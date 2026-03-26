@@ -54,7 +54,12 @@
   </div>
 
   <script type="module">
-    import { signup as createAccount, login as loginAccount } from "./assets/auth.js";
+    import { signup as createAccount, login as loginAccount, getCurrentUserDoc } from "./assets/auth.js";
+    import { auth } from "./assets/firebase.js";
+
+    function getDashboardPath(role) {
+      return role === "customer" ? "customer_dashboard.html" : "dashboard.html";
+    }
 
     window.showAuthTab = function(tab) {
       const loginPanel = document.getElementById("loginPanel");
@@ -89,7 +94,15 @@
 
       try {
         await loginAccount(email, password);
-        window.location.href = "dashboard.html";
+        const user = auth.currentUser;
+        const userDoc = await getCurrentUserDoc(user);
+
+        if (!userDoc) {
+          msg.textContent = "No user profile found.";
+          return;
+        }
+
+        window.location.href = getDashboardPath(userDoc.role);
       } catch (e) {
         msg.textContent = e.message || "Login failed.";
       }
