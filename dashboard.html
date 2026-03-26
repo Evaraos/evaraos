@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - Evaraos Inc</title>
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body class="app-shell">
+  <header class="app-topbar" id="topbar"></header>
+
+  <div class="app-layout">
+    <aside class="sidebar">
+      <a class="active" href="dashboard.html">Overview</a>
+    </aside>
+
+    <main class="main-panel">
+      <section class="glass-card">
+        <h1 style="margin-top:0;">Allocation Overview</h1>
+        <div class="stats-grid">
+          <div class="stat"><h3 id="statLeads">0</h3><p>Leads</p></div>
+          <div class="stat"><h3 id="statCustomers">0</h3><p>Customers</p></div>
+          <div class="stat"><h3 id="statJobs">0</h3><p>Jobs</p></div>
+          <div class="stat"><h3 id="statInvoices">0</h3><p>Invoices</p></div>
+        </div>
+      </section>
+
+      <section class="glass-card">
+        <h2 style="margin-top:0;">Welcome</h2>
+        <div id="dashboardContent" class="muted">Loading...</div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+    import { bindTopbar, requireAuth, fetchCompanyCollection } from "./assets/app.js";
+
+    await bindTopbar();
+
+    requireAuth(async (user) => {
+      const [leads, customers, jobs, invoices] = await Promise.all([
+        fetchCompanyCollection("leads"),
+        fetchCompanyCollection("customers"),
+        fetchCompanyCollection("jobs"),
+        fetchCompanyCollection("invoices")
+      ]);
+
+      document.getElementById("statLeads").textContent = leads.length;
+      document.getElementById("statCustomers").textContent = customers.length;
+      document.getElementById("statJobs").textContent = jobs.length;
+      document.getElementById("statInvoices").textContent = invoices.length;
+
+      document.getElementById("dashboardContent").innerHTML = `
+        <strong>${user.name || user.email}</strong><br>
+        Role: ${user.role}<br>
+        Company: ${user.companyId}
+      `;
+    });
+  </script>
+</body>
+</html>
