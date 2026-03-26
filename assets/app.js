@@ -28,7 +28,7 @@ export async function bindTopbar() {
   topbar.innerHTML = `
     <div class="app-topbar-inner">
       <div class="app-brand">
-        <img src="${settings?.logoUrl || "./assets/img/logo.png"}" alt="logo">
+        <img src="${settings?.logoUrl || "../assets/img/evaraos_logo.png"}" alt="logo">
         <div>
           <div>${settings?.platformName || "Evaraos Inc"}</div>
           <div class="muted">${settings?.companyName || "Supreme TrueClean"}</div>
