@@ -251,8 +251,6 @@ img{max-width:100%;display:block}
   color:var(--muted);
 }
 
-/* APP */
-
 .app-shell{
   min-height:100vh;
   background:
@@ -364,6 +362,7 @@ img{max-width:100%;display:block}
   color:var(--muted);
 }
 
+.auth-body,
 .auth-shell{
   min-height:100vh;
   display:grid;
@@ -374,8 +373,36 @@ img{max-width:100%;display:block}
     linear-gradient(180deg,#050608,#0c1016);
 }
 
+.auth-shell-wrap{
+  width:min(520px,94vw);
+}
+
+.auth-tabs{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:14px;
+}
+
+.auth-tab{
+  padding:14px 16px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.06);
+  color:var(--white);
+  cursor:pointer;
+  backdrop-filter:blur(10px);
+  font-weight:700;
+}
+
+.auth-tab.active{
+  background:linear-gradient(135deg,var(--red),var(--red-2));
+  box-shadow:0 10px 30px rgba(227,6,19,.25);
+}
+
+.auth-box,
 .auth-card{
-  width:min(460px,92vw);
+  width:100%;
   padding:26px;
   border-radius:32px;
   background:rgba(255,255,255,.08);
@@ -392,8 +419,19 @@ img{max-width:100%;display:block}
   border-radius:20px;
 }
 
-.muted{color:var(--muted)}
-.status-text{color:var(--muted);margin-top:14px}
+.auth-subtext{
+  color:var(--muted);
+  text-align:center;
+  margin:0 0 18px;
+}
+
+.auth-msg,
+.muted,
+.status-text{
+  color:var(--muted);
+  margin-top:14px;
+}
+
 .stack{display:grid;gap:10px}
 
 input,select{
