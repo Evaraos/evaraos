@@ -14,7 +14,7 @@
 
     <main class="main-panel">
       <section class="glass-card">
-        <h1 style="margin-top:0;">Allocation Overview</h1>
+        <h1 style="margin-top:0;">Internal Operations Overview</h1>
         <div class="stats-grid">
           <div class="stat"><h3 id="statLeads">0</h3><p>Leads</p></div>
           <div class="stat"><h3 id="statCustomers">0</h3><p>Customers</p></div>
@@ -47,6 +47,11 @@
     await bindTopbar();
 
     requireAuth(async (user) => {
+      if (user.role === "customer") {
+        window.location.href = "customer_dashboard.html";
+        return;
+      }
+
       document.getElementById("sidebar").innerHTML = renderSidebar(user.role, "overview");
 
       const [leads, customers, jobs, invoices] = await Promise.all([
@@ -64,8 +69,7 @@
       document.getElementById("dashboardContent").innerHTML = renderRoleSummary(user);
 
       document.getElementById("rolePreview").innerHTML = `
-        Your sidebar and visible modules are now controlled by your role.
-        As we add Leads, Customers, Jobs, Admin, and Settings pages, access will follow this exact role structure.
+        This is the internal worker dashboard. Customer accounts are routed to a separate customer portfolio view.
       `;
     });
   </script>
