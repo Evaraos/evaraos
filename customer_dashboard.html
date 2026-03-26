@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Portfolio - Evaraos Inc</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body class="app-shell">
+  <header class="app-topbar" id="topbar"></header>
+
+  <div class="app-layout" style="grid-template-columns:1fr;">
+    <main class="main-panel">
+      <section class="glass-card">
+        <h1 style="margin-top:0;">Customer Portfolio</h1>
+        <p class="muted">
+          This dashboard is for customer-facing account information only.
+        </p>
+      </section>
+
+      <section class="glass-card">
+        <h2 style="margin-top:0;">Profile</h2>
+        <div id="customerProfile" class="muted">Loading...</div>
+      </section>
+
+      <section class="glass-card">
+        <h2 style="margin-top:0;">Service Portfolio</h2>
+        <div class="grid-3">
+          <div class="glow-card">
+            <h3>Account Status</h3>
+            <p id="customerStatus">Active customer account</p>
+          </div>
+          <div class="glow-card">
+            <h3>Company</h3>
+            <p>Supreme TrueClean</p>
+          </div>
+          <div class="glow-card">
+            <h3>Platform</h3>
+            <p>Evaraos Inc</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="glass-card">
+        <h2 style="margin-top:0;">Coming Next</h2>
+        <p class="muted">
+          Upcoming customer features will include bookings, invoices, subscriptions, service history,
+          portfolio badges, and loyalty systems.
+        </p>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+    import { bindTopbar, requireAuth } from "./assets/app.js";
+
+    requireAuth(async (user) => {
+      if (user.role !== "customer") {
+        await bindTopbar(user);
+        window.location.href = "dashboard.html";
+        return;
+      }
+
+      await bindTopbar(user);
+
+      document.getElementById("customerProfile").innerHTML = `
+        <strong>${user.name || user.email}</strong><br>
+        Email: ${user.email}<br>
+        Role: Customer<br>
+        Company: ${user.companyId}
+      `;
+    });
+  </script>
+</body>
+</html>
