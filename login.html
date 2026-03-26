@@ -1,68 +1,128 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login - Evaraos Inc</title>
-  <link rel="stylesheet" href="assets/style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Evaraos Access</title>
+  <link rel="stylesheet" href="assets/style.css">
 </head>
-<body class="auth-shell">
-  <div class="auth-card">
-    <img class="auth-logo" src="assets/img/logo.png" alt="Evaraos logo" />
-    <h1 style="margin:0 0 8px;text-align:center;">Evaraos Inc</h1>
-    <p class="muted" style="text-align:center;margin:0 0 18px;">Secure platform access</p>
+<body class="auth-body">
 
-    <input id="name" placeholder="Full Name (signup only)" />
-    <input id="email" type="email" placeholder="Email" />
-    <input id="password" type="password" placeholder="Password" />
-
-    <select id="role">
-      <option value="customer">Customer</option>
-      <option value="sales_rep">Sales Rep</option>
-      <option value="technician">Technician</option>
-      <option value="manager">Manager</option>
-      <option value="operations_coordinator">Operations Coordinator</option>
-      <option value="hr">HR</option>
-    </select>
-
-    <div class="stack">
-      <button class="btn" id="signupBtn">Sign Up</button>
-      <button class="btn secondary" id="loginBtn">Login</button>
+  <div class="auth-shell-wrap">
+    <div class="auth-tabs">
+      <button id="loginTab" class="auth-tab active" onclick="showAuthTab('login')">Login</button>
+      <button id="signupTab" class="auth-tab" onclick="showAuthTab('signup')">Sign Up</button>
     </div>
 
-    <p id="msg" class="status-text"></p>
+    <div class="auth-box">
+
+      <div id="loginPanel">
+        <img src="assets/img/evaraos_logo.png" class="auth-logo" alt="Evaraos logo">
+        <h2 style="text-align:center;margin:0 0 8px;">Welcome Back</h2>
+        <p class="auth-subtext">Login to access Evaraos Inc</p>
+
+        <input id="loginEmail" type="email" placeholder="Email">
+        <input id="loginPassword" type="password" placeholder="Password">
+
+        <button class="btn" onclick="login()">Login</button>
+        <p id="loginMsg" class="auth-msg"></p>
+      </div>
+
+      <div id="signupPanel" style="display:none;">
+        <img src="assets/img/evaraos_logo.png" class="auth-logo" alt="Evaraos logo">
+        <h2 style="text-align:center;margin:0 0 8px;">Create Account</h2>
+        <p class="auth-subtext">Join the Evaraos platform</p>
+
+        <input id="signupName" type="text" placeholder="Full Name">
+        <input id="signupEmail" type="email" placeholder="Email">
+        <input id="signupPassword" type="password" placeholder="Password">
+
+        <select id="signupRole">
+          <option value="customer">Customer</option>
+          <option value="sales_rep">Sales Rep</option>
+          <option value="technician">Technician</option>
+          <option value="manager">Manager</option>
+          <option value="operations_coordinator">Operations Coordinator</option>
+          <option value="hr">HR</option>
+        </select>
+
+        <button class="btn" onclick="signup()">Create Account</button>
+        <p id="signupMsg" class="auth-msg"></p>
+      </div>
+
+    </div>
   </div>
 
   <script type="module">
-    import { signup, login } from "./assets/auth.js";
+    import { signup as createAccount, login as loginAccount } from "./assets/auth.js";
 
-    const msg = document.getElementById("msg");
+    window.showAuthTab = function(tab) {
+      const loginPanel = document.getElementById("loginPanel");
+      const signupPanel = document.getElementById("signupPanel");
+      const loginTab = document.getElementById("loginTab");
+      const signupTab = document.getElementById("signupTab");
 
-    document.getElementById("signupBtn").onclick = async () => {
-      try {
-        await signup(
-          document.getElementById("name").value.trim(),
-          document.getElementById("email").value.trim(),
-          document.getElementById("password").value,
-          document.getElementById("role").value
-        );
-        msg.textContent = "Account created. Staff accounts require approval.";
-      } catch (e) {
-        msg.textContent = e.message;
+      if (tab === "login") {
+        loginPanel.style.display = "block";
+        signupPanel.style.display = "none";
+        loginTab.classList.add("active");
+        signupTab.classList.remove("active");
+      } else {
+        loginPanel.style.display = "none";
+        signupPanel.style.display = "block";
+        loginTab.classList.remove("active");
+        signupTab.classList.add("active");
       }
     };
 
-    document.getElementById("loginBtn").onclick = async () => {
+    window.login = async function() {
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      const msg = document.getElementById("loginMsg");
+
+      msg.textContent = "";
+
+      if (!email || !password) {
+        msg.textContent = "Enter your email and password.";
+        return;
+      }
+
       try {
-        await login(
-          document.getElementById("email").value.trim(),
-          document.getElementById("password").value
-        );
+        await loginAccount(email, password);
         window.location.href = "dashboard.html";
       } catch (e) {
-        msg.textContent = "Login failed";
+        msg.textContent = e.message || "Login failed.";
+      }
+    };
+
+    window.signup = async function() {
+      const name = document.getElementById("signupName").value.trim();
+      const email = document.getElementById("signupEmail").value.trim();
+      const password = document.getElementById("signupPassword").value;
+      const role = document.getElementById("signupRole").value;
+      const msg = document.getElementById("signupMsg");
+
+      msg.textContent = "";
+
+      if (!name || !email || !password || !role) {
+        msg.textContent = "Complete all sign up fields.";
+        return;
+      }
+
+      try {
+        await createAccount(name, email, password, role);
+        msg.textContent = "Account created successfully.";
+
+        setTimeout(() => {
+          showAuthTab("login");
+          document.getElementById("loginEmail").value = email;
+          document.getElementById("loginPassword").value = "";
+        }, 800);
+      } catch (e) {
+        msg.textContent = e.message || "Sign up failed.";
       }
     };
   </script>
+
 </body>
 </html>
