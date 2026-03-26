@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Evaraos Inc</title>
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body class="auth-shell">
+  <div class="auth-card">
+    <img class="auth-logo" src="assets/img/logo.png" alt="Evaraos logo" />
+    <h1 style="margin:0 0 8px;text-align:center;">Evaraos Inc</h1>
+    <p class="muted" style="text-align:center;margin:0 0 18px;">Secure platform access</p>
+
+    <input id="name" placeholder="Full Name (signup only)" />
+    <input id="email" type="email" placeholder="Email" />
+    <input id="password" type="password" placeholder="Password" />
+
+    <select id="role">
+      <option value="customer">Customer</option>
+      <option value="sales_rep">Sales Rep</option>
+      <option value="technician">Technician</option>
+      <option value="manager">Manager</option>
+      <option value="operations_coordinator">Operations Coordinator</option>
+      <option value="hr">HR</option>
+    </select>
+
+    <div class="stack">
+      <button class="btn" id="signupBtn">Sign Up</button>
+      <button class="btn secondary" id="loginBtn">Login</button>
+    </div>
+
+    <p id="msg" class="status-text"></p>
+  </div>
+
+  <script type="module">
+    import { signup, login } from "./assets/auth.js";
+
+    const msg = document.getElementById("msg");
+
+    document.getElementById("signupBtn").onclick = async () => {
+      try {
+        await signup(
+          document.getElementById("name").value.trim(),
+          document.getElementById("email").value.trim(),
+          document.getElementById("password").value,
+          document.getElementById("role").value
+        );
+        msg.textContent = "Account created. Staff accounts require approval.";
+      } catch (e) {
+        msg.textContent = e.message;
+      }
+    };
+
+    document.getElementById("loginBtn").onclick = async () => {
+      try {
+        await login(
+          document.getElementById("email").value.trim(),
+          document.getElementById("password").value
+        );
+        window.location.href = "dashboard.html";
+      } catch (e) {
+        msg.textContent = "Login failed";
+      }
+    };
+  </script>
+</body>
+</html>
