@@ -9,6 +9,7 @@ import {
 
 import { db, COMPANY_ID } from "./firebase.js";
 import { listenAuth, logout } from "./auth.js";
+import { canAccess, getAllowedSections, getRoleLabel } from "./roles.js";
 
 export async function loadBrandSettings() {
   try {
@@ -71,4 +72,39 @@ export async function fetchCompanyCollection(name) {
   const q = query(collection(db, name), where("companyId", "==", COMPANY_ID));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+export function renderSidebar(role, active = "overview") {
+  const links = [
+    { key: "overview", label: "Overview", href: "dashboard.html" },
+    { key: "leads", label: "Leads", href: "#" },
+    { key: "customers", label: "Customers", href: "#" },
+    { key: "jobs", label: "Jobs", href: "#" },
+    { key: "admin", label: "Admin", href: "#" },
+    { key: "settings", label: "Settings", href: "#" }
+  ];
+
+  return links
+    .filter((link) => canAccess(role, link.key))
+    .map(
+      (link) =>
+        `<a class="${active === link.key ? "active" : ""}" href="${link.href}">${link.label}</a>`
+    )
+    .join("");
+}
+
+export function renderRoleSummary(user) {
+  const sections = getAllowedSections(user.role);
+  const prettyRole = getRoleLabel(user.role);
+
+  return `
+    <strong>${user.name || user.email}</strong><br>
+    Role: ${prettyRole}<br>
+    Company: ${user.companyId}<br>
+    Access: ${sections.join(", ")}
+  `;
+}
+
+export function roleGuard(user, requiredSection) {
+  return canAccess(user.role, requiredSection);
 }
