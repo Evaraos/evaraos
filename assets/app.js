@@ -20,22 +20,31 @@ export async function loadBrandSettings() {
   }
 }
 
-export async function bindTopbar() {
+export function getDashboardPath(role) {
+  return role === "customer" ? "customer_dashboard.html" : "dashboard.html";
+}
+
+export async function bindTopbar(user = null) {
   const topbar = document.getElementById("topbar");
   if (!topbar) return;
 
   const settings = await loadBrandSettings();
+  const homeHref = "index.html";
+  const dashboardHref = user ? getDashboardPath(user.role) : "dashboard.html";
 
   topbar.innerHTML = `
     <div class="app-topbar-inner">
-      <div class="app-brand">
+      <a class="app-brand" href="${homeHref}">
         <img src="${settings?.logoUrl || "../assets/img/evaraos_logo.png"}" alt="logo">
         <div>
           <div>${settings?.platformName || "Evaraos Inc"}</div>
           <div class="muted">${settings?.companyName || "Supreme TrueClean"}</div>
         </div>
+      </a>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <a class="btn secondary" href="${dashboardHref}">Dashboard</a>
+        <button class="btn secondary" id="logoutBtn">Logout</button>
       </div>
-      <button class="btn secondary" id="logoutBtn">Logout</button>
     </div>
   `;
 
