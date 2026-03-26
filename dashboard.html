@@ -10,9 +10,7 @@
   <header class="app-topbar" id="topbar"></header>
 
   <div class="app-layout">
-    <aside class="sidebar">
-      <a class="active" href="dashboard.html">Overview</a>
-    </aside>
+    <aside class="sidebar" id="sidebar"></aside>
 
     <main class="main-panel">
       <section class="glass-card">
@@ -26,18 +24,31 @@
       </section>
 
       <section class="glass-card">
-        <h2 style="margin-top:0;">Welcome</h2>
+        <h2 style="margin-top:0;">Account Summary</h2>
         <div id="dashboardContent" class="muted">Loading...</div>
+      </section>
+
+      <section class="glass-card">
+        <h2 style="margin-top:0;">Role Access Preview</h2>
+        <div id="rolePreview" class="muted">Loading...</div>
       </section>
     </main>
   </div>
 
   <script type="module">
-    import { bindTopbar, requireAuth, fetchCompanyCollection } from "./assets/app.js";
+    import {
+      bindTopbar,
+      requireAuth,
+      fetchCompanyCollection,
+      renderSidebar,
+      renderRoleSummary
+    } from "./assets/app.js";
 
     await bindTopbar();
 
     requireAuth(async (user) => {
+      document.getElementById("sidebar").innerHTML = renderSidebar(user.role, "overview");
+
       const [leads, customers, jobs, invoices] = await Promise.all([
         fetchCompanyCollection("leads"),
         fetchCompanyCollection("customers"),
@@ -50,10 +61,11 @@
       document.getElementById("statJobs").textContent = jobs.length;
       document.getElementById("statInvoices").textContent = invoices.length;
 
-      document.getElementById("dashboardContent").innerHTML = `
-        <strong>${user.name || user.email}</strong><br>
-        Role: ${user.role}<br>
-        Company: ${user.companyId}
+      document.getElementById("dashboardContent").innerHTML = renderRoleSummary(user);
+
+      document.getElementById("rolePreview").innerHTML = `
+        Your sidebar and visible modules are now controlled by your role.
+        As we add Leads, Customers, Jobs, Admin, and Settings pages, access will follow this exact role structure.
       `;
     });
   </script>
