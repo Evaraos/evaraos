@@ -1,0 +1,164 @@
+import {
+  bindTopbar,
+  requireAuth,
+  fetchCompanyCollection,
+  renderSidebar,
+  roleGuard,
+  createLead,
+  updateLead
+} from "./app.js";
+
+let currentUser = null;
+let editingLeadId = null;
+
+function getLeadFormData() {
+  return {
+    fullName: document.getElementById("leadFullName").value.trim(),
+    phone: document.getElementById("leadPhone").value.trim(),
+    email: document.getElementById("leadEmail").value.trim(),
+    address: document.getElementById("leadAddress").value.trim(),
+    city: document.getElementById("leadCity").value.trim(),
+    state: document.getElementById("leadState").value.trim(),
+    zip: document.getElementById("leadZip").value.trim(),
+    serviceInterest: document.getElementById("leadServiceInterest").value.trim(),
+    leadSource: document.getElementById("leadSource").value.trim(),
+    preferredContactMethod: document.getElementById("leadPreferredContactMethod").value,
+    estimatedSqFt: document.getElementById("leadEstimatedSqFt").value,
+    assignedRep: document.getElementById("leadAssignedRep").value.trim(),
+    status: document.getElementById("leadStatus").value,
+    appointmentDate: document.getElementById("leadAppointmentDate").value,
+    notes: document.getElementById("leadNotes").value.trim()
+  };
+}
+
+function fillLeadForm(lead) {
+  document.getElementById("leadFullName").value = lead.fullName || "";
+  document.getElementById("leadPhone").value = lead.phone || "";
+  document.getElementById("leadEmail").value = lead.email || "";
+  document.getElementById("leadAddress").value = lead.address || "";
+  document.getElementById("leadCity").value = lead.city || "";
+  document.getElementById("leadState").value = lead.state || "";
+  document.getElementById("leadZip").value = lead.zip || "";
+  document.getElementById("leadServiceInterest").value = lead.serviceInterest || "";
+  document.getElementById("leadSource").value = lead.leadSource || "";
+  document.getElementById("leadPreferredContactMethod").value = lead.preferredContactMethod || "";
+  document.getElementById("leadEstimatedSqFt").value = lead.estimatedSqFt || "";
+  document.getElementById("leadAssignedRep").value = lead.assignedRep || "";
+  document.getElementById("leadStatus").value = lead.status || "new";
+  document.getElementById("leadAppointmentDate").value = lead.appointmentDate || "";
+  document.getElementById("leadNotes").value = lead.notes || "";
+}
+
+function clearLeadForm() {
+  editingLeadId = null;
+  document.getElementById("leadFullName").value = "";
+  document.getElementById("leadPhone").value = "";
+  document.getElementById("leadEmail").value = "";
+  document.getElementById("leadAddress").value = "";
+  document.getElementById("leadCity").value = "";
+  document.getElementById("leadState").value = "";
+  document.getElementById("leadZip").value = "";
+  document.getElementById("leadServiceInterest").value = "";
+  document.getElementById("leadSource").value = "";
+  document.getElementById("leadPreferredContactMethod").value = "";
+  document.getElementById("leadEstimatedSqFt").value = "";
+  document.getElementById("leadAssignedRep").value = "";
+  document.getElementById("leadStatus").value = "new";
+  document.getElementById("leadAppointmentDate").value = "";
+  document.getElementById("leadNotes").value = "";
+  document.getElementById("cancelEditBtn").style.display = "none";
+}
+
+async function renderLeads() {
+  const leads = await fetchCompanyCollection("leads");
+  const leadsList = document.getElementById("leadsList");
+
+  if (!leads.length) {
+    leadsList.innerHTML = `<div class="muted">No leads yet.</div>`;
+    return;
+  }
+
+  leadsList.innerHTML = leads.map((lead) => `
+    <div class="row">
+      <div>
+        <strong>${lead.fullName || "Unnamed Lead"}</strong><br>
+        <span class="muted">${lead.serviceInterest || "No service selected"}</span>
+      </div>
+      <div>
+        ${lead.phone || "No phone"}<br>
+        <span class="muted">${lead.email || "No email"}</span>
+      </div>
+      <div>
+        ${lead.city || ""} ${lead.state || ""}<br>
+        <span class="muted">${lead.status || "new"}</span>
+      </div>
+      <div>
+        <button class="btn secondary edit-lead-btn" data-id="${lead.id}">Edit</button>
+      </div>
+    </div>
+  `).join("");
+
+  document.querySelectorAll(".edit-lead-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const selectedLead = leads.find((lead) => lead.id === btn.dataset.id);
+      if (!selectedLead) return;
+
+      editingLeadId = selectedLead.id;
+      fillLeadForm(selectedLead);
+      document.getElementById("cancelEditBtn").style.display = "inline-flex";
+      document.getElementById("leadMsg").textContent = `Editing ${selectedLead.fullName || "lead"}`;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  });
+}
+
+requireAuth(async (user) => {
+  currentUser = user;
+
+  if (!roleGuard(user, "leads")) {
+    document.body.innerHTML = `
+      <div class="auth-shell">
+        <div class="auth-card">
+          <h2>Access denied</h2>
+          <p class="muted">Your role does not have access to the Leads module.</p>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  await bindTopbar(user);
+  document.getElementById("sidebar").innerHTML = renderSidebar(user.role, "leads");
+
+  await renderLeads();
+
+  document.getElementById("saveLeadBtn").addEventListener("click", async () => {
+    const msg = document.getElementById("leadMsg");
+    const data = getLeadFormData();
+
+    if (!data.fullName || !data.phone || !data.address) {
+      msg.textContent = "Full name, phone, and address are required.";
+      return;
+    }
+
+    try {
+      if (editingLeadId) {
+        await updateLead(editingLeadId, data);
+        msg.textContent = "Lead updated successfully.";
+      } else {
+        await createLead(data, currentUser);
+        msg.textContent = "Lead created successfully.";
+      }
+
+      clearLeadForm();
+      await renderLeads();
+    } catch (e) {
+      msg.textContent = e.message || "Failed to save lead.";
+    }
+  });
+
+  document.getElementById("cancelEditBtn").addEventListener("click", () => {
+    clearLeadForm();
+    document.getElementById("leadMsg").textContent = "Edit cancelled.";
+  });
+});
