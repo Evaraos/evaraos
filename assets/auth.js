@@ -123,6 +123,32 @@ export function buildUserIdentity(username) {
   };
 }
 
+export function formatAuthError(error) {
+  const code = error?.code || "";
+  const message = error?.message || "";
+
+  const map = {
+    "auth/email-already-in-use": "That email is already in use.",
+    "auth/invalid-email": "Enter a valid email address.",
+    "auth/user-disabled": "This account has been disabled.",
+    "auth/user-not-found": "Account not found.",
+    "auth/wrong-password": "Incorrect password.",
+    "auth/invalid-credential": "Incorrect username/email or password.",
+    "auth/too-many-requests": "Too many attempts. Try again in a moment.",
+    "auth/network-request-failed": "Network error. Check your connection and try again.",
+    "auth/weak-password": "Password should be at least 6 characters.",
+    "auth/requires-recent-login": "For security, log in again before changing your password."
+  };
+
+  if (map[code]) return map[code];
+
+  if (message.includes("Missing or insufficient permissions")) {
+    return "Permissions issue detected. Check Firestore rules or access settings.";
+  }
+
+  return message || "Something went wrong. Please try again.";
+}
+
 export async function usernameExists(username, excludeUid = "") {
   const clean = sanitizeUsername(username);
   if (!clean) return false;
@@ -191,7 +217,7 @@ export async function signup(name, username, email, password, role) {
   const identity = buildUserIdentity(username);
 
   if (!cleanName || !identity.username || !cleanEmail || !password || !role) {
-    throw new Error("Missing required signup fields.");
+    throw new Error("Complete all required signup fields.");
   }
 
   if (identity.username.length < 3) {
@@ -203,37 +229,41 @@ export async function signup(name, username, email, password, role) {
     throw new Error("That username is already taken.");
   }
 
-  const cred = await createUserWithEmailAndPassword(auth, cleanEmail, password);
-  const isOwner = cleanEmail === OWNER_EMAIL;
-  const defaults = getRoleDefaults(role, isOwner);
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, cleanEmail, password);
+    const isOwner = cleanEmail === OWNER_EMAIL;
+    const defaults = getRoleDefaults(role, isOwner);
 
-  await setDoc(doc(db, "users", cred.user.uid), {
-    name: cleanName,
-    username: identity.username,
-    handle: identity.handle,
-    displayUsername: identity.displayUsername,
-    email: cleanEmail,
-    role: defaults.finalRole,
-    approvalStatus: defaults.approvalStatus,
-    status: "active",
-    companyId: DEFAULT_COMPANY_ID,
-    companyAccessLevel: defaults.companyAccessLevel,
-    photoUrl: "",
-    createdAt: serverTimestamp(),
-    lastLogin: serverTimestamp(),
-    reportsTo: cred.user.uid,
-    organizationLevel: defaults.organizationLevel,
-    permissions: defaults.permissions,
-    phone: "",
-    address: "",
-    city: "",
-    state: "",
-    zip: "",
-    preferredContactMethod: "",
-    updatedAt: serverTimestamp()
-  });
+    await setDoc(doc(db, "users", cred.user.uid), {
+      name: cleanName,
+      username: identity.username,
+      handle: identity.handle,
+      displayUsername: identity.displayUsername,
+      email: cleanEmail,
+      role: defaults.finalRole,
+      approvalStatus: defaults.approvalStatus,
+      status: "active",
+      companyId: DEFAULT_COMPANY_ID,
+      companyAccessLevel: defaults.companyAccessLevel,
+      photoUrl: "",
+      createdAt: serverTimestamp(),
+      lastLogin: serverTimestamp(),
+      reportsTo: cred.user.uid,
+      organizationLevel: defaults.organizationLevel,
+      permissions: defaults.permissions,
+      phone: "",
+      address: "",
+      city: "",
+      state: "",
+      zip: "",
+      preferredContactMethod: "",
+      updatedAt: serverTimestamp()
+    });
 
-  return cred;
+    return cred;
+  } catch (error) {
+    throw new Error(formatAuthError(error));
+  }
 }
 
 export async function loginWithUsername(usernameOrHandle, password) {
@@ -243,20 +273,24 @@ export async function loginWithUsername(usernameOrHandle, password) {
     throw new Error("Username and password are required.");
   }
 
-  const q = query(collection(db, "users"), where("username", "==", cleanUsername));
-  const snap = await getDocs(q);
+  try {
+    const q = query(collection(db, "users"), where("username", "==", cleanUsername));
+    const snap = await getDocs(q);
 
-  if (snap.empty) {
-    throw new Error("Username not found.");
+    if (snap.empty) {
+      throw new Error("Username not found.");
+    }
+
+    const userData = snap.docs[0].data();
+
+    if (!userData?.email) {
+      throw new Error("That account is missing an email.");
+    }
+
+    return await signInWithEmailAndPassword(auth, cleanEmailValue(userData.email), password);
+  } catch (error) {
+    throw new Error(formatAuthError(error));
   }
-
-  const userData = snap.docs[0].data();
-
-  if (!userData?.email) {
-    throw new Error("That account is missing an email.");
-  }
-
-  return signInWithEmailAndPassword(auth, cleanEmailValue(userData.email), password);
 }
 
 export async function logout() {
@@ -265,11 +299,16 @@ export async function logout() {
 
 export async function resetPassword(email) {
   const cleanEmail = cleanEmailValue(email);
+
   if (!cleanEmail) {
     throw new Error("Email is required for password reset.");
   }
 
-  return sendPasswordResetEmail(auth, cleanEmail);
+  try {
+    return await sendPasswordResetEmail(auth, cleanEmail);
+  } catch (error) {
+    throw new Error(formatAuthError(error));
+  }
 }
 
 export async function getCurrentUserDoc(user) {
@@ -326,9 +365,13 @@ export async function changeOwnPassword(currentPassword, newPassword) {
     throw new Error("New password must be at least 6 characters.");
   }
 
-  const credential = EmailAuthProvider.credential(user.email, currentPassword);
-  await reauthenticateWithCredential(user, credential);
-  await updatePassword(user, newPassword);
+  try {
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, credential);
+    await updatePassword(user, newPassword);
+  } catch (error) {
+    throw new Error(formatAuthError(error));
+  }
 }
 
 export function listenAuth(callback) {
