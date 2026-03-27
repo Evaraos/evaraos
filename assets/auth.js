@@ -13,25 +13,25 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-import { auth, db, COMPANY_ID, OWNER_EMAIL } from "./firebase.js";
+import { auth, db, OWNER_EMAIL, DEFAULT_COMPANY_ID } from "./firebase.js";
 
 export async function signup(name, email, password, role) {
   const cred = await createUserWithEmailAndPassword(auth, email, password);
 
   const normalizedEmail = email.toLowerCase();
-  const finalRole = normalizedEmail === OWNER_EMAIL ? "super_admin" : role;
-  const approvalStatus =
-    normalizedEmail === OWNER_EMAIL || role === "customer" ? "approved" : "pending";
+  const isOwner = normalizedEmail === OWNER_EMAIL;
 
   await setDoc(doc(db, "users", cred.user.uid), {
     name,
     email,
-    role: finalRole,
-    approvalStatus,
+    role: isOwner ? "super_admin" : role,
+    approvalStatus: isOwner || role === "customer" ? "approved" : "pending",
     status: "active",
-    companyId: COMPANY_ID,
+    companyId: DEFAULT_COMPANY_ID,
     createdAt: serverTimestamp(),
-    lastLogin: null
+    lastLogin: null,
+    photoUrl: "",
+    companyAccessLevel: isOwner ? "parent" : "subsidiary"
   });
 
   return cred;
