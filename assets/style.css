@@ -379,7 +379,7 @@ img{max-width:100%;display:block}
 }
 
 .auth-shell-wrap{
-  width:min(520px,94vw);
+  width:min(560px,94vw);
 }
 
 .auth-tabs{
@@ -441,6 +441,8 @@ img{max-width:100%;display:block}
 
 input,select,textarea{
   width:100%;
+  min-height:52px;
+  height:52px;
   padding:14px 16px;
   border-radius:18px;
   border:1px solid rgba(255,255,255,.12);
@@ -452,13 +454,23 @@ input,select,textarea{
 }
 
 textarea{
+  height:auto;
   min-height:160px;
   resize:vertical;
+}
+
+input[type="date"]{
+  height:52px;
+  min-height:52px;
+  padding:14px 16px;
+  appearance:none;
+  -webkit-appearance:none;
 }
 
 .notes-field{
   width:100%;
   min-height:180px;
+  height:auto;
 }
 
 .table{
@@ -548,6 +560,45 @@ textarea{
   display:flex;
   gap:12px;
   flex-wrap:wrap;
+}
+
+.password-wrap{
+  position:relative;
+}
+
+.password-wrap input{
+  padding-right:54px;
+}
+
+.eye-toggle{
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  border:none;
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  font-size:18px;
+}
+
+.upload-row{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.file-btn{
+  position:relative;
+  overflow:hidden;
+}
+
+.file-btn input[type="file"]{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  cursor:pointer;
 }
 
 @media (max-width: 1024px){
