@@ -36,7 +36,15 @@ function clearUserForm() {
   document.getElementById("userCompanyAccessLevel").value = "subsidiary";
   document.getElementById("userOrganizationLevel").value = "";
   document.getElementById("userPermissions").value = "";
-  document.getElementById("cancelUserEditBtn").style.display = "none";
+  document.getElementById("userMsg").textContent = "";
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add("active");
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove("active");
 }
 
 function userCard(user) {
@@ -98,9 +106,7 @@ async function renderUsers() {
 
       editingUserId = selectedUser.id;
       fillUserForm(selectedUser);
-      document.getElementById("cancelUserEditBtn").style.display = "inline-flex";
-      document.getElementById("userMsg").textContent = `Editing ${selectedUser.name || "user"}`;
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      openModal("userModal");
     });
   });
 }
@@ -124,6 +130,8 @@ requireAuth(async (user) => {
   document.getElementById("sidebar").innerHTML = renderSidebar(user.role, "users");
 
   await renderUsers();
+
+  document.getElementById("closeUserModalBtn").addEventListener("click", () => closeModal("userModal"));
 
   document.getElementById("saveUserBtn").addEventListener("click", async () => {
     const msg = document.getElementById("userMsg");
@@ -151,15 +159,11 @@ requireAuth(async (user) => {
       });
 
       msg.textContent = "User updated successfully.";
-      clearUserForm();
       await renderUsers();
+      closeModal("userModal");
+      clearUserForm();
     } catch (e) {
       msg.textContent = e.message || "Failed to update user.";
     }
-  });
-
-  document.getElementById("cancelUserEditBtn").addEventListener("click", () => {
-    clearUserForm();
-    document.getElementById("userMsg").textContent = "Edit cancelled.";
   });
 });
