@@ -16,21 +16,6 @@
       grid-template-columns:repeat(4,1fr);
       gap:16px;
     }
-    .mini-grid{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:16px;
-    }
-    .badge{
-      display:inline-flex;
-      padding:8px 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.07);
-      border:1px solid rgba(255,255,255,.10);
-      margin:0 8px 8px 0;
-      color:#ececec;
-      font-size:13px;
-    }
     .info-list{
       display:grid;
       gap:12px;
@@ -49,8 +34,27 @@
       color:#b8c0d0;
       line-height:1.6;
     }
+    .analytics-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:16px;
+    }
+    .analytics-card{
+      padding:18px;
+      border-radius:22px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .analytics-card h3{
+      margin:0 0 10px;
+    }
+    .analytics-list{
+      color:#b8c0d0;
+      line-height:1.7;
+      font-size:14px;
+    }
     @media (max-width: 1024px){
-      .hero-grid-dash,.stats-grid-4,.mini-grid{
+      .hero-grid-dash,.stats-grid-4,.analytics-grid{
         grid-template-columns:1fr;
       }
     }
@@ -67,7 +71,7 @@
         <div class="hero-grid-dash">
           <div>
             <h1 class="dash-title" id="dashHeading">Loading dashboard...</h1>
-            <p class="dash-sub" id="dashSubtext">Loading company-aware view...</p>
+            <p class="dash-sub" id="dashSubtext">Loading company-aware analytics...</p>
           </div>
           <div class="glass-card" style="padding:18px;">
             <h3 style="margin-top:0;">Current Access</h3>
@@ -78,6 +82,11 @@
 
       <section class="glass-card">
         <div class="stats-grid-4" id="statsGrid"></div>
+      </section>
+
+      <section class="glass-card">
+        <h2 style="margin-top:0;">Operational Analytics</h2>
+        <div class="analytics-grid" id="analyticsGrid"></div>
       </section>
 
       <section class="glass-card">
@@ -101,6 +110,7 @@
       fetchAllCollection,
       fetchUsersByCompany,
       fetchActiveSalesReps,
+      fetchActiveTechnicians,
       renderSidebar,
       renderRoleSummary,
       renderPermissionBadges,
@@ -125,6 +135,24 @@
       `;
     }
 
+    function analyticsCard(title, lines) {
+      return `
+        <div class="analytics-card">
+          <h3>${title}</h3>
+          <div class="analytics-list">${lines.join("<br>")}</div>
+        </div>
+      `;
+    }
+
+    function countByStatus(items, key = "status") {
+      const counts = {};
+      items.forEach((item) => {
+        const value = item[key] || "unknown";
+        counts[value] = (counts[value] || 0) + 1;
+      });
+      return counts;
+    }
+
     requireAuth(async (user) => {
       if (user.role === "customer") {
         window.location.href = "customer_dashboard.html";
@@ -136,14 +164,19 @@
 
       const company = await loadCompany(user.companyId);
 
-      const [leads, users, reps, companies, services, invoices] = await Promise.all([
+      const [leads, jobs, users, reps, technicians, companies, services, invoices] = await Promise.all([
         fetchCompanyCollection("leads", user.companyId).catch(() => []),
+        fetchCompanyCollection("jobs", user.companyId).catch(() => []),
         fetchUsersByCompany(user.companyId).catch(() => []),
         fetchActiveSalesReps(user.companyId).catch(() => []),
+        fetchActiveTechnicians(user.companyId).catch(() => []),
         user.role === "super_admin" ? fetchAllCollection("companies").catch(() => []) : Promise.resolve(company ? [company] : []),
         fetchAllCollection("services").catch(() => []),
         fetchCompanyCollection("invoices", user.companyId).catch(() => [])
       ]);
+
+      const leadCounts = countByStatus(leads);
+      const jobCounts = countByStatus(jobs);
 
       document.getElementById("permissionBadges").innerHTML = renderPermissionBadges(user);
       document.getElementById("accountSummary").innerHTML = renderRoleSummary(user);
@@ -151,7 +184,34 @@
       const heading = document.getElementById("dashHeading");
       const subtext = document.getElementById("dashSubtext");
       const statsGrid = document.getElementById("statsGrid");
+      const analyticsGrid = document.getElementById("analyticsGrid");
       const roleWorkspace = document.getElementById("roleWorkspace");
+
+      const analyticsCards = [
+        analyticsCard("Lead Funnel", [
+          `New: ${leadCounts.new || 0}`,
+          `Contacted: ${leadCounts.contacted || 0}`,
+          `Quoted: ${leadCounts.quoted || 0}`,
+          `Scheduled: ${leadCounts.scheduled || 0}`,
+          `Won: ${leadCounts.won || 0}`,
+          `Lost: ${leadCounts.lost || 0}`
+        ]),
+        analyticsCard("Job Pipeline", [
+          `Scheduled: ${jobCounts.scheduled || 0}`,
+          `In Progress: ${jobCounts.in_progress || 0}`,
+          `Completed: ${jobCounts.completed || 0}`,
+          `Cancelled: ${jobCounts.cancelled || 0}`
+        ]),
+        analyticsCard("Team Snapshot", [
+          `Users: ${users.length}`,
+          `Sales Reps: ${reps.length}`,
+          `Technicians: ${technicians.length}`,
+          `Services: ${services.length}`,
+          `Invoices: ${invoices.length}`
+        ])
+      ];
+
+      analyticsGrid.innerHTML = analyticsCards.join("");
 
       if (user.role === "super_admin") {
         heading.textContent = "Evaraos Parent Control";
@@ -159,67 +219,67 @@
 
         statsGrid.innerHTML = [
           statCard("Companies", companies.length),
-          statCard("Users In Current LLC", users.length),
-          statCard("Active Sales Reps", reps.length),
-          statCard("Invoices", invoices.length)
+          statCard("Leads", leads.length),
+          statCard("Jobs", jobs.length),
+          statCard("Users In Current LLC", users.length)
         ].join("");
 
         roleWorkspace.innerHTML = [
-          infoCard("Platform Authority", "You can oversee subsidiaries, users, staffing structure, and future expansion."),
+          infoCard("Platform Authority", "You can oversee subsidiaries, users, job flow, staffing structure, and future expansion."),
           infoCard("Current Company Context", company?.name || user.companyId),
-          infoCard("Future LLC Readiness", "Every new LLC can plug into the same SaaS using its own companyId and user hierarchy."),
+          infoCard("Lead to Job Engine", "Sales can now push qualified opportunities into scheduled jobs for operations."),
           infoCard("Permissions Snapshot", hasPermission(user, "all") ? "Full platform control is active." : "Limited.")
         ].join("");
       } else if (user.role === "admin") {
         heading.textContent = `${company?.name || "Company"} Admin Dashboard`;
-        subtext.textContent = "This is the business operations view for the LLC owner/admin. Manage people, leads, and company growth from here.";
+        subtext.textContent = "This is the LLC control center for approvals, staffing, leads, jobs, and operational performance.";
 
         statsGrid.innerHTML = [
           statCard("Users", users.length),
-          statCard("Active Sales Reps", reps.length),
           statCard("Leads", leads.length),
-          statCard("Services", services.length)
+          statCard("Jobs", jobs.length),
+          statCard("Technicians", technicians.length)
         ].join("");
 
         roleWorkspace.innerHTML = [
-          infoCard("Company Management", "You can manage staffing, leads, and day-to-day company operations."),
+          infoCard("Company Management", "Manage staffing, pending approvals, lead conversion, and day-to-day execution."),
+          infoCard("Job Oversight", "Use the Jobs page to monitor scheduled, in-progress, and completed work."),
           infoCard("Owner Link", company?.ownerName ? `${company.ownerName} | ${company.ownerEmail}` : "Owner information not found."),
-          infoCard("Internal Growth", "Use this structure to grow teams regionally and nationally under the same LLC."),
-          infoCard("Current Company", company?.name || user.companyId)
+          infoCard("Internal Growth", "Use this structure to grow teams regionally and nationally under the same LLC.")
         ].join("");
       } else if (user.role === "sales_rep") {
         heading.textContent = `${company?.name || "Company"} Sales Workspace`;
-        subtext.textContent = "This dashboard is focused on pipeline movement, customer communication, and converting leads into paying customers.";
+        subtext.textContent = "This dashboard is focused on lead movement, conversion, and clean handoff into scheduled jobs.";
 
         statsGrid.innerHTML = [
           statCard("Leads", leads.length),
-          statCard("Assigned Company Reps", reps.length),
-          statCard("Users In LLC", users.length),
-          statCard("Services", services.length)
+          statCard("Scheduled Jobs", jobCounts.scheduled || 0),
+          statCard("Won Leads", leadCounts.won || 0),
+          statCard("Quoted Leads", leadCounts.quoted || 0)
         ].join("");
 
         roleWorkspace.innerHTML = [
-          infoCard("Lead Pipeline", "Work the leads module, update statuses, and track sales activity."),
-          infoCard("Organization Chain", `You report into ${user.reportsTo || "not set"}.`),
-          infoCard("Sales Mission", "Focus on new appointments, conversions, and cleaner handoff to operations."),
-          infoCard("Company", company?.name || user.companyId)
+          infoCard("Pipeline Mission", "Convert leads into quoted, won, and scheduled work."),
+          infoCard("Lead → Job Flow", "Qualified opportunities should be converted into jobs for field execution."),
+          infoCard("Company", company?.name || user.companyId),
+          infoCard("Reporting Chain", `You report into ${user.reportsTo || "not set"}.`)
         ].join("");
       } else if (user.role === "technician") {
         heading.textContent = `${company?.name || "Company"} Technician Dashboard`;
-        subtext.textContent = "This dashboard is designed for job execution, service quality, and field updates.";
+        subtext.textContent = "This dashboard is designed for job execution, field updates, and service quality.";
 
         statsGrid.innerHTML = [
-          statCard("Services", services.length),
-          statCard("Users In LLC", users.length),
-          statCard("Invoices", invoices.length),
-          statCard("Leads", leads.length)
+          statCard("Jobs", jobs.length),
+          statCard("Scheduled", jobCounts.scheduled || 0),
+          statCard("In Progress", jobCounts.in_progress || 0),
+          statCard("Completed", jobCounts.completed || 0)
         ].join("");
 
         roleWorkspace.innerHTML = [
-          infoCard("Field Focus", "Job execution and service quality should live here as the technician module expands."),
-          infoCard("Visibility", "You should only see what supports field delivery and status updates."),
+          infoCard("Field Focus", "Stay focused on scheduled work, completion updates, and quality delivery."),
+          infoCard("Operations Visibility", "You should only see what supports execution and status updates."),
           infoCard("Company", company?.name || user.companyId),
-          infoCard("Growth Path", "Technicians can later promote into management or operations leadership.")
+          infoCard("Growth Path", "Technicians can later promote into operations leadership or management.")
         ].join("");
       } else {
         heading.textContent = `${company?.name || "Company"} Internal Dashboard`;
@@ -228,7 +288,7 @@
         statsGrid.innerHTML = [
           statCard("Users", users.length),
           statCard("Leads", leads.length),
-          statCard("Active Sales Reps", reps.length),
+          statCard("Jobs", jobs.length),
           statCard("Services", services.length)
         ].join("");
 
@@ -236,7 +296,7 @@
           infoCard("Company", company?.name || user.companyId),
           infoCard("Access", "Your role determines which modules and actions you can see."),
           infoCard("Hierarchy", `Organization Level ${user.organizationLevel || "—"}`),
-          infoCard("Permissions", "Your UI should stay focused on your job inside the company.")
+          infoCard("Execution", "The business now supports both lead conversion and job fulfillment.")
         ].join("");
       }
     });
