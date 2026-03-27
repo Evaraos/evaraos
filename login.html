@@ -22,9 +22,17 @@
         <p class="auth-subtext">Login to access Evaraos Inc</p>
 
         <input id="loginEmail" type="email" placeholder="Email">
-        <input id="loginPassword" type="password" placeholder="Password">
 
-        <button class="btn" onclick="login()">Login</button>
+        <div class="password-wrap">
+          <input id="loginPassword" type="password" placeholder="Password">
+          <button class="eye-toggle" type="button" onclick="togglePassword('loginPassword', this)">👁</button>
+        </div>
+
+        <div class="action-row">
+          <button class="btn" onclick="loginUser()">Login</button>
+          <button class="btn secondary" onclick="forgotPassword()">Forgot Password</button>
+        </div>
+
         <p id="loginMsg" class="auth-msg"></p>
       </div>
 
@@ -34,8 +42,18 @@
         <p class="auth-subtext">Join the Evaraos platform</p>
 
         <input id="signupName" type="text" placeholder="Full Name">
+        <input id="signupUsername" type="text" placeholder="Username (must be unique)">
         <input id="signupEmail" type="email" placeholder="Email">
-        <input id="signupPassword" type="password" placeholder="Password">
+
+        <div class="password-wrap">
+          <input id="signupPassword" type="password" placeholder="Password">
+          <button class="eye-toggle" type="button" onclick="togglePassword('signupPassword', this)">👁</button>
+        </div>
+
+        <div class="password-wrap">
+          <input id="signupPasswordConfirm" type="password" placeholder="Confirm Password">
+          <button class="eye-toggle" type="button" onclick="togglePassword('signupPasswordConfirm', this)">👁</button>
+        </div>
 
         <select id="signupRole">
           <option value="customer">Customer</option>
@@ -44,9 +62,13 @@
           <option value="manager">Manager</option>
           <option value="operations_coordinator">Operations Coordinator</option>
           <option value="hr">HR</option>
+          <option value="admin">Admin</option>
         </select>
 
-        <button class="btn" onclick="signup()">Create Account</button>
+        <button class="btn" onclick="signupUser()">Create Account</button>
+        <p class="auth-subtext" style="text-align:left;">
+          Staff signups require approval by an Admin or Super Admin before access is granted.
+        </p>
         <p id="signupMsg" class="auth-msg"></p>
       </div>
 
@@ -54,12 +76,19 @@
   </div>
 
   <script type="module">
-    import { signup as createAccount, login as loginAccount, getCurrentUserDoc } from "./assets/auth.js";
+    import { signup as createAccount, login as loginAccount, getCurrentUserDoc, resetPassword } from "./assets/auth.js";
     import { auth } from "./assets/firebase.js";
 
     function getDashboardPath(role) {
       return role === "customer" ? "customer_dashboard.html" : "dashboard.html";
     }
+
+    window.togglePassword = function(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const isPassword = input.type === "password";
+      input.type = isPassword ? "text" : "password";
+      btn.textContent = isPassword ? "🙈" : "👁";
+    };
 
     window.showAuthTab = function(tab) {
       const loginPanel = document.getElementById("loginPanel");
@@ -80,7 +109,7 @@
       }
     };
 
-    window.login = async function() {
+    window.loginUser = async function() {
       const email = document.getElementById("loginEmail").value.trim();
       const password = document.getElementById("loginPassword").value;
       const msg = document.getElementById("loginMsg");
@@ -108,29 +137,55 @@
       }
     };
 
-    window.signup = async function() {
+    window.forgotPassword = async function() {
+      const email = document.getElementById("loginEmail").value.trim();
+      const msg = document.getElementById("loginMsg");
+
+      if (!email) {
+        msg.textContent = "Enter your email first, then tap Forgot Password.";
+        return;
+      }
+
+      try {
+        await resetPassword(email);
+        msg.textContent = "Password reset email sent.";
+      } catch (e) {
+        msg.textContent = e.message || "Could not send reset email.";
+      }
+    };
+
+    window.signupUser = async function() {
       const name = document.getElementById("signupName").value.trim();
+      const username = document.getElementById("signupUsername").value.trim();
       const email = document.getElementById("signupEmail").value.trim();
       const password = document.getElementById("signupPassword").value;
+      const passwordConfirm = document.getElementById("signupPasswordConfirm").value;
       const role = document.getElementById("signupRole").value;
       const msg = document.getElementById("signupMsg");
 
       msg.textContent = "";
 
-      if (!name || !email || !password || !role) {
+      if (!name || !username || !email || !password || !passwordConfirm || !role) {
         msg.textContent = "Complete all sign up fields.";
         return;
       }
 
+      if (password !== passwordConfirm) {
+        msg.textContent = "Passwords do not match.";
+        return;
+      }
+
       try {
-        await createAccount(name, email, password, role);
-        msg.textContent = "Account created successfully.";
+        await createAccount(name, username, email, password, role);
+        msg.textContent = role === "customer"
+          ? "Account created successfully."
+          : "Staff account created and sent for approval.";
 
         setTimeout(() => {
           showAuthTab("login");
           document.getElementById("loginEmail").value = email;
           document.getElementById("loginPassword").value = "";
-        }, 800);
+        }, 900);
       } catch (e) {
         msg.textContent = e.message || "Sign up failed.";
       }
