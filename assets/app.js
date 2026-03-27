@@ -7,12 +7,73 @@ import {
   getDoc,
   addDoc,
   updateDoc,
+  deleteDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import { db } from "./firebase.js";
 import { listenAuth, logout } from "./auth.js";
 import { canAccess, getAllowedSections, getRoleLabel } from "./roles.js";
+
+export const SERVICE_LIBRARY = {
+  exterior: [
+    { id: "driveway_cleaning", label: "Driveway Cleaning", rate: 0.20, unit: "sqft" },
+    { id: "sidewalk_cleaning", label: "Sidewalk Cleaning", rate: 0.12, unit: "sqft" },
+    { id: "patio_cleaning", label: "Patio Cleaning", rate: 0.18, unit: "sqft" },
+    { id: "deck_cleaning", label: "Deck Cleaning", rate: 0.20, unit: "sqft" },
+    { id: "house_wash", label: "House Wash", rate: 0.25, unit: "sqft" },
+    { id: "fence_cleaning", label: "Fence Cleaning", rate: 12, unit: "panel" }
+  ],
+  trash_bin: [
+    { id: "one_bin_monthly", label: "1 Bin Monthly", flat: 25 },
+    { id: "two_bins_monthly", label: "2 Bins Monthly", flat: 45 },
+    { id: "three_plus_bins_monthly", label: "3+ Bins Monthly", flat: 60 },
+    { id: "one_time_bin_cleaning", label: "One-Time Bin Cleaning", flat: 30 }
+  ],
+  bundle: [
+    { id: "driveway_sidewalk_bundle", label: "Driveway + Sidewalk Bundle", rate: 0.28, unit: "sqft" },
+    { id: "full_exterior_bundle", label: "Full Exterior Package", rate: 0.38, unit: "sqft" },
+    { id: "house_driveway_patio_bundle", label: "House + Driveway + Patio Bundle", rate: 0.42, unit: "sqft" }
+  ]
+};
+
+export const ADD_ONS = [
+  { id: "deodorizing", label: "Deodorizing", flat: 10 },
+  { id: "rust_removal", label: "Rust Removal", flat: 25 },
+  { id: "oil_stain_removal", label: "Oil Stain Removal", flat: 35 },
+  { id: "mold_treatment", label: "Mold Treatment", flat: 20 },
+  { id: "sealing", label: "Sealing", flat: 60 }
+];
+
+export function getRoleDefaults(role) {
+  const map = {
+    super_admin: { organizationLevel: 1, permissions: ["all"], companyAccessLevel: "parent" },
+    admin: { organizationLevel: 2, permissions: ["manage_users", "approve", "full_company"], companyAccessLevel: "subsidiary" },
+    manager: { organizationLevel: 3, permissions: ["leads", "jobs", "customers"], companyAccessLevel: "subsidiary" },
+    operations_coordinator: { organizationLevel: 3, permissions: ["jobs", "customers"], companyAccessLevel: "subsidiary" },
+    hr: { organizationLevel: 3, permissions: ["users", "staff"], companyAccessLevel: "subsidiary" },
+    sales_rep: { organizationLevel: 4, permissions: ["leads", "convert"], companyAccessLevel: "subsidiary" },
+    technician: { organizationLevel: 5, permissions: ["jobs"], companyAccessLevel: "subsidiary" },
+    customer: { organizationLevel: 6, permissions: ["self"], companyAccessLevel: "subsidiary" }
+  };
+  return map[role] || map.customer;
+}
+
+export function calculateLeadEstimate(serviceCategory, serviceType, quantity, addOns = []) {
+  const qty = Number(quantity || 0);
+  const service = (SERVICE_LIBRARY[serviceCategory] || []).find((s) => s.id === serviceType);
+
+  let total = 0;
+  if (service?.rate) total += qty * service.rate;
+  if (service?.flat) total += service.flat;
+
+  addOns.forEach((addonId) => {
+    const addon = ADD_ONS.find((a) => a.id === addonId);
+    if (addon?.flat) total += addon.flat;
+  });
+
+  return Number(total.toFixed(2));
+}
 
 export async function loadBrandSettings() {
   try {
@@ -234,14 +295,22 @@ export async function createLead(data, user) {
     city: data.city || "",
     state: data.state || "",
     zip: data.zip || "",
-    serviceInterest: data.serviceInterest || "",
+    serviceCategory: data.serviceCategory || "",
+    serviceType: data.serviceType || "",
+    serviceInterest: data.serviceLabel || "",
+    addOns: data.addOns || [],
     leadSource: data.leadSource || "",
     preferredContactMethod: data.preferredContactMethod || "",
     estimatedSqFt: Number(data.estimatedSqFt || 0),
+    estimatedPrice: Number(data.estimatedPrice || 0),
     assignedRep: data.assignedRep || "",
     status: data.status || "new",
     notes: data.notes || "",
     appointmentDate: data.appointmentDate || "",
+    isArchived: false,
+    deleteRequested: false,
+    deleteRequestedBy: "",
+    deleteApprovedBy: "",
     createdBy: user.email || "",
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
@@ -257,16 +326,44 @@ export async function updateLead(leadId, data) {
     city: data.city || "",
     state: data.state || "",
     zip: data.zip || "",
-    serviceInterest: data.serviceInterest || "",
+    serviceCategory: data.serviceCategory || "",
+    serviceType: data.serviceType || "",
+    serviceInterest: data.serviceLabel || "",
+    addOns: data.addOns || [],
     leadSource: data.leadSource || "",
     preferredContactMethod: data.preferredContactMethod || "",
     estimatedSqFt: Number(data.estimatedSqFt || 0),
+    estimatedPrice: Number(data.estimatedPrice || 0),
     assignedRep: data.assignedRep || "",
     status: data.status || "new",
     notes: data.notes || "",
     appointmentDate: data.appointmentDate || "",
     updatedAt: serverTimestamp()
   });
+}
+
+export async function archiveLead(leadId, user) {
+  return updateDoc(doc(db, "leads", leadId), {
+    isArchived: true,
+    archivedBy: user.email || "",
+    updatedAt: serverTimestamp()
+  });
+}
+
+export async function requestDeleteLead(leadId, user) {
+  return updateDoc(doc(db, "leads", leadId), {
+    deleteRequested: true,
+    deleteRequestedBy: user.email || "",
+    updatedAt: serverTimestamp()
+  });
+}
+
+export async function approveDeleteLead(leadId, user) {
+  await updateDoc(doc(db, "leads", leadId), {
+    deleteApprovedBy: user.email || "",
+    updatedAt: serverTimestamp()
+  });
+  return deleteDoc(doc(db, "leads", leadId));
 }
 
 export async function convertLeadToJob(lead, data, user) {
@@ -286,6 +383,7 @@ export async function convertLeadToJob(lead, data, user) {
     scheduledDate: data.scheduledDate || "",
     scheduledTimeWindow: data.scheduledTimeWindow || "",
     estimatedSqFt: Number(lead.estimatedSqFt || 0),
+    estimatedPrice: Number(lead.estimatedPrice || 0),
     status: "scheduled",
     notes: data.notes || lead.notes || "",
     createdBy: user.email || "",
@@ -361,15 +459,24 @@ export async function updateCompany(companyId, data) {
 }
 
 export async function updateUserAdmin(userId, data) {
+  const defaults = getRoleDefaults(data.role);
+
   return updateDoc(doc(db, "users", userId), {
     name: data.name,
+    username: data.username,
     role: data.role,
     approvalStatus: data.approvalStatus,
     companyId: data.companyId,
     status: data.status,
-    organizationLevel: Number(data.organizationLevel),
-    permissions: data.permissions,
-    companyAccessLevel: data.companyAccessLevel
+    phone: data.phone || "",
+    address: data.address || "",
+    city: data.city || "",
+    state: data.state || "",
+    zip: data.zip || "",
+    organizationLevel: defaults.organizationLevel,
+    permissions: defaults.permissions,
+    companyAccessLevel: defaults.companyAccessLevel,
+    updatedAt: serverTimestamp()
   });
 }
 
@@ -392,6 +499,7 @@ export async function rejectUser(userId) {
 export async function updateOwnCustomerProfile(userId, data) {
   return updateDoc(doc(db, "users", userId), {
     name: data.name,
+    username: data.username,
     email: data.email,
     phone: data.phone || "",
     address: data.address || "",
