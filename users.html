@@ -5,6 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Users - Evaraos Inc</title>
   <link rel="stylesheet" href="assets/style.css">
+  <style>
+    .role-group{
+      margin-bottom:22px;
+    }
+    .role-group h3{
+      margin:0 0 12px;
+      font-size:20px;
+    }
+    .empty-group{
+      color:#8f97a6;
+      padding:14px 0;
+    }
+  </style>
 </head>
 <body class="app-shell">
   <header class="app-topbar" id="topbar"></header>
@@ -15,7 +28,7 @@
     <main class="main-panel">
       <section class="glass-card">
         <h1 style="margin-top:0;">Users & Approvals</h1>
-        <p class="muted">Approve users, assign roles, and control company access.</p>
+        <p class="muted">Approve users, assign roles, control company access, and view the organization by role.</p>
       </section>
 
       <section class="glass-card">
@@ -42,6 +55,12 @@
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
+          <select id="userCompanyAccessLevel">
+            <option value="subsidiary">Subsidiary</option>
+            <option value="parent">Parent</option>
+          </select>
+          <input id="userOrganizationLevel" type="number" placeholder="Organization Level">
+          <input id="userPermissions" placeholder="Permissions comma separated">
         </div>
 
         <div class="stack">
@@ -53,8 +72,8 @@
       </section>
 
       <section class="glass-card">
-        <h2 style="margin-top:0;">Users List</h2>
-        <div id="usersList" class="table"></div>
+        <h2 style="margin-top:0;">Users By Role</h2>
+        <div id="usersGroupedList" class="table"></div>
       </section>
     </main>
   </div>
