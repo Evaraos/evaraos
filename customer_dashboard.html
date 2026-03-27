@@ -44,16 +44,6 @@
       font-size:14px;
       line-height:1.6;
     }
-    .badge{
-      display:inline-flex;
-      padding:8px 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.07);
-      border:1px solid rgba(255,255,255,.10);
-      margin:0 8px 8px 0;
-      color:#ececec;
-      font-size:13px;
-    }
     .card-stack{
       display:grid;
       gap:16px;
@@ -101,22 +91,13 @@
       </section>
 
       <section class="glass-card">
-        <h2 style="margin-top:0;">Edit Profile</h2>
-        <div class="portfolio-grid">
-          <input id="profileName" placeholder="Full Name">
-          <input id="profileEmail" placeholder="Email">
-          <input id="profilePhone" placeholder="Phone">
-          <input id="profilePreferredContactMethod" placeholder="Preferred Contact Method">
-          <input id="profileAddress" placeholder="Address">
-          <input id="profileCity" placeholder="City">
-          <input id="profileState" placeholder="State">
-          <input id="profileZip" placeholder="Zip">
-          <input id="profilePhotoUrl" placeholder="Profile Picture URL">
+        <div class="action-row" style="justify-content:space-between;align-items:center;">
+          <div>
+            <h2 style="margin:0;">Profile</h2>
+            <div class="mini-muted">Edit only when you need to. Your profile stays clean by default.</div>
+          </div>
+          <button class="btn" id="openProfileEditBtn">Edit Profile</button>
         </div>
-        <div class="stack">
-          <button class="btn" id="saveProfileBtn">Save Profile</button>
-        </div>
-        <p id="profileMsg" class="status-text"></p>
       </section>
 
       <section class="glass-card">
@@ -127,7 +108,7 @@
       <section class="glass-card">
         <h2 style="margin-top:0;">Subscription & Termination Policy</h2>
         <div class="mini-muted">
-          Service removals and subscription cancellations may trigger termination fees depending on the service agreement and timing of cancellation.  
+          Service removals and subscription cancellations may trigger termination fees depending on the service agreement and timing of cancellation.
           Customers can request changes here, but billing-impacting changes should still be reviewed and confirmed by the company when required.
         </div>
       </section>
@@ -137,6 +118,32 @@
         <div id="customerSummary" class="mini-muted">Loading...</div>
       </section>
     </main>
+  </div>
+
+  <div class="modal-backdrop" id="profileModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 style="margin:0;">Edit Profile</h2>
+        <button class="modal-close" id="closeProfileModalBtn">Close</button>
+      </div>
+
+      <div class="portfolio-grid">
+        <input id="profileName" placeholder="Full Name">
+        <input id="profileEmail" placeholder="Email">
+        <input id="profilePhone" placeholder="Phone">
+        <input id="profilePreferredContactMethod" placeholder="Preferred Contact Method">
+        <input id="profileAddress" placeholder="Address">
+        <input id="profileCity" placeholder="City">
+        <input id="profileState" placeholder="State">
+        <input id="profileZip" placeholder="Zip">
+        <input id="profilePhotoUrl" placeholder="Profile Picture URL">
+      </div>
+
+      <div class="stack">
+        <button class="btn" id="saveProfileBtn">Save Profile</button>
+      </div>
+      <p id="profileMsg" class="status-text"></p>
+    </div>
   </div>
 
   <script type="module">
@@ -183,6 +190,14 @@
       `;
     }
 
+    function openModal(id) {
+      document.getElementById(id).classList.add("active");
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove("active");
+    }
+
     requireAuth(async (user) => {
       if (user.role !== "customer") {
         window.location.href = "dashboard.html";
@@ -205,7 +220,6 @@
       document.getElementById("customerCompany").textContent = company?.name || user.companyId;
 
       setProfileForm(user);
-
       document.getElementById("servicesList").innerHTML = services.map(serviceCard).join("");
 
       document.getElementById("customerSummary").innerHTML = `
@@ -215,6 +229,9 @@
         <strong>Reports To:</strong> ${user.reportsTo || "Not set"}<br>
         <strong>Permission Meaning:</strong> The permission <em>view_own_data</em> exists so customers only access their own profile, services, and customer-safe account information, while internal business tools stay hidden.
       `;
+
+      document.getElementById("openProfileEditBtn").addEventListener("click", () => openModal("profileModal"));
+      document.getElementById("closeProfileModalBtn").addEventListener("click", () => closeModal("profileModal"));
 
       document.getElementById("saveProfileBtn").addEventListener("click", async () => {
         const msg = document.getElementById("profileMsg");
@@ -237,7 +254,7 @@
             photoUrl: document.getElementById("profilePhotoUrl").value.trim()
           });
 
-          msg.textContent = "Profile updated successfully. Refresh once if you want to see top-card changes immediately.";
+          msg.textContent = "Profile updated successfully.";
         } catch (e) {
           msg.textContent = e.message || "Failed to update profile.";
         }
