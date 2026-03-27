@@ -27,48 +27,12 @@
 
     <main class="main-panel">
       <section class="glass-card">
-        <h1 style="margin-top:0;">Users & Approvals</h1>
-        <p class="muted">Approve users, assign roles, control company access, and view the organization by role.</p>
-      </section>
-
-      <section class="glass-card">
-        <h2 style="margin-top:0;">Edit User</h2>
-
-        <div class="form-grid">
-          <input id="userName" placeholder="Full Name">
-          <input id="userEmail" placeholder="Email" disabled>
-          <select id="userRole">
-            <option value="customer">Customer</option>
-            <option value="sales_rep">Sales Rep</option>
-            <option value="technician">Technician</option>
-            <option value="manager">Manager</option>
-            <option value="operations_coordinator">Operations Coordinator</option>
-            <option value="hr">HR</option>
-            <option value="admin">Admin</option>
-          </select>
-          <select id="userApprovalStatus">
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-          </select>
-          <input id="userCompanyId" placeholder="Company ID">
-          <select id="userStatus">
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-          <select id="userCompanyAccessLevel">
-            <option value="subsidiary">Subsidiary</option>
-            <option value="parent">Parent</option>
-          </select>
-          <input id="userOrganizationLevel" type="number" placeholder="Organization Level">
-          <input id="userPermissions" placeholder="Permissions comma separated">
+        <div class="action-row" style="justify-content:space-between;align-items:center;">
+          <div>
+            <h1 style="margin:0;">Users & Approvals</h1>
+            <p class="muted" style="margin:8px 0 0;">Approve users, assign roles, control company access, and view the organization by role.</p>
+          </div>
         </div>
-
-        <div class="stack">
-          <button class="btn" id="saveUserBtn">Save User</button>
-          <button class="btn secondary" id="cancelUserEditBtn" style="display:none;">Cancel Edit</button>
-        </div>
-
-        <p id="userMsg" class="status-text"></p>
       </section>
 
       <section class="glass-card">
@@ -76,6 +40,50 @@
         <div id="usersGroupedList" class="table"></div>
       </section>
     </main>
+  </div>
+
+  <div class="modal-backdrop" id="userModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 style="margin:0;">Edit User</h2>
+        <button class="modal-close" id="closeUserModalBtn">Close</button>
+      </div>
+
+      <div class="form-grid">
+        <input id="userName" placeholder="Full Name">
+        <input id="userEmail" placeholder="Email" disabled>
+        <select id="userRole">
+          <option value="customer">Customer</option>
+          <option value="sales_rep">Sales Rep</option>
+          <option value="technician">Technician</option>
+          <option value="manager">Manager</option>
+          <option value="operations_coordinator">Operations Coordinator</option>
+          <option value="hr">HR</option>
+          <option value="admin">Admin</option>
+        </select>
+        <select id="userApprovalStatus">
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+        </select>
+        <input id="userCompanyId" placeholder="Company ID">
+        <select id="userStatus">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        <select id="userCompanyAccessLevel">
+          <option value="subsidiary">Subsidiary</option>
+          <option value="parent">Parent</option>
+        </select>
+        <input id="userOrganizationLevel" type="number" placeholder="Organization Level">
+        <input id="userPermissions" placeholder="Permissions comma separated">
+      </div>
+
+      <div class="stack">
+        <button class="btn" id="saveUserBtn">Save User</button>
+      </div>
+
+      <p id="userMsg" class="status-text"></p>
+    </div>
   </div>
 
   <script type="module" src="assets/users.js"></script>
