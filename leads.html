@@ -17,7 +17,7 @@
         <div class="action-row" style="justify-content:space-between;align-items:center;">
           <div>
             <h1 style="margin:0;">Leads Module</h1>
-            <p class="muted" style="margin:8px 0 0;">Create, edit, and manage leads without cluttering the page.</p>
+            <p class="muted" style="margin:8px 0 0;">Create, edit, and convert leads into jobs.</p>
           </div>
           <button class="btn" id="openLeadModalBtn">Add Lead</button>
         </div>
@@ -149,6 +149,43 @@
       </div>
 
       <p id="leadMsg" class="status-text"></p>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="convertModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 style="margin:0;">Convert Lead to Job</h2>
+        <button class="modal-close" id="closeConvertModalBtn">Close</button>
+      </div>
+
+      <div class="form-grid">
+        <input id="convertCustomerName" placeholder="Customer Name" disabled>
+        <input id="convertServiceType" placeholder="Service Type">
+
+        <select id="convertAssignedTechnician">
+          <option value="">Assigned Technician</option>
+        </select>
+
+        <input id="convertScheduledDate" type="date">
+
+        <select id="convertScheduledTimeWindow">
+          <option value="">Time Window</option>
+          <option value="8am-10am">8am - 10am</option>
+          <option value="10am-12pm">10am - 12pm</option>
+          <option value="12pm-2pm">12pm - 2pm</option>
+          <option value="2pm-4pm">2pm - 4pm</option>
+          <option value="4pm-6pm">4pm - 6pm</option>
+        </select>
+      </div>
+
+      <textarea id="convertNotes" class="notes-field" placeholder="Job Notes"></textarea>
+
+      <div class="stack">
+        <button class="btn" id="confirmConvertBtn">Create Job</button>
+      </div>
+
+      <p id="convertMsg" class="status-text"></p>
     </div>
   </div>
 
