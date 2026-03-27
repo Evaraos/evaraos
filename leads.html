@@ -14,125 +14,13 @@
 
     <main class="main-panel">
       <section class="glass-card">
-        <h1 style="margin-top:0;">Leads Module</h1>
-        <p class="muted">Create and edit leads for sales and management workflows.</p>
-      </section>
-
-      <section class="glass-card">
-        <h2 style="margin-top:0;">Create / Edit Lead</h2>
-
-        <div class="form-grid">
-          <input id="leadFullName" placeholder="Full Name">
-          <input id="leadPhone" placeholder="Phone">
-          <input id="leadEmail" placeholder="Email">
-          <input id="leadAddress" placeholder="Address">
-          <input id="leadCity" placeholder="City">
-
-          <select id="leadState">
-            <option value="">State</option>
-            <option value="AL">Alabama</option>
-            <option value="AK">Alaska</option>
-            <option value="AZ">Arizona</option>
-            <option value="AR">Arkansas</option>
-            <option value="CA">California</option>
-            <option value="CO">Colorado</option>
-            <option value="CT">Connecticut</option>
-            <option value="DE">Delaware</option>
-            <option value="FL">Florida</option>
-            <option value="GA">Georgia</option>
-            <option value="HI">Hawaii</option>
-            <option value="ID">Idaho</option>
-            <option value="IL">Illinois</option>
-            <option value="IN">Indiana</option>
-            <option value="IA">Iowa</option>
-            <option value="KS">Kansas</option>
-            <option value="KY">Kentucky</option>
-            <option value="LA">Louisiana</option>
-            <option value="ME">Maine</option>
-            <option value="MD">Maryland</option>
-            <option value="MA">Massachusetts</option>
-            <option value="MI">Michigan</option>
-            <option value="MN">Minnesota</option>
-            <option value="MS">Mississippi</option>
-            <option value="MO">Missouri</option>
-            <option value="MT">Montana</option>
-            <option value="NE">Nebraska</option>
-            <option value="NV">Nevada</option>
-            <option value="NH">New Hampshire</option>
-            <option value="NJ">New Jersey</option>
-            <option value="NM">New Mexico</option>
-            <option value="NY">New York</option>
-            <option value="NC">North Carolina</option>
-            <option value="ND">North Dakota</option>
-            <option value="OH">Ohio</option>
-            <option value="OK">Oklahoma</option>
-            <option value="OR">Oregon</option>
-            <option value="PA">Pennsylvania</option>
-            <option value="RI">Rhode Island</option>
-            <option value="SC">South Carolina</option>
-            <option value="SD">South Dakota</option>
-            <option value="TN">Tennessee</option>
-            <option value="TX">Texas</option>
-            <option value="UT">Utah</option>
-            <option value="VT">Vermont</option>
-            <option value="VA">Virginia</option>
-            <option value="WA">Washington</option>
-            <option value="WV">West Virginia</option>
-            <option value="WI">Wisconsin</option>
-            <option value="WY">Wyoming</option>
-          </select>
-
-          <input id="leadZip" placeholder="Zip">
-          <input id="leadServiceInterest" placeholder="Service Interest">
-
-          <select id="leadSource">
-            <option value="">Lead Source</option>
-            <option value="website">🌐 Website</option>
-            <option value="referral">🤝 Referral</option>
-            <option value="door_to_door">🚪 Door to Door</option>
-            <option value="facebook">📘 Facebook</option>
-            <option value="instagram">📸 Instagram</option>
-            <option value="x_twitter">🐦 X / Twitter</option>
-            <option value="tiktok">🎵 TikTok</option>
-            <option value="google">🔎 Google</option>
-            <option value="yelp">⭐ Yelp</option>
-            <option value="phone_call">📞 Phone Call</option>
-            <option value="other">➕ Other</option>
-          </select>
-
-          <select id="leadPreferredContactMethod">
-            <option value="">Preferred Contact Method</option>
-            <option value="call">Call</option>
-            <option value="text">Text</option>
-            <option value="email">Email</option>
-          </select>
-
-          <input id="leadEstimatedSqFt" type="number" placeholder="Estimated Sq Ft">
-
-          <select id="leadAssignedRep">
-            <option value="">Assigned Sales Rep</option>
-          </select>
-
-          <select id="leadStatus">
-            <option value="new">New</option>
-            <option value="contacted">Contacted</option>
-            <option value="quoted">Quoted</option>
-            <option value="scheduled">Scheduled</option>
-            <option value="won">Won</option>
-            <option value="lost">Lost</option>
-          </select>
-
-          <input id="leadAppointmentDate" type="date">
+        <div class="action-row" style="justify-content:space-between;align-items:center;">
+          <div>
+            <h1 style="margin:0;">Leads Module</h1>
+            <p class="muted" style="margin:8px 0 0;">Create, edit, and manage leads without cluttering the page.</p>
+          </div>
+          <button class="btn" id="openLeadModalBtn">Add Lead</button>
         </div>
-
-        <textarea id="leadNotes" class="notes-field" placeholder="Notes"></textarea>
-
-        <div class="stack">
-          <button class="btn" id="saveLeadBtn">Save Lead</button>
-          <button class="btn secondary" id="cancelEditBtn" style="display:none;">Cancel Edit</button>
-        </div>
-
-        <p id="leadMsg" class="status-text"></p>
       </section>
 
       <section class="glass-card">
@@ -140,6 +28,128 @@
         <div id="leadsList" class="table"></div>
       </section>
     </main>
+  </div>
+
+  <div class="modal-backdrop" id="leadModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 style="margin:0;">Create / Edit Lead</h2>
+        <button class="modal-close" id="closeLeadModalBtn">Close</button>
+      </div>
+
+      <div class="form-grid">
+        <input id="leadFullName" placeholder="Full Name">
+        <input id="leadPhone" placeholder="Phone">
+        <input id="leadEmail" placeholder="Email">
+        <input id="leadAddress" placeholder="Address">
+        <input id="leadCity" placeholder="City">
+
+        <select id="leadState">
+          <option value="">State</option>
+          <option value="AL">Alabama</option>
+          <option value="AK">Alaska</option>
+          <option value="AZ">Arizona</option>
+          <option value="AR">Arkansas</option>
+          <option value="CA">California</option>
+          <option value="CO">Colorado</option>
+          <option value="CT">Connecticut</option>
+          <option value="DE">Delaware</option>
+          <option value="FL">Florida</option>
+          <option value="GA">Georgia</option>
+          <option value="HI">Hawaii</option>
+          <option value="ID">Idaho</option>
+          <option value="IL">Illinois</option>
+          <option value="IN">Indiana</option>
+          <option value="IA">Iowa</option>
+          <option value="KS">Kansas</option>
+          <option value="KY">Kentucky</option>
+          <option value="LA">Louisiana</option>
+          <option value="ME">Maine</option>
+          <option value="MD">Maryland</option>
+          <option value="MA">Massachusetts</option>
+          <option value="MI">Michigan</option>
+          <option value="MN">Minnesota</option>
+          <option value="MS">Mississippi</option>
+          <option value="MO">Missouri</option>
+          <option value="MT">Montana</option>
+          <option value="NE">Nebraska</option>
+          <option value="NV">Nevada</option>
+          <option value="NH">New Hampshire</option>
+          <option value="NJ">New Jersey</option>
+          <option value="NM">New Mexico</option>
+          <option value="NY">New York</option>
+          <option value="NC">North Carolina</option>
+          <option value="ND">North Dakota</option>
+          <option value="OH">Ohio</option>
+          <option value="OK">Oklahoma</option>
+          <option value="OR">Oregon</option>
+          <option value="PA">Pennsylvania</option>
+          <option value="RI">Rhode Island</option>
+          <option value="SC">South Carolina</option>
+          <option value="SD">South Dakota</option>
+          <option value="TN">Tennessee</option>
+          <option value="TX">Texas</option>
+          <option value="UT">Utah</option>
+          <option value="VT">Vermont</option>
+          <option value="VA">Virginia</option>
+          <option value="WA">Washington</option>
+          <option value="WV">West Virginia</option>
+          <option value="WI">Wisconsin</option>
+          <option value="WY">Wyoming</option>
+        </select>
+
+        <input id="leadZip" placeholder="Zip">
+        <input id="leadServiceInterest" placeholder="Service Interest">
+
+        <select id="leadSource">
+          <option value="">Lead Source</option>
+          <option value="website">🌐 Website</option>
+          <option value="referral">🤝 Referral</option>
+          <option value="door_to_door">🚪 Door to Door</option>
+          <option value="facebook">📘 Facebook</option>
+          <option value="instagram">📸 Instagram</option>
+          <option value="x_twitter">🐦 X / Twitter</option>
+          <option value="tiktok">🎵 TikTok</option>
+          <option value="google">🔎 Google</option>
+          <option value="yelp">⭐ Yelp</option>
+          <option value="phone_call">📞 Phone Call</option>
+          <option value="other">➕ Other</option>
+        </select>
+
+        <select id="leadPreferredContactMethod">
+          <option value="">Preferred Contact Method</option>
+          <option value="call">Call</option>
+          <option value="text">Text</option>
+          <option value="email">Email</option>
+        </select>
+
+        <input id="leadEstimatedSqFt" type="number" placeholder="Estimated Sq Ft">
+
+        <select id="leadAssignedRep">
+          <option value="">Assigned Sales Rep</option>
+        </select>
+
+        <select id="leadStatus">
+          <option value="new">New</option>
+          <option value="contacted">Contacted</option>
+          <option value="quoted">Quoted</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="won">Won</option>
+          <option value="lost">Lost</option>
+        </select>
+
+        <input id="leadAppointmentDate" type="date">
+      </div>
+
+      <textarea id="leadNotes" class="notes-field" placeholder="Notes"></textarea>
+
+      <div class="stack">
+        <button class="btn" id="saveLeadBtn">Save Lead</button>
+        <button class="btn secondary" id="cancelLeadEditBtn" style="display:none;">Cancel Edit</button>
+      </div>
+
+      <p id="leadMsg" class="status-text"></p>
+    </div>
   </div>
 
   <script type="module" src="assets/leads.js"></script>
