@@ -4,6 +4,7 @@ import {
   fetchCompanyCollection,
   fetchActiveSalesReps,
   fetchActiveTechnicians,
+  fetchUsersByCompany,
   renderSidebar,
   roleGuard,
   createLead,
@@ -23,6 +24,7 @@ let convertingLeadId = null;
 let currentSalesReps = [];
 let currentTechnicians = [];
 let currentLeads = [];
+let currentUsers = [];
 
 function formatDate(value) {
   if (!value) return "—";
@@ -170,14 +172,29 @@ function prettySource(value) {
   return map[value] || "—";
 }
 
-function repName(value) {
-  const rep = currentSalesReps.find((r) => r.id === value);
-  return rep ? rep.fullName : "—";
+function findUserById(id) {
+  return currentUsers.find((u) => u.id === id) || null;
 }
 
-function techName(value) {
-  const tech = currentTechnicians.find((r) => r.id === value);
-  return tech ? (tech.name || tech.email) : "—";
+function formatHandleFromUser(user) {
+  return user?.handle || (user?.username ? `@${user.username}` : "@user");
+}
+
+function formatDisplayNameFromUser(user) {
+  return user?.displayUsername || user?.username || user?.name || "User";
+}
+
+function repName(value) {
+  const rep = findUserById(value);
+  if (!rep) return "—";
+  return `${rep.name || formatDisplayNameFromUser(rep)} • ${formatHandleFromUser(rep)}`;
+}
+
+function creatorName(email) {
+  if (!email) return "—";
+  const creator = currentUsers.find((u) => u.email === email);
+  if (!creator) return email;
+  return `${creator.name || formatDisplayNameFromUser(creator)} • ${formatHandleFromUser(creator)}`;
 }
 
 function formatAddOns(addOns = []) {
@@ -191,7 +208,11 @@ async function loadAssignedRepOptions() {
 
   select.innerHTML = `
     <option value="">Assigned Sales Rep</option>
-    ${currentSalesReps.map((rep) => `<option value="${rep.id}">${rep.fullName}</option>`).join("")}
+    ${currentSalesReps.map((rep) => {
+      const handle = rep.handle || (rep.username ? `@${rep.username}` : "@user");
+      const label = rep.name || rep.displayUsername || rep.username || rep.email;
+      return `<option value="${rep.id}">${label} • ${handle}</option>`;
+    }).join("")}
   `;
 }
 
@@ -201,7 +222,11 @@ async function loadTechnicianOptions() {
 
   select.innerHTML = `
     <option value="">Assigned Technician</option>
-    ${currentTechnicians.map((tech) => `<option value="${tech.id}">${tech.name || tech.email}</option>`).join("")}
+    ${currentTechnicians.map((tech) => {
+      const handle = tech.handle || (tech.username ? `@${tech.username}` : "@user");
+      const label = tech.name || tech.displayUsername || tech.username || tech.email;
+      return `<option value="${tech.id}">${label} • ${handle}</option>`;
+    }).join("")}
   `;
 }
 
@@ -255,10 +280,10 @@ async function renderLeads() {
           </button>
         </div>
         <div class="meta-line">
+          Created By: ${creatorName(lead.createdBy)}<br>
           Created: ${formatDate(lead.createdAt)}<br>
           Updated: ${formatDate(lead.updatedAt)}<br>
-          Job: ${lead.convertedToJobId || "—"}<br>
-          Delete Requested: ${lead.deleteRequested ? "Yes" : "No"}
+          Job: ${lead.convertedToJobId || "—"}
         </div>
       </div>
     </div>
@@ -335,6 +360,7 @@ requireAuth(async (user) => {
   await bindTopbar(user);
   document.getElementById("sidebar").innerHTML = renderSidebar(user.role, "leads");
 
+  currentUsers = await fetchUsersByCompany(user.companyId);
   await loadAssignedRepOptions();
   await loadTechnicianOptions();
   refreshServiceTypeOptions();
