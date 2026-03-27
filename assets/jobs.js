@@ -72,6 +72,10 @@ function repLabel(job) {
   return `${rep.name || formatDisplayNameFromUser(rep)} • ${formatHandleFromUser(rep)}`;
 }
 
+function statusClass(status) {
+  return `status-${status || "scheduled"}`;
+}
+
 function fillJobForm(job) {
   document.getElementById("jobCustomerName").value = job.customerName || "";
   document.getElementById("jobCustomerPhone").value = job.customerPhone || "";
@@ -114,42 +118,68 @@ async function renderJobs() {
   }
 
   root.innerHTML = currentJobs.map((job) => `
-    <div class="row">
-      <div>
-        <strong>${job.customerName || "Unnamed Job"}</strong><br>
-        <span class="muted">${job.serviceType || "No service type"}</span>
-        <div class="job-meta-line">
-          Customer: ${job.customerPhone || "No phone"}<br>
-          ${job.customerEmail || "No email"}
+    <div class="pipeline-card">
+      <div class="pipeline-head">
+        <div>
+          <h3 class="pipeline-name">${job.customerName || "Unnamed Job"}</h3>
+          <div class="pipeline-sub">${job.serviceType || "No service type"}</div>
+        </div>
+
+        <div class="badge-row">
+          <span class="status-badge ${statusClass(job.status)}">${(job.status || "scheduled").replaceAll("_", " ")}</span>
         </div>
       </div>
 
       <div>
-        ${job.address || "No address"}<br>
-        <span class="muted">${job.city || ""} ${job.state || ""} ${job.zip || ""}</span>
-        <div class="job-meta-line">
-          Date: ${job.scheduledDate || "—"}<br>
-          Window: ${job.scheduledTimeWindow || "—"}<br>
-          Status: ${job.status || "scheduled"}
+        <span class="identity-chip">Tech: ${technicianLabel(job.assignedTechnician)}</span>
+        <span class="identity-chip">Rep: ${repLabel(job)}</span>
+        <span class="identity-chip">Created By: ${createdByLabel(job)}</span>
+      </div>
+
+      <div class="pipeline-grid">
+        <div class="pipeline-box">
+          <div class="pipeline-label">Customer</div>
+          <div class="pipeline-value">
+            ${job.customerPhone || "No phone"}<br>
+            ${job.customerEmail || "No email"}
+          </div>
+        </div>
+
+        <div class="pipeline-box">
+          <div class="pipeline-label">Location</div>
+          <div class="pipeline-value">
+            ${job.address || "No address"}<br>
+            ${job.city || ""} ${job.state || ""} ${job.zip || ""}
+          </div>
+        </div>
+
+        <div class="pipeline-box">
+          <div class="pipeline-label">Schedule</div>
+          <div class="pipeline-value">
+            Date: ${job.scheduledDate || "—"}<br>
+            Window: ${job.scheduledTimeWindow || "—"}<br>
+            Status: ${(job.status || "scheduled").replaceAll("_", " ")}
+          </div>
+        </div>
+
+        <div class="pipeline-box">
+          <div class="pipeline-label">Estimate</div>
+          <div class="pipeline-value">
+            Sq Ft: ${job.estimatedSqFt || 0}<br>
+            Price: $${Number(job.estimatedPrice || 0).toFixed(2)}<br>
+            Lead ID: ${job.sourceLeadId || "—"}
+          </div>
         </div>
       </div>
 
-      <div>
-        <div class="identity-chip">Tech: ${technicianLabel(job.assignedTechnician)}</div>
-        <div class="identity-chip">Rep: ${repLabel(job)}</div>
-        <div class="job-meta-line">
-          Sq Ft: ${job.estimatedSqFt || 0}<br>
-          Price: $${Number(job.estimatedPrice || 0).toFixed(2)}
-        </div>
-      </div>
-
-      <div>
+      <div class="pipeline-actions">
         <button class="btn secondary edit-job-btn" data-id="${job.id}">Edit</button>
-        <div class="job-meta-line">
-          Created By: ${createdByLabel(job)}<br>
-          Created: ${formatDate(job.createdAt)}<br>
-          Updated: ${formatDate(job.updatedAt)}
-        </div>
+      </div>
+
+      <div class="meta-line">
+        Created: ${formatDate(job.createdAt)}<br>
+        Updated: ${formatDate(job.updatedAt)}<br>
+        Notes: ${job.notes || "—"}
       </div>
     </div>
   `).join("");
