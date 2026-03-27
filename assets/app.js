@@ -119,6 +119,23 @@ export async function fetchUsersByCompany(companyId) {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
+export async function fetchPendingUsersByCompany(companyId, includeAll = false) {
+  let qRef;
+
+  if (includeAll) {
+    qRef = query(collection(db, "users"), where("approvalStatus", "==", "pending"));
+  } else {
+    qRef = query(
+      collection(db, "users"),
+      where("companyId", "==", companyId),
+      where("approvalStatus", "==", "pending")
+    );
+  }
+
+  const snap = await getDocs(qRef);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
 export async function fetchActiveSalesReps(companyId) {
   const q = query(
     collection(db, "sales_reps"),
@@ -308,6 +325,22 @@ export async function updateUserAdmin(userId, data) {
     organizationLevel: Number(data.organizationLevel),
     permissions: data.permissions,
     companyAccessLevel: data.companyAccessLevel
+  });
+}
+
+export async function approveUser(userId) {
+  return updateDoc(doc(db, "users", userId), {
+    approvalStatus: "approved",
+    status: "active",
+    updatedAt: serverTimestamp()
+  });
+}
+
+export async function rejectUser(userId) {
+  return updateDoc(doc(db, "users", userId), {
+    approvalStatus: "rejected",
+    status: "inactive",
+    updatedAt: serverTimestamp()
   });
 }
 
