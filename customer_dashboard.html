@@ -16,12 +16,6 @@
       grid-template-columns:repeat(2,1fr);
       gap:16px;
     }
-    .portfolio-card{
-      padding:20px;
-      border-radius:24px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
-    }
     .profile-shell{
       display:flex;
       gap:16px;
@@ -129,7 +123,7 @@
 
             <div class="quick-actions">
               <button class="btn" id="openProfileEditBtn">Edit Profile</button>
-              <button class="btn secondary" id="viewMyDataBtn">My Account</button>
+              <button class="btn secondary" id="openAccountSecurityBtn">Account & Security</button>
               <button class="btn secondary" id="jumpToServicesBtn">My Services</button>
             </div>
           </div>
@@ -147,27 +141,9 @@
         </div>
       </section>
 
-      <section class="glass-card" id="myAccountSection">
-        <div class="action-row" style="justify-content:space-between;align-items:center;">
-          <div>
-            <h2 style="margin:0;">My Account</h2>
-            <div class="mini-muted">Your customer-only information lives here. No internal staff tools are shown.</div>
-          </div>
-          <button class="btn" id="openProfileEditBtnSecondary">Edit Profile</button>
-        </div>
-      </section>
-
       <section class="glass-card" id="myServicesSection">
         <h2 style="margin-top:0;">My Services</h2>
         <div id="servicesList" class="card-stack"></div>
-      </section>
-
-      <section class="glass-card">
-        <h2 style="margin-top:0;">Subscription & Termination Policy</h2>
-        <div class="mini-muted">
-          Service removals and subscription cancellations may trigger termination fees depending on the service agreement and timing of cancellation.
-          Customers can request changes here, but billing-impacting changes should still be reviewed and confirmed by the company when required.
-        </div>
       </section>
 
       <section class="glass-card">
@@ -194,6 +170,7 @@
 
       <div class="portfolio-grid">
         <input id="profileName" placeholder="Full Name">
+        <input id="profileUsername" placeholder="Username">
         <input id="profileEmail" placeholder="Email">
         <input id="profilePhone" placeholder="Phone">
         <input id="profilePreferredContactMethod" placeholder="Preferred Contact Method">
@@ -264,6 +241,36 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="accountSecurityModal">
+    <div class="modal-card" style="max-width:640px;">
+      <div class="modal-head">
+        <h2 style="margin:0;">Account & Security</h2>
+        <button class="modal-close" id="closeAccountSecurityModalBtn">Close</button>
+      </div>
+
+      <div class="portfolio-grid">
+        <input id="securityUsername" placeholder="Username">
+
+        <div></div>
+
+        <div class="password-wrap" style="position:relative;">
+          <input id="currentPassword" type="password" placeholder="Current Password" style="padding-right:54px;">
+          <button class="eye-toggle" type="button" id="toggleCurrentPasswordBtn">👁</button>
+        </div>
+
+        <div class="password-wrap" style="position:relative;">
+          <input id="newPassword" type="password" placeholder="New Password" style="padding-right:54px;">
+          <button class="eye-toggle" type="button" id="toggleNewPasswordBtn">👁</button>
+        </div>
+      </div>
+
+      <div class="stack">
+        <button class="btn" id="saveSecurityBtn">Save Changes</button>
+      </div>
+      <p id="securityMsg" class="status-text"></p>
+    </div>
+  </div>
+
   <script type="module">
     import {
       bindTopbar,
@@ -274,6 +281,7 @@
       fetchCustomerServices,
       hasPermission
     } from "./assets/app.js";
+    import { updateOwnUsername, changeOwnPassword } from "./assets/auth.js";
 
     function initials(name) {
       const parts = (name || "").trim().split(" ").filter(Boolean);
@@ -292,7 +300,6 @@
 
     function setModalAvatar(user, previewUrl = "") {
       const modalAvatarButton = document.getElementById("modalAvatarButton");
-      const modalAvatarFallback = document.getElementById("modalAvatarFallback");
 
       if (previewUrl) {
         modalAvatarButton.innerHTML = `
@@ -317,6 +324,7 @@
 
     function setProfileForm(user) {
       document.getElementById("profileName").value = user.name || "";
+      document.getElementById("profileUsername").value = user.username || "";
       document.getElementById("profileEmail").value = user.email || "";
       document.getElementById("profilePhone").value = user.phone || "";
       document.getElementById("profilePreferredContactMethod").value = user.preferredContactMethod || "";
@@ -332,10 +340,7 @@
           <strong>${service.name}</strong><br>
           <span class="mini-muted">Status: ${service.status}</span><br>
           <span class="mini-muted">Billing: ${service.billingType}</span><br>
-          <span class="mini-muted">${service.cancellationPolicy}</span><br><br>
-          <button class="btn secondary" ${service.canRequestChanges ? "" : "disabled"}>
-            ${service.status === "active" ? "Request Removal / Cancellation" : "Request Add Service"}
-          </button>
+          <span class="mini-muted">${service.cancellationPolicy}</span>
         </div>
       `;
     }
@@ -355,6 +360,13 @@
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
+    }
+
+    function togglePasswordField(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const isPassword = input.type === "password";
+      input.type = isPassword ? "text" : "password";
+      btn.textContent = isPassword ? "🙈" : "👁";
     }
 
     function scrollToSection(id) {
@@ -384,6 +396,7 @@
 
       setProfileForm(user);
       setModalAvatar(user);
+      document.getElementById("securityUsername").value = user.username || "";
 
       document.getElementById("servicesList").innerHTML = services.map(serviceCard).join("");
 
@@ -392,22 +405,30 @@
         <strong>Username:</strong> ${user.username || "—"}<br>
         <strong>Company Access Level:</strong> ${user.companyAccessLevel}<br>
         <strong>Organization Level:</strong> ${user.organizationLevel}<br>
-        <strong>Reports To:</strong> ${user.reportsTo || "Not set"}<br>
-        <strong>My Account:</strong> Use the My Account button to jump directly to your personal customer information and keep your profile updated.
+        <strong>Reports To:</strong> ${user.reportsTo || "Not set"}
       `;
 
-      const openProfile = () => openModal("profileModal");
+      document.getElementById("openProfileEditBtn").addEventListener("click", () => {
+        openModal("profileModal");
+      });
 
-      document.getElementById("openProfileEditBtn").addEventListener("click", openProfile);
-      document.getElementById("openProfileEditBtnSecondary").addEventListener("click", openProfile);
-      document.getElementById("closeProfileModalBtn").addEventListener("click", () => closeModal("profileModal"));
-
-      document.getElementById("viewMyDataBtn").addEventListener("click", () => {
-        scrollToSection("myAccountSection");
+      document.getElementById("openAccountSecurityBtn").addEventListener("click", () => {
+        openModal("accountSecurityModal");
       });
 
       document.getElementById("jumpToServicesBtn").addEventListener("click", () => {
         scrollToSection("myServicesSection");
+      });
+
+      document.getElementById("closeProfileModalBtn").addEventListener("click", () => closeModal("profileModal"));
+      document.getElementById("closeAccountSecurityModalBtn").addEventListener("click", () => closeModal("accountSecurityModal"));
+
+      document.getElementById("toggleCurrentPasswordBtn").addEventListener("click", function() {
+        togglePasswordField("currentPassword", this);
+      });
+
+      document.getElementById("toggleNewPasswordBtn").addEventListener("click", function() {
+        togglePasswordField("newPassword", this);
       });
 
       document.addEventListener("change", async (event) => {
@@ -422,7 +443,7 @@
       document.getElementById("saveProfileBtn").addEventListener("click", async () => {
         const msg = document.getElementById("profileMsg");
 
-        if (!hasPermission(user, "view_own_data")) {
+        if (!hasPermission(user, "self")) {
           msg.textContent = "Your account does not have permission to edit profile data.";
           return;
         }
@@ -438,6 +459,7 @@
 
           await updateOwnCustomerProfile(user.uid || user.id, {
             name: document.getElementById("profileName").value.trim(),
+            username: document.getElementById("profileUsername").value.trim().toLowerCase(),
             email: document.getElementById("profileEmail").value.trim(),
             phone: document.getElementById("profilePhone").value.trim(),
             preferredContactMethod: document.getElementById("profilePreferredContactMethod").value.trim(),
@@ -448,9 +470,32 @@
             photoUrl
           });
 
-          msg.textContent = "Profile updated successfully. Refresh once to see updated header/profile image immediately.";
+          msg.textContent = "Profile updated successfully.";
         } catch (e) {
           msg.textContent = e.message || "Failed to update profile.";
+        }
+      });
+
+      document.getElementById("saveSecurityBtn").addEventListener("click", async () => {
+        const msg = document.getElementById("securityMsg");
+        const newUsername = document.getElementById("securityUsername").value.trim().toLowerCase();
+        const currentPassword = document.getElementById("currentPassword").value;
+        const newPassword = document.getElementById("newPassword").value;
+
+        msg.textContent = "";
+
+        try {
+          if (newUsername && newUsername !== (user.username || "").toLowerCase()) {
+            await updateOwnUsername(user.uid || user.id, newUsername);
+          }
+
+          if (currentPassword || newPassword) {
+            await changeOwnPassword(currentPassword, newPassword);
+          }
+
+          msg.textContent = "Account settings updated successfully.";
+        } catch (e) {
+          msg.textContent = e.message || "Failed to update account settings.";
         }
       });
     });
