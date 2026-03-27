@@ -28,6 +28,30 @@
       50%{text-shadow:0 0 18px rgba(227,6,19,.85);}
       100%{text-shadow:0 0 0 rgba(227,6,19,0);}
     }
+    .username-feedback{
+      margin:8px 0 10px;
+      color:#b8c0d0;
+      font-size:13px;
+      min-height:20px;
+    }
+    .suggestions-wrap{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin:6px 0 12px;
+    }
+    .suggestion-chip{
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      border-radius:999px;
+      padding:8px 12px;
+      cursor:pointer;
+      font-size:13px;
+    }
+    .suggestion-chip:hover{
+      background:rgba(255,255,255,.10);
+    }
   </style>
 </head>
 <body class="auth-page">
@@ -61,9 +85,9 @@
         <div id="loginPanel">
           <img src="assets/img/evaraos_logo.png" class="auth-logo" alt="Evaraos logo">
           <h2 style="text-align:center;margin:0 0 8px;">Welcome Back</h2>
-          <p class="auth-subtext">Login with your username</p>
+          <p class="auth-subtext">Login with your username or @handle</p>
 
-          <input id="loginUsername" type="text" placeholder="Username">
+          <input id="loginUsername" type="text" placeholder="Username or @handle">
 
           <div class="password-wrap">
             <input id="loginPassword" type="password" placeholder="Password">
@@ -84,10 +108,14 @@
         <div id="signupPanel" style="display:none;">
           <img src="assets/img/evaraos_logo.png" class="auth-logo" alt="Evaraos logo">
           <h2 style="text-align:center;margin:0 0 8px;">Create Account</h2>
-          <p class="auth-subtext">Join the Evaraos platform</p>
+          <p class="auth-subtext">Choose your @handle</p>
 
           <input id="signupName" type="text" placeholder="Full Name">
-          <input id="signupUsername" type="text" placeholder="Username (must be unique)">
+          <input id="signupUsername" type="text" placeholder="Username">
+
+          <div id="usernameFeedback" class="username-feedback"></div>
+          <div id="usernameSuggestions" class="suggestions-wrap"></div>
+
           <input id="signupEmail" type="email" placeholder="Email">
 
           <div class="password-wrap">
@@ -141,7 +169,11 @@
       signup as createAccount,
       loginWithUsername,
       getCurrentUserDoc,
-      resetPassword
+      resetPassword,
+      usernameExists,
+      generateUsernameSuggestions,
+      normalizeUsernameInput,
+      buildUserIdentity
     } from "./assets/auth.js";
     import { auth } from "./assets/firebase.js";
 
@@ -155,6 +187,56 @@
 
     function closeModal(id) {
       document.getElementById(id).classList.remove("active");
+    }
+
+    function renderSuggestions(items) {
+      const root = document.getElementById("usernameSuggestions");
+      root.innerHTML = items.map((item) => `
+        <button type="button" class="suggestion-chip" data-username="${item.username}">
+          ${item.handle}
+        </button>
+      `).join("");
+
+      root.querySelectorAll(".suggestion-chip").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.getElementById("signupUsername").value = btn.dataset.username;
+          document.getElementById("usernameFeedback").textContent = `Selected ${"@" + btn.dataset.username}`;
+          root.innerHTML = "";
+        });
+      });
+    }
+
+    async function checkUsernameLive() {
+      const raw = document.getElementById("signupUsername").value;
+      const clean = normalizeUsernameInput(raw);
+      const feedback = document.getElementById("usernameFeedback");
+      const suggestionsRoot = document.getElementById("usernameSuggestions");
+
+      if (!clean) {
+        feedback.textContent = "";
+        suggestionsRoot.innerHTML = "";
+        return;
+      }
+
+      const identity = buildUserIdentity(clean);
+
+      if (identity.username.length < 3) {
+        feedback.textContent = "Username must be at least 3 characters.";
+        suggestionsRoot.innerHTML = "";
+        return;
+      }
+
+      const taken = await usernameExists(identity.username);
+
+      if (!taken) {
+        feedback.textContent = `${identity.handle} is available`;
+        suggestionsRoot.innerHTML = "";
+        return;
+      }
+
+      feedback.textContent = `${identity.handle} is already taken`;
+      const suggestions = await generateUsernameSuggestions(identity.username);
+      renderSuggestions(suggestions);
     }
 
     window.togglePassword = function(inputId, btn) {
@@ -234,9 +316,11 @@
 
       try {
         await createAccount(name, username, email, password, role);
+        const identity = buildUserIdentity(username);
+
         msg.textContent = role === "customer"
-          ? "Account created successfully."
-          : "Account pending admin approval.";
+          ? `Account created successfully as ${identity.handle}.`
+          : `Account pending admin approval as ${identity.handle}.`;
 
         setTimeout(() => showAuthTab("login"), 900);
       } catch (e) {
@@ -274,6 +358,8 @@
         msg.textContent = e.message || "Error sending reset email.";
       }
     });
+
+    document.getElementById("signupUsername").addEventListener("input", checkUsernameLive);
   </script>
 
 </body>
