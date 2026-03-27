@@ -86,11 +86,17 @@ export async function fetchCompanyCollection(name) {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
+export async function fetchAllCollection(name) {
+  const snap = await getDocs(collection(db, name));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
 export function renderSidebar(role, active = "overview") {
   const links = [
     { key: "overview", label: "Overview", href: role === "customer" ? "customer_dashboard.html" : "dashboard.html" },
     { key: "leads", label: "Leads", href: "leads.html" },
     { key: "sales_reps", label: "Sales Reps", href: "sales_reps.html" },
+    { key: "companies", label: "Companies", href: "companies.html" },
     { key: "customers", label: "Customers", href: "#" },
     { key: "jobs", label: "Jobs", href: "#" },
     { key: "admin", label: "Admin", href: "#" },
@@ -202,4 +208,35 @@ export async function fetchActiveSalesReps() {
   );
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+// Companies
+export async function createCompany(data, user) {
+  return addDoc(collection(db, "companies"), {
+    name: data.name || "",
+    slug: data.slug || "",
+    city: data.city || "",
+    state: data.state || "",
+    phone: data.phone || "",
+    email: data.email || "",
+    status: data.status || "active",
+    notes: data.notes || "",
+    createdBy: user.email || "",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  });
+}
+
+export async function updateCompany(companyId, data) {
+  return updateDoc(doc(db, "companies", companyId), {
+    name: data.name || "",
+    slug: data.slug || "",
+    city: data.city || "",
+    state: data.state || "",
+    phone: data.phone || "",
+    email: data.email || "",
+    status: data.status || "active",
+    notes: data.notes || "",
+    updatedAt: serverTimestamp()
+  });
 }
