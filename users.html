@@ -81,6 +81,7 @@
           <option value="operations_coordinator">Operations Coordinator</option>
           <option value="hr">HR</option>
           <option value="admin">Admin</option>
+          <option value="super_admin">Super Admin</option>
         </select>
 
         <select id="userApprovalStatus">
@@ -156,6 +157,10 @@
 
         <input id="userZip" placeholder="Zip">
       </div>
+
+      <p id="superAdminLockMsg" class="status-text" style="display:none;">
+        Super Admin is locked at the highest level. You can edit profile/contact fields, but role, approval, and status stay protected.
+      </p>
 
       <div class="stack">
         <button class="btn" id="saveUserBtn">Save User</button>
