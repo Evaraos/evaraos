@@ -16,5 +16,6 @@ const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const COMPANY_ID = "supreme-trueclean";
+
 export const OWNER_EMAIL = "gilbert37ramos@gmail.com";
+export const DEFAULT_COMPANY_ID = "supreme-trueclean";
