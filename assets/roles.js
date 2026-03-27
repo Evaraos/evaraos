@@ -1,11 +1,11 @@
 export const ROLE_ACCESS = {
   super_admin: ["overview", "admin", "settings", "leads", "customers", "jobs", "users", "sales_reps", "companies"],
-  admin: ["overview", "admin", "settings", "leads", "customers", "jobs", "sales_reps"],
+  admin: ["overview", "admin", "settings", "leads", "customers", "jobs", "users", "sales_reps"],
   manager: ["overview", "leads", "customers", "jobs"],
   operations_coordinator: ["overview", "customers", "jobs"],
   sales_rep: ["overview", "leads", "customers"],
   technician: ["overview", "jobs"],
-  hr: ["overview", "admin", "sales_reps"],
+  hr: ["overview", "admin", "sales_reps", "users"],
   customer: ["overview"]
 };
 
