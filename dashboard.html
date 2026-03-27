@@ -6,65 +6,304 @@
   <title>Dashboard - Evaraos Inc</title>
   <link rel="stylesheet" href="assets/style.css">
   <style>
-    .hero-grid-dash{
+    .dashboard-shell{
       display:grid;
-      grid-template-columns:1.2fr .8fr;
       gap:20px;
     }
-    .stats-grid-4{
+
+    .executive-hero{
+      display:grid;
+      grid-template-columns:1.25fr .75fr;
+      gap:20px;
+      align-items:stretch;
+    }
+
+    .hero-panel{
+      border:1px solid rgba(255,255,255,.08);
+      background:
+        radial-gradient(circle at top left, rgba(227,6,19,.22), transparent 36%),
+        linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      border-radius:28px;
+      padding:24px;
+      min-height:250px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+    }
+
+    .hero-kicker{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      width:max-content;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:12px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:#f5f7fb;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.1);
+      margin-bottom:16px;
+    }
+
+    .hero-title{
+      margin:0;
+      font-size:clamp(32px,4.2vw,54px);
+      line-height:1.05;
+      letter-spacing:-.03em;
+    }
+
+    .hero-subtitle{
+      margin:14px 0 0;
+      color:#b8c0d0;
+      font-size:15px;
+      line-height:1.75;
+      max-width:820px;
+    }
+
+    .hero-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-top:22px;
+    }
+
+    .identity-panel{
+      border:1px solid rgba(255,255,255,.08);
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      border-radius:28px;
+      padding:22px;
+      display:grid;
+      gap:16px;
+      align-content:start;
+    }
+
+    .identity-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+    }
+
+    .identity-avatar{
+      width:58px;
+      height:58px;
+      border-radius:18px;
+      display:grid;
+      place-items:center;
+      font-size:22px;
+      font-weight:800;
+      background:linear-gradient(135deg, rgba(227,6,19,.35), rgba(246,89,44,.18));
+      border:1px solid rgba(255,255,255,.1);
+    }
+
+    .identity-meta strong{
+      display:block;
+      font-size:18px;
+      line-height:1.2;
+    }
+
+    .identity-meta span{
+      color:#b8c0d0;
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .identity-chip{
+      display:inline-flex;
+      align-items:center;
+      padding:7px 11px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.1);
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      font-size:12px;
+      width:max-content;
+    }
+
+    .kpi-grid{
       display:grid;
       grid-template-columns:repeat(4,1fr);
       gap:16px;
     }
-    .info-list{
-      display:grid;
-      gap:12px;
-    }
-    .info-item{
-      padding:16px;
-      border-radius:20px;
-      background:rgba(255,255,255,.05);
+
+    .kpi-card{
+      position:relative;
+      overflow:hidden;
       border:1px solid rgba(255,255,255,.08);
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      border-radius:24px;
+      padding:18px;
+      min-height:150px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
     }
-    .dash-title{
-      margin:0 0 10px;
-      font-size:clamp(28px,4vw,44px);
+
+    .kpi-card::after{
+      content:"";
+      position:absolute;
+      inset:auto -10% -45% auto;
+      width:120px;
+      height:120px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(227,6,19,.18), transparent 68%);
+      pointer-events:none;
     }
-    .dash-sub{
+
+    .kpi-label{
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color:#8fa0bb;
+      margin-bottom:12px;
+    }
+
+    .kpi-value{
+      font-size:40px;
+      line-height:1;
+      font-weight:800;
+      letter-spacing:-.03em;
+      margin:0;
+    }
+
+    .kpi-foot{
+      margin-top:12px;
       color:#b8c0d0;
+      font-size:13px;
       line-height:1.6;
     }
+
+    .section-shell{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:20px;
+    }
+
+    .panel-card{
+      border:1px solid rgba(255,255,255,.08);
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      border-radius:26px;
+      padding:22px;
+    }
+
+    .panel-title{
+      margin:0 0 14px;
+      font-size:22px;
+      letter-spacing:-.02em;
+    }
+
+    .panel-sub{
+      color:#b8c0d0;
+      font-size:14px;
+      line-height:1.7;
+      margin:0 0 18px;
+    }
+
     .analytics-grid{
       display:grid;
       grid-template-columns:repeat(3,1fr);
       gap:16px;
     }
+
     .analytics-card{
-      padding:18px;
-      border-radius:22px;
-      background:rgba(255,255,255,.05);
       border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      border-radius:22px;
+      padding:18px;
+      min-height:190px;
     }
+
     .analytics-card h3{
-      margin:0 0 10px;
+      margin:0 0 12px;
+      font-size:18px;
+      letter-spacing:-.02em;
     }
+
     .analytics-list{
-      color:#b8c0d0;
-      line-height:1.7;
+      color:#c1cada;
+      line-height:1.8;
       font-size:14px;
     }
-    .handle-chip{
-      display:inline-block;
-      margin-top:10px;
-      padding:8px 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.06);
+
+    .summary-block{
       border:1px solid rgba(255,255,255,.08);
-      color:#fff;
-      font-size:13px;
+      background:rgba(255,255,255,.04);
+      border-radius:22px;
+      padding:18px;
+      color:#c1cada;
+      font-size:14px;
+      line-height:1.8;
     }
-    @media (max-width: 1024px){
-      .hero-grid-dash,.stats-grid-4,.analytics-grid{
+
+    .workspace-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:14px;
+    }
+
+    .workspace-card{
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      border-radius:20px;
+      padding:16px;
+      min-height:122px;
+    }
+
+    .workspace-card strong{
+      display:block;
+      margin-bottom:8px;
+      font-size:15px;
+    }
+
+    .workspace-card span{
+      color:#b8c0d0;
+      font-size:14px;
+      line-height:1.65;
+    }
+
+    .security-form-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+
+    .password-wrap{
+      position:relative;
+    }
+
+    .password-wrap input{
+      padding-right:54px;
+    }
+
+    .eye-toggle{
+      position:absolute;
+      right:10px;
+      top:50%;
+      transform:translateY(-50%);
+      border:none;
+      background:transparent;
+      color:#fff;
+      cursor:pointer;
+      font-size:18px;
+    }
+
+    @media (max-width: 1180px){
+      .executive-hero,
+      .section-shell,
+      .analytics-grid,
+      .kpi-grid{
+        grid-template-columns:1fr;
+      }
+
+      .workspace-grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media (max-width: 740px){
+      .security-form-grid{
         grid-template-columns:1fr;
       }
     }
@@ -76,43 +315,65 @@
   <div class="app-layout">
     <aside class="sidebar" id="sidebar"></aside>
 
-    <main class="main-panel" id="dashboardRoot">
-      <section class="glass-card">
-        <div class="hero-grid-dash">
-          <div>
-            <h1 class="dash-title" id="dashHeading">Loading dashboard...</h1>
-            <p class="dash-sub" id="dashSubtext">Loading company-aware analytics...</p>
-            <div class="handle-chip" id="userHandleChip">@loading</div>
+    <main class="main-panel">
+      <div class="dashboard-shell">
 
-            <div class="action-row" style="margin-top:16px;">
+        <section class="executive-hero">
+          <div class="hero-panel">
+            <div>
+              <div class="hero-kicker" id="heroKicker">Control Center</div>
+              <h1 class="hero-title" id="dashHeading">Loading dashboard...</h1>
+              <p class="hero-subtitle" id="dashSubtext">Loading company-aware analytics...</p>
+            </div>
+
+            <div class="hero-actions">
               <button class="btn secondary" id="openAccountSecurityBtn">Account & Security</button>
             </div>
           </div>
-          <div class="glass-card" style="padding:18px;">
-            <h3 style="margin-top:0;">Current Access</h3>
-            <div id="permissionBadges"></div>
+
+          <div class="identity-panel">
+            <div class="identity-top">
+              <div style="display:flex;align-items:center;gap:14px;">
+                <div class="identity-avatar" id="identityAvatar">E</div>
+                <div class="identity-meta">
+                  <strong id="identityName">Loading...</strong>
+                  <span id="identityRole">Loading role...</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="identity-chip" id="userHandleChip">@loading</div>
+
+            <div>
+              <h3 style="margin:0 0 10px;">Current Access</h3>
+              <div id="permissionBadges"></div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section class="glass-card">
-        <div class="stats-grid-4" id="statsGrid"></div>
-      </section>
+        <section class="kpi-grid" id="statsGrid"></section>
 
-      <section class="glass-card">
-        <h2 style="margin-top:0;">Operational Analytics</h2>
-        <div class="analytics-grid" id="analyticsGrid"></div>
-      </section>
+        <section class="panel-card">
+          <h2 class="panel-title">Operational Analytics</h2>
+          <p class="panel-sub">High-level performance indicators across lead flow, job execution, and internal team activity.</p>
+          <div class="analytics-grid" id="analyticsGrid"></div>
+        </section>
 
-      <section class="glass-card">
-        <h2 style="margin-top:0;">Account Summary</h2>
-        <div id="accountSummary" class="muted">Loading...</div>
-      </section>
+        <section class="section-shell">
+          <div class="panel-card">
+            <h2 class="panel-title">Account Summary</h2>
+            <p class="panel-sub">Your current role, hierarchy, permissions, and company context.</p>
+            <div id="accountSummary" class="summary-block">Loading...</div>
+          </div>
 
-      <section class="glass-card">
-        <h2 style="margin-top:0;">Role-Specific Workspace</h2>
-        <div id="roleWorkspace" class="info-list"></div>
-      </section>
+          <div class="panel-card">
+            <h2 class="panel-title">Role-Specific Workspace</h2>
+            <p class="panel-sub">Focused next actions and operational visibility based on your current access level.</p>
+            <div id="roleWorkspace" class="workspace-grid"></div>
+          </div>
+        </section>
+
+      </div>
     </main>
   </div>
 
@@ -123,7 +384,7 @@
         <button class="modal-close" id="closeAccountSecurityModalBtn">Close</button>
       </div>
 
-      <div class="form-grid">
+      <div class="security-form-grid">
         <input id="securityUsername" placeholder="Username">
         <input id="securityHandle" placeholder="@handle" disabled>
 
@@ -138,7 +399,7 @@
         </div>
       </div>
 
-      <div class="action-row">
+      <div class="action-row" style="margin-top:18px;">
         <button class="btn" id="saveSecurityBtn">Save Changes</button>
       </div>
 
@@ -163,20 +424,23 @@
     } from "./assets/app.js";
     import { updateOwnUsername, changeOwnPassword, buildUserIdentity } from "./assets/auth.js";
 
-    function statCard(label, value) {
+    function statCard(label, value, foot = "") {
       return `
-        <div class="stat">
-          <h3>${value}</h3>
-          <p>${label}</p>
+        <div class="kpi-card">
+          <div>
+            <div class="kpi-label">${label}</div>
+            <h3 class="kpi-value">${value}</h3>
+          </div>
+          <div class="kpi-foot">${foot}</div>
         </div>
       `;
     }
 
-    function infoCard(title, body) {
+    function workspaceCard(title, body) {
       return `
-        <div class="info-item">
-          <strong>${title}</strong><br>
-          <span class="muted">${body}</span>
+        <div class="workspace-card">
+          <strong>${title}</strong>
+          <span>${body}</span>
         </div>
       `;
     }
@@ -214,6 +478,11 @@
       btn.textContent = isPassword ? "🙈" : "👁";
     }
 
+    function getInitial(user) {
+      const value = user?.displayUsername || user?.username || user?.name || "E";
+      return String(value).charAt(0).toUpperCase();
+    }
+
     requireAuth(async (user) => {
       if (user.role === "customer") {
         window.location.href = "customer_dashboard.html";
@@ -223,6 +492,9 @@
       await bindTopbar(user);
       document.getElementById("sidebar").innerHTML = renderSidebar(user.role, "overview");
       document.getElementById("userHandleChip").textContent = user.handle || `@${user.username || "user"}`;
+      document.getElementById("identityAvatar").textContent = getInitial(user);
+      document.getElementById("identityName").textContent = user.name || user.displayUsername || user.username || "User";
+      document.getElementById("identityRole").textContent = `${user.role?.replaceAll("_", " ") || "role"} • Org Level ${user.organizationLevel || "—"}`;
 
       const company = await loadCompany(user.companyId);
 
@@ -245,11 +517,12 @@
 
       const heading = document.getElementById("dashHeading");
       const subtext = document.getElementById("dashSubtext");
+      const heroKicker = document.getElementById("heroKicker");
       const statsGrid = document.getElementById("statsGrid");
       const analyticsGrid = document.getElementById("analyticsGrid");
       const roleWorkspace = document.getElementById("roleWorkspace");
 
-      const analyticsCards = [
+      analyticsGrid.innerHTML = [
         analyticsCard("Lead Funnel", [
           `New: ${leadCounts.new || 0}`,
           `Contacted: ${leadCounts.contacted || 0}`,
@@ -271,94 +544,97 @@
           `Services: ${services.length}`,
           `Invoices: ${invoices.length}`
         ])
-      ];
-
-      analyticsGrid.innerHTML = analyticsCards.join("");
+      ].join("");
 
       if (user.role === "super_admin") {
-        heading.textContent = "Evaraos Parent Control";
-        subtext.textContent = `You are operating as parent owner over the platform while your current working company is ${company?.name || user.companyId}.`;
+        heroKicker.textContent = "Parent Platform";
+        heading.textContent = "Evaraos Executive Control";
+        subtext.textContent = `You are operating at the platform level while your current working company context is ${company?.name || user.companyId}. This view is built for subsidiary oversight, growth, and systems control.`;
 
         statsGrid.innerHTML = [
-          statCard("Companies", companies.length),
-          statCard("Leads", leads.length),
-          statCard("Jobs", jobs.length),
-          statCard("Users In Current LLC", users.length)
+          statCard("Companies", companies.length, "Active LLCs and future subsidiary entities managed through the parent platform."),
+          statCard("Leads", leads.length, "Current company lead volume flowing through the pipeline."),
+          statCard("Jobs", jobs.length, "Operational work generated from converted pipeline opportunities."),
+          statCard("Users", users.length, "Users active under the current company context.")
         ].join("");
 
         roleWorkspace.innerHTML = [
-          infoCard("Platform Authority", "You can oversee subsidiaries, users, job flow, staffing structure, and future expansion."),
-          infoCard("Current Company Context", company?.name || user.companyId),
-          infoCard("Lead to Job Engine", "Sales can now push qualified opportunities into scheduled jobs for operations."),
-          infoCard("Permissions Snapshot", hasPermission(user, "all") ? "Full platform control is active." : "Limited.")
+          workspaceCard("Platform Authority", "You control the parent operating system and oversee subsidiary growth, permissions, and process consistency."),
+          workspaceCard("Expansion Readiness", "The structure is prepared for multiple LLCs to run through the same SaaS and payment infrastructure."),
+          workspaceCard("Operational Command", "Use this view to monitor handoff quality from lead generation into jobs and field execution."),
+          workspaceCard("Permission Scope", hasPermission(user, "all") ? "Full platform control is active for this account." : "Permission set is limited.")
         ].join("");
       } else if (user.role === "admin") {
-        heading.textContent = `${company?.name || "Company"} Admin Dashboard`;
-        subtext.textContent = "This is the LLC control center for approvals, staffing, leads, jobs, and operational performance.";
+        heroKicker.textContent = "LLC Command";
+        heading.textContent = `${company?.name || "Company"} Admin Center`;
+        subtext.textContent = "This dashboard is designed for day-to-day LLC control: staffing, lead management, approvals, scheduling flow, and execution quality.";
 
         statsGrid.innerHTML = [
-          statCard("Users", users.length),
-          statCard("Leads", leads.length),
-          statCard("Jobs", jobs.length),
-          statCard("Technicians", technicians.length)
+          statCard("Users", users.length, "Total company users currently active inside this operating unit."),
+          statCard("Leads", leads.length, "Potential customers currently being worked through the pipeline."),
+          statCard("Jobs", jobs.length, "Scheduled or active work tied to the current company."),
+          statCard("Technicians", technicians.length, "Field team members available for execution and service delivery.")
         ].join("");
 
         roleWorkspace.innerHTML = [
-          infoCard("Company Management", "Manage staffing, pending approvals, lead conversion, and day-to-day execution."),
-          infoCard("Job Oversight", "Use the Jobs page to monitor scheduled, in-progress, and completed work."),
-          infoCard("Handle Identity", user.handle || `@${user.username || "user"}`),
-          infoCard("Internal Growth", "Use this structure to grow teams regionally and nationally under the same LLC.")
+          workspaceCard("Company Management", "Oversee staffing, approvals, customer flow, and quality handoff into operations."),
+          workspaceCard("Execution Visibility", "Track how quickly leads move into quotes, scheduled jobs, and completed service."),
+          workspaceCard("Internal Growth", "This LLC can scale regionally and nationally while keeping the same system structure."),
+          workspaceCard("Identity", user.handle || `@${user.username || "user"}`)
         ].join("");
       } else if (user.role === "sales_rep") {
+        heroKicker.textContent = "Sales Pipeline";
         heading.textContent = `${company?.name || "Company"} Sales Workspace`;
-        subtext.textContent = "This dashboard is focused on lead movement, conversion, and clean handoff into scheduled jobs.";
+        subtext.textContent = "This dashboard is centered on lead movement, closing activity, and clean conversion into scheduled work for the operations team.";
 
         statsGrid.innerHTML = [
-          statCard("Leads", leads.length),
-          statCard("Scheduled Jobs", jobCounts.scheduled || 0),
-          statCard("Won Leads", leadCounts.won || 0),
-          statCard("Quoted Leads", leadCounts.quoted || 0)
+          statCard("Leads", leads.length, "All current pipeline opportunities assigned within your company."),
+          statCard("Quoted", leadCounts.quoted || 0, "Leads that are actively priced and close to conversion."),
+          statCard("Won", leadCounts.won || 0, "Closed opportunities that represent captured revenue."),
+          statCard("Scheduled Jobs", jobCounts.scheduled || 0, "Upcoming work already pushed into operations.")
         ].join("");
 
         roleWorkspace.innerHTML = [
-          infoCard("Pipeline Mission", "Convert leads into quoted, won, and scheduled work."),
-          infoCard("Lead → Job Flow", "Qualified opportunities should be converted into jobs for field execution."),
-          infoCard("Handle", user.handle || `@${user.username || "user"}`),
-          infoCard("Reporting Chain", `You report into ${user.reportsTo || "not set"}.`)
+          workspaceCard("Conversion Focus", "Move leads cleanly through contact, quote, and close stages without losing context."),
+          workspaceCard("Job Handoff", "The better the lead details, the better the field team can execute."),
+          workspaceCard("Handle Identity", user.handle || `@${user.username || "user"}`),
+          workspaceCard("Reporting Chain", `You currently report into ${user.reportsTo || "not set"}.`)
         ].join("");
       } else if (user.role === "technician") {
-        heading.textContent = `${company?.name || "Company"} Technician Dashboard`;
-        subtext.textContent = "This dashboard is designed for job execution, field updates, and service quality.";
+        heroKicker.textContent = "Field Execution";
+        heading.textContent = `${company?.name || "Company"} Technician Workspace`;
+        subtext.textContent = "This view is built for execution quality, schedule clarity, and job completion discipline in the field.";
 
         statsGrid.innerHTML = [
-          statCard("Jobs", jobs.length),
-          statCard("Scheduled", jobCounts.scheduled || 0),
-          statCard("In Progress", jobCounts.in_progress || 0),
-          statCard("Completed", jobCounts.completed || 0)
+          statCard("Jobs", jobs.length, "All company jobs visible inside your current scope."),
+          statCard("Scheduled", jobCounts.scheduled || 0, "Upcoming work ready for assignment and execution."),
+          statCard("In Progress", jobCounts.in_progress || 0, "Active jobs being completed right now."),
+          statCard("Completed", jobCounts.completed || 0, "Finished jobs that have moved through operations successfully.")
         ].join("");
 
         roleWorkspace.innerHTML = [
-          infoCard("Field Focus", "Stay focused on scheduled work, completion updates, and quality delivery."),
-          infoCard("Operations Visibility", "You should only see what supports execution and status updates."),
-          infoCard("Handle", user.handle || `@${user.username || "user"}`),
-          infoCard("Growth Path", "Technicians can later promote into operations leadership or management.")
+          workspaceCard("Field Focus", "Stay locked in on schedule, route quality, customer experience, and service completion."),
+          workspaceCard("Execution Quality", "Strong field notes and status changes keep leadership informed and customers confident."),
+          workspaceCard("Handle Identity", user.handle || `@${user.username || "user"}`),
+          workspaceCard("Growth Path", "Technicians can move into leadership, coordination, or operations management over time.")
         ].join("");
       } else {
-        heading.textContent = `${company?.name || "Company"} Internal Dashboard`;
-        subtext.textContent = "This is your internal company view based on your role and access level.";
+        heroKicker.textContent = "Internal Ops";
+        heading.textContent = `${company?.name || "Company"} Internal Workspace`;
+        subtext.textContent = "This dashboard reflects your role-based access and gives you a clean operational snapshot of the business right now.";
 
         statsGrid.innerHTML = [
-          statCard("Users", users.length),
-          statCard("Leads", leads.length),
-          statCard("Jobs", jobs.length),
-          statCard("Services", services.length)
+          statCard("Users", users.length, "Internal people active in the company environment."),
+          statCard("Leads", leads.length, "Live sales opportunities currently flowing through the pipeline."),
+          statCard("Jobs", jobs.length, "Active scheduled work inside the business."),
+          statCard("Services", services.length, "Configured service records and operational offerings.")
         ].join("");
 
         roleWorkspace.innerHTML = [
-          infoCard("Company", company?.name || user.companyId),
-          infoCard("Handle", user.handle || `@${user.username || "user"}`),
-          infoCard("Hierarchy", `Organization Level ${user.organizationLevel || "—"}`),
-          infoCard("Execution", "The business now supports both lead conversion and job fulfillment.")
+          workspaceCard("Company Context", company?.name || user.companyId),
+          workspaceCard("Role Access", "Your modules and actions are automatically controlled by your assigned role."),
+          workspaceCard("Hierarchy", `Organization Level ${user.organizationLevel || "—"}`),
+          workspaceCard("Identity", user.handle || `@${user.username || "user"}`)
         ].join("");
       }
 
