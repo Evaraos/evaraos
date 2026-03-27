@@ -72,6 +72,10 @@
           <div>
             <h1 class="dash-title" id="dashHeading">Loading dashboard...</h1>
             <p class="dash-sub" id="dashSubtext">Loading company-aware analytics...</p>
+
+            <div class="action-row" style="margin-top:16px;">
+              <button class="btn secondary" id="openAccountSecurityBtn">Account & Security</button>
+            </div>
           </div>
           <div class="glass-card" style="padding:18px;">
             <h3 style="margin-top:0;">Current Access</h3>
@@ -101,6 +105,37 @@
     </main>
   </div>
 
+  <div class="modal-backdrop" id="accountSecurityModal">
+    <div class="modal-card" style="max-width:640px;">
+      <div class="modal-head">
+        <h2 style="margin:0;">Account & Security</h2>
+        <button class="modal-close" id="closeAccountSecurityModalBtn">Close</button>
+      </div>
+
+      <div class="form-grid">
+        <input id="securityUsername" placeholder="Username">
+
+        <div></div>
+
+        <div class="password-wrap">
+          <input id="currentPassword" type="password" placeholder="Current Password">
+          <button class="eye-toggle" type="button" id="toggleCurrentPasswordBtn">👁</button>
+        </div>
+
+        <div class="password-wrap">
+          <input id="newPassword" type="password" placeholder="New Password">
+          <button class="eye-toggle" type="button" id="toggleNewPasswordBtn">👁</button>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn" id="saveSecurityBtn">Save Changes</button>
+      </div>
+
+      <p id="securityMsg" class="status-text"></p>
+    </div>
+  </div>
+
   <script type="module">
     import {
       bindTopbar,
@@ -116,6 +151,7 @@
       renderPermissionBadges,
       hasPermission
     } from "./assets/app.js";
+    import { updateOwnUsername, changeOwnPassword } from "./assets/auth.js";
 
     function statCard(label, value) {
       return `
@@ -151,6 +187,21 @@
         counts[value] = (counts[value] || 0) + 1;
       });
       return counts;
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add("active");
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove("active");
+    }
+
+    function togglePasswordField(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const isPassword = input.type === "password";
+      input.type = isPassword ? "text" : "password";
+      btn.textContent = isPassword ? "🙈" : "👁";
     }
 
     requireAuth(async (user) => {
@@ -299,6 +350,47 @@
           infoCard("Execution", "The business now supports both lead conversion and job fulfillment.")
         ].join("");
       }
+
+      document.getElementById("securityUsername").value = user.username || "";
+
+      document.getElementById("openAccountSecurityBtn").addEventListener("click", () => {
+        openModal("accountSecurityModal");
+      });
+
+      document.getElementById("closeAccountSecurityModalBtn").addEventListener("click", () => {
+        closeModal("accountSecurityModal");
+      });
+
+      document.getElementById("toggleCurrentPasswordBtn").addEventListener("click", function() {
+        togglePasswordField("currentPassword", this);
+      });
+
+      document.getElementById("toggleNewPasswordBtn").addEventListener("click", function() {
+        togglePasswordField("newPassword", this);
+      });
+
+      document.getElementById("saveSecurityBtn").addEventListener("click", async () => {
+        const msg = document.getElementById("securityMsg");
+        const newUsername = document.getElementById("securityUsername").value.trim().toLowerCase();
+        const currentPassword = document.getElementById("currentPassword").value;
+        const newPassword = document.getElementById("newPassword").value;
+
+        msg.textContent = "";
+
+        try {
+          if (newUsername && newUsername !== (user.username || "").toLowerCase()) {
+            await updateOwnUsername(user.uid || user.id, newUsername);
+          }
+
+          if (currentPassword || newPassword) {
+            await changeOwnPassword(currentPassword, newPassword);
+          }
+
+          msg.textContent = "Account settings updated successfully.";
+        } catch (e) {
+          msg.textContent = e.message || "Failed to update account settings.";
+        }
+      });
     });
   </script>
 </body>
