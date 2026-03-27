@@ -19,14 +19,37 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import { auth, db, OWNER_EMAIL, DEFAULT_COMPANY_ID } from "./firebase.js";
+import { getRoleDefaults } from "./roles.js";
 
-export async function usernameExists(username) {
+export async function usernameExists(username, excludeUserId = "") {
   const clean = (username || "").trim().toLowerCase();
   if (!clean) return false;
 
   const q = query(collection(db, "users"), where("username", "==", clean));
   const snap = await getDocs(q);
-  return !snap.empty;
+
+  return snap.docs.some((d) => d.id !== excludeUserId);
+}
+
+async function resolveEmailFromIdentifier(identifier) {
+  const raw = (identifier || "").trim().toLowerCase();
+  if (!raw) throw new Error("Enter your username or email.");
+
+  if (raw.includes("@")) return raw;
+
+  const q = query(collection(db, "users"), where("username", "==", raw));
+  const snap = await getDocs(q);
+
+  if (snap.empty) {
+    throw new Error("Username not found.");
+  }
+
+  const userDoc = snap.docs[0].data();
+  if (!userDoc.email) {
+    throw new Error("No email found for that username.");
+  }
+
+  return userDoc.email;
 }
 
 export async function signup(name, username, email, password, role) {
@@ -39,66 +62,39 @@ export async function signup(name, username, email, password, role) {
 
   const cred = await createUserWithEmailAndPassword(auth, cleanEmail, password);
   const isOwner = cleanEmail === OWNER_EMAIL;
-
-  let organizationLevel = 4;
-  let permissions = ["view_own_data"];
-  let companyAccessLevel = "subsidiary";
-  let approvalStatus = "pending";
-  let finalRole = role;
-
-  if (isOwner) {
-    finalRole = "super_admin";
-    approvalStatus = "approved";
-    organizationLevel = 1;
-    permissions = ["all"];
-    companyAccessLevel = "parent";
-  } else if (role === "customer") {
-    approvalStatus = "approved";
-    organizationLevel = 4;
-    permissions = [
-      "view_own_data",
-      "edit_own_profile",
-      "view_own_services",
-      "request_service_changes"
-    ];
-  } else if (role === "admin") {
-    approvalStatus = "pending";
-    organizationLevel = 2;
-    permissions = ["manage_company", "manage_staff", "view_reports", "manage_leads"];
-  } else {
-    approvalStatus = "pending";
-    organizationLevel = 3;
-    permissions = ["view_leads", "edit_leads", "update_jobs"];
-  }
+  const defaults = getRoleDefaults(role, isOwner);
 
   await setDoc(doc(db, "users", cred.user.uid), {
     name,
     username: cleanUsername,
     email: cleanEmail,
-    role: finalRole,
-    approvalStatus,
+    role: defaults.role,
+    approvalStatus: defaults.approvalStatus,
     status: "active",
     companyId: DEFAULT_COMPANY_ID,
-    companyAccessLevel,
+    companyAccessLevel: defaults.companyAccessLevel,
     photoUrl: "",
     createdAt: serverTimestamp(),
     lastLogin: serverTimestamp(),
     reportsTo: cred.user.uid,
-    organizationLevel,
-    permissions,
+    organizationLevel: defaults.organizationLevel,
+    permissions: defaults.permissions,
     phone: "",
     address: "",
     city: "",
     state: "",
     zip: "",
-    preferredContactMethod: ""
+    preferredContactMethod: "",
+    emergencyContactName: "",
+    emergencyContactPhone: ""
   });
 
   return cred;
 }
 
-export async function login(email, password) {
-  return signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
+export async function login(identifier, password) {
+  const email = await resolveEmailFromIdentifier(identifier);
+  return signInWithEmailAndPassword(auth, email, password);
 }
 
 export async function logout() {
