@@ -5,6 +5,56 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - Evaraos Inc</title>
   <link rel="stylesheet" href="assets/style.css">
+  <style>
+    .hero-grid-dash{
+      display:grid;
+      grid-template-columns:1.2fr .8fr;
+      gap:20px;
+    }
+    .stats-grid-4{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:16px;
+    }
+    .mini-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:16px;
+    }
+    .badge{
+      display:inline-flex;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.10);
+      margin:0 8px 8px 0;
+      color:#ececec;
+      font-size:13px;
+    }
+    .info-list{
+      display:grid;
+      gap:12px;
+    }
+    .info-item{
+      padding:16px;
+      border-radius:20px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .dash-title{
+      margin:0 0 10px;
+      font-size:clamp(28px,4vw,44px);
+    }
+    .dash-sub{
+      color:#b8c0d0;
+      line-height:1.6;
+    }
+    @media (max-width: 1024px){
+      .hero-grid-dash,.stats-grid-4,.mini-grid{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
 </head>
 <body class="app-shell">
   <header class="app-topbar" id="topbar"></header>
@@ -12,25 +62,32 @@
   <div class="app-layout">
     <aside class="sidebar" id="sidebar"></aside>
 
-    <main class="main-panel">
+    <main class="main-panel" id="dashboardRoot">
       <section class="glass-card">
-        <h1 style="margin-top:0;">Internal Operations Overview</h1>
-        <div class="stats-grid">
-          <div class="stat"><h3 id="statLeads">0</h3><p>Leads</p></div>
-          <div class="stat"><h3 id="statUsers">0</h3><p>Users</p></div>
-          <div class="stat"><h3 id="statCompanies">0</h3><p>Companies</p></div>
-          <div class="stat"><h3 id="statInvoices">0</h3><p>Invoices</p></div>
+        <div class="hero-grid-dash">
+          <div>
+            <h1 class="dash-title" id="dashHeading">Loading dashboard...</h1>
+            <p class="dash-sub" id="dashSubtext">Loading company-aware view...</p>
+          </div>
+          <div class="glass-card" style="padding:18px;">
+            <h3 style="margin-top:0;">Current Access</h3>
+            <div id="permissionBadges"></div>
+          </div>
         </div>
       </section>
 
       <section class="glass-card">
-        <h2 style="margin-top:0;">Account Summary</h2>
-        <div id="dashboardContent" class="muted">Loading...</div>
+        <div class="stats-grid-4" id="statsGrid"></div>
       </section>
 
       <section class="glass-card">
-        <h2 style="margin-top:0;">Platform Scope</h2>
-        <div id="rolePreview" class="muted">Loading...</div>
+        <h2 style="margin-top:0;">Account Summary</h2>
+        <div id="accountSummary" class="muted">Loading...</div>
+      </section>
+
+      <section class="glass-card">
+        <h2 style="margin-top:0;">Role-Specific Workspace</h2>
+        <div id="roleWorkspace" class="info-list"></div>
       </section>
     </main>
   </div>
@@ -39,12 +96,34 @@
     import {
       bindTopbar,
       requireAuth,
+      loadCompany,
       fetchCompanyCollection,
       fetchAllCollection,
       fetchUsersByCompany,
+      fetchActiveSalesReps,
       renderSidebar,
-      renderRoleSummary
+      renderRoleSummary,
+      renderPermissionBadges,
+      hasPermission
     } from "./assets/app.js";
+
+    function statCard(label, value) {
+      return `
+        <div class="stat">
+          <h3>${value}</h3>
+          <p>${label}</p>
+        </div>
+      `;
+    }
+
+    function infoCard(title, body) {
+      return `
+        <div class="info-item">
+          <strong>${title}</strong><br>
+          <span class="muted">${body}</span>
+        </div>
+      `;
+    }
 
     requireAuth(async (user) => {
       if (user.role === "customer") {
@@ -55,23 +134,111 @@
       await bindTopbar(user);
       document.getElementById("sidebar").innerHTML = renderSidebar(user.role, "overview");
 
-      const [leads, users, companies, invoices] = await Promise.all([
-        fetchCompanyCollection("leads", user.companyId),
-        fetchUsersByCompany(user.companyId),
-        user.role === "super_admin" ? fetchAllCollection("companies") : fetchCompanyCollection("companies", user.companyId),
-        fetchCompanyCollection("invoices", user.companyId)
+      const company = await loadCompany(user.companyId);
+
+      const [leads, users, reps, companies, services, invoices] = await Promise.all([
+        fetchCompanyCollection("leads", user.companyId).catch(() => []),
+        fetchUsersByCompany(user.companyId).catch(() => []),
+        fetchActiveSalesReps(user.companyId).catch(() => []),
+        user.role === "super_admin" ? fetchAllCollection("companies").catch(() => []) : Promise.resolve(company ? [company] : []),
+        fetchAllCollection("services").catch(() => []),
+        fetchCompanyCollection("invoices", user.companyId).catch(() => [])
       ]);
 
-      document.getElementById("statLeads").textContent = leads.length;
-      document.getElementById("statUsers").textContent = users.length;
-      document.getElementById("statCompanies").textContent = companies.length;
-      document.getElementById("statInvoices").textContent = invoices.length;
+      document.getElementById("permissionBadges").innerHTML = renderPermissionBadges(user);
+      document.getElementById("accountSummary").innerHTML = renderRoleSummary(user);
 
-      document.getElementById("dashboardContent").innerHTML = renderRoleSummary(user);
+      const heading = document.getElementById("dashHeading");
+      const subtext = document.getElementById("dashSubtext");
+      const statsGrid = document.getElementById("statsGrid");
+      const roleWorkspace = document.getElementById("roleWorkspace");
 
-      document.getElementById("rolePreview").innerHTML = user.role === "super_admin"
-        ? "You are viewing Evaraos parent-level controls and can oversee multiple LLCs."
-        : "You are operating inside your assigned company scope only.";
+      if (user.role === "super_admin") {
+        heading.textContent = "Evaraos Parent Control";
+        subtext.textContent = `You are operating as parent owner over the platform while your current working company is ${company?.name || user.companyId}.`;
+
+        statsGrid.innerHTML = [
+          statCard("Companies", companies.length),
+          statCard("Users In Current LLC", users.length),
+          statCard("Active Sales Reps", reps.length),
+          statCard("Invoices", invoices.length)
+        ].join("");
+
+        roleWorkspace.innerHTML = [
+          infoCard("Platform Authority", "You can oversee subsidiaries, users, staffing structure, and future expansion."),
+          infoCard("Current Company Context", company?.name || user.companyId),
+          infoCard("Future LLC Readiness", "Every new LLC can plug into the same SaaS using its own companyId and user hierarchy."),
+          infoCard("Permissions Snapshot", hasPermission(user, "all") ? "Full platform control is active." : "Limited.")
+        ].join("");
+      } else if (user.role === "admin") {
+        heading.textContent = `${company?.name || "Company"} Admin Dashboard`;
+        subtext.textContent = "This is the business operations view for the LLC owner/admin. Manage people, leads, and company growth from here.";
+
+        statsGrid.innerHTML = [
+          statCard("Users", users.length),
+          statCard("Active Sales Reps", reps.length),
+          statCard("Leads", leads.length),
+          statCard("Services", services.length)
+        ].join("");
+
+        roleWorkspace.innerHTML = [
+          infoCard("Company Management", "You can manage staffing, leads, and day-to-day company operations."),
+          infoCard("Owner Link", company?.ownerName ? `${company.ownerName} | ${company.ownerEmail}` : "Owner information not found."),
+          infoCard("Internal Growth", "Use this structure to grow teams regionally and nationally under the same LLC."),
+          infoCard("Current Company", company?.name || user.companyId)
+        ].join("");
+      } else if (user.role === "sales_rep") {
+        heading.textContent = `${company?.name || "Company"} Sales Workspace`;
+        subtext.textContent = "This dashboard is focused on pipeline movement, customer communication, and converting leads into paying customers.";
+
+        statsGrid.innerHTML = [
+          statCard("Leads", leads.length),
+          statCard("Assigned Company Reps", reps.length),
+          statCard("Users In LLC", users.length),
+          statCard("Services", services.length)
+        ].join("");
+
+        roleWorkspace.innerHTML = [
+          infoCard("Lead Pipeline", "Work the leads module, update statuses, and track sales activity."),
+          infoCard("Organization Chain", `You report into ${user.reportsTo || "not set"}.`),
+          infoCard("Sales Mission", "Focus on new appointments, conversions, and cleaner handoff to operations."),
+          infoCard("Company", company?.name || user.companyId)
+        ].join("");
+      } else if (user.role === "technician") {
+        heading.textContent = `${company?.name || "Company"} Technician Dashboard`;
+        subtext.textContent = "This dashboard is designed for job execution, service quality, and field updates.";
+
+        statsGrid.innerHTML = [
+          statCard("Services", services.length),
+          statCard("Users In LLC", users.length),
+          statCard("Invoices", invoices.length),
+          statCard("Leads", leads.length)
+        ].join("");
+
+        roleWorkspace.innerHTML = [
+          infoCard("Field Focus", "Job execution and service quality should live here as the technician module expands."),
+          infoCard("Visibility", "You should only see what supports field delivery and status updates."),
+          infoCard("Company", company?.name || user.companyId),
+          infoCard("Growth Path", "Technicians can later promote into management or operations leadership.")
+        ].join("");
+      } else {
+        heading.textContent = `${company?.name || "Company"} Internal Dashboard`;
+        subtext.textContent = "This is your internal company view based on your role and access level.";
+
+        statsGrid.innerHTML = [
+          statCard("Users", users.length),
+          statCard("Leads", leads.length),
+          statCard("Active Sales Reps", reps.length),
+          statCard("Services", services.length)
+        ].join("");
+
+        roleWorkspace.innerHTML = [
+          infoCard("Company", company?.name || user.companyId),
+          infoCard("Access", "Your role determines which modules and actions you can see."),
+          infoCard("Hierarchy", `Organization Level ${user.organizationLevel || "—"}`),
+          infoCard("Permissions", "Your UI should stay focused on your job inside the company.")
+        ].join("");
+      }
     });
   </script>
 </body>
