@@ -460,7 +460,7 @@ export async function updateCompany(companyId, data) {
   });
 }
 
-export async function updateUserAdmin(userId, data, actingUser = null) {
+export async function updateUserAdmin(userId, data) {
   const existingSnap = await getDoc(doc(db, "users", userId));
   if (!existingSnap.exists()) {
     throw new Error("User not found.");
