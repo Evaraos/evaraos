@@ -17,7 +17,7 @@
         <div class="action-row" style="justify-content:space-between;align-items:center;">
           <div>
             <h1 style="margin:0;">Leads Module</h1>
-            <p class="muted" style="margin:8px 0 0;">Create, edit, and convert leads into jobs.</p>
+            <p class="muted" style="margin:8px 0 0;">Create, edit, archive, request deletion, and convert leads into jobs.</p>
           </div>
           <button class="btn" id="openLeadModalBtn">Add Lead</button>
         </div>
@@ -99,9 +99,27 @@
         </select>
 
         <input id="leadZip" placeholder="Zip">
-        <input id="leadServiceInterest" placeholder="Service Interest">
 
-        <select id="leadSource">
+        <select id="leadServiceCategory">
+          <option value="">Service Category</option>
+          <option value="exterior">Exterior Cleaning</option>
+          <option value="trash_bin">Trash Bin Cleaning</option>
+          <option value="bundle">Bundle</option>
+        </select>
+
+        <select id="leadServiceType">
+          <option value="">Select Service</option>
+        </select>
+
+        <select id="leadAddOns" multiple>
+          <option value="deodorizing">Deodorizing</option>
+          <option value="rust_removal">Rust Removal</option>
+          <option value="oil_stain_removal">Oil Stain Removal</option>
+          <option value="mold_treatment">Mold Treatment</option>
+          <option value="sealing">Sealing</option>
+        </select>
+
+        <select id="leadLeadSource">
           <option value="">Lead Source</option>
           <option value="website">🌐 Website</option>
           <option value="referral">🤝 Referral</option>
@@ -123,7 +141,8 @@
           <option value="email">Email</option>
         </select>
 
-        <input id="leadEstimatedSqFt" type="number" placeholder="Estimated Sq Ft">
+        <input id="leadEstimatedSqFt" type="number" placeholder="Estimated Sq Ft / Panels / Quantity">
+        <input id="leadEstimatedPrice" placeholder="Estimated Price" disabled>
 
         <select id="leadAssignedRep">
           <option value="">Assigned Sales Rep</option>
