@@ -56,15 +56,17 @@ export async function bindTopbar(user = null) {
     <div class="app-topbar-inner">
       <a class="app-brand" href="${homeHref}">
         <img src="${settings?.logoUrl || "assets/img/evaraos_logo.png"}" alt="logo">
-        <div>
-          <div>${settings?.platformName || "Evaraos Inc"}</div>
-          <div class="muted">${company?.name || settings?.companyName || "Supreme TrueClean"}</div>
+        <div class="app-brand-text">
+          <strong>${settings?.platformName || "Evaraos Inc"}</strong>
+          <span>${company?.name || settings?.companyName || "Supreme TrueClean"}</span>
         </div>
       </a>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-        <a class="btn secondary" href="${dashboardHref}">Dashboard</a>
-        <button class="btn secondary" id="logoutBtn">Logout</button>
-      </div>
+
+      <nav class="app-nav">
+        <a href="${homeHref}">Home</a>
+        <a href="${dashboardHref}" class="active">Dashboard</a>
+        <button id="logoutBtn">Logout</button>
+      </nav>
     </div>
   `;
 
@@ -193,7 +195,6 @@ export function groupUsersByRole(users) {
   return groups;
 }
 
-// Leads
 export async function createLead(data, user) {
   return addDoc(collection(db, "leads"), {
     companyId: user.companyId,
@@ -239,7 +240,6 @@ export async function updateLead(leadId, data) {
   });
 }
 
-// Sales reps
 export async function createSalesRep(data, user) {
   return addDoc(collection(db, "sales_reps"), {
     companyId: user.companyId,
@@ -267,7 +267,6 @@ export async function updateSalesRep(repId, data) {
   });
 }
 
-// Companies
 export async function createCompany(data, user) {
   return addDoc(collection(db, "companies"), {
     name: data.name || "",
@@ -299,7 +298,6 @@ export async function updateCompany(companyId, data) {
   });
 }
 
-// Users
 export async function updateUserAdmin(userId, data) {
   return updateDoc(doc(db, "users", userId), {
     name: data.name,
