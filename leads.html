@@ -5,6 +5,122 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Leads - Evaraos Inc</title>
   <link rel="stylesheet" href="assets/style.css">
+  <style>
+    .pipeline-list{
+      display:grid;
+      gap:16px;
+    }
+    .pipeline-card{
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      border-radius:24px;
+      padding:18px;
+    }
+    .pipeline-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      margin-bottom:14px;
+      flex-wrap:wrap;
+    }
+    .pipeline-name{
+      margin:0;
+      font-size:18px;
+      line-height:1.2;
+    }
+    .pipeline-sub{
+      color:#b8c0d0;
+      font-size:14px;
+      margin-top:6px;
+      line-height:1.5;
+    }
+    .badge-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+    }
+    .status-badge{
+      display:inline-flex;
+      align-items:center;
+      padding:7px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.06);
+      color:#fff;
+    }
+    .status-new{ background:rgba(59,130,246,.18); }
+    .status-contacted{ background:rgba(168,85,247,.18); }
+    .status-quoted{ background:rgba(245,158,11,.18); }
+    .status-scheduled{ background:rgba(34,197,94,.18); }
+    .status-won{ background:rgba(16,185,129,.18); }
+    .status-lost{ background:rgba(239,68,68,.18); }
+    .status-archived{ background:rgba(148,163,184,.18); }
+
+    .pipeline-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:14px;
+      margin-top:12px;
+    }
+    .pipeline-box{
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.03);
+      border-radius:18px;
+      padding:14px;
+      min-height:110px;
+    }
+    .pipeline-label{
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color:#8fa0bb;
+      margin-bottom:8px;
+    }
+    .pipeline-value{
+      color:#fff;
+      font-size:14px;
+      line-height:1.6;
+      word-break:break-word;
+    }
+    .identity-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      font-size:12px;
+      color:#fff;
+      margin:4px 8px 0 0;
+    }
+    .pipeline-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:16px;
+    }
+    .meta-line{
+      color:#9fb0c9;
+      font-size:12px;
+      margin-top:12px;
+      line-height:1.6;
+    }
+    @media (max-width: 1100px){
+      .pipeline-grid{
+        grid-template-columns:repeat(2,1fr);
+      }
+    }
+    @media (max-width: 700px){
+      .pipeline-grid{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
 </head>
 <body class="app-shell">
   <header class="app-topbar" id="topbar"></header>
@@ -24,8 +140,8 @@
       </section>
 
       <section class="glass-card">
-        <h2 style="margin-top:0;">Lead List</h2>
-        <div id="leadsList" class="table"></div>
+        <h2 style="margin-top:0;">Lead Pipeline</h2>
+        <div id="leadsList" class="pipeline-list"></div>
       </section>
     </main>
   </div>
