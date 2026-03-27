@@ -3,15 +3,20 @@ import {
   requireAuth,
   fetchCompanyCollection,
   fetchActiveSalesReps,
+  fetchActiveTechnicians,
   renderSidebar,
   roleGuard,
   createLead,
-  updateLead
+  updateLead,
+  convertLeadToJob
 } from "./app.js";
 
 let currentUser = null;
 let editingLeadId = null;
+let convertingLeadId = null;
 let currentSalesReps = [];
+let currentTechnicians = [];
+let currentLeads = [];
 
 function formatDate(value) {
   if (!value) return "—";
@@ -107,9 +112,14 @@ function prettySource(value) {
   return map[value] || "—";
 }
 
-function prettyRep(value) {
+function repName(value) {
   const rep = currentSalesReps.find((r) => r.id === value);
   return rep ? rep.fullName : "—";
+}
+
+function techName(value) {
+  const tech = currentTechnicians.find((r) => r.id === value);
+  return tech ? (tech.name || tech.email) : "—";
 }
 
 async function loadAssignedRepOptions() {
@@ -122,23 +132,33 @@ async function loadAssignedRepOptions() {
   `;
 }
 
+async function loadTechnicianOptions() {
+  currentTechnicians = await fetchActiveTechnicians(currentUser.companyId);
+  const select = document.getElementById("convertAssignedTechnician");
+
+  select.innerHTML = `
+    <option value="">Assigned Technician</option>
+    ${currentTechnicians.map((tech) => `<option value="${tech.id}">${tech.name || tech.email}</option>`).join("")}
+  `;
+}
+
 async function renderLeads() {
-  const leads = await fetchCompanyCollection("leads", currentUser.companyId);
+  currentLeads = await fetchCompanyCollection("leads", currentUser.companyId);
   const leadsList = document.getElementById("leadsList");
 
-  if (!leads.length) {
+  if (!currentLeads.length) {
     leadsList.innerHTML = `<div class="muted">No leads yet.</div>`;
     return;
   }
 
-  leadsList.innerHTML = leads.map((lead) => `
+  leadsList.innerHTML = currentLeads.map((lead) => `
     <div class="row">
       <div>
         <strong>${lead.fullName || "Unnamed Lead"}</strong><br>
         <span class="muted">${lead.serviceInterest || "No service selected"}</span>
         <div class="meta-line">
           Source: ${prettySource(lead.leadSource)}<br>
-          Rep: ${prettyRep(lead.assignedRep)}
+          Rep: ${repName(lead.assignedRep)}
         </div>
       </div>
       <div>
@@ -158,10 +178,16 @@ async function renderLeads() {
         </div>
       </div>
       <div>
-        <button class="btn secondary edit-lead-btn" data-id="${lead.id}">Edit</button>
+        <div class="action-row">
+          <button class="btn secondary edit-lead-btn" data-id="${lead.id}">Edit</button>
+          <button class="btn convert-lead-btn" data-id="${lead.id}" ${lead.convertedToJobId ? "disabled" : ""}>
+            ${lead.convertedToJobId ? "Converted" : "Convert"}
+          </button>
+        </div>
         <div class="meta-line">
           Created: ${formatDate(lead.createdAt)}<br>
-          Updated: ${formatDate(lead.updatedAt)}
+          Updated: ${formatDate(lead.updatedAt)}<br>
+          Job: ${lead.convertedToJobId || "—"}
         </div>
       </div>
     </div>
@@ -169,7 +195,7 @@ async function renderLeads() {
 
   document.querySelectorAll(".edit-lead-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const selectedLead = leads.find((lead) => lead.id === btn.dataset.id);
+      const selectedLead = currentLeads.find((lead) => lead.id === btn.dataset.id);
       if (!selectedLead) return;
 
       editingLeadId = selectedLead.id;
@@ -177,6 +203,23 @@ async function renderLeads() {
       document.getElementById("cancelLeadEditBtn").style.display = "inline-flex";
       document.getElementById("leadMsg").textContent = `Editing ${selectedLead.fullName || "lead"}`;
       openModal("leadModal");
+    });
+  });
+
+  document.querySelectorAll(".convert-lead-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const selectedLead = currentLeads.find((lead) => lead.id === btn.dataset.id);
+      if (!selectedLead || selectedLead.convertedToJobId) return;
+
+      convertingLeadId = selectedLead.id;
+      document.getElementById("convertCustomerName").value = selectedLead.fullName || "";
+      document.getElementById("convertServiceType").value = selectedLead.serviceInterest || "";
+      document.getElementById("convertAssignedTechnician").value = "";
+      document.getElementById("convertScheduledDate").value = selectedLead.appointmentDate || "";
+      document.getElementById("convertScheduledTimeWindow").value = "";
+      document.getElementById("convertNotes").value = selectedLead.notes || "";
+      document.getElementById("convertMsg").textContent = "";
+      openModal("convertModal");
     });
   });
 }
@@ -200,6 +243,7 @@ requireAuth(async (user) => {
   document.getElementById("sidebar").innerHTML = renderSidebar(user.role, "leads");
 
   await loadAssignedRepOptions();
+  await loadTechnicianOptions();
   await renderLeads();
 
   document.getElementById("openLeadModalBtn").addEventListener("click", async () => {
@@ -213,6 +257,8 @@ requireAuth(async (user) => {
     clearLeadForm();
     closeModal("leadModal");
   });
+
+  document.getElementById("closeConvertModalBtn").addEventListener("click", () => closeModal("convertModal"));
 
   document.getElementById("saveLeadBtn").addEventListener("click", async () => {
     const msg = document.getElementById("leadMsg");
@@ -237,6 +283,32 @@ requireAuth(async (user) => {
       closeModal("leadModal");
     } catch (e) {
       msg.textContent = e.message || "Failed to save lead.";
+    }
+  });
+
+  document.getElementById("confirmConvertBtn").addEventListener("click", async () => {
+    const msg = document.getElementById("convertMsg");
+    const lead = currentLeads.find((item) => item.id === convertingLeadId);
+
+    if (!lead) {
+      msg.textContent = "Lead not found.";
+      return;
+    }
+
+    try {
+      await convertLeadToJob(lead, {
+        serviceType: document.getElementById("convertServiceType").value.trim(),
+        assignedTechnician: document.getElementById("convertAssignedTechnician").value,
+        scheduledDate: document.getElementById("convertScheduledDate").value,
+        scheduledTimeWindow: document.getElementById("convertScheduledTimeWindow").value,
+        notes: document.getElementById("convertNotes").value.trim()
+      }, currentUser);
+
+      msg.textContent = "Lead converted to job successfully.";
+      await renderLeads();
+      closeModal("convertModal");
+    } catch (e) {
+      msg.textContent = e.message || "Failed to convert lead.";
     }
   });
 });
