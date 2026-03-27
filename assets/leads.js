@@ -186,7 +186,7 @@ function formatDisplayNameFromUser(user) {
 
 function repName(value) {
   const rep = findUserById(value);
-  if (!rep) return "—";
+  if (!rep) return "Unassigned";
   return `${rep.name || formatDisplayNameFromUser(rep)} • ${formatHandleFromUser(rep)}`;
 }
 
@@ -200,6 +200,16 @@ function creatorName(email) {
 function formatAddOns(addOns = []) {
   if (!addOns.length) return "—";
   return addOns.map((id) => ADD_ONS.find((a) => a.id === id)?.label || id).join(", ");
+}
+
+function statusClass(status, archived) {
+  if (archived) return "status-archived";
+  return `status-${status || "new"}`;
+}
+
+function statusLabel(status, archived) {
+  if (archived) return "Archived";
+  return (status || "new").replaceAll("_", " ");
 }
 
 async function loadAssignedRepOptions() {
@@ -240,51 +250,80 @@ async function renderLeads() {
   }
 
   leadsList.innerHTML = currentLeads.map((lead) => `
-    <div class="row">
-      <div>
-        <strong>${lead.fullName || "Unnamed Lead"}</strong><br>
-        <span class="muted">${lead.serviceInterest || "No service selected"}</span>
-        <div class="meta-line">
-          Category: ${lead.serviceCategory || "—"}<br>
-          Add-ons: ${formatAddOns(lead.addOns || [])}
+    <div class="pipeline-card">
+      <div class="pipeline-head">
+        <div>
+          <h3 class="pipeline-name">${lead.fullName || "Unnamed Lead"}</h3>
+          <div class="pipeline-sub">${lead.serviceInterest || "No service selected"}</div>
+        </div>
+
+        <div class="badge-row">
+          <span class="status-badge ${statusClass(lead.status, lead.isArchived)}">${statusLabel(lead.status, lead.isArchived)}</span>
+          ${lead.deleteRequested ? `<span class="status-badge">Delete Requested</span>` : ``}
+          ${lead.convertedToJobId ? `<span class="status-badge status-scheduled">Converted</span>` : ``}
         </div>
       </div>
+
       <div>
-        ${lead.phone || "No phone"}<br>
-        <span class="muted">${lead.email || "No email"}</span>
-        <div class="meta-line">
-          Source: ${prettySource(lead.leadSource)}<br>
-          Rep: ${repName(lead.assignedRep)}
+        <span class="identity-chip">Rep: ${repName(lead.assignedRep)}</span>
+        <span class="identity-chip">Created By: ${creatorName(lead.createdBy)}</span>
+      </div>
+
+      <div class="pipeline-grid">
+        <div class="pipeline-box">
+          <div class="pipeline-label">Contact</div>
+          <div class="pipeline-value">
+            ${lead.phone || "No phone"}<br>
+            ${lead.email || "No email"}<br>
+            Preferred: ${lead.preferredContactMethod || "—"}
+          </div>
+        </div>
+
+        <div class="pipeline-box">
+          <div class="pipeline-label">Location</div>
+          <div class="pipeline-value">
+            ${lead.address || "No address"}<br>
+            ${lead.city || ""} ${lead.state || ""} ${lead.zip || ""}
+          </div>
+        </div>
+
+        <div class="pipeline-box">
+          <div class="pipeline-label">Service</div>
+          <div class="pipeline-value">
+            Category: ${lead.serviceCategory || "—"}<br>
+            Source: ${prettySource(lead.leadSource)}<br>
+            Add-ons: ${formatAddOns(lead.addOns || [])}
+          </div>
+        </div>
+
+        <div class="pipeline-box">
+          <div class="pipeline-label">Estimate</div>
+          <div class="pipeline-value">
+            Sq Ft / Qty: ${lead.estimatedSqFt || 0}<br>
+            Estimate: $${Number(lead.estimatedPrice || 0).toFixed(2)}<br>
+            Appointment: ${lead.appointmentDate || "—"}
+          </div>
         </div>
       </div>
-      <div>
-        ${lead.address || "No address"}<br>
-        <span class="muted">${lead.city || ""} ${lead.state || ""} ${lead.zip || ""}</span>
-        <div class="meta-line">
-          Sq Ft / Qty: ${lead.estimatedSqFt || 0}<br>
-          Estimate: $${Number(lead.estimatedPrice || 0).toFixed(2)}<br>
-          Status: ${lead.status || "new"}
-        </div>
+
+      <div class="pipeline-actions">
+        <button class="btn secondary edit-lead-btn" data-id="${lead.id}">Edit</button>
+        <button class="btn convert-lead-btn" data-id="${lead.id}" ${lead.convertedToJobId ? "disabled" : ""}>
+          ${lead.convertedToJobId ? "Converted" : "Convert"}
+        </button>
+        <button class="btn secondary archive-lead-btn" data-id="${lead.id}" ${lead.isArchived ? "disabled" : ""}>
+          ${lead.isArchived ? "Archived" : "Archive"}
+        </button>
+        <button class="btn secondary delete-lead-btn" data-id="${lead.id}">
+          ${lead.deleteRequested && currentUser.role !== "admin" && currentUser.role !== "super_admin" ? "Delete Requested" : "Delete"}
+        </button>
       </div>
-      <div>
-        <div class="action-row">
-          <button class="btn secondary edit-lead-btn" data-id="${lead.id}">Edit</button>
-          <button class="btn convert-lead-btn" data-id="${lead.id}" ${lead.convertedToJobId ? "disabled" : ""}>
-            ${lead.convertedToJobId ? "Converted" : "Convert"}
-          </button>
-          <button class="btn secondary archive-lead-btn" data-id="${lead.id}" ${lead.isArchived ? "disabled" : ""}>
-            ${lead.isArchived ? "Archived" : "Archive"}
-          </button>
-          <button class="btn secondary delete-lead-btn" data-id="${lead.id}">
-            ${lead.deleteRequested && currentUser.role !== "admin" && currentUser.role !== "super_admin" ? "Delete Requested" : "Delete"}
-          </button>
-        </div>
-        <div class="meta-line">
-          Created By: ${creatorName(lead.createdBy)}<br>
-          Created: ${formatDate(lead.createdAt)}<br>
-          Updated: ${formatDate(lead.updatedAt)}<br>
-          Job: ${lead.convertedToJobId || "—"}
-        </div>
+
+      <div class="meta-line">
+        Created: ${formatDate(lead.createdAt)}<br>
+        Updated: ${formatDate(lead.updatedAt)}<br>
+        Job: ${lead.convertedToJobId || "—"}<br>
+        Notes: ${lead.notes || "—"}
       </div>
     </div>
   `).join("");
