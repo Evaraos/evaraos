@@ -151,6 +151,7 @@ export function renderRoleSummary(user) {
 
   return `
     <strong>${user.name || user.email}</strong><br>
+    Username: ${user.username || "—"}<br>
     Role: ${prettyRole}<br>
     Company: ${user.companyId}<br>
     Access Level: ${user.companyAccessLevel || "subsidiary"}<br>
