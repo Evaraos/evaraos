@@ -5,76 +5,125 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Evaraos Access</title>
   <link rel="stylesheet" href="assets/style.css">
+
+  <style>
+    .auth-page{
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .auth-center{
+      flex:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:40px 20px;
+    }
+
+    .auth-shell-wrap{
+      width:100%;
+      max-width:520px;
+      margin:0 auto;
+    }
+  </style>
 </head>
-<body class="auth-body">
 
-  <div class="auth-shell-wrap">
-    <div class="auth-tabs">
-      <button id="loginTab" class="auth-tab active" onclick="showAuthTab('login')">Login</button>
-      <button id="signupTab" class="auth-tab" onclick="showAuthTab('signup')">Sign Up</button>
+<body class="auth-page">
+
+  <!-- NAVBAR -->
+  <header class="site-header">
+    <div class="container site-header-inner">
+      
+      <a class="brand" href="index.html">
+        <img src="assets/img/evaraos_logo.png" alt="logo">
+        <span>Evaraos Inc</span>
+      </a>
+
+      <nav class="site-nav">
+        <a href="index.html">Home</a>
+        <a href="login.html" class="active">Login</a>
+      </nav>
+
     </div>
+  </header>
 
-    <div class="auth-box">
+  <!-- CENTERED AUTH -->
+  <div class="auth-center">
+    <div class="auth-shell-wrap">
 
-      <div id="loginPanel">
-        <img src="assets/img/evaraos_logo.png" class="auth-logo" alt="Evaraos logo">
-        <h2 style="text-align:center;margin:0 0 8px;">Welcome Back</h2>
-        <p class="auth-subtext">Login to access Evaraos Inc</p>
-
-        <input id="loginEmail" type="email" placeholder="Email">
-
-        <div class="password-wrap">
-          <input id="loginPassword" type="password" placeholder="Password">
-          <button class="eye-toggle" type="button" onclick="togglePassword('loginPassword', this)">👁</button>
-        </div>
-
-        <div class="action-row">
-          <button class="btn" onclick="loginUser()">Login</button>
-          <button class="btn secondary" onclick="forgotPassword()">Forgot Password</button>
-        </div>
-
-        <p id="loginMsg" class="auth-msg"></p>
+      <div class="auth-tabs">
+        <button id="loginTab" class="auth-tab active" onclick="showAuthTab('login')">Login</button>
+        <button id="signupTab" class="auth-tab" onclick="showAuthTab('signup')">Sign Up</button>
       </div>
 
-      <div id="signupPanel" style="display:none;">
-        <img src="assets/img/evaraos_logo.png" class="auth-logo" alt="Evaraos logo">
-        <h2 style="text-align:center;margin:0 0 8px;">Create Account</h2>
-        <p class="auth-subtext">Join the Evaraos platform</p>
+      <div class="auth-box">
 
-        <input id="signupName" type="text" placeholder="Full Name">
-        <input id="signupUsername" type="text" placeholder="Username (must be unique)">
-        <input id="signupEmail" type="email" placeholder="Email">
+        <!-- LOGIN -->
+        <div id="loginPanel">
+          <img src="assets/img/evaraos_logo.png" class="auth-logo" alt="Evaraos logo">
+          <h2 style="text-align:center;margin:0 0 8px;">Welcome Back</h2>
+          <p class="auth-subtext">Login to access Evaraos Inc</p>
 
-        <div class="password-wrap">
-          <input id="signupPassword" type="password" placeholder="Password">
-          <button class="eye-toggle" type="button" onclick="togglePassword('signupPassword', this)">👁</button>
+          <input id="loginEmail" type="email" placeholder="Email">
+
+          <div class="password-wrap">
+            <input id="loginPassword" type="password" placeholder="Password">
+            <button class="eye-toggle" type="button" onclick="togglePassword('loginPassword', this)">👁</button>
+          </div>
+
+          <div class="action-row">
+            <button class="btn" onclick="loginUser()">Login</button>
+            <button class="btn secondary" onclick="forgotPassword()">Forgot Password</button>
+          </div>
+
+          <p id="loginMsg" class="auth-msg"></p>
         </div>
 
-        <div class="password-wrap">
-          <input id="signupPasswordConfirm" type="password" placeholder="Confirm Password">
-          <button class="eye-toggle" type="button" onclick="togglePassword('signupPasswordConfirm', this)">👁</button>
+        <!-- SIGNUP -->
+        <div id="signupPanel" style="display:none;">
+          <img src="assets/img/evaraos_logo.png" class="auth-logo" alt="Evaraos logo">
+          <h2 style="text-align:center;margin:0 0 8px;">Create Account</h2>
+          <p class="auth-subtext">Join the Evaraos platform</p>
+
+          <input id="signupName" type="text" placeholder="Full Name">
+          <input id="signupUsername" type="text" placeholder="Username (must be unique)">
+          <input id="signupEmail" type="email" placeholder="Email">
+
+          <div class="password-wrap">
+            <input id="signupPassword" type="password" placeholder="Password">
+            <button class="eye-toggle" type="button" onclick="togglePassword('signupPassword', this)">👁</button>
+          </div>
+
+          <div class="password-wrap">
+            <input id="signupPasswordConfirm" type="password" placeholder="Confirm Password">
+            <button class="eye-toggle" type="button" onclick="togglePassword('signupPasswordConfirm', this)">👁</button>
+          </div>
+
+          <select id="signupRole">
+            <option value="customer">Customer</option>
+            <option value="sales_rep">Sales Rep</option>
+            <option value="technician">Technician</option>
+            <option value="manager">Manager</option>
+            <option value="operations_coordinator">Operations Coordinator</option>
+            <option value="hr">HR</option>
+            <option value="admin">Admin</option>
+          </select>
+
+          <button class="btn" onclick="signupUser()">Create Account</button>
+
+          <p class="auth-subtext" style="text-align:left;">
+            Staff accounts require admin approval before access is granted.
+          </p>
+
+          <p id="signupMsg" class="auth-msg"></p>
         </div>
 
-        <select id="signupRole">
-          <option value="customer">Customer</option>
-          <option value="sales_rep">Sales Rep</option>
-          <option value="technician">Technician</option>
-          <option value="manager">Manager</option>
-          <option value="operations_coordinator">Operations Coordinator</option>
-          <option value="hr">HR</option>
-          <option value="admin">Admin</option>
-        </select>
-
-        <button class="btn" onclick="signupUser()">Create Account</button>
-        <p class="auth-subtext" style="text-align:left;">
-          Staff signups require approval by an Admin or Super Admin before access is granted.
-        </p>
-        <p id="signupMsg" class="auth-msg"></p>
       </div>
-
     </div>
   </div>
 
+  <!-- SCRIPT -->
   <script type="module">
     import { signup as createAccount, login as loginAccount, getCurrentUserDoc, resetPassword } from "./assets/auth.js";
     import { auth } from "./assets/firebase.js";
@@ -142,7 +191,7 @@
       const msg = document.getElementById("loginMsg");
 
       if (!email) {
-        msg.textContent = "Enter your email first, then tap Forgot Password.";
+        msg.textContent = "Enter your email first.";
         return;
       }
 
@@ -150,7 +199,7 @@
         await resetPassword(email);
         msg.textContent = "Password reset email sent.";
       } catch (e) {
-        msg.textContent = e.message || "Could not send reset email.";
+        msg.textContent = e.message || "Error sending reset email.";
       }
     };
 
@@ -165,8 +214,8 @@
 
       msg.textContent = "";
 
-      if (!name || !username || !email || !password || !passwordConfirm || !role) {
-        msg.textContent = "Complete all sign up fields.";
+      if (!name || !username || !email || !password || !passwordConfirm) {
+        msg.textContent = "Complete all fields.";
         return;
       }
 
@@ -179,15 +228,11 @@
         await createAccount(name, username, email, password, role);
         msg.textContent = role === "customer"
           ? "Account created successfully."
-          : "Staff account created and sent for approval.";
+          : "Account pending admin approval.";
 
-        setTimeout(() => {
-          showAuthTab("login");
-          document.getElementById("loginEmail").value = email;
-          document.getElementById("loginPassword").value = "";
-        }, 900);
+        setTimeout(() => showAuthTab("login"), 900);
       } catch (e) {
-        msg.textContent = e.message || "Sign up failed.";
+        msg.textContent = e.message || "Signup failed.";
       }
     };
   </script>
