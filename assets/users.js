@@ -17,6 +17,21 @@ let editingUserId = null;
 let currentUsers = [];
 let currentPendingUsers = [];
 
+function applySuperAdminLock(user) {
+  const isSuperAdmin = user?.role === "super_admin";
+
+  document.getElementById("superAdminLockMsg").style.display = isSuperAdmin ? "block" : "none";
+  document.getElementById("userRole").disabled = isSuperAdmin;
+  document.getElementById("userApprovalStatus").disabled = isSuperAdmin;
+  document.getElementById("userStatus").disabled = isSuperAdmin;
+
+  if (isSuperAdmin) {
+    document.getElementById("userRole").value = "super_admin";
+    document.getElementById("userApprovalStatus").value = "approved";
+    document.getElementById("userStatus").value = "active";
+  }
+}
+
 function fillUserForm(user) {
   document.getElementById("userName").value = user.name || "";
   document.getElementById("userUsername").value = user.username || "";
@@ -30,6 +45,8 @@ function fillUserForm(user) {
   document.getElementById("userCity").value = user.city || "";
   document.getElementById("userState").value = user.state || "";
   document.getElementById("userZip").value = user.zip || "";
+
+  applySuperAdminLock(user);
 }
 
 function clearUserForm() {
@@ -47,6 +64,10 @@ function clearUserForm() {
   document.getElementById("userState").value = "";
   document.getElementById("userZip").value = "";
   document.getElementById("userMsg").textContent = "";
+  document.getElementById("superAdminLockMsg").style.display = "none";
+  document.getElementById("userRole").disabled = false;
+  document.getElementById("userApprovalStatus").disabled = false;
+  document.getElementById("userStatus").disabled = false;
 }
 
 function openModal(id) {
@@ -122,17 +143,25 @@ async function renderPendingUsers() {
 
   document.querySelectorAll(".approve-user-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
-      await approveUser(btn.dataset.id);
-      await renderPendingUsers();
-      await renderUsers();
+      try {
+        await approveUser(btn.dataset.id);
+        await renderPendingUsers();
+        await renderUsers();
+      } catch (e) {
+        alert(e.message || "Could not approve user.");
+      }
     });
   });
 
   document.querySelectorAll(".reject-user-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
-      await rejectUser(btn.dataset.id);
-      await renderPendingUsers();
-      await renderUsers();
+      try {
+        await rejectUser(btn.dataset.id);
+        await renderPendingUsers();
+        await renderUsers();
+      } catch (e) {
+        alert(e.message || "Could not reject user.");
+      }
     });
   });
 
@@ -224,14 +253,23 @@ requireAuth(async (user) => {
       return;
     }
 
+    const selectedUser =
+      currentUsers.find((u) => u.id === editingUserId) ||
+      currentPendingUsers.find((u) => u.id === editingUserId);
+
+    if (!selectedUser) {
+      msg.textContent = "User not found.";
+      return;
+    }
+
     try {
       await updateUserAdmin(editingUserId, {
         name: document.getElementById("userName").value.trim(),
         username: document.getElementById("userUsername").value.trim().toLowerCase(),
-        role: document.getElementById("userRole").value,
-        approvalStatus: document.getElementById("userApprovalStatus").value,
+        role: selectedUser.role === "super_admin" ? "super_admin" : document.getElementById("userRole").value,
+        approvalStatus: selectedUser.role === "super_admin" ? "approved" : document.getElementById("userApprovalStatus").value,
         companyId: document.getElementById("userCompanyId").value.trim(),
-        status: document.getElementById("userStatus").value,
+        status: selectedUser.role === "super_admin" ? "active" : document.getElementById("userStatus").value,
         phone: document.getElementById("userPhone").value.trim(),
         address: document.getElementById("userAddress").value.trim(),
         city: document.getElementById("userCity").value.trim(),
@@ -239,7 +277,10 @@ requireAuth(async (user) => {
         zip: document.getElementById("userZip").value.trim()
       });
 
-      msg.textContent = "User updated successfully.";
+      msg.textContent = selectedUser.role === "super_admin"
+        ? "Super Admin updated. Highest role remains locked."
+        : "User updated successfully.";
+
       await renderPendingUsers();
       await renderUsers();
       closeModal("userModal");
