@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leads - Evaraos Inc</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body class="app-shell">
+  <header class="app-topbar" id="topbar"></header>
+
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main-panel">
+      <section class="glass-card">
+        <h1 style="margin-top:0;">Leads Module</h1>
+        <p class="muted">Create and edit leads for sales and management workflows.</p>
+      </section>
+
+      <section class="glass-card">
+        <h2 style="margin-top:0;">Create / Edit Lead</h2>
+        <div class="form-grid">
+          <input id="leadFullName" placeholder="Full Name">
+          <input id="leadPhone" placeholder="Phone">
+          <input id="leadEmail" placeholder="Email">
+          <input id="leadAddress" placeholder="Address">
+          <input id="leadCity" placeholder="City">
+          <input id="leadState" placeholder="State">
+          <input id="leadZip" placeholder="Zip">
+          <input id="leadServiceInterest" placeholder="Service Interest">
+          <input id="leadSource" placeholder="Lead Source">
+          <select id="leadPreferredContactMethod">
+            <option value="">Preferred Contact Method</option>
+            <option value="call">Call</option>
+            <option value="text">Text</option>
+            <option value="email">Email</option>
+          </select>
+          <input id="leadEstimatedSqFt" type="number" placeholder="Estimated Sq Ft">
+          <input id="leadAssignedRep" placeholder="Assigned Rep">
+          <select id="leadStatus">
+            <option value="new">New</option>
+            <option value="contacted">Contacted</option>
+            <option value="quoted">Quoted</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="won">Won</option>
+            <option value="lost">Lost</option>
+          </select>
+          <input id="leadAppointmentDate" type="date">
+        </div>
+
+        <textarea id="leadNotes" placeholder="Notes"></textarea>
+
+        <div class="stack">
+          <button class="btn" id="saveLeadBtn">Save Lead</button>
+          <button class="btn secondary" id="cancelEditBtn" style="display:none;">Cancel Edit</button>
+        </div>
+
+        <p id="leadMsg" class="status-text"></p>
+      </section>
+
+      <section class="glass-card">
+        <h2 style="margin-top:0;">Lead List</h2>
+        <div id="leadsList" class="table"></div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="assets/leads.js"></script>
+</body>
+</html>
