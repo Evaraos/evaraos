@@ -17,6 +17,14 @@ let editingUserId = null;
 let currentUsers = [];
 let currentPendingUsers = [];
 
+function formatDisplayUsername(user) {
+  return user.displayUsername || user.username || "NoUsername";
+}
+
+function formatHandle(user) {
+  return user.handle || (user.username ? `@${user.username}` : "@no-username");
+}
+
 function applySuperAdminLock(user) {
   const isSuperAdmin = user?.role === "super_admin";
 
@@ -83,7 +91,8 @@ function userCard(user) {
     <div class="row">
       <div>
         <strong>${user.name || "Unnamed User"}</strong><br>
-        <span class="muted">@${user.username || "no-username"}</span><br>
+        <span class="muted">${formatDisplayUsername(user)}</span>
+        <div class="handle-line">${formatHandle(user)}</div>
         <span class="muted">${user.email || "No email"}</span>
       </div>
       <div>
@@ -106,7 +115,8 @@ function pendingUserCard(user) {
     <div class="approval-row">
       <div>
         <strong>${user.name || "Unnamed User"}</strong><br>
-        <span class="muted">@${user.username || "no-username"}</span><br>
+        <span class="muted">${formatDisplayUsername(user)}</span>
+        <div class="handle-line">${formatHandle(user)}</div>
         <span class="muted">${user.email || "No email"}</span>
       </div>
       <div>
