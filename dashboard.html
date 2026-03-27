@@ -53,6 +53,16 @@
       line-height:1.7;
       font-size:14px;
     }
+    .handle-chip{
+      display:inline-block;
+      margin-top:10px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      color:#fff;
+      font-size:13px;
+    }
     @media (max-width: 1024px){
       .hero-grid-dash,.stats-grid-4,.analytics-grid{
         grid-template-columns:1fr;
@@ -72,6 +82,7 @@
           <div>
             <h1 class="dash-title" id="dashHeading">Loading dashboard...</h1>
             <p class="dash-sub" id="dashSubtext">Loading company-aware analytics...</p>
+            <div class="handle-chip" id="userHandleChip">@loading</div>
 
             <div class="action-row" style="margin-top:16px;">
               <button class="btn secondary" id="openAccountSecurityBtn">Account & Security</button>
@@ -114,8 +125,7 @@
 
       <div class="form-grid">
         <input id="securityUsername" placeholder="Username">
-
-        <div></div>
+        <input id="securityHandle" placeholder="@handle" disabled>
 
         <div class="password-wrap">
           <input id="currentPassword" type="password" placeholder="Current Password">
@@ -151,7 +161,7 @@
       renderPermissionBadges,
       hasPermission
     } from "./assets/app.js";
-    import { updateOwnUsername, changeOwnPassword } from "./assets/auth.js";
+    import { updateOwnUsername, changeOwnPassword, buildUserIdentity } from "./assets/auth.js";
 
     function statCard(label, value) {
       return `
@@ -212,6 +222,7 @@
 
       await bindTopbar(user);
       document.getElementById("sidebar").innerHTML = renderSidebar(user.role, "overview");
+      document.getElementById("userHandleChip").textContent = user.handle || `@${user.username || "user"}`;
 
       const company = await loadCompany(user.companyId);
 
@@ -295,7 +306,7 @@
         roleWorkspace.innerHTML = [
           infoCard("Company Management", "Manage staffing, pending approvals, lead conversion, and day-to-day execution."),
           infoCard("Job Oversight", "Use the Jobs page to monitor scheduled, in-progress, and completed work."),
-          infoCard("Owner Link", company?.ownerName ? `${company.ownerName} | ${company.ownerEmail}` : "Owner information not found."),
+          infoCard("Handle Identity", user.handle || `@${user.username || "user"}`),
           infoCard("Internal Growth", "Use this structure to grow teams regionally and nationally under the same LLC.")
         ].join("");
       } else if (user.role === "sales_rep") {
@@ -312,7 +323,7 @@
         roleWorkspace.innerHTML = [
           infoCard("Pipeline Mission", "Convert leads into quoted, won, and scheduled work."),
           infoCard("Lead → Job Flow", "Qualified opportunities should be converted into jobs for field execution."),
-          infoCard("Company", company?.name || user.companyId),
+          infoCard("Handle", user.handle || `@${user.username || "user"}`),
           infoCard("Reporting Chain", `You report into ${user.reportsTo || "not set"}.`)
         ].join("");
       } else if (user.role === "technician") {
@@ -329,7 +340,7 @@
         roleWorkspace.innerHTML = [
           infoCard("Field Focus", "Stay focused on scheduled work, completion updates, and quality delivery."),
           infoCard("Operations Visibility", "You should only see what supports execution and status updates."),
-          infoCard("Company", company?.name || user.companyId),
+          infoCard("Handle", user.handle || `@${user.username || "user"}`),
           infoCard("Growth Path", "Technicians can later promote into operations leadership or management.")
         ].join("");
       } else {
@@ -345,13 +356,19 @@
 
         roleWorkspace.innerHTML = [
           infoCard("Company", company?.name || user.companyId),
-          infoCard("Access", "Your role determines which modules and actions you can see."),
+          infoCard("Handle", user.handle || `@${user.username || "user"}`),
           infoCard("Hierarchy", `Organization Level ${user.organizationLevel || "—"}`),
           infoCard("Execution", "The business now supports both lead conversion and job fulfillment.")
         ].join("");
       }
 
       document.getElementById("securityUsername").value = user.username || "";
+      document.getElementById("securityHandle").value = user.handle || `@${user.username || ""}`;
+
+      document.getElementById("securityUsername").addEventListener("input", (e) => {
+        const identity = buildUserIdentity(e.target.value);
+        document.getElementById("securityHandle").value = identity.handle || "";
+      });
 
       document.getElementById("openAccountSecurityBtn").addEventListener("click", () => {
         openModal("accountSecurityModal");
@@ -379,14 +396,15 @@
 
         try {
           if (newUsername && newUsername !== (user.username || "").toLowerCase()) {
-            await updateOwnUsername(user.uid || user.id, newUsername);
+            const identity = await updateOwnUsername(user.uid || user.id, newUsername);
+            document.getElementById("securityHandle").value = identity.handle;
           }
 
           if (currentPassword || newPassword) {
             await changeOwnPassword(currentPassword, newPassword);
           }
 
-          msg.textContent = "Account settings updated successfully.";
+          msg.textContent = "Account settings updated successfully. Refresh once to see updated handle everywhere.";
         } catch (e) {
           msg.textContent = e.message || "Failed to update account settings.";
         }
