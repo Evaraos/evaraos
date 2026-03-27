@@ -21,6 +21,14 @@ function formatDate(value) {
   }
 }
 
+function openModal(id) {
+  document.getElementById(id).classList.add("active");
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove("active");
+}
+
 function getRepFormData() {
   return {
     fullName: document.getElementById("repFullName").value.trim(),
@@ -47,10 +55,11 @@ function clearRepForm() {
   document.getElementById("repStatus").value = "active";
   document.getElementById("repNotes").value = "";
   document.getElementById("cancelRepEditBtn").style.display = "none";
+  document.getElementById("repMsg").textContent = "";
 }
 
 async function renderSalesReps() {
-  const reps = await fetchCompanyCollection("sales_reps");
+  const reps = await fetchCompanyCollection("sales_reps", currentUser.companyId);
   const salesRepsList = document.getElementById("salesRepsList");
 
   if (!reps.length) {
@@ -90,7 +99,7 @@ async function renderSalesReps() {
       fillRepForm(selectedRep);
       document.getElementById("cancelRepEditBtn").style.display = "inline-flex";
       document.getElementById("repMsg").textContent = `Editing ${selectedRep.fullName || "sales rep"}`;
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      openModal("repModal");
     });
   });
 }
@@ -115,6 +124,17 @@ requireAuth(async (user) => {
 
   await renderSalesReps();
 
+  document.getElementById("openRepModalBtn").addEventListener("click", () => {
+    clearRepForm();
+    openModal("repModal");
+  });
+
+  document.getElementById("closeRepModalBtn").addEventListener("click", () => closeModal("repModal"));
+  document.getElementById("cancelRepEditBtn").addEventListener("click", () => {
+    clearRepForm();
+    closeModal("repModal");
+  });
+
   document.getElementById("saveRepBtn").addEventListener("click", async () => {
     const msg = document.getElementById("repMsg");
     const data = getRepFormData();
@@ -133,15 +153,11 @@ requireAuth(async (user) => {
         msg.textContent = "Sales rep created successfully.";
       }
 
-      clearRepForm();
       await renderSalesReps();
+      clearRepForm();
+      closeModal("repModal");
     } catch (e) {
       msg.textContent = e.message || "Failed to save sales rep.";
     }
-  });
-
-  document.getElementById("cancelRepEditBtn").addEventListener("click", () => {
-    clearRepForm();
-    document.getElementById("repMsg").textContent = "Edit cancelled.";
   });
 });
