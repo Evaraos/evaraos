@@ -23,6 +23,14 @@ function formatDate(value) {
   }
 }
 
+function openModal(id) {
+  document.getElementById(id).classList.add("active");
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove("active");
+}
+
 function getLeadFormData() {
   return {
     fullName: document.getElementById("leadFullName").value.trim(),
@@ -78,7 +86,8 @@ function clearLeadForm() {
   document.getElementById("leadStatus").value = "new";
   document.getElementById("leadAppointmentDate").value = "";
   document.getElementById("leadNotes").value = "";
-  document.getElementById("cancelEditBtn").style.display = "none";
+  document.getElementById("cancelLeadEditBtn").style.display = "none";
+  document.getElementById("leadMsg").textContent = "";
 }
 
 function prettySource(value) {
@@ -104,7 +113,7 @@ function prettyRep(value) {
 }
 
 async function loadAssignedRepOptions() {
-  currentSalesReps = await fetchActiveSalesReps();
+  currentSalesReps = await fetchActiveSalesReps(currentUser.companyId);
   const select = document.getElementById("leadAssignedRep");
 
   select.innerHTML = `
@@ -114,7 +123,7 @@ async function loadAssignedRepOptions() {
 }
 
 async function renderLeads() {
-  const leads = await fetchCompanyCollection("leads");
+  const leads = await fetchCompanyCollection("leads", currentUser.companyId);
   const leadsList = document.getElementById("leadsList");
 
   if (!leads.length) {
@@ -159,15 +168,15 @@ async function renderLeads() {
   `).join("");
 
   document.querySelectorAll(".edit-lead-btn").forEach((btn) => {
-    btn.addEventListener("click", async () => {
+    btn.addEventListener("click", () => {
       const selectedLead = leads.find((lead) => lead.id === btn.dataset.id);
       if (!selectedLead) return;
 
       editingLeadId = selectedLead.id;
       fillLeadForm(selectedLead);
-      document.getElementById("cancelEditBtn").style.display = "inline-flex";
+      document.getElementById("cancelLeadEditBtn").style.display = "inline-flex";
       document.getElementById("leadMsg").textContent = `Editing ${selectedLead.fullName || "lead"}`;
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      openModal("leadModal");
     });
   });
 }
@@ -193,6 +202,18 @@ requireAuth(async (user) => {
   await loadAssignedRepOptions();
   await renderLeads();
 
+  document.getElementById("openLeadModalBtn").addEventListener("click", async () => {
+    clearLeadForm();
+    await loadAssignedRepOptions();
+    openModal("leadModal");
+  });
+
+  document.getElementById("closeLeadModalBtn").addEventListener("click", () => closeModal("leadModal"));
+  document.getElementById("cancelLeadEditBtn").addEventListener("click", () => {
+    clearLeadForm();
+    closeModal("leadModal");
+  });
+
   document.getElementById("saveLeadBtn").addEventListener("click", async () => {
     const msg = document.getElementById("leadMsg");
     const data = getLeadFormData();
@@ -211,16 +232,11 @@ requireAuth(async (user) => {
         msg.textContent = "Lead created successfully.";
       }
 
-      clearLeadForm();
-      await loadAssignedRepOptions();
       await renderLeads();
+      clearLeadForm();
+      closeModal("leadModal");
     } catch (e) {
       msg.textContent = e.message || "Failed to save lead.";
     }
-  });
-
-  document.getElementById("cancelEditBtn").addEventListener("click", () => {
-    clearLeadForm();
-    document.getElementById("leadMsg").textContent = "Edit cancelled.";
   });
 });
