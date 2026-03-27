@@ -11,6 +11,16 @@ import {
 let currentUser = null;
 let editingLeadId = null;
 
+function formatDate(value) {
+  if (!value) return "—";
+  try {
+    if (value.toDate) return value.toDate().toLocaleString();
+    return new Date(value).toLocaleString();
+  } catch {
+    return "—";
+  }
+}
+
 function getLeadFormData() {
   return {
     fullName: document.getElementById("leadFullName").value.trim(),
@@ -18,13 +28,13 @@ function getLeadFormData() {
     email: document.getElementById("leadEmail").value.trim(),
     address: document.getElementById("leadAddress").value.trim(),
     city: document.getElementById("leadCity").value.trim(),
-    state: document.getElementById("leadState").value.trim(),
+    state: document.getElementById("leadState").value,
     zip: document.getElementById("leadZip").value.trim(),
     serviceInterest: document.getElementById("leadServiceInterest").value.trim(),
-    leadSource: document.getElementById("leadSource").value.trim(),
+    leadSource: document.getElementById("leadSource").value,
     preferredContactMethod: document.getElementById("leadPreferredContactMethod").value,
     estimatedSqFt: document.getElementById("leadEstimatedSqFt").value,
-    assignedRep: document.getElementById("leadAssignedRep").value.trim(),
+    assignedRep: document.getElementById("leadAssignedRep").value,
     status: document.getElementById("leadStatus").value,
     appointmentDate: document.getElementById("leadAppointmentDate").value,
     notes: document.getElementById("leadNotes").value.trim()
@@ -69,6 +79,34 @@ function clearLeadForm() {
   document.getElementById("cancelEditBtn").style.display = "none";
 }
 
+function prettySource(value) {
+  const map = {
+    website: "🌐 Website",
+    referral: "🤝 Referral",
+    door_to_door: "🚪 Door to Door",
+    facebook: "📘 Facebook",
+    instagram: "📸 Instagram",
+    x_twitter: "🐦 X / Twitter",
+    tiktok: "🎵 TikTok",
+    google: "🔎 Google",
+    yelp: "⭐ Yelp",
+    phone_call: "📞 Phone Call",
+    other: "➕ Other"
+  };
+  return map[value] || "—";
+}
+
+function prettyRep(value) {
+  const map = {
+    unassigned: "Unassigned",
+    gilbert_ramos: "Gilbert Ramos",
+    rep_1: "Rep 1",
+    rep_2: "Rep 2",
+    rep_3: "Rep 3"
+  };
+  return map[value] || "—";
+}
+
 async function renderLeads() {
   const leads = await fetchCompanyCollection("leads");
   const leadsList = document.getElementById("leadsList");
@@ -83,17 +121,33 @@ async function renderLeads() {
       <div>
         <strong>${lead.fullName || "Unnamed Lead"}</strong><br>
         <span class="muted">${lead.serviceInterest || "No service selected"}</span>
+        <div class="meta-line">
+          Source: ${prettySource(lead.leadSource)}<br>
+          Rep: ${prettyRep(lead.assignedRep)}
+        </div>
       </div>
       <div>
         ${lead.phone || "No phone"}<br>
         <span class="muted">${lead.email || "No email"}</span>
+        <div class="meta-line">
+          Contact: ${lead.preferredContactMethod || "—"}<br>
+          Sq Ft: ${lead.estimatedSqFt || 0}
+        </div>
       </div>
       <div>
-        ${lead.city || ""} ${lead.state || ""}<br>
-        <span class="muted">${lead.status || "new"}</span>
+        ${lead.address || "No address"}<br>
+        <span class="muted">${lead.city || ""} ${lead.state || ""} ${lead.zip || ""}</span>
+        <div class="meta-line">
+          Status: ${lead.status || "new"}<br>
+          Appointment: ${lead.appointmentDate || "—"}
+        </div>
       </div>
       <div>
         <button class="btn secondary edit-lead-btn" data-id="${lead.id}">Edit</button>
+        <div class="meta-line">
+          Created: ${formatDate(lead.createdAt)}<br>
+          Updated: ${formatDate(lead.updatedAt)}
+        </div>
       </div>
     </div>
   `).join("");
