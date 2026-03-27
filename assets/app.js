@@ -23,8 +23,24 @@ export async function loadBrandSettings() {
   }
 }
 
+export async function loadCompany(companyId) {
+  try {
+    if (!companyId) return null;
+    const snap = await getDoc(doc(db, "companies", companyId));
+    return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+  } catch {
+    return null;
+  }
+}
+
 export function getDashboardPath(role) {
   return role === "customer" ? "customer_dashboard.html" : "dashboard.html";
+}
+
+export function hasPermission(user, permission) {
+  if (!user) return false;
+  if (!Array.isArray(user.permissions)) return false;
+  return user.permissions.includes("all") || user.permissions.includes(permission);
 }
 
 export async function bindTopbar(user = null) {
@@ -32,29 +48,33 @@ export async function bindTopbar(user = null) {
   if (!topbar) return;
 
   const settings = await loadBrandSettings();
+  const company = user?.companyId ? await loadCompany(user.companyId) : null;
   const homeHref = "index.html";
   const dashboardHref = user ? getDashboardPath(user.role) : "dashboard.html";
 
   topbar.innerHTML = `
     <div class="app-topbar-inner">
       <a class="app-brand" href="${homeHref}">
-        <img src="${settings?.logoUrl || "../assets/img/evaraos_logo.png"}" alt="logo">
+        <img src="${settings?.logoUrl || "assets/img/evaraos_logo.png"}" alt="logo">
         <div>
           <div>${settings?.platformName || "Evaraos Inc"}</div>
-          <div class="muted">${settings?.companyName || "Supreme TrueClean"}</div>
+          <div class="muted">${company?.name || settings?.companyName || "Supreme TrueClean"}</div>
         </div>
       </a>
-      <div style="display:flex;gap:10px;align-items:center;">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
         <a class="btn secondary" href="${dashboardHref}">Dashboard</a>
         <button class="btn secondary" id="logoutBtn">Logout</button>
       </div>
     </div>
   `;
 
-  document.getElementById("logoutBtn").onclick = async () => {
-    await logout();
-    window.location.href = "login.html";
-  };
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.onclick = async () => {
+      await logout();
+      window.location.href = "login.html";
+    };
+  }
 }
 
 export function requireAuth(renderFn) {
@@ -91,6 +111,22 @@ export async function fetchAllCollection(name) {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
+export async function fetchUsersByCompany(companyId) {
+  const q = query(collection(db, "users"), where("companyId", "==", companyId));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+export async function fetchActiveSalesReps(companyId) {
+  const q = query(
+    collection(db, "sales_reps"),
+    where("companyId", "==", companyId),
+    where("status", "==", "active")
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
 export function renderSidebar(role, active = "overview") {
   const links = [
     { key: "overview", label: "Overview", href: role === "customer" ? "customer_dashboard.html" : "dashboard.html" },
@@ -100,7 +136,6 @@ export function renderSidebar(role, active = "overview") {
     { key: "companies", label: "Companies", href: "companies.html" },
     { key: "customers", label: "Customers", href: "#" },
     { key: "jobs", label: "Jobs", href: "#" },
-    { key: "admin", label: "Admin", href: "#" },
     { key: "settings", label: "Settings", href: "#" }
   ];
 
@@ -118,8 +153,16 @@ export function renderRoleSummary(user) {
     <strong>${user.name || user.email}</strong><br>
     Role: ${prettyRole}<br>
     Company: ${user.companyId}<br>
-    Access: ${sections.join(", ")}
+    Access Level: ${user.companyAccessLevel || "subsidiary"}<br>
+    Sections: ${sections.join(", ")}<br>
+    Org Level: ${user.organizationLevel || "—"}
   `;
+}
+
+export function renderPermissionBadges(user) {
+  const permissions = Array.isArray(user?.permissions) ? user.permissions : [];
+  if (!permissions.length) return `<span class="muted">No permissions found</span>`;
+  return permissions.map((item) => `<span class="badge">${item}</span>`).join("");
 }
 
 export function roleGuard(user, requiredSection) {
@@ -181,6 +224,7 @@ export async function createSalesRep(data, user) {
     phone: data.phone || "",
     status: data.status || "active",
     notes: data.notes || "",
+    role: data.role || "sales_rep",
     createdBy: user.email || "",
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
@@ -194,18 +238,9 @@ export async function updateSalesRep(repId, data) {
     phone: data.phone || "",
     status: data.status || "active",
     notes: data.notes || "",
+    role: data.role || "sales_rep",
     updatedAt: serverTimestamp()
   });
-}
-
-export async function fetchActiveSalesReps(companyId) {
-  const q = query(
-    collection(db, "sales_reps"),
-    where("companyId", "==", companyId),
-    where("status", "==", "active")
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
 // Companies
@@ -241,18 +276,15 @@ export async function updateCompany(companyId, data) {
 }
 
 // Users
-export async function fetchUsersByCompany(companyId) {
-  const q = query(collection(db, "users"), where("companyId", "==", companyId));
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-}
-
 export async function updateUserAdmin(userId, data) {
   return updateDoc(doc(db, "users", userId), {
     name: data.name,
     role: data.role,
     approvalStatus: data.approvalStatus,
     companyId: data.companyId,
-    status: data.status
+    status: data.status,
+    organizationLevel: Number(data.organizationLevel),
+    permissions: data.permissions,
+    companyAccessLevel: data.companyAccessLevel
   });
 }
