@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Reps - Evaraos Inc</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body class="app-shell">
+  <header class="app-topbar" id="topbar"></header>
+
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main-panel">
+      <section class="glass-card">
+        <h1 style="margin-top:0;">Sales Reps Management</h1>
+        <p class="muted">Add, edit, and deactivate sales reps for live lead assignment.</p>
+      </section>
+
+      <section class="glass-card">
+        <h2 style="margin-top:0;">Create / Edit Sales Rep</h2>
+
+        <div class="form-grid">
+          <input id="repFullName" placeholder="Full Name">
+          <input id="repEmail" type="email" placeholder="Email">
+          <input id="repPhone" placeholder="Phone">
+          <select id="repStatus">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+
+        <textarea id="repNotes" class="notes-field" placeholder="Notes"></textarea>
+
+        <div class="stack">
+          <button class="btn" id="saveRepBtn">Save Sales Rep</button>
+          <button class="btn secondary" id="cancelRepEditBtn" style="display:none;">Cancel Edit</button>
+        </div>
+
+        <p id="repMsg" class="status-text"></p>
+      </section>
+
+      <section class="glass-card">
+        <h2 style="margin-top:0;">Sales Reps List</h2>
+        <div id="salesRepsList" class="table"></div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="assets/sales_reps.js"></script>
+</body>
+</html>
