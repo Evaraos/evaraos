@@ -2,6 +2,7 @@ import {
   bindTopbar,
   requireAuth,
   fetchCompanyCollection,
+  fetchActiveSalesReps,
   renderSidebar,
   roleGuard,
   createLead,
@@ -10,6 +11,7 @@ import {
 
 let currentUser = null;
 let editingLeadId = null;
+let currentSalesReps = [];
 
 function formatDate(value) {
   if (!value) return "—";
@@ -97,14 +99,18 @@ function prettySource(value) {
 }
 
 function prettyRep(value) {
-  const map = {
-    unassigned: "Unassigned",
-    gilbert_ramos: "Gilbert Ramos",
-    rep_1: "Rep 1",
-    rep_2: "Rep 2",
-    rep_3: "Rep 3"
-  };
-  return map[value] || "—";
+  const rep = currentSalesReps.find((r) => r.id === value);
+  return rep ? rep.fullName : "—";
+}
+
+async function loadAssignedRepOptions() {
+  currentSalesReps = await fetchActiveSalesReps();
+  const select = document.getElementById("leadAssignedRep");
+
+  select.innerHTML = `
+    <option value="">Assigned Sales Rep</option>
+    ${currentSalesReps.map((rep) => `<option value="${rep.id}">${rep.fullName}</option>`).join("")}
+  `;
 }
 
 async function renderLeads() {
@@ -184,6 +190,7 @@ requireAuth(async (user) => {
   await bindTopbar(user);
   document.getElementById("sidebar").innerHTML = renderSidebar(user.role, "leads");
 
+  await loadAssignedRepOptions();
   await renderLeads();
 
   document.getElementById("saveLeadBtn").addEventListener("click", async () => {
@@ -205,6 +212,7 @@ requireAuth(async (user) => {
       }
 
       clearLeadForm();
+      await loadAssignedRepOptions();
       await renderLeads();
     } catch (e) {
       msg.textContent = e.message || "Failed to save lead.";
