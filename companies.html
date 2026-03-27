@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Companies - Evaraos Inc</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body class="app-shell">
+  <header class="app-topbar" id="topbar"></header>
+
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main-panel">
+      <section class="glass-card">
+        <h1 style="margin-top:0;">Companies Management</h1>
+        <p class="muted">Owner-only control for future subsidiaries and business entities.</p>
+      </section>
+
+      <section class="glass-card">
+        <h2 style="margin-top:0;">Create / Edit Company</h2>
+
+        <div class="form-grid">
+          <input id="companyName" placeholder="Company Name">
+          <input id="companySlug" placeholder="Slug (example: supreme-trueclean)">
+          <input id="companyCity" placeholder="City">
+          <input id="companyState" placeholder="State">
+          <input id="companyPhone" placeholder="Phone">
+          <input id="companyEmail" type="email" placeholder="Email">
+          <select id="companyStatus">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+
+        <textarea id="companyNotes" class="notes-field" placeholder="Notes"></textarea>
+
+        <div class="stack">
+          <button class="btn" id="saveCompanyBtn">Save Company</button>
+          <button class="btn secondary" id="cancelCompanyEditBtn" style="display:none;">Cancel Edit</button>
+        </div>
+
+        <p id="companyMsg" class="status-text"></p>
+      </section>
+
+      <section class="glass-card">
+        <h2 style="margin-top:0;">Companies List</h2>
+        <div id="companiesList" class="table"></div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="assets/companies.js"></script>
+</body>
+</html>
