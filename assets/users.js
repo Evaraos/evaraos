@@ -19,27 +19,33 @@ let currentPendingUsers = [];
 
 function fillUserForm(user) {
   document.getElementById("userName").value = user.name || "";
+  document.getElementById("userUsername").value = user.username || "";
   document.getElementById("userEmail").value = user.email || "";
   document.getElementById("userRole").value = user.role || "customer";
   document.getElementById("userApprovalStatus").value = user.approvalStatus || "pending";
   document.getElementById("userCompanyId").value = user.companyId || "";
   document.getElementById("userStatus").value = user.status || "active";
-  document.getElementById("userCompanyAccessLevel").value = user.companyAccessLevel || "subsidiary";
-  document.getElementById("userOrganizationLevel").value = user.organizationLevel || "";
-  document.getElementById("userPermissions").value = Array.isArray(user.permissions) ? user.permissions.join(", ") : "";
+  document.getElementById("userPhone").value = user.phone || "";
+  document.getElementById("userAddress").value = user.address || "";
+  document.getElementById("userCity").value = user.city || "";
+  document.getElementById("userState").value = user.state || "";
+  document.getElementById("userZip").value = user.zip || "";
 }
 
 function clearUserForm() {
   editingUserId = null;
   document.getElementById("userName").value = "";
+  document.getElementById("userUsername").value = "";
   document.getElementById("userEmail").value = "";
   document.getElementById("userRole").value = "customer";
   document.getElementById("userApprovalStatus").value = "pending";
   document.getElementById("userCompanyId").value = "";
   document.getElementById("userStatus").value = "active";
-  document.getElementById("userCompanyAccessLevel").value = "subsidiary";
-  document.getElementById("userOrganizationLevel").value = "";
-  document.getElementById("userPermissions").value = "";
+  document.getElementById("userPhone").value = "";
+  document.getElementById("userAddress").value = "";
+  document.getElementById("userCity").value = "";
+  document.getElementById("userState").value = "";
+  document.getElementById("userZip").value = "";
   document.getElementById("userMsg").textContent = "";
 }
 
@@ -56,6 +62,7 @@ function userCard(user) {
     <div class="row">
       <div>
         <strong>${user.name || "Unnamed User"}</strong><br>
+        <span class="muted">@${user.username || "no-username"}</span><br>
         <span class="muted">${user.email || "No email"}</span>
       </div>
       <div>
@@ -63,8 +70,8 @@ function userCard(user) {
         <span class="muted">${user.approvalStatus || "pending"} | ${user.status || "active"}</span>
       </div>
       <div>
-        ${user.companyId || "No company"}<br>
-        <span class="muted">Level ${user.organizationLevel || "—"} | ${user.companyAccessLevel || "subsidiary"}</span>
+        ${user.phone || "No phone"}<br>
+        <span class="muted">${user.city || ""} ${user.state || ""}</span>
       </div>
       <div>
         <button class="btn secondary edit-user-btn" data-id="${user.id}">Edit</button>
@@ -78,6 +85,7 @@ function pendingUserCard(user) {
     <div class="approval-row">
       <div>
         <strong>${user.name || "Unnamed User"}</strong><br>
+        <span class="muted">@${user.username || "no-username"}</span><br>
         <span class="muted">${user.email || "No email"}</span>
       </div>
       <div>
@@ -85,8 +93,8 @@ function pendingUserCard(user) {
         <span class="muted">Approval: ${user.approvalStatus || "pending"}</span>
       </div>
       <div>
-        ${user.companyId || "No company"}<br>
-        <span class="muted">${user.companyAccessLevel || "subsidiary"}</span>
+        ${user.phone || "No phone"}<br>
+        <span class="muted">${user.city || ""} ${user.state || ""}</span>
       </div>
       <div class="action-row">
         <button class="btn approve-user-btn" data-id="${user.id}">Approve</button>
@@ -217,20 +225,18 @@ requireAuth(async (user) => {
     }
 
     try {
-      const permissionArray = document.getElementById("userPermissions").value
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean);
-
       await updateUserAdmin(editingUserId, {
         name: document.getElementById("userName").value.trim(),
+        username: document.getElementById("userUsername").value.trim().toLowerCase(),
         role: document.getElementById("userRole").value,
         approvalStatus: document.getElementById("userApprovalStatus").value,
         companyId: document.getElementById("userCompanyId").value.trim(),
         status: document.getElementById("userStatus").value,
-        companyAccessLevel: document.getElementById("userCompanyAccessLevel").value,
-        organizationLevel: document.getElementById("userOrganizationLevel").value || 0,
-        permissions: permissionArray
+        phone: document.getElementById("userPhone").value.trim(),
+        address: document.getElementById("userAddress").value.trim(),
+        city: document.getElementById("userCity").value.trim(),
+        state: document.getElementById("userState").value,
+        zip: document.getElementById("userZip").value.trim()
       });
 
       msg.textContent = "User updated successfully.";
