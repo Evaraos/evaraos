@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Users - Evaraos Inc</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body class="app-shell">
+  <header class="app-topbar" id="topbar"></header>
+
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main-panel">
+      <section class="glass-card">
+        <h1 style="margin-top:0;">Users & Approvals</h1>
+        <p class="muted">Approve users, assign roles, and control company access.</p>
+      </section>
+
+      <section class="glass-card">
+        <h2 style="margin-top:0;">Edit User</h2>
+
+        <div class="form-grid">
+          <input id="userName" placeholder="Full Name">
+          <input id="userEmail" placeholder="Email" disabled>
+          <select id="userRole">
+            <option value="customer">Customer</option>
+            <option value="sales_rep">Sales Rep</option>
+            <option value="technician">Technician</option>
+            <option value="manager">Manager</option>
+            <option value="operations_coordinator">Operations Coordinator</option>
+            <option value="hr">HR</option>
+            <option value="admin">Admin</option>
+          </select>
+          <select id="userApprovalStatus">
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+          </select>
+          <input id="userCompanyId" placeholder="Company ID">
+          <select id="userStatus">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+
+        <div class="stack">
+          <button class="btn" id="saveUserBtn">Save User</button>
+          <button class="btn secondary" id="cancelUserEditBtn" style="display:none;">Cancel Edit</button>
+        </div>
+
+        <p id="userMsg" class="status-text"></p>
+      </section>
+
+      <section class="glass-card">
+        <h2 style="margin-top:0;">Users List</h2>
+        <div id="usersList" class="table"></div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="assets/users.js"></script>
+</body>
+</html>
