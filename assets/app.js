@@ -10,7 +10,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-import { db, COMPANY_ID } from "./firebase.js";
+import { db } from "./firebase.js";
 import { listenAuth, logout } from "./auth.js";
 import { canAccess, getAllowedSections, getRoleLabel } from "./roles.js";
 
@@ -80,8 +80,8 @@ export function requireAuth(renderFn) {
   });
 }
 
-export async function fetchCompanyCollection(name) {
-  const q = query(collection(db, name), where("companyId", "==", COMPANY_ID));
+export async function fetchCompanyCollection(name, companyId) {
+  const q = query(collection(db, name), where("companyId", "==", companyId));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
@@ -94,6 +94,7 @@ export async function fetchAllCollection(name) {
 export function renderSidebar(role, active = "overview") {
   const links = [
     { key: "overview", label: "Overview", href: role === "customer" ? "customer_dashboard.html" : "dashboard.html" },
+    { key: "users", label: "Users", href: "users.html" },
     { key: "leads", label: "Leads", href: "leads.html" },
     { key: "sales_reps", label: "Sales Reps", href: "sales_reps.html" },
     { key: "companies", label: "Companies", href: "companies.html" },
@@ -105,10 +106,7 @@ export function renderSidebar(role, active = "overview") {
 
   return links
     .filter((link) => canAccess(role, link.key))
-    .map(
-      (link) =>
-        `<a class="${active === link.key ? "active" : ""}" href="${link.href}">${link.label}</a>`
-    )
+    .map((link) => `<a class="${active === link.key ? "active" : ""}" href="${link.href}">${link.label}</a>`)
     .join("");
 }
 
@@ -131,7 +129,7 @@ export function roleGuard(user, requiredSection) {
 // Leads
 export async function createLead(data, user) {
   return addDoc(collection(db, "leads"), {
-    companyId: COMPANY_ID,
+    companyId: user.companyId,
     fullName: data.fullName || "",
     phone: data.phone || "",
     email: data.email || "",
@@ -177,7 +175,7 @@ export async function updateLead(leadId, data) {
 // Sales reps
 export async function createSalesRep(data, user) {
   return addDoc(collection(db, "sales_reps"), {
-    companyId: COMPANY_ID,
+    companyId: user.companyId,
     fullName: data.fullName || "",
     email: data.email || "",
     phone: data.phone || "",
@@ -200,10 +198,10 @@ export async function updateSalesRep(repId, data) {
   });
 }
 
-export async function fetchActiveSalesReps() {
+export async function fetchActiveSalesReps(companyId) {
   const q = query(
     collection(db, "sales_reps"),
-    where("companyId", "==", COMPANY_ID),
+    where("companyId", "==", companyId),
     where("status", "==", "active")
   );
   const snap = await getDocs(q);
@@ -221,6 +219,7 @@ export async function createCompany(data, user) {
     email: data.email || "",
     status: data.status || "active",
     notes: data.notes || "",
+    ownerCompany: "Evaraos Inc",
     createdBy: user.email || "",
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
@@ -238,5 +237,22 @@ export async function updateCompany(companyId, data) {
     status: data.status || "active",
     notes: data.notes || "",
     updatedAt: serverTimestamp()
+  });
+}
+
+// Users
+export async function fetchUsersByCompany(companyId) {
+  const q = query(collection(db, "users"), where("companyId", "==", companyId));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+export async function updateUserAdmin(userId, data) {
+  return updateDoc(doc(db, "users", userId), {
+    name: data.name,
+    role: data.role,
+    approvalStatus: data.approvalStatus,
+    companyId: data.companyId,
+    status: data.status
   });
 }
