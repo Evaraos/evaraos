@@ -37,14 +37,16 @@
         <div id="loginPanel">
           <img src="assets/img/evaraos_logo.png" class="auth-logo" alt="Evaraos logo">
           <h2 style="text-align:center;margin:0 0 8px;">Welcome Back</h2>
-          <p class="auth-subtext">Login to access Evaraos Inc</p>
+          <p class="auth-subtext">Login with your username</p>
 
-          <input id="loginEmail" type="email" placeholder="Email">
+          <input id="loginUsername" type="text" placeholder="Username">
 
           <div class="password-wrap">
             <input id="loginPassword" type="password" placeholder="Password">
             <button class="eye-toggle" type="button" onclick="togglePassword('loginPassword', this)">👁</button>
           </div>
+
+          <input id="resetEmail" type="email" placeholder="Email for password reset only">
 
           <div class="action-row">
             <button class="btn" onclick="loginUser()">Login</button>
@@ -86,7 +88,7 @@
           <button class="btn" onclick="signupUser()">Create Account</button>
 
           <p class="auth-subtext" style="text-align:left;">
-            Staff accounts require admin approval before access is granted.
+            Staff accounts require admin or super admin approval before access is granted.
           </p>
 
           <p id="signupMsg" class="auth-msg"></p>
@@ -97,7 +99,12 @@
   </div>
 
   <script type="module">
-    import { signup as createAccount, login as loginAccount, getCurrentUserDoc, resetPassword } from "./assets/auth.js";
+    import {
+      signup as createAccount,
+      loginWithUsername,
+      getCurrentUserDoc,
+      resetPassword
+    } from "./assets/auth.js";
     import { auth } from "./assets/firebase.js";
 
     function getDashboardPath(role) {
@@ -131,19 +138,19 @@
     };
 
     window.loginUser = async function() {
-      const email = document.getElementById("loginEmail").value.trim();
+      const username = document.getElementById("loginUsername").value.trim();
       const password = document.getElementById("loginPassword").value;
       const msg = document.getElementById("loginMsg");
 
       msg.textContent = "";
 
-      if (!email || !password) {
-        msg.textContent = "Enter your email and password.";
+      if (!username || !password) {
+        msg.textContent = "Enter your username and password.";
         return;
       }
 
       try {
-        await loginAccount(email, password);
+        await loginWithUsername(username, password);
         const user = auth.currentUser;
         const userDoc = await getCurrentUserDoc(user);
 
@@ -159,11 +166,11 @@
     };
 
     window.forgotPassword = async function() {
-      const email = document.getElementById("loginEmail").value.trim();
+      const email = document.getElementById("resetEmail").value.trim();
       const msg = document.getElementById("loginMsg");
 
       if (!email) {
-        msg.textContent = "Enter your email first.";
+        msg.textContent = "Enter your email in the reset field first.";
         return;
       }
 
