@@ -15,9 +15,11 @@
       <span>Evaraos Inc</span>
     </a>
 
-    <nav class="site-nav">
+    <nav class="site-nav" id="homeNav">
       <a class="active" href="index.html">Home</a>
-      <a href="login.html">Login</a>
+      <a href="login.html" id="loginNavLink">Login</a>
+      <a href="dashboard.html" id="dashboardNavLink" style="display:none;">Dashboard</a>
+      <button id="logoutHomeBtn" style="display:none;">Logout</button>
     </nav>
   </div>
 </header>
@@ -31,9 +33,9 @@
         Evaraos Inc powers Supreme TrueClean first, then expands into a global organization
         with one premium platform for operations, approvals, users, and automation.
       </p>
-      <div class="hero-actions">
-        <a class="btn" href="login.html">Enter Platform</a>
-        <a class="btn secondary" href="login.html">Get Started</a>
+      <div class="hero-actions" id="heroActions">
+        <a class="btn" href="login.html" id="heroEnterLink">Enter Platform</a>
+        <a class="btn secondary" href="login.html" id="heroSecondaryLink">Get Started</a>
       </div>
     </div>
 
@@ -58,7 +60,7 @@
     <div class="grid-3">
       <div class="glow-card">
         <h3>Identity</h3>
-        <p>Multi-company foundation with Supreme TrueClean as the first active LLC inside Evaraos Inc.</p>
+        <p>Multi-company foundation with Supreme TrueClean as the first active LLC inside the Evaraos platform.</p>
       </div>
       <div class="glow-card">
         <h3>Operations</h3>
@@ -76,5 +78,6 @@
   <div class="container">© Evaraos Inc</div>
 </footer>
 
+<script type="module" src="assets/home.js"></script>
 </body>
 </html>
