@@ -17,6 +17,21 @@
       color:#8f97a6;
       padding:14px 0;
     }
+    .approval-row{
+      display:grid;
+      grid-template-columns:1.2fr 1fr 1fr auto;
+      gap:12px;
+      padding:16px;
+      border-radius:20px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      margin-bottom:12px;
+    }
+    @media (max-width: 1024px){
+      .approval-row{
+        grid-template-columns:1fr;
+      }
+    }
   </style>
 </head>
 <body class="app-shell">
@@ -30,9 +45,14 @@
         <div class="action-row" style="justify-content:space-between;align-items:center;">
           <div>
             <h1 style="margin:0;">Users & Approvals</h1>
-            <p class="muted" style="margin:8px 0 0;">Approve users, assign roles, control company access, and view the organization by role.</p>
+            <p class="muted" style="margin:8px 0 0;">Approve pending staff, assign roles, control company access, and view the organization by role.</p>
           </div>
         </div>
+      </section>
+
+      <section class="glass-card">
+        <h2 style="margin-top:0;">Pending Approvals</h2>
+        <div id="pendingUsersList"></div>
       </section>
 
       <section class="glass-card">
@@ -64,6 +84,7 @@
         <select id="userApprovalStatus">
           <option value="pending">Pending</option>
           <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
         </select>
         <input id="userCompanyId" placeholder="Company ID">
         <select id="userStatus">
