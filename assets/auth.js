@@ -89,16 +89,42 @@ function getRoleDefaults(role, isOwner = false) {
   return map[role] || map.customer;
 }
 
-function cleanUsernameValue(username) {
-  return (username || "").trim().toLowerCase();
+function sanitizeUsername(raw) {
+  return (raw || "")
+    .trim()
+    .replace(/^@+/, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9._]/g, "");
+}
+
+function makeDisplayUsername(username) {
+  if (!username) return "";
+  return username.charAt(0).toUpperCase() + username.slice(1).toLowerCase();
+}
+
+function makeHandle(username) {
+  return username ? `@${username}` : "";
 }
 
 function cleanEmailValue(email) {
   return (email || "").trim().toLowerCase();
 }
 
+export function normalizeUsernameInput(raw) {
+  return sanitizeUsername(raw);
+}
+
+export function buildUserIdentity(username) {
+  const clean = sanitizeUsername(username);
+  return {
+    username: clean,
+    handle: makeHandle(clean),
+    displayUsername: makeDisplayUsername(clean)
+  };
+}
+
 export async function usernameExists(username, excludeUid = "") {
-  const clean = cleanUsernameValue(username);
+  const clean = sanitizeUsername(username);
   if (!clean) return false;
 
   const q = query(collection(db, "users"), where("username", "==", clean));
@@ -110,16 +136,69 @@ export async function usernameExists(username, excludeUid = "") {
   return snap.docs.some((d) => d.id !== excludeUid);
 }
 
+export async function generateUsernameSuggestions(rawUsername) {
+  const base = sanitizeUsername(rawUsername);
+  if (!base) return [];
+
+  const suggestions = [];
+  const seedValues = [
+    base,
+    `${base}1`,
+    `${base}7`,
+    `${base}9`,
+    `${base}22`,
+    `${base}101`,
+    `${base}_official`,
+    `${base}.hq`,
+    `${base}.inc`,
+    `${base}_group`,
+    `${base}_team`,
+    `${base}_co`
+  ];
+
+  for (const value of seedValues) {
+    const clean = sanitizeUsername(value);
+    if (!clean) continue;
+    if (suggestions.includes(clean)) continue;
+
+    const taken = await usernameExists(clean);
+    if (!taken) suggestions.push(clean);
+    if (suggestions.length >= 6) break;
+  }
+
+  if (suggestions.length < 6) {
+    let counter = 111;
+    while (suggestions.length < 6) {
+      const candidate = `${base}${counter}`;
+      const taken = await usernameExists(candidate);
+      if (!taken && !suggestions.includes(candidate)) {
+        suggestions.push(candidate);
+      }
+      counter += 37;
+    }
+  }
+
+  return suggestions.map((item) => ({
+    username: item,
+    handle: makeHandle(item),
+    displayUsername: makeDisplayUsername(item)
+  }));
+}
+
 export async function signup(name, username, email, password, role) {
   const cleanName = (name || "").trim();
-  const cleanUsername = cleanUsernameValue(username);
   const cleanEmail = cleanEmailValue(email);
+  const identity = buildUserIdentity(username);
 
-  if (!cleanName || !cleanUsername || !cleanEmail || !password || !role) {
+  if (!cleanName || !identity.username || !cleanEmail || !password || !role) {
     throw new Error("Missing required signup fields.");
   }
 
-  const taken = await usernameExists(cleanUsername);
+  if (identity.username.length < 3) {
+    throw new Error("Username must be at least 3 characters.");
+  }
+
+  const taken = await usernameExists(identity.username);
   if (taken) {
     throw new Error("That username is already taken.");
   }
@@ -130,7 +209,9 @@ export async function signup(name, username, email, password, role) {
 
   await setDoc(doc(db, "users", cred.user.uid), {
     name: cleanName,
-    username: cleanUsername,
+    username: identity.username,
+    handle: identity.handle,
+    displayUsername: identity.displayUsername,
     email: cleanEmail,
     role: defaults.finalRole,
     approvalStatus: defaults.approvalStatus,
@@ -155,8 +236,8 @@ export async function signup(name, username, email, password, role) {
   return cred;
 }
 
-export async function loginWithUsername(username, password) {
-  const cleanUsername = cleanUsernameValue(username);
+export async function loginWithUsername(usernameOrHandle, password) {
+  const cleanUsername = sanitizeUsername(usernameOrHandle);
 
   if (!cleanUsername || !password) {
     throw new Error("Username and password are required.");
@@ -169,8 +250,7 @@ export async function loginWithUsername(username, password) {
     throw new Error("Username not found.");
   }
 
-  const userDoc = snap.docs[0];
-  const userData = userDoc.data();
+  const userData = snap.docs[0].data();
 
   if (!userData?.email) {
     throw new Error("That account is missing an email.");
@@ -206,21 +286,29 @@ export async function getCurrentUserDoc(user) {
 }
 
 export async function updateOwnUsername(userId, username) {
-  const cleanUsername = cleanUsernameValue(username);
+  const identity = buildUserIdentity(username);
 
-  if (!cleanUsername) {
+  if (!identity.username) {
     throw new Error("Username is required.");
   }
 
-  const taken = await usernameExists(cleanUsername, userId);
+  if (identity.username.length < 3) {
+    throw new Error("Username must be at least 3 characters.");
+  }
+
+  const taken = await usernameExists(identity.username, userId);
   if (taken) {
     throw new Error("That username is already taken.");
   }
 
   await updateDoc(doc(db, "users", userId), {
-    username: cleanUsername,
+    username: identity.username,
+    handle: identity.handle,
+    displayUsername: identity.displayUsername,
     updatedAt: serverTimestamp()
   });
+
+  return identity;
 }
 
 export async function changeOwnPassword(currentPassword, newPassword) {
