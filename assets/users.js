@@ -3,15 +3,19 @@ import {
   requireAuth,
   fetchUsersByCompany,
   fetchAllCollection,
+  fetchPendingUsersByCompany,
   renderSidebar,
   roleGuard,
   updateUserAdmin,
-  groupUsersByRole
+  groupUsersByRole,
+  approveUser,
+  rejectUser
 } from "./app.js";
 
 let currentUser = null;
 let editingUserId = null;
 let currentUsers = [];
+let currentPendingUsers = [];
 
 function fillUserForm(user) {
   document.getElementById("userName").value = user.name || "";
@@ -69,6 +73,76 @@ function userCard(user) {
   `;
 }
 
+function pendingUserCard(user) {
+  return `
+    <div class="approval-row">
+      <div>
+        <strong>${user.name || "Unnamed User"}</strong><br>
+        <span class="muted">${user.email || "No email"}</span>
+      </div>
+      <div>
+        ${user.role || "No role"}<br>
+        <span class="muted">Approval: ${user.approvalStatus || "pending"}</span>
+      </div>
+      <div>
+        ${user.companyId || "No company"}<br>
+        <span class="muted">${user.companyAccessLevel || "subsidiary"}</span>
+      </div>
+      <div class="action-row">
+        <button class="btn approve-user-btn" data-id="${user.id}">Approve</button>
+        <button class="btn secondary reject-user-btn" data-id="${user.id}">Reject</button>
+        <button class="btn secondary edit-user-btn" data-id="${user.id}">Edit</button>
+      </div>
+    </div>
+  `;
+}
+
+async function renderPendingUsers() {
+  const includeAll = currentUser.role === "super_admin";
+  currentPendingUsers = includeAll
+    ? await fetchPendingUsersByCompany(currentUser.companyId, true)
+    : await fetchPendingUsersByCompany(currentUser.companyId, false);
+
+  const root = document.getElementById("pendingUsersList");
+
+  if (!currentPendingUsers.length) {
+    root.innerHTML = `<div class="empty-group">No pending users right now.</div>`;
+    return;
+  }
+
+  root.innerHTML = currentPendingUsers.map(pendingUserCard).join("");
+
+  document.querySelectorAll(".approve-user-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      await approveUser(btn.dataset.id);
+      await renderPendingUsers();
+      await renderUsers();
+    });
+  });
+
+  document.querySelectorAll(".reject-user-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      await rejectUser(btn.dataset.id);
+      await renderPendingUsers();
+      await renderUsers();
+    });
+  });
+
+  document.querySelectorAll(".edit-user-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const selectedUser =
+        currentPendingUsers.find((user) => user.id === btn.dataset.id) ||
+        currentUsers.find((user) => user.id === btn.dataset.id);
+
+      if (!selectedUser) return;
+
+      editingUserId = selectedUser.id;
+      fillUserForm(selectedUser);
+      openModal("userModal");
+    });
+  });
+}
+
 async function renderUsers() {
   currentUsers = currentUser.role === "super_admin"
     ? await fetchAllCollection("users")
@@ -99,7 +173,7 @@ async function renderUsers() {
     `;
   }).join("");
 
-  document.querySelectorAll(".edit-user-btn").forEach((btn) => {
+  document.querySelectorAll("#usersGroupedList .edit-user-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const selectedUser = currentUsers.find((user) => user.id === btn.dataset.id);
       if (!selectedUser) return;
@@ -129,6 +203,7 @@ requireAuth(async (user) => {
   await bindTopbar(user);
   document.getElementById("sidebar").innerHTML = renderSidebar(user.role, "users");
 
+  await renderPendingUsers();
   await renderUsers();
 
   document.getElementById("closeUserModalBtn").addEventListener("click", () => closeModal("userModal"));
@@ -159,6 +234,7 @@ requireAuth(async (user) => {
       });
 
       msg.textContent = "User updated successfully.";
+      await renderPendingUsers();
       await renderUsers();
       closeModal("userModal");
       clearUserForm();
