@@ -4,7 +4,10 @@ import {
   query,
   where,
   doc,
-  getDoc
+  getDoc,
+  addDoc,
+  updateDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import { db, COMPANY_ID } from "./firebase.js";
@@ -85,8 +88,8 @@ export async function fetchCompanyCollection(name) {
 
 export function renderSidebar(role, active = "overview") {
   const links = [
-    { key: "overview", label: "Overview", href: "dashboard.html" },
-    { key: "leads", label: "Leads", href: "#" },
+    { key: "overview", label: "Overview", href: role === "customer" ? "customer_dashboard.html" : "dashboard.html" },
+    { key: "leads", label: "Leads", href: "leads.html" },
     { key: "customers", label: "Customers", href: "#" },
     { key: "jobs", label: "Jobs", href: "#" },
     { key: "admin", label: "Admin", href: "#" },
@@ -116,4 +119,49 @@ export function renderRoleSummary(user) {
 
 export function roleGuard(user, requiredSection) {
   return canAccess(user.role, requiredSection);
+}
+
+export async function createLead(data, user) {
+  return addDoc(collection(db, "leads"), {
+    companyId: COMPANY_ID,
+    fullName: data.fullName || "",
+    phone: data.phone || "",
+    email: data.email || "",
+    address: data.address || "",
+    city: data.city || "",
+    state: data.state || "",
+    zip: data.zip || "",
+    serviceInterest: data.serviceInterest || "",
+    leadSource: data.leadSource || "",
+    preferredContactMethod: data.preferredContactMethod || "",
+    estimatedSqFt: Number(data.estimatedSqFt || 0),
+    assignedRep: data.assignedRep || "",
+    status: data.status || "new",
+    notes: data.notes || "",
+    appointmentDate: data.appointmentDate || "",
+    createdBy: user.email || "",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  });
+}
+
+export async function updateLead(leadId, data) {
+  return updateDoc(doc(db, "leads", leadId), {
+    fullName: data.fullName || "",
+    phone: data.phone || "",
+    email: data.email || "",
+    address: data.address || "",
+    city: data.city || "",
+    state: data.state || "",
+    zip: data.zip || "",
+    serviceInterest: data.serviceInterest || "",
+    leadSource: data.leadSource || "",
+    preferredContactMethod: data.preferredContactMethod || "",
+    estimatedSqFt: Number(data.estimatedSqFt || 0),
+    assignedRep: data.assignedRep || "",
+    status: data.status || "new",
+    notes: data.notes || "",
+    appointmentDate: data.appointmentDate || "",
+    updatedAt: serverTimestamp()
+  });
 }
