@@ -169,6 +169,29 @@ export function roleGuard(user, requiredSection) {
   return canAccess(user.role, requiredSection);
 }
 
+export function groupUsersByRole(users) {
+  const order = [
+    "super_admin",
+    "admin",
+    "manager",
+    "operations_coordinator",
+    "sales_rep",
+    "technician",
+    "hr",
+    "customer"
+  ];
+
+  const groups = {};
+  order.forEach((role) => {
+    groups[role] = users.filter((user) => user.role === role);
+  });
+
+  const extras = users.filter((user) => !order.includes(user.role));
+  if (extras.length) groups.other = extras;
+
+  return groups;
+}
+
 // Leads
 export async function createLead(data, user) {
   return addDoc(collection(db, "leads"), {
@@ -287,4 +310,40 @@ export async function updateUserAdmin(userId, data) {
     permissions: data.permissions,
     companyAccessLevel: data.companyAccessLevel
   });
+}
+
+export async function updateOwnCustomerProfile(userId, data) {
+  return updateDoc(doc(db, "users", userId), {
+    name: data.name,
+    email: data.email,
+    phone: data.phone || "",
+    address: data.address || "",
+    city: data.city || "",
+    state: data.state || "",
+    zip: data.zip || "",
+    photoUrl: data.photoUrl || "",
+    preferredContactMethod: data.preferredContactMethod || "",
+    updatedAt: serverTimestamp()
+  });
+}
+
+export async function fetchCustomerServices(user) {
+  return [
+    {
+      id: "trash-bin-monthly",
+      name: "Trash Bin Cleaning Subscription",
+      status: "active",
+      billingType: "monthly",
+      cancellationPolicy: "Early cancellation may include termination fees depending on contract terms.",
+      canRequestChanges: true
+    },
+    {
+      id: "driveway-cleaning",
+      name: "Driveway Cleaning",
+      status: "inactive",
+      billingType: "one_time",
+      cancellationPolicy: "One-time services can be removed before scheduling confirmation.",
+      canRequestChanges: true
+    }
+  ];
 }
