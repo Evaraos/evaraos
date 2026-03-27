@@ -44,14 +44,13 @@
       renderRoleSummary
     } from "./assets/app.js";
 
-    await bindTopbar();
-
     requireAuth(async (user) => {
       if (user.role === "customer") {
         window.location.href = "customer_dashboard.html";
         return;
       }
 
+      await bindTopbar(user);
       document.getElementById("sidebar").innerHTML = renderSidebar(user.role, "overview");
 
       const [leads, customers, jobs, invoices] = await Promise.all([
