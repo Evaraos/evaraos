@@ -3,7 +3,10 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  updatePassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
@@ -86,8 +89,16 @@ function getRoleDefaults(role, isOwner = false) {
   return map[role] || map.customer;
 }
 
+function cleanUsernameValue(username) {
+  return (username || "").trim().toLowerCase();
+}
+
+function cleanEmailValue(email) {
+  return (email || "").trim().toLowerCase();
+}
+
 export async function usernameExists(username, excludeUid = "") {
-  const clean = (username || "").trim().toLowerCase();
+  const clean = cleanUsernameValue(username);
   if (!clean) return false;
 
   const q = query(collection(db, "users"), where("username", "==", clean));
@@ -101,8 +112,8 @@ export async function usernameExists(username, excludeUid = "") {
 
 export async function signup(name, username, email, password, role) {
   const cleanName = (name || "").trim();
-  const cleanUsername = (username || "").trim().toLowerCase();
-  const cleanEmail = (email || "").trim().toLowerCase();
+  const cleanUsername = cleanUsernameValue(username);
+  const cleanEmail = cleanEmailValue(email);
 
   if (!cleanName || !cleanUsername || !cleanEmail || !password || !role) {
     throw new Error("Missing required signup fields.");
@@ -145,7 +156,7 @@ export async function signup(name, username, email, password, role) {
 }
 
 export async function loginWithUsername(username, password) {
-  const cleanUsername = (username || "").trim().toLowerCase();
+  const cleanUsername = cleanUsernameValue(username);
 
   if (!cleanUsername || !password) {
     throw new Error("Username and password are required.");
@@ -158,12 +169,14 @@ export async function loginWithUsername(username, password) {
     throw new Error("Username not found.");
   }
 
-  const userData = snap.docs[0].data();
+  const userDoc = snap.docs[0];
+  const userData = userDoc.data();
+
   if (!userData?.email) {
     throw new Error("That account is missing an email.");
   }
 
-  return signInWithEmailAndPassword(auth, userData.email, password);
+  return signInWithEmailAndPassword(auth, cleanEmailValue(userData.email), password);
 }
 
 export async function logout() {
@@ -171,7 +184,7 @@ export async function logout() {
 }
 
 export async function resetPassword(email) {
-  const cleanEmail = (email || "").trim().toLowerCase();
+  const cleanEmail = cleanEmailValue(email);
   if (!cleanEmail) {
     throw new Error("Email is required for password reset.");
   }
@@ -193,7 +206,7 @@ export async function getCurrentUserDoc(user) {
 }
 
 export async function updateOwnUsername(userId, username) {
-  const cleanUsername = (username || "").trim().toLowerCase();
+  const cleanUsername = cleanUsernameValue(username);
 
   if (!cleanUsername) {
     throw new Error("Username is required.");
@@ -208,6 +221,26 @@ export async function updateOwnUsername(userId, username) {
     username: cleanUsername,
     updatedAt: serverTimestamp()
   });
+}
+
+export async function changeOwnPassword(currentPassword, newPassword) {
+  const user = auth.currentUser;
+
+  if (!user?.email) {
+    throw new Error("You must be logged in to change your password.");
+  }
+
+  if (!currentPassword || !newPassword) {
+    throw new Error("Current and new password are required.");
+  }
+
+  if (newPassword.length < 6) {
+    throw new Error("New password must be at least 6 characters.");
+  }
+
+  const credential = EmailAuthProvider.credential(user.email, currentPassword);
+  await reauthenticateWithCredential(user, credential);
+  await updatePassword(user, newPassword);
 }
 
 export function listenAuth(callback) {
