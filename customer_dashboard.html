@@ -38,6 +38,12 @@
       font-size:28px;
       background:linear-gradient(135deg, rgba(227,6,19,.35), rgba(246,89,44,.18));
       border:1px solid rgba(255,255,255,.12);
+      overflow:hidden;
+    }
+    .avatar-fallback img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
     }
     .mini-muted{
       color:#b8c0d0;
@@ -134,9 +140,70 @@
         <input id="profilePreferredContactMethod" placeholder="Preferred Contact Method">
         <input id="profileAddress" placeholder="Address">
         <input id="profileCity" placeholder="City">
-        <input id="profileState" placeholder="State">
+
+        <select id="profileState">
+          <option value="">State</option>
+          <option value="AL">Alabama</option>
+          <option value="AK">Alaska</option>
+          <option value="AZ">Arizona</option>
+          <option value="AR">Arkansas</option>
+          <option value="CA">California</option>
+          <option value="CO">Colorado</option>
+          <option value="CT">Connecticut</option>
+          <option value="DE">Delaware</option>
+          <option value="FL">Florida</option>
+          <option value="GA">Georgia</option>
+          <option value="HI">Hawaii</option>
+          <option value="ID">Idaho</option>
+          <option value="IL">Illinois</option>
+          <option value="IN">Indiana</option>
+          <option value="IA">Iowa</option>
+          <option value="KS">Kansas</option>
+          <option value="KY">Kentucky</option>
+          <option value="LA">Louisiana</option>
+          <option value="ME">Maine</option>
+          <option value="MD">Maryland</option>
+          <option value="MA">Massachusetts</option>
+          <option value="MI">Michigan</option>
+          <option value="MN">Minnesota</option>
+          <option value="MS">Mississippi</option>
+          <option value="MO">Missouri</option>
+          <option value="MT">Montana</option>
+          <option value="NE">Nebraska</option>
+          <option value="NV">Nevada</option>
+          <option value="NH">New Hampshire</option>
+          <option value="NJ">New Jersey</option>
+          <option value="NM">New Mexico</option>
+          <option value="NY">New York</option>
+          <option value="NC">North Carolina</option>
+          <option value="ND">North Dakota</option>
+          <option value="OH">Ohio</option>
+          <option value="OK">Oklahoma</option>
+          <option value="OR">Oregon</option>
+          <option value="PA">Pennsylvania</option>
+          <option value="RI">Rhode Island</option>
+          <option value="SC">South Carolina</option>
+          <option value="SD">South Dakota</option>
+          <option value="TN">Tennessee</option>
+          <option value="TX">Texas</option>
+          <option value="UT">Utah</option>
+          <option value="VT">Vermont</option>
+          <option value="VA">Virginia</option>
+          <option value="WA">Washington</option>
+          <option value="WV">West Virginia</option>
+          <option value="WI">Wisconsin</option>
+          <option value="WY">Wyoming</option>
+        </select>
+
         <input id="profileZip" placeholder="Zip">
-        <input id="profilePhotoUrl" placeholder="Profile Picture URL">
+      </div>
+
+      <div class="upload-row">
+        <label class="btn secondary file-btn">
+          Upload Photo
+          <input id="profilePhotoFile" type="file" accept="image/*">
+        </label>
+        <span class="mini-muted">Small images work best. Large files may exceed profile storage limits.</span>
       </div>
 
       <div class="stack">
@@ -164,6 +231,15 @@
       return parts.slice(0, 2).map(part => part[0]?.toUpperCase()).join("");
     }
 
+    function setAvatar(user) {
+      const avatar = document.getElementById("avatarFallback");
+      if (user.photoUrl) {
+        avatar.innerHTML = `<img src="${user.photoUrl}" alt="Profile Photo">`;
+      } else {
+        avatar.textContent = initials(user.name);
+      }
+    }
+
     function setProfileForm(user) {
       document.getElementById("profileName").value = user.name || "";
       document.getElementById("profileEmail").value = user.email || "";
@@ -173,7 +249,6 @@
       document.getElementById("profileCity").value = user.city || "";
       document.getElementById("profileState").value = user.state || "";
       document.getElementById("profileZip").value = user.zip || "";
-      document.getElementById("profilePhotoUrl").value = user.photoUrl || "";
     }
 
     function serviceCard(service) {
@@ -198,6 +273,15 @@
       document.getElementById(id).classList.remove("active");
     }
 
+    function fileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
     requireAuth(async (user) => {
       if (user.role !== "customer") {
         window.location.href = "dashboard.html";
@@ -214,7 +298,7 @@
       document.getElementById("welcomeSubtext").textContent = `You are viewing your customer dashboard for ${company?.name || user.companyId}.`;
       document.getElementById("customerPermissions").innerHTML = renderPermissionBadges(user);
 
-      document.getElementById("avatarFallback").textContent = initials(user.name);
+      setAvatar(user);
       document.getElementById("customerName").textContent = user.name || "Customer";
       document.getElementById("customerEmail").textContent = user.email || "No email";
       document.getElementById("customerCompany").textContent = company?.name || user.companyId;
@@ -224,6 +308,7 @@
 
       document.getElementById("customerSummary").innerHTML = `
         <strong>Customer Role:</strong> ${user.role}<br>
+        <strong>Username:</strong> ${user.username || "—"}<br>
         <strong>Company Access Level:</strong> ${user.companyAccessLevel}<br>
         <strong>Organization Level:</strong> ${user.organizationLevel}<br>
         <strong>Reports To:</strong> ${user.reportsTo || "Not set"}<br>
@@ -242,6 +327,13 @@
         }
 
         try {
+          const file = document.getElementById("profilePhotoFile").files[0];
+          let photoUrl = user.photoUrl || "";
+
+          if (file) {
+            photoUrl = await fileToDataUrl(file);
+          }
+
           await updateOwnCustomerProfile(user.uid || user.id, {
             name: document.getElementById("profileName").value.trim(),
             email: document.getElementById("profileEmail").value.trim(),
@@ -249,12 +341,12 @@
             preferredContactMethod: document.getElementById("profilePreferredContactMethod").value.trim(),
             address: document.getElementById("profileAddress").value.trim(),
             city: document.getElementById("profileCity").value.trim(),
-            state: document.getElementById("profileState").value.trim(),
+            state: document.getElementById("profileState").value,
             zip: document.getElementById("profileZip").value.trim(),
-            photoUrl: document.getElementById("profilePhotoUrl").value.trim()
+            photoUrl
           });
 
-          msg.textContent = "Profile updated successfully.";
+          msg.textContent = "Profile updated successfully. Refresh once to see updated header/profile image immediately.";
         } catch (e) {
           msg.textContent = e.message || "Failed to update profile.";
         }
