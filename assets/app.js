@@ -75,6 +75,14 @@ export function calculateLeadEstimate(serviceCategory, serviceType, quantity, ad
   return Number(total.toFixed(2));
 }
 
+export function formatHandle(user) {
+  return user?.handle || (user?.username ? `@${user.username}` : "@user");
+}
+
+export function formatDisplayUsername(user) {
+  return user?.displayUsername || user?.username || "User";
+}
+
 export async function loadBrandSettings() {
   try {
     const snap = await getDoc(doc(db, "settings", "app"));
@@ -113,15 +121,30 @@ export async function bindTopbar(user = null) {
   const homeHref = "index.html";
   const dashboardHref = user ? getDashboardPath(user.role) : "dashboard.html";
 
+  const identityName = user ? (user.name || formatDisplayUsername(user)) : "Guest";
+  const identityHandle = user ? formatHandle(user) : "";
+  const identityCompany = company?.name || settings?.companyName || "Supreme TrueClean";
+
   topbar.innerHTML = `
     <div class="app-topbar-inner">
       <a class="app-brand" href="${homeHref}">
         <img src="${settings?.logoUrl || "assets/img/evaraos_logo.png"}" alt="logo">
         <div class="app-brand-text">
           <strong>${settings?.platformName || "Evaraos Inc"}</strong>
-          <span>${company?.name || settings?.companyName || "Supreme TrueClean"}</span>
+          <span>${identityCompany}</span>
         </div>
       </a>
+
+      ${
+        user
+          ? `
+        <div class="topbar-identity" style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;margin-left:auto;margin-right:14px;">
+          <strong style="font-size:14px;line-height:1.2;">${identityName}</strong>
+          <span style="font-size:12px;color:#b8c0d0;line-height:1.2;">${identityHandle}</span>
+        </div>
+      `
+          : ``
+      }
 
       <nav class="app-nav">
         <a href="${homeHref}">Home</a>
@@ -243,7 +266,8 @@ export function renderRoleSummary(user) {
 
   return `
     <strong>${user.name || user.email}</strong><br>
-    Username: ${user.username || "—"}<br>
+    Display Username: ${formatDisplayUsername(user)}<br>
+    Handle: ${formatHandle(user)}<br>
     Role: ${prettyRole}<br>
     Company: ${user.companyId}<br>
     Access Level: ${user.companyAccessLevel || "subsidiary"}<br>
@@ -472,6 +496,8 @@ export async function updateUserAdmin(userId, data) {
     return updateDoc(doc(db, "users", userId), {
       name: data.name,
       username: data.username,
+      displayUsername: data.username ? data.username.charAt(0).toUpperCase() + data.username.slice(1).toLowerCase() : existingUser.displayUsername || "",
+      handle: data.username ? `@${data.username}` : existingUser.handle || "",
       companyId: data.companyId,
       status: "active",
       phone: data.phone || "",
@@ -493,6 +519,8 @@ export async function updateUserAdmin(userId, data) {
   return updateDoc(doc(db, "users", userId), {
     name: data.name,
     username: data.username,
+    displayUsername: data.username ? data.username.charAt(0).toUpperCase() + data.username.slice(1).toLowerCase() : "",
+    handle: data.username ? `@${data.username}` : "",
     role: data.role,
     approvalStatus: data.approvalStatus,
     companyId: data.companyId,
@@ -553,6 +581,8 @@ export async function updateOwnCustomerProfile(userId, data) {
   return updateDoc(doc(db, "users", userId), {
     name: data.name,
     username: data.username,
+    displayUsername: data.username ? data.username.charAt(0).toUpperCase() + data.username.slice(1).toLowerCase() : "",
+    handle: data.username ? `@${data.username}` : "",
     email: data.email,
     phone: data.phone || "",
     address: data.address || "",
