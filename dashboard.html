@@ -17,7 +17,7 @@
         <h1 style="margin-top:0;">Internal Operations Overview</h1>
         <div class="stats-grid">
           <div class="stat"><h3 id="statLeads">0</h3><p>Leads</p></div>
-          <div class="stat"><h3 id="statCustomers">0</h3><p>Customers</p></div>
+          <div class="stat"><h3 id="statSalesReps">0</h3><p>Sales Reps</p></div>
           <div class="stat"><h3 id="statJobs">0</h3><p>Jobs</p></div>
           <div class="stat"><h3 id="statInvoices">0</h3><p>Invoices</p></div>
         </div>
@@ -53,22 +53,22 @@
       await bindTopbar(user);
       document.getElementById("sidebar").innerHTML = renderSidebar(user.role, "overview");
 
-      const [leads, customers, jobs, invoices] = await Promise.all([
+      const [leads, salesReps, jobs, invoices] = await Promise.all([
         fetchCompanyCollection("leads"),
-        fetchCompanyCollection("customers"),
+        fetchCompanyCollection("sales_reps"),
         fetchCompanyCollection("jobs"),
         fetchCompanyCollection("invoices")
       ]);
 
       document.getElementById("statLeads").textContent = leads.length;
-      document.getElementById("statCustomers").textContent = customers.length;
+      document.getElementById("statSalesReps").textContent = salesReps.length;
       document.getElementById("statJobs").textContent = jobs.length;
       document.getElementById("statInvoices").textContent = invoices.length;
 
       document.getElementById("dashboardContent").innerHTML = renderRoleSummary(user);
 
       document.getElementById("rolePreview").innerHTML = `
-        This is the internal worker dashboard. Customer accounts are routed to a separate customer portfolio view.
+        Sales reps can now be managed dynamically by authorized roles.
       `;
     });
   </script>
