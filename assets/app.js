@@ -259,6 +259,8 @@ export function renderPermissionBadges(user) {
 }
 
 export function roleGuard(user, requiredSection) {
+  if (!user) return false;
+  if (user.role === "super_admin") return true;
   return canAccess(user.role, requiredSection);
 }
 
@@ -458,7 +460,34 @@ export async function updateCompany(companyId, data) {
   });
 }
 
-export async function updateUserAdmin(userId, data) {
+export async function updateUserAdmin(userId, data, actingUser = null) {
+  const existingSnap = await getDoc(doc(db, "users", userId));
+  if (!existingSnap.exists()) {
+    throw new Error("User not found.");
+  }
+
+  const existingUser = existingSnap.data();
+
+  if (existingUser.role === "super_admin") {
+    return updateDoc(doc(db, "users", userId), {
+      name: data.name,
+      username: data.username,
+      companyId: data.companyId,
+      status: "active",
+      phone: data.phone || "",
+      address: data.address || "",
+      city: data.city || "",
+      state: data.state || "",
+      zip: data.zip || "",
+      role: "super_admin",
+      approvalStatus: "approved",
+      organizationLevel: 1,
+      permissions: ["all"],
+      companyAccessLevel: "parent",
+      updatedAt: serverTimestamp()
+    });
+  }
+
   const defaults = getRoleDefaults(data.role);
 
   return updateDoc(doc(db, "users", userId), {
@@ -481,6 +510,22 @@ export async function updateUserAdmin(userId, data) {
 }
 
 export async function approveUser(userId) {
+  const existingSnap = await getDoc(doc(db, "users", userId));
+  if (!existingSnap.exists()) throw new Error("User not found.");
+
+  const existingUser = existingSnap.data();
+  if (existingUser.role === "super_admin") {
+    return updateDoc(doc(db, "users", userId), {
+      role: "super_admin",
+      approvalStatus: "approved",
+      status: "active",
+      organizationLevel: 1,
+      permissions: ["all"],
+      companyAccessLevel: "parent",
+      updatedAt: serverTimestamp()
+    });
+  }
+
   return updateDoc(doc(db, "users", userId), {
     approvalStatus: "approved",
     status: "active",
@@ -489,6 +534,14 @@ export async function approveUser(userId) {
 }
 
 export async function rejectUser(userId) {
+  const existingSnap = await getDoc(doc(db, "users", userId));
+  if (!existingSnap.exists()) throw new Error("User not found.");
+
+  const existingUser = existingSnap.data();
+  if (existingUser.role === "super_admin") {
+    throw new Error("Super Admin cannot be rejected.");
+  }
+
   return updateDoc(doc(db, "users", userId), {
     approvalStatus: "rejected",
     status: "inactive",
