@@ -101,6 +101,16 @@
       color:#b8c0d0;
       text-align:center;
     }
+    .handle-chip{
+      display:inline-block;
+      margin-top:10px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      color:#fff;
+      font-size:13px;
+    }
     @media (max-width: 1024px){
       .customer-hero,.portfolio-grid{
         grid-template-columns:1fr;
@@ -120,6 +130,7 @@
           <div>
             <h1 style="margin-top:0;font-size:clamp(30px,4vw,48px);" id="welcomeTitle">Welcome</h1>
             <p class="muted" id="welcomeSubtext">Loading your customer experience...</p>
+            <div class="handle-chip" id="customerHandleChip">@loading</div>
 
             <div class="quick-actions">
               <button class="btn" id="openProfileEditBtn">Edit Profile</button>
@@ -250,8 +261,7 @@
 
       <div class="portfolio-grid">
         <input id="securityUsername" placeholder="Username">
-
-        <div></div>
+        <input id="securityHandle" placeholder="@handle" disabled>
 
         <div class="password-wrap" style="position:relative;">
           <input id="currentPassword" type="password" placeholder="Current Password" style="padding-right:54px;">
@@ -281,7 +291,7 @@
       fetchCustomerServices,
       hasPermission
     } from "./assets/app.js";
-    import { updateOwnUsername, changeOwnPassword } from "./assets/auth.js";
+    import { updateOwnUsername, changeOwnPassword, buildUserIdentity } from "./assets/auth.js";
 
     function initials(name) {
       const parts = (name || "").trim().split(" ").filter(Boolean);
@@ -388,6 +398,7 @@
 
       document.getElementById("welcomeTitle").textContent = `Welcome, ${user.name || "Customer"}`;
       document.getElementById("welcomeSubtext").textContent = `You are viewing your customer dashboard for ${company?.name || user.companyId}.`;
+      document.getElementById("customerHandleChip").textContent = user.handle || `@${user.username || "user"}`;
 
       setAvatar(user);
       document.getElementById("customerName").textContent = user.name || "Customer";
@@ -397,12 +408,14 @@
       setProfileForm(user);
       setModalAvatar(user);
       document.getElementById("securityUsername").value = user.username || "";
+      document.getElementById("securityHandle").value = user.handle || `@${user.username || ""}`;
 
       document.getElementById("servicesList").innerHTML = services.map(serviceCard).join("");
 
       document.getElementById("customerSummary").innerHTML = `
         <strong>Customer Role:</strong> ${user.role}<br>
-        <strong>Username:</strong> ${user.username || "—"}<br>
+        <strong>Display Username:</strong> ${user.displayUsername || user.username || "—"}<br>
+        <strong>Handle:</strong> ${user.handle || `@${user.username || ""}`}<br>
         <strong>Company Access Level:</strong> ${user.companyAccessLevel}<br>
         <strong>Organization Level:</strong> ${user.organizationLevel}<br>
         <strong>Reports To:</strong> ${user.reportsTo || "Not set"}
@@ -429,6 +442,11 @@
 
       document.getElementById("toggleNewPasswordBtn").addEventListener("click", function() {
         togglePasswordField("newPassword", this);
+      });
+
+      document.getElementById("securityUsername").addEventListener("input", (e) => {
+        const identity = buildUserIdentity(e.target.value);
+        document.getElementById("securityHandle").value = identity.handle || "";
       });
 
       document.addEventListener("change", async (event) => {
@@ -486,14 +504,15 @@
 
         try {
           if (newUsername && newUsername !== (user.username || "").toLowerCase()) {
-            await updateOwnUsername(user.uid || user.id, newUsername);
+            const identity = await updateOwnUsername(user.uid || user.id, newUsername);
+            document.getElementById("securityHandle").value = identity.handle;
           }
 
           if (currentPassword || newPassword) {
             await changeOwnPassword(currentPassword, newPassword);
           }
 
-          msg.textContent = "Account settings updated successfully.";
+          msg.textContent = "Account settings updated successfully. Refresh once to see updated handle everywhere.";
         } catch (e) {
           msg.textContent = e.message || "Failed to update account settings.";
         }
