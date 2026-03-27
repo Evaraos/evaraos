@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jobs - Evaraos Inc</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body class="app-shell">
+  <header class="app-topbar" id="topbar"></header>
+
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main-panel">
+      <section class="glass-card">
+        <div class="action-row" style="justify-content:space-between;align-items:center;">
+          <div>
+            <h1 style="margin:0;">Jobs Pipeline</h1>
+            <p class="muted" style="margin:8px 0 0;">Track scheduled, in-progress, completed, and cancelled jobs.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="glass-card">
+        <h2 style="margin-top:0;">Jobs List</h2>
+        <div id="jobsList" class="table"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="jobModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 style="margin:0;">Edit Job</h2>
+        <button class="modal-close" id="closeJobModalBtn">Close</button>
+      </div>
+
+      <div class="form-grid">
+        <input id="jobCustomerName" placeholder="Customer Name" disabled>
+        <input id="jobServiceType" placeholder="Service Type">
+
+        <select id="jobAssignedTechnician">
+          <option value="">Assigned Technician</option>
+        </select>
+
+        <input id="jobScheduledDate" type="date" placeholder="Scheduled Date">
+
+        <select id="jobScheduledTimeWindow">
+          <option value="">Time Window</option>
+          <option value="8am-10am">8am - 10am</option>
+          <option value="10am-12pm">10am - 12pm</option>
+          <option value="12pm-2pm">12pm - 2pm</option>
+          <option value="2pm-4pm">2pm - 4pm</option>
+          <option value="4pm-6pm">4pm - 6pm</option>
+        </select>
+
+        <select id="jobStatus">
+          <option value="scheduled">Scheduled</option>
+          <option value="in_progress">In Progress</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+
+      <textarea id="jobNotes" class="notes-field" placeholder="Notes"></textarea>
+
+      <div class="stack">
+        <button class="btn" id="saveJobBtn">Save Job</button>
+      </div>
+
+      <p id="jobMsg" class="status-text"></p>
+    </div>
+  </div>
+
+  <script type="module" src="assets/jobs.js"></script>
+</body>
+</html>
