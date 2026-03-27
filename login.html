@@ -6,10 +6,27 @@
   <title>Evaraos Access</title>
   <link rel="stylesheet" href="assets/style.css">
   <style>
+    .auth-box{
+      position:relative;
+      overflow:hidden;
+    }
+
+    .auth-box::before{
+      content:"";
+      position:absolute;
+      inset:-40% auto auto -20%;
+      width:220px;
+      height:220px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(227,6,19,.18), transparent 68%);
+      pointer-events:none;
+    }
+
     .forgot-link-wrap{
       text-align:right;
       margin:-4px 0 12px;
     }
+
     .forgot-link{
       background:none;
       border:none;
@@ -19,27 +36,42 @@
       font:inherit;
       text-decoration:underline;
       text-underline-offset:3px;
+      transition:opacity .2s ease, transform .2s ease;
     }
+
+    .forgot-link:hover{
+      opacity:.9;
+      transform:translateY(-1px);
+    }
+
     .forgot-link.glow{
       animation:forgotGlow .55s ease;
     }
+
     @keyframes forgotGlow{
       0%{text-shadow:0 0 0 rgba(227,6,19,0);}
       50%{text-shadow:0 0 18px rgba(227,6,19,.85);}
       100%{text-shadow:0 0 0 rgba(227,6,19,0);}
     }
+
     .username-feedback{
       margin:8px 0 10px;
-      color:#b8c0d0;
       font-size:13px;
       min-height:20px;
+      line-height:1.5;
     }
+
+    .feedback-neutral{ color:#b8c0d0; }
+    .feedback-success{ color:#9ef0b5; }
+    .feedback-error{ color:#ffb0b0; }
+
     .suggestions-wrap{
       display:flex;
       flex-wrap:wrap;
       gap:8px;
       margin:6px 0 12px;
     }
+
     .suggestion-chip{
       border:1px solid rgba(255,255,255,.14);
       background:rgba(255,255,255,.05);
@@ -48,9 +80,50 @@
       padding:8px 12px;
       cursor:pointer;
       font-size:13px;
+      transition:background .2s ease, transform .2s ease;
     }
+
     .suggestion-chip:hover{
       background:rgba(255,255,255,.10);
+      transform:translateY(-1px);
+    }
+
+    .auth-msg{
+      min-height:22px;
+      margin-top:14px;
+      line-height:1.5;
+      font-size:14px;
+    }
+
+    .msg-success{
+      color:#9ef0b5;
+    }
+
+    .msg-error{
+      color:#ffb0b0;
+    }
+
+    .msg-info{
+      color:#b8c0d0;
+    }
+
+    .input-hint{
+      color:#93a3bb;
+      font-size:12px;
+      margin-top:-6px;
+      margin-bottom:10px;
+      line-height:1.5;
+    }
+
+    .loading-btn{
+      opacity:.8;
+      pointer-events:none;
+    }
+
+    .auth-divider{
+      height:1px;
+      background:linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent);
+      margin:18px 0 0;
     }
   </style>
 </head>
@@ -88,6 +161,7 @@
           <p class="auth-subtext">Login with your username or @handle</p>
 
           <input id="loginUsername" type="text" placeholder="Username or @handle">
+          <div class="input-hint">Example: topg or @topg</div>
 
           <div class="password-wrap">
             <input id="loginPassword" type="password" placeholder="Password">
@@ -99,7 +173,7 @@
           </div>
 
           <div class="action-row">
-            <button class="btn" onclick="loginUser()">Login</button>
+            <button class="btn" id="loginBtn" onclick="loginUser()">Login</button>
           </div>
 
           <p id="loginMsg" class="auth-msg"></p>
@@ -108,12 +182,12 @@
         <div id="signupPanel" style="display:none;">
           <img src="assets/img/evaraos_logo.png" class="auth-logo" alt="Evaraos logo">
           <h2 style="text-align:center;margin:0 0 8px;">Create Account</h2>
-          <p class="auth-subtext">Choose your @handle</p>
+          <p class="auth-subtext">Choose your username and secure your access</p>
 
           <input id="signupName" type="text" placeholder="Full Name">
           <input id="signupUsername" type="text" placeholder="Username">
 
-          <div id="usernameFeedback" class="username-feedback"></div>
+          <div id="usernameFeedback" class="username-feedback feedback-neutral"></div>
           <div id="usernameSuggestions" class="suggestions-wrap"></div>
 
           <input id="signupEmail" type="email" placeholder="Email">
@@ -138,9 +212,11 @@
             <option value="admin">Admin</option>
           </select>
 
-          <button class="btn" onclick="signupUser()">Create Account</button>
+          <button class="btn" id="signupBtn" onclick="signupUser()">Create Account</button>
 
-          <p class="auth-subtext" style="text-align:left;">
+          <div class="auth-divider"></div>
+
+          <p class="auth-subtext" style="text-align:left;margin-top:12px;">
             Staff accounts require admin or super admin approval before access is granted.
           </p>
 
@@ -173,7 +249,8 @@
       usernameExists,
       generateUsernameSuggestions,
       normalizeUsernameInput,
-      buildUserIdentity
+      buildUserIdentity,
+      formatAuthError
     } from "./assets/auth.js";
     import { auth } from "./assets/firebase.js";
 
@@ -189,6 +266,40 @@
       document.getElementById(id).classList.remove("active");
     }
 
+    function setMessage(id, type, text) {
+      const el = document.getElementById(id);
+      el.className = "auth-msg";
+      if (type === "success") el.classList.add("msg-success");
+      if (type === "error") el.classList.add("msg-error");
+      if (type === "info") el.classList.add("msg-info");
+      el.textContent = text;
+    }
+
+    function setForgotMessage(type, text) {
+      const el = document.getElementById("forgotMsg");
+      el.className = "status-text";
+      if (type === "success") el.style.color = "#9ef0b5";
+      else if (type === "error") el.style.color = "#ffb0b0";
+      else el.style.color = "#b8c0d0";
+      el.textContent = text;
+    }
+
+    function setFeedback(type, text) {
+      const el = document.getElementById("usernameFeedback");
+      el.className = "username-feedback";
+      if (type === "success") el.classList.add("feedback-success");
+      else if (type === "error") el.classList.add("feedback-error");
+      else el.classList.add("feedback-neutral");
+      el.textContent = text;
+    }
+
+    function setLoading(buttonId, isLoading, loadingText, normalText) {
+      const btn = document.getElementById(buttonId);
+      if (!btn) return;
+      btn.textContent = isLoading ? loadingText : normalText;
+      btn.classList.toggle("loading-btn", isLoading);
+    }
+
     function renderSuggestions(items) {
       const root = document.getElementById("usernameSuggestions");
       root.innerHTML = items.map((item) => `
@@ -200,20 +311,22 @@
       root.querySelectorAll(".suggestion-chip").forEach((btn) => {
         btn.addEventListener("click", () => {
           document.getElementById("signupUsername").value = btn.dataset.username;
-          document.getElementById("usernameFeedback").textContent = `Selected ${"@" + btn.dataset.username}`;
+          setFeedback("success", `Selected @${btn.dataset.username}`);
           root.innerHTML = "";
         });
       });
     }
 
+    let usernameCheckCounter = 0;
+
     async function checkUsernameLive() {
+      const currentCheck = ++usernameCheckCounter;
       const raw = document.getElementById("signupUsername").value;
       const clean = normalizeUsernameInput(raw);
-      const feedback = document.getElementById("usernameFeedback");
       const suggestionsRoot = document.getElementById("usernameSuggestions");
 
       if (!clean) {
-        feedback.textContent = "";
+        setFeedback("neutral", "");
         suggestionsRoot.innerHTML = "";
         return;
       }
@@ -221,29 +334,39 @@
       const identity = buildUserIdentity(clean);
 
       if (identity.username.length < 3) {
-        feedback.textContent = "Username must be at least 3 characters.";
+        setFeedback("error", "Username must be at least 3 characters.");
         suggestionsRoot.innerHTML = "";
         return;
       }
 
-      const taken = await usernameExists(identity.username);
+      setFeedback("neutral", `Checking ${identity.handle}...`);
 
-      if (!taken) {
-        feedback.textContent = `${identity.handle} is available`;
-        suggestionsRoot.innerHTML = "";
-        return;
+      try {
+        const taken = await usernameExists(identity.username);
+
+        if (currentCheck !== usernameCheckCounter) return;
+
+        if (!taken) {
+          setFeedback("success", `${identity.handle} is available`);
+          suggestionsRoot.innerHTML = "";
+          return;
+        }
+
+        setFeedback("error", `${identity.handle} is already taken`);
+        const suggestions = await generateUsernameSuggestions(identity.username);
+
+        if (currentCheck !== usernameCheckCounter) return;
+        renderSuggestions(suggestions);
+      } catch (error) {
+        setFeedback("error", formatAuthError(error));
       }
-
-      feedback.textContent = `${identity.handle} is already taken`;
-      const suggestions = await generateUsernameSuggestions(identity.username);
-      renderSuggestions(suggestions);
     }
 
     window.togglePassword = function(inputId, btn) {
       const input = document.getElementById(inputId);
       const isPassword = input.type === "password";
       input.type = isPassword ? "text" : "password";
-      btn.textContent = isPassword ? "🙈" : "👁";
+      btn.textContent = isPassword ? "🙈" : "🙊";
     };
 
     window.showAuthTab = function(tab) {
@@ -251,6 +374,9 @@
       const signupPanel = document.getElementById("signupPanel");
       const loginTab = document.getElementById("loginTab");
       const signupTab = document.getElementById("signupTab");
+
+      setMessage("loginMsg", "info", "");
+      setMessage("signupMsg", "info", "");
 
       if (tab === "login") {
         loginPanel.style.display = "block";
@@ -268,14 +394,15 @@
     window.loginUser = async function() {
       const username = document.getElementById("loginUsername").value.trim();
       const password = document.getElementById("loginPassword").value;
-      const msg = document.getElementById("loginMsg");
 
-      msg.textContent = "";
+      setMessage("loginMsg", "info", "");
 
       if (!username || !password) {
-        msg.textContent = "Enter your username and password.";
+        setMessage("loginMsg", "error", "Enter your username and password.");
         return;
       }
+
+      setLoading("loginBtn", true, "Logging in...", "Login");
 
       try {
         await loginWithUsername(username, password);
@@ -283,13 +410,16 @@
         const userDoc = await getCurrentUserDoc(user);
 
         if (!userDoc) {
-          msg.textContent = "No user profile found.";
+          setMessage("loginMsg", "error", "No user profile found.");
+          setLoading("loginBtn", false, "Logging in...", "Login");
           return;
         }
 
+        setMessage("loginMsg", "success", "Login successful. Redirecting...");
         window.location.href = getDashboardPath(userDoc.role);
       } catch (e) {
-        msg.textContent = e.message || "Login failed.";
+        setMessage("loginMsg", "error", formatAuthError(e));
+        setLoading("loginBtn", false, "Logging in...", "Login");
       }
     };
 
@@ -300,31 +430,44 @@
       const password = document.getElementById("signupPassword").value;
       const passwordConfirm = document.getElementById("signupPasswordConfirm").value;
       const role = document.getElementById("signupRole").value;
-      const msg = document.getElementById("signupMsg");
 
-      msg.textContent = "";
+      setMessage("signupMsg", "info", "");
 
       if (!name || !username || !email || !password || !passwordConfirm) {
-        msg.textContent = "Complete all fields.";
+        setMessage("signupMsg", "error", "Complete all fields.");
         return;
       }
 
       if (password !== passwordConfirm) {
-        msg.textContent = "Passwords do not match.";
+        setMessage("signupMsg", "error", "Passwords do not match.");
         return;
       }
+
+      setLoading("signupBtn", true, "Creating...", "Create Account");
 
       try {
         await createAccount(name, username, email, password, role);
         const identity = buildUserIdentity(username);
 
-        msg.textContent = role === "customer"
-          ? `Account created successfully as ${identity.handle}.`
-          : `Account pending admin approval as ${identity.handle}.`;
+        setMessage(
+          "signupMsg",
+          "success",
+          role === "customer"
+            ? `Account created successfully as ${identity.handle}.`
+            : `Account created as ${identity.handle} and sent for approval.`
+        );
 
-        setTimeout(() => showAuthTab("login"), 900);
+        document.getElementById("signupPassword").value = "";
+        document.getElementById("signupPasswordConfirm").value = "";
+
+        setTimeout(() => {
+          showAuthTab("login");
+          document.getElementById("loginUsername").value = identity.username;
+        }, 1000);
       } catch (e) {
-        msg.textContent = e.message || "Signup failed.";
+        setMessage("signupMsg", "error", formatAuthError(e));
+      } finally {
+        setLoading("signupBtn", false, "Creating...", "Create Account");
       }
     };
 
@@ -333,6 +476,7 @@
       forgotLink.classList.remove("glow");
       void forgotLink.offsetWidth;
       forgotLink.classList.add("glow");
+      setForgotMessage("info", "");
       openModal("forgotModal");
     });
 
@@ -342,24 +486,35 @@
 
     document.getElementById("sendResetBtn").addEventListener("click", async () => {
       const email = document.getElementById("resetEmail").value.trim();
-      const msg = document.getElementById("forgotMsg");
 
-      msg.textContent = "";
+      setForgotMessage("info", "");
 
       if (!email) {
-        msg.textContent = "Enter your account email.";
+        setForgotMessage("error", "Enter your account email.");
         return;
       }
 
+      setLoading("sendResetBtn", true, "Sending...", "Send Reset Email");
+
       try {
         await resetPassword(email);
-        msg.textContent = "Password reset email sent.";
+        setForgotMessage("success", "Password reset email sent.");
       } catch (e) {
-        msg.textContent = e.message || "Error sending reset email.";
+        setForgotMessage("error", formatAuthError(e));
+      } finally {
+        setLoading("sendResetBtn", false, "Sending...", "Send Reset Email");
       }
     });
 
     document.getElementById("signupUsername").addEventListener("input", checkUsernameLive);
+
+    document.getElementById("loginPassword").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") loginUser();
+    });
+
+    document.getElementById("signupPasswordConfirm").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") signupUser();
+    });
   </script>
 
 </body>
