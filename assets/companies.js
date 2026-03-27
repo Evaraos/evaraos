@@ -21,12 +21,20 @@ function formatDate(value) {
   }
 }
 
+function openModal(id) {
+  document.getElementById(id).classList.add("active");
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove("active");
+}
+
 function getCompanyFormData() {
   return {
     name: document.getElementById("companyName").value.trim(),
-    slug: document.getElementById("companySlug").value.trim(),
+    slug: document.getElementById("companySlug").value.trim().toLowerCase(),
     city: document.getElementById("companyCity").value.trim(),
-    state: document.getElementById("companyState").value.trim(),
+    state: document.getElementById("companyState").value,
     phone: document.getElementById("companyPhone").value.trim(),
     email: document.getElementById("companyEmail").value.trim(),
     status: document.getElementById("companyStatus").value,
@@ -56,10 +64,19 @@ function clearCompanyForm() {
   document.getElementById("companyStatus").value = "active";
   document.getElementById("companyNotes").value = "";
   document.getElementById("cancelCompanyEditBtn").style.display = "none";
+  document.getElementById("companyMsg").textContent = "";
+}
+
+function sortCompanies(companies) {
+  return [...companies].sort((a, b) => {
+    if ((a.slug || "") === "supreme-trueclean") return -1;
+    if ((b.slug || "") === "supreme-trueclean") return 1;
+    return (a.name || "").localeCompare(b.name || "");
+  });
 }
 
 async function renderCompanies() {
-  const companies = await fetchAllCollection("companies");
+  const companies = sortCompanies(await fetchAllCollection("companies"));
   const companiesList = document.getElementById("companiesList");
 
   if (!companies.length) {
@@ -100,7 +117,7 @@ async function renderCompanies() {
       fillCompanyForm(selectedCompany);
       document.getElementById("cancelCompanyEditBtn").style.display = "inline-flex";
       document.getElementById("companyMsg").textContent = `Editing ${selectedCompany.name || "company"}`;
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      openModal("companyModal");
     });
   });
 }
@@ -125,6 +142,17 @@ requireAuth(async (user) => {
 
   await renderCompanies();
 
+  document.getElementById("openCompanyModalBtn").addEventListener("click", () => {
+    clearCompanyForm();
+    openModal("companyModal");
+  });
+
+  document.getElementById("closeCompanyModalBtn").addEventListener("click", () => closeModal("companyModal"));
+  document.getElementById("cancelCompanyEditBtn").addEventListener("click", () => {
+    clearCompanyForm();
+    closeModal("companyModal");
+  });
+
   document.getElementById("saveCompanyBtn").addEventListener("click", async () => {
     const msg = document.getElementById("companyMsg");
     const data = getCompanyFormData();
@@ -135,6 +163,16 @@ requireAuth(async (user) => {
     }
 
     try {
+      const existingCompanies = await fetchAllCollection("companies");
+      const duplicateSlug = existingCompanies.find(
+        (company) => company.slug === data.slug && company.id !== editingCompanyId
+      );
+
+      if (duplicateSlug) {
+        msg.textContent = "That company slug already exists. Edit the existing company instead.";
+        return;
+      }
+
       if (editingCompanyId) {
         await updateCompany(editingCompanyId, data);
         msg.textContent = "Company updated successfully.";
@@ -143,15 +181,11 @@ requireAuth(async (user) => {
         msg.textContent = "Company created successfully.";
       }
 
-      clearCompanyForm();
       await renderCompanies();
+      clearCompanyForm();
+      closeModal("companyModal");
     } catch (e) {
       msg.textContent = e.message || "Failed to save company.";
     }
-  });
-
-  document.getElementById("cancelCompanyEditBtn").addEventListener("click", () => {
-    clearCompanyForm();
-    document.getElementById("companyMsg").textContent = "Edit cancelled.";
   });
 });
