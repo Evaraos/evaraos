@@ -61,6 +61,52 @@
       border:1px solid rgba(255,255,255,.08);
       margin-bottom:12px;
     }
+    .quick-actions{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+    .avatar-edit-wrap{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:10px;
+      margin-bottom:18px;
+    }
+    .avatar-edit-button{
+      position:relative;
+      width:96px;
+      height:96px;
+      border-radius:28px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.14);
+      background:linear-gradient(135deg, rgba(227,6,19,.35), rgba(246,89,44,.18));
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+    }
+    .avatar-edit-button img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+    .avatar-edit-button span{
+      font-size:34px;
+      font-weight:800;
+      color:#fff;
+    }
+    .avatar-edit-button input[type="file"]{
+      position:absolute;
+      inset:0;
+      opacity:0;
+      cursor:pointer;
+    }
+    .avatar-edit-text{
+      font-size:13px;
+      color:#b8c0d0;
+      text-align:center;
+    }
     @media (max-width: 1024px){
       .customer-hero,.portfolio-grid{
         grid-template-columns:1fr;
@@ -80,7 +126,12 @@
           <div>
             <h1 style="margin-top:0;font-size:clamp(30px,4vw,48px);" id="welcomeTitle">Welcome</h1>
             <p class="muted" id="welcomeSubtext">Loading your customer experience...</p>
-            <div id="customerPermissions" style="margin-top:14px;"></div>
+
+            <div class="quick-actions">
+              <button class="btn" id="openProfileEditBtn">Edit Profile</button>
+              <button class="btn secondary" id="viewMyDataBtn">My Account</button>
+              <button class="btn secondary" id="jumpToServicesBtn">My Services</button>
+            </div>
           </div>
 
           <div class="glass-card" style="padding:18px;">
@@ -96,17 +147,17 @@
         </div>
       </section>
 
-      <section class="glass-card">
+      <section class="glass-card" id="myAccountSection">
         <div class="action-row" style="justify-content:space-between;align-items:center;">
           <div>
-            <h2 style="margin:0;">Profile</h2>
-            <div class="mini-muted">Edit only when you need to. Your profile stays clean by default.</div>
+            <h2 style="margin:0;">My Account</h2>
+            <div class="mini-muted">Your customer-only information lives here. No internal staff tools are shown.</div>
           </div>
-          <button class="btn" id="openProfileEditBtn">Edit Profile</button>
+          <button class="btn" id="openProfileEditBtnSecondary">Edit Profile</button>
         </div>
       </section>
 
-      <section class="glass-card">
+      <section class="glass-card" id="myServicesSection">
         <h2 style="margin-top:0;">My Services</h2>
         <div id="servicesList" class="card-stack"></div>
       </section>
@@ -131,6 +182,14 @@
       <div class="modal-head">
         <h2 style="margin:0;">Edit Profile</h2>
         <button class="modal-close" id="closeProfileModalBtn">Close</button>
+      </div>
+
+      <div class="avatar-edit-wrap">
+        <label class="avatar-edit-button" id="modalAvatarButton">
+          <span id="modalAvatarFallback">C</span>
+          <input id="profilePhotoFile" type="file" accept="image/*">
+        </label>
+        <div class="avatar-edit-text">Tap the profile icon to change your photo</div>
       </div>
 
       <div class="portfolio-grid">
@@ -198,14 +257,6 @@
         <input id="profileZip" placeholder="Zip">
       </div>
 
-      <div class="upload-row">
-        <label class="btn secondary file-btn">
-          Upload Photo
-          <input id="profilePhotoFile" type="file" accept="image/*">
-        </label>
-        <span class="mini-muted">Small images work best. Large files may exceed profile storage limits.</span>
-      </div>
-
       <div class="stack">
         <button class="btn" id="saveProfileBtn">Save Profile</button>
       </div>
@@ -219,7 +270,6 @@
       requireAuth,
       loadCompany,
       renderSidebar,
-      renderPermissionBadges,
       updateOwnCustomerProfile,
       fetchCustomerServices,
       hasPermission
@@ -237,6 +287,31 @@
         avatar.innerHTML = `<img src="${user.photoUrl}" alt="Profile Photo">`;
       } else {
         avatar.textContent = initials(user.name);
+      }
+    }
+
+    function setModalAvatar(user, previewUrl = "") {
+      const modalAvatarButton = document.getElementById("modalAvatarButton");
+      const modalAvatarFallback = document.getElementById("modalAvatarFallback");
+
+      if (previewUrl) {
+        modalAvatarButton.innerHTML = `
+          <img src="${previewUrl}" alt="Profile Photo Preview">
+          <input id="profilePhotoFile" type="file" accept="image/*">
+        `;
+        return;
+      }
+
+      if (user.photoUrl) {
+        modalAvatarButton.innerHTML = `
+          <img src="${user.photoUrl}" alt="Profile Photo">
+          <input id="profilePhotoFile" type="file" accept="image/*">
+        `;
+      } else {
+        modalAvatarButton.innerHTML = `
+          <span id="modalAvatarFallback">${initials(user.name)}</span>
+          <input id="profilePhotoFile" type="file" accept="image/*">
+        `;
       }
     }
 
@@ -282,6 +357,11 @@
       });
     }
 
+    function scrollToSection(id) {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
     requireAuth(async (user) => {
       if (user.role !== "customer") {
         window.location.href = "dashboard.html";
@@ -296,7 +376,6 @@
 
       document.getElementById("welcomeTitle").textContent = `Welcome, ${user.name || "Customer"}`;
       document.getElementById("welcomeSubtext").textContent = `You are viewing your customer dashboard for ${company?.name || user.companyId}.`;
-      document.getElementById("customerPermissions").innerHTML = renderPermissionBadges(user);
 
       setAvatar(user);
       document.getElementById("customerName").textContent = user.name || "Customer";
@@ -304,6 +383,8 @@
       document.getElementById("customerCompany").textContent = company?.name || user.companyId;
 
       setProfileForm(user);
+      setModalAvatar(user);
+
       document.getElementById("servicesList").innerHTML = services.map(serviceCard).join("");
 
       document.getElementById("customerSummary").innerHTML = `
@@ -312,11 +393,31 @@
         <strong>Company Access Level:</strong> ${user.companyAccessLevel}<br>
         <strong>Organization Level:</strong> ${user.organizationLevel}<br>
         <strong>Reports To:</strong> ${user.reportsTo || "Not set"}<br>
-        <strong>Permission Meaning:</strong> The permission <em>view_own_data</em> exists so customers only access their own profile, services, and customer-safe account information, while internal business tools stay hidden.
+        <strong>My Account:</strong> Use the My Account button to jump directly to your personal customer information and keep your profile updated.
       `;
 
-      document.getElementById("openProfileEditBtn").addEventListener("click", () => openModal("profileModal"));
+      const openProfile = () => openModal("profileModal");
+
+      document.getElementById("openProfileEditBtn").addEventListener("click", openProfile);
+      document.getElementById("openProfileEditBtnSecondary").addEventListener("click", openProfile);
       document.getElementById("closeProfileModalBtn").addEventListener("click", () => closeModal("profileModal"));
+
+      document.getElementById("viewMyDataBtn").addEventListener("click", () => {
+        scrollToSection("myAccountSection");
+      });
+
+      document.getElementById("jumpToServicesBtn").addEventListener("click", () => {
+        scrollToSection("myServicesSection");
+      });
+
+      document.addEventListener("change", async (event) => {
+        if (event.target && event.target.id === "profilePhotoFile") {
+          const file = event.target.files[0];
+          if (!file) return;
+          const previewUrl = await fileToDataUrl(file);
+          setModalAvatar(user, previewUrl);
+        }
+      });
 
       document.getElementById("saveProfileBtn").addEventListener("click", async () => {
         const msg = document.getElementById("profileMsg");
@@ -327,7 +428,8 @@
         }
 
         try {
-          const file = document.getElementById("profilePhotoFile").files[0];
+          const currentFileInput = document.getElementById("profilePhotoFile");
+          const file = currentFileInput?.files?.[0];
           let photoUrl = user.photoUrl || "";
 
           if (file) {
