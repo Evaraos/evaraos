@@ -3,71 +3,168 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Customer Portfolio - Evaraos Inc</title>
+  <title>Customer Dashboard - Evaraos Inc</title>
   <link rel="stylesheet" href="assets/style.css">
+  <style>
+    .customer-hero{
+      display:grid;
+      grid-template-columns:1.15fr .85fr;
+      gap:20px;
+    }
+    .portfolio-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:16px;
+    }
+    .portfolio-card{
+      padding:20px;
+      border-radius:24px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .profile-shell{
+      display:flex;
+      gap:16px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .avatar-fallback{
+      width:76px;
+      height:76px;
+      border-radius:24px;
+      display:grid;
+      place-items:center;
+      font-weight:800;
+      font-size:28px;
+      background:linear-gradient(135deg, rgba(227,6,19,.35), rgba(246,89,44,.18));
+      border:1px solid rgba(255,255,255,.12);
+    }
+    .mini-muted{
+      color:#b8c0d0;
+      font-size:14px;
+      line-height:1.6;
+    }
+    .badge{
+      display:inline-flex;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.10);
+      margin:0 8px 8px 0;
+      color:#ececec;
+      font-size:13px;
+    }
+    @media (max-width: 1024px){
+      .customer-hero,.portfolio-grid{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
 </head>
 <body class="app-shell">
   <header class="app-topbar" id="topbar"></header>
 
-  <div class="app-layout" style="grid-template-columns:1fr;">
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
     <main class="main-panel">
       <section class="glass-card">
-        <h1 style="margin-top:0;">Customer Portfolio</h1>
-        <p class="muted">
-          This dashboard is for customer-facing account information only.
-        </p>
-      </section>
-
-      <section class="glass-card">
-        <h2 style="margin-top:0;">Profile</h2>
-        <div id="customerProfile" class="muted">Loading...</div>
-      </section>
-
-      <section class="glass-card">
-        <h2 style="margin-top:0;">Service Portfolio</h2>
-        <div class="grid-3">
-          <div class="glow-card">
-            <h3>Account Status</h3>
-            <p id="customerStatus">Active customer account</p>
+        <div class="customer-hero">
+          <div>
+            <h1 style="margin-top:0;font-size:clamp(30px,4vw,48px);" id="welcomeTitle">Welcome</h1>
+            <p class="muted" id="welcomeSubtext">Loading your customer experience...</p>
+            <div id="customerPermissions" style="margin-top:14px;"></div>
           </div>
-          <div class="glow-card">
-            <h3>Company</h3>
-            <p>Supreme TrueClean</p>
-          </div>
-          <div class="glow-card">
-            <h3>Platform</h3>
-            <p>Evaraos Inc</p>
+
+          <div class="glass-card" style="padding:18px;">
+            <div class="profile-shell">
+              <div class="avatar-fallback" id="avatarFallback">C</div>
+              <div>
+                <strong id="customerName">Customer</strong><br>
+                <span class="mini-muted" id="customerEmail">Loading...</span><br>
+                <span class="mini-muted" id="customerCompany">Loading company...</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       <section class="glass-card">
-        <h2 style="margin-top:0;">Coming Next</h2>
-        <p class="muted">
-          Upcoming customer features will include bookings, invoices, subscriptions, service history,
-          portfolio badges, and loyalty systems.
-        </p>
+        <h2 style="margin-top:0;">Customer Portfolio</h2>
+        <div class="portfolio-grid">
+          <div class="portfolio-card">
+            <strong>Account Status</strong>
+            <p class="mini-muted" id="accountStatusText">Loading...</p>
+          </div>
+          <div class="portfolio-card">
+            <strong>Current Company</strong>
+            <p class="mini-muted" id="companyStatusText">Loading...</p>
+          </div>
+          <div class="portfolio-card">
+            <strong>Services Access</strong>
+            <p class="mini-muted" id="servicesText">Your account is ready for future job history, invoices, and service activity.</p>
+          </div>
+          <div class="portfolio-card">
+            <strong>Profile View</strong>
+            <p class="mini-muted">This dashboard is intentionally separated from staff and internal management tools.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="glass-card">
+        <h2 style="margin-top:0;">Customer Summary</h2>
+        <div id="customerSummary" class="mini-muted">Loading...</div>
       </section>
     </main>
   </div>
 
   <script type="module">
-    import { bindTopbar, requireAuth } from "./assets/app.js";
+    import {
+      bindTopbar,
+      requireAuth,
+      loadCompany,
+      renderSidebar,
+      renderPermissionBadges
+    } from "./assets/app.js";
+
+    function initials(name) {
+      const parts = (name || "").trim().split(" ").filter(Boolean);
+      if (!parts.length) return "C";
+      return parts.slice(0, 2).map(part => part[0]?.toUpperCase()).join("");
+    }
 
     requireAuth(async (user) => {
       if (user.role !== "customer") {
-        await bindTopbar(user);
         window.location.href = "dashboard.html";
         return;
       }
 
       await bindTopbar(user);
+      document.getElementById("sidebar").innerHTML = renderSidebar(user.role, "overview");
 
-      document.getElementById("customerProfile").innerHTML = `
-        <strong>${user.name || user.email}</strong><br>
-        Email: ${user.email}<br>
-        Role: Customer<br>
-        Company: ${user.companyId}
+      const company = await loadCompany(user.companyId);
+
+      document.getElementById("welcomeTitle").textContent = `Welcome, ${user.name || "Customer"}`;
+      document.getElementById("welcomeSubtext").textContent = `You are viewing your customer dashboard for ${company?.name || user.companyId}.`;
+      document.getElementById("customerPermissions").innerHTML = renderPermissionBadges(user);
+
+      document.getElementById("avatarFallback").textContent = initials(user.name);
+      document.getElementById("customerName").textContent = user.name || "Customer";
+      document.getElementById("customerEmail").textContent = user.email || "No email";
+      document.getElementById("customerCompany").textContent = company?.name || user.companyId;
+
+      document.getElementById("accountStatusText").textContent =
+        `Approval: ${user.approvalStatus || "approved"} | Status: ${user.status || "active"}`;
+
+      document.getElementById("companyStatusText").textContent =
+        `${company?.name || user.companyId} is your current service company under the Evaraos platform.`;
+
+      document.getElementById("customerSummary").innerHTML = `
+        <strong>Customer Role:</strong> ${user.role}<br>
+        <strong>Company Access Level:</strong> ${user.companyAccessLevel}<br>
+        <strong>Organization Level:</strong> ${user.organizationLevel}<br>
+        <strong>Reports To:</strong> ${user.reportsTo || "Not set"}<br>
+        <strong>Platform Model:</strong> Evaraos powers the system while ${company?.name || user.companyId} remains your actual business service provider.
       `;
     });
   </script>
