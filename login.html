@@ -5,53 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Evaraos Access</title>
   <link rel="stylesheet" href="assets/style.css">
-
-  <style>
-    .auth-page{
-      min-height:100vh;
-      display:flex;
-      flex-direction:column;
-    }
-
-    .auth-center{
-      flex:1;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:40px 20px;
-    }
-
-    .auth-shell-wrap{
-      width:100%;
-      max-width:520px;
-      margin:0 auto;
-    }
-  </style>
 </head>
-
 <body class="auth-page">
 
-  <!-- NAVBAR -->
   <header class="site-header">
-    <div class="container site-header-inner">
-      
+    <div class="site-header-inner">
       <a class="brand" href="index.html">
         <img src="assets/img/evaraos_logo.png" alt="logo">
-        <span>Evaraos Inc</span>
+        <div class="brand-text">
+          <strong>Evaraos Inc</strong>
+          <span>Subsidiaries Allocation SaaS</span>
+        </div>
       </a>
 
       <nav class="site-nav">
         <a href="index.html">Home</a>
         <a href="login.html" class="active">Login</a>
       </nav>
-
     </div>
   </header>
 
-  <!-- CENTERED AUTH -->
   <div class="auth-center">
     <div class="auth-shell-wrap">
-
       <div class="auth-tabs">
         <button id="loginTab" class="auth-tab active" onclick="showAuthTab('login')">Login</button>
         <button id="signupTab" class="auth-tab" onclick="showAuthTab('signup')">Sign Up</button>
@@ -59,7 +34,6 @@
 
       <div class="auth-box">
 
-        <!-- LOGIN -->
         <div id="loginPanel">
           <img src="assets/img/evaraos_logo.png" class="auth-logo" alt="Evaraos logo">
           <h2 style="text-align:center;margin:0 0 8px;">Welcome Back</h2>
@@ -80,7 +54,6 @@
           <p id="loginMsg" class="auth-msg"></p>
         </div>
 
-        <!-- SIGNUP -->
         <div id="signupPanel" style="display:none;">
           <img src="assets/img/evaraos_logo.png" class="auth-logo" alt="Evaraos logo">
           <h2 style="text-align:center;margin:0 0 8px;">Create Account</h2>
@@ -123,7 +96,6 @@
     </div>
   </div>
 
-  <!-- SCRIPT -->
   <script type="module">
     import { signup as createAccount, login as loginAccount, getCurrentUserDoc, resetPassword } from "./assets/auth.js";
     import { auth } from "./assets/firebase.js";
