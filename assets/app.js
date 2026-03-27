@@ -146,6 +146,18 @@ export async function fetchActiveSalesReps(companyId) {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
+export async function fetchActiveTechnicians(companyId) {
+  const q = query(
+    collection(db, "users"),
+    where("companyId", "==", companyId),
+    where("role", "==", "technician"),
+    where("status", "==", "active"),
+    where("approvalStatus", "==", "approved")
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
 export function renderSidebar(role, active = "overview") {
   const links = [
     { key: "overview", label: "Overview", href: role === "customer" ? "customer_dashboard.html" : "dashboard.html" },
@@ -153,8 +165,8 @@ export function renderSidebar(role, active = "overview") {
     { key: "leads", label: "Leads", href: "leads.html" },
     { key: "sales_reps", label: "Sales Reps", href: "sales_reps.html" },
     { key: "companies", label: "Companies", href: "companies.html" },
+    { key: "jobs", label: "Jobs", href: "jobs.html" },
     { key: "customers", label: "Customers", href: "#" },
-    { key: "jobs", label: "Jobs", href: "#" },
     { key: "settings", label: "Settings", href: "#" }
   ];
 
@@ -255,6 +267,39 @@ export async function updateLead(leadId, data) {
     appointmentDate: data.appointmentDate || "",
     updatedAt: serverTimestamp()
   });
+}
+
+export async function convertLeadToJob(lead, data, user) {
+  const jobRef = await addDoc(collection(db, "jobs"), {
+    companyId: user.companyId,
+    sourceLeadId: lead.id,
+    customerName: lead.fullName || "",
+    customerPhone: lead.phone || "",
+    customerEmail: lead.email || "",
+    address: lead.address || "",
+    city: lead.city || "",
+    state: lead.state || "",
+    zip: lead.zip || "",
+    serviceType: data.serviceType || lead.serviceInterest || "",
+    assignedRep: lead.assignedRep || "",
+    assignedTechnician: data.assignedTechnician || "",
+    scheduledDate: data.scheduledDate || "",
+    scheduledTimeWindow: data.scheduledTimeWindow || "",
+    estimatedSqFt: Number(lead.estimatedSqFt || 0),
+    status: "scheduled",
+    notes: data.notes || lead.notes || "",
+    createdBy: user.email || "",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  });
+
+  await updateDoc(doc(db, "leads", lead.id), {
+    status: "scheduled",
+    convertedToJobId: jobRef.id,
+    updatedAt: serverTimestamp()
+  });
+
+  return jobRef;
 }
 
 export async function createSalesRep(data, user) {
