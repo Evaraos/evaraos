@@ -90,6 +90,7 @@ export function renderSidebar(role, active = "overview") {
   const links = [
     { key: "overview", label: "Overview", href: role === "customer" ? "customer_dashboard.html" : "dashboard.html" },
     { key: "leads", label: "Leads", href: "leads.html" },
+    { key: "sales_reps", label: "Sales Reps", href: "sales_reps.html" },
     { key: "customers", label: "Customers", href: "#" },
     { key: "jobs", label: "Jobs", href: "#" },
     { key: "admin", label: "Admin", href: "#" },
@@ -121,6 +122,7 @@ export function roleGuard(user, requiredSection) {
   return canAccess(user.role, requiredSection);
 }
 
+// Leads
 export async function createLead(data, user) {
   return addDoc(collection(db, "leads"), {
     companyId: COMPANY_ID,
@@ -164,4 +166,40 @@ export async function updateLead(leadId, data) {
     appointmentDate: data.appointmentDate || "",
     updatedAt: serverTimestamp()
   });
+}
+
+// Sales reps
+export async function createSalesRep(data, user) {
+  return addDoc(collection(db, "sales_reps"), {
+    companyId: COMPANY_ID,
+    fullName: data.fullName || "",
+    email: data.email || "",
+    phone: data.phone || "",
+    status: data.status || "active",
+    notes: data.notes || "",
+    createdBy: user.email || "",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  });
+}
+
+export async function updateSalesRep(repId, data) {
+  return updateDoc(doc(db, "sales_reps", repId), {
+    fullName: data.fullName || "",
+    email: data.email || "",
+    phone: data.phone || "",
+    status: data.status || "active",
+    notes: data.notes || "",
+    updatedAt: serverTimestamp()
+  });
+}
+
+export async function fetchActiveSalesReps() {
+  const q = query(
+    collection(db, "sales_reps"),
+    where("companyId", "==", COMPANY_ID),
+    where("status", "==", "active")
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
