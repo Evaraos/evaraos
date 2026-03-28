@@ -1,7 +1,6 @@
 import {
   bindTopbar,
   requireAuth,
-  renderSidebar,
   fetchAllCollection,
   fetchCompanyCollection,
   fetchActiveSalesReps,
@@ -49,21 +48,11 @@ function injectLeadsStyles() {
   const style = document.createElement("style");
   style.id = "leadsUpgradeStyles";
   style.textContent = `
-    .leads-shell{
-      display:grid;
-      grid-template-columns:280px minmax(0,1fr);
-      gap:22px;
-      padding:22px;
-    }
-    .leads-sidebar{
-      position:sticky;
-      top:18px;
-      align-self:start;
-    }
     .leads-main{
       display:flex;
       flex-direction:column;
       gap:22px;
+      padding:22px;
     }
     .section-row{
       display:flex;
@@ -201,8 +190,6 @@ function injectLeadsStyles() {
       flex-wrap:wrap;
     }
     @media (max-width: 1100px){
-      .leads-shell{ grid-template-columns:1fr; }
-      .leads-sidebar{ position:static; }
       .pipeline-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
       .stage-strip{ grid-template-columns:repeat(3,minmax(0,1fr)); }
     }
@@ -343,13 +330,31 @@ async function loadLeadsData(user) {
     isGlobal ? fetchAllCollection("users") : fetchActiveTechnicians(user.companyId)
   ]);
 
-  state.leads = filterLeadsForUser(
-    user,
-    isGlobal ? leads : leads
-  );
-
+  state.leads = filterLeadsForUser(user, leads);
   state.reps = reps.filter((u) => u.role === "sales_rep" || !u.role);
   state.techs = techs.filter((u) => u.role === "technician" || !u.role);
+}
+
+function renderQuickActions() {
+  const links = [
+    { label: "Open Sales Reps", href: "sales_reps.html", show: canAccess(state.user.role, "sales_reps") },
+    { label: "Open Companies", href: "companies.html", show: canAccess(state.user.role, "companies") },
+    { label: "Open Jobs", href: "jobs.html", show: canAccess(state.user.role, "jobs") },
+    { label: "Open Audit", href: "audit.html", show: canAccess(state.user.role, "audit") }
+  ].filter((item) => item.show);
+
+  if (!links.length) return "";
+
+  return `
+    <section class="glass-card">
+      <div class="section-row">
+        <h2 style="margin:0;">Quick Actions</h2>
+      </div>
+      <div class="top-actions" style="margin-top:14px;">
+        ${links.map((item) => `<a class="btn secondary" href="${item.href}">${item.label}</a>`).join("")}
+      </div>
+    </section>
+  `;
 }
 
 function renderPage() {
@@ -358,98 +363,89 @@ function renderPage() {
   const visibleLeads = filteredLeads();
 
   root.innerHTML = `
-    <div class="leads-shell">
-      <aside class="leads-sidebar">
-        <div class="glass-card">
-          <div class="section-row">
-            <h2 style="margin:0;">Navigation</h2>
+    <main class="leads-main">
+      ${renderQuickActions()}
+
+      <section class="glass-card">
+        <div class="section-row">
+          <div>
+            <h1 style="margin:0;">Leads Pipeline</h1>
+            <p class="muted" style="margin:10px 0 0;">Role-scoped pipeline visibility, assignments, and lead actions.</p>
           </div>
-          <nav class="sidebar-nav">${renderSidebar(state.user.role, "leads")}</nav>
+          <div class="top-actions">
+            ${canAccess(state.user.role, "leads") ? `<button class="btn" id="openLeadModalBtn">Add Lead</button>` : ""}
+          </div>
         </div>
-      </aside>
 
-      <main class="leads-main">
-        <section class="glass-card">
-          <div class="section-row">
-            <div>
-              <h1 style="margin:0;">Leads Pipeline</h1>
-              <p class="muted" style="margin:10px 0 0;">Role-scoped pipeline visibility, assignments, and lead actions.</p>
-            </div>
-            <div class="top-actions">
-              ${canAccess(state.user.role, "leads") ? `<button class="btn" id="openLeadModalBtn">Add Lead</button>` : ""}
-            </div>
-          </div>
-
-          <div class="stage-strip">
-            ${[
-              ["all", "All", state.leads.length],
-              ["new", "New", counts.new],
-              ["contacted", "Contacted", counts.contacted],
-              ["quoted", "Quoted", counts.quoted],
-              ["booked", "Booked", counts.booked],
-              ["won", "Won", counts.won + counts.booked]
-            ]
-              .map(
-                ([key, label, value]) => `
-              <button class="stage-pill ${state.activeStage === key ? "active" : ""}" data-stage="${key}">
-                <span class="muted" style="display:block;margin-bottom:6px;">${label}</span>
-                <strong>${value}</strong>
-              </button>
-            `
-              )
-              .join("")}
-          </div>
-        </section>
-
-        <section class="glass-card">
-          <div class="section-row">
-            <h2 style="margin:0;">Pipeline Cards</h2>
-            <div class="muted">${visibleLeads.length} visible lead(s)</div>
-          </div>
-
-          ${
-            !visibleLeads.length
-              ? `<div class="empty-state">No leads match this view.</div>`
-              : `
-            <div class="pipeline-grid" style="margin-top:16px;">
-              ${visibleLeads
-                .map(
-                  (lead) => `
-                <div class="lead-card">
-                  <div>
-                    <strong>${lead.fullName || "Unnamed Lead"}</strong>
-                    <div class="muted" style="margin-top:6px;">${lead.email || "No email"} · ${lead.phone || "No phone"}</div>
-                  </div>
-
-                  <div>
-                    <span class="chip">${lead.status || "new"}</span>
-                    <span class="chip">${lead.serviceInterest || lead.serviceType || "No service"}</span>
-                    <span class="chip">$${Number(lead.estimatedPrice || 0).toFixed(2)}</span>
-                  </div>
-
-                  <div class="muted">
-                    ${lead.address || "No address"}<br>
-                    ${lead.city || ""} ${lead.state || ""} ${lead.zip || ""}
-                  </div>
-
-                  <div class="lead-actions">
-                    ${canEditLead(state.user, lead) ? `<button class="btn secondary edit-lead-btn" data-id="${lead.id}">Edit</button>` : ""}
-                    ${canAssignLead(state.user) ? `<button class="btn secondary assign-lead-btn" data-id="${lead.id}">Assign</button>` : ""}
-                    ${canArchiveLead(state.user, lead) ? `<button class="btn secondary archive-lead-btn" data-id="${lead.id}">Archive</button>` : ""}
-                    ${canRequestLeadDelete(state.user, lead) ? `<button class="btn secondary request-delete-btn" data-id="${lead.id}">Request Delete</button>` : ""}
-                    ${canApproveLeadDelete(state.user) && lead.deleteRequested ? `<button class="btn secondary approve-delete-btn" data-id="${lead.id}">Approve Delete</button>` : ""}
-                    ${canConvertLead(state.user, lead) ? `<button class="btn convert-lead-btn" data-id="${lead.id}">Convert to Job</button>` : ""}
-                  </div>
-                </div>
+        <div class="stage-strip">
+          ${[
+            ["all", "All", state.leads.length],
+            ["new", "New", counts.new],
+            ["contacted", "Contacted", counts.contacted],
+            ["quoted", "Quoted", counts.quoted],
+            ["booked", "Booked", counts.booked],
+            ["won", "Won", counts.won + counts.booked]
+          ]
+            .map(
+              ([key, label, value]) => `
+                <button class="stage-pill ${state.activeStage === key ? "active" : ""}" data-stage="${key}">
+                  <span class="muted" style="display:block;margin-bottom:6px;">${label}</span>
+                  <strong>${value}</strong>
+                </button>
               `
-                )
-                .join("")}
-            </div>
-          `
-          }
-        </section>
-      </main>
-    </div>
+            )
+            .join("")}
+        </div>
+      </section>
+
+      <section class="glass-card">
+        <div class="section-row">
+          <h2 style="margin:0;">Pipeline Cards</h2>
+          <div class="muted">${visibleLeads.length} visible lead(s)</div>
+        </div>
+
+        ${
+          !visibleLeads.length
+            ? `<div class="empty-state">No leads match this view.</div>`
+            : `
+              <div class="pipeline-grid" style="margin-top:16px;">
+                ${visibleLeads
+                  .map(
+                    (lead) => `
+                      <div class="lead-card">
+                        <div>
+                          <strong>${lead.fullName || "Unnamed Lead"}</strong>
+                          <div class="muted" style="margin-top:6px;">${lead.email || "No email"} · ${lead.phone || "No phone"}</div>
+                        </div>
+
+                        <div>
+                          <span class="chip">${lead.status || "new"}</span>
+                          <span class="chip">${lead.serviceInterest || lead.serviceType || "No service"}</span>
+                          <span class="chip">$${Number(lead.estimatedPrice || 0).toFixed(2)}</span>
+                        </div>
+
+                        <div class="muted">
+                          ${lead.address || "No address"}<br>
+                          ${lead.city || ""} ${lead.state || ""} ${lead.zip || ""}
+                        </div>
+
+                        <div class="lead-actions">
+                          ${canEditLead(state.user, lead) ? `<button class="btn secondary edit-lead-btn" data-id="${lead.id}">Edit</button>` : ""}
+                          ${canAssignLead(state.user) ? `<button class="btn secondary assign-lead-btn" data-id="${lead.id}">Assign</button>` : ""}
+                          ${canArchiveLead(state.user, lead) ? `<button class="btn secondary archive-lead-btn" data-id="${lead.id}">Archive</button>` : ""}
+                          ${canRequestLeadDelete(state.user, lead) ? `<button class="btn secondary request-delete-btn" data-id="${lead.id}">Request Delete</button>` : ""}
+                          ${canApproveLeadDelete(state.user) && lead.deleteRequested ? `<button class="btn secondary approve-delete-btn" data-id="${lead.id}">Approve Delete</button>` : ""}
+                          ${canConvertLead(state.user, lead) ? `<button class="btn convert-lead-btn" data-id="${lead.id}">Convert to Job</button>` : ""}
+                        </div>
+                      </div>
+                    `
+                  )
+                  .join("")}
+              </div>
+            `
+        }
+      </section>
+    </main>
   `;
 
   wirePageEvents();
@@ -703,7 +699,7 @@ requireAuth(async (user) => {
   await bindTopbar(user);
 
   if (!canAccess(user.role, "leads")) {
-    document.getElementById("leadsRoot").innerHTML = `<section class="glass-card">Access denied for leads.</section>`;
+    document.getElementById("leadsRoot").innerHTML = `<section class="glass-card" style="margin:22px;">Access denied for leads.</section>`;
     return;
   }
 
@@ -712,13 +708,13 @@ requireAuth(async (user) => {
     sidebarTop.innerHTML = "";
   }
 
-  document.getElementById("leadsRoot").innerHTML = `<section class="glass-card">Loading leads pipeline...</section>`;
+  document.getElementById("leadsRoot").innerHTML = `<section class="glass-card" style="margin:22px;">Loading leads pipeline...</section>`;
 
   try {
     await loadLeadsData(user);
     populateReferenceOptions();
     renderPage();
   } catch (e) {
-    document.getElementById("leadsRoot").innerHTML = `<section class="glass-card">Leads page failed: ${e.message || e}</section>`;
+    document.getElementById("leadsRoot").innerHTML = `<section class="glass-card" style="margin:22px;">Leads page failed: ${e.message || e}</section>`;
   }
 });
