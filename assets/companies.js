@@ -2,190 +2,336 @@ import {
   bindTopbar,
   requireAuth,
   fetchAllCollection,
-  renderSidebar,
-  roleGuard,
+  fetchCompanyCollection,
   createCompany,
   updateCompany
 } from "./app.js";
 
-let currentUser = null;
-let editingCompanyId = null;
+import { canAccess } from "./roles.js";
 
-function formatDate(value) {
-  if (!value) return "—";
-  try {
-    if (value.toDate) return value.toDate().toLocaleString();
-    return new Date(value).toLocaleString();
-  } catch {
-    return "—";
+const companyState = {
+  user: null,
+  companies: [],
+  editingId: null
+};
+
+function showToast(message, variant = "success") {
+  let container = document.getElementById("companiesToastContainer");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "companiesToastContainer";
+    container.style.position = "fixed";
+    container.style.top = "20px";
+    container.style.right = "20px";
+    container.style.zIndex = "9999";
+    container.style.display = "flex";
+    container.style.flexDirection = "column";
+    container.style.gap = "10px";
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement("div");
+  toast.textContent = message;
+  toast.style.padding = "14px 16px";
+  toast.style.borderRadius = "16px";
+  toast.style.background =
+    variant === "error" ? "rgba(180,40,40,.94)" : "rgba(25,110,55,.94)";
+  toast.style.color = "#fff";
+  toast.style.boxShadow = "0 12px 30px rgba(0,0,0,.28)";
+  container.appendChild(toast);
+
+  setTimeout(() => toast.remove(), 2600);
+}
+
+function injectStyles() {
+  if (document.getElementById("companiesUpgradeStyles")) return;
+
+  const style = document.createElement("style");
+  style.id = "companiesUpgradeStyles";
+  style.textContent = `
+    .page-main{
+      display:flex;
+      flex-direction:column;
+      gap:22px;
+      padding:22px;
+    }
+    .card-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:16px;
+    }
+    .company-card{
+      border-radius:24px;
+      padding:18px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.08);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .company-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
+    .muted{
+      color:#aeb8c8;
+      font-size:13px;
+    }
+    .modal-backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.45);
+      backdrop-filter:blur(8px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:9998;
+      padding:18px;
+    }
+    .modal-backdrop.open{
+      display:flex;
+    }
+    .modal-card{
+      width:min(760px,100%);
+      max-height:90vh;
+      overflow:auto;
+      border-radius:28px;
+      background:rgba(14,16,24,.96);
+      border:1px solid rgba(255,255,255,.08);
+      padding:22px;
+      box-shadow:0 25px 60px rgba(0,0,0,.35);
+    }
+    .form-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:14px;
+      margin-top:16px;
+    }
+    .full{
+      grid-column:1/-1;
+    }
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .field label{
+      font-size:13px;
+      color:#b4bfd0;
+    }
+    .field input,
+    .field select,
+    .field textarea{
+      width:100%;
+      padding:14px 16px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      color:#fff;
+      outline:none;
+    }
+    .top-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .empty-state{
+      color:#aeb8c8;
+      padding:12px 0 4px;
+    }
+    .chip{
+      display:inline-flex;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      font-size:12px;
+      margin:6px 8px 0 0;
+      text-transform:capitalize;
+    }
+    @media (max-width: 700px){
+      .card-grid{ grid-template-columns:1fr; }
+      .form-grid{ grid-template-columns:1fr; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+async function loadCompanies(user) {
+  companyState.user = user;
+
+  if (user.role === "super_admin") {
+    companyState.companies = await fetchAllCollection("companies");
+  } else {
+    companyState.companies = await fetchCompanyCollection("companies", user.companyId).catch(() => []);
+    if (!companyState.companies.length) {
+      const all = await fetchAllCollection("companies");
+      companyState.companies = all.filter((item) => item.id === user.companyId || item.companyId === user.companyId);
+    }
   }
 }
 
-function openModal(id) {
-  document.getElementById(id).classList.add("active");
+function openCompanyModal(company = null) {
+  companyState.editingId = company?.id || null;
+  document.getElementById("companyModal").classList.add("open");
+  document.getElementById("companyModalTitle").textContent = company ? "Edit Company" : "Add Company";
+
+  document.getElementById("companyName").value = company?.name || "";
+  document.getElementById("companySlug").value = company?.slug || "";
+  document.getElementById("companyCity").value = company?.city || "";
+  document.getElementById("companyStateField").value = company?.state || "";
+  document.getElementById("companyPhone").value = company?.phone || "";
+  document.getElementById("companyEmail").value = company?.email || "";
+  document.getElementById("companyStatus").value = company?.status || "active";
+  document.getElementById("companyBrandColor").value = company?.brandColor || "#E30613";
+  document.getElementById("companyOwnerName").value = company?.ownerName || "";
+  document.getElementById("companyOwnerEmail").value = company?.ownerEmail || "";
+  document.getElementById("companyNotes").value = company?.notes || "";
 }
 
-function closeModal(id) {
-  document.getElementById(id).classList.remove("active");
+function closeCompanyModal() {
+  document.getElementById("companyModal").classList.remove("open");
+  companyState.editingId = null;
 }
 
-function getCompanyFormData() {
-  return {
-    name: document.getElementById("companyName").value.trim(),
-    slug: document.getElementById("companySlug").value.trim().toLowerCase(),
-    city: document.getElementById("companyCity").value.trim(),
-    state: document.getElementById("companyState").value,
-    phone: document.getElementById("companyPhone").value.trim(),
-    email: document.getElementById("companyEmail").value.trim(),
-    status: document.getElementById("companyStatus").value,
-    notes: document.getElementById("companyNotes").value.trim()
-  };
-}
-
-function fillCompanyForm(company) {
-  document.getElementById("companyName").value = company.name || "";
-  document.getElementById("companySlug").value = company.slug || "";
-  document.getElementById("companyCity").value = company.city || "";
-  document.getElementById("companyState").value = company.state || "";
-  document.getElementById("companyPhone").value = company.phone || "";
-  document.getElementById("companyEmail").value = company.email || "";
-  document.getElementById("companyStatus").value = company.status || "active";
-  document.getElementById("companyNotes").value = company.notes || "";
-}
-
-function clearCompanyForm() {
-  editingCompanyId = null;
-  document.getElementById("companyName").value = "";
-  document.getElementById("companySlug").value = "";
-  document.getElementById("companyCity").value = "";
-  document.getElementById("companyState").value = "";
-  document.getElementById("companyPhone").value = "";
-  document.getElementById("companyEmail").value = "";
-  document.getElementById("companyStatus").value = "active";
-  document.getElementById("companyNotes").value = "";
-  document.getElementById("cancelCompanyEditBtn").style.display = "none";
-  document.getElementById("companyMsg").textContent = "";
-}
-
-function sortCompanies(companies) {
-  return [...companies].sort((a, b) => {
-    if ((a.slug || "") === "supreme-trueclean") return -1;
-    if ((b.slug || "") === "supreme-trueclean") return 1;
-    return (a.name || "").localeCompare(b.name || "");
-  });
-}
-
-async function renderCompanies() {
-  const companies = sortCompanies(await fetchAllCollection("companies"));
-  const companiesList = document.getElementById("companiesList");
-
-  if (!companies.length) {
-    companiesList.innerHTML = `<div class="muted">No companies yet.</div>`;
-    return;
-  }
-
-  companiesList.innerHTML = companies.map((company) => `
-    <div class="row">
-      <div>
-        <strong>${company.name || "Unnamed Company"}</strong><br>
-        <span class="muted">${company.slug || "No slug"}</span>
-      </div>
-      <div>
-        ${company.city || "No city"}<br>
-        <span class="muted">${company.state || "No state"}</span>
-      </div>
-      <div>
-        ${company.phone || "No phone"}<br>
-        <span class="muted">${company.email || "No email"}</span>
-      </div>
-      <div>
-        <button class="btn secondary edit-company-btn" data-id="${company.id}">Edit</button>
-        <div class="meta-line">
-          Status: ${company.status || "active"}<br>
-          Updated: ${formatDate(company.updatedAt)}
+function renderPage() {
+  const root = document.getElementById("companiesRoot");
+  root.innerHTML = `
+    <main class="page-main">
+      <section class="glass-card">
+        <div class="section-title-row">
+          <div>
+            <h1 style="margin:0;">Companies</h1>
+            <p class="muted" style="margin:10px 0 0;">Create, edit, and manage company records.</p>
+          </div>
+          <div class="top-actions">
+            <button class="btn" id="openCompanyModalBtn">Add Company</button>
+          </div>
         </div>
-      </div>
-    </div>
-  `).join("");
+      </section>
+
+      <section class="glass-card">
+        <div class="section-title-row">
+          <h2>Companies List</h2>
+          <div class="muted">${companyState.companies.length} company record(s)</div>
+        </div>
+
+        ${
+          !companyState.companies.length
+            ? `<div class="empty-state">No companies found.</div>`
+            : `
+              <div class="card-grid" style="margin-top:14px;">
+                ${companyState.companies
+                  .map(
+                    (company) => `
+                      <div class="company-card">
+                        <div>
+                          <strong>${company.name || company.id || "Unnamed Company"}</strong>
+                          <div class="muted" style="margin-top:6px;">${company.city || "—"} ${company.state || ""}</div>
+                        </div>
+
+                        <div>
+                          <span class="chip">${company.status || "active"}</span>
+                          <span class="chip">${company.slug || company.id || "no-slug"}</span>
+                        </div>
+
+                        <div class="muted">
+                          Owner: ${company.ownerName || "—"}<br>
+                          Email: ${company.ownerEmail || company.email || "—"}<br>
+                          Phone: ${company.phone || "—"}
+                        </div>
+
+                        <div class="company-actions">
+                          <button class="btn secondary edit-company-btn" data-id="${company.id}">Edit</button>
+                        </div>
+                      </div>
+                    `
+                  )
+                  .join("")}
+              </div>
+            `
+        }
+      </section>
+    </main>
+  `;
+
+  document.getElementById("openCompanyModalBtn")?.addEventListener("click", () => openCompanyModal());
 
   document.querySelectorAll(".edit-company-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const selectedCompany = companies.find((company) => company.id === btn.dataset.id);
-      if (!selectedCompany) return;
-
-      editingCompanyId = selectedCompany.id;
-      fillCompanyForm(selectedCompany);
-      document.getElementById("cancelCompanyEditBtn").style.display = "inline-flex";
-      document.getElementById("companyMsg").textContent = `Editing ${selectedCompany.name || "company"}`;
-      openModal("companyModal");
+      const company = companyState.companies.find((item) => item.id === btn.dataset.id);
+      openCompanyModal(company);
     });
   });
 }
 
-requireAuth(async (user) => {
-  currentUser = user;
+async function saveCompany(e) {
+  e.preventDefault();
 
-  if (!roleGuard(user, "companies")) {
-    document.body.innerHTML = `
-      <div class="auth-shell">
-        <div class="auth-card">
-          <h2>Access denied</h2>
-          <p class="muted">Only the owner can manage companies.</p>
-        </div>
-      </div>
-    `;
+  const payload = {
+    name: document.getElementById("companyName").value.trim(),
+    slug: document.getElementById("companySlug").value.trim(),
+    city: document.getElementById("companyCity").value.trim(),
+    state: document.getElementById("companyStateField").value.trim(),
+    phone: document.getElementById("companyPhone").value.trim(),
+    email: document.getElementById("companyEmail").value.trim(),
+    status: document.getElementById("companyStatus").value,
+    brandColor: document.getElementById("companyBrandColor").value.trim(),
+    ownerName: document.getElementById("companyOwnerName").value.trim(),
+    ownerEmail: document.getElementById("companyOwnerEmail").value.trim(),
+    notes: document.getElementById("companyNotes").value.trim()
+  };
+
+  if (!payload.name) {
+    showToast("Company name is required.", "error");
     return;
   }
 
+  if (companyState.editingId) {
+    await updateCompany(companyState.editingId, payload);
+    showToast("Company updated.");
+  } else {
+    await createCompany(
+      {
+        ...payload,
+        companyId: payload.slug || payload.name
+      },
+      companyState.user
+    );
+    showToast("Company created.");
+  }
+
+  closeCompanyModal();
+  await loadCompanies(companyState.user);
+  renderPage();
+}
+
+requireAuth(async (user) => {
+  injectStyles();
   await bindTopbar(user);
-  document.getElementById("sidebar").innerHTML = renderSidebar(user.role, "companies");
 
-  await renderCompanies();
+  if (!canAccess(user.role, "companies")) {
+    document.getElementById("companiesRoot").innerHTML = `<section class="glass-card" style="margin:22px;">Access denied for companies.</section>`;
+    return;
+  }
 
-  document.getElementById("openCompanyModalBtn").addEventListener("click", () => {
-    clearCompanyForm();
-    openModal("companyModal");
-  });
+  const topSidebar = document.getElementById("sidebar");
+  if (topSidebar) {
+    topSidebar.innerHTML = "";
+  }
 
-  document.getElementById("closeCompanyModalBtn").addEventListener("click", () => closeModal("companyModal"));
-  document.getElementById("cancelCompanyEditBtn").addEventListener("click", () => {
-    clearCompanyForm();
-    closeModal("companyModal");
-  });
+  const root = document.getElementById("companiesRoot");
+  root.innerHTML = `<section class="glass-card" style="margin:22px;">Loading companies...</section>`;
 
-  document.getElementById("saveCompanyBtn").addEventListener("click", async () => {
-    const msg = document.getElementById("companyMsg");
-    const data = getCompanyFormData();
+  try {
+    await loadCompanies(user);
+    renderPage();
+  } catch (e) {
+    root.innerHTML = `<section class="glass-card" style="margin:22px;">Companies page failed: ${e.message || e}</section>`;
+  }
 
-    if (!data.name || !data.slug) {
-      msg.textContent = "Company name and slug are required.";
-      return;
-    }
-
-    try {
-      const existingCompanies = await fetchAllCollection("companies");
-      const duplicateSlug = existingCompanies.find(
-        (company) => company.slug === data.slug && company.id !== editingCompanyId
-      );
-
-      if (duplicateSlug) {
-        msg.textContent = "That company slug already exists. Edit the existing company instead.";
-        return;
-      }
-
-      if (editingCompanyId) {
-        await updateCompany(editingCompanyId, data);
-        msg.textContent = "Company updated successfully.";
-      } else {
-        await createCompany(data, currentUser);
-        msg.textContent = "Company created successfully.";
-      }
-
-      await renderCompanies();
-      clearCompanyForm();
-      closeModal("companyModal");
-    } catch (e) {
-      msg.textContent = e.message || "Failed to save company.";
-    }
-  });
+  document.getElementById("companyModalCloseBtn")?.addEventListener("click", closeCompanyModal);
+  document.getElementById("companyModalCancelBtn")?.addEventListener("click", closeCompanyModal);
+  document.getElementById("companyForm")?.addEventListener("submit", saveCompany);
 });
