@@ -14,7 +14,8 @@ import {
   getDoc,
   updateDoc,
   addDoc,
-  serverTimestamp
+  serverTimestamp,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const auditState = {
@@ -24,7 +25,8 @@ const auditState = {
   actionFilter: "all",
   autoRefreshHandle: null,
   isRefreshing: false,
-  pendingRollbackLogId: null
+  pendingRollbackLogId: null,
+  activeWarnings: []
 };
 
 const ACTION_LABELS = {
@@ -224,33 +226,6 @@ function injectAuditStyles() {
       text-align:right;
       font-size:12px;
       color:#aeb8c8;
-    }
-    .print-sheet{
-      font-family:Arial,Helvetica,sans-serif;
-      color:#000;
-      padding:24px;
-    }
-    .print-sheet h1,
-    .print-sheet h2{
-      margin:0 0 12px 0;
-    }
-    .print-sheet .meta{
-      color:#444;
-      font-size:12px;
-      margin-bottom:18px;
-    }
-    .print-sheet table{
-      width:100%;
-      border-collapse:collapse;
-      margin-top:12px;
-    }
-    .print-sheet th,
-    .print-sheet td{
-      border:1px solid #ccc;
-      padding:8px;
-      text-align:left;
-      font-size:12px;
-      vertical-align:top;
     }
     @media (max-width: 980px){
       .audit-analytics-grid,
@@ -578,10 +553,9 @@ function renderCharts() {
   `;
 }
 
-function renderSuspiciousActivity() {
+function buildSuspiciousWarnings() {
   const logs = auditState.logs;
   const warnings = [];
-
   const actorBuckets = new Map();
 
   logs.forEach((log) => {
@@ -598,8 +572,10 @@ function renderSuspiciousActivity() {
 
     if (recentHour.length >= 8) {
       warnings.push({
+        id: `high_volume_${actorKey}`,
         title: "High change volume",
-        text: `${bucket[0]?.actorName || actorKey} made ${recentHour.length} changes in the last hour.`
+        text: `${bucket[0]?.actorName || actorKey} made ${recentHour.length} changes in the last hour.`,
+        severity: "high"
       });
     }
 
@@ -609,8 +585,10 @@ function renderSuspiciousActivity() {
 
     if (companyMoves.length >= 3) {
       warnings.push({
+        id: `company_moves_${actorKey}`,
         title: "Frequent company moves",
-        text: `${bucket[0]?.actorName || actorKey} moved users across companies ${companyMoves.length} times in the last hour.`
+        text: `${bucket[0]?.actorName || actorKey} moved users across companies ${companyMoves.length} times in the last hour.`,
+        severity: "medium"
       });
     }
   });
@@ -622,10 +600,46 @@ function renderSuspiciousActivity() {
 
   if (recentRollbacks.length >= 5) {
     warnings.push({
+      id: "heavy_rollback_usage",
       title: "Heavy rollback usage",
-      text: `${recentRollbacks.length} rollback actions were triggered in the last 24 hours.`
+      text: `${recentRollbacks.length} rollback actions were triggered in the last 24 hours.`,
+      severity: "medium"
     });
   }
+
+  return warnings;
+}
+
+async function queueSuspiciousEmailAlerts(warnings) {
+  for (const warning of warnings) {
+    const alertRef = doc(db, "security_alerts", warning.id);
+    const existing = await getDoc(alertRef);
+
+    if (existing.exists()) {
+      const existingData = existing.data();
+      const createdAtSeconds = existingData?.createdAt?.seconds || 0;
+      const ageMs = Date.now() - createdAtSeconds * 1000;
+
+      if (ageMs < 1000 * 60 * 60) {
+        continue;
+      }
+    }
+
+    await setDoc(alertRef, {
+      type: "suspicious_audit_activity",
+      title: warning.title,
+      text: warning.text,
+      severity: warning.severity,
+      status: "queued",
+      createdAt: serverTimestamp(),
+      createdBy: auditState.user?.id || auditState.user?.uid || ""
+    });
+  }
+}
+
+async function renderSuspiciousActivity() {
+  const warnings = buildSuspiciousWarnings();
+  auditState.activeWarnings = warnings;
 
   document.getElementById("auditSuspiciousRoot").innerHTML = warnings.length
     ? warnings.map((warning) => `
@@ -635,6 +649,10 @@ function renderSuspiciousActivity() {
         </div>
       `).join("")
     : `<div class="audit-empty">No suspicious activity detected right now.</div>`;
+
+  if (warnings.length) {
+    await queueSuspiciousEmailAlerts(warnings);
+  }
 }
 
 function renderLogs() {
