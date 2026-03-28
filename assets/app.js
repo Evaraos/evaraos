@@ -141,7 +141,16 @@ export function getRoleDefaults(role) {
 }
 
 export function sanitizeCompanyId(value = "") {
-  return String(value).trim().toLowerCase().replace(/-/g, "_");
+  return String(value).trim().toLowerCase().replace(/-/g, "_").replace(/\s+/g, "_");
+}
+
+export function buildNormalizedUsernameFields(username = "") {
+  const clean = String(username).trim().replace(/^@+/, "").toLowerCase();
+  return {
+    username: clean,
+    handle: clean ? `@${clean}` : "",
+    displayUsername: clean ? clean.charAt(0).toUpperCase() + clean.slice(1).toLowerCase() : ""
+  };
 }
 
 export function calculateLeadEstimate(serviceCategory, serviceType, quantity, addOns = []) {
@@ -166,15 +175,6 @@ export function formatHandle(user) {
 
 export function formatDisplayUsername(user) {
   return user?.displayUsername || user?.username || "User";
-}
-
-export function buildNormalizedUsernameFields(username = "") {
-  const clean = String(username).trim().replace(/^@+/, "").toLowerCase();
-  return {
-    username: clean,
-    handle: clean ? `@${clean}` : "",
-    displayUsername: clean ? clean.charAt(0).toUpperCase() + clean.slice(1).toLowerCase() : ""
-  };
 }
 
 export function buildNormalizedUserPayload(existing = {}) {
@@ -227,6 +227,193 @@ export async function normalizeUserDoc(userId) {
   return normalized;
 }
 
+export function buildNormalizedCompanyPayload(existing = {}, companyId = "") {
+  const normalizedId = sanitizeCompanyId(companyId || existing.id || existing.companyId || existing.slug || existing.name || "");
+  const slug = String(existing.slug || normalizedId).trim().toLowerCase().replace(/_/g, "-");
+
+  return {
+    name: existing.name || "",
+    slug,
+    city: existing.city || "",
+    state: existing.state || "",
+    phone: existing.phone || "",
+    email: existing.email || "",
+    status: existing.status || "active",
+    notes: existing.notes || "",
+    ownerCompany: existing.ownerCompany || "Evaraos Inc",
+    ownerName: existing.ownerName || "",
+    ownerEmail: existing.ownerEmail || "",
+    ownerUserId: existing.ownerUserId || "",
+    parentCompany: existing.parentCompany || "Evaraos Inc",
+    brandColor: existing.brandColor || "#E30613",
+    logoUrl: existing.logoUrl || "",
+    serviceCategories: Array.isArray(existing.serviceCategories) ? existing.serviceCategories : [],
+    active: existing.active !== false
+  };
+}
+
+export async function normalizeCompanyDoc(companyId) {
+  const normalizedId = sanitizeCompanyId(companyId);
+  const companyRef = doc(db, "companies", normalizedId);
+  const snap = await getDoc(companyRef);
+  if (!snap.exists()) throw new Error("Company not found.");
+
+  const existing = snap.data();
+  const normalized = buildNormalizedCompanyPayload(existing, normalizedId);
+
+  await setDoc(
+    companyRef,
+    {
+      ...normalized,
+      updatedAt: serverTimestamp()
+    },
+    { merge: true }
+  );
+
+  return normalized;
+}
+
+export function buildNormalizedLeadPayload(existing = {}) {
+  return {
+    companyId: sanitizeCompanyId(existing.companyId || ""),
+    fullName: existing.fullName || "",
+    phone: existing.phone || "",
+    email: existing.email || "",
+    address: existing.address || "",
+    city: existing.city || "",
+    state: existing.state || "",
+    zip: existing.zip || "",
+    serviceCategory: existing.serviceCategory || "",
+    serviceType: existing.serviceType || "",
+    serviceInterest: existing.serviceInterest || "",
+    addOns: Array.isArray(existing.addOns) ? existing.addOns : [],
+    leadSource: existing.leadSource || "",
+    preferredContactMethod: existing.preferredContactMethod || "",
+    estimatedSqFt: Number(existing.estimatedSqFt || 0),
+    estimatedPrice: Number(existing.estimatedPrice || 0),
+    assignedRep: existing.assignedRep || "",
+    status: ["new", "contacted", "quoted", "scheduled", "won", "lost"].includes(existing.status)
+      ? existing.status
+      : "new",
+    notes: existing.notes || "",
+    appointmentDate: existing.appointmentDate || "",
+    isArchived: existing.isArchived === true,
+    deleteRequested: existing.deleteRequested === true,
+    deleteRequestedBy: existing.deleteRequestedBy || "",
+    deleteApprovedBy: existing.deleteApprovedBy || "",
+    convertedToJobId: existing.convertedToJobId || ""
+  };
+}
+
+export async function normalizeLeadDoc(leadId) {
+  const leadRef = doc(db, "leads", leadId);
+  const snap = await getDoc(leadRef);
+  if (!snap.exists()) throw new Error("Lead not found.");
+
+  const normalized = buildNormalizedLeadPayload(snap.data());
+
+  await updateDoc(leadRef, {
+    ...normalized,
+    updatedAt: serverTimestamp()
+  });
+
+  return normalized;
+}
+
+export function buildNormalizedJobPayload(existing = {}) {
+  const allowedStatuses = ["scheduled", "in_progress", "completed", "cancelled"];
+  const allowedPaymentStatuses = ["unpaid", "paid", "refunded", "pending", "partial"];
+
+  return {
+    companyId: sanitizeCompanyId(existing.companyId || ""),
+    sourceLeadId: existing.sourceLeadId || "",
+    customerName: existing.customerName || "",
+    customerPhone: existing.customerPhone || "",
+    customerEmail: existing.customerEmail || "",
+    address: existing.address || "",
+    city: existing.city || "",
+    state: existing.state || "",
+    zip: existing.zip || "",
+    serviceType: existing.serviceType || "",
+    assignedRep: existing.assignedRep || "",
+    assignedTechnician: existing.assignedTechnician || "",
+    scheduledDate: existing.scheduledDate || "",
+    scheduledTimeWindow: existing.scheduledTimeWindow || "",
+    estimatedSqFt: Number(existing.estimatedSqFt || 0),
+    estimatedPrice: Number(existing.estimatedPrice || 0),
+    status: allowedStatuses.includes(existing.status) ? existing.status : "scheduled",
+    notes: existing.notes || "",
+    beforePhotos: Array.isArray(existing.beforePhotos) ? existing.beforePhotos : [],
+    afterPhotos: Array.isArray(existing.afterPhotos) ? existing.afterPhotos : [],
+    completionNotes: existing.completionNotes || "",
+    paymentStatus: allowedPaymentStatuses.includes(existing.paymentStatus) ? existing.paymentStatus : "unpaid",
+    invoiceId: existing.invoiceId || "",
+    customerSignature: existing.customerSignature || "",
+    routeOrder: Number(existing.routeOrder || 0),
+    crewNotes: existing.crewNotes || "",
+    arrivalTime: existing.arrivalTime || "",
+    departureTime: existing.departureTime || "",
+    assignedCrewIds: Array.isArray(existing.assignedCrewIds) ? existing.assignedCrewIds : [],
+    serviceAddOns: Array.isArray(existing.serviceAddOns) ? existing.serviceAddOns : []
+  };
+}
+
+export async function normalizeJobDoc(jobId) {
+  const jobRef = doc(db, "jobs", jobId);
+  const snap = await getDoc(jobRef);
+  if (!snap.exists()) throw new Error("Job not found.");
+
+  const normalized = buildNormalizedJobPayload(snap.data());
+
+  await updateDoc(jobRef, {
+    ...normalized,
+    updatedAt: serverTimestamp()
+  });
+
+  return normalized;
+}
+
+export function buildNormalizedServicePayload(existing = {}) {
+  const slug = String(existing.slug || existing.name || "").trim().toLowerCase().replace(/\s+/g, "_");
+  return {
+    companyId: sanitizeCompanyId(existing.companyId || ""),
+    name: existing.name || "",
+    slug,
+    category: existing.category || "",
+    pricingType: existing.pricingType || "",
+    baseRate: Number(existing.baseRate || 0),
+    unit: existing.unit || "",
+    active: existing.active !== false,
+    description: existing.description || "",
+    addOnsAllowed: Array.isArray(existing.addOnsAllowed) ? existing.addOnsAllowed : [],
+    bundleEligible: existing.bundleEligible === true,
+    internalNotes: existing.internalNotes || "",
+    featured: existing.featured === true,
+    displayOrder: Number(existing.displayOrder || 0),
+    minPrice: Number(existing.minPrice || 0),
+    maxPrice: Number(existing.maxPrice || 0),
+    defaultAddOns: Array.isArray(existing.defaultAddOns) ? existing.defaultAddOns : [],
+    estimatedDurationMinutes: Number(existing.estimatedDurationMinutes || 0),
+    requiresInspection: existing.requiresInspection === true,
+    customerVisible: existing.customerVisible !== false
+  };
+}
+
+export async function normalizeServiceDoc(serviceId) {
+  const serviceRef = doc(db, "services", serviceId);
+  const snap = await getDoc(serviceRef);
+  if (!snap.exists()) throw new Error("Service not found.");
+
+  const normalized = buildNormalizedServicePayload(snap.data());
+
+  await updateDoc(serviceRef, {
+    ...normalized,
+    updatedAt: serverTimestamp()
+  });
+
+  return normalized;
+}
+
 export async function loadBrandSettings() {
   try {
     const snap = await getDoc(doc(db, "settings", "app"));
@@ -265,7 +452,7 @@ export async function bindTopbar(user = null) {
   const homeHref = "index.html";
   const dashboardHref = user ? getDashboardPath(user.role) : "dashboard.html";
 
-  const identityName = user ? (user.name || formatDisplayUsername(user)) : "Guest";
+  const identityName = user ? user.name || formatDisplayUsername(user) : "Guest";
   const identityHandle = user ? formatHandle(user) : "";
   const identityCompany = company?.name || settings?.companyName || "Supreme TrueClean";
 
@@ -287,7 +474,7 @@ export async function bindTopbar(user = null) {
           <span style="font-size:12px;color:#b8c0d0;line-height:1.2;">${identityHandle}</span>
         </div>
       `
-          : ``
+          : ""
       }
 
       <nav class="app-nav">
@@ -900,10 +1087,7 @@ export async function scanSystemDiscrepancies() {
     if (typeof user.organizationLevel !== "number" || user.organizationLevel !== normalized.organizationLevel) {
       mismatchFields.push("organizationLevel");
     }
-    if (
-      !Array.isArray(user.permissions) ||
-      JSON.stringify(user.permissions) !== JSON.stringify(normalized.permissions)
-    ) {
+    if (!Array.isArray(user.permissions) || JSON.stringify(user.permissions) !== JSON.stringify(normalized.permissions)) {
       mismatchFields.push("permissions");
     }
 
@@ -932,58 +1116,49 @@ export async function scanSystemDiscrepancies() {
     if (entry.handle !== `@${entry.id}`) issues.push("handle_mismatch");
 
     if (issues.length) {
-      discrepancies.usernames.push({
-        id: entry.id,
-        issues
-      });
+      discrepancies.usernames.push({ id: entry.id, issues });
     }
   });
 
   companies.forEach((company) => {
     const issues = [];
+    const normalized = buildNormalizedCompanyPayload(company, company.id);
+
     if (company.id !== sanitizeCompanyId(company.id)) issues.push("doc_id_not_standardized");
-    if ((company.slug || "").includes("_")) issues.push("slug_should_use_dashes");
+    if ((company.slug || "") !== normalized.slug) issues.push("slug_mismatch");
     if (!company.ownerName) issues.push("ownerName_missing");
     if (!company.ownerEmail) issues.push("ownerEmail_missing");
     if (company.active === undefined) issues.push("active_missing");
     if (!company.brandColor) issues.push("brandColor_missing");
 
     if (issues.length) {
-      discrepancies.companies.push({
-        id: company.id,
-        issues
-      });
+      discrepancies.companies.push({ id: company.id, issues });
     }
   });
 
   leads.forEach((lead) => {
     const issues = [];
-    if ((lead.companyId || "") !== sanitizeCompanyId(lead.companyId || "")) issues.push("companyId_not_standardized");
-    if (!["new", "contacted", "quoted", "scheduled", "won", "lost"].includes(lead.status || "")) {
-      issues.push("status_outside_allowed_values");
-    }
+    const normalized = buildNormalizedLeadPayload(lead);
+
+    if ((lead.companyId || "") !== normalized.companyId) issues.push("companyId_not_standardized");
+    if (lead.status !== normalized.status) issues.push("status_outside_allowed_values");
     if (!lead.createdAt) issues.push("createdAt_missing");
     if (!lead.updatedAt) issues.push("updatedAt_missing");
 
     if (issues.length) {
-      discrepancies.leads.push({
-        id: lead.id,
-        issues
-      });
+      discrepancies.leads.push({ id: lead.id, issues });
     }
   });
 
   jobs.forEach((job) => {
     const issues = [];
-    if ((job.companyId || "") !== sanitizeCompanyId(job.companyId || "")) issues.push("companyId_not_standardized");
-    if (!["scheduled", "in_progress", "completed", "cancelled"].includes(job.status || "")) {
-      issues.push("status_outside_allowed_values");
-    }
-    if (!["unpaid", "paid", "refunded", ""].includes(job.paymentStatus || "")) {
-      issues.push("paymentStatus_outside_allowed_values");
-    }
+    const normalized = buildNormalizedJobPayload(job);
 
-    const required = [
+    if ((job.companyId || "") !== normalized.companyId) issues.push("companyId_not_standardized");
+    if (job.status !== normalized.status) issues.push("status_outside_allowed_values");
+    if ((job.paymentStatus || "unpaid") !== normalized.paymentStatus) issues.push("paymentStatus_outside_allowed_values");
+
+    [
       "sourceLeadId",
       "assignedTechnician",
       "serviceAddOns",
@@ -998,33 +1173,27 @@ export async function scanSystemDiscrepancies() {
       "invoiceId",
       "customerSignature",
       "routeOrder"
-    ];
-
-    required.forEach((field) => {
+    ].forEach((field) => {
       if (job[field] === undefined) issues.push(`${field}_missing`);
     });
 
     if (issues.length) {
-      discrepancies.jobs.push({
-        id: job.id,
-        issues
-      });
+      discrepancies.jobs.push({ id: job.id, issues });
     }
   });
 
   services.forEach((service) => {
     const issues = [];
-    if ((service.companyId || "") !== sanitizeCompanyId(service.companyId || "")) issues.push("companyId_not_standardized");
-    if (!service.slug) issues.push("slug_missing");
+    const normalized = buildNormalizedServicePayload(service);
+
+    if ((service.companyId || "") !== normalized.companyId) issues.push("companyId_not_standardized");
+    if ((service.slug || "") !== normalized.slug) issues.push("slug_missing_or_mismatch");
     if (service.active === undefined) issues.push("active_missing");
     if (!service.category) issues.push("category_missing");
     if (!service.pricingType) issues.push("pricingType_missing");
 
     if (issues.length) {
-      discrepancies.services.push({
-        id: service.id,
-        issues
-      });
+      discrepancies.services.push({ id: service.id, issues });
     }
   });
 
