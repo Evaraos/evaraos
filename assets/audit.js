@@ -9,14 +9,21 @@ import {
   getDocs,
   query,
   orderBy,
-  limit
+  limit,
+  doc,
+  getDoc,
+  updateDoc,
+  addDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const auditState = {
   user: null,
   logs: [],
   search: "",
-  actionFilter: "all"
+  actionFilter: "all",
+  autoRefreshHandle: null,
+  isRefreshing: false
 };
 
 const ACTION_LABELS = {
@@ -27,8 +34,19 @@ const ACTION_LABELS = {
   modal_user_edit: "Manual Edit",
   modal_role_edit: "Manual Role Edit",
   modal_company_edit: "Manual Company Edit",
-  modal_company_and_role_edit: "Manual Company + Role Edit"
+  modal_company_and_role_edit: "Manual Company + Role Edit",
+  rollback_change: "Rollback Change"
 };
+
+const ROLLBACKABLE_ACTIONS = new Set([
+  "role_drag_move",
+  "company_drag_move",
+  "company_and_role_drag_move",
+  "company_drag_move_keep_role",
+  "modal_role_edit",
+  "modal_company_edit",
+  "modal_company_and_role_edit"
+]);
 
 function injectAuditStyles() {
   if (document.getElementById("auditUpgradeStyles")) return;
@@ -107,13 +125,102 @@ function injectAuditStyles() {
       color:#aeb8c8;
       padding:8px 0 4px;
     }
+    .audit-analytics-grid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:14px;
+    }
+    .audit-analytics-card{
+      border-radius:18px;
+      padding:16px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.06);
+    }
+    .audit-analytics-label{
+      color:#aeb8c8;
+      font-size:12px;
+      margin-bottom:8px;
+    }
+    .audit-analytics-value{
+      font-size:26px;
+      font-weight:800;
+      line-height:1.1;
+    }
+    .audit-leaderboard{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .audit-leaderboard-row{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:center;
+      padding:12px 14px;
+      border-radius:16px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.06);
+    }
+    .audit-warning{
+      border-radius:18px;
+      padding:14px 16px;
+      background:rgba(180,40,40,.12);
+      border:1px solid rgba(180,40,40,.28);
+    }
+    .audit-warning-title{
+      font-weight:700;
+      margin-bottom:6px;
+    }
+    .audit-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:6px;
+    }
+    @media (max-width: 980px){
+      .audit-analytics-grid{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+    }
     @media (max-width: 760px){
-      .audit-grid{
+      .audit-grid,
+      .audit-analytics-grid{
         grid-template-columns:1fr;
       }
     }
   `;
   document.head.appendChild(style);
+}
+
+function showToast(message, variant = "success") {
+  let wrap = document.getElementById("auditToastWrap");
+  if (!wrap) {
+    wrap = document.createElement("div");
+    wrap.id = "auditToastWrap";
+    wrap.style.position = "fixed";
+    wrap.style.top = "18px";
+    wrap.style.right = "18px";
+    wrap.style.zIndex = "10000";
+    wrap.style.display = "flex";
+    wrap.style.flexDirection = "column";
+    wrap.style.gap = "10px";
+    document.body.appendChild(wrap);
+  }
+
+  const toast = document.createElement("div");
+  toast.textContent = message;
+  toast.style.padding = "14px 16px";
+  toast.style.borderRadius = "16px";
+  toast.style.color = "#fff";
+  toast.style.maxWidth = "320px";
+  toast.style.boxShadow = "0 12px 30px rgba(0,0,0,.28)";
+  toast.style.background =
+    variant === "error"
+      ? "rgba(180,40,40,.94)"
+      : "rgba(25,110,55,.94)";
+
+  wrap.appendChild(toast);
+  setTimeout(() => toast.remove(), 2600);
 }
 
 function formatTimestamp(timestamp) {
@@ -143,7 +250,7 @@ async function loadLogs() {
   const qRef = query(
     collection(db, "audit_logs"),
     orderBy("createdAt", "desc"),
-    limit(300)
+    limit(400)
   );
 
   const snap = await getDocs(qRef);
@@ -181,6 +288,18 @@ function getFilteredLogs() {
   });
 }
 
+function isRollbackAllowed(log) {
+  if (!ROLLBACKABLE_ACTIONS.has(log.action)) return false;
+  if (!log.targetUserId) return false;
+  return true;
+}
+
+function isRecentLog(log) {
+  if (!log?.createdAt?.seconds) return false;
+  const diffMs = Date.now() - log.createdAt.seconds * 1000;
+  return diffMs <= 1000 * 60 * 60 * 24;
+}
+
 function renderAuditCard(log) {
   const roleLine =
     log.oldRole || log.newRole
@@ -197,14 +316,13 @@ function renderAuditCard(log) {
       <div class="audit-head">
         <div>
           <div class="audit-title">${labelForAction(log.action)}</div>
-          <div class="audit-sub">
-            ${formatTimestamp(log.createdAt)}
-          </div>
+          <div class="audit-sub">${formatTimestamp(log.createdAt)}</div>
         </div>
 
         <div class="audit-chip-row">
           <span class="audit-chip">${log.type || "log"}</span>
           <span class="audit-chip">${log.actorRole || "unknown actor role"}</span>
+          ${isRecentLog(log) ? `<span class="audit-chip">Recent</span>` : ""}
         </div>
       </div>
 
@@ -246,8 +364,144 @@ function renderAuditCard(log) {
           `
           : ""
       }
+
+      <div class="audit-actions">
+        ${
+          isRollbackAllowed(log)
+            ? `<button class="btn secondary rollback-btn" data-log-id="${log.id}">Undo Change</button>`
+            : ""
+        }
+      </div>
     </div>
   `;
+}
+
+function buildActorLeaderboard(logs) {
+  const counts = new Map();
+
+  logs.forEach((log) => {
+    const key = log.actorName || log.actorUserId || "Unknown";
+    counts.set(key, (counts.get(key) || 0) + 1);
+  });
+
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+}
+
+function renderAnalytics() {
+  const logs = getFilteredLogs();
+  const recent24h = logs.filter((log) => {
+    if (!log?.createdAt?.seconds) return false;
+    return Date.now() - log.createdAt.seconds * 1000 <= 1000 * 60 * 60 * 24;
+  });
+
+  const roleMoves = logs.filter((log) =>
+    ["role_drag_move", "company_and_role_drag_move", "modal_role_edit", "modal_company_and_role_edit"].includes(log.action)
+  ).length;
+
+  const companyMoves = logs.filter((log) =>
+    ["company_drag_move", "company_and_role_drag_move", "company_drag_move_keep_role", "modal_company_edit", "modal_company_and_role_edit"].includes(log.action)
+  ).length;
+
+  const rollbacks = logs.filter((log) => log.action === "rollback_change").length;
+  const topActors = buildActorLeaderboard(logs);
+
+  document.getElementById("auditAnalyticsRoot").innerHTML = `
+    <div class="audit-analytics-grid">
+      <div class="audit-analytics-card">
+        <div class="audit-analytics-label">Visible Logs</div>
+        <div class="audit-analytics-value">${logs.length}</div>
+      </div>
+      <div class="audit-analytics-card">
+        <div class="audit-analytics-label">Last 24h Activity</div>
+        <div class="audit-analytics-value">${recent24h.length}</div>
+      </div>
+      <div class="audit-analytics-card">
+        <div class="audit-analytics-label">Role Changes</div>
+        <div class="audit-analytics-value">${roleMoves}</div>
+      </div>
+      <div class="audit-analytics-card">
+        <div class="audit-analytics-label">Company Moves / Rollbacks</div>
+        <div class="audit-analytics-value">${companyMoves + rollbacks}</div>
+      </div>
+    </div>
+
+    <div class="glass-card" style="margin-top:16px; padding:16px;">
+      <h3 style="margin:0 0 12px 0;">Top Actors</h3>
+      ${
+        topActors.length
+          ? `<div class="audit-leaderboard">
+              ${topActors.map(([name, count]) => `
+                <div class="audit-leaderboard-row">
+                  <strong>${name}</strong>
+                  <span class="chip">${count} changes</span>
+                </div>
+              `).join("")}
+            </div>`
+          : `<div class="audit-empty">No actor analytics available.</div>`
+      }
+    </div>
+  `;
+}
+
+function renderSuspiciousActivity() {
+  const logs = auditState.logs;
+  const warnings = [];
+
+  const actorBuckets = new Map();
+
+  logs.forEach((log) => {
+    if (!log?.createdAt?.seconds) return;
+    const key = log.actorUserId || log.actorName || "unknown";
+    if (!actorBuckets.has(key)) actorBuckets.set(key, []);
+    actorBuckets.get(key).push(log);
+  });
+
+  actorBuckets.forEach((bucket, actorKey) => {
+    const recentHour = bucket.filter((log) => {
+      return Date.now() - log.createdAt.seconds * 1000 <= 1000 * 60 * 60;
+    });
+
+    if (recentHour.length >= 8) {
+      warnings.push({
+        title: "High change volume",
+        text: `${bucket[0]?.actorName || actorKey} made ${recentHour.length} changes in the last hour.`
+      });
+    }
+
+    const companyMoves = recentHour.filter((log) =>
+      ["company_drag_move", "company_and_role_drag_move", "company_drag_move_keep_role", "modal_company_edit", "modal_company_and_role_edit"].includes(log.action)
+    );
+
+    if (companyMoves.length >= 3) {
+      warnings.push({
+        title: "Frequent company moves",
+        text: `${bucket[0]?.actorName || actorKey} moved users across companies ${companyMoves.length} times in the last hour.`
+      });
+    }
+  });
+
+  const recentRollbacks = logs.filter((log) => {
+    if (log.action !== "rollback_change" || !log?.createdAt?.seconds) return false;
+    return Date.now() - log.createdAt.seconds * 1000 <= 1000 * 60 * 60 * 24;
+  });
+
+  if (recentRollbacks.length >= 5) {
+    warnings.push({
+      title: "Heavy rollback usage",
+      text: `${recentRollbacks.length} rollback actions were triggered in the last 24 hours.`
+    });
+  }
+
+  document.getElementById("auditSuspiciousRoot").innerHTML = warnings.length
+    ? warnings.map((warning) => `
+        <div class="audit-warning" style="margin-bottom:12px;">
+          <div class="audit-warning-title">${warning.title}</div>
+          <div>${warning.text}</div>
+        </div>
+      `).join("")
+    : `<div class="audit-empty">No suspicious activity detected right now.</div>`;
 }
 
 function renderLogs() {
@@ -260,6 +514,166 @@ function renderLogs() {
   root.innerHTML = filtered.length
     ? `<div class="audit-stack">${filtered.map(renderAuditCard).join("")}</div>`
     : `<div class="audit-empty">No audit logs match your current filters.</div>`;
+
+  wireRollbackButtons();
+  renderAnalytics();
+  renderSuspiciousActivity();
+}
+
+function csvEscape(value) {
+  const text = String(value ?? "");
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function exportCsv() {
+  const rows = getFilteredLogs();
+
+  const headers = [
+    "Time",
+    "Action",
+    "Actor Name",
+    "Actor Role",
+    "Target User",
+    "Old Role",
+    "New Role",
+    "Old Company",
+    "New Company",
+    "Notes"
+  ];
+
+  const body = rows.map((log) => [
+    formatTimestamp(log.createdAt),
+    labelForAction(log.action),
+    log.actorName || "",
+    log.actorRole || "",
+    log.targetUserName || "",
+    log.oldRole || "",
+    log.newRole || "",
+    log.oldCompanyId || "",
+    log.newCompanyId || "",
+    log.notes || ""
+  ]);
+
+  const csv = [
+    headers.map(csvEscape).join(","),
+    ...body.map((row) => row.map(csvEscape).join(","))
+  ].join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `audit_logs_${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function rollbackLogChange(logId) {
+  const log = auditState.logs.find((item) => item.id === logId);
+  if (!log) {
+    showToast("Audit log not found.", "error");
+    return;
+  }
+
+  if (!isRollbackAllowed(log)) {
+    showToast("This change cannot be rolled back.", "error");
+    return;
+  }
+
+  const confirmed = window.confirm(
+    `Undo ${labelForAction(log.action)} for ${log.targetUserName || "this user"}?`
+  );
+  if (!confirmed) return;
+
+  const targetRef = doc(db, "users", log.targetUserId);
+  const targetSnap = await getDoc(targetRef);
+
+  if (!targetSnap.exists()) {
+    showToast("Target user no longer exists.", "error");
+    return;
+  }
+
+  const patch = {};
+
+  if (log.oldRole !== undefined && log.oldRole !== null && log.oldRole !== "") {
+    patch.role = log.oldRole;
+  }
+
+  if (log.oldCompanyId !== undefined && log.oldCompanyId !== null && log.oldCompanyId !== "") {
+    patch.companyId = log.oldCompanyId;
+  }
+
+  if (patch.role) {
+    const roleLevels = {
+      admin: 2,
+      manager: 3,
+      operations_coordinator: 3,
+      sales_rep: 4,
+      technician: 5,
+      hr: 3
+    };
+    const roleDefaults = {
+      admin: ["manage_users", "approve", "full_company"],
+      manager: ["leads", "jobs", "customers"],
+      operations_coordinator: ["jobs", "customers"],
+      sales_rep: ["leads", "convert"],
+      technician: ["jobs"],
+      hr: ["users", "staff"]
+    };
+
+    patch.organizationLevel = roleLevels[patch.role] || 6;
+    patch.permissions = roleDefaults[patch.role] || [];
+  }
+
+  await updateDoc(targetRef, patch);
+
+  await addDoc(collection(db, "audit_logs"), {
+    type: "org_chart_change",
+    action: "rollback_change",
+    targetUserId: log.targetUserId || "",
+    targetUserName: log.targetUserName || "",
+    actorUserId: auditState.user?.id || auditState.user?.uid || "",
+    actorName: auditState.user?.name || auditState.user?.email || "",
+    actorRole: auditState.user?.role || "",
+    oldRole: log.newRole || null,
+    newRole: log.oldRole || null,
+    oldCompanyId: log.newCompanyId || null,
+    newCompanyId: log.oldCompanyId || null,
+    notes: `Rollback of audit log ${log.id}`,
+    createdAt: serverTimestamp()
+  });
+
+  showToast("Change rolled back.");
+  await refreshAudit();
+}
+
+function wireRollbackButtons() {
+  document.querySelectorAll(".rollback-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      try {
+        await rollbackLogChange(btn.dataset.logId);
+      } catch (e) {
+        showToast(e.message || "Rollback failed.", "error");
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  });
+}
+
+async function refreshAudit() {
+  if (auditState.isRefreshing) return;
+  auditState.isRefreshing = true;
+
+  try {
+    await loadLogs();
+    renderLogs();
+  } finally {
+    auditState.isRefreshing = false;
+  }
 }
 
 function wireEvents() {
@@ -275,9 +689,28 @@ function wireEvents() {
 
   document.getElementById("refreshAuditBtn")?.addEventListener("click", async () => {
     document.getElementById("auditRoot").innerHTML = "Refreshing audit logs...";
-    await loadLogs();
-    renderLogs();
+    await refreshAudit();
+    showToast("Audit refreshed.");
   });
+
+  document.getElementById("exportCsvBtn")?.addEventListener("click", () => {
+    exportCsv();
+    showToast("CSV exported.");
+  });
+}
+
+function startLiveFeed() {
+  stopLiveFeed();
+  auditState.autoRefreshHandle = setInterval(async () => {
+    await refreshAudit();
+  }, 20000);
+}
+
+function stopLiveFeed() {
+  if (auditState.autoRefreshHandle) {
+    clearInterval(auditState.autoRefreshHandle);
+    auditState.autoRefreshHandle = null;
+  }
 }
 
 requireAuth(async (user) => {
@@ -303,6 +736,9 @@ requireAuth(async (user) => {
     await loadLogs();
     renderLogs();
     wireEvents();
+    startLiveFeed();
+
+    window.addEventListener("beforeunload", stopLiveFeed);
   } catch (e) {
     document.getElementById("auditRoot").innerHTML = `Audit page failed: ${e.message || e}`;
   }
