@@ -23,10 +23,10 @@ import { canAccess, getAllowedSections, getRoleLabel } from "./roles.js";
 
 export const SERVICE_LIBRARY = {
   exterior: [
-    { id: "driveway_cleaning", label: "Driveway Cleaning", rate: 0.20, unit: "sqft" },
+    { id: "driveway_cleaning", label: "Driveway Cleaning", rate: 0.2, unit: "sqft" },
     { id: "sidewalk_cleaning", label: "Sidewalk Cleaning", rate: 0.12, unit: "sqft" },
     { id: "patio_cleaning", label: "Patio Cleaning", rate: 0.18, unit: "sqft" },
-    { id: "deck_cleaning", label: "Deck Cleaning", rate: 0.20, unit: "sqft" },
+    { id: "deck_cleaning", label: "Deck Cleaning", rate: 0.2, unit: "sqft" },
     { id: "house_wash", label: "House Wash", rate: 0.25, unit: "sqft" },
     { id: "fence_cleaning", label: "Fence Cleaning", rate: 12, unit: "panel" }
   ],
@@ -369,6 +369,38 @@ export async function normalizeCompanyDoc(companyId) {
   };
 }
 
+export async function cleanupLegacyCompanyDocs() {
+  const companies = await fetchAllCollection("companies");
+  const grouped = new Map();
+  const deleted = [];
+  const canonicalized = [];
+
+  companies.forEach((company) => {
+    const canonicalId = sanitizeCompanyId(company.id || company.slug || company.name || "");
+    if (!canonicalId) return;
+    if (!grouped.has(canonicalId)) grouped.set(canonicalId, []);
+    grouped.get(canonicalId).push(company);
+  });
+
+  for (const [canonicalId, docs] of grouped.entries()) {
+    await normalizeCompanyDoc(canonicalId);
+    canonicalized.push(canonicalId);
+
+    for (const legacy of docs) {
+      if (legacy.id !== canonicalId) {
+        try {
+          await deleteDoc(doc(db, "companies", legacy.id));
+          deleted.push(legacy.id);
+        } catch (e) {
+          console.warn("Could not delete legacy company doc", legacy.id, e);
+        }
+      }
+    }
+  }
+
+  return { canonicalized, deleted };
+}
+
 export function buildNormalizedLeadPayload(existing = {}) {
   return {
     companyId: sanitizeCompanyId(existing.companyId || ""),
@@ -508,6 +540,71 @@ export async function normalizeServiceDoc(serviceId) {
   });
 
   return normalized;
+}
+
+export async function cleanupUsernameDirectory() {
+  const [users, usernames] = await Promise.all([
+    fetchAllCollection("users"),
+    fetchAllCollection("usernames")
+  ]);
+
+  const removed = [];
+  const repaired = [];
+
+  for (const entry of usernames) {
+    const linkedUser = users.find((u) => u.id === entry.uid);
+
+    if (!linkedUser) {
+      try {
+        await deleteDoc(doc(db, "usernames", entry.id));
+        removed.push(entry.id);
+      } catch (e) {
+        console.warn("Could not delete orphan username doc", entry.id, e);
+      }
+      continue;
+    }
+
+    const currentUsername = buildNormalizedUsernameFields(linkedUser.username || "").username;
+    const expectedHandle = currentUsername ? `@${currentUsername}` : "";
+
+    if (!currentUsername) {
+      try {
+        await deleteDoc(doc(db, "usernames", entry.id));
+        removed.push(entry.id);
+      } catch (e) {
+        console.warn("Could not delete blank username doc", entry.id, e);
+      }
+      continue;
+    }
+
+    if (entry.id !== currentUsername || entry.handle !== expectedHandle) {
+      await syncUsernameDirectoryByUserDoc(linkedUser.id);
+
+      if (entry.id !== currentUsername) {
+        try {
+          await deleteDoc(doc(db, "usernames", entry.id));
+          removed.push(entry.id);
+        } catch (e) {
+          console.warn("Could not delete stale username doc", entry.id, e);
+        }
+      } else {
+        repaired.push(entry.id);
+      }
+    }
+  }
+
+  for (const user of users) {
+    const normalized = buildNormalizedUserPayload(user);
+    if (normalized.username) {
+      const snap = await getDoc(doc(db, "usernames", normalized.username));
+      if (!snap.exists()) {
+        await syncUsernameDirectoryByUserDoc(user.id);
+        repaired.push(normalized.username);
+      }
+    }
+  }
+
+  return { removed, repaired };
 }
 
 export async function loadBrandSettings() {
@@ -765,402 +862,6 @@ export function groupUsersByRole(users) {
   if (extras.length) groups.other = extras;
 
   return groups;
-}
-
-export async function createLead(data, user) {
-  return addDoc(collection(db, "leads"), {
-    companyId: sanitizeCompanyId(user.companyId),
-    fullName: data.fullName || "",
-    phone: data.phone || "",
-    email: data.email || "",
-    address: data.address || "",
-    city: data.city || "",
-    state: data.state || "",
-    zip: data.zip || "",
-    serviceCategory: data.serviceCategory || "",
-    serviceType: data.serviceType || "",
-    serviceInterest: data.serviceLabel || "",
-    addOns: data.addOns || [],
-    leadSource: data.leadSource || "",
-    preferredContactMethod: data.preferredContactMethod || "",
-    estimatedSqFt: Number(data.estimatedSqFt || 0),
-    estimatedPrice: Number(data.estimatedPrice || 0),
-    assignedRep: data.assignedRep || "",
-    status: data.status || "new",
-    notes: data.notes || "",
-    appointmentDate: data.appointmentDate || "",
-    isArchived: false,
-    deleteRequested: false,
-    deleteRequestedBy: "",
-    deleteApprovedBy: "",
-    createdBy: user.email || "",
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
-  });
-}
-
-export async function updateLead(leadId, data) {
-  return updateDoc(doc(db, "leads", leadId), {
-    fullName: data.fullName || "",
-    phone: data.phone || "",
-    email: data.email || "",
-    address: data.address || "",
-    city: data.city || "",
-    state: data.state || "",
-    zip: data.zip || "",
-    serviceCategory: data.serviceCategory || "",
-    serviceType: data.serviceType || "",
-    serviceInterest: data.serviceLabel || "",
-    addOns: data.addOns || [],
-    leadSource: data.leadSource || "",
-    preferredContactMethod: data.preferredContactMethod || "",
-    estimatedSqFt: Number(data.estimatedSqFt || 0),
-    estimatedPrice: Number(data.estimatedPrice || 0),
-    assignedRep: data.assignedRep || "",
-    status: data.status || "new",
-    notes: data.notes || "",
-    appointmentDate: data.appointmentDate || "",
-    updatedAt: serverTimestamp()
-  });
-}
-
-export async function archiveLead(leadId, user) {
-  return updateDoc(doc(db, "leads", leadId), {
-    isArchived: true,
-    archivedBy: user.email || "",
-    updatedAt: serverTimestamp()
-  });
-}
-
-export async function requestDeleteLead(leadId, user) {
-  return updateDoc(doc(db, "leads", leadId), {
-    deleteRequested: true,
-    deleteRequestedBy: user.email || "",
-    updatedAt: serverTimestamp()
-  });
-}
-
-export async function approveDeleteLead(leadId, user) {
-  await updateDoc(doc(db, "leads", leadId), {
-    deleteApprovedBy: user.email || "",
-    updatedAt: serverTimestamp()
-  });
-  return deleteDoc(doc(db, "leads", leadId));
-}
-
-export async function convertLeadToJob(lead, data, user) {
-  const jobRef = await addDoc(collection(db, "jobs"), {
-    companyId: sanitizeCompanyId(user.companyId),
-    sourceLeadId: lead.id,
-    customerName: lead.fullName || "",
-    customerPhone: lead.phone || "",
-    customerEmail: lead.email || "",
-    address: lead.address || "",
-    city: lead.city || "",
-    state: lead.state || "",
-    zip: lead.zip || "",
-    serviceType: data.serviceType || lead.serviceInterest || "",
-    assignedRep: lead.assignedRep || "",
-    assignedTechnician: data.assignedTechnician || "",
-    scheduledDate: data.scheduledDate || "",
-    scheduledTimeWindow: data.scheduledTimeWindow || "",
-    estimatedSqFt: Number(lead.estimatedSqFt || 0),
-    estimatedPrice: Number(lead.estimatedPrice || 0),
-    status: "scheduled",
-    notes: data.notes || lead.notes || "",
-    beforePhotos: [],
-    afterPhotos: [],
-    completionNotes: "",
-    paymentStatus: "unpaid",
-    invoiceId: "",
-    customerSignature: "",
-    routeOrder: 0,
-    crewNotes: "",
-    arrivalTime: "",
-    departureTime: "",
-    assignedCrewIds: [],
-    serviceAddOns: [],
-    createdBy: user.email || "",
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
-  });
-
-  await updateDoc(doc(db, "leads", lead.id), {
-    status: "scheduled",
-    convertedToJobId: jobRef.id,
-    updatedAt: serverTimestamp()
-  });
-
-  return jobRef;
-}
-
-export async function createSalesRep(data, user) {
-  const usernameFields = buildNormalizedUsernameFields(data.username || "");
-  const docRef = await addDoc(collection(db, "users"), {
-    companyId: sanitizeCompanyId(user.companyId),
-    name: data.fullName || "",
-    ...usernameFields,
-    email: data.email || "",
-    phone: data.phone || "",
-    status: data.status || "active",
-    approvalStatus: data.approvalStatus || "approved",
-    role: "sales_rep",
-    organizationLevel: 4,
-    permissions: ["leads", "convert"],
-    companyAccessLevel: "subsidiary",
-    photoUrl: "",
-    reportsTo: data.reportsTo || user.id || "",
-    address: "",
-    city: "",
-    state: "",
-    zip: "",
-    preferredContactMethod: "",
-    notes: data.notes || "",
-    createdBy: user.email || "",
-    createdAt: serverTimestamp(),
-    lastLogin: serverTimestamp(),
-    updatedAt: serverTimestamp()
-  });
-
-  if (usernameFields.username) {
-    await syncUsernameDirectoryByUserDoc(docRef.id);
-  }
-
-  return docRef;
-}
-
-export async function updateSalesRep(repId, data) {
-  const existingSnap = await getDoc(doc(db, "users", repId));
-  if (!existingSnap.exists()) throw new Error("Sales rep not found.");
-
-  const existingUser = existingSnap.data();
-  const newUsername = String(data.username || existingUser.username || "").trim().toLowerCase();
-
-  await updateDoc(doc(db, "users", repId), {
-    name: data.fullName || existingUser.name || "",
-    email: data.email || existingUser.email || "",
-    phone: data.phone || existingUser.phone || "",
-    status: data.status || existingUser.status || "active",
-    notes: data.notes || existingUser.notes || "",
-    updatedAt: serverTimestamp()
-  });
-
-  if (newUsername && newUsername !== (existingUser.username || "")) {
-    await syncUsernameChangeForUser(repId, newUsername);
-  } else {
-    await syncUsernameDirectoryByUserDoc(repId);
-  }
-}
-
-export async function createCompany(data, user) {
-  const companyId = sanitizeCompanyId(data.companyId || data.slug || data.name || "");
-  const slug = String(data.slug || data.name || "").trim().toLowerCase().replace(/\s+/g, "-");
-
-  await setDoc(doc(db, "companies", companyId), {
-    name: data.name || "",
-    slug,
-    city: data.city || "",
-    state: data.state || "",
-    phone: data.phone || "",
-    email: data.email || "",
-    status: data.status || "active",
-    notes: data.notes || "",
-    ownerCompany: "Evaraos Inc",
-    ownerName: data.ownerName || "",
-    ownerEmail: data.ownerEmail || "",
-    ownerUserId: data.ownerUserId || "",
-    parentCompany: "Evaraos Inc",
-    brandColor: data.brandColor || "#E30613",
-    logoUrl: data.logoUrl || "",
-    serviceCategories: data.serviceCategories || [],
-    active: data.active !== false,
-    createdBy: user.email || "",
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
-  });
-
-  return doc(db, "companies", companyId);
-}
-
-export async function updateCompany(companyId, data) {
-  return updateDoc(doc(db, "companies", sanitizeCompanyId(companyId)), {
-    name: data.name || "",
-    slug: data.slug || "",
-    city: data.city || "",
-    state: data.state || "",
-    phone: data.phone || "",
-    email: data.email || "",
-    status: data.status || "active",
-    notes: data.notes || "",
-    ownerName: data.ownerName || "",
-    ownerEmail: data.ownerEmail || "",
-    ownerUserId: data.ownerUserId || "",
-    parentCompany: data.parentCompany || "Evaraos Inc",
-    brandColor: data.brandColor || "#E30613",
-    logoUrl: data.logoUrl || "",
-    serviceCategories: data.serviceCategories || [],
-    active: data.active !== false,
-    updatedAt: serverTimestamp()
-  });
-}
-
-export async function updateUserAdmin(userId, data) {
-  const existingSnap = await getDoc(doc(db, "users", userId));
-  if (!existingSnap.exists()) {
-    throw new Error("User not found.");
-  }
-
-  const existingUser = existingSnap.data();
-  const newUsername = String(data.username || existingUser.username || "").trim().toLowerCase();
-
-  if (existingUser.role === "super_admin") {
-    await updateDoc(doc(db, "users", userId), {
-      name: data.name,
-      companyId: sanitizeCompanyId(data.companyId),
-      status: "active",
-      phone: data.phone || "",
-      address: data.address || "",
-      city: data.city || "",
-      state: data.state || "",
-      zip: data.zip || "",
-      role: "super_admin",
-      approvalStatus: "approved",
-      organizationLevel: 1,
-      permissions: ["all"],
-      companyAccessLevel: "parent",
-      updatedAt: serverTimestamp()
-    });
-
-    if (newUsername && newUsername !== (existingUser.username || "")) {
-      await syncUsernameChangeForUser(userId, newUsername);
-    } else {
-      await syncUsernameDirectoryByUserDoc(userId);
-    }
-
-    return;
-  }
-
-  const defaults = getRoleDefaults(data.role);
-
-  await updateDoc(doc(db, "users", userId), {
-    name: data.name,
-    role: data.role,
-    approvalStatus: data.approvalStatus || defaults.approvalStatus,
-    companyId: sanitizeCompanyId(data.companyId),
-    status: data.status || defaults.status,
-    phone: data.phone || "",
-    address: data.address || "",
-    city: data.city || "",
-    state: data.state || "",
-    zip: data.zip || "",
-    organizationLevel: defaults.organizationLevel,
-    permissions: defaults.permissions,
-    companyAccessLevel: defaults.companyAccessLevel,
-    updatedAt: serverTimestamp()
-  });
-
-  if (newUsername && newUsername !== (existingUser.username || "")) {
-    await syncUsernameChangeForUser(userId, newUsername);
-  } else {
-    await syncUsernameDirectoryByUserDoc(userId);
-  }
-}
-
-export async function approveUser(userId) {
-  const existingSnap = await getDoc(doc(db, "users", userId));
-  if (!existingSnap.exists()) throw new Error("User not found.");
-
-  const existingUser = existingSnap.data();
-  const defaults = getRoleDefaults(existingUser.role);
-
-  if (existingUser.role === "super_admin") {
-    await updateDoc(doc(db, "users", userId), {
-      role: "super_admin",
-      approvalStatus: "approved",
-      status: "active",
-      organizationLevel: 1,
-      permissions: ["all"],
-      companyAccessLevel: "parent",
-      updatedAt: serverTimestamp()
-    });
-  } else {
-    await updateDoc(doc(db, "users", userId), {
-      approvalStatus: "approved",
-      status: "active",
-      organizationLevel: defaults.organizationLevel,
-      permissions: defaults.permissions,
-      companyAccessLevel: defaults.companyAccessLevel,
-      updatedAt: serverTimestamp()
-    });
-  }
-
-  await syncUsernameDirectoryByUserDoc(userId);
-}
-
-export async function rejectUser(userId) {
-  const existingSnap = await getDoc(doc(db, "users", userId));
-  if (!existingSnap.exists()) throw new Error("User not found.");
-
-  const existingUser = existingSnap.data();
-  if (existingUser.role === "super_admin") {
-    throw new Error("Super Admin cannot be rejected.");
-  }
-
-  await updateDoc(doc(db, "users", userId), {
-    approvalStatus: "rejected",
-    status: "inactive",
-    updatedAt: serverTimestamp()
-  });
-
-  await syncUsernameDirectoryByUserDoc(userId);
-}
-
-export async function updateOwnCustomerProfile(userId, data) {
-  const existingSnap = await getDoc(doc(db, "users", userId));
-  if (!existingSnap.exists()) throw new Error("User not found.");
-
-  const existingUser = existingSnap.data();
-  const newUsername = String(data.username || existingUser.username || "").trim().toLowerCase();
-
-  await updateDoc(doc(db, "users", userId), {
-    name: data.name,
-    email: data.email,
-    phone: data.phone || "",
-    address: data.address || "",
-    city: data.city || "",
-    state: data.state || "",
-    zip: data.zip || "",
-    photoUrl: data.photoUrl || "",
-    preferredContactMethod: data.preferredContactMethod || "",
-    updatedAt: serverTimestamp()
-  });
-
-  if (newUsername && newUsername !== (existingUser.username || "")) {
-    await syncUsernameChangeForUser(userId, newUsername);
-  } else {
-    await syncUsernameDirectoryByUserDoc(userId);
-  }
-}
-
-export async function fetchCustomerServices(user) {
-  return [
-    {
-      id: "trash-bin-monthly",
-      name: "Trash Bin Cleaning Subscription",
-      status: "active",
-      billingType: "monthly",
-      cancellationPolicy: "Early cancellation may include termination fees depending on contract terms.",
-      canRequestChanges: true
-    },
-    {
-      id: "driveway-cleaning",
-      name: "Driveway Cleaning",
-      status: "inactive",
-      billingType: "one_time",
-      cancellationPolicy: "One-time services can be removed before scheduling confirmation.",
-      canRequestChanges: true
-    }
-  ];
 }
 
 export async function scanSystemDiscrepancies() {
