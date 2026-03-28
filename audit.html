@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audit - Evaraos Inc</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <style>
+    .audit-grid{
+      display:grid;
+      gap:16px;
+    }
+    .audit-card{
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      border-radius:24px;
+      padding:18px;
+    }
+    .audit-row{
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:18px;
+      padding:14px;
+      margin-top:12px;
+      background:rgba(255,255,255,.03);
+    }
+    .audit-badge{
+      display:inline-flex;
+      align-items:center;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      font-size:12px;
+      margin-right:8px;
+      margin-bottom:8px;
+    }
+    .audit-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:12px;
+    }
+    .audit-empty{
+      color:#9fb0c9;
+    }
+  </style>
+</head>
+<body class="app-shell">
+  <header class="app-topbar" id="topbar"></header>
+
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main-panel">
+      <section class="glass-card">
+        <div class="action-row" style="justify-content:space-between;align-items:center;">
+          <div>
+            <h1 style="margin:0;">System Audit</h1>
+            <p class="muted" style="margin:8px 0 0;">Super admin discrepancy checker and repair console.</p>
+          </div>
+          <div class="action-row">
+            <button class="btn secondary" id="runAuditBtn">Run Audit</button>
+            <button class="btn" id="repairAllUsersBtn">Repair All Users</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="audit-grid" id="auditRoot"></section>
+    </main>
+  </div>
+
+  <script type="module" src="assets/audit.js"></script>
+</body>
+</html>
