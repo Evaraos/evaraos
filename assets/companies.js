@@ -34,8 +34,7 @@ function showToast(message, variant = "success") {
   toast.textContent = message;
   toast.style.padding = "14px 16px";
   toast.style.borderRadius = "16px";
-  toast.style.background =
-    variant === "error" ? "rgba(180,40,40,.94)" : "rgba(25,110,55,.94)";
+  toast.style.background = variant === "error" ? "rgba(180,40,40,.94)" : "rgba(25,110,55,.94)";
   toast.style.color = "#fff";
   toast.style.boxShadow = "0 12px 30px rgba(0,0,0,.28)";
   container.appendChild(toast);
