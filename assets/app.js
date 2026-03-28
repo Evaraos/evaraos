@@ -258,10 +258,6 @@ export function buildNormalizedCompanyPayload(existing = {}, companyId = "") {
   };
 }
 
-/*
-  AUTO-HEAL COMPANY LOOKUP:
-  Finds canonical company doc first, then falls back to legacy IDs/slugs/names.
-*/
 export async function findCompanyDocFlexible(companyId) {
   const canonicalId = sanitizeCompanyId(companyId);
   if (!canonicalId) return null;
@@ -307,19 +303,54 @@ export async function findCompanyDocFlexible(companyId) {
   return null;
 }
 
-/*
-  AUTO-MIGRATES legacy company docs into canonical companies/{underscore_id}
-*/
 export async function normalizeCompanyDoc(companyId) {
   const canonicalId = sanitizeCompanyId(companyId);
   const found = await findCompanyDocFlexible(companyId);
+  const canonicalRef = doc(db, "companies", canonicalId);
 
   if (!found) {
-    throw new Error("Company not found.");
+    const fallback = buildNormalizedCompanyPayload(
+      {
+        name: "Supreme TrueClean",
+        slug: companyIdToSlug(canonicalId),
+        city: "Jacksonville",
+        state: "FL",
+        phone: "",
+        email: "",
+        status: "active",
+        notes: "",
+        ownerCompany: "Evaraos Inc",
+        ownerName: "Gilbert Ramos",
+        ownerEmail: "gilbert37ramos@gmail.com",
+        ownerUserId: "",
+        parentCompany: "Evaraos Inc",
+        brandColor: "#E30613",
+        logoUrl: "",
+        serviceCategories: [],
+        active: true
+      },
+      canonicalId
+    );
+
+    await setDoc(
+      canonicalRef,
+      {
+        ...fallback,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
+
+    return {
+      canonicalId,
+      previousId: null,
+      matchedBy: "auto_created",
+      normalized: fallback
+    };
   }
 
   const normalized = buildNormalizedCompanyPayload(found.data, canonicalId);
-  const canonicalRef = doc(db, "companies", canonicalId);
 
   await setDoc(
     canonicalRef,
