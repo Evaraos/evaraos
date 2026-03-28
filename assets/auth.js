@@ -142,7 +142,6 @@ export function formatAuthError(error) {
   };
 
   if (map[code]) return map[code];
-
   if (message.includes("Missing or insufficient permissions")) {
     return "Permissions issue detected. Check Firestore rules or access settings.";
   }
@@ -160,22 +159,92 @@ async function getUsernameDoc(username) {
   return { id: snap.id, ...snap.data() };
 }
 
-async function setUsernameDoc(username, data) {
+async function writeUsernameDirectory({ username, uid, email, companyId, role, active = true }) {
   const clean = sanitizeUsername(username);
   if (!clean) throw new Error("Invalid username.");
 
   await setDoc(doc(db, "usernames", clean), {
-    ...data,
+    uid,
+    email: cleanEmailValue(email || ""),
     handle: makeHandle(clean),
     displayUsername: makeDisplayUsername(clean),
+    companyId: companyId || DEFAULT_COMPANY_ID,
+    role: role || "customer",
+    active,
     updatedAt: serverTimestamp()
   }, { merge: true });
 }
 
-async function deleteUsernameDoc(username) {
+async function deleteUsernameDirectory(username) {
   const clean = sanitizeUsername(username);
   if (!clean) return;
   await deleteDoc(doc(db, "usernames", clean));
+}
+
+export async function syncUsernameDirectoryByUserDoc(userId) {
+  const snap = await getDoc(doc(db, "users", userId));
+  if (!snap.exists()) throw new Error("User not found.");
+
+  const user = snap.data();
+  const username = sanitizeUsername(user.username || "");
+  if (!username) throw new Error("User is missing username.");
+
+  await setDoc(doc(db, "usernames", username), {
+    uid: userId,
+    email: cleanEmailValue(user.email || ""),
+    handle: makeHandle(username),
+    displayUsername: makeDisplayUsername(username),
+    companyId: user.companyId || DEFAULT_COMPANY_ID,
+    role: user.role || "customer",
+    active: user.status !== "inactive",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+
+  return true;
+}
+
+export async function syncUsernameChangeForUser(userId, newUsername) {
+  const cleanNew = sanitizeUsername(newUsername);
+  if (!cleanNew) throw new Error("Invalid username.");
+
+  const userRef = doc(db, "users", userId);
+  const snap = await getDoc(userRef);
+  if (!snap.exists()) throw new Error("User not found.");
+
+  const user = snap.data();
+  const oldUsername = sanitizeUsername(user.username || "");
+
+  const taken = await usernameExists(cleanNew, userId);
+  if (taken) {
+    throw new Error("That username is already taken.");
+  }
+
+  await updateDoc(userRef, {
+    username: cleanNew,
+    handle: makeHandle(cleanNew),
+    displayUsername: makeDisplayUsername(cleanNew),
+    updatedAt: serverTimestamp()
+  });
+
+  await writeUsernameDirectory({
+    username: cleanNew,
+    uid: userId,
+    email: user.email || "",
+    companyId: user.companyId || DEFAULT_COMPANY_ID,
+    role: user.role || "customer",
+    active: user.status !== "inactive"
+  });
+
+  if (oldUsername && oldUsername !== cleanNew) {
+    await deleteUsernameDirectory(oldUsername);
+  }
+
+  return {
+    username: cleanNew,
+    handle: makeHandle(cleanNew),
+    displayUsername: makeDisplayUsername(cleanNew)
+  };
 }
 
 export async function usernameExists(username, excludeUid = "") {
@@ -365,72 +434,7 @@ export async function getCurrentUserDoc(user) {
 }
 
 export async function updateOwnUsername(userId, username) {
-  const identity = buildUserIdentity(username);
-
-  if (!identity.username) {
-    throw new Error("Username is required.");
-  }
-
-  if (identity.username.length < 3) {
-    throw new Error("Username must be at least 3 characters.");
-  }
-
-  const currentUserSnap = await getDoc(doc(db, "users", userId));
-  if (!currentUserSnap.exists()) {
-    throw new Error("User not found.");
-  }
-
-  const currentUser = currentUserSnap.data();
-  const oldUsername = currentUser.username || "";
-
-  const taken = await usernameExists(identity.username, userId);
-  if (taken) {
-    throw new Error("That username is already taken.");
-  }
-
-  await updateDoc(doc(db, "users", userId), {
-    username: identity.username,
-    handle: identity.handle,
-    displayUsername: identity.displayUsername,
-    updatedAt: serverTimestamp()
-  });
-
-  await setUsernameDoc(identity.username, {
-    uid: userId,
-    email: currentUser.email || "",
-    companyId: currentUser.companyId || DEFAULT_COMPANY_ID,
-    role: currentUser.role || "customer",
-    active: currentUser.status !== "inactive"
-  });
-
-  if (oldUsername && oldUsername !== identity.username) {
-    await deleteUsernameDoc(oldUsername);
-  }
-
-  return identity;
-}
-
-export async function syncUsernameDirectoryForUser(userId) {
-  const snap = await getDoc(doc(db, "users", userId));
-  if (!snap.exists()) throw new Error("User not found.");
-
-  const user = snap.data();
-  const username = sanitizeUsername(user.username || "");
-  if (!username) throw new Error("User is missing username.");
-
-  await setDoc(doc(db, "usernames", username), {
-    uid: userId,
-    email: user.email || "",
-    handle: makeHandle(username),
-    displayUsername: makeDisplayUsername(username),
-    companyId: user.companyId || DEFAULT_COMPANY_ID,
-    role: user.role || "customer",
-    active: user.status !== "inactive",
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
-  }, { merge: true });
-
-  return true;
+  return syncUsernameChangeForUser(userId, username);
 }
 
 export async function changeOwnPassword(currentPassword, newPassword) {
@@ -479,7 +483,7 @@ export function listenAuth(callback) {
       if (username) {
         await setDoc(doc(db, "usernames", username), {
           uid: user.uid,
-          email: current.email || "",
+          email: cleanEmailValue(current.email || ""),
           handle: makeHandle(username),
           displayUsername: makeDisplayUsername(username),
           companyId: current.companyId || DEFAULT_COMPANY_ID,
@@ -500,11 +504,6 @@ export function listenAuth(callback) {
   });
 }
 
-/*
-  Optional legacy helper:
-  if any older page still tries to search users directly by username,
-  this gives a fallback utility.
-*/
 export async function findUserByUsernameLegacy(username) {
   const clean = sanitizeUsername(username);
   if (!clean) return null;
