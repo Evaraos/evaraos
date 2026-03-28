@@ -14,6 +14,7 @@ import {
   setDoc,
   getDoc,
   updateDoc,
+  deleteDoc,
   serverTimestamp,
   collection,
   getDocs,
@@ -149,17 +150,43 @@ export function formatAuthError(error) {
   return message || "Something went wrong. Please try again.";
 }
 
+async function getUsernameDoc(username) {
+  const clean = sanitizeUsername(username);
+  if (!clean) return null;
+
+  const snap = await getDoc(doc(db, "usernames", clean));
+  if (!snap.exists()) return null;
+
+  return { id: snap.id, ...snap.data() };
+}
+
+async function setUsernameDoc(username, data) {
+  const clean = sanitizeUsername(username);
+  if (!clean) throw new Error("Invalid username.");
+
+  await setDoc(doc(db, "usernames", clean), {
+    ...data,
+    handle: makeHandle(clean),
+    displayUsername: makeDisplayUsername(clean),
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+}
+
+async function deleteUsernameDoc(username) {
+  const clean = sanitizeUsername(username);
+  if (!clean) return;
+  await deleteDoc(doc(db, "usernames", clean));
+}
+
 export async function usernameExists(username, excludeUid = "") {
   const clean = sanitizeUsername(username);
   if (!clean) return false;
 
-  const q = query(collection(db, "users"), where("username", "==", clean));
-  const snap = await getDocs(q);
-
-  if (snap.empty) return false;
+  const usernameDoc = await getUsernameDoc(clean);
+  if (!usernameDoc) return false;
   if (!excludeUid) return true;
 
-  return snap.docs.some((d) => d.id !== excludeUid);
+  return usernameDoc.uid !== excludeUid;
 }
 
 export async function generateUsernameSuggestions(rawUsername) {
@@ -260,6 +287,18 @@ export async function signup(name, username, email, password, role) {
       updatedAt: serverTimestamp()
     });
 
+    await setDoc(doc(db, "usernames", identity.username), {
+      uid: cred.user.uid,
+      email: cleanEmail,
+      handle: identity.handle,
+      displayUsername: identity.displayUsername,
+      companyId: DEFAULT_COMPANY_ID,
+      role: defaults.finalRole,
+      active: true,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+
     return cred;
   } catch (error) {
     throw new Error(formatAuthError(error));
@@ -274,20 +313,21 @@ export async function loginWithUsername(usernameOrHandle, password) {
   }
 
   try {
-    const q = query(collection(db, "users"), where("username", "==", cleanUsername));
-    const snap = await getDocs(q);
+    const usernameDoc = await getUsernameDoc(cleanUsername);
 
-    if (snap.empty) {
+    if (!usernameDoc) {
       throw new Error("Username not found.");
     }
 
-    const userData = snap.docs[0].data();
-
-    if (!userData?.email) {
-      throw new Error("That account is missing an email.");
+    if (!usernameDoc.email) {
+      throw new Error("That username is missing an email link.");
     }
 
-    return await signInWithEmailAndPassword(auth, cleanEmailValue(userData.email), password);
+    if (usernameDoc.active === false) {
+      throw new Error("That username is inactive.");
+    }
+
+    return await signInWithEmailAndPassword(auth, cleanEmailValue(usernameDoc.email), password);
   } catch (error) {
     throw new Error(formatAuthError(error));
   }
@@ -335,6 +375,14 @@ export async function updateOwnUsername(userId, username) {
     throw new Error("Username must be at least 3 characters.");
   }
 
+  const currentUserSnap = await getDoc(doc(db, "users", userId));
+  if (!currentUserSnap.exists()) {
+    throw new Error("User not found.");
+  }
+
+  const currentUser = currentUserSnap.data();
+  const oldUsername = currentUser.username || "";
+
   const taken = await usernameExists(identity.username, userId);
   if (taken) {
     throw new Error("That username is already taken.");
@@ -347,7 +395,42 @@ export async function updateOwnUsername(userId, username) {
     updatedAt: serverTimestamp()
   });
 
+  await setUsernameDoc(identity.username, {
+    uid: userId,
+    email: currentUser.email || "",
+    companyId: currentUser.companyId || DEFAULT_COMPANY_ID,
+    role: currentUser.role || "customer",
+    active: currentUser.status !== "inactive"
+  });
+
+  if (oldUsername && oldUsername !== identity.username) {
+    await deleteUsernameDoc(oldUsername);
+  }
+
   return identity;
+}
+
+export async function syncUsernameDirectoryForUser(userId) {
+  const snap = await getDoc(doc(db, "users", userId));
+  if (!snap.exists()) throw new Error("User not found.");
+
+  const user = snap.data();
+  const username = sanitizeUsername(user.username || "");
+  if (!username) throw new Error("User is missing username.");
+
+  await setDoc(doc(db, "usernames", username), {
+    uid: userId,
+    email: user.email || "",
+    handle: makeHandle(username),
+    displayUsername: makeDisplayUsername(username),
+    companyId: user.companyId || DEFAULT_COMPANY_ID,
+    role: user.role || "customer",
+    active: user.status !== "inactive",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+
+  return true;
 }
 
 export async function changeOwnPassword(currentPassword, newPassword) {
@@ -391,10 +474,45 @@ export function listenAuth(callback) {
       await updateDoc(doc(db, "users", user.uid), {
         lastLogin: serverTimestamp()
       });
+
+      const username = sanitizeUsername(current.username || "");
+      if (username) {
+        await setDoc(doc(db, "usernames", username), {
+          uid: user.uid,
+          email: current.email || "",
+          handle: makeHandle(username),
+          displayUsername: makeDisplayUsername(username),
+          companyId: current.companyId || DEFAULT_COMPANY_ID,
+          role: current.role || "customer",
+          active: current.status !== "inactive",
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      }
     } catch (e) {
-      console.warn("Failed to update lastLogin", e);
+      console.warn("Failed to sync lastLogin/username directory", e);
     }
 
-    callback(current);
+    callback({
+      uid: user.uid,
+      id: user.uid,
+      ...current
+    });
   });
+}
+
+/*
+  Optional legacy helper:
+  if any older page still tries to search users directly by username,
+  this gives a fallback utility.
+*/
+export async function findUserByUsernameLegacy(username) {
+  const clean = sanitizeUsername(username);
+  if (!clean) return null;
+
+  const q = query(collection(db, "users"), where("username", "==", clean));
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+
+  const first = snap.docs[0];
+  return { id: first.id, ...first.data() };
 }
