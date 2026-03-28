@@ -1,302 +1,400 @@
 import {
   bindTopbar,
   requireAuth,
-  fetchUsersByCompany,
   fetchAllCollection,
+  fetchUsersByCompany,
   fetchPendingUsersByCompany,
-  renderSidebar,
-  roleGuard,
-  updateUserAdmin,
-  groupUsersByRole,
-  approveUser,
-  rejectUser
+  sanitizeCompanyId
 } from "./app.js";
 
-let currentUser = null;
-let editingUserId = null;
-let currentUsers = [];
-let currentPendingUsers = [];
+import { canAccess } from "./roles.js";
 
-function formatDisplayUsername(user) {
-  return user.displayUsername || user.username || "NoUsername";
-}
+import {
+  doc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-function formatHandle(user) {
-  return user.handle || (user.username ? `@${user.username}` : "@no-username");
-}
+import { db } from "./firebase.js";
 
-function applySuperAdminLock(user) {
-  const isSuperAdmin = user?.role === "super_admin";
+const usersState = {
+  user: null,
+  approved: [],
+  pending: [],
+  editingId: null
+};
 
-  document.getElementById("superAdminLockMsg").style.display = isSuperAdmin ? "block" : "none";
-  document.getElementById("userRole").disabled = isSuperAdmin;
-  document.getElementById("userApprovalStatus").disabled = isSuperAdmin;
-  document.getElementById("userStatus").disabled = isSuperAdmin;
-
-  if (isSuperAdmin) {
-    document.getElementById("userRole").value = "super_admin";
-    document.getElementById("userApprovalStatus").value = "approved";
-    document.getElementById("userStatus").value = "active";
+function showToast(message, variant = "success") {
+  let container = document.getElementById("usersToastContainer");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "usersToastContainer";
+    container.style.position = "fixed";
+    container.style.top = "20px";
+    container.style.right = "20px";
+    container.style.zIndex = "9999";
+    container.style.display = "flex";
+    container.style.flexDirection = "column";
+    container.style.gap = "10px";
+    document.body.appendChild(container);
   }
+
+  const toast = document.createElement("div");
+  toast.textContent = message;
+  toast.style.padding = "14px 16px";
+  toast.style.borderRadius = "16px";
+  toast.style.background =
+    variant === "error" ? "rgba(180,40,40,.94)" : "rgba(25,110,55,.94)";
+  toast.style.color = "#fff";
+  toast.style.boxShadow = "0 12px 30px rgba(0,0,0,.28)";
+  container.appendChild(toast);
+
+  setTimeout(() => toast.remove(), 2600);
 }
 
-function fillUserForm(user) {
-  document.getElementById("userName").value = user.name || "";
-  document.getElementById("userUsername").value = user.username || "";
-  document.getElementById("userEmail").value = user.email || "";
-  document.getElementById("userRole").value = user.role || "customer";
-  document.getElementById("userApprovalStatus").value = user.approvalStatus || "pending";
-  document.getElementById("userCompanyId").value = user.companyId || "";
-  document.getElementById("userStatus").value = user.status || "active";
-  document.getElementById("userPhone").value = user.phone || "";
-  document.getElementById("userAddress").value = user.address || "";
-  document.getElementById("userCity").value = user.city || "";
-  document.getElementById("userState").value = user.state || "";
-  document.getElementById("userZip").value = user.zip || "";
+function injectStyles() {
+  if (document.getElementById("usersUpgradeStyles")) return;
 
-  applySuperAdminLock(user);
+  const style = document.createElement("style");
+  style.id = "usersUpgradeStyles";
+  style.textContent = `
+    .users-main{
+      display:flex;
+      flex-direction:column;
+      gap:22px;
+      padding:22px;
+    }
+    .users-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:16px;
+    }
+    .user-card{
+      border-radius:24px;
+      padding:18px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.08);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .user-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:6px;
+    }
+    .chip{
+      display:inline-flex;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      font-size:12px;
+      margin:6px 8px 0 0;
+      text-transform:capitalize;
+    }
+    .muted{
+      color:#aeb8c8;
+      font-size:13px;
+    }
+    .empty-state{
+      color:#aeb8c8;
+      padding:12px 0 4px;
+    }
+    .modal-backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.45);
+      backdrop-filter:blur(8px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:9998;
+      padding:18px;
+    }
+    .modal-backdrop.open{
+      display:flex;
+    }
+    .modal-card{
+      width:min(760px,100%);
+      max-height:90vh;
+      overflow:auto;
+      border-radius:28px;
+      background:rgba(14,16,24,.96);
+      border:1px solid rgba(255,255,255,.08);
+      padding:22px;
+      box-shadow:0 25px 60px rgba(0,0,0,.35);
+    }
+    .form-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:14px;
+      margin-top:16px;
+    }
+    .full{
+      grid-column:1/-1;
+    }
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .field label{
+      font-size:13px;
+      color:#b4bfd0;
+    }
+    .field input,
+    .field select,
+    .field textarea{
+      width:100%;
+      padding:14px 16px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      color:#fff;
+      outline:none;
+    }
+    .split-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:22px;
+    }
+    @media (max-width: 900px){
+      .split-grid,
+      .users-grid,
+      .form-grid{
+        grid-template-columns:1fr;
+      }
+    }
+  `;
+  document.head.appendChild(style);
 }
 
-function clearUserForm() {
-  editingUserId = null;
-  document.getElementById("userName").value = "";
-  document.getElementById("userUsername").value = "";
-  document.getElementById("userEmail").value = "";
-  document.getElementById("userRole").value = "customer";
-  document.getElementById("userApprovalStatus").value = "pending";
-  document.getElementById("userCompanyId").value = "";
-  document.getElementById("userStatus").value = "active";
-  document.getElementById("userPhone").value = "";
-  document.getElementById("userAddress").value = "";
-  document.getElementById("userCity").value = "";
-  document.getElementById("userState").value = "";
-  document.getElementById("userZip").value = "";
-  document.getElementById("userMsg").textContent = "";
-  document.getElementById("superAdminLockMsg").style.display = "none";
-  document.getElementById("userRole").disabled = false;
-  document.getElementById("userApprovalStatus").disabled = false;
-  document.getElementById("userStatus").disabled = false;
+async function loadUsers(user) {
+  usersState.user = user;
+
+  const isSuper = user.role === "super_admin";
+
+  const [allUsers, pendingUsers] = await Promise.all([
+    isSuper ? fetchAllCollection("users") : fetchUsersByCompany(user.companyId),
+    isSuper ? fetchPendingUsersByCompany("", true) : fetchPendingUsersByCompany(user.companyId, false)
+  ]);
+
+  usersState.pending = pendingUsers;
+
+  usersState.approved = allUsers.filter((item) => {
+    const sameCompany = sanitizeCompanyId(item.companyId || "") === sanitizeCompanyId(user.companyId || "");
+    if (isSuper) return item.approvalStatus !== "pending";
+    return sameCompany && item.approvalStatus !== "pending";
+  });
 }
 
-function openModal(id) {
-  document.getElementById(id).classList.add("active");
+function openUserModal(userRecord) {
+  usersState.editingId = userRecord.id;
+  document.getElementById("userModal").classList.add("open");
+
+  document.getElementById("userModalTitle").textContent = `Edit ${userRecord.name || userRecord.email || "User"}`;
+  document.getElementById("editUserName").value = userRecord.name || "";
+  document.getElementById("editUserEmail").value = userRecord.email || "";
+  document.getElementById("editUserPhone").value = userRecord.phone || "";
+  document.getElementById("editUserRole").value = userRecord.role || "customer";
+  document.getElementById("editUserStatus").value = userRecord.status || "active";
+  document.getElementById("editUserApproval").value = userRecord.approvalStatus || "approved";
+  document.getElementById("editUserReportsTo").value = userRecord.reportsTo || "";
 }
 
-function closeModal(id) {
-  document.getElementById(id).classList.remove("active");
+function closeUserModal() {
+  document.getElementById("userModal").classList.remove("open");
+  usersState.editingId = null;
 }
 
-function userCard(user) {
+function renderPendingCard(userRecord) {
   return `
-    <div class="row">
+    <div class="user-card">
       <div>
-        <strong>${user.name || "Unnamed User"}</strong><br>
-        <span class="muted">${formatDisplayUsername(user)}</span>
-        <div class="handle-line">${formatHandle(user)}</div>
-        <span class="muted">${user.email || "No email"}</span>
+        <strong>${userRecord.name || "Unnamed User"}</strong>
+        <div class="muted" style="margin-top:6px;">${userRecord.email || "No email"} · ${userRecord.phone || "No phone"}</div>
       </div>
+
       <div>
-        ${user.role || "No role"}<br>
-        <span class="muted">${user.approvalStatus || "pending"} | ${user.status || "active"}</span>
+        <span class="chip">${userRecord.role || "unknown"}</span>
+        <span class="chip">${userRecord.approvalStatus || "pending"}</span>
+        <span class="chip">${userRecord.status || "inactive"}</span>
       </div>
-      <div>
-        ${user.phone || "No phone"}<br>
-        <span class="muted">${user.city || ""} ${user.state || ""}</span>
+
+      <div class="muted">
+        Company: ${userRecord.companyId || "—"}<br>
+        Username: ${userRecord.username || "—"}<br>
+        Handle: ${userRecord.handle || "—"}
       </div>
-      <div>
-        <button class="btn secondary edit-user-btn" data-id="${user.id}">Edit</button>
+
+      <div class="user-actions">
+        <button class="btn approve-user-btn" data-id="${userRecord.id}">Approve</button>
+        <button class="btn secondary deny-user-btn" data-id="${userRecord.id}">Deny</button>
       </div>
     </div>
   `;
 }
 
-function pendingUserCard(user) {
+function renderApprovedCard(userRecord) {
   return `
-    <div class="approval-row">
+    <div class="user-card">
       <div>
-        <strong>${user.name || "Unnamed User"}</strong><br>
-        <span class="muted">${formatDisplayUsername(user)}</span>
-        <div class="handle-line">${formatHandle(user)}</div>
-        <span class="muted">${user.email || "No email"}</span>
+        <strong>${userRecord.name || "Unnamed User"}</strong>
+        <div class="muted" style="margin-top:6px;">${userRecord.email || "No email"} · ${userRecord.phone || "No phone"}</div>
       </div>
+
       <div>
-        ${user.role || "No role"}<br>
-        <span class="muted">Approval: ${user.approvalStatus || "pending"}</span>
+        <span class="chip">${userRecord.role || "unknown"}</span>
+        <span class="chip">${userRecord.approvalStatus || "approved"}</span>
+        <span class="chip">${userRecord.status || "active"}</span>
       </div>
-      <div>
-        ${user.phone || "No phone"}<br>
-        <span class="muted">${user.city || ""} ${user.state || ""}</span>
+
+      <div class="muted">
+        Company: ${userRecord.companyId || "—"}<br>
+        Username: ${userRecord.username || "—"}<br>
+        Handle: ${userRecord.handle || "—"}<br>
+        Reports To: ${userRecord.reportsTo || "—"}
       </div>
-      <div class="action-row">
-        <button class="btn approve-user-btn" data-id="${user.id}">Approve</button>
-        <button class="btn secondary reject-user-btn" data-id="${user.id}">Reject</button>
-        <button class="btn secondary edit-user-btn" data-id="${user.id}">Edit</button>
+
+      <div class="user-actions">
+        <button class="btn secondary edit-user-btn" data-id="${userRecord.id}">Edit</button>
       </div>
     </div>
   `;
 }
 
-async function renderPendingUsers() {
-  const includeAll = currentUser.role === "super_admin";
-  currentPendingUsers = includeAll
-    ? await fetchPendingUsersByCompany(currentUser.companyId, true)
-    : await fetchPendingUsersByCompany(currentUser.companyId, false);
+function renderPage() {
+  const root = document.getElementById("usersRoot");
+  root.innerHTML = `
+    <main class="users-main">
+      <section class="glass-card">
+        <div class="section-title-row">
+          <div>
+            <h1 style="margin:0;">Users & Approvals</h1>
+            <p class="muted" style="margin:10px 0 0;">Manage staff roles, approval flow, and account status.</p>
+          </div>
+        </div>
+      </section>
 
-  const root = document.getElementById("pendingUsersList");
+      <div class="split-grid">
+        <section class="glass-card">
+          <div class="section-title-row">
+            <h2>Pending Approvals</h2>
+            <div class="muted">${usersState.pending.length} pending</div>
+          </div>
 
-  if (!currentPendingUsers.length) {
-    root.innerHTML = `<div class="empty-group">No pending users right now.</div>`;
-    return;
-  }
+          ${
+            !usersState.pending.length
+              ? `<div class="empty-state">No pending users.</div>`
+              : `
+                <div class="users-grid" style="grid-template-columns:1fr; margin-top:14px;">
+                  ${usersState.pending.map(renderPendingCard).join("")}
+                </div>
+              `
+          }
+        </section>
 
-  root.innerHTML = currentPendingUsers.map(pendingUserCard).join("");
+        <section class="glass-card">
+          <div class="section-title-row">
+            <h2>Approved Users</h2>
+            <div class="muted">${usersState.approved.length} active records</div>
+          </div>
 
+          ${
+            !usersState.approved.length
+              ? `<div class="empty-state">No approved users found.</div>`
+              : `
+                <div class="users-grid" style="grid-template-columns:1fr; margin-top:14px;">
+                  ${usersState.approved.map(renderApprovedCard).join("")}
+                </div>
+              `
+          }
+        </section>
+      </div>
+    </main>
+  `;
+
+  wirePageEvents();
+}
+
+function wirePageEvents() {
   document.querySelectorAll(".approve-user-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
-      try {
-        await approveUser(btn.dataset.id);
-        await renderPendingUsers();
-        await renderUsers();
-      } catch (e) {
-        alert(e.message || "Could not approve user.");
-      }
+      await updateDoc(doc(db, "users", btn.dataset.id), {
+        approvalStatus: "approved",
+        status: "active",
+        updatedAt: serverTimestamp()
+      });
+      showToast("User approved.");
+      await reloadAndRender();
     });
   });
 
-  document.querySelectorAll(".reject-user-btn").forEach((btn) => {
+  document.querySelectorAll(".deny-user-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
-      try {
-        await rejectUser(btn.dataset.id);
-        await renderPendingUsers();
-        await renderUsers();
-      } catch (e) {
-        alert(e.message || "Could not reject user.");
-      }
+      await deleteDoc(doc(db, "users", btn.dataset.id));
+      showToast("Pending user denied and removed.");
+      await reloadAndRender();
     });
   });
 
   document.querySelectorAll(".edit-user-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const selectedUser =
-        currentPendingUsers.find((user) => user.id === btn.dataset.id) ||
-        currentUsers.find((user) => user.id === btn.dataset.id);
-
-      if (!selectedUser) return;
-
-      editingUserId = selectedUser.id;
-      fillUserForm(selectedUser);
-      openModal("userModal");
+      const found = usersState.approved.find((item) => item.id === btn.dataset.id);
+      if (found) openUserModal(found);
     });
   });
+
+  document.getElementById("userModalCloseBtn")?.addEventListener("click", closeUserModal);
+  document.getElementById("userModalCancelBtn")?.addEventListener("click", closeUserModal);
+  document.getElementById("userForm")?.addEventListener("submit", saveUserEdit);
 }
 
-async function renderUsers() {
-  currentUsers = currentUser.role === "super_admin"
-    ? await fetchAllCollection("users")
-    : await fetchUsersByCompany(currentUser.companyId);
+async function saveUserEdit(e) {
+  e.preventDefault();
+  if (!usersState.editingId) return;
 
-  const grouped = groupUsersByRole(currentUsers);
-  const root = document.getElementById("usersGroupedList");
-
-  const sectionOrder = [
-    ["super_admin", "Super Admin"],
-    ["admin", "Admins"],
-    ["manager", "Managers"],
-    ["operations_coordinator", "Operations Coordinators"],
-    ["sales_rep", "Sales Reps"],
-    ["technician", "Technicians"],
-    ["hr", "HR"],
-    ["customer", "Customers"],
-    ["other", "Other"]
-  ];
-
-  root.innerHTML = sectionOrder.map(([key, label]) => {
-    const users = grouped[key] || [];
-    return `
-      <div class="role-group">
-        <h3>${label}</h3>
-        ${users.length ? users.map(userCard).join("") : `<div class="empty-group">No users in this category.</div>`}
-      </div>
-    `;
-  }).join("");
-
-  document.querySelectorAll("#usersGroupedList .edit-user-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const selectedUser = currentUsers.find((user) => user.id === btn.dataset.id);
-      if (!selectedUser) return;
-
-      editingUserId = selectedUser.id;
-      fillUserForm(selectedUser);
-      openModal("userModal");
-    });
+  await updateDoc(doc(db, "users", usersState.editingId), {
+    name: document.getElementById("editUserName").value.trim(),
+    email: document.getElementById("editUserEmail").value.trim(),
+    phone: document.getElementById("editUserPhone").value.trim(),
+    role: document.getElementById("editUserRole").value,
+    status: document.getElementById("editUserStatus").value,
+    approvalStatus: document.getElementById("editUserApproval").value,
+    reportsTo: document.getElementById("editUserReportsTo").value.trim(),
+    updatedAt: serverTimestamp()
   });
+
+  closeUserModal();
+  showToast("User updated.");
+  await reloadAndRender();
+}
+
+async function reloadAndRender() {
+  await loadUsers(usersState.user);
+  renderPage();
 }
 
 requireAuth(async (user) => {
-  currentUser = user;
+  injectStyles();
+  await bindTopbar(user);
 
-  if (!roleGuard(user, "users")) {
-    document.body.innerHTML = `
-      <div class="auth-shell">
-        <div class="auth-card">
-          <h2>Access denied</h2>
-          <p class="muted">Your role does not have access to Users management.</p>
-        </div>
-      </div>
-    `;
+  if (!canAccess(user.role, "users")) {
+    document.getElementById("usersRoot").innerHTML = `<section class="glass-card" style="margin:22px;">Access denied for users.</section>`;
     return;
   }
 
-  await bindTopbar(user);
-  document.getElementById("sidebar").innerHTML = renderSidebar(user.role, "users");
+  const sidebarTop = document.getElementById("sidebar");
+  if (sidebarTop) sidebarTop.innerHTML = "";
 
-  await renderPendingUsers();
-  await renderUsers();
+  document.getElementById("usersRoot").innerHTML = `<section class="glass-card" style="margin:22px;">Loading users...</section>`;
 
-  document.getElementById("closeUserModalBtn").addEventListener("click", () => closeModal("userModal"));
-
-  document.getElementById("saveUserBtn").addEventListener("click", async () => {
-    const msg = document.getElementById("userMsg");
-
-    if (!editingUserId) {
-      msg.textContent = "Select a user from the list to edit.";
-      return;
-    }
-
-    const selectedUser =
-      currentUsers.find((u) => u.id === editingUserId) ||
-      currentPendingUsers.find((u) => u.id === editingUserId);
-
-    if (!selectedUser) {
-      msg.textContent = "User not found.";
-      return;
-    }
-
-    try {
-      await updateUserAdmin(editingUserId, {
-        name: document.getElementById("userName").value.trim(),
-        username: document.getElementById("userUsername").value.trim().toLowerCase(),
-        role: selectedUser.role === "super_admin" ? "super_admin" : document.getElementById("userRole").value,
-        approvalStatus: selectedUser.role === "super_admin" ? "approved" : document.getElementById("userApprovalStatus").value,
-        companyId: document.getElementById("userCompanyId").value.trim(),
-        status: selectedUser.role === "super_admin" ? "active" : document.getElementById("userStatus").value,
-        phone: document.getElementById("userPhone").value.trim(),
-        address: document.getElementById("userAddress").value.trim(),
-        city: document.getElementById("userCity").value.trim(),
-        state: document.getElementById("userState").value,
-        zip: document.getElementById("userZip").value.trim()
-      });
-
-      msg.textContent = selectedUser.role === "super_admin"
-        ? "Super Admin updated. Highest role remains locked."
-        : "User updated successfully.";
-
-      await renderPendingUsers();
-      await renderUsers();
-      closeModal("userModal");
-      clearUserForm();
-    } catch (e) {
-      msg.textContent = e.message || "Failed to update user.";
-    }
-  });
+  try {
+    await loadUsers(user);
+    renderPage();
+  } catch (e) {
+    document.getElementById("usersRoot").innerHTML = `<section class="glass-card" style="margin:22px;">Users page failed: ${e.message || e}</section>`;
+  }
 });
