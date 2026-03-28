@@ -15,7 +15,9 @@ const performanceState = {
   leads: [],
   jobs: [],
   search: "",
-  roleFilter: "all"
+  roleFilter: "all",
+  rows: [],
+  selectedUserId: null
 };
 
 const ROLE_LABELS = {
@@ -100,6 +102,12 @@ function injectStyles() {
       display:flex;
       flex-direction:column;
       gap:12px;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+    .perf-card:hover{
+      transform:translateY(-2px);
+      background:rgba(255,255,255,.06);
     }
     .perf-head{
       display:flex;
@@ -176,18 +184,143 @@ function injectStyles() {
       color:#aeb8c8;
       padding:10px 0 4px;
     }
-    @media (max-width: 1100px){
+    .perf-section-grid{
+      display:grid;
+      grid-template-columns:1.15fr .85fr;
+      gap:16px;
+      margin-top:16px;
+    }
+    .perf-panel{
+      padding:18px;
+      border-radius:22px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .perf-panel h3{
+      margin:0 0 12px 0;
+    }
+    .perf-rollup-list{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .perf-rollup-item{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:center;
+      padding:12px 14px;
+      border-radius:16px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.06);
+    }
+    .perf-rollup-meta{
+      color:#aeb8c8;
+      font-size:12px;
+      margin-top:4px;
+      line-height:1.4;
+    }
+    .perf-chart-wrap{
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+    .perf-chart{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .perf-chart-row{
+      display:grid;
+      grid-template-columns:140px minmax(0,1fr) 70px;
+      gap:12px;
+      align-items:center;
+    }
+    .perf-chart-label{
+      font-size:13px;
+      color:#fff;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .perf-chart-bar-track{
+      width:100%;
+      height:12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      overflow:hidden;
+    }
+    .perf-chart-bar{
+      height:100%;
+      border-radius:999px;
+      background:linear-gradient(90deg, rgba(255,94,77,0.95), rgba(255,140,92,0.95));
+    }
+    .perf-chart-value{
+      text-align:right;
+      font-size:12px;
+      color:#aeb8c8;
+    }
+    .perf-modal-backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.45);
+      backdrop-filter:blur(8px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:9998;
+      padding:18px;
+    }
+    .perf-modal-backdrop.open{
+      display:flex;
+    }
+    .perf-modal-card{
+      width:min(860px,100%);
+      max-height:90vh;
+      overflow:auto;
+      border-radius:28px;
+      background:rgba(14,16,24,.96);
+      border:1px solid rgba(255,255,255,.08);
+      padding:22px;
+      box-shadow:0 25px 60px rgba(0,0,0,.35);
+    }
+    .perf-detail-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:14px;
+      margin-top:16px;
+    }
+    .perf-detail-box{
+      padding:14px;
+      border-radius:18px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.07);
+    }
+    .perf-detail-label{
+      font-size:12px;
+      color:#aeb8c8;
+      margin-bottom:8px;
+    }
+    .perf-detail-value{
+      font-size:14px;
+      line-height:1.45;
+    }
+    @media (max-width: 1200px){
       .perf-summary-grid{
         grid-template-columns:repeat(2,minmax(0,1fr));
       }
       .perf-grid{
         grid-template-columns:repeat(2,minmax(0,1fr));
       }
+      .perf-section-grid{
+        grid-template-columns:1fr;
+      }
     }
     @media (max-width: 700px){
       .perf-summary-grid,
       .perf-grid,
-      .perf-stats{
+      .perf-stats,
+      .perf-detail-grid{
         grid-template-columns:1fr;
       }
       .perf-toolbar{
@@ -197,9 +330,110 @@ function injectStyles() {
       .perf-select{
         width:100%;
       }
+      .perf-chart-row{
+        grid-template-columns:100px minmax(0,1fr) 56px;
+      }
     }
   `;
   document.head.appendChild(style);
+}
+
+function ensureModalShell() {
+  if (document.getElementById("performanceDetailModal")) return;
+
+  const wrap = document.createElement("div");
+  wrap.className = "perf-modal-backdrop";
+  wrap.id = "performanceDetailModal";
+  wrap.innerHTML = `
+    <div class="perf-modal-card">
+      <div class="section-title-row">
+        <h2 id="performanceDetailTitle" style="margin:0;">User Detail</h2>
+        <button class="btn secondary" id="performanceDetailCloseBtn" type="button">Close</button>
+      </div>
+      <div id="performanceDetailBody" style="margin-top:16px;"></div>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+
+  document.getElementById("performanceDetailCloseBtn")?.addEventListener("click", closeUserDetailModal);
+}
+
+function openUserDetailModal(userId) {
+  performanceState.selectedUserId = userId;
+  const row = performanceState.rows.find((item) => item.id === userId);
+  if (!row) return;
+
+  ensureModalShell();
+
+  document.getElementById("performanceDetailTitle").textContent =
+    row.name || row.email || "User Detail";
+
+  document.getElementById("performanceDetailBody").innerHTML = `
+    <div class="perf-chip-row" style="margin-top:0;">
+      <span class="perf-chip">${ROLE_LABELS[row.role] || row.role || "Unknown"}</span>
+      <span class="perf-chip">${row.status || "inactive"}</span>
+      <span class="perf-chip">${row.approvalStatus || "pending"}</span>
+      <span class="perf-chip">Level ${row.organizationLevel || "—"}</span>
+      <span class="perf-chip">Rank #${row.rank}</span>
+    </div>
+
+    <div class="perf-detail-grid">
+      <div class="perf-detail-box">
+        <div class="perf-detail-label">Name</div>
+        <div class="perf-detail-value">${row.name || "—"}</div>
+      </div>
+      <div class="perf-detail-box">
+        <div class="perf-detail-label">Email</div>
+        <div class="perf-detail-value">${row.email || "—"}</div>
+      </div>
+      <div class="perf-detail-box">
+        <div class="perf-detail-label">Phone</div>
+        <div class="perf-detail-value">${row.phone || "—"}</div>
+      </div>
+      <div class="perf-detail-box">
+        <div class="perf-detail-label">Username</div>
+        <div class="perf-detail-value">${row.username || "—"}</div>
+      </div>
+      <div class="perf-detail-box">
+        <div class="perf-detail-label">Assigned Leads</div>
+        <div class="perf-detail-value">${row.leadsAssigned}</div>
+      </div>
+      <div class="perf-detail-box">
+        <div class="perf-detail-label">Converted Leads</div>
+        <div class="perf-detail-value">${row.convertedLeads}</div>
+      </div>
+      <div class="perf-detail-box">
+        <div class="perf-detail-label">Completed Jobs</div>
+        <div class="perf-detail-value">${row.completedJobs}</div>
+      </div>
+      <div class="perf-detail-box">
+        <div class="perf-detail-label">In Progress Jobs</div>
+        <div class="perf-detail-value">${row.inProgressJobs}</div>
+      </div>
+      <div class="perf-detail-box">
+        <div class="perf-detail-label">Revenue from Leads</div>
+        <div class="perf-detail-value">${safeCurrency(row.revenueFromLeads)}</div>
+      </div>
+      <div class="perf-detail-box">
+        <div class="perf-detail-label">Revenue from Jobs</div>
+        <div class="perf-detail-value">${safeCurrency(row.revenueFromJobs)}</div>
+      </div>
+      <div class="perf-detail-box">
+        <div class="perf-detail-label">Conversion Rate</div>
+        <div class="perf-detail-value">${safePercent(row.conversionRate)}</div>
+      </div>
+      <div class="perf-detail-box">
+        <div class="perf-detail-label">Direct Reports</div>
+        <div class="perf-detail-value">${row.directReports}</div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("performanceDetailModal").classList.add("open");
+}
+
+function closeUserDetailModal() {
+  document.getElementById("performanceDetailModal")?.classList.remove("open");
 }
 
 function normalizeText(value) {
@@ -313,9 +547,17 @@ function calculateUserStats(user) {
   const revenueFromLeads = convertedLeads.reduce((sum, lead) => sum + Number(lead.estimatedPrice || 0), 0);
   const revenueFromJobs = completedJobs.reduce((sum, job) => sum + Number(job.estimatedPrice || 0), 0);
 
-  const directReports = performanceState.users.filter(
+  const directReportUsers = performanceState.users.filter(
     (candidate) => normalizeText(candidate.reportsTo) === normalizeText(user.id)
   );
+
+  const teamLeadCount = performanceState.leads.filter((lead) =>
+    directReportUsers.some((rep) => matchesAssignedRep(lead, rep))
+  ).length;
+
+  const teamCompletedJobs = performanceState.jobs.filter((job) =>
+    directReportUsers.some((member) => matchesAssignedTech(job, member))
+  ).filter(isCompletedJob).length;
 
   let score = 0;
 
@@ -324,13 +566,7 @@ function calculateUserStats(user) {
   } else if (role === "technician") {
     score = completedJobs.length * 10 + inProgressJobs.length * 4;
   } else if (role === "manager" || role === "operations_coordinator" || role === "admin" || role === "super_admin") {
-    const teamLeadCount = performanceState.leads.filter((lead) =>
-      directReports.some((rep) => matchesAssignedRep(lead, rep))
-    ).length;
-    const teamJobCount = performanceState.jobs.filter((job) =>
-      directReports.some((tech) => matchesAssignedTech(job, tech))
-    ).length;
-    score = directReports.length * 5 + teamLeadCount * 2 + teamJobCount * 2;
+    score = directReportUsers.length * 5 + teamLeadCount * 2 + teamCompletedJobs * 3;
   } else {
     score = leadsAssigned.length + assignedJobs.length;
   }
@@ -351,7 +587,9 @@ function calculateUserStats(user) {
     revenueFromLeads,
     revenueFromJobs,
     conversionRate,
-    directReports: directReports.length,
+    directReports: directReportUsers.length,
+    teamLeadCount,
+    teamCompletedJobs,
     score
   };
 }
@@ -375,6 +613,58 @@ function summaryStats(rows) {
     totalCompletedJobs,
     totalRevenue
   };
+}
+
+function aggregateByRole(rows) {
+  const map = new Map();
+
+  rows.forEach((row) => {
+    const key = row.role || "unknown";
+    if (!map.has(key)) {
+      map.set(key, {
+        role: key,
+        leads: 0,
+        jobs: 0,
+        revenue: 0
+      });
+    }
+
+    const bucket = map.get(key);
+    bucket.leads += Number(row.leadsAssigned || 0);
+    bucket.jobs += Number(row.completedJobs || 0);
+    bucket.revenue += Number(row.revenueFromLeads || 0) + Number(row.revenueFromJobs || 0);
+  });
+
+  return [...map.values()];
+}
+
+function renderBarChart(title, items, valueKey, formatter = (v) => v) {
+  const max = Math.max(...items.map((item) => Number(item[valueKey] || 0)), 0);
+
+  return `
+    <div class="perf-chart">
+      <h3 style="margin:0;">${title}</h3>
+      ${
+        items.length
+          ? items
+              .map((item) => {
+                const raw = Number(item[valueKey] || 0);
+                const width = max > 0 ? (raw / max) * 100 : 0;
+                return `
+                  <div class="perf-chart-row">
+                    <div class="perf-chart-label">${ROLE_LABELS[item.role] || item.role}</div>
+                    <div class="perf-chart-bar-track">
+                      <div class="perf-chart-bar" style="width:${width}%;"></div>
+                    </div>
+                    <div class="perf-chart-value">${formatter(raw)}</div>
+                  </div>
+                `;
+              })
+              .join("")
+          : `<div class="perf-empty">No chart data.</div>`
+      }
+    </div>
+  `;
 }
 
 function renderSummaryCards(rows) {
@@ -404,7 +694,7 @@ function renderSummaryCards(rows) {
 
 function renderCard(row) {
   return `
-    <div class="perf-card">
+    <div class="perf-card" data-user-id="${row.id}">
       <div class="perf-head">
         <div>
           <div class="perf-name">${row.name || "User"}</div>
@@ -449,8 +739,61 @@ function renderCard(row) {
   `;
 }
 
+function renderRollups(rows) {
+  const managers = rows
+    .filter((row) =>
+      ["super_admin", "admin", "manager", "operations_coordinator"].includes(row.role)
+    )
+    .sort((a, b) => (b.directReports + b.teamCompletedJobs) - (a.directReports + a.teamCompletedJobs));
+
+  return `
+    <div class="perf-panel">
+      <h3>Manager / Team Rollups</h3>
+      ${
+        managers.length
+          ? `<div class="perf-rollup-list">
+              ${managers
+                .map(
+                  (row) => `
+                    <div class="perf-rollup-item">
+                      <div>
+                        <strong>${row.name || "User"}</strong>
+                        <div class="perf-rollup-meta">
+                          ${ROLE_LABELS[row.role] || row.role}<br>
+                          Direct Reports: ${row.directReports}<br>
+                          Team Leads: ${row.teamLeadCount}<br>
+                          Team Completed Jobs: ${row.teamCompletedJobs}
+                        </div>
+                      </div>
+                      <div class="perf-rank">#${row.rank}</div>
+                    </div>
+                  `
+                )
+                .join("")}
+            </div>`
+          : `<div class="perf-empty">No manager rollups available.</div>`
+      }
+    </div>
+  `;
+}
+
+function renderCharts(rows) {
+  const roleBuckets = aggregateByRole(rows);
+
+  return `
+    <div class="perf-panel">
+      <div class="perf-chart-wrap">
+        ${renderBarChart("Leads by Role", roleBuckets, "leads")}
+        ${renderBarChart("Completed Jobs by Role", roleBuckets, "jobs")}
+        ${renderBarChart("Revenue by Role", roleBuckets, "revenue", (v) => safeCurrency(v))}
+      </div>
+    </div>
+  `;
+}
+
 function renderPage() {
-  const rows = buildPerformanceRows();
+  performanceState.rows = buildPerformanceRows();
+  const rows = performanceState.rows;
 
   document.getElementById("performanceRoot").innerHTML = `
     <main class="perf-page">
@@ -459,7 +802,7 @@ function renderPage() {
           <div>
             <h1 style="margin:0;">User Performance Dashboard</h1>
             <p class="muted" style="margin:10px 0 0;">
-              Track team output across leads, jobs, conversions, hierarchy, and revenue.
+              Track team output across leads, jobs, conversions, hierarchy, revenue, and role performance.
             </p>
           </div>
           <div class="top-actions">
@@ -503,6 +846,16 @@ function renderPage() {
             : `<div class="perf-empty">No users match this filter.</div>`
         }
       </section>
+
+      <section class="glass-card">
+        <div class="section-title-row">
+          <h2>Performance Insights</h2>
+        </div>
+        <div class="perf-section-grid">
+          ${renderRollups(rows)}
+          ${renderCharts(rows)}
+        </div>
+      </section>
     </main>
   `;
 
@@ -523,6 +876,12 @@ function wireEvents() {
   document.getElementById("refreshPerformanceBtn")?.addEventListener("click", async () => {
     await loadData();
     renderPage();
+  });
+
+  document.querySelectorAll(".perf-card").forEach((card) => {
+    card.addEventListener("click", () => {
+      openUserDetailModal(card.dataset.userId);
+    });
   });
 }
 
@@ -558,6 +917,7 @@ async function loadData() {
 
 requireAuth(async (user) => {
   injectStyles();
+  ensureModalShell();
   await bindTopbar(user);
 
   if (!canAccess(user.role, "users")) {
