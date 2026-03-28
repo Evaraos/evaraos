@@ -8,19 +8,27 @@
 </head>
 <body>
 
-<div id="topbar"></div>
+  <div id="topbar"></div>
 
-<div class="page-container">
+  <div class="page-container">
+    <div class="card">
+      <h1>Organization Structure</h1>
+      <p class="muted">Company-grouped hierarchy with role lanes and interactive staff management.</p>
+    </div>
 
-  <div class="card">
-    <h1>Organization Structure</h1>
-    <p class="muted">Company-grouped hierarchy with role lanes and interactive staff management.</p>
+    <div id="orgChartContainer"></div>
   </div>
 
-  <div id="orgChartContainer"></div>
+  <div id="modal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="section-title-row">
+        <h2 style="margin:0;">Edit User</h2>
+        <button class="btn secondary" onclick="closeModal()">Close</button>
+      </div>
+      <div id="modalContent" style="margin-top:16px;"></div>
+    </div>
+  </div>
 
-</div>
-
-<script type="module" src="assets/org.js"></script>
+  <script type="module" src="assets/org.js"></script>
 </body>
 </html>
