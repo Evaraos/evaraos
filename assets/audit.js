@@ -3,16 +3,22 @@ import {
   requireAuth,
   renderSidebar,
   scanSystemDiscrepancies,
-  normalizeUserDoc
+  normalizeUserDoc,
+  normalizeCompanyDoc,
+  normalizeLeadDoc,
+  normalizeJobDoc,
+  normalizeServiceDoc,
+  fetchAllCollection
 } from "./app.js";
 
-let currentUser = null;
-
-function renderSection(title, items, type) {
+function renderSection(title, items, type, repairable = false) {
   if (!items.length) {
     return `
       <div class="audit-card">
-        <h2 style="margin-top:0;">${title}</h2>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+          <h2 style="margin-top:0;">${title}</h2>
+          ${repairable ? `<button class="btn secondary repair-section-btn" data-type="${type}">Repair ${title}</button>` : ``}
+        </div>
         <div class="audit-empty">No discrepancies found.</div>
       </div>
     `;
@@ -20,7 +26,11 @@ function renderSection(title, items, type) {
 
   return `
     <div class="audit-card">
-      <h2 style="margin-top:0;">${title}</h2>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+        <h2 style="margin-top:0;">${title}</h2>
+        ${repairable ? `<button class="btn secondary repair-section-btn" data-type="${type}">Repair ${title}</button>` : ``}
+      </div>
+
       ${items.map((item) => `
         <div class="audit-row">
           <strong>${item.name || item.id}</strong><br>
@@ -45,18 +55,39 @@ function renderSection(title, items, type) {
           }
 
           ${
-            type === "users"
-              ? `
-              <div class="audit-actions">
-                <button class="btn repair-user-btn" data-id="${item.id}">Repair User</button>
-              </div>
-            `
+            repairable
+              ? `<div class="audit-actions"><button class="btn repair-item-btn" data-type="${type}" data-id="${item.id}">Repair</button></div>`
               : ``
           }
         </div>
       `).join("")}
     </div>
   `;
+}
+
+async function repairItem(type, id) {
+  if (type === "users") return normalizeUserDoc(id);
+  if (type === "companies") return normalizeCompanyDoc(id);
+  if (type === "leads") return normalizeLeadDoc(id);
+  if (type === "jobs") return normalizeJobDoc(id);
+  if (type === "services") return normalizeServiceDoc(id);
+}
+
+async function repairSection(type) {
+  const data = await scanSystemDiscrepancies();
+  const section = data[type] || [];
+  for (const item of section) {
+    await repairItem(type, item.id);
+  }
+}
+
+async function repairUsernameDirectory() {
+  const users = await fetchAllCollection("users");
+  for (const user of users) {
+    if (user.username) {
+      await normalizeUserDoc(user.id);
+    }
+  }
 }
 
 async function loadAudit() {
@@ -67,26 +98,40 @@ async function loadAudit() {
     const data = await scanSystemDiscrepancies();
 
     root.innerHTML = [
-      renderSection("Users", data.users, "users"),
-      renderSection("Username Directory", data.usernames, "usernames"),
-      renderSection("Companies", data.companies, "companies"),
-      renderSection("Leads", data.leads, "leads"),
-      renderSection("Jobs", data.jobs, "jobs"),
-      renderSection("Services", data.services, "services")
+      renderSection("Users", data.users, "users", true),
+      renderSection("Username Directory", data.usernames, "usernames", false),
+      renderSection("Companies", data.companies, "companies", true),
+      renderSection("Leads", data.leads, "leads", true),
+      renderSection("Jobs", data.jobs, "jobs", true),
+      renderSection("Services", data.services, "services", true)
     ].join("");
 
-    document.querySelectorAll(".repair-user-btn").forEach((btn) => {
+    document.querySelectorAll(".repair-item-btn").forEach((btn) => {
       btn.addEventListener("click", async () => {
         btn.disabled = true;
         btn.textContent = "Repairing...";
         try {
-          await normalizeUserDoc(btn.dataset.id);
-          btn.textContent = "Fixed";
+          await repairItem(btn.dataset.type, btn.dataset.id);
           await loadAudit();
         } catch (e) {
           btn.disabled = false;
-          btn.textContent = "Repair User";
-          alert(e.message || "Failed to repair user.");
+          btn.textContent = "Repair";
+          alert(e.message || "Failed to repair item.");
+        }
+      });
+    });
+
+    document.querySelectorAll(".repair-section-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        btn.disabled = true;
+        btn.textContent = "Repairing...";
+        try {
+          await repairSection(btn.dataset.type);
+          await loadAudit();
+        } catch (e) {
+          btn.disabled = false;
+          btn.textContent = `Repair ${btn.dataset.type}`;
+          alert(e.message || "Failed to repair section.");
         }
       });
     });
@@ -96,8 +141,6 @@ async function loadAudit() {
 }
 
 requireAuth(async (user) => {
-  currentUser = user;
-
   if (user.role !== "super_admin") {
     document.body.innerHTML = `
       <div class="auth-shell">
@@ -120,10 +163,8 @@ requireAuth(async (user) => {
     btn.disabled = true;
     btn.textContent = "Repairing...";
     try {
-      const data = await scanSystemDiscrepancies();
-      for (const userIssue of data.users) {
-        await normalizeUserDoc(userIssue.id);
-      }
+      await repairSection("users");
+      await repairUsernameDirectory();
       btn.textContent = "Repair All Users";
       btn.disabled = false;
       await loadAudit();
@@ -131,6 +172,41 @@ requireAuth(async (user) => {
       btn.textContent = "Repair All Users";
       btn.disabled = false;
       alert(e.message || "Failed to repair users.");
+    }
+  });
+
+  const root = document.getElementById("auditRoot");
+  const fullRepairWrap = document.createElement("section");
+  fullRepairWrap.className = "glass-card";
+  fullRepairWrap.innerHTML = `
+    <div class="action-row" style="justify-content:space-between;align-items:center;">
+      <div>
+        <h2 style="margin:0;">Full System Repair</h2>
+        <p class="muted" style="margin:8px 0 0;">Repairs users, username directory, companies, leads, jobs, and services.</p>
+      </div>
+      <button class="btn" id="repairEverythingBtn">Repair All System Data</button>
+    </div>
+  `;
+  root.parentNode.insertBefore(fullRepairWrap, root);
+
+  document.getElementById("repairEverythingBtn").addEventListener("click", async () => {
+    const btn = document.getElementById("repairEverythingBtn");
+    btn.disabled = true;
+    btn.textContent = "Repairing Everything...";
+    try {
+      await repairSection("users");
+      await repairUsernameDirectory();
+      await repairSection("companies");
+      await repairSection("leads");
+      await repairSection("jobs");
+      await repairSection("services");
+      btn.textContent = "Repair All System Data";
+      btn.disabled = false;
+      await loadAudit();
+    } catch (e) {
+      btn.textContent = "Repair All System Data";
+      btn.disabled = false;
+      alert(e.message || "Failed to repair all system data.");
     }
   });
 
