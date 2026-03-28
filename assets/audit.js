@@ -14,7 +14,7 @@ import {
 
 let currentActionLock = false;
 
-function toastContainer() {
+function ensureToastContainer() {
   let el = document.getElementById("auditToastContainer");
   if (!el) {
     el = document.createElement("div");
@@ -33,7 +33,7 @@ function toastContainer() {
 }
 
 function showToast(message, variant = "success") {
-  const container = toastContainer();
+  const container = ensureToastContainer();
   const toast = document.createElement("div");
   toast.textContent = message;
   toast.style.padding = "14px 16px";
@@ -80,99 +80,6 @@ function setButtonLoading(btn, isLoading, loadingText = "Loading...") {
     btn.textContent = btn.dataset.originalText || btn.textContent;
     btn.style.opacity = "1";
   }
-}
-
-function renderSection(title, items, type, repairable = false) {
-  if (!items.length) {
-    return `
-      <div class="audit-card">
-        <div class="audit-section-header">
-          <h2>${title}</h2>
-          ${repairable ? `<button class="btn secondary repair-section-btn" data-type="${type}">Repair ${title}</button>` : ``}
-        </div>
-        <div class="audit-empty">No discrepancies found.</div>
-      </div>
-    `;
-  }
-
-  return `
-    <div class="audit-card">
-      <div class="audit-section-header">
-        <h2>${title}</h2>
-        ${repairable ? `<button class="btn secondary repair-section-btn" data-type="${type}">Repair ${title}</button>` : ``}
-      </div>
-
-      ${items.map((item) => `
-        <div class="audit-row">
-          <strong>${item.name || item.id}</strong>
-          ${item.role ? `<div class="muted" style="margin-top:6px;">${item.role}</div>` : ""}
-
-          ${
-            item.missingFields?.length
-              ? `<div style="margin-top:12px;"><strong>Missing Fields:</strong><br>${item.missingFields.map((field) => `<span class="audit-badge">${field}</span>`).join("")}</div>`
-              : ``
-          }
-
-          ${
-            item.mismatchFields?.length
-              ? `<div style="margin-top:12px;"><strong>Mismatches:</strong><br>${item.mismatchFields.map((field) => `<span class="audit-badge">${field}</span>`).join("")}</div>`
-              : ``
-          }
-
-          ${
-            item.issues?.length
-              ? `<div style="margin-top:12px;"><strong>Issues:</strong><br>${item.issues.map((field) => `<span class="audit-badge">${field}</span>`).join("")}</div>`
-              : ``
-          }
-
-          ${
-            repairable
-              ? `
-                <div class="audit-actions">
-                  <button class="btn repair-item-btn" data-type="${type}" data-id="${item.id}">Repair</button>
-                </div>
-              `
-              : ``
-          }
-        </div>
-      `).join("")}
-    </div>
-  `;
-}
-
-function renderSystemAuditCard() {
-  return `
-    <section class="glass-card">
-      <div class="audit-hero">
-        <div>
-          <h1 style="margin:0;">System Audit</h1>
-          <p class="muted" style="margin:12px 0 0;">Super admin discrepancy checker and repair console.</p>
-        </div>
-        <div class="audit-button-stack">
-          <button id="runAuditBtnTop" class="btn secondary">Run Audit</button>
-          <button id="repairAllUsersBtnTop" class="btn">Repair All Users</button>
-        </div>
-      </div>
-    </section>
-  `;
-}
-
-function renderFullRepairCard() {
-  return `
-    <section class="glass-card">
-      <div class="audit-hero">
-        <div>
-          <h2 style="margin:0;">Full System Repair</h2>
-          <p class="muted" style="margin:12px 0 0;">Repairs users, usernames, companies, leads, jobs, and services.</p>
-        </div>
-        <div class="audit-button-grid">
-          <button class="btn" id="repairEverythingBtn">Repair All System Data</button>
-          <button class="btn secondary" id="repairUsernameDirectoryBtn">Repair Username Directory</button>
-          <button class="btn secondary" id="canonicalizeCompaniesBtn">Canonicalize Companies</button>
-        </div>
-      </div>
-    </section>
-  `;
 }
 
 function injectAuditStyles() {
@@ -263,12 +170,106 @@ function injectAuditStyles() {
   document.head.appendChild(style);
 }
 
+function renderSystemAuditCard() {
+  return `
+    <section class="glass-card">
+      <div class="audit-hero">
+        <div>
+          <h1 style="margin:0;">System Audit</h1>
+          <p class="muted" style="margin:12px 0 0;">Super admin discrepancy checker and repair console.</p>
+        </div>
+        <div class="audit-button-stack">
+          <button id="runAuditBtnTop" class="btn secondary">Run Audit</button>
+          <button id="repairAllUsersBtnTop" class="btn">Repair All Users</button>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderFullRepairCard() {
+  return `
+    <section class="glass-card">
+      <div class="audit-hero">
+        <div>
+          <h2 style="margin:0;">Full System Repair</h2>
+          <p class="muted" style="margin:12px 0 0;">Repairs users, usernames, companies, leads, jobs, and services.</p>
+        </div>
+        <div class="audit-button-grid">
+          <button class="btn" id="repairEverythingBtn">Repair All System Data</button>
+          <button class="btn secondary" id="repairUsernameDirectoryBtn">Repair Username Directory</button>
+          <button class="btn secondary" id="canonicalizeCompaniesBtn">Canonicalize Companies</button>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderSection(title, items, type, repairable = false) {
+  if (!items.length) {
+    return `
+      <div class="audit-card">
+        <div class="audit-section-header">
+          <h2>${title}</h2>
+          ${repairable ? `<button class="btn secondary repair-section-btn" data-type="${type}">Repair ${title}</button>` : ``}
+        </div>
+        <div class="audit-empty">No discrepancies found.</div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="audit-card">
+      <div class="audit-section-header">
+        <h2>${title}</h2>
+        ${repairable ? `<button class="btn secondary repair-section-btn" data-type="${type}">Repair ${title}</button>` : ``}
+      </div>
+
+      ${items.map((item) => `
+        <div class="audit-row">
+          <strong>${item.name || item.id}</strong>
+          ${item.role ? `<div class="muted" style="margin-top:6px;">${item.role}</div>` : ""}
+
+          ${
+            item.missingFields?.length
+              ? `<div style="margin-top:12px;"><strong>Missing Fields:</strong><br>${item.missingFields.map((field) => `<span class="audit-badge">${field}</span>`).join("")}</div>`
+              : ``
+          }
+
+          ${
+            item.mismatchFields?.length
+              ? `<div style="margin-top:12px;"><strong>Mismatches:</strong><br>${item.mismatchFields.map((field) => `<span class="audit-badge">${field}</span>`).join("")}</div>`
+              : ``
+          }
+
+          ${
+            item.issues?.length
+              ? `<div style="margin-top:12px;"><strong>Issues:</strong><br>${item.issues.map((field) => `<span class="audit-badge">${field}</span>`).join("")}</div>`
+              : ``
+          }
+
+          ${
+            repairable
+              ? `
+                <div class="audit-actions">
+                  <button class="btn repair-item-btn" data-type="${type}" data-id="${item.id}">Repair</button>
+                </div>
+              `
+              : ``
+          }
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
 async function repairItem(type, id) {
   if (type === "users") return normalizeUserDoc(id);
   if (type === "companies") return normalizeCompanyDoc(id);
   if (type === "leads") return normalizeLeadDoc(id);
   if (type === "jobs") return normalizeJobDoc(id);
   if (type === "services") return normalizeServiceDoc(id);
+  throw new Error(`Unknown repair type: ${type}`);
 }
 
 async function repairSection(type) {
@@ -398,6 +399,7 @@ async function loadAudit() {
       <div class="glass-card">Audit failed: ${e.message || e}</div>
     `;
     await wireAuditButtons();
+    showToast(`Audit failed: ${e.message || e}`, "error");
   }
 }
 
@@ -415,6 +417,10 @@ requireAuth(async (user) => {
   }
 
   await bindTopbar(user);
-  document.getElementById("sidebar").innerHTML = renderSidebar(user.role, "audit");
+  const sidebar = document.getElementById("sidebar");
+  if (sidebar) {
+    sidebar.innerHTML = renderSidebar(user.role, "audit");
+  }
+
   await loadAudit();
 });
