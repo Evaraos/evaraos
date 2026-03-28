@@ -14,6 +14,10 @@ import {
   canAccess
 } from "./roles.js";
 
+const dashboardState = {
+  navOpen: false
+};
+
 function currency(value) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -199,154 +203,63 @@ function renderUpcomingJobs(jobs) {
 
 function getQuickLinks(user) {
   const links = [
-    { key: "overview", label: "Overview", href: "dashboard.html", desc: "Main dashboard" },
+    { key: "overview", label: "Overview", href: "dashboard.html", desc: "Main control center" },
     { key: "users", label: "Users", href: "users.html", desc: "Team and account records" },
     { key: "leads", label: "Leads", href: "leads.html", desc: "Pipeline and conversions" },
     { key: "sales_reps", label: "Sales Reps", href: "sales_reps.html", desc: "Rep management" },
-    { key: "companies", label: "Companies", href: "companies.html", desc: "Company records" },
-    { key: "jobs", label: "Jobs", href: "jobs.html", desc: "Scheduling and operations" },
-    { key: "audit", label: "Audit", href: "audit.html", desc: "Repair tools" }
+    { key: "companies", label: "Companies", href: "companies.html", desc: "Brand and company records" },
+    { key: "jobs", label: "Jobs", href: "jobs.html", desc: "Operations and scheduling" },
+    { key: "audit", label: "Audit", href: "audit.html", desc: "Repair and discrepancy tools" }
   ];
 
   return links.filter((item) => item.key === "overview" || canAccess(user.role, item.key));
 }
 
-function renderHeaderCard(user) {
-  return `
-    <section class="glass-card">
-      <div class="page-header-card">
-        <div>
-          <div class="eyebrow">Evaraos Inc</div>
-          <h1 class="page-title">Dashboard</h1>
-          <div class="muted">Supreme TrueClean operating overview</div>
-        </div>
-
-        <div class="identity-card">
-          <strong>${user.name || "User"}</strong>
-          <span>${user.handle || (user.username ? `@${user.username}` : "@user")}</span>
-          <small>${user.companyId || "supreme_trueclean"}</small>
-        </div>
-      </div>
-    </section>
-  `;
-}
-
 function renderNavDropdown(user) {
-  return `
-    <section class="glass-card nav-dropdown-wrap">
-      <div class="section-title-row">
-        <h2>Navigation</h2>
-        <button id="navDropdownToggle" class="btn secondary" type="button">Toggle Menu</button>
-      </div>
-      <div id="navDropdownBody" class="nav-dropdown-body">
-        <nav class="sidebar-nav">${renderSidebar(user.role, "overview")}</nav>
-      </div>
-    </section>
-  `;
-}
-
-function renderQuickLinks(user) {
   const links = getQuickLinks(user);
 
   return `
     <section class="glass-card">
       <div class="section-title-row">
-        <h2>Quick Access</h2>
+        <h2>Navigation</h2>
+        <button class="btn secondary" id="navToggleBtn">
+          ${dashboardState.navOpen ? "Hide" : "Open"}
+        </button>
       </div>
-      <div class="quick-links-grid">
-        ${links
-          .map(
-            (item) => `
-              <a class="quick-link-card ${item.key === "overview" ? "active" : ""}" href="${item.href}">
-                <strong>${item.label}</strong>
-                <span>${item.desc}</span>
-              </a>
-            `
-          )
-          .join("")}
-      </div>
+
+      ${
+        dashboardState.navOpen
+          ? `
+            <div class="quick-links-grid" style="margin-top:14px;">
+              ${links
+                .map(
+                  (item) => `
+                    <a class="quick-link-card ${item.key === "overview" ? "active" : ""}" href="${item.href}">
+                      <strong>${item.label}</strong>
+                      <span>${item.desc}</span>
+                    </a>
+                  `
+                )
+                .join("")}
+            </div>
+          `
+          : `<div class="muted" style="margin-top:6px;">Tap Open to view pages and tools.</div>`
+      }
     </section>
   `;
 }
 
 function injectDashboardStyles() {
-  if (document.getElementById("dashboardRestoreStyles")) return;
+  if (document.getElementById("dashboardUpgradeStyles")) return;
 
   const style = document.createElement("style");
-  style.id = "dashboardRestoreStyles";
+  style.id = "dashboardUpgradeStyles";
   style.textContent = `
-    .dashboard-shell{
+    .dashboard-main{
       display:flex;
       flex-direction:column;
       gap:22px;
       padding:22px;
-    }
-    .page-header-card{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:18px;
-      flex-wrap:wrap;
-    }
-    .eyebrow{
-      color:#aeb8c8;
-      font-size:13px;
-      margin-bottom:10px;
-      text-transform:uppercase;
-      letter-spacing:.08em;
-    }
-    .page-title{
-      margin:0;
-      font-size:54px;
-      line-height:1;
-    }
-    .identity-card{
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-      align-items:flex-end;
-      text-align:right;
-      min-width:180px;
-    }
-    .identity-card strong{
-      font-size:22px;
-    }
-    .identity-card span,
-    .identity-card small{
-      color:#aeb8c8;
-    }
-    .nav-dropdown-body{
-      overflow:hidden;
-      max-height:0;
-      opacity:0;
-      transition:max-height .28s ease, opacity .2s ease, margin-top .2s ease;
-      margin-top:0;
-    }
-    .nav-dropdown-body.open{
-      max-height:700px;
-      opacity:1;
-      margin-top:12px;
-    }
-    .sidebar-nav{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-    .sidebar-nav a{
-      display:flex;
-      align-items:center;
-      padding:14px 16px;
-      border-radius:18px;
-      background:rgba(255,255,255,.03);
-      border:1px solid rgba(255,255,255,.07);
-      color:#fff;
-      text-decoration:none;
-      transition:.18s ease;
-    }
-    .sidebar-nav a:hover,
-    .sidebar-nav a.active{
-      background:rgba(255,255,255,.09);
-      transform:translateY(-1px);
     }
     .metric-grid{
       display:grid;
@@ -440,7 +353,6 @@ function injectDashboardStyles() {
       display:grid;
       grid-template-columns:repeat(3,minmax(0,1fr));
       gap:14px;
-      margin-top:12px;
     }
     .quick-link-card{
       display:flex;
@@ -468,14 +380,11 @@ function injectDashboardStyles() {
       .metric-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
       .pipeline-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); }
       .quick-links-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
-      .page-title{ font-size:42px; }
     }
     @media (max-width: 700px){
       .metric-grid{ grid-template-columns:1fr; }
       .pipeline-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
       .quick-links-grid{ grid-template-columns:1fr; }
-      .identity-card{ align-items:flex-start; text-align:left; }
-      .page-title{ font-size:34px; }
     }
   `;
   document.head.appendChild(style);
@@ -515,14 +424,13 @@ function renderDashboard(user, scoped) {
 
   const root = document.getElementById("dashboardRoot");
   root.innerHTML = `
-    <div class="dashboard-shell">
-      ${renderHeaderCard(user)}
+    <main class="dashboard-main">
       ${renderNavDropdown(user)}
 
       <section class="glass-card">
         <div class="section-title-row">
           <div>
-            <h2 style="margin:0;">Overview</h2>
+            <h1 style="margin:0;">Dashboard</h1>
             <p class="muted" style="margin:10px 0 0;">Role-scoped analytics and real-time pipeline visibility.</p>
           </div>
         </div>
@@ -539,23 +447,19 @@ function renderDashboard(user, scoped) {
         </div>
       </section>
 
-      ${renderQuickLinks(user)}
       ${canAccess(user.role, "leads") ? renderPipeline(stageCounts) : ""}
 
       <div class="metric-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
         ${canAccess(user.role, "leads") ? renderRecentLeads(scoped.leads) : ""}
         ${canAccess(user.role, "jobs") ? renderUpcomingJobs(scoped.jobs) : ""}
       </div>
-    </div>
+    </main>
   `;
 
-  const toggleBtn = document.getElementById("navDropdownToggle");
-  const body = document.getElementById("navDropdownBody");
-  if (toggleBtn && body) {
-    toggleBtn.addEventListener("click", () => {
-      body.classList.toggle("open");
-    });
-  }
+  document.getElementById("navToggleBtn")?.addEventListener("click", async () => {
+    dashboardState.navOpen = !dashboardState.navOpen;
+    renderDashboard(user, scoped);
+  });
 }
 
 requireAuth(async (user) => {
@@ -568,12 +472,12 @@ requireAuth(async (user) => {
   }
 
   const root = document.getElementById("dashboardRoot");
-  root.innerHTML = `<section class="glass-card">Loading dashboard...</section>`;
+  root.innerHTML = `<section class="glass-card" style="margin:22px;">Loading dashboard...</section>`;
 
   try {
     const scoped = await loadScopedData(user);
     renderDashboard(user, scoped);
   } catch (e) {
-    root.innerHTML = `<section class="glass-card">Dashboard failed to load: ${e.message || e}</section>`;
+    root.innerHTML = `<section class="glass-card" style="margin:22px;">Dashboard failed to load: ${e.message || e}</section>`;
   }
 });
