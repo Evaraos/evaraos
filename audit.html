@@ -16,10 +16,11 @@
         <div>
           <h1 style="margin:0;">Audit Logs</h1>
           <p class="muted" style="margin:10px 0 0;">
-            Track org structure changes, role updates, company moves, and manual edits.
+            Track org changes, roll back recent moves, monitor suspicious activity, and export logs.
           </p>
         </div>
         <div class="top-actions">
+          <button class="btn secondary" id="exportCsvBtn">Export CSV</button>
           <button class="btn" id="refreshAuditBtn">Refresh</button>
         </div>
       </div>
@@ -27,7 +28,7 @@
       <div class="form-grid" style="margin-top:18px;">
         <div class="field">
           <label for="auditSearchInput">Search</label>
-          <input id="auditSearchInput" type="text" placeholder="Search actor, target, company, role, or note..." />
+          <input id="auditSearchInput" type="text" placeholder="Search actor, target, company, role, note..." />
         </div>
 
         <div class="field">
@@ -42,6 +43,7 @@
             <option value="modal_role_edit">Manual Role Edit</option>
             <option value="modal_company_edit">Manual Company Edit</option>
             <option value="modal_company_and_role_edit">Manual Company + Role Edit</option>
+            <option value="rollback_change">Rollback Change</option>
           </select>
         </div>
       </div>
@@ -49,8 +51,26 @@
 
     <section class="glass-card" style="margin-top:18px;">
       <div class="section-title-row">
+        <h2 style="margin:0;">Audit Analytics</h2>
+      </div>
+      <div id="auditAnalyticsRoot" style="margin-top:16px;">Loading analytics...</div>
+    </section>
+
+    <section class="glass-card" style="margin-top:18px;">
+      <div class="section-title-row">
+        <h2 style="margin:0;">Suspicious Activity</h2>
+      </div>
+      <div id="auditSuspiciousRoot" style="margin-top:16px;">Checking suspicious activity...</div>
+    </section>
+
+    <section class="glass-card" style="margin-top:18px;">
+      <div class="section-title-row">
         <h2 style="margin:0;">Audit Feed</h2>
         <div class="muted" id="auditCountLabel">0 logs</div>
+      </div>
+
+      <div class="top-actions" style="margin-top:14px;">
+        <span class="chip">Live feed every 20s</span>
       </div>
 
       <div id="auditRoot" style="margin-top:16px;">
