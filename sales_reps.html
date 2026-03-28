@@ -1,60 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sales Reps - Evaraos Inc</title>
-  <link rel="stylesheet" href="assets/styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales Reps | Evaraos</title>
+  <link rel="stylesheet" href="assets/styles.css" />
 </head>
-<body class="app-shell">
-  <header class="app-topbar" id="topbar"></header>
-
-  <div class="app-layout">
-    <aside class="sidebar" id="sidebar"></aside>
-
-    <main class="main-panel">
-      <section class="glass-card">
-        <div class="action-row" style="justify-content:space-between;align-items:center;">
-          <div>
-            <h1 style="margin:0;">Sales Reps Management</h1>
-            <p class="muted" style="margin:8px 0 0;">Add, edit, and deactivate sales reps without cluttering the page.</p>
-          </div>
-          <button class="btn" id="openRepModalBtn">Add Sales Rep</button>
-        </div>
-      </section>
-
-      <section class="glass-card">
-        <h2 style="margin-top:0;">Sales Reps List</h2>
-        <div id="salesRepsList" class="table"></div>
-      </section>
-    </main>
-  </div>
+<body>
+  <header id="topbar"></header>
+  <div id="sidebar" style="display:none;"></div>
+  <main id="salesRepsRoot"></main>
 
   <div class="modal-backdrop" id="repModal">
     <div class="modal-card">
-      <div class="modal-head">
-        <h2 style="margin:0;">Create / Edit Sales Rep</h2>
-        <button class="modal-close" id="closeRepModalBtn">Close</button>
+      <div class="section-title-row">
+        <h2 id="repModalTitle" style="margin:0;">Add Sales Rep</h2>
+        <button class="btn secondary" id="repModalCloseBtn" type="button">Close</button>
       </div>
 
-      <div class="form-grid">
-        <input id="repFullName" placeholder="Full Name">
-        <input id="repEmail" type="email" placeholder="Email">
-        <input id="repPhone" placeholder="Phone">
-        <select id="repStatus">
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
-      </div>
+      <form id="repForm">
+        <div class="form-grid">
+          <div class="field">
+            <label for="repFullName">Full Name</label>
+            <input id="repFullName" required />
+          </div>
 
-      <textarea id="repNotes" class="notes-field" placeholder="Notes"></textarea>
+          <div class="field">
+            <label for="repUsername">Username</label>
+            <input id="repUsername" required />
+          </div>
 
-      <div class="stack">
-        <button class="btn" id="saveRepBtn">Save Sales Rep</button>
-        <button class="btn secondary" id="cancelRepEditBtn" style="display:none;">Cancel Edit</button>
-      </div>
+          <div class="field">
+            <label for="repEmail">Email</label>
+            <input id="repEmail" type="email" />
+          </div>
 
-      <p id="repMsg" class="status-text"></p>
+          <div class="field">
+            <label for="repPhone">Phone</label>
+            <input id="repPhone" />
+          </div>
+
+          <div class="field">
+            <label for="repStatus">Status</label>
+            <select id="repStatus">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+
+          <div class="field full">
+            <label for="repNotes">Notes</label>
+            <textarea id="repNotes" rows="4"></textarea>
+          </div>
+        </div>
+
+        <div class="top-actions" style="margin-top:18px;">
+          <button class="btn" type="submit">Save Sales Rep</button>
+          <button class="btn secondary" id="repModalCancelBtn" type="button">Cancel</button>
+        </div>
+      </form>
     </div>
   </div>
 
