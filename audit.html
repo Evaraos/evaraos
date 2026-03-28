@@ -1,72 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Audit - Evaraos Inc</title>
-  <link rel="stylesheet" href="assets/styles.css">
-  <style>
-    .audit-grid{
-      display:grid;
-      gap:16px;
-    }
-    .audit-card{
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.04);
-      border-radius:24px;
-      padding:18px;
-    }
-    .audit-row{
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:18px;
-      padding:14px;
-      margin-top:12px;
-      background:rgba(255,255,255,.03);
-    }
-    .audit-badge{
-      display:inline-flex;
-      align-items:center;
-      padding:6px 10px;
-      border-radius:999px;
-      background:rgba(255,255,255,.08);
-      font-size:12px;
-      margin-right:8px;
-      margin-bottom:8px;
-    }
-    .audit-actions{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-top:12px;
-    }
-    .audit-empty{
-      color:#9fb0c9;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Audit | Evaraos</title>
+  <link rel="stylesheet" href="assets/styles.css" />
 </head>
-<body class="app-shell">
-  <header class="app-topbar" id="topbar"></header>
+<body>
+  <header id="topbar"></header>
+  <div id="sidebar" style="display:none;"></div>
 
-  <div class="app-layout">
-    <aside class="sidebar" id="sidebar"></aside>
-
-    <main class="main-panel">
-      <section class="glass-card">
-        <div class="action-row" style="justify-content:space-between;align-items:center;">
-          <div>
-            <h1 style="margin:0;">System Audit</h1>
-            <p class="muted" style="margin:8px 0 0;">Super admin discrepancy checker and repair console.</p>
-          </div>
-          <div class="action-row">
-            <button class="btn secondary" id="runAuditBtn">Run Audit</button>
-            <button class="btn" id="repairAllUsersBtn">Repair All Users</button>
-          </div>
+  <main class="page-container">
+    <section class="glass-card">
+      <div class="section-title-row">
+        <div>
+          <h1 style="margin:0;">Audit Logs</h1>
+          <p class="muted" style="margin:10px 0 0;">
+            Track org structure changes, role updates, company moves, and manual edits.
+          </p>
         </div>
-      </section>
+        <div class="top-actions">
+          <button class="btn" id="refreshAuditBtn">Refresh</button>
+        </div>
+      </div>
 
-      <section class="audit-grid" id="auditRoot"></section>
-    </main>
-  </div>
+      <div class="form-grid" style="margin-top:18px;">
+        <div class="field">
+          <label for="auditSearchInput">Search</label>
+          <input id="auditSearchInput" type="text" placeholder="Search actor, target, company, role, or note..." />
+        </div>
+
+        <div class="field">
+          <label for="auditActionFilter">Action Filter</label>
+          <select id="auditActionFilter">
+            <option value="all">All Actions</option>
+            <option value="role_drag_move">Role Change</option>
+            <option value="company_drag_move">Company Move</option>
+            <option value="company_and_role_drag_move">Company + Role Move</option>
+            <option value="company_drag_move_keep_role">Company Move Keep Role</option>
+            <option value="modal_user_edit">Manual Edit</option>
+            <option value="modal_role_edit">Manual Role Edit</option>
+            <option value="modal_company_edit">Manual Company Edit</option>
+            <option value="modal_company_and_role_edit">Manual Company + Role Edit</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section class="glass-card" style="margin-top:18px;">
+      <div class="section-title-row">
+        <h2 style="margin:0;">Audit Feed</h2>
+        <div class="muted" id="auditCountLabel">0 logs</div>
+      </div>
+
+      <div id="auditRoot" style="margin-top:16px;">
+        Loading audit logs...
+      </div>
+    </section>
+  </main>
 
   <script type="module" src="assets/audit.js"></script>
 </body>
