@@ -220,11 +220,17 @@ export async function fetchPendingUsersByCompany(companyId, includeAll = false) 
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
+/*
+  IMPORTANT CHANGE:
+  sales reps now come from USERS, not sales_reps collection.
+*/
 export async function fetchActiveSalesReps(companyId) {
   const q = query(
-    collection(db, "sales_reps"),
+    collection(db, "users"),
     where("companyId", "==", companyId),
-    where("status", "==", "active")
+    where("role", "==", "sales_rep"),
+    where("status", "==", "active"),
+    where("approvalStatus", "==", "approved")
   );
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -426,29 +432,54 @@ export async function convertLeadToJob(lead, data, user) {
   return jobRef;
 }
 
+/*
+  LEGACY ONLY:
+  This can stay temporarily if an old page still calls it,
+  but it should no longer be used as the main people source.
+*/
 export async function createSalesRep(data, user) {
-  return addDoc(collection(db, "sales_reps"), {
+  return addDoc(collection(db, "users"), {
     companyId: user.companyId,
-    fullName: data.fullName || "",
+    name: data.fullName || "",
+    username: (data.username || "").toLowerCase(),
+    handle: data.username ? `@${String(data.username).toLowerCase()}` : "",
+    displayUsername: data.username
+      ? String(data.username).charAt(0).toUpperCase() + String(data.username).slice(1).toLowerCase()
+      : "",
     email: data.email || "",
     phone: data.phone || "",
     status: data.status || "active",
+    approvalStatus: data.approvalStatus || "approved",
+    role: "sales_rep",
+    organizationLevel: 4,
+    permissions: ["leads", "convert"],
+    companyAccessLevel: "subsidiary",
+    photoUrl: "",
+    reportsTo: data.reportsTo || user.id || "",
+    address: "",
+    city: "",
+    state: "",
+    zip: "",
+    preferredContactMethod: "",
     notes: data.notes || "",
-    role: data.role || "sales_rep",
     createdBy: user.email || "",
     createdAt: serverTimestamp(),
+    lastLogin: serverTimestamp(),
     updatedAt: serverTimestamp()
   });
 }
 
+/*
+  LEGACY ONLY:
+  if old rep edit UI still exists, this updates the matching USERS doc
+*/
 export async function updateSalesRep(repId, data) {
-  return updateDoc(doc(db, "sales_reps", repId), {
-    fullName: data.fullName || "",
+  return updateDoc(doc(db, "users", repId), {
+    name: data.fullName || "",
     email: data.email || "",
     phone: data.phone || "",
     status: data.status || "active",
     notes: data.notes || "",
-    role: data.role || "sales_rep",
     updatedAt: serverTimestamp()
   });
 }
