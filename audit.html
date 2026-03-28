@@ -21,6 +21,7 @@
         </div>
         <div class="top-actions">
           <button class="btn secondary" id="exportCsvBtn">Export CSV</button>
+          <button class="btn secondary" id="exportPdfBtn">Export PDF</button>
           <button class="btn" id="refreshAuditBtn">Refresh</button>
         </div>
       </div>
@@ -58,6 +59,13 @@
 
     <section class="glass-card" style="margin-top:18px;">
       <div class="section-title-row">
+        <h2 style="margin:0;">Actor Activity Charts</h2>
+      </div>
+      <div id="auditChartsRoot" style="margin-top:16px;">Loading charts...</div>
+    </section>
+
+    <section class="glass-card" style="margin-top:18px;">
+      <div class="section-title-row">
         <h2 style="margin:0;">Suspicious Activity</h2>
       </div>
       <div id="auditSuspiciousRoot" style="margin-top:16px;">Checking suspicious activity...</div>
@@ -78,6 +86,25 @@
       </div>
     </section>
   </main>
+
+  <div class="modal-backdrop" id="rollbackReasonModal">
+    <div class="modal-card">
+      <div class="section-title-row">
+        <h2 style="margin:0;">Undo Change</h2>
+        <button class="btn secondary" id="closeRollbackModalBtn" type="button">Close</button>
+      </div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rollbackReasonInput">Rollback Reason</label>
+        <textarea id="rollbackReasonInput" placeholder="Explain why this change is being rolled back..."></textarea>
+      </div>
+
+      <div class="top-actions" style="margin-top:18px;">
+        <button class="btn" id="confirmRollbackBtn" type="button">Confirm Rollback</button>
+        <button class="btn secondary" id="cancelRollbackBtn" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
 
   <script type="module" src="assets/audit.js"></script>
 </body>
