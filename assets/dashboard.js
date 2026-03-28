@@ -1,7 +1,6 @@
 import {
   bindTopbar,
   requireAuth,
-  renderSidebar,
   fetchAllCollection,
   fetchCompanyCollection,
   fetchUsersByCompany
@@ -13,10 +12,6 @@ import {
   filterUsersForUser,
   canAccess
 } from "./roles.js";
-
-const dashboardState = {
-  navOpen: false
-};
 
 function currency(value) {
   return new Intl.NumberFormat("en-US", {
@@ -124,6 +119,39 @@ function renderPipeline(stageCounts) {
   `;
 }
 
+function renderQuickLinks(user) {
+  const links = [
+    { key: "leads", label: "Open Leads", href: "leads.html", desc: "Manage pipeline and conversions" },
+    { key: "sales_reps", label: "Open Sales Reps", href: "sales_reps.html", desc: "Add and edit reps" },
+    { key: "companies", label: "Open Companies", href: "companies.html", desc: "Manage company records" },
+    { key: "jobs", label: "Open Jobs", href: "jobs.html", desc: "Track scheduled work" },
+    { key: "users", label: "Open Users", href: "users.html", desc: "Manage user accounts" },
+    { key: "audit", label: "Open Audit", href: "audit.html", desc: "Repair and integrity tools" }
+  ].filter((item) => canAccess(user.role, item.key));
+
+  if (!links.length) return "";
+
+  return `
+    <section class="glass-card">
+      <div class="section-title-row">
+        <h2>Quick Actions</h2>
+      </div>
+      <div class="quick-links-grid">
+        ${links
+          .map(
+            (item) => `
+              <a class="quick-link-card" href="${item.href}">
+                <strong>${item.label}</strong>
+                <span>${item.desc}</span>
+              </a>
+            `
+          )
+          .join("")}
+      </div>
+    </section>
+  `;
+}
+
 function renderRecentLeads(leads) {
   const sorted = [...leads]
     .sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")))
@@ -196,54 +224,6 @@ function renderUpcomingJobs(jobs) {
                 .join("")}
             </div>
           `
-      }
-    </section>
-  `;
-}
-
-function getQuickLinks(user) {
-  const links = [
-    { key: "overview", label: "Overview", href: "dashboard.html", desc: "Main control center" },
-    { key: "users", label: "Users", href: "users.html", desc: "Team and account records" },
-    { key: "leads", label: "Leads", href: "leads.html", desc: "Pipeline and conversions" },
-    { key: "sales_reps", label: "Sales Reps", href: "sales_reps.html", desc: "Rep management" },
-    { key: "companies", label: "Companies", href: "companies.html", desc: "Brand and company records" },
-    { key: "jobs", label: "Jobs", href: "jobs.html", desc: "Operations and scheduling" },
-    { key: "audit", label: "Audit", href: "audit.html", desc: "Repair and discrepancy tools" }
-  ];
-
-  return links.filter((item) => item.key === "overview" || canAccess(user.role, item.key));
-}
-
-function renderNavDropdown(user) {
-  const links = getQuickLinks(user);
-
-  return `
-    <section class="glass-card">
-      <div class="section-title-row">
-        <h2>Navigation</h2>
-        <button class="btn secondary" id="navToggleBtn">
-          ${dashboardState.navOpen ? "Hide" : "Open"}
-        </button>
-      </div>
-
-      ${
-        dashboardState.navOpen
-          ? `
-            <div class="quick-links-grid" style="margin-top:14px;">
-              ${links
-                .map(
-                  (item) => `
-                    <a class="quick-link-card ${item.key === "overview" ? "active" : ""}" href="${item.href}">
-                      <strong>${item.label}</strong>
-                      <span>${item.desc}</span>
-                    </a>
-                  `
-                )
-                .join("")}
-            </div>
-          `
-          : `<div class="muted" style="margin-top:6px;">Tap Open to view pages and tools.</div>`
       }
     </section>
   `;
@@ -353,6 +333,7 @@ function injectDashboardStyles() {
       display:grid;
       grid-template-columns:repeat(3,minmax(0,1fr));
       gap:14px;
+      margin-top:12px;
     }
     .quick-link-card{
       display:flex;
@@ -366,8 +347,7 @@ function injectDashboardStyles() {
       border:1px solid rgba(255,255,255,.08);
       transition:.18s ease;
     }
-    .quick-link-card:hover,
-    .quick-link-card.active{
+    .quick-link-card:hover{
       transform:translateY(-2px);
       background:rgba(255,255,255,.08);
     }
@@ -425,8 +405,6 @@ function renderDashboard(user, scoped) {
   const root = document.getElementById("dashboardRoot");
   root.innerHTML = `
     <main class="dashboard-main">
-      ${renderNavDropdown(user)}
-
       <section class="glass-card">
         <div class="section-title-row">
           <div>
@@ -447,6 +425,7 @@ function renderDashboard(user, scoped) {
         </div>
       </section>
 
+      ${renderQuickLinks(user)}
       ${canAccess(user.role, "leads") ? renderPipeline(stageCounts) : ""}
 
       <div class="metric-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
@@ -455,11 +434,6 @@ function renderDashboard(user, scoped) {
       </div>
     </main>
   `;
-
-  document.getElementById("navToggleBtn")?.addEventListener("click", async () => {
-    dashboardState.navOpen = !dashboardState.navOpen;
-    renderDashboard(user, scoped);
-  });
 }
 
 requireAuth(async (user) => {
