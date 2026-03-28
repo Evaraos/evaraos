@@ -16,7 +16,6 @@ import { db } from "./firebase.js";
 import {
   listenAuth,
   logout,
-  syncUsernameChangeForUser,
   syncUsernameDirectoryByUserDoc
 } from "./auth.js";
 import { canAccess, getAllowedSections, getRoleLabel } from "./roles.js";
@@ -653,9 +652,263 @@ export function hasPermission(user, permission) {
   return user.permissions.includes("all") || user.permissions.includes(permission);
 }
 
+function injectTopbarStyles() {
+  if (document.getElementById("appTopbarEnhancements")) return;
+
+  const style = document.createElement("style");
+  style.id = "appTopbarEnhancements";
+  style.textContent = `
+    .app-topbar-shell{
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      padding:22px;
+    }
+    .app-topbar-inner{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:16px;
+      width:100%;
+      flex-wrap:wrap;
+    }
+    .app-brand{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      color:#fff;
+      text-decoration:none;
+      min-width:0;
+    }
+    .app-brand img{
+      width:46px;
+      height:46px;
+      border-radius:50%;
+      object-fit:cover;
+      flex-shrink:0;
+    }
+    .app-brand-text{
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+    }
+    .app-brand-text strong{
+      font-size:18px;
+      line-height:1.1;
+    }
+    .app-brand-text span{
+      color:#c0c8d6;
+      font-size:13px;
+      line-height:1.2;
+      margin-top:4px;
+    }
+    .topbar-identity{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:2px;
+      min-width:0;
+      margin-left:auto;
+    }
+    .topbar-identity strong{
+      font-size:14px;
+      line-height:1.2;
+      text-align:right;
+    }
+    .topbar-identity span{
+      font-size:12px;
+      color:#b8c0d0;
+      line-height:1.2;
+      text-align:right;
+    }
+    .app-nav{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      width:100%;
+    }
+    .app-nav a,
+    .app-nav button{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:48px;
+      min-width:110px;
+      padding:12px 18px;
+      border-radius:999px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      color:#fff;
+      text-decoration:none;
+      font:inherit;
+      cursor:pointer;
+      transition:.2s ease;
+    }
+    .app-nav a:hover,
+    .app-nav button:hover,
+    .app-nav a.active{
+      background:rgba(255,255,255,.10);
+      transform:translateY(-1px);
+    }
+    .topbar-menu-wrap{
+      position:relative;
+      display:inline-flex;
+    }
+    .topbar-menu-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:48px;
+      min-width:120px;
+      padding:12px 18px;
+      border-radius:999px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      color:#fff;
+      font:inherit;
+      cursor:pointer;
+      transition:.2s ease;
+      gap:8px;
+    }
+    .topbar-menu-btn:hover,
+    .topbar-menu-btn.open{
+      background:rgba(255,255,255,.10);
+      transform:translateY(-1px);
+    }
+    .topbar-menu-caret{
+      transition:transform .22s ease;
+    }
+    .topbar-menu-btn.open .topbar-menu-caret{
+      transform:rotate(180deg);
+    }
+    .topbar-dropdown{
+      position:absolute;
+      top:calc(100% + 10px);
+      right:0;
+      min-width:290px;
+      max-width:360px;
+      padding:12px;
+      border-radius:22px;
+      background:rgba(18,20,28,.96);
+      border:1px solid rgba(255,255,255,.09);
+      backdrop-filter:blur(18px);
+      box-shadow:0 22px 50px rgba(0,0,0,.36);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      opacity:0;
+      pointer-events:none;
+      transform:translateY(-8px) scale(.98);
+      transition:opacity .22s ease, transform .22s ease;
+      z-index:9990;
+    }
+    .topbar-dropdown.open{
+      opacity:1;
+      pointer-events:auto;
+      transform:translateY(0) scale(1);
+    }
+    .topbar-dropdown a{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      padding:14px 16px;
+      border-radius:18px;
+      text-decoration:none;
+      color:#fff;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.07);
+      transition:.18s ease;
+    }
+    .topbar-dropdown a:hover{
+      background:rgba(255,255,255,.08);
+      transform:translateY(-1px);
+    }
+    .topbar-dropdown a strong{
+      font-size:15px;
+      line-height:1.2;
+    }
+    .topbar-dropdown a span{
+      font-size:12px;
+      color:#b2bbca;
+      line-height:1.35;
+    }
+    @media (max-width: 768px){
+      .app-topbar-shell{
+        padding:18px 18px 8px;
+      }
+      .topbar-identity{
+        order:3;
+        width:100%;
+        align-items:flex-start;
+        margin-left:0;
+      }
+      .topbar-menu-wrap{
+        width:100%;
+      }
+      .topbar-menu-btn{
+        width:100%;
+      }
+      .topbar-dropdown{
+        left:0;
+        right:0;
+        min-width:unset;
+        max-width:unset;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function getGlobalNavItems(role) {
+  const items = [
+    { key: "overview", label: "Overview", href: "dashboard.html", desc: "Main dashboard and KPIs" },
+    { key: "users", label: "Users", href: "users.html", desc: "User accounts and staff records" },
+    { key: "leads", label: "Leads", href: "leads.html", desc: "Pipeline, assignments, conversions" },
+    { key: "sales_reps", label: "Sales Reps", href: "sales_reps.html", desc: "Rep creation and management" },
+    { key: "companies", label: "Companies", href: "companies.html", desc: "Company records and brand settings" },
+    { key: "jobs", label: "Jobs", href: "jobs.html", desc: "Scheduling and operations" },
+    { key: "customers", label: "Customers", href: "#", desc: "Customer tools and accounts" },
+    { key: "settings", label: "Settings", href: "#", desc: "Application preferences" }
+  ];
+
+  if (role === "super_admin") {
+    items.push({ key: "audit", label: "Audit", href: "audit.html", desc: "Repair and integrity tools" });
+  }
+
+  return items.filter((item) => item.key === "overview" || canAccess(role, item.key));
+}
+
+function closeAllTopbarMenus() {
+  document.querySelectorAll(".topbar-menu-btn").forEach((btn) => btn.classList.remove("open"));
+  document.querySelectorAll(".topbar-dropdown").forEach((menu) => menu.classList.remove("open"));
+}
+
+function wireTopbarMenu() {
+  const menuBtn = document.getElementById("topbarMenuBtn");
+  const dropdown = document.getElementById("topbarDropdown");
+
+  if (!menuBtn || !dropdown) return;
+
+  menuBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = dropdown.classList.contains("open");
+    closeAllTopbarMenus();
+    if (!isOpen) {
+      menuBtn.classList.add("open");
+      dropdown.classList.add("open");
+    }
+  });
+
+  dropdown.addEventListener("click", (e) => e.stopPropagation());
+  document.addEventListener("click", closeAllTopbarMenus, { once: false });
+}
+
 export async function bindTopbar(user = null) {
   const topbar = document.getElementById("topbar");
   if (!topbar) return;
+
+  injectTopbarStyles();
 
   const settings = await loadBrandSettings();
   const company = user?.companyId ? await loadCompany(user.companyId) : null;
@@ -665,43 +918,71 @@ export async function bindTopbar(user = null) {
   const identityName = user ? user.name || formatDisplayUsername(user) : "Guest";
   const identityHandle = user ? formatHandle(user) : "";
   const identityCompany = company?.name || settings?.companyName || "Supreme TrueClean";
+  const menuItems = user ? getGlobalNavItems(user.role) : [];
 
   topbar.innerHTML = `
-    <div class="app-topbar-inner">
-      <a class="app-brand" href="${homeHref}">
-        <img src="${settings?.logoUrl || "assets/img/evaraos_logo.png"}" alt="logo">
-        <div class="app-brand-text">
-          <strong>${settings?.platformName || "Evaraos Inc"}</strong>
-          <span>${identityCompany}</span>
-        </div>
-      </a>
+    <div class="app-topbar-shell">
+      <div class="app-topbar-inner">
+        <a class="app-brand" href="${homeHref}">
+          <img src="${settings?.logoUrl || "assets/img/evaraos_logo.png"}" alt="logo">
+          <div class="app-brand-text">
+            <strong>${settings?.platformName || "Evaraos Inc"}</strong>
+            <span>${identityCompany}</span>
+          </div>
+        </a>
 
-      ${
-        user
-          ? `
-        <div class="topbar-identity" style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;margin-left:auto;margin-right:14px;">
-          <strong style="font-size:14px;line-height:1.2;">${identityName}</strong>
-          <span style="font-size:12px;color:#b8c0d0;line-height:1.2;">${identityHandle}</span>
-        </div>
-      `
-          : ""
-      }
+        ${
+          user
+            ? `
+          <div class="topbar-identity">
+            <strong>${identityName}</strong>
+            <span>${identityHandle}</span>
+          </div>
+        `
+            : ""
+        }
+      </div>
 
       <nav class="app-nav">
         <a href="${homeHref}">Home</a>
         <a href="${dashboardHref}" class="active">Dashboard</a>
+
+        ${
+          user
+            ? `
+          <div class="topbar-menu-wrap">
+            <button type="button" class="topbar-menu-btn" id="topbarMenuBtn">
+              Menu
+              <span class="topbar-menu-caret">⌄</span>
+            </button>
+            <div class="topbar-dropdown" id="topbarDropdown">
+              ${menuItems
+                .map(
+                  (item) => `
+                    <a href="${item.href}">
+                      <strong>${item.label}</strong>
+                      <span>${item.desc}</span>
+                    </a>
+                  `
+                )
+                .join("")}
+            </div>
+          </div>
+        `
+            : ""
+        }
+
         <button id="logoutBtn">Logout</button>
       </nav>
     </div>
   `;
 
-  const logoutBtn = document.getElementById("logoutBtn");
-  if (logoutBtn) {
-    logoutBtn.onclick = async () => {
-      await logout();
-      window.location.href = "login.html";
-    };
-  }
+  document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+    await logout();
+    window.location.href = "login.html";
+  });
+
+  wireTopbarMenu();
 }
 
 export function requireAuth(renderFn) {
@@ -789,6 +1070,106 @@ export async function fetchActiveTechnicians(companyId) {
   );
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+export async function createSalesRep(payload, currentUser) {
+  const username = String(payload.username || "").trim().toLowerCase();
+  if (!username) throw new Error("Username is required.");
+
+  const userDoc = await addDoc(collection(db, "users"), {
+    name: payload.fullName || "",
+    username,
+    handle: `@${username}`,
+    displayUsername: username.charAt(0).toUpperCase() + username.slice(1),
+    email: payload.email || "",
+    phone: payload.phone || "",
+    role: "sales_rep",
+    approvalStatus: "approved",
+    status: payload.status || "active",
+    companyId: sanitizeCompanyId(currentUser.companyId || "supreme_trueclean"),
+    companyAccessLevel: "subsidiary",
+    photoUrl: "",
+    reportsTo: currentUser.id || currentUser.uid || currentUser.email || "",
+    organizationLevel: 4,
+    permissions: ["leads", "convert"],
+    preferredContactMethod: "",
+    address: "",
+    city: "",
+    state: "",
+    zip: "",
+    notes: payload.notes || "",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    lastLogin: null
+  });
+
+  await syncUsernameDirectoryByUserDoc(userDoc.id);
+  return userDoc.id;
+}
+
+export async function updateSalesRep(userId, payload) {
+  const username = String(payload.username || "").trim().toLowerCase();
+  if (!username) throw new Error("Username is required.");
+
+  await updateDoc(doc(db, "users", userId), {
+    name: payload.fullName || "",
+    username,
+    handle: `@${username}`,
+    displayUsername: username.charAt(0).toUpperCase() + username.slice(1),
+    email: payload.email || "",
+    phone: payload.phone || "",
+    status: payload.status || "active",
+    notes: payload.notes || "",
+    updatedAt: serverTimestamp()
+  });
+
+  await syncUsernameDirectoryByUserDoc(userId);
+}
+
+export async function createCompany(payload, currentUser) {
+  const companyId = sanitizeCompanyId(payload.companyId || payload.slug || payload.name || "");
+  if (!companyId) throw new Error("Company ID is required.");
+
+  await setDoc(doc(db, "companies", companyId), {
+    name: payload.name || "",
+    slug: payload.slug || companyIdToSlug(companyId),
+    city: payload.city || "",
+    state: payload.state || "",
+    phone: payload.phone || "",
+    email: payload.email || "",
+    status: payload.status || "active",
+    notes: payload.notes || "",
+    ownerCompany: "Evaraos Inc",
+    ownerName: payload.ownerName || currentUser.name || "",
+    ownerEmail: payload.ownerEmail || currentUser.email || "",
+    ownerUserId: currentUser.id || currentUser.uid || "",
+    parentCompany: "Evaraos Inc",
+    brandColor: payload.brandColor || "#E30613",
+    logoUrl: "",
+    serviceCategories: [],
+    active: true,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+
+  return companyId;
+}
+
+export async function updateCompany(companyId, payload) {
+  await updateDoc(doc(db, "companies", companyId), {
+    name: payload.name || "",
+    slug: payload.slug || companyIdToSlug(companyId),
+    city: payload.city || "",
+    state: payload.state || "",
+    phone: payload.phone || "",
+    email: payload.email || "",
+    status: payload.status || "active",
+    notes: payload.notes || "",
+    ownerName: payload.ownerName || "",
+    ownerEmail: payload.ownerEmail || "",
+    brandColor: payload.brandColor || "#E30613",
+    updatedAt: serverTimestamp()
+  });
 }
 
 export function renderSidebar(role, active = "overview") {
