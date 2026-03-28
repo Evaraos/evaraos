@@ -48,9 +48,7 @@ function getLeadStageCounts(leads) {
   leads.forEach((lead) => {
     let status = String(lead.status || "").toLowerCase();
     if (status === "scheduled") status = "booked";
-    if (base[status] !== undefined) {
-      base[status] += 1;
-    }
+    if (base[status] !== undefined) base[status] += 1;
   });
 
   return base;
@@ -201,16 +199,50 @@ function renderUpcomingJobs(jobs) {
 
 function getQuickLinks(user) {
   const links = [
-    { key: "overview", label: "Overview", href: "dashboard.html", desc: "Main control center" },
+    { key: "overview", label: "Overview", href: "dashboard.html", desc: "Main dashboard" },
     { key: "users", label: "Users", href: "users.html", desc: "Team and account records" },
     { key: "leads", label: "Leads", href: "leads.html", desc: "Pipeline and conversions" },
     { key: "sales_reps", label: "Sales Reps", href: "sales_reps.html", desc: "Rep management" },
-    { key: "companies", label: "Companies", href: "companies.html", desc: "Brand and company records" },
-    { key: "jobs", label: "Jobs", href: "jobs.html", desc: "Operations and scheduling" },
-    { key: "audit", label: "Audit", href: "audit.html", desc: "Repair and discrepancy tools" }
+    { key: "companies", label: "Companies", href: "companies.html", desc: "Company records" },
+    { key: "jobs", label: "Jobs", href: "jobs.html", desc: "Scheduling and operations" },
+    { key: "audit", label: "Audit", href: "audit.html", desc: "Repair tools" }
   ];
 
   return links.filter((item) => item.key === "overview" || canAccess(user.role, item.key));
+}
+
+function renderHeaderCard(user) {
+  return `
+    <section class="glass-card">
+      <div class="page-header-card">
+        <div>
+          <div class="eyebrow">Evaraos Inc</div>
+          <h1 class="page-title">Dashboard</h1>
+          <div class="muted">Supreme TrueClean operating overview</div>
+        </div>
+
+        <div class="identity-card">
+          <strong>${user.name || "User"}</strong>
+          <span>${user.handle || (user.username ? `@${user.username}` : "@user")}</span>
+          <small>${user.companyId || "supreme_trueclean"}</small>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderNavDropdown(user) {
+  return `
+    <section class="glass-card nav-dropdown-wrap">
+      <div class="section-title-row">
+        <h2>Navigation</h2>
+        <button id="navDropdownToggle" class="btn secondary" type="button">Toggle Menu</button>
+      </div>
+      <div id="navDropdownBody" class="nav-dropdown-body">
+        <nav class="sidebar-nav">${renderSidebar(user.role, "overview")}</nav>
+      </div>
+    </section>
+  `;
 }
 
 function renderQuickLinks(user) {
@@ -219,7 +251,7 @@ function renderQuickLinks(user) {
   return `
     <section class="glass-card">
       <div class="section-title-row">
-        <h2>Quick Navigation</h2>
+        <h2>Quick Access</h2>
       </div>
       <div class="quick-links-grid">
         ${links
@@ -237,59 +269,68 @@ function renderQuickLinks(user) {
   `;
 }
 
-function renderTopTabs(user) {
-  const links = getQuickLinks(user);
-
-  return `
-    <section class="glass-card">
-      <div class="section-title-row">
-        <h2>Overview Tabs</h2>
-      </div>
-      <div class="top-tabs">
-        ${links
-          .map(
-            (item) => `
-              <a class="top-tab ${item.key === "overview" ? "active" : ""}" href="${item.href}">
-                ${item.label}
-              </a>
-            `
-          )
-          .join("")}
-      </div>
-    </section>
-  `;
-}
-
 function injectDashboardStyles() {
-  if (document.getElementById("dashboardUpgradeStyles")) return;
+  if (document.getElementById("dashboardRestoreStyles")) return;
 
   const style = document.createElement("style");
-  style.id = "dashboardUpgradeStyles";
+  style.id = "dashboardRestoreStyles";
   style.textContent = `
     .dashboard-shell{
-      display:grid;
-      grid-template-columns:280px minmax(0,1fr);
-      gap:22px;
-      padding:22px;
-    }
-    .dashboard-sidebar{
-      position:sticky;
-      top:18px;
-      align-self:start;
-    }
-    .dashboard-sidebar .glass-card{
-      padding:18px;
-    }
-    .dashboard-main{
       display:flex;
       flex-direction:column;
       gap:22px;
+      padding:22px;
+    }
+    .page-header-card{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:18px;
+      flex-wrap:wrap;
+    }
+    .eyebrow{
+      color:#aeb8c8;
+      font-size:13px;
+      margin-bottom:10px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+    .page-title{
+      margin:0;
+      font-size:54px;
+      line-height:1;
+    }
+    .identity-card{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      align-items:flex-end;
+      text-align:right;
+      min-width:180px;
+    }
+    .identity-card strong{
+      font-size:22px;
+    }
+    .identity-card span,
+    .identity-card small{
+      color:#aeb8c8;
+    }
+    .nav-dropdown-body{
+      overflow:hidden;
+      max-height:0;
+      opacity:0;
+      transition:max-height .28s ease, opacity .2s ease, margin-top .2s ease;
+      margin-top:0;
+    }
+    .nav-dropdown-body.open{
+      max-height:700px;
+      opacity:1;
+      margin-top:12px;
     }
     .sidebar-nav{
       display:flex;
       flex-direction:column;
       gap:10px;
-      margin-top:14px;
     }
     .sidebar-nav a{
       display:flex;
@@ -423,40 +464,18 @@ function injectDashboardStyles() {
       font-size:13px;
       line-height:1.4;
     }
-    .top-tabs{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:12px;
-    }
-    .top-tab{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-width:120px;
-      padding:12px 16px;
-      border-radius:999px;
-      text-decoration:none;
-      color:#fff;
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.08);
-      transition:.18s ease;
-    }
-    .top-tab:hover,
-    .top-tab.active{
-      background:rgba(255,255,255,.1);
-    }
     @media (max-width: 1100px){
       .metric-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
       .pipeline-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); }
       .quick-links-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
-      .dashboard-shell{ grid-template-columns:1fr; }
-      .dashboard-sidebar{ position:static; }
+      .page-title{ font-size:42px; }
     }
     @media (max-width: 700px){
       .metric-grid{ grid-template-columns:1fr; }
       .pipeline-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
       .quick-links-grid{ grid-template-columns:1fr; }
+      .identity-card{ align-items:flex-start; text-align:left; }
+      .page-title{ font-size:34px; }
     }
   `;
   document.head.appendChild(style);
@@ -497,47 +516,46 @@ function renderDashboard(user, scoped) {
   const root = document.getElementById("dashboardRoot");
   root.innerHTML = `
     <div class="dashboard-shell">
-      <aside class="dashboard-sidebar">
-        <div class="glass-card">
-          <div class="section-title-row">
-            <h2 style="margin:0;">Navigation</h2>
+      ${renderHeaderCard(user)}
+      ${renderNavDropdown(user)}
+
+      <section class="glass-card">
+        <div class="section-title-row">
+          <div>
+            <h2 style="margin:0;">Overview</h2>
+            <p class="muted" style="margin:10px 0 0;">Role-scoped analytics and real-time pipeline visibility.</p>
           </div>
-          <nav class="sidebar-nav">${renderSidebar(user.role, "overview")}</nav>
         </div>
-      </aside>
 
-      <main class="dashboard-main">
-        <section class="glass-card">
-          <div class="section-title-row">
-            <div>
-              <h1 style="margin:0;">Dashboard</h1>
-              <p class="muted" style="margin:10px 0 0;">Role-scoped analytics and real-time pipeline visibility.</p>
-            </div>
-          </div>
-
-          <div class="metric-grid" style="margin-top:16px;">
-            ${renderKpiCard("Revenue", currency(metrics.revenue), "Completed jobs")}
-            ${renderKpiCard("Total Leads", metrics.totalLeads)}
-            ${renderKpiCard("Scheduled Jobs", metrics.scheduledJobs)}
-            ${renderKpiCard("Completed Jobs", metrics.completedJobs)}
-            ${renderKpiCard("In Progress", metrics.inProgressJobs)}
-            ${renderKpiCard("Conversion Rate", percent(metrics.conversionRate))}
-            ${renderKpiCard("Active Reps", metrics.activeReps)}
-            ${renderKpiCard("Active Technicians", metrics.activeTechs)}
-          </div>
-        </section>
-
-        ${renderTopTabs(user)}
-        ${renderQuickLinks(user)}
-        ${canAccess(user.role, "leads") ? renderPipeline(stageCounts) : ""}
-
-        <div class="metric-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
-          ${canAccess(user.role, "leads") ? renderRecentLeads(scoped.leads) : ""}
-          ${canAccess(user.role, "jobs") ? renderUpcomingJobs(scoped.jobs) : ""}
+        <div class="metric-grid" style="margin-top:16px;">
+          ${renderKpiCard("Revenue", currency(metrics.revenue), "Completed jobs")}
+          ${renderKpiCard("Total Leads", metrics.totalLeads)}
+          ${renderKpiCard("Scheduled Jobs", metrics.scheduledJobs)}
+          ${renderKpiCard("Completed Jobs", metrics.completedJobs)}
+          ${renderKpiCard("In Progress", metrics.inProgressJobs)}
+          ${renderKpiCard("Conversion Rate", percent(metrics.conversionRate))}
+          ${renderKpiCard("Active Reps", metrics.activeReps)}
+          ${renderKpiCard("Active Technicians", metrics.activeTechs)}
         </div>
-      </main>
+      </section>
+
+      ${renderQuickLinks(user)}
+      ${canAccess(user.role, "leads") ? renderPipeline(stageCounts) : ""}
+
+      <div class="metric-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
+        ${canAccess(user.role, "leads") ? renderRecentLeads(scoped.leads) : ""}
+        ${canAccess(user.role, "jobs") ? renderUpcomingJobs(scoped.jobs) : ""}
+      </div>
     </div>
   `;
+
+  const toggleBtn = document.getElementById("navDropdownToggle");
+  const body = document.getElementById("navDropdownBody");
+  if (toggleBtn && body) {
+    toggleBtn.addEventListener("click", () => {
+      body.classList.toggle("open");
+    });
+  }
 }
 
 requireAuth(async (user) => {
