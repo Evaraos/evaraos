@@ -57,7 +57,9 @@ function getLeadStageCounts(leads) {
 }
 
 function getDashboardMetrics(leads, jobs, users) {
-  const wonLeads = leads.filter((lead) => ["won", "scheduled", "booked"].includes(String(lead.status || "").toLowerCase()));
+  const wonLeads = leads.filter((lead) =>
+    ["won", "scheduled", "booked"].includes(String(lead.status || "").toLowerCase())
+  );
   const completedJobs = jobs.filter((job) => String(job.status || "").toLowerCase() === "completed");
   const scheduledJobs = jobs.filter((job) => String(job.status || "").toLowerCase() === "scheduled");
   const inProgressJobs = jobs.filter((job) => String(job.status || "").toLowerCase() === "in_progress");
@@ -108,11 +110,11 @@ function renderPipeline(stageCounts) {
         ${stages
           .map(
             ([key, label]) => `
-          <div class="pipeline-stage">
-            <span class="pipeline-label">${label}</span>
-            <strong class="pipeline-count">${stageCounts[key] || 0}</strong>
-          </div>
-        `
+              <div class="pipeline-stage">
+                <span class="pipeline-label">${label}</span>
+                <strong class="pipeline-count">${stageCounts[key] || 0}</strong>
+              </div>
+            `
           )
           .join("")}
       </div>
@@ -134,25 +136,25 @@ function renderRecentLeads(leads) {
         !sorted.length
           ? `<div class="empty-state">No leads available.</div>`
           : `
-        <div class="list-stack">
-          ${sorted
-            .map(
-              (lead) => `
-            <div class="list-row">
-              <div>
-                <strong>${lead.fullName || "Unnamed Lead"}</strong>
-                <div class="muted">${lead.serviceInterest || lead.serviceType || "No service selected"}</div>
-              </div>
-              <div style="text-align:right;">
-                <div class="status-pill">${lead.status || "new"}</div>
-                <div class="muted">${currency(lead.estimatedPrice || 0)}</div>
-              </div>
+            <div class="list-stack">
+              ${sorted
+                .map(
+                  (lead) => `
+                    <div class="list-row">
+                      <div>
+                        <strong>${lead.fullName || "Unnamed Lead"}</strong>
+                        <div class="muted">${lead.serviceInterest || lead.serviceType || "No service selected"}</div>
+                      </div>
+                      <div style="text-align:right;">
+                        <div class="status-pill">${lead.status || "new"}</div>
+                        <div class="muted">${currency(lead.estimatedPrice || 0)}</div>
+                      </div>
+                    </div>
+                  `
+                )
+                .join("")}
             </div>
           `
-            )
-            .join("")}
-        </div>
-      `
       }
     </section>
   `;
@@ -173,26 +175,87 @@ function renderUpcomingJobs(jobs) {
         !sorted.length
           ? `<div class="empty-state">No upcoming jobs.</div>`
           : `
-        <div class="list-stack">
-          ${sorted
-            .map(
-              (job) => `
-            <div class="list-row">
-              <div>
-                <strong>${job.customerName || "Unnamed Customer"}</strong>
-                <div class="muted">${job.serviceType || "Service not set"}</div>
-              </div>
-              <div style="text-align:right;">
-                <div class="status-pill">${job.status || "scheduled"}</div>
-                <div class="muted">${formatDate(job.scheduledDate)}</div>
-              </div>
+            <div class="list-stack">
+              ${sorted
+                .map(
+                  (job) => `
+                    <div class="list-row">
+                      <div>
+                        <strong>${job.customerName || "Unnamed Customer"}</strong>
+                        <div class="muted">${job.serviceType || "Service not set"}</div>
+                      </div>
+                      <div style="text-align:right;">
+                        <div class="status-pill">${job.status || "scheduled"}</div>
+                        <div class="muted">${formatDate(job.scheduledDate)}</div>
+                      </div>
+                    </div>
+                  `
+                )
+                .join("")}
             </div>
           `
-            )
-            .join("")}
-        </div>
-      `
       }
+    </section>
+  `;
+}
+
+function getQuickLinks(user) {
+  const links = [
+    { key: "overview", label: "Overview", href: "dashboard.html", desc: "Main control center" },
+    { key: "users", label: "Users", href: "users.html", desc: "Team and account records" },
+    { key: "leads", label: "Leads", href: "leads.html", desc: "Pipeline and conversions" },
+    { key: "sales_reps", label: "Sales Reps", href: "sales_reps.html", desc: "Rep management" },
+    { key: "companies", label: "Companies", href: "companies.html", desc: "Brand and company records" },
+    { key: "jobs", label: "Jobs", href: "jobs.html", desc: "Operations and scheduling" },
+    { key: "audit", label: "Audit", href: "audit.html", desc: "Repair and discrepancy tools" }
+  ];
+
+  return links.filter((item) => item.key === "overview" || canAccess(user.role, item.key));
+}
+
+function renderQuickLinks(user) {
+  const links = getQuickLinks(user);
+
+  return `
+    <section class="glass-card">
+      <div class="section-title-row">
+        <h2>Quick Navigation</h2>
+      </div>
+      <div class="quick-links-grid">
+        ${links
+          .map(
+            (item) => `
+              <a class="quick-link-card ${item.key === "overview" ? "active" : ""}" href="${item.href}">
+                <strong>${item.label}</strong>
+                <span>${item.desc}</span>
+              </a>
+            `
+          )
+          .join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderTopTabs(user) {
+  const links = getQuickLinks(user);
+
+  return `
+    <section class="glass-card">
+      <div class="section-title-row">
+        <h2>Overview Tabs</h2>
+      </div>
+      <div class="top-tabs">
+        ${links
+          .map(
+            (item) => `
+              <a class="top-tab ${item.key === "overview" ? "active" : ""}" href="${item.href}">
+                ${item.label}
+              </a>
+            `
+          )
+          .join("")}
+      </div>
     </section>
   `;
 }
@@ -221,6 +284,28 @@ function injectDashboardStyles() {
       display:flex;
       flex-direction:column;
       gap:22px;
+    }
+    .sidebar-nav{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-top:14px;
+    }
+    .sidebar-nav a{
+      display:flex;
+      align-items:center;
+      padding:14px 16px;
+      border-radius:18px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.07);
+      color:#fff;
+      text-decoration:none;
+      transition:.18s ease;
+    }
+    .sidebar-nav a:hover,
+    .sidebar-nav a.active{
+      background:rgba(255,255,255,.09);
+      transform:translateY(-1px);
     }
     .metric-grid{
       display:grid;
@@ -276,6 +361,7 @@ function injectDashboardStyles() {
       align-items:center;
       gap:12px;
       margin-bottom:8px;
+      flex-wrap:wrap;
     }
     .list-stack{
       display:flex;
@@ -309,15 +395,68 @@ function injectDashboardStyles() {
       color:#aeb8c8;
       font-size:13px;
     }
+    .quick-links-grid{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:14px;
+      margin-top:12px;
+    }
+    .quick-link-card{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      padding:18px;
+      border-radius:22px;
+      text-decoration:none;
+      color:#fff;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      transition:.18s ease;
+    }
+    .quick-link-card:hover,
+    .quick-link-card.active{
+      transform:translateY(-2px);
+      background:rgba(255,255,255,.08);
+    }
+    .quick-link-card span{
+      color:#aeb8c8;
+      font-size:13px;
+      line-height:1.4;
+    }
+    .top-tabs{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+    .top-tab{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:120px;
+      padding:12px 16px;
+      border-radius:999px;
+      text-decoration:none;
+      color:#fff;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      transition:.18s ease;
+    }
+    .top-tab:hover,
+    .top-tab.active{
+      background:rgba(255,255,255,.1);
+    }
     @media (max-width: 1100px){
       .metric-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
       .pipeline-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); }
+      .quick-links-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
       .dashboard-shell{ grid-template-columns:1fr; }
       .dashboard-sidebar{ position:static; }
     }
     @media (max-width: 700px){
       .metric-grid{ grid-template-columns:1fr; }
       .pipeline-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .quick-links-grid{ grid-template-columns:1fr; }
     }
   `;
   document.head.appendChild(style);
@@ -388,6 +527,8 @@ function renderDashboard(user, scoped) {
           </div>
         </section>
 
+        ${renderTopTabs(user)}
+        ${renderQuickLinks(user)}
         ${canAccess(user.role, "leads") ? renderPipeline(stageCounts) : ""}
 
         <div class="metric-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
