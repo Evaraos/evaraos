@@ -12,7 +12,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import { db } from "./firebase.js";
-import { listenAuth, logout } from "./auth.js";
+import { listenAuth, logout, syncUsernameChangeForUser, syncUsernameDirectoryByUserDoc } from "./auth.js";
 import { canAccess, getAllowedSections, getRoleLabel } from "./roles.js";
 
 export const SERVICE_LIBRARY = {
@@ -220,10 +220,6 @@ export async function fetchPendingUsersByCompany(companyId, includeAll = false) 
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
-/*
-  IMPORTANT CHANGE:
-  sales reps now come from USERS, not sales_reps collection.
-*/
 export async function fetchActiveSalesReps(companyId) {
   const q = query(
     collection(db, "users"),
@@ -432,19 +428,16 @@ export async function convertLeadToJob(lead, data, user) {
   return jobRef;
 }
 
-/*
-  LEGACY ONLY:
-  This can stay temporarily if an old page still calls it,
-  but it should no longer be used as the main people source.
-*/
 export async function createSalesRep(data, user) {
-  return addDoc(collection(db, "users"), {
+  const username = (data.username || "").trim().toLowerCase();
+
+  const docRef = await addDoc(collection(db, "users"), {
     companyId: user.companyId,
     name: data.fullName || "",
-    username: (data.username || "").toLowerCase(),
-    handle: data.username ? `@${String(data.username).toLowerCase()}` : "",
-    displayUsername: data.username
-      ? String(data.username).charAt(0).toUpperCase() + String(data.username).slice(1).toLowerCase()
+    username,
+    handle: username ? `@${username}` : "",
+    displayUsername: username
+      ? username.charAt(0).toUpperCase() + username.slice(1).toLowerCase()
       : "",
     email: data.email || "",
     phone: data.phone || "",
@@ -467,12 +460,14 @@ export async function createSalesRep(data, user) {
     lastLogin: serverTimestamp(),
     updatedAt: serverTimestamp()
   });
+
+  if (username) {
+    await syncUsernameDirectoryByUserDoc(docRef.id);
+  }
+
+  return docRef;
 }
 
-/*
-  LEGACY ONLY:
-  if old rep edit UI still exists, this updates the matching USERS doc
-*/
 export async function updateSalesRep(repId, data) {
   return updateDoc(doc(db, "users", repId), {
     name: data.fullName || "",
@@ -522,13 +517,11 @@ export async function updateUserAdmin(userId, data) {
   }
 
   const existingUser = existingSnap.data();
+  const newUsername = (data.username || "").trim().toLowerCase();
 
   if (existingUser.role === "super_admin") {
-    return updateDoc(doc(db, "users", userId), {
+    await updateDoc(doc(db, "users", userId), {
       name: data.name,
-      username: data.username,
-      displayUsername: data.username ? data.username.charAt(0).toUpperCase() + data.username.slice(1).toLowerCase() : existingUser.displayUsername || "",
-      handle: data.username ? `@${data.username}` : existingUser.handle || "",
       companyId: data.companyId,
       status: "active",
       phone: data.phone || "",
@@ -543,15 +536,20 @@ export async function updateUserAdmin(userId, data) {
       companyAccessLevel: "parent",
       updatedAt: serverTimestamp()
     });
+
+    if (newUsername && newUsername !== (existingUser.username || "")) {
+      await syncUsernameChangeForUser(userId, newUsername);
+    } else {
+      await syncUsernameDirectoryByUserDoc(userId);
+    }
+
+    return;
   }
 
   const defaults = getRoleDefaults(data.role);
 
-  return updateDoc(doc(db, "users", userId), {
+  await updateDoc(doc(db, "users", userId), {
     name: data.name,
-    username: data.username,
-    displayUsername: data.username ? data.username.charAt(0).toUpperCase() + data.username.slice(1).toLowerCase() : "",
-    handle: data.username ? `@${data.username}` : "",
     role: data.role,
     approvalStatus: data.approvalStatus,
     companyId: data.companyId,
@@ -566,6 +564,12 @@ export async function updateUserAdmin(userId, data) {
     companyAccessLevel: defaults.companyAccessLevel,
     updatedAt: serverTimestamp()
   });
+
+  if (newUsername && newUsername !== (existingUser.username || "")) {
+    await syncUsernameChangeForUser(userId, newUsername);
+  } else {
+    await syncUsernameDirectoryByUserDoc(userId);
+  }
 }
 
 export async function approveUser(userId) {
@@ -573,8 +577,9 @@ export async function approveUser(userId) {
   if (!existingSnap.exists()) throw new Error("User not found.");
 
   const existingUser = existingSnap.data();
+
   if (existingUser.role === "super_admin") {
-    return updateDoc(doc(db, "users", userId), {
+    await updateDoc(doc(db, "users", userId), {
       role: "super_admin",
       approvalStatus: "approved",
       status: "active",
@@ -583,13 +588,15 @@ export async function approveUser(userId) {
       companyAccessLevel: "parent",
       updatedAt: serverTimestamp()
     });
+  } else {
+    await updateDoc(doc(db, "users", userId), {
+      approvalStatus: "approved",
+      status: "active",
+      updatedAt: serverTimestamp()
+    });
   }
 
-  return updateDoc(doc(db, "users", userId), {
-    approvalStatus: "approved",
-    status: "active",
-    updatedAt: serverTimestamp()
-  });
+  await syncUsernameDirectoryByUserDoc(userId);
 }
 
 export async function rejectUser(userId) {
@@ -601,19 +608,24 @@ export async function rejectUser(userId) {
     throw new Error("Super Admin cannot be rejected.");
   }
 
-  return updateDoc(doc(db, "users", userId), {
+  await updateDoc(doc(db, "users", userId), {
     approvalStatus: "rejected",
     status: "inactive",
     updatedAt: serverTimestamp()
   });
+
+  await syncUsernameDirectoryByUserDoc(userId);
 }
 
 export async function updateOwnCustomerProfile(userId, data) {
-  return updateDoc(doc(db, "users", userId), {
+  const existingSnap = await getDoc(doc(db, "users", userId));
+  if (!existingSnap.exists()) throw new Error("User not found.");
+
+  const existingUser = existingSnap.data();
+  const newUsername = (data.username || "").trim().toLowerCase();
+
+  await updateDoc(doc(db, "users", userId), {
     name: data.name,
-    username: data.username,
-    displayUsername: data.username ? data.username.charAt(0).toUpperCase() + data.username.slice(1).toLowerCase() : "",
-    handle: data.username ? `@${data.username}` : "",
     email: data.email,
     phone: data.phone || "",
     address: data.address || "",
@@ -624,6 +636,12 @@ export async function updateOwnCustomerProfile(userId, data) {
     preferredContactMethod: data.preferredContactMethod || "",
     updatedAt: serverTimestamp()
   });
+
+  if (newUsername && newUsername !== (existingUser.username || "")) {
+    await syncUsernameChangeForUser(userId, newUsername);
+  } else {
+    await syncUsernameDirectoryByUserDoc(userId);
+  }
 }
 
 export async function fetchCustomerServices(user) {
