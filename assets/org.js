@@ -7,7 +7,10 @@ import {
 import { db } from "./firebase.js";
 import {
   doc,
-  updateDoc
+  updateDoc,
+  collection,
+  addDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const ROLE_ORDER = [
@@ -118,8 +121,91 @@ function injectOrgEnhancements() {
     .company-block.drag-over-company .company-drop-hint{
       display:block;
     }
+    .org-toast-wrap{
+      position:fixed;
+      top:18px;
+      right:18px;
+      z-index:10000;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .org-toast{
+      padding:14px 16px;
+      border-radius:16px;
+      color:#fff;
+      background:rgba(25,110,55,.94);
+      box-shadow:0 12px 30px rgba(0,0,0,.28);
+      max-width:320px;
+    }
+    .org-toast.error{
+      background:rgba(180,40,40,.94);
+    }
   `;
   document.head.appendChild(style);
+}
+
+function showToast(message, variant = "success") {
+  let wrap = document.getElementById("orgToastWrap");
+  if (!wrap) {
+    wrap = document.createElement("div");
+    wrap.id = "orgToastWrap";
+    wrap.className = "org-toast-wrap";
+    document.body.appendChild(wrap);
+  }
+
+  const toast = document.createElement("div");
+  toast.className = `org-toast ${variant === "error" ? "error" : ""}`;
+  toast.textContent = message;
+  wrap.appendChild(toast);
+
+  setTimeout(() => toast.remove(), 2600);
+}
+
+function isSuperAdmin() {
+  return CURRENT_USER?.role === "super_admin";
+}
+
+function canManageTargetUser(targetUser) {
+  if (!CURRENT_USER || !targetUser) return false;
+  if (isSuperAdmin()) return true;
+  return (CURRENT_USER.companyId || "") === (targetUser.companyId || "");
+}
+
+function canMoveAcrossCompanies(fromCompanyId, toCompanyId) {
+  if (fromCompanyId === toCompanyId) return true;
+  return isSuperAdmin();
+}
+
+async function writeAuditLog({
+  action,
+  targetUserId,
+  targetUserName,
+  oldRole = null,
+  newRole = null,
+  oldCompanyId = null,
+  newCompanyId = null,
+  notes = ""
+}) {
+  try {
+    await addDoc(collection(db, "audit_logs"), {
+      type: "org_chart_change",
+      action,
+      targetUserId: targetUserId || "",
+      targetUserName: targetUserName || "",
+      actorUserId: CURRENT_USER?.id || CURRENT_USER?.uid || "",
+      actorName: CURRENT_USER?.name || CURRENT_USER?.email || "",
+      actorRole: CURRENT_USER?.role || "",
+      oldRole,
+      newRole,
+      oldCompanyId,
+      newCompanyId,
+      notes,
+      createdAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error("Failed to write audit log:", error);
+  }
 }
 
 async function loadOrgChart() {
@@ -308,12 +394,22 @@ function enableDragAndDrop() {
 
       if (!draggedUser) return;
 
+      if (!canManageTargetUser(draggedUser)) {
+        showToast("You cannot manage users outside your company.", "error");
+        return;
+      }
+
       const oldCompanyId = draggedUser.companyId || "";
       const oldRole = draggedUser.role || "";
       const companyChanged = oldCompanyId !== targetCompanyId;
       const roleChanged = oldRole !== targetRole;
 
       if (!companyChanged && !roleChanged) return;
+
+      if (!canMoveAcrossCompanies(oldCompanyId, targetCompanyId)) {
+        showToast("Only super admins can move users across companies.", "error");
+        return;
+      }
 
       if (companyChanged) {
         const confirmed = window.confirm(
@@ -329,7 +425,21 @@ function enableDragAndDrop() {
         organizationLevel: getOrgLevelFromRole(targetRole)
       });
 
+      await writeAuditLog({
+        action: companyChanged && roleChanged ? "company_and_role_drag_move" : roleChanged ? "role_drag_move" : "company_drag_move",
+        targetUserId: draggedUser.id,
+        targetUserName: draggedUser.name || draggedUser.email || "",
+        oldRole,
+        newRole: targetRole,
+        oldCompanyId,
+        newCompanyId: targetCompanyId,
+        notes: companyChanged
+          ? `Dragged user from ${getCompanyNameById(oldCompanyId)} to ${getCompanyNameById(targetCompanyId)}`
+          : `Dragged user to role ${ROLE_LABELS[targetRole] || targetRole}`
+      });
+
       await loadOrgChart();
+      showToast("User updated.");
     });
   });
 
@@ -355,8 +465,18 @@ function enableDragAndDrop() {
 
       if (!draggedUser) return;
 
+      if (!canManageTargetUser(draggedUser)) {
+        showToast("You cannot manage users outside your company.", "error");
+        return;
+      }
+
       const oldCompanyId = draggedUser.companyId || "";
       if (oldCompanyId === targetCompanyId) return;
+
+      if (!canMoveAcrossCompanies(oldCompanyId, targetCompanyId)) {
+        showToast("Only super admins can move users across companies.", "error");
+        return;
+      }
 
       const confirmed = window.confirm(
         `Move ${draggedUser.name || "this user"} from ${getCompanyNameById(oldCompanyId)} to ${getCompanyNameById(targetCompanyId)} and keep role ${ROLE_LABELS[draggedUser.role] || draggedUser.role}?`
@@ -367,7 +487,19 @@ function enableDragAndDrop() {
         companyId: targetCompanyId
       });
 
+      await writeAuditLog({
+        action: "company_drag_move_keep_role",
+        targetUserId: draggedUser.id,
+        targetUserName: draggedUser.name || draggedUser.email || "",
+        oldRole: draggedUser.role || "",
+        newRole: draggedUser.role || "",
+        oldCompanyId,
+        newCompanyId: targetCompanyId,
+        notes: "Dragged onto company block and kept existing role"
+      });
+
       await loadOrgChart();
+      showToast("User moved to new company.");
     });
   });
 }
@@ -492,7 +624,18 @@ function openModal(user) {
     const approvalStatus = document.getElementById("editApproval").value;
     const reportsTo = document.getElementById("editReportsTo").value;
 
+    if (!canManageTargetUser(user)) {
+      showToast("You cannot edit users outside your company.", "error");
+      return;
+    }
+
     const companyChanged = (user.companyId || "") !== companyId;
+    const roleChanged = (user.role || "") !== role;
+
+    if (companyChanged && !canMoveAcrossCompanies(user.companyId || "", companyId)) {
+      showToast("Only super admins can move users across companies.", "error");
+      return;
+    }
 
     if (companyChanged) {
       const confirmed = window.confirm(
@@ -511,8 +654,20 @@ function openModal(user) {
       organizationLevel: getOrgLevelFromRole(role)
     });
 
+    await writeAuditLog({
+      action: companyChanged && roleChanged ? "modal_company_and_role_edit" : roleChanged ? "modal_role_edit" : companyChanged ? "modal_company_edit" : "modal_user_edit",
+      targetUserId: user.id,
+      targetUserName: user.name || user.email || "",
+      oldRole: user.role || "",
+      newRole: role,
+      oldCompanyId: user.companyId || "",
+      newCompanyId: companyId,
+      notes: "Saved changes from org chart modal"
+    });
+
     closeModal();
     await loadOrgChart();
+    showToast("User saved.");
   });
 }
 
