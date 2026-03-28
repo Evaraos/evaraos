@@ -65,6 +65,20 @@ function renderSection(title, items, type, repairable = false) {
   `;
 }
 
+function renderFullRepairCard() {
+  return `
+    <section class="glass-card" id="fullRepairCard">
+      <div class="action-row" style="justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;">
+        <div>
+          <h2 style="margin:0;">Full System Repair</h2>
+          <p class="muted" style="margin:8px 0 0;">Repairs users, username directory, companies, leads, jobs, and services.</p>
+        </div>
+        <button class="btn" id="repairEverythingBtn">Repair All System Data</button>
+      </div>
+    </section>
+  `;
+}
+
 async function repairItem(type, id) {
   if (type === "users") return normalizeUserDoc(id);
   if (type === "companies") return normalizeCompanyDoc(id);
@@ -90,14 +104,73 @@ async function repairUsernameDirectory() {
   }
 }
 
+async function wireAuditButtons() {
+  document.querySelectorAll(".repair-item-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      btn.textContent = "Repairing...";
+      try {
+        await repairItem(btn.dataset.type, btn.dataset.id);
+        await loadAudit();
+      } catch (e) {
+        btn.disabled = false;
+        btn.textContent = "Repair";
+        alert(e.message || "Failed to repair item.");
+      }
+    });
+  });
+
+  document.querySelectorAll(".repair-section-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      btn.textContent = "Repairing...";
+      try {
+        await repairSection(btn.dataset.type);
+        await loadAudit();
+      } catch (e) {
+        btn.disabled = false;
+        btn.textContent = `Repair ${btn.dataset.type}`;
+        alert(e.message || "Failed to repair section.");
+      }
+    });
+  });
+
+  const repairEverythingBtn = document.getElementById("repairEverythingBtn");
+  if (repairEverythingBtn) {
+    repairEverythingBtn.addEventListener("click", async () => {
+      repairEverythingBtn.disabled = true;
+      repairEverythingBtn.textContent = "Repairing Everything...";
+      try {
+        await repairSection("users");
+        await repairUsernameDirectory();
+        await repairSection("companies");
+        await repairSection("leads");
+        await repairSection("jobs");
+        await repairSection("services");
+        repairEverythingBtn.textContent = "Repair All System Data";
+        repairEverythingBtn.disabled = false;
+        await loadAudit();
+      } catch (e) {
+        repairEverythingBtn.textContent = "Repair All System Data";
+        repairEverythingBtn.disabled = false;
+        alert(e.message || "Failed to repair all system data.");
+      }
+    });
+  }
+}
+
 async function loadAudit() {
   const root = document.getElementById("auditRoot");
-  root.innerHTML = `<div class="glass-card">Scanning...</div>`;
+  root.innerHTML = `
+    ${renderFullRepairCard()}
+    <div class="glass-card">Scanning...</div>
+  `;
 
   try {
     const data = await scanSystemDiscrepancies();
 
     root.innerHTML = [
+      renderFullRepairCard(),
       renderSection("Users", data.users, "users", true),
       renderSection("Username Directory", data.usernames, "usernames", false),
       renderSection("Companies", data.companies, "companies", true),
@@ -106,37 +179,13 @@ async function loadAudit() {
       renderSection("Services", data.services, "services", true)
     ].join("");
 
-    document.querySelectorAll(".repair-item-btn").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        btn.disabled = true;
-        btn.textContent = "Repairing...";
-        try {
-          await repairItem(btn.dataset.type, btn.dataset.id);
-          await loadAudit();
-        } catch (e) {
-          btn.disabled = false;
-          btn.textContent = "Repair";
-          alert(e.message || "Failed to repair item.");
-        }
-      });
-    });
-
-    document.querySelectorAll(".repair-section-btn").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        btn.disabled = true;
-        btn.textContent = "Repairing...";
-        try {
-          await repairSection(btn.dataset.type);
-          await loadAudit();
-        } catch (e) {
-          btn.disabled = false;
-          btn.textContent = `Repair ${btn.dataset.type}`;
-          alert(e.message || "Failed to repair section.");
-        }
-      });
-    });
+    await wireAuditButtons();
   } catch (e) {
-    root.innerHTML = `<div class="glass-card">Audit failed: ${e.message || e}</div>`;
+    root.innerHTML = `
+      ${renderFullRepairCard()}
+      <div class="glass-card">Audit failed: ${e.message || e}</div>
+    `;
+    await wireAuditButtons();
   }
 }
 
@@ -156,59 +205,29 @@ requireAuth(async (user) => {
   await bindTopbar(user);
   document.getElementById("sidebar").innerHTML = renderSidebar(user.role, "audit");
 
-  document.getElementById("runAuditBtn").addEventListener("click", loadAudit);
+  const runAuditBtn = document.getElementById("runAuditBtn");
+  if (runAuditBtn) {
+    runAuditBtn.addEventListener("click", loadAudit);
+  }
 
-  document.getElementById("repairAllUsersBtn").addEventListener("click", async () => {
-    const btn = document.getElementById("repairAllUsersBtn");
-    btn.disabled = true;
-    btn.textContent = "Repairing...";
-    try {
-      await repairSection("users");
-      await repairUsernameDirectory();
-      btn.textContent = "Repair All Users";
-      btn.disabled = false;
-      await loadAudit();
-    } catch (e) {
-      btn.textContent = "Repair All Users";
-      btn.disabled = false;
-      alert(e.message || "Failed to repair users.");
-    }
-  });
-
-  const root = document.getElementById("auditRoot");
-  const fullRepairWrap = document.createElement("section");
-  fullRepairWrap.className = "glass-card";
-  fullRepairWrap.innerHTML = `
-    <div class="action-row" style="justify-content:space-between;align-items:center;">
-      <div>
-        <h2 style="margin:0;">Full System Repair</h2>
-        <p class="muted" style="margin:8px 0 0;">Repairs users, username directory, companies, leads, jobs, and services.</p>
-      </div>
-      <button class="btn" id="repairEverythingBtn">Repair All System Data</button>
-    </div>
-  `;
-  root.parentNode.insertBefore(fullRepairWrap, root);
-
-  document.getElementById("repairEverythingBtn").addEventListener("click", async () => {
-    const btn = document.getElementById("repairEverythingBtn");
-    btn.disabled = true;
-    btn.textContent = "Repairing Everything...";
-    try {
-      await repairSection("users");
-      await repairUsernameDirectory();
-      await repairSection("companies");
-      await repairSection("leads");
-      await repairSection("jobs");
-      await repairSection("services");
-      btn.textContent = "Repair All System Data";
-      btn.disabled = false;
-      await loadAudit();
-    } catch (e) {
-      btn.textContent = "Repair All System Data";
-      btn.disabled = false;
-      alert(e.message || "Failed to repair all system data.");
-    }
-  });
+  const repairAllUsersBtn = document.getElementById("repairAllUsersBtn");
+  if (repairAllUsersBtn) {
+    repairAllUsersBtn.addEventListener("click", async () => {
+      repairAllUsersBtn.disabled = true;
+      repairAllUsersBtn.textContent = "Repairing...";
+      try {
+        await repairSection("users");
+        await repairUsernameDirectory();
+        repairAllUsersBtn.textContent = "Repair All Users";
+        repairAllUsersBtn.disabled = false;
+        await loadAudit();
+      } catch (e) {
+        repairAllUsersBtn.textContent = "Repair All Users";
+        repairAllUsersBtn.disabled = false;
+        alert(e.message || "Failed to repair users.");
+      }
+    });
+  }
 
   await loadAudit();
 });
