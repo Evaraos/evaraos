@@ -1,177 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Users - Evaraos Inc</title>
-  <link rel="stylesheet" href="assets/styles.css">
-  <style>
-    .role-group{
-      margin-bottom:22px;
-    }
-    .role-group h3{
-      margin:0 0 12px;
-      font-size:20px;
-    }
-    .empty-group{
-      color:#8f97a6;
-      padding:14px 0;
-    }
-    .approval-row{
-      display:grid;
-      grid-template-columns:1.2fr 1fr 1fr auto;
-      gap:12px;
-      padding:16px;
-      border-radius:20px;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.08);
-      margin-bottom:12px;
-    }
-    .handle-line{
-      color:#b8c0d0;
-      font-size:13px;
-      margin-top:4px;
-    }
-    @media (max-width: 1024px){
-      .approval-row{
-        grid-template-columns:1fr;
-      }
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Users | Evaraos</title>
+  <link rel="stylesheet" href="assets/styles.css" />
 </head>
-<body class="app-shell">
-  <header class="app-topbar" id="topbar"></header>
-
-  <div class="app-layout">
-    <aside class="sidebar" id="sidebar"></aside>
-
-    <main class="main-panel">
-      <section class="glass-card">
-        <div class="action-row" style="justify-content:space-between;align-items:center;">
-          <div>
-            <h1 style="margin:0;">Users & Approvals</h1>
-            <p class="muted" style="margin:8px 0 0;">Approve pending staff, edit staff credentials, and view the organization by role.</p>
-          </div>
-        </div>
-      </section>
-
-      <section class="glass-card">
-        <h2 style="margin-top:0;">Pending Approvals</h2>
-        <div id="pendingUsersList"></div>
-      </section>
-
-      <section class="glass-card">
-        <h2 style="margin-top:0;">Users By Role</h2>
-        <div id="usersGroupedList" class="table"></div>
-      </section>
-    </main>
-  </div>
+<body>
+  <header id="topbar"></header>
+  <div id="sidebar" style="display:none;"></div>
+  <main id="usersRoot"></main>
 
   <div class="modal-backdrop" id="userModal">
     <div class="modal-card">
-      <div class="modal-head">
-        <h2 style="margin:0;">Edit User</h2>
-        <button class="modal-close" id="closeUserModalBtn">Close</button>
+      <div class="section-title-row">
+        <h2 id="userModalTitle" style="margin:0;">Edit User</h2>
+        <button class="btn secondary" id="userModalCloseBtn" type="button">Close</button>
       </div>
 
-      <div class="form-grid">
-        <input id="userName" placeholder="Full Name">
-        <input id="userUsername" placeholder="Username">
-        <input id="userEmail" placeholder="Email" disabled>
-        <select id="userRole">
-          <option value="customer">Customer</option>
-          <option value="sales_rep">Sales Rep</option>
-          <option value="technician">Technician</option>
-          <option value="manager">Manager</option>
-          <option value="operations_coordinator">Operations Coordinator</option>
-          <option value="hr">HR</option>
-          <option value="admin">Admin</option>
-          <option value="super_admin">Super Admin</option>
-        </select>
+      <form id="userForm">
+        <div class="form-grid">
+          <div class="field">
+            <label for="editUserName">Full Name</label>
+            <input id="editUserName" />
+          </div>
 
-        <select id="userApprovalStatus">
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-        </select>
+          <div class="field">
+            <label for="editUserEmail">Email</label>
+            <input id="editUserEmail" type="email" />
+          </div>
 
-        <input id="userCompanyId" placeholder="Company ID">
+          <div class="field">
+            <label for="editUserPhone">Phone</label>
+            <input id="editUserPhone" />
+          </div>
 
-        <select id="userStatus">
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
+          <div class="field">
+            <label for="editUserRole">Role</label>
+            <select id="editUserRole">
+              <option value="super_admin">Super Admin</option>
+              <option value="admin">Admin</option>
+              <option value="manager">Manager</option>
+              <option value="operations_coordinator">Operations Coordinator</option>
+              <option value="sales_rep">Sales Rep</option>
+              <option value="technician">Technician</option>
+              <option value="hr">HR</option>
+              <option value="customer">Customer</option>
+            </select>
+          </div>
 
-        <input id="userPhone" placeholder="Phone">
-        <input id="userAddress" placeholder="Address">
-        <input id="userCity" placeholder="City">
+          <div class="field">
+            <label for="editUserStatus">Status</label>
+            <select id="editUserStatus">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
 
-        <select id="userState">
-          <option value="">State</option>
-          <option value="AL">Alabama</option>
-          <option value="AK">Alaska</option>
-          <option value="AZ">Arizona</option>
-          <option value="AR">Arkansas</option>
-          <option value="CA">California</option>
-          <option value="CO">Colorado</option>
-          <option value="CT">Connecticut</option>
-          <option value="DE">Delaware</option>
-          <option value="FL">Florida</option>
-          <option value="GA">Georgia</option>
-          <option value="HI">Hawaii</option>
-          <option value="ID">Idaho</option>
-          <option value="IL">Illinois</option>
-          <option value="IN">Indiana</option>
-          <option value="IA">Iowa</option>
-          <option value="KS">Kansas</option>
-          <option value="KY">Kentucky</option>
-          <option value="LA">Louisiana</option>
-          <option value="ME">Maine</option>
-          <option value="MD">Maryland</option>
-          <option value="MA">Massachusetts</option>
-          <option value="MI">Michigan</option>
-          <option value="MN">Minnesota</option>
-          <option value="MS">Mississippi</option>
-          <option value="MO">Missouri</option>
-          <option value="MT">Montana</option>
-          <option value="NE">Nebraska</option>
-          <option value="NV">Nevada</option>
-          <option value="NH">New Hampshire</option>
-          <option value="NJ">New Jersey</option>
-          <option value="NM">New Mexico</option>
-          <option value="NY">New York</option>
-          <option value="NC">North Carolina</option>
-          <option value="ND">North Dakota</option>
-          <option value="OH">Ohio</option>
-          <option value="OK">Oklahoma</option>
-          <option value="OR">Oregon</option>
-          <option value="PA">Pennsylvania</option>
-          <option value="RI">Rhode Island</option>
-          <option value="SC">South Carolina</option>
-          <option value="SD">South Dakota</option>
-          <option value="TN">Tennessee</option>
-          <option value="TX">Texas</option>
-          <option value="UT">Utah</option>
-          <option value="VT">Vermont</option>
-          <option value="VA">Virginia</option>
-          <option value="WA">Washington</option>
-          <option value="WV">West Virginia</option>
-          <option value="WI">Wisconsin</option>
-          <option value="WY">Wyoming</option>
-        </select>
+          <div class="field">
+            <label for="editUserApproval">Approval</label>
+            <select id="editUserApproval">
+              <option value="approved">Approved</option>
+              <option value="pending">Pending</option>
+              <option value="denied">Denied</option>
+            </select>
+          </div>
 
-        <input id="userZip" placeholder="Zip">
-      </div>
+          <div class="field full">
+            <label for="editUserReportsTo">Reports To</label>
+            <input id="editUserReportsTo" />
+          </div>
+        </div>
 
-      <p id="superAdminLockMsg" class="status-text" style="display:none;">
-        Super Admin is locked at the highest level. You can edit profile/contact fields, but role, approval, and status stay protected.
-      </p>
-
-      <div class="stack">
-        <button class="btn" id="saveUserBtn">Save User</button>
-      </div>
-
-      <p id="userMsg" class="status-text"></p>
+        <div class="top-actions" style="margin-top:18px;">
+          <button class="btn" type="submit">Save User</button>
+          <button class="btn secondary" id="userModalCancelBtn" type="button">Cancel</button>
+        </div>
+      </form>
     </div>
   </div>
 
