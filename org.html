@@ -2,26 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Org Chart | Evaraos</title>
-  <link rel="stylesheet" href="assets/styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Org Chart</title>
+  <link rel="stylesheet" href="assets/styles.css"/>
 </head>
 <body>
-  <header id="topbar"></header>
-  <div id="sidebar" style="display:none;"></div>
-  <main id="orgRoot"></main>
 
-  <div class="modal-backdrop" id="orgProfileModal">
-    <div class="modal-card">
-      <div class="section-title-row">
-        <h2 id="orgProfileTitle" style="margin:0;">Profile</h2>
-        <button class="btn secondary" id="orgProfileCloseBtn" type="button">Close</button>
-      </div>
+<div id="topbar"></div>
 
-      <div id="orgProfileBody" style="margin-top:16px;"></div>
-    </div>
+<div class="page-container">
+
+  <div class="card">
+    <h1>Organization Structure</h1>
+    <p class="muted">Company-grouped hierarchy with role lanes and interactive staff management.</p>
   </div>
 
-  <script type="module" src="assets/org.js"></script>
+  <div id="orgChartContainer"></div>
+
+</div>
+
+<script type="module" src="assets/org.js"></script>
 </body>
 </html>
