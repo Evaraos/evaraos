@@ -661,16 +661,14 @@ function injectTopbarStyles() {
     .app-topbar-shell{
       display:flex;
       flex-direction:column;
-      gap:16px;
-      padding:22px;
+      gap:18px;
+      padding:22px 22px 10px;
     }
     .app-topbar-inner{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      align-items:center;
       gap:16px;
-      width:100%;
-      flex-wrap:wrap;
     }
     .app-brand{
       display:flex;
@@ -681,8 +679,8 @@ function injectTopbarStyles() {
       min-width:0;
     }
     .app-brand img{
-      width:46px;
-      height:46px;
+      width:48px;
+      height:48px;
       border-radius:50%;
       object-fit:cover;
       flex-shrink:0;
@@ -706,9 +704,8 @@ function injectTopbarStyles() {
       display:flex;
       flex-direction:column;
       align-items:flex-end;
-      gap:2px;
+      gap:3px;
       min-width:0;
-      margin-left:auto;
     }
     .topbar-identity strong{
       font-size:14px;
@@ -722,19 +719,20 @@ function injectTopbarStyles() {
       text-align:right;
     }
     .app-nav{
-      display:flex;
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,auto));
+      justify-content:start;
       align-items:center;
       gap:12px;
-      flex-wrap:wrap;
-      width:100%;
     }
     .app-nav a,
-    .app-nav button{
+    .app-nav button,
+    .topbar-menu-btn{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      min-height:48px;
-      min-width:110px;
+      min-height:50px;
+      min-width:118px;
       padding:12px 18px;
       border-radius:999px;
       background:rgba(255,255,255,.04);
@@ -744,10 +742,13 @@ function injectTopbarStyles() {
       font:inherit;
       cursor:pointer;
       transition:.2s ease;
+      box-sizing:border-box;
     }
     .app-nav a:hover,
     .app-nav button:hover,
-    .app-nav a.active{
+    .app-nav a.active,
+    .topbar-menu-btn:hover,
+    .topbar-menu-btn.open{
       background:rgba(255,255,255,.10);
       transform:translateY(-1px);
     }
@@ -756,25 +757,7 @@ function injectTopbarStyles() {
       display:inline-flex;
     }
     .topbar-menu-btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:48px;
-      min-width:120px;
-      padding:12px 18px;
-      border-radius:999px;
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.08);
-      color:#fff;
-      font:inherit;
-      cursor:pointer;
-      transition:.2s ease;
       gap:8px;
-    }
-    .topbar-menu-btn:hover,
-    .topbar-menu-btn.open{
-      background:rgba(255,255,255,.10);
-      transform:translateY(-1px);
     }
     .topbar-menu-caret{
       transition:transform .22s ease;
@@ -786,7 +769,7 @@ function injectTopbarStyles() {
       position:absolute;
       top:calc(100% + 10px);
       right:0;
-      min-width:290px;
+      min-width:300px;
       max-width:360px;
       padding:12px;
       border-radius:22px;
@@ -833,20 +816,22 @@ function injectTopbarStyles() {
       color:#b2bbca;
       line-height:1.35;
     }
-    @media (max-width: 768px){
-      .app-topbar-shell{
-        padding:18px 18px 8px;
+    @media (max-width: 900px){
+      .app-topbar-inner{
+        grid-template-columns:1fr;
+        align-items:flex-start;
       }
       .topbar-identity{
-        order:3;
-        width:100%;
         align-items:flex-start;
-        margin-left:0;
       }
-      .topbar-menu-wrap{
+      .app-nav{
+        grid-template-columns:repeat(2,minmax(0,1fr));
         width:100%;
       }
-      .topbar-menu-btn{
+      .app-nav a,
+      .app-nav button,
+      .topbar-menu-btn,
+      .topbar-menu-wrap{
         width:100%;
       }
       .topbar-dropdown{
@@ -854,6 +839,11 @@ function injectTopbarStyles() {
         right:0;
         min-width:unset;
         max-width:unset;
+      }
+    }
+    @media (max-width: 560px){
+      .app-nav{
+        grid-template-columns:1fr 1fr;
       }
     }
   `;
