@@ -23,7 +23,8 @@ const auditState = {
   search: "",
   actionFilter: "all",
   autoRefreshHandle: null,
-  isRefreshing: false
+  isRefreshing: false,
+  pendingRollbackLogId: null
 };
 
 const ACTION_LABELS = {
@@ -177,15 +178,94 @@ function injectAuditStyles() {
       flex-wrap:wrap;
       margin-top:6px;
     }
+    .audit-chart-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:16px;
+    }
+    .audit-chart-card{
+      border-radius:18px;
+      padding:16px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.06);
+    }
+    .audit-chart-stack{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      margin-top:12px;
+    }
+    .audit-chart-row{
+      display:grid;
+      grid-template-columns:120px minmax(0,1fr) 54px;
+      gap:10px;
+      align-items:center;
+    }
+    .audit-chart-label{
+      font-size:12px;
+      color:#fff;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .audit-chart-track{
+      width:100%;
+      height:12px;
+      background:rgba(255,255,255,.08);
+      border-radius:999px;
+      overflow:hidden;
+    }
+    .audit-chart-bar{
+      height:100%;
+      border-radius:999px;
+      background:linear-gradient(90deg, rgba(227,6,19,.92), rgba(255,106,61,.92));
+    }
+    .audit-chart-value{
+      text-align:right;
+      font-size:12px;
+      color:#aeb8c8;
+    }
+    .print-sheet{
+      font-family:Arial,Helvetica,sans-serif;
+      color:#000;
+      padding:24px;
+    }
+    .print-sheet h1,
+    .print-sheet h2{
+      margin:0 0 12px 0;
+    }
+    .print-sheet .meta{
+      color:#444;
+      font-size:12px;
+      margin-bottom:18px;
+    }
+    .print-sheet table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:12px;
+    }
+    .print-sheet th,
+    .print-sheet td{
+      border:1px solid #ccc;
+      padding:8px;
+      text-align:left;
+      font-size:12px;
+      vertical-align:top;
+    }
     @media (max-width: 980px){
-      .audit-analytics-grid{
+      .audit-analytics-grid,
+      .audit-chart-grid{
         grid-template-columns:repeat(2,minmax(0,1fr));
       }
     }
     @media (max-width: 760px){
       .audit-grid,
-      .audit-analytics-grid{
+      .audit-analytics-grid,
+      .audit-chart-grid{
         grid-template-columns:1fr;
+      }
+      .audit-chart-row{
+        grid-template-columns:90px minmax(0,1fr) 42px;
       }
     }
   `;
@@ -445,6 +525,59 @@ function renderAnalytics() {
   `;
 }
 
+function groupCounts(logs, bucketFn) {
+  const map = new Map();
+  logs.forEach((log) => {
+    const key = bucketFn(log);
+    if (!key) return;
+    map.set(key, (map.get(key) || 0) + 1);
+  });
+  return [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
+}
+
+function renderChartCard(title, items) {
+  const max = Math.max(...items.map(([, count]) => count), 0);
+
+  return `
+    <div class="audit-chart-card">
+      <h3 style="margin:0;">${title}</h3>
+      ${
+        items.length
+          ? `<div class="audit-chart-stack">
+              ${items.map(([label, count]) => {
+                const width = max ? (count / max) * 100 : 0;
+                return `
+                  <div class="audit-chart-row">
+                    <div class="audit-chart-label">${label}</div>
+                    <div class="audit-chart-track">
+                      <div class="audit-chart-bar" style="width:${width}%;"></div>
+                    </div>
+                    <div class="audit-chart-value">${count}</div>
+                  </div>
+                `;
+              }).join("")}
+            </div>`
+          : `<div class="audit-empty" style="margin-top:12px;">No chart data.</div>`
+      }
+    </div>
+  `;
+}
+
+function renderCharts() {
+  const logs = getFilteredLogs();
+  const actorCounts = groupCounts(logs, (log) => log.actorName || log.actorUserId || "");
+  const actionCounts = groupCounts(logs, (log) => labelForAction(log.action));
+  const targetCounts = groupCounts(logs, (log) => log.targetUserName || log.targetUserId || "");
+
+  document.getElementById("auditChartsRoot").innerHTML = `
+    <div class="audit-chart-grid">
+      ${renderChartCard("Changes by Actor", actorCounts)}
+      ${renderChartCard("Changes by Action", actionCounts)}
+      ${renderChartCard("Most Changed Users", targetCounts)}
+    </div>
+  `;
+}
+
 function renderSuspiciousActivity() {
   const logs = auditState.logs;
   const warnings = [];
@@ -517,6 +650,7 @@ function renderLogs() {
 
   wireRollbackButtons();
   renderAnalytics();
+  renderCharts();
   renderSuspiciousActivity();
 }
 
@@ -570,7 +704,85 @@ function exportCsv() {
   URL.revokeObjectURL(url);
 }
 
-async function rollbackLogChange(logId) {
+function exportPdf() {
+  const rows = getFilteredLogs();
+  const html = `
+    <html>
+      <head>
+        <title>Audit Logs PDF</title>
+        <style>
+          body{font-family:Arial,Helvetica,sans-serif;color:#000;padding:24px;}
+          h1,h2{margin:0 0 12px 0;}
+          .meta{color:#444;font-size:12px;margin-bottom:18px;}
+          table{width:100%;border-collapse:collapse;margin-top:12px;}
+          th,td{border:1px solid #ccc;padding:8px;text-align:left;font-size:12px;vertical-align:top;}
+          th{background:#f2f2f2;}
+        </style>
+      </head>
+      <body>
+        <h1>Audit Logs</h1>
+        <div class="meta">
+          Generated: ${new Date().toLocaleString()}<br>
+          Visible Logs: ${rows.length}
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Action</th>
+              <th>Actor</th>
+              <th>Target</th>
+              <th>Role</th>
+              <th>Company</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((log) => `
+              <tr>
+                <td>${formatTimestamp(log.createdAt)}</td>
+                <td>${labelForAction(log.action)}</td>
+                <td>${log.actorName || ""}<br>${log.actorRole || ""}</td>
+                <td>${log.targetUserName || ""}</td>
+                <td>${log.oldRole || "—"} → ${log.newRole || "—"}</td>
+                <td>${log.oldCompanyId || "—"} → ${log.newCompanyId || "—"}</td>
+                <td>${log.notes || ""}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </body>
+    </html>
+  `;
+
+  const printWindow = window.open("", "_blank", "width=1100,height=900");
+  if (!printWindow) {
+    showToast("Popup blocked. Allow popups for PDF export.", "error");
+    return;
+  }
+
+  printWindow.document.open();
+  printWindow.document.write(html);
+  printWindow.document.close();
+  printWindow.focus();
+
+  setTimeout(() => {
+    printWindow.print();
+  }, 250);
+}
+
+function openRollbackReasonModal(logId) {
+  auditState.pendingRollbackLogId = logId;
+  document.getElementById("rollbackReasonInput").value = "";
+  document.getElementById("rollbackReasonModal").classList.add("open");
+}
+
+function closeRollbackReasonModal() {
+  auditState.pendingRollbackLogId = null;
+  document.getElementById("rollbackReasonModal").classList.remove("open");
+}
+
+async function rollbackLogChange(logId, reason) {
   const log = auditState.logs.find((item) => item.id === logId);
   if (!log) {
     showToast("Audit log not found.", "error");
@@ -581,11 +793,6 @@ async function rollbackLogChange(logId) {
     showToast("This change cannot be rolled back.", "error");
     return;
   }
-
-  const confirmed = window.confirm(
-    `Undo ${labelForAction(log.action)} for ${log.targetUserName || "this user"}?`
-  );
-  if (!confirmed) return;
 
   const targetRef = doc(db, "users", log.targetUserId);
   const targetSnap = await getDoc(targetRef);
@@ -641,7 +848,7 @@ async function rollbackLogChange(logId) {
     newRole: log.oldRole || null,
     oldCompanyId: log.newCompanyId || null,
     newCompanyId: log.oldCompanyId || null,
-    notes: `Rollback of audit log ${log.id}`,
+    notes: `Rollback of audit log ${log.id}. Reason: ${reason || "No reason provided."}`,
     createdAt: serverTimestamp()
   });
 
@@ -651,15 +858,8 @@ async function rollbackLogChange(logId) {
 
 function wireRollbackButtons() {
   document.querySelectorAll(".rollback-btn").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      btn.disabled = true;
-      try {
-        await rollbackLogChange(btn.dataset.logId);
-      } catch (e) {
-        showToast(e.message || "Rollback failed.", "error");
-      } finally {
-        btn.disabled = false;
-      }
+    btn.addEventListener("click", () => {
+      openRollbackReasonModal(btn.dataset.logId);
     });
   });
 }
@@ -696,6 +896,27 @@ function wireEvents() {
   document.getElementById("exportCsvBtn")?.addEventListener("click", () => {
     exportCsv();
     showToast("CSV exported.");
+  });
+
+  document.getElementById("exportPdfBtn")?.addEventListener("click", () => {
+    exportPdf();
+    showToast("PDF print window opened.");
+  });
+
+  document.getElementById("closeRollbackModalBtn")?.addEventListener("click", closeRollbackReasonModal);
+  document.getElementById("cancelRollbackBtn")?.addEventListener("click", closeRollbackReasonModal);
+
+  document.getElementById("confirmRollbackBtn")?.addEventListener("click", async () => {
+    const reason = document.getElementById("rollbackReasonInput").value.trim();
+    const logId = auditState.pendingRollbackLogId;
+    if (!logId) return;
+
+    try {
+      await rollbackLogChange(logId, reason);
+      closeRollbackReasonModal();
+    } catch (e) {
+      showToast(e.message || "Rollback failed.", "error");
+    }
   });
 }
 
