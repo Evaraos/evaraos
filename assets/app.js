@@ -785,6 +785,8 @@ function injectTopbarStyles() {
       transform:translateY(-8px) scale(.98);
       transition:opacity .22s ease, transform .22s ease;
       z-index:9990;
+      max-height:70vh;
+      overflow:auto;
     }
     .topbar-dropdown.open{
       opacity:1;
@@ -858,12 +860,19 @@ function getGlobalNavItems(role) {
     { key: "sales_reps", label: "Sales Reps", href: "sales_reps.html", desc: "Rep creation and management" },
     { key: "companies", label: "Companies", href: "companies.html", desc: "Company records and brand settings" },
     { key: "jobs", label: "Jobs", href: "jobs.html", desc: "Scheduling and operations" },
+    { key: "users", label: "Org Chart", href: "org.html", desc: "Interactive hierarchy and reporting lines" },
+    { key: "users", label: "Performance", href: "performance.html", desc: "User performance and productivity metrics" },
     { key: "customers", label: "Customers", href: "#", desc: "Customer tools and accounts" },
     { key: "settings", label: "Settings", href: "#", desc: "Application preferences" }
   ];
 
   if (role === "super_admin") {
-    items.push({ key: "audit", label: "Audit", href: "audit.html", desc: "Repair and integrity tools" });
+    items.push({
+      key: "audit",
+      label: "Audit",
+      href: "audit.html",
+      desc: "Repair and integrity tools"
+    });
   }
 
   return items.filter((item) => item.key === "overview" || canAccess(role, item.key));
@@ -1120,27 +1129,31 @@ export async function createCompany(payload, currentUser) {
   const companyId = sanitizeCompanyId(payload.companyId || payload.slug || payload.name || "");
   if (!companyId) throw new Error("Company ID is required.");
 
-  await setDoc(doc(db, "companies", companyId), {
-    name: payload.name || "",
-    slug: payload.slug || companyIdToSlug(companyId),
-    city: payload.city || "",
-    state: payload.state || "",
-    phone: payload.phone || "",
-    email: payload.email || "",
-    status: payload.status || "active",
-    notes: payload.notes || "",
-    ownerCompany: "Evaraos Inc",
-    ownerName: payload.ownerName || currentUser.name || "",
-    ownerEmail: payload.ownerEmail || currentUser.email || "",
-    ownerUserId: currentUser.id || currentUser.uid || "",
-    parentCompany: "Evaraos Inc",
-    brandColor: payload.brandColor || "#E30613",
-    logoUrl: "",
-    serviceCategories: [],
-    active: true,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
-  }, { merge: true });
+  await setDoc(
+    doc(db, "companies", companyId),
+    {
+      name: payload.name || "",
+      slug: payload.slug || companyIdToSlug(companyId),
+      city: payload.city || "",
+      state: payload.state || "",
+      phone: payload.phone || "",
+      email: payload.email || "",
+      status: payload.status || "active",
+      notes: payload.notes || "",
+      ownerCompany: "Evaraos Inc",
+      ownerName: payload.ownerName || currentUser.name || "",
+      ownerEmail: payload.ownerEmail || currentUser.email || "",
+      ownerUserId: currentUser.id || currentUser.uid || "",
+      parentCompany: "Evaraos Inc",
+      brandColor: payload.brandColor || "#E30613",
+      logoUrl: "",
+      serviceCategories: [],
+      active: true,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    },
+    { merge: true }
+  );
 
   return companyId;
 }
