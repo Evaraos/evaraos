@@ -8,57 +8,51 @@ import {
   normalizeLeadDoc,
   normalizeJobDoc,
   normalizeServiceDoc,
-  fetchAllCollection
+  fetchAllCollection,
+  sanitizeCompanyId
 } from "./app.js";
+
+import {
+  doc,
+  getDoc,
+  setDoc,
+  deleteDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import { db } from "./firebase.js";
+
+const CANONICAL_COMPANY_ID = "supreme_trueclean";
 
 function renderSection(title, items, type, repairable = false) {
   if (!items.length) {
     return `
       <div class="audit-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
-          <h2 style="margin-top:0;">${title}</h2>
-          ${repairable ? `<button class="btn secondary repair-section-btn" data-type="${type}">Repair ${title}</button>` : ``}
+        <div style="display:flex;justify-content:space-between;">
+          <h2>${title}</h2>
+          ${repairable ? `<button class="btn repair-section-btn" data-type="${type}">Repair ${title}</button>` : ``}
         </div>
-        <div class="audit-empty">No discrepancies found.</div>
+        <p>No discrepancies found.</p>
       </div>
     `;
   }
 
   return `
     <div class="audit-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
-        <h2 style="margin-top:0;">${title}</h2>
-        ${repairable ? `<button class="btn secondary repair-section-btn" data-type="${type}">Repair ${title}</button>` : ``}
+      <div style="display:flex;justify-content:space-between;">
+        <h2>${title}</h2>
+        ${repairable ? `<button class="btn repair-section-btn" data-type="${type}">Repair ${title}</button>` : ``}
       </div>
 
-      ${items.map((item) => `
+      ${items.map(item => `
         <div class="audit-row">
           <strong>${item.name || item.id}</strong><br>
-          ${item.role ? `<span class="muted">${item.role}</span><br>` : ""}
 
-          ${
-            item.missingFields?.length
-              ? `<div style="margin-top:10px;"><strong>Missing Fields:</strong><br>${item.missingFields.map((field) => `<span class="audit-badge">${field}</span>`).join("")}</div>`
-              : ``
-          }
+          ${item.issues?.map(i => `<span class="badge">${i}</span>`).join("") || ""}
 
-          ${
-            item.mismatchFields?.length
-              ? `<div style="margin-top:10px;"><strong>Mismatches:</strong><br>${item.mismatchFields.map((field) => `<span class="audit-badge">${field}</span>`).join("")}</div>`
-              : ``
-          }
-
-          ${
-            item.issues?.length
-              ? `<div style="margin-top:10px;"><strong>Issues:</strong><br>${item.issues.map((field) => `<span class="audit-badge">${field}</span>`).join("")}</div>`
-              : ``
-          }
-
-          ${
-            repairable
-              ? `<div class="audit-actions"><button class="btn repair-item-btn" data-type="${type}" data-id="${item.id}">Repair</button></div>`
-              : ``
-          }
+          <div style="margin-top:10px;">
+            ${repairable ? `<button class="btn repair-item-btn" data-type="${type}" data-id="${item.id}">Repair</button>` : ""}
+          </div>
         </div>
       `).join("")}
     </div>
@@ -67,15 +61,14 @@ function renderSection(title, items, type, repairable = false) {
 
 function renderFullRepairCard() {
   return `
-    <section class="glass-card" id="fullRepairCard">
-      <div class="action-row" style="justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;">
-        <div>
-          <h2 style="margin:0;">Full System Repair</h2>
-          <p class="muted" style="margin:8px 0 0;">Repairs users, username directory, companies, leads, jobs, and services.</p>
-        </div>
-        <button class="btn" id="repairEverythingBtn">Repair All System Data</button>
-      </div>
-    </section>
+    <div class="audit-card">
+      <h2>Full System Repair</h2>
+      <p>Repairs everything including users, usernames, companies, leads, jobs.</p>
+
+      <button id="repairEverythingBtn" class="btn">Repair All System Data</button>
+      <button id="repairUsernameDirectoryBtn" class="btn secondary">Repair Username Directory</button>
+      <button id="canonicalizeCompaniesBtn" class="btn secondary">Canonicalize Companies</button>
+    </div>
   `;
 }
 
@@ -87,147 +80,174 @@ async function repairItem(type, id) {
   if (type === "services") return normalizeServiceDoc(id);
 }
 
-async function repairSection(type) {
-  const data = await scanSystemDiscrepancies();
-  const section = data[type] || [];
-  for (const item of section) {
-    await repairItem(type, item.id);
-  }
-}
+/* =========================
+   🔥 USERNAME DIRECTORY FIX
+========================= */
 
 async function repairUsernameDirectory() {
   const users = await fetchAllCollection("users");
+  const usernames = await fetchAllCollection("usernames");
+
+  const validUsernames = new Set();
+
   for (const user of users) {
-    if (user.username) {
-      await normalizeUserDoc(user.id);
+    if (!user.username) continue;
+
+    const clean = user.username.toLowerCase();
+    validUsernames.add(clean);
+
+    await setDoc(doc(db, "usernames", clean), {
+      uid: user.id,
+      username: clean,
+      handle: `@${clean}`,
+      companyId: sanitizeCompanyId(user.companyId || ""),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+  }
+
+  // delete stale usernames
+  for (const entry of usernames) {
+    if (!validUsernames.has(entry.id)) {
+      await deleteDoc(doc(db, "usernames", entry.id));
     }
   }
 }
 
-async function wireAuditButtons() {
-  document.querySelectorAll(".repair-item-btn").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      btn.disabled = true;
-      btn.textContent = "Repairing...";
-      try {
-        await repairItem(btn.dataset.type, btn.dataset.id);
-        await loadAudit();
-      } catch (e) {
-        btn.disabled = false;
-        btn.textContent = "Repair";
-        alert(e.message || "Failed to repair item.");
-      }
-    });
-  });
+/* =========================
+   🔥 COMPANY CANONICAL FIX
+========================= */
 
-  document.querySelectorAll(".repair-section-btn").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      btn.disabled = true;
-      btn.textContent = "Repairing...";
-      try {
-        await repairSection(btn.dataset.type);
-        await loadAudit();
-      } catch (e) {
-        btn.disabled = false;
-        btn.textContent = `Repair ${btn.dataset.type}`;
-        alert(e.message || "Failed to repair section.");
-      }
-    });
-  });
+async function canonicalizeCompanies() {
+  const companies = await fetchAllCollection("companies");
 
-  const repairEverythingBtn = document.getElementById("repairEverythingBtn");
-  if (repairEverythingBtn) {
-    repairEverythingBtn.addEventListener("click", async () => {
-      repairEverythingBtn.disabled = true;
-      repairEverythingBtn.textContent = "Repairing Everything...";
-      try {
-        await repairSection("users");
-        await repairUsernameDirectory();
-        await repairSection("companies");
-        await repairSection("leads");
-        await repairSection("jobs");
-        await repairSection("services");
-        repairEverythingBtn.textContent = "Repair All System Data";
-        repairEverythingBtn.disabled = false;
-        await loadAudit();
-      } catch (e) {
-        repairEverythingBtn.textContent = "Repair All System Data";
-        repairEverythingBtn.disabled = false;
-        alert(e.message || "Failed to repair all system data.");
-      }
+  const canonicalRef = doc(db, "companies", CANONICAL_COMPANY_ID);
+
+  let canonicalData = null;
+
+  // find best existing company
+  for (const c of companies) {
+    if (
+      c.id === CANONICAL_COMPANY_ID ||
+      c.slug === "supreme-trueclean" ||
+      c.name?.toLowerCase().includes("supreme")
+    ) {
+      canonicalData = c;
+      break;
+    }
+  }
+
+  if (!canonicalData) {
+    // create default
+    await setDoc(canonicalRef, {
+      name: "Supreme TrueClean",
+      slug: "supreme-trueclean",
+      ownerName: "Gilbert Ramos",
+      ownerEmail: "gilbert37ramos@gmail.com",
+      brandColor: "#E30613",
+      active: true,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
     });
+  } else {
+    await setDoc(canonicalRef, {
+      ...canonicalData,
+      id: undefined,
+      updatedAt: serverTimestamp(),
+      active: true,
+      brandColor: canonicalData.brandColor || "#E30613"
+    }, { merge: true });
+  }
+
+  // delete legacy duplicates
+  for (const c of companies) {
+    if (c.id !== CANONICAL_COMPANY_ID) {
+      await deleteDoc(doc(db, "companies", c.id));
+    }
   }
 }
+
+/* =========================
+   🔥 FULL SYSTEM REPAIR
+========================= */
+
+async function repairAll() {
+  const data = await scanSystemDiscrepancies();
+
+  for (const u of data.users) await normalizeUserDoc(u.id);
+  for (const l of data.leads) await normalizeLeadDoc(l.id);
+  for (const j of data.jobs) await normalizeJobDoc(j.id);
+  for (const s of data.services) await normalizeServiceDoc(s.id);
+
+  await repairUsernameDirectory();
+  await canonicalizeCompanies();
+}
+
+/* =========================
+   🔥 UI BINDINGS
+========================= */
+
+async function wireButtons() {
+  document.getElementById("repairEverythingBtn")?.addEventListener("click", async () => {
+    await repairAll();
+    await loadAudit();
+  });
+
+  document.getElementById("repairUsernameDirectoryBtn")?.addEventListener("click", async () => {
+    await repairUsernameDirectory();
+    await loadAudit();
+  });
+
+  document.getElementById("canonicalizeCompaniesBtn")?.addEventListener("click", async () => {
+    await canonicalizeCompanies();
+    await loadAudit();
+  });
+
+  document.querySelectorAll(".repair-item-btn").forEach(btn => {
+    btn.onclick = async () => {
+      await repairItem(btn.dataset.type, btn.dataset.id);
+      await loadAudit();
+    };
+  });
+}
+
+/* =========================
+   🔥 LOAD AUDIT
+========================= */
 
 async function loadAudit() {
   const root = document.getElementById("auditRoot");
-  root.innerHTML = `
-    ${renderFullRepairCard()}
-    <div class="glass-card">Scanning...</div>
-  `;
 
-  try {
-    const data = await scanSystemDiscrepancies();
+  root.innerHTML = renderFullRepairCard() + `<div>Loading...</div>`;
 
-    root.innerHTML = [
-      renderFullRepairCard(),
-      renderSection("Users", data.users, "users", true),
-      renderSection("Username Directory", data.usernames, "usernames", false),
-      renderSection("Companies", data.companies, "companies", true),
-      renderSection("Leads", data.leads, "leads", true),
-      renderSection("Jobs", data.jobs, "jobs", true),
-      renderSection("Services", data.services, "services", true)
-    ].join("");
+  const data = await scanSystemDiscrepancies();
 
-    await wireAuditButtons();
-  } catch (e) {
-    root.innerHTML = `
-      ${renderFullRepairCard()}
-      <div class="glass-card">Audit failed: ${e.message || e}</div>
-    `;
-    await wireAuditButtons();
-  }
+  root.innerHTML = [
+    renderFullRepairCard(),
+    renderSection("Users", data.users, "users", true),
+    renderSection("Username Directory", data.usernames, "usernames", false),
+    renderSection("Companies", data.companies, "companies", true),
+    renderSection("Leads", data.leads, "leads", true),
+    renderSection("Jobs", data.jobs, "jobs", true),
+    renderSection("Services", data.services, "services", true)
+  ].join("");
+
+  await wireButtons();
 }
+
+/* =========================
+   🔥 INIT
+========================= */
 
 requireAuth(async (user) => {
   if (user.role !== "super_admin") {
-    document.body.innerHTML = `
-      <div class="auth-shell">
-        <div class="auth-card">
-          <h2>Access denied</h2>
-          <p class="muted">Only super admins can access the audit page.</p>
-        </div>
-      </div>
-    `;
+    document.body.innerHTML = "Access denied";
     return;
   }
 
   await bindTopbar(user);
   document.getElementById("sidebar").innerHTML = renderSidebar(user.role, "audit");
 
-  const runAuditBtn = document.getElementById("runAuditBtn");
-  if (runAuditBtn) {
-    runAuditBtn.addEventListener("click", loadAudit);
-  }
-
-  const repairAllUsersBtn = document.getElementById("repairAllUsersBtn");
-  if (repairAllUsersBtn) {
-    repairAllUsersBtn.addEventListener("click", async () => {
-      repairAllUsersBtn.disabled = true;
-      repairAllUsersBtn.textContent = "Repairing...";
-      try {
-        await repairSection("users");
-        await repairUsernameDirectory();
-        repairAllUsersBtn.textContent = "Repair All Users";
-        repairAllUsersBtn.disabled = false;
-        await loadAudit();
-      } catch (e) {
-        repairAllUsersBtn.textContent = "Repair All Users";
-        repairAllUsersBtn.disabled = false;
-        alert(e.message || "Failed to repair users.");
-      }
-    });
-  }
+  document.getElementById("runAuditBtn")?.addEventListener("click", loadAudit);
 
   await loadAudit();
 });
