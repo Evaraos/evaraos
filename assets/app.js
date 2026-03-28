@@ -144,6 +144,10 @@ export function sanitizeCompanyId(value = "") {
   return String(value).trim().toLowerCase().replace(/-/g, "_").replace(/\s+/g, "_");
 }
 
+export function companyIdToSlug(value = "") {
+  return sanitizeCompanyId(value).replace(/_/g, "-");
+}
+
 export function buildNormalizedUsernameFields(username = "") {
   const clean = String(username).trim().replace(/^@+/, "").toLowerCase();
   return {
@@ -228,8 +232,10 @@ export async function normalizeUserDoc(userId) {
 }
 
 export function buildNormalizedCompanyPayload(existing = {}, companyId = "") {
-  const normalizedId = sanitizeCompanyId(companyId || existing.id || existing.companyId || existing.slug || existing.name || "");
-  const slug = String(existing.slug || normalizedId).trim().toLowerCase().replace(/_/g, "-");
+  const normalizedId = sanitizeCompanyId(
+    companyId || existing.id || existing.companyId || existing.slug || existing.name || ""
+  );
+  const slug = String(existing.slug || companyIdToSlug(normalizedId)).trim().toLowerCase().replace(/_/g, "-");
 
   return {
     name: existing.name || "",
@@ -252,17 +258,71 @@ export function buildNormalizedCompanyPayload(existing = {}, companyId = "") {
   };
 }
 
-export async function normalizeCompanyDoc(companyId) {
-  const normalizedId = sanitizeCompanyId(companyId);
-  const companyRef = doc(db, "companies", normalizedId);
-  const snap = await getDoc(companyRef);
-  if (!snap.exists()) throw new Error("Company not found.");
+/*
+  AUTO-HEAL COMPANY LOOKUP:
+  Finds canonical company doc first, then falls back to legacy IDs/slugs/names.
+*/
+export async function findCompanyDocFlexible(companyId) {
+  const canonicalId = sanitizeCompanyId(companyId);
+  if (!canonicalId) return null;
 
-  const existing = snap.data();
-  const normalized = buildNormalizedCompanyPayload(existing, normalizedId);
+  const directRef = doc(db, "companies", canonicalId);
+  const directSnap = await getDoc(directRef);
+  if (directSnap.exists()) {
+    return { id: directSnap.id, ref: directRef, data: directSnap.data(), matchedBy: "canonical_id" };
+  }
+
+  const legacyDashId = canonicalId.replace(/_/g, "-");
+  if (legacyDashId && legacyDashId !== canonicalId) {
+    const legacyRef = doc(db, "companies", legacyDashId);
+    const legacySnap = await getDoc(legacyRef);
+    if (legacySnap.exists()) {
+      return { id: legacySnap.id, ref: legacyRef, data: legacySnap.data(), matchedBy: "legacy_dash_id" };
+    }
+  }
+
+  const allCompanies = await getDocs(collection(db, "companies"));
+  const candidates = allCompanies.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+  const bySlug = candidates.find((c) => sanitizeCompanyId(c.slug || "") === canonicalId);
+  if (bySlug) {
+    return {
+      id: bySlug.id,
+      ref: doc(db, "companies", bySlug.id),
+      data: bySlug,
+      matchedBy: "slug"
+    };
+  }
+
+  const byName = candidates.find((c) => sanitizeCompanyId(c.name || "") === canonicalId);
+  if (byName) {
+    return {
+      id: byName.id,
+      ref: doc(db, "companies", byName.id),
+      data: byName,
+      matchedBy: "name"
+    };
+  }
+
+  return null;
+}
+
+/*
+  AUTO-MIGRATES legacy company docs into canonical companies/{underscore_id}
+*/
+export async function normalizeCompanyDoc(companyId) {
+  const canonicalId = sanitizeCompanyId(companyId);
+  const found = await findCompanyDocFlexible(companyId);
+
+  if (!found) {
+    throw new Error("Company not found.");
+  }
+
+  const normalized = buildNormalizedCompanyPayload(found.data, canonicalId);
+  const canonicalRef = doc(db, "companies", canonicalId);
 
   await setDoc(
-    companyRef,
+    canonicalRef,
     {
       ...normalized,
       updatedAt: serverTimestamp()
@@ -270,7 +330,12 @@ export async function normalizeCompanyDoc(companyId) {
     { merge: true }
   );
 
-  return normalized;
+  return {
+    canonicalId,
+    previousId: found.id,
+    matchedBy: found.matchedBy,
+    normalized
+  };
 }
 
 export function buildNormalizedLeadPayload(existing = {}) {
@@ -426,8 +491,25 @@ export async function loadBrandSettings() {
 export async function loadCompany(companyId) {
   try {
     if (!companyId) return null;
-    const snap = await getDoc(doc(db, "companies", sanitizeCompanyId(companyId)));
-    return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+
+    const found = await findCompanyDocFlexible(companyId);
+    if (!found) return null;
+
+    if (found.id !== sanitizeCompanyId(companyId)) {
+      try {
+        await normalizeCompanyDoc(companyId);
+      } catch (e) {
+        console.warn("Company auto-heal skipped", e);
+      }
+    }
+
+    const canonicalRef = doc(db, "companies", sanitizeCompanyId(companyId));
+    const canonicalSnap = await getDoc(canonicalRef);
+    if (canonicalSnap.exists()) {
+      return { id: canonicalSnap.id, ...canonicalSnap.data() };
+    }
+
+    return { id: found.id, ...found.data };
   } catch {
     return null;
   }
