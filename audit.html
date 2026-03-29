@@ -2,110 +2,436 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Audit | Evaraos</title>
-  <link rel="stylesheet" href="assets/styles.css" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+  <title>Evaraos Audit Command Center</title>
+  <link rel="stylesheet" href="./audit.css" />
 </head>
-<body>
-  <header id="topbar"></header>
-  <div id="sidebar" style="display:none;"></div>
+<body data-theme="system">
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand-block">
+        <div class="brand-mark">E</div>
+        <div class="brand-copy">
+          <h1>Evaraos</h1>
+          <p>Audit Command Center</p>
+        </div>
+      </div>
 
-  <main class="page-container">
-    <section class="glass-card">
-      <div class="section-title-row">
+      <div class="company-panel glass">
+        <label class="field-label" for="companySwitcher">Active Company</label>
+        <select id="companySwitcher" class="select">
+          <option value="all">All Companies</option>
+          <option value="evaraos">Evaraos</option>
+          <option value="supreme-true-clean">Supreme True Clean</option>
+        </select>
+      </div>
+
+      <nav class="side-nav glass">
+        <button class="nav-link active" data-tab="overviewTab">Overview</button>
+        <button class="nav-link" data-tab="securityTab">Security Alerts</button>
+        <button class="nav-link" data-tab="auditTab">Audit Logs</button>
+        <button class="nav-link" data-tab="autofixTab">Auto Fix Queue</button>
+        <button class="nav-link" data-tab="notificationsTab">Notifications</button>
+        <button class="nav-link" data-tab="settingsTab">Settings</button>
+      </nav>
+
+      <div class="sidebar-footer glass">
+        <div class="mini-stat">
+          <span class="mini-label">Mode</span>
+          <strong id="activeThemeLabel">System</strong>
+        </div>
+        <div class="mini-stat">
+          <span class="mini-label">Access</span>
+          <strong id="accessRoleLabel">Owner / Admin</strong>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar glass">
+        <div class="topbar-left">
+          <button class="icon-btn mobile-only" id="sidebarToggle" aria-label="Toggle sidebar">☰</button>
+          <div>
+            <h2 id="pageTitle">Audit Command Center</h2>
+            <p id="pageSubtitle">Enterprise monitoring, remediation, and alert intelligence.</p>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <div class="notification-chip" id="notificationChip">
+            <span class="dot dot-live"></span>
+            <span id="liveStatusText">Live</span>
+          </div>
+          <button class="icon-btn" id="refreshBtn" aria-label="Refresh">↻</button>
+          <button class="icon-btn" id="openNotificationsBtn" aria-label="Open notifications">🔔</button>
+        </div>
+      </header>
+
+      <section class="toolbar glass">
+        <div class="toolbar-row">
+          <div class="toolbar-group search-group">
+            <label class="sr-only" for="searchInput">Search alerts or logs</label>
+            <input
+              id="searchInput"
+              class="input"
+              type="text"
+              placeholder="Search title, actor, target, company, source..."
+            />
+          </div>
+
+          <div class="toolbar-group">
+            <select id="filterSource" class="select">
+              <option value="all">All Sources</option>
+              <option value="internal">Internal</option>
+              <option value="github">GitHub</option>
+              <option value="google_cloud">Google Cloud</option>
+              <option value="firebase">Firebase</option>
+              <option value="stripe">Stripe</option>
+            </select>
+
+            <select id="filterSeverity" class="select">
+              <option value="all">All Severities</option>
+              <option value="LOW">LOW</option>
+              <option value="MEDIUM">MEDIUM</option>
+              <option value="HIGH">HIGH</option>
+              <option value="CRITICAL">CRITICAL</option>
+            </select>
+
+            <select id="filterStatus" class="select">
+              <option value="all">All Statuses</option>
+              <option value="OPEN">OPEN</option>
+              <option value="REVIEWING">REVIEWING</option>
+              <option value="RESOLVED">RESOLVED</option>
+              <option value="ESCALATED">ESCALATED</option>
+              <option value="IGNORED">IGNORED</option>
+            </select>
+          </div>
+
+          <div class="toolbar-group">
+            <button class="btn btn-secondary" id="exportCsvBtn">Export CSV</button>
+            <button class="btn btn-primary" id="createTestAlertBtn">Create Test Alert</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-stack">
+        <div id="overviewTab" class="tab-panel active">
+          <section class="cards-grid">
+            <article class="metric-card glass">
+              <div class="metric-label">Open Alerts</div>
+              <div class="metric-value" id="metricOpenAlerts">0</div>
+              <div class="metric-foot">Current unresolved alerts</div>
+            </article>
+
+            <article class="metric-card glass">
+              <div class="metric-label">Critical Alerts</div>
+              <div class="metric-value critical" id="metricCriticalAlerts">0</div>
+              <div class="metric-foot">Needs immediate attention</div>
+            </article>
+
+            <article class="metric-card glass">
+              <div class="metric-label">Auto Fix Available</div>
+              <div class="metric-value" id="metricAutoFix">0</div>
+              <div class="metric-foot">Ready for one-tap remediation</div>
+            </article>
+
+            <article class="metric-card glass">
+              <div class="metric-label">Resolved Today</div>
+              <div class="metric-value success" id="metricResolvedToday">0</div>
+              <div class="metric-foot">Closed in the last 24 hours</div>
+            </article>
+
+            <article class="metric-card glass">
+              <div class="metric-label">Escalated</div>
+              <div class="metric-value warning" id="metricEscalated">0</div>
+              <div class="metric-foot">Sent for higher review</div>
+            </article>
+
+            <article class="metric-card glass">
+              <div class="metric-label">Unread Notifications</div>
+              <div class="metric-value" id="metricUnreadNotifications">0</div>
+              <div class="metric-foot">In-app notification center</div>
+            </article>
+          </section>
+
+          <section class="overview-grid">
+            <article class="panel glass">
+              <div class="panel-head">
+                <h3>Recent Security Alerts</h3>
+                <button class="text-btn" data-switch-tab="securityTab">View all</button>
+              </div>
+              <div id="recentSecurityList" class="stack-list"></div>
+            </article>
+
+            <article class="panel glass">
+              <div class="panel-head">
+                <h3>Recent Audit Activity</h3>
+                <button class="text-btn" data-switch-tab="auditTab">View all</button>
+              </div>
+              <div id="recentAuditList" class="stack-list"></div>
+            </article>
+
+            <article class="panel glass">
+              <div class="panel-head">
+                <h3>Auto Fix Queue</h3>
+                <button class="text-btn" data-switch-tab="autofixTab">Open queue</button>
+              </div>
+              <div id="autoFixQueueList" class="stack-list"></div>
+            </article>
+
+            <article class="panel glass">
+              <div class="panel-head">
+                <h3>Notification Feed</h3>
+                <button class="text-btn" data-switch-tab="notificationsTab">Open notifications</button>
+              </div>
+              <div id="notificationFeedList" class="stack-list"></div>
+            </article>
+          </section>
+        </div>
+
+        <div id="securityTab" class="tab-panel">
+          <section class="panel glass">
+            <div class="panel-head">
+              <h3>Security Alerts</h3>
+              <div class="panel-actions">
+                <span class="pill">GitHub</span>
+                <span class="pill">Google Cloud</span>
+                <span class="pill">Firebase</span>
+                <span class="pill">Stripe</span>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table class="data-table" id="securityTable">
+                <thead>
+                  <tr>
+                    <th>Severity</th>
+                    <th>Title</th>
+                    <th>Source</th>
+                    <th>Company</th>
+                    <th>Status</th>
+                    <th>Assigned</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="securityTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+
+        <div id="auditTab" class="tab-panel">
+          <section class="panel glass">
+            <div class="panel-head">
+              <h3>Audit Logs</h3>
+              <div class="panel-actions">
+                <span class="pill">Owner/Admin</span>
+                <span class="pill">Live Feed</span>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table class="data-table" id="auditTable">
+                <thead>
+                  <tr>
+                    <th>Severity</th>
+                    <th>Action</th>
+                    <th>Actor</th>
+                    <th>Target</th>
+                    <th>Company</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="auditTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+
+        <div id="autofixTab" class="tab-panel">
+          <section class="panel glass">
+            <div class="panel-head">
+              <h3>Auto Fix Queue</h3>
+              <button class="btn btn-secondary" id="runAllSafeFixesBtn">Run All Safe Fixes</button>
+            </div>
+            <div id="autoFixPanelList" class="stack-list large-list"></div>
+          </section>
+        </div>
+
+        <div id="notificationsTab" class="tab-panel">
+          <section class="panel glass">
+            <div class="panel-head">
+              <h3>Notifications</h3>
+              <button class="btn btn-secondary" id="markNotificationsReadBtn">Mark all as read</button>
+            </div>
+            <div id="notificationsList" class="stack-list large-list"></div>
+          </section>
+        </div>
+
+        <div id="settingsTab" class="tab-panel">
+          <section class="settings-grid">
+            <article class="panel glass">
+              <div class="panel-head">
+                <h3>Appearance</h3>
+              </div>
+              <div class="setting-group">
+                <label class="field-label" for="themeModeSelect">Theme Mode</label>
+                <select id="themeModeSelect" class="select">
+                  <option value="dark">Dark</option>
+                  <option value="light">Light</option>
+                  <option value="system">System Auto</option>
+                </select>
+              </div>
+            </article>
+
+            <article class="panel glass">
+              <div class="panel-head">
+                <h3>Notification Channels</h3>
+              </div>
+              <div class="toggle-list">
+                <label class="toggle-row">
+                  <span>Email Alerts</span>
+                  <input type="checkbox" id="notifEmail" checked />
+                </label>
+                <label class="toggle-row">
+                  <span>In-App Notifications</span>
+                  <input type="checkbox" id="notifInApp" checked />
+                </label>
+                <label class="toggle-row">
+                  <span>Push Notifications</span>
+                  <input type="checkbox" id="notifPush" />
+                </label>
+                <label class="toggle-row">
+                  <span>SMS Alerts</span>
+                  <input type="checkbox" id="notifSms" />
+                </label>
+              </div>
+            </article>
+
+            <article class="panel glass">
+              <div class="panel-head">
+                <h3>Access + Policy</h3>
+              </div>
+              <div class="setting-stack">
+                <div class="setting-item">
+                  <span class="setting-title">Allowed roles</span>
+                  <span class="setting-value">Owner, Admin</span>
+                </div>
+                <div class="setting-item">
+                  <span class="setting-title">Security level</span>
+                  <span class="setting-value">Enterprise</span>
+                </div>
+                <div class="setting-item">
+                  <span class="setting-title">Collection model</span>
+                  <span class="setting-value">audit_logs + security_alerts</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel glass">
+              <div class="panel-head">
+                <h3>Data + Controls</h3>
+              </div>
+              <div class="setting-stack">
+                <button class="btn btn-secondary" id="seedDemoBtn">Load Demo Data</button>
+                <button class="btn btn-secondary" id="clearDemoBtn">Clear Demo Data</button>
+              </div>
+            </article>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <aside class="notification-drawer" id="notificationDrawer">
+    <div class="drawer-head">
+      <h3>In-App Alerts</h3>
+      <button class="icon-btn" id="closeNotificationsBtn">✕</button>
+    </div>
+    <div id="drawerNotificationList" class="stack-list large-list"></div>
+  </aside>
+
+  <div class="modal-overlay" id="detailModalOverlay">
+    <div class="modal glass">
+      <div class="modal-head">
         <div>
-          <h1 style="margin:0;">Audit Logs</h1>
-          <p class="muted" style="margin:10px 0 0;">
-            Track org changes, roll back recent moves, monitor suspicious activity, and export logs.
-          </p>
+          <h3 id="detailModalTitle">Alert Detail</h3>
+          <p id="detailModalSubtitle">Inspect, assign, note, or remediate.</p>
         </div>
-        <div class="top-actions">
-          <button class="btn secondary" id="exportCsvBtn">Export CSV</button>
-          <button class="btn secondary" id="exportPdfBtn">Export PDF</button>
-          <button class="btn" id="refreshAuditBtn">Refresh</button>
+        <button class="icon-btn" id="closeDetailModalBtn">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="detail-grid">
+          <div class="detail-block">
+            <span class="detail-label">Source</span>
+            <strong id="detailSource"></strong>
+          </div>
+          <div class="detail-block">
+            <span class="detail-label">Severity</span>
+            <strong id="detailSeverity"></strong>
+          </div>
+          <div class="detail-block">
+            <span class="detail-label">Status</span>
+            <strong id="detailStatus"></strong>
+          </div>
+          <div class="detail-block">
+            <span class="detail-label">Company</span>
+            <strong id="detailCompany"></strong>
+          </div>
+          <div class="detail-block full">
+            <span class="detail-label">Message</span>
+            <p id="detailMessage"></p>
+          </div>
+          <div class="detail-block full">
+            <span class="detail-label">External URL</span>
+            <a id="detailExternalUrl" href="#" target="_blank" rel="noopener noreferrer">Open source</a>
+          </div>
         </div>
-      </div>
 
-      <div class="form-grid" style="margin-top:18px;">
-        <div class="field">
-          <label for="auditSearchInput">Search</label>
-          <input id="auditSearchInput" type="text" placeholder="Search actor, target, company, role, note..." />
+        <div class="edit-grid">
+          <div>
+            <label class="field-label" for="detailStatusSelect">Update Status</label>
+            <select id="detailStatusSelect" class="select">
+              <option value="OPEN">OPEN</option>
+              <option value="REVIEWING">REVIEWING</option>
+              <option value="RESOLVED">RESOLVED</option>
+              <option value="ESCALATED">ESCALATED</option>
+              <option value="IGNORED">IGNORED</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="field-label" for="detailAssignSelect">Assign To</label>
+            <select id="detailAssignSelect" class="select">
+              <option value="Gilbert">Gilbert</option>
+              <option value="Owner">Owner</option>
+              <option value="Admin Team">Admin Team</option>
+            </select>
+          </div>
         </div>
 
-        <div class="field">
-          <label for="auditActionFilter">Action Filter</label>
-          <select id="auditActionFilter">
-            <option value="all">All Actions</option>
-            <option value="role_drag_move">Role Change</option>
-            <option value="company_drag_move">Company Move</option>
-            <option value="company_and_role_drag_move">Company + Role Move</option>
-            <option value="company_drag_move_keep_role">Company Move Keep Role</option>
-            <option value="modal_user_edit">Manual Edit</option>
-            <option value="modal_role_edit">Manual Role Edit</option>
-            <option value="modal_company_edit">Manual Company Edit</option>
-            <option value="modal_company_and_role_edit">Manual Company + Role Edit</option>
-            <option value="rollback_change">Rollback Change</option>
-          </select>
+        <div>
+          <label class="field-label" for="detailNotesInput">Notes</label>
+          <textarea id="detailNotesInput" class="textarea" placeholder="Add incident notes, decisions, or remediation details..."></textarea>
         </div>
-      </div>
-    </section>
 
-    <section class="glass-card" style="margin-top:18px;">
-      <div class="section-title-row">
-        <h2 style="margin:0;">Audit Analytics</h2>
-      </div>
-      <div id="auditAnalyticsRoot" style="margin-top:16px;">Loading analytics...</div>
-    </section>
-
-    <section class="glass-card" style="margin-top:18px;">
-      <div class="section-title-row">
-        <h2 style="margin:0;">Actor Activity Charts</h2>
-      </div>
-      <div id="auditChartsRoot" style="margin-top:16px;">Loading charts...</div>
-    </section>
-
-    <section class="glass-card" style="margin-top:18px;">
-      <div class="section-title-row">
-        <h2 style="margin:0;">Suspicious Activity</h2>
-      </div>
-      <div id="auditSuspiciousRoot" style="margin-top:16px;">Checking suspicious activity...</div>
-    </section>
-
-    <section class="glass-card" style="margin-top:18px;">
-      <div class="section-title-row">
-        <h2 style="margin:0;">Audit Feed</h2>
-        <div class="muted" id="auditCountLabel">0 logs</div>
-      </div>
-
-      <div class="top-actions" style="margin-top:14px;">
-        <span class="chip">Live feed every 20s</span>
-      </div>
-
-      <div id="auditRoot" style="margin-top:16px;">
-        Loading audit logs...
-      </div>
-    </section>
-  </main>
-
-  <div class="modal-backdrop" id="rollbackReasonModal">
-    <div class="modal-card">
-      <div class="section-title-row">
-        <h2 style="margin:0;">Undo Change</h2>
-        <button class="btn secondary" id="closeRollbackModalBtn" type="button">Close</button>
-      </div>
-
-      <div class="field" style="margin-top:16px;">
-        <label for="rollbackReasonInput">Rollback Reason</label>
-        <textarea id="rollbackReasonInput" placeholder="Explain why this change is being rolled back..."></textarea>
-      </div>
-
-      <div class="top-actions" style="margin-top:18px;">
-        <button class="btn" id="confirmRollbackBtn" type="button">Confirm Rollback</button>
-        <button class="btn secondary" id="cancelRollbackBtn" type="button">Cancel</button>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" id="detailRecheckBtn">Recheck</button>
+          <button class="btn btn-secondary" id="detailEscalateBtn">Escalate</button>
+          <button class="btn btn-secondary" id="detailAutoFixBtn">Auto Fix</button>
+          <button class="btn btn-primary" id="detailSaveBtn">Save Changes</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <script type="module" src="assets/audit.js"></script>
+  <script src="./audit.js"></script>
 </body>
 </html>
