@@ -1,521 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Evaraos Access</title>
-  <link rel="stylesheet" href="assets/styles.css">
-  <style>
-    .auth-box{
-      position:relative;
-      overflow:hidden;
-    }
-
-    .auth-box::before{
-      content:"";
-      position:absolute;
-      inset:-40% auto auto -20%;
-      width:220px;
-      height:220px;
-      border-radius:50%;
-      background:radial-gradient(circle, rgba(227,6,19,.18), transparent 68%);
-      pointer-events:none;
-    }
-
-    .forgot-link-wrap{
-      text-align:right;
-      margin:-4px 0 12px;
-    }
-
-    .forgot-link{
-      background:none;
-      border:none;
-      color:#f5f7fb;
-      cursor:pointer;
-      padding:0;
-      font:inherit;
-      text-decoration:underline;
-      text-underline-offset:3px;
-      transition:opacity .2s ease, transform .2s ease;
-    }
-
-    .forgot-link:hover{
-      opacity:.9;
-      transform:translateY(-1px);
-    }
-
-    .forgot-link.glow{
-      animation:forgotGlow .55s ease;
-    }
-
-    @keyframes forgotGlow{
-      0%{text-shadow:0 0 0 rgba(227,6,19,0);}
-      50%{text-shadow:0 0 18px rgba(227,6,19,.85);}
-      100%{text-shadow:0 0 0 rgba(227,6,19,0);}
-    }
-
-    .username-feedback{
-      margin:8px 0 10px;
-      font-size:13px;
-      min-height:20px;
-      line-height:1.5;
-    }
-
-    .feedback-neutral{ color:#b8c0d0; }
-    .feedback-success{ color:#9ef0b5; }
-    .feedback-error{ color:#ffb0b0; }
-
-    .suggestions-wrap{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin:6px 0 12px;
-    }
-
-    .suggestion-chip{
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.05);
-      color:#fff;
-      border-radius:999px;
-      padding:8px 12px;
-      cursor:pointer;
-      font-size:13px;
-      transition:background .2s ease, transform .2s ease;
-    }
-
-    .suggestion-chip:hover{
-      background:rgba(255,255,255,.10);
-      transform:translateY(-1px);
-    }
-
-    .auth-msg{
-      min-height:22px;
-      margin-top:14px;
-      line-height:1.5;
-      font-size:14px;
-    }
-
-    .msg-success{
-      color:#9ef0b5;
-    }
-
-    .msg-error{
-      color:#ffb0b0;
-    }
-
-    .msg-info{
-      color:#b8c0d0;
-    }
-
-    .input-hint{
-      color:#93a3bb;
-      font-size:12px;
-      margin-top:-6px;
-      margin-bottom:10px;
-      line-height:1.5;
-    }
-
-    .loading-btn{
-      opacity:.8;
-      pointer-events:none;
-    }
-
-    .auth-divider{
-      height:1px;
-      background:linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent);
-      margin:18px 0 0;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Login • Evaraos Inc</title>
+  <link rel="stylesheet" href="./assets/css/styles.css" />
 </head>
-<body class="auth-page">
-
-  <header class="site-header">
-    <div class="site-header-inner">
-      <a class="brand" href="index.html">
-        <img src="assets/img/evaraos_logo.png" alt="logo">
-        <div class="brand-text">
+<body class="login-page">
+  <header class="landing-header">
+    <div class="landing-header-inner">
+      <a href="./index.html" class="brand-link no-underline">
+        <img src="./assets/img/evaraos_logo.png" alt="Evaraos logo" class="brand-logo" />
+        <div class="brand-copy">
           <strong>Evaraos Inc</strong>
           <span>Subsidiaries Allocation SaaS</span>
         </div>
       </a>
 
-      <nav class="site-nav">
-        <a href="index.html">Home</a>
-        <a href="login.html" class="active">Login</a>
+      <nav class="landing-nav">
+        <a href="./index.html" class="nav-pill no-underline">Home</a>
+        <a href="./login.html" class="nav-pill active no-underline">Login</a>
       </nav>
     </div>
   </header>
 
-  <div class="auth-center">
-    <div class="auth-shell-wrap">
-      <div class="auth-tabs">
-        <button id="loginTab" class="auth-tab active" onclick="showAuthTab('login')">Login</button>
-        <button id="signupTab" class="auth-tab" onclick="showAuthTab('signup')">Sign Up</button>
+  <main class="login-shell">
+    <section class="login-panel glass">
+      <div class="login-badge-wrap">
+        <img src="./assets/img/evaraos_logo.png" alt="Evaraos" class="login-badge" />
       </div>
 
-      <div class="auth-box">
+      <h1>Welcome Back</h1>
+      <p class="login-subtitle">Login with your username or @handle</p>
 
-        <div id="loginPanel">
-          <img src="assets/img/evaraos_logo.png" class="auth-logo" alt="Evaraos logo">
-          <h2 style="text-align:center;margin:0 0 8px;">Welcome Back</h2>
-          <p class="auth-subtext">Login with your username or @handle</p>
+      <form id="loginForm" class="login-form">
+        <label class="sr-only" for="username">Username</label>
+        <input
+          id="username"
+          name="username"
+          type="text"
+          class="input login-input"
+          placeholder="Username or @handle"
+          autocomplete="username"
+          required
+        />
 
-          <input id="loginUsername" type="text" placeholder="Username or @handle">
-          <div class="input-hint">Example: topg or @topg</div>
-
-          <div class="password-wrap">
-            <input id="loginPassword" type="password" placeholder="Password">
-            <button class="eye-toggle" type="button" onclick="togglePassword('loginPassword', this)">🙊</button>
-          </div>
-
-          <div class="forgot-link-wrap">
-            <button id="forgotPasswordLink" class="forgot-link" type="button">Forgot password?</button>
-          </div>
-
-          <div class="action-row">
-            <button class="btn" id="loginBtn" onclick="loginUser()">Login</button>
-          </div>
-
-          <p id="loginMsg" class="auth-msg"></p>
+        <label class="sr-only" for="password">Password</label>
+        <div class="password-wrap">
+          <input
+            id="password"
+            name="password"
+            type="password"
+            class="input login-input"
+            placeholder="Password"
+            autocomplete="current-password"
+            required
+          />
+          <button type="button" id="togglePasswordBtn" class="password-toggle" aria-label="Toggle password">
+            👁️
+          </button>
         </div>
 
-        <div id="signupPanel" style="display:none;">
-          <img src="assets/img/evaraos_logo.png" class="auth-logo" alt="Evaraos logo">
-          <h2 style="text-align:center;margin:0 0 8px;">Create Account</h2>
-          <p class="auth-subtext">Choose your username and secure your access</p>
-
-          <input id="signupName" type="text" placeholder="Full Name">
-          <input id="signupUsername" type="text" placeholder="Username">
-
-          <div id="usernameFeedback" class="username-feedback feedback-neutral"></div>
-          <div id="usernameSuggestions" class="suggestions-wrap"></div>
-
-          <input id="signupEmail" type="email" placeholder="Email">
-
-          <div class="password-wrap">
-            <input id="signupPassword" type="password" placeholder="Password">
-            <button class="eye-toggle" type="button" onclick="togglePassword('signupPassword', this)">🙊</button>
-          </div>
-
-          <div class="password-wrap">
-            <input id="signupPasswordConfirm" type="password" placeholder="Confirm Password">
-            <button class="eye-toggle" type="button" onclick="togglePassword('signupPasswordConfirm', this)">🙊</button>
-          </div>
-
-          <select id="signupRole">
-            <option value="customer">Customer</option>
-            <option value="sales_rep">Sales Rep</option>
-            <option value="technician">Technician</option>
-            <option value="manager">Manager</option>
-            <option value="operations_coordinator">Operations Coordinator</option>
-            <option value="hr">HR</option>
-            <option value="admin">Admin</option>
-          </select>
-
-          <button class="btn" id="signupBtn" onclick="signupUser()">Create Account</button>
-
-          <div class="auth-divider"></div>
-
-          <p class="auth-subtext" style="text-align:left;margin-top:12px;">
-            Staff accounts require admin or super admin approval before access is granted.
-          </p>
-
-          <p id="signupMsg" class="auth-msg"></p>
+        <div class="login-meta-row">
+          <button type="submit" class="btn primary no-underline">Login</button>
+          <button type="button" id="openResetBtn" class="text-link-btn">Forgot password?</button>
         </div>
 
-      </div>
-    </div>
-  </div>
+        <p id="loginMessage" class="login-message muted"></p>
+      </form>
+    </section>
 
-  <div class="modal-backdrop" id="forgotModal">
-    <div class="modal-card" style="max-width:520px;">
-      <div class="modal-head">
+    <section id="resetPanel" class="reset-panel glass hidden">
+      <div class="section-title-row">
         <h2 style="margin:0;">Reset Password</h2>
-        <button class="modal-close" id="closeForgotModalBtn">Close</button>
+        <button type="button" id="closeResetBtn" class="btn secondary">Close</button>
       </div>
 
-      <input id="resetEmail" type="email" placeholder="Account Email">
-      <button class="btn" id="sendResetBtn">Send Reset Email</button>
-      <p id="forgotMsg" class="status-text"></p>
-    </div>
-  </div>
+      <form id="resetForm" class="login-form" style="margin-top:16px;">
+        <input
+          id="resetEmail"
+          type="email"
+          class="input login-input"
+          placeholder="Account Email"
+          autocomplete="email"
+          required
+        />
+        <button type="submit" class="btn secondary">Send Reset Email</button>
+        <p id="resetMessage" class="login-message muted"></p>
+      </form>
+    </section>
+  </main>
 
-  <script type="module">
-    import {
-      signup as createAccount,
-      loginWithUsername,
-      getCurrentUserDoc,
-      resetPassword,
-      usernameExists,
-      generateUsernameSuggestions,
-      normalizeUsernameInput,
-      buildUserIdentity,
-      formatAuthError
-    } from "./assets/auth.js";
-    import { auth } from "./assets/firebase.js";
-
-    function getDashboardPath(role) {
-      return role === "customer" ? "customer_dashboard.html" : "dashboard.html";
-    }
-
-    function openModal(id) {
-      document.getElementById(id).classList.add("active");
-    }
-
-    function closeModal(id) {
-      document.getElementById(id).classList.remove("active");
-    }
-
-    function setMessage(id, type, text) {
-      const el = document.getElementById(id);
-      el.className = "auth-msg";
-      if (type === "success") el.classList.add("msg-success");
-      if (type === "error") el.classList.add("msg-error");
-      if (type === "info") el.classList.add("msg-info");
-      el.textContent = text;
-    }
-
-    function setForgotMessage(type, text) {
-      const el = document.getElementById("forgotMsg");
-      el.className = "status-text";
-      if (type === "success") el.style.color = "#9ef0b5";
-      else if (type === "error") el.style.color = "#ffb0b0";
-      else el.style.color = "#b8c0d0";
-      el.textContent = text;
-    }
-
-    function setFeedback(type, text) {
-      const el = document.getElementById("usernameFeedback");
-      el.className = "username-feedback";
-      if (type === "success") el.classList.add("feedback-success");
-      else if (type === "error") el.classList.add("feedback-error");
-      else el.classList.add("feedback-neutral");
-      el.textContent = text;
-    }
-
-    function setLoading(buttonId, isLoading, loadingText, normalText) {
-      const btn = document.getElementById(buttonId);
-      if (!btn) return;
-      btn.textContent = isLoading ? loadingText : normalText;
-      btn.classList.toggle("loading-btn", isLoading);
-    }
-
-    function renderSuggestions(items) {
-      const root = document.getElementById("usernameSuggestions");
-      root.innerHTML = items.map((item) => `
-        <button type="button" class="suggestion-chip" data-username="${item.username}">
-          ${item.handle}
-        </button>
-      `).join("");
-
-      root.querySelectorAll(".suggestion-chip").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          document.getElementById("signupUsername").value = btn.dataset.username;
-          setFeedback("success", `Selected @${btn.dataset.username}`);
-          root.innerHTML = "";
-        });
-      });
-    }
-
-    let usernameCheckCounter = 0;
-
-    async function checkUsernameLive() {
-      const currentCheck = ++usernameCheckCounter;
-      const raw = document.getElementById("signupUsername").value;
-      const clean = normalizeUsernameInput(raw);
-      const suggestionsRoot = document.getElementById("usernameSuggestions");
-
-      if (!clean) {
-        setFeedback("neutral", "");
-        suggestionsRoot.innerHTML = "";
-        return;
-      }
-
-      const identity = buildUserIdentity(clean);
-
-      if (identity.username.length < 3) {
-        setFeedback("error", "Username must be at least 3 characters.");
-        suggestionsRoot.innerHTML = "";
-        return;
-      }
-
-      setFeedback("neutral", `Checking ${identity.handle}...`);
-
-      try {
-        const taken = await usernameExists(identity.username);
-
-        if (currentCheck !== usernameCheckCounter) return;
-
-        if (!taken) {
-          setFeedback("success", `${identity.handle} is available`);
-          suggestionsRoot.innerHTML = "";
-          return;
-        }
-
-        setFeedback("error", `${identity.handle} is already taken`);
-        const suggestions = await generateUsernameSuggestions(identity.username);
-
-        if (currentCheck !== usernameCheckCounter) return;
-        renderSuggestions(suggestions);
-      } catch (error) {
-        setFeedback("error", formatAuthError(error));
-      }
-    }
-
-    window.togglePassword = function(inputId, btn) {
-      const input = document.getElementById(inputId);
-      const isPassword = input.type === "password";
-      input.type = isPassword ? "text" : "password";
-      btn.textContent = isPassword ? "🙈" : "🙊";
-    };
-
-    window.showAuthTab = function(tab) {
-      const loginPanel = document.getElementById("loginPanel");
-      const signupPanel = document.getElementById("signupPanel");
-      const loginTab = document.getElementById("loginTab");
-      const signupTab = document.getElementById("signupTab");
-
-      setMessage("loginMsg", "info", "");
-      setMessage("signupMsg", "info", "");
-
-      if (tab === "login") {
-        loginPanel.style.display = "block";
-        signupPanel.style.display = "none";
-        loginTab.classList.add("active");
-        signupTab.classList.remove("active");
-      } else {
-        loginPanel.style.display = "none";
-        signupPanel.style.display = "block";
-        loginTab.classList.remove("active");
-        signupTab.classList.add("active");
-      }
-    };
-
-    window.loginUser = async function() {
-      const username = document.getElementById("loginUsername").value.trim();
-      const password = document.getElementById("loginPassword").value;
-
-      setMessage("loginMsg", "info", "");
-
-      if (!username || !password) {
-        setMessage("loginMsg", "error", "Enter your username and password.");
-        return;
-      }
-
-      setLoading("loginBtn", true, "Logging in...", "Login");
-
-      try {
-        await loginWithUsername(username, password);
-        const user = auth.currentUser;
-        const userDoc = await getCurrentUserDoc(user);
-
-        if (!userDoc) {
-          setMessage("loginMsg", "error", "No user profile found.");
-          setLoading("loginBtn", false, "Logging in...", "Login");
-          return;
-        }
-
-        setMessage("loginMsg", "success", "Login successful. Redirecting...");
-        window.location.href = getDashboardPath(userDoc.role);
-      } catch (e) {
-        setMessage("loginMsg", "error", formatAuthError(e));
-        setLoading("loginBtn", false, "Logging in...", "Login");
-      }
-    };
-
-    window.signupUser = async function() {
-      const name = document.getElementById("signupName").value.trim();
-      const username = document.getElementById("signupUsername").value.trim();
-      const email = document.getElementById("signupEmail").value.trim();
-      const password = document.getElementById("signupPassword").value;
-      const passwordConfirm = document.getElementById("signupPasswordConfirm").value;
-      const role = document.getElementById("signupRole").value;
-
-      setMessage("signupMsg", "info", "");
-
-      if (!name || !username || !email || !password || !passwordConfirm) {
-        setMessage("signupMsg", "error", "Complete all fields.");
-        return;
-      }
-
-      if (password !== passwordConfirm) {
-        setMessage("signupMsg", "error", "Passwords do not match.");
-        return;
-      }
-
-      setLoading("signupBtn", true, "Creating...", "Create Account");
-
-      try {
-        await createAccount(name, username, email, password, role);
-        const identity = buildUserIdentity(username);
-
-        setMessage(
-          "signupMsg",
-          "success",
-          role === "customer"
-            ? `Account created successfully as ${identity.handle}.`
-            : `Account created as ${identity.handle} and sent for approval.`
-        );
-
-        document.getElementById("signupPassword").value = "";
-        document.getElementById("signupPasswordConfirm").value = "";
-
-        setTimeout(() => {
-          showAuthTab("login");
-          document.getElementById("loginUsername").value = identity.username;
-        }, 1000);
-      } catch (e) {
-        setMessage("signupMsg", "error", formatAuthError(e));
-      } finally {
-        setLoading("signupBtn", false, "Creating...", "Create Account");
-      }
-    };
-
-    const forgotLink = document.getElementById("forgotPasswordLink");
-    forgotLink.addEventListener("click", () => {
-      forgotLink.classList.remove("glow");
-      void forgotLink.offsetWidth;
-      forgotLink.classList.add("glow");
-      setForgotMessage("info", "");
-      openModal("forgotModal");
-    });
-
-    document.getElementById("closeForgotModalBtn").addEventListener("click", () => {
-      closeModal("forgotModal");
-    });
-
-    document.getElementById("sendResetBtn").addEventListener("click", async () => {
-      const email = document.getElementById("resetEmail").value.trim();
-
-      setForgotMessage("info", "");
-
-      if (!email) {
-        setForgotMessage("error", "Enter your account email.");
-        return;
-      }
-
-      setLoading("sendResetBtn", true, "Sending...", "Send Reset Email");
-
-      try {
-        await resetPassword(email);
-        setForgotMessage("success", "Password reset email sent.");
-      } catch (e) {
-        setForgotMessage("error", formatAuthError(e));
-      } finally {
-        setLoading("sendResetBtn", false, "Sending...", "Send Reset Email");
-      }
-    });
-
-    document.getElementById("signupUsername").addEventListener("input", checkUsernameLive);
-
-    document.getElementById("loginPassword").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") loginUser();
-    });
-
-    document.getElementById("signupPasswordConfirm").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") signupUser();
-    });
-  </script>
-
+  <script type="module" src="./assets/js/auth.js"></script>
 </body>
 </html>
