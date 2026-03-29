@@ -16,8 +16,8 @@
     <section class="glass-card">
       <div class="section-title-row">
         <div>
-          <h1 style="margin: 0;">Audit Command Center</h1>
-          <p class="muted" style="margin: 10px 0 0;">
+          <h1 style="margin:0;">Audit Command Center</h1>
+          <p class="muted" style="margin:10px 0 0;">
             Enterprise monitoring, rollback controls, suspicious activity detection,
             exports, and integrity tools.
           </p>
@@ -31,22 +31,22 @@
       </div>
     </section>
 
-    <section class="glass-card" style="margin-top: 18px;">
+    <section class="glass-card" style="margin-top:18px;">
       <div class="section-title-row">
-        <h2 style="margin: 0;">Audit Filters</h2>
+        <h2 style="margin:0;">Audit Filters</h2>
         <div class="chip" id="auditCountLabel">0 logs</div>
       </div>
 
       <div
         style="
           display:grid;
-          grid-template-columns: minmax(0, 1fr) 260px;
-          gap: 14px;
-          margin-top: 14px;
+          grid-template-columns:minmax(0,1fr) 260px;
+          gap:14px;
+          margin-top:14px;
         "
       >
         <div>
-          <label for="auditSearchInput" class="muted" style="display:block; margin-bottom:8px;">
+          <label for="auditSearchInput" class="muted" style="display:block;margin-bottom:8px;">
             Search logs
           </label>
           <input
@@ -58,7 +58,7 @@
         </div>
 
         <div>
-          <label for="auditActionFilter" class="muted" style="display:block; margin-bottom:8px;">
+          <label for="auditActionFilter" class="muted" style="display:block;margin-bottom:8px;">
             Action type
           </label>
           <select id="auditActionFilter" class="input">
@@ -77,38 +77,38 @@
       </div>
     </section>
 
-    <section class="glass-card" style="margin-top: 18px;">
+    <section class="glass-card" style="margin-top:18px;">
       <div class="section-title-row">
-        <h2 style="margin: 0;">Suspicious Activity Signals</h2>
+        <h2 style="margin:0;">Suspicious Activity Signals</h2>
       </div>
-      <div id="auditSuspiciousRoot" style="margin-top: 14px;">
+      <div id="auditSuspiciousRoot" style="margin-top:14px;">
         <div class="audit-empty">Scanning activity...</div>
       </div>
     </section>
 
-    <section class="glass-card" style="margin-top: 18px;">
+    <section class="glass-card" style="margin-top:18px;">
       <div class="section-title-row">
-        <h2 style="margin: 0;">Audit Analytics</h2>
+        <h2 style="margin:0;">Audit Analytics</h2>
       </div>
-      <div id="auditAnalyticsRoot" style="margin-top: 14px;">
+      <div id="auditAnalyticsRoot" style="margin-top:14px;">
         <div class="audit-empty">Loading analytics...</div>
       </div>
     </section>
 
-    <section class="glass-card" style="margin-top: 18px;">
+    <section class="glass-card" style="margin-top:18px;">
       <div class="section-title-row">
-        <h2 style="margin: 0;">Activity Charts</h2>
+        <h2 style="margin:0;">Activity Charts</h2>
       </div>
-      <div id="auditChartsRoot" style="margin-top: 14px;">
+      <div id="auditChartsRoot" style="margin-top:14px;">
         <div class="audit-empty">Loading charts...</div>
       </div>
     </section>
 
-    <section class="glass-card" style="margin-top: 18px; margin-bottom: 30px;">
+    <section class="glass-card" style="margin-top:18px;margin-bottom:30px;">
       <div class="section-title-row">
-        <h2 style="margin: 0;">Audit Log Feed</h2>
+        <h2 style="margin:0;">Audit Log Feed</h2>
       </div>
-      <div id="auditRoot" style="margin-top: 14px;">
+      <div id="auditRoot" style="margin-top:14px;">
         <div class="audit-empty">Loading audit logs...</div>
       </div>
     </section>
@@ -116,16 +116,16 @@
 
   <div id="rollbackReasonModal" class="modal-backdrop">
     <div class="modal-card">
-      <div class="section-title-row" style="margin-bottom: 12px;">
-        <h3 style="margin: 0;">Rollback Change</h3>
+      <div class="section-title-row" style="margin-bottom:12px;">
+        <h3 style="margin:0;">Rollback Change</h3>
         <button id="closeRollbackModalBtn" class="btn secondary" type="button">Close</button>
       </div>
 
-      <p class="muted" style="margin-top: 0;">
+      <p class="muted" style="margin-top:0;">
         Add a reason for this rollback. This reason will be written into the audit log.
       </p>
 
-      <label for="rollbackReasonInput" class="muted" style="display:block; margin-bottom:8px;">
+      <label for="rollbackReasonInput" class="muted" style="display:block;margin-bottom:8px;">
         Rollback reason
       </label>
       <textarea
@@ -135,7 +135,7 @@
         placeholder="Explain why this rollback is being performed..."
       ></textarea>
 
-      <div class="audit-actions" style="margin-top: 16px;">
+      <div class="audit-actions" style="margin-top:16px;">
         <button id="cancelRollbackBtn" class="btn secondary" type="button">Cancel</button>
         <button id="confirmRollbackBtn" class="btn primary" type="button">Confirm Rollback</button>
       </div>
