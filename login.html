@@ -34,7 +34,7 @@
       <p class="login-subtitle">Login with your username or @handle</p>
 
       <form id="loginForm" class="login-form">
-        <label class="sr-only" for="username">Username</label>
+        <label for="username">Username</label>
         <input
           id="username"
           name="username"
@@ -45,7 +45,7 @@
           required
         />
 
-        <label class="sr-only" for="password">Password</label>
+        <label for="password">Password</label>
         <div class="password-wrap">
           <input
             id="password"
@@ -57,7 +57,9 @@
             required
           />
           <button type="button" id="togglePasswordBtn" class="password-toggle" aria-label="Toggle password">
-            👁️
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 5c5.5 0 9.5 4.6 10.8 6.3a1.16 1.16 0 0 1 0 1.4C21.5 14.4 17.5 19 12 19S2.5 14.4 1.2 12.7a1.16 1.16 0 0 1 0-1.4C2.5 9.6 6.5 5 12 5Zm0 2C8.2 7 5.1 10 3.5 12c1.6 2 4.7 5 8.5 5s6.9-3 8.5-5c-1.6-2-4.7-5-8.5-5Zm0 1.8A3.2 3.2 0 1 1 8.8 12 3.2 3.2 0 0 1 12 8.8Zm0 2A1.2 1.2 0 1 0 13.2 12 1.2 1.2 0 0 0 12 10.8Z"/>
+            </svg>
           </button>
         </div>
 
@@ -77,6 +79,7 @@
       </div>
 
       <form id="resetForm" class="login-form" style="margin-top:16px;">
+        <label for="resetEmail">Account Email</label>
         <input
           id="resetEmail"
           type="email"
