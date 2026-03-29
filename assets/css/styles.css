@@ -573,3 +573,8 @@ a {
     align-items: center;
   }
 }
+input:-webkit-autofill,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #fff !important;
+  box-shadow: 0 0 0 1000px rgba(255,255,255,0.05) inset !important;
+}
