@@ -6,10 +6,10 @@
   <title>Login • Evaraos Inc</title>
   <link rel="stylesheet" href="./assets/css/styles.css" />
 </head>
-<body class="login-page">
+<body class="app-theme">
   <header class="landing-header">
     <div class="landing-header-inner">
-      <a href="./index.html" class="brand-link no-underline">
+      <a href="./index.html" class="brand-link">
         <img src="./assets/img/evaraos_logo.png" alt="Evaraos logo" class="brand-logo" />
         <div class="brand-copy">
           <strong>Evaraos Inc</strong>
@@ -18,23 +18,23 @@
       </a>
 
       <nav class="landing-nav">
-        <a href="./index.html" class="nav-pill no-underline">Home</a>
-        <a href="./login.html" class="nav-pill active no-underline">Login</a>
+        <a href="./index.html" class="nav-pill">Home</a>
+        <a href="./login.html" class="nav-pill active">Login</a>
       </nav>
     </div>
   </header>
 
   <main class="login-shell">
-    <section class="login-panel glass">
+    <section class="login-panel glass-card">
       <div class="login-badge-wrap">
         <img src="./assets/img/evaraos_logo.png" alt="Evaraos" class="login-badge" />
       </div>
 
-      <h1>Welcome Back</h1>
+      <h1 class="login-title">Welcome Back</h1>
       <p class="login-subtitle">Login with your username or @handle</p>
 
       <form id="loginForm" class="login-form">
-        <label for="username">Username</label>
+        <label class="field-label" for="username">Username</label>
         <input
           id="username"
           name="username"
@@ -45,7 +45,7 @@
           required
         />
 
-        <label for="password">Password</label>
+        <label class="field-label" for="password">Password</label>
         <div class="password-wrap">
           <input
             id="password"
@@ -75,22 +75,22 @@
         </div>
 
         <div class="login-meta-row">
-          <button type="submit" class="btn primary no-underline">Login</button>
+          <button type="submit" class="btn btn-primary">Login</button>
           <button type="button" id="openResetBtn" class="text-link-btn">Forgot password?</button>
         </div>
 
-        <p id="loginMessage" class="login-message muted"></p>
+        <p id="loginMessage" class="login-message"></p>
       </form>
     </section>
 
-    <section id="resetPanel" class="reset-panel glass hidden">
-      <div class="section-title-row">
-        <h2 style="margin:0;">Reset Password</h2>
-        <button type="button" id="closeResetBtn" class="btn secondary">Close</button>
+    <section id="resetPanel" class="reset-panel glass-card hidden">
+      <div class="panel-head">
+        <h2>Reset Password</h2>
+        <button type="button" id="closeResetBtn" class="btn btn-secondary">Close</button>
       </div>
 
-      <form id="resetForm" class="login-form" style="margin-top:16px;">
-        <label for="resetEmail">Account Email</label>
+      <form id="resetForm" class="login-form reset-form">
+        <label class="field-label" for="resetEmail">Account Email</label>
         <input
           id="resetEmail"
           type="email"
@@ -99,8 +99,8 @@
           autocomplete="email"
           required
         />
-        <button type="submit" class="btn secondary">Send Reset Email</button>
-        <p id="resetMessage" class="login-message muted"></p>
+        <button type="submit" class="btn btn-secondary">Send Reset Email</button>
+        <p id="resetMessage" class="login-message"></p>
       </form>
     </section>
   </main>
