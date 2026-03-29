@@ -6,14 +6,11 @@
   <title>Login • Evaraos Inc</title>
   <link rel="stylesheet" href="./assets/css/styles.css" />
 </head>
-
 <body class="app-theme">
-
-  <!-- NAV -->
   <header class="landing-header">
     <div class="landing-header-inner">
       <a href="./index.html" class="brand-link">
-        <img src="./assets/img/evaraos_logo.png" class="brand-logo" />
+        <img src="./assets/img/evaraos_logo.png" alt="Evaraos logo" class="brand-logo" />
         <div class="brand-copy">
           <strong>Evaraos Inc</strong>
           <span>Subsidiaries Allocation SaaS</span>
@@ -27,70 +24,85 @@
     </div>
   </header>
 
-  <!-- LOGIN -->
   <main class="login-shell">
-
     <section class="login-panel glass-card">
-
-      <img src="./assets/img/evaraos_logo.png" class="login-badge" />
+      <div class="login-badge-wrap">
+        <img src="./assets/img/evaraos_logo.png" alt="Evaraos" class="login-badge" />
+      </div>
 
       <h1 class="login-title">Welcome Back</h1>
       <p class="login-subtitle">Login with your email, username, or @handle</p>
 
       <form id="loginForm" class="login-form">
-
-        <label>Username</label>
+        <label class="field-label" for="username">Username</label>
         <input
           id="username"
+          name="username"
+          type="text"
           class="input login-input"
           placeholder="Email, username, or @handle"
+          autocomplete="username"
           required
         />
 
-        <label>Password</label>
+        <label class="field-label" for="password">Password</label>
         <div class="password-wrap">
           <input
             id="password"
+            name="password"
             type="password"
             class="input login-input"
             placeholder="Password"
+            autocomplete="current-password"
             required
           />
 
-          <button type="button" id="togglePasswordBtn" class="password-toggle">
-            <svg id="passwordIconOpen" viewBox="0 0 24 24">
-              <path d="M12 5c5 0 9 4 10 6-1 2-5 6-10 6S3 13 2 11c1-2 5-6 10-6z"/>
+          <button
+            type="button"
+            id="togglePasswordBtn"
+            class="password-toggle"
+            aria-label="Show password"
+            aria-pressed="false"
+          >
+            <svg id="passwordIconOpen" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 5c5.6 0 9.7 4.7 10.9 6.4.27.36.27.86 0 1.22C21.7 14.3 17.6 19 12 19S2.3 14.3 1.1 12.62a1 1 0 0 1 0-1.22C2.3 9.7 6.4 5 12 5Zm0 2C8.52 7 5.6 9.74 3.98 12 5.6 14.26 8.52 17 12 17s6.4-2.74 8.02-5C18.4 9.74 15.48 7 12 7Zm0 1.8A3.2 3.2 0 1 1 8.8 12 3.2 3.2 0 0 1 12 8.8Zm0 2A1.2 1.2 0 1 0 13.2 12 1.2 1.2 0 0 0 12 10.8Z"/>
             </svg>
 
-            <svg id="passwordIconClosed" viewBox="0 0 24 24" style="display:none;">
-              <path d="M3 3l18 18"/>
+            <svg id="passwordIconClosed" viewBox="0 0 24 24" aria-hidden="true" style="display:none;">
+              <path d="M3.28 2.22 21.78 20.72l-1.06 1.06-3.16-3.15A12.9 12.9 0 0 1 12 19c-5.6 0-9.7-4.7-10.9-6.4a1 1 0 0 1 0-1.22A18.3 18.3 0 0 1 6 7.02L2.22 3.28l1.06-1.06ZM7.5 8.52A15.24 15.24 0 0 0 3.98 12C5.6 14.26 8.52 17 12 17c1.45 0 2.8-.32 4.02-.9l-2.17-2.17A3.18 3.18 0 0 1 10.07 10L7.5 8.52Zm4.82-1.48c5.1.13 8.84 4.52 9.58 5.36.27.36.27.86 0 1.22-.45.63-1.34 1.7-2.62 2.76l-1.43-1.43A13.42 13.42 0 0 0 20.02 12c-1.4-1.79-4.06-4.87-7.7-4.97V7.04Zm-.5 2.06a3.2 3.2 0 0 1 3.08 3.96l-3.95-3.95c.28-.01.57-.01.87-.01Z"/>
             </svg>
           </button>
         </div>
 
-        <div class="login-actions">
-          <button type="submit" class="btn-primary">Login</button>
-          <button type="button" id="openResetBtn" class="link-btn">Forgot password?</button>
+        <div class="login-actions-row">
+          <button type="submit" class="btn btn-primary login-submit-btn">Login</button>
+          <button type="button" id="openResetBtn" class="text-link-btn forgot-link">Forgot password?</button>
         </div>
 
-        <p id="loginMessage" class="error-text"></p>
+        <p id="loginMessage" class="login-message"></p>
       </form>
     </section>
 
-    <!-- RESET -->
-    <section id="resetPanel" class="reset-panel hidden">
+    <section id="resetPanel" class="reset-panel glass-card hidden">
+      <div class="panel-head">
+        <h2>Reset Password</h2>
+        <button type="button" id="closeResetBtn" class="btn btn-secondary">Close</button>
+      </div>
 
-      <h2>Reset Password</h2>
-
-      <form id="resetForm">
-        <input id="resetEmail" placeholder="Account Email" required />
-        <button type="submit">Send Reset Email</button>
-        <p id="resetMessage"></p>
+      <form id="resetForm" class="login-form reset-form">
+        <label class="field-label" for="resetEmail">Account Email</label>
+        <input
+          id="resetEmail"
+          type="email"
+          class="input login-input"
+          placeholder="Account Email"
+          autocomplete="email"
+          required
+        />
+        <button type="submit" class="btn btn-secondary">Send Reset Email</button>
+        <p id="resetMessage" class="login-message"></p>
       </form>
-
-      <button id="closeResetBtn">Close</button>
     </section>
-
   </main>
 
   <script type="module" src="./assets/js/auth.js"></script>
