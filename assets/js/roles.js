@@ -19,7 +19,8 @@ export const ROLE_ACCESS = {
     "jobs",
     "customers",
     "settings",
-    "audit"
+    "audit",
+    "performance"
   ],
   admin: [
     "overview",
@@ -29,7 +30,8 @@ export const ROLE_ACCESS = {
     "companies",
     "jobs",
     "customers",
-    "settings"
+    "settings",
+    "performance"
   ],
   manager: [
     "overview",
@@ -37,16 +39,19 @@ export const ROLE_ACCESS = {
     "leads",
     "sales_reps",
     "jobs",
-    "customers"
+    "customers",
+    "performance"
   ],
   operations_coordinator: [
     "overview",
     "jobs",
-    "customers"
+    "customers",
+    "performance"
   ],
   hr: [
     "overview",
-    "users"
+    "users",
+    "performance"
   ],
   sales_rep: [
     "overview",
@@ -96,12 +101,18 @@ export function canAccess(role = "", section = "") {
 
 export function filterLeadsForUser(user, leads = []) {
   if (!user) return [];
-  if (user.role === "super_admin" || user.role === "admin" || user.role === "manager") {
+
+  if (
+    user.role === "super_admin" ||
+    user.role === "admin" ||
+    user.role === "manager"
+  ) {
     return leads;
   }
 
   if (user.role === "sales_rep") {
     const ids = userIdentifiers(user);
+
     return leads.filter((lead) => {
       const values = [
         lead.assignedRep,
@@ -119,6 +130,7 @@ export function filterLeadsForUser(user, leads = []) {
 
   if (user.role === "customer") {
     const ids = userIdentifiers(user);
+
     return leads.filter((lead) => {
       const values = [
         lead.customerId,
@@ -138,6 +150,7 @@ export function filterLeadsForUser(user, leads = []) {
 
 export function filterJobsForUser(user, jobs = []) {
   if (!user) return [];
+
   if (
     user.role === "super_admin" ||
     user.role === "admin" ||
@@ -149,6 +162,7 @@ export function filterJobsForUser(user, jobs = []) {
 
   if (user.role === "technician") {
     const ids = userIdentifiers(user);
+
     return jobs.filter((job) => {
       const directValues = [
         job.assignedTechnician,
@@ -167,6 +181,7 @@ export function filterJobsForUser(user, jobs = []) {
 
   if (user.role === "customer") {
     const ids = userIdentifiers(user);
+
     return jobs.filter((job) => {
       const values = [
         job.customerId,
@@ -186,17 +201,28 @@ export function filterJobsForUser(user, jobs = []) {
 
 export function filterUsersForUser(user, users = []) {
   if (!user) return [];
+
   if (user.role === "super_admin" || user.role === "admin") {
     return users;
   }
 
-  if (user.role === "manager" || user.role === "operations_coordinator" || user.role === "hr") {
+  if (
+    user.role === "manager" ||
+    user.role === "operations_coordinator" ||
+    user.role === "hr"
+  ) {
     const companyId = normalize(user.companyId);
     return users.filter((candidate) => normalize(candidate.companyId) === companyId);
   }
 
-  if (user.role === "sales_rep" || user.role === "technician" || user.role === "customer") {
-    return users.filter((candidate) => candidate.id === user.id || candidate.uid === user.uid);
+  if (
+    user.role === "sales_rep" ||
+    user.role === "technician" ||
+    user.role === "customer"
+  ) {
+    return users.filter(
+      (candidate) => candidate.id === user.id || candidate.uid === user.uid
+    );
   }
 
   return [];
