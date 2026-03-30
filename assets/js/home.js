@@ -1,12 +1,6 @@
 import { auth, db } from "./firebase.js";
-import {
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {
-  doc,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 function dashboardPath(role) {
   return role === "customer"
@@ -35,16 +29,16 @@ function closeHomeMenu() {
   const menuBtn = document.getElementById("homeMenuBtn");
   const dropdown = document.getElementById("homeMenuDropdown");
 
-  if (menuBtn) menuBtn.classList.remove("open");
-  if (dropdown) dropdown.classList.remove("open");
+  menuBtn?.classList.remove("open");
+  dropdown?.classList.remove("open");
 }
 
 function openHomeMenu() {
   const menuBtn = document.getElementById("homeMenuBtn");
   const dropdown = document.getElementById("homeMenuDropdown");
 
-  if (menuBtn) menuBtn.classList.add("open");
-  if (dropdown) dropdown.classList.add("open");
+  menuBtn?.classList.add("open");
+  dropdown?.classList.add("open");
 }
 
 function wireHomeMenu() {
@@ -53,10 +47,9 @@ function wireHomeMenu() {
 
   if (!menuBtn || !dropdown) return;
 
-  menuBtn.addEventListener("click", (event) => {
-    event.stopPropagation();
+  menuBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
     const isOpen = dropdown.classList.contains("open");
-
     if (isOpen) {
       closeHomeMenu();
     } else {
@@ -64,136 +57,132 @@ function wireHomeMenu() {
     }
   });
 
-  dropdown.addEventListener("click", (event) => {
-    event.stopPropagation();
+  dropdown.addEventListener("click", (e) => {
+    e.stopPropagation();
   });
 
   document.addEventListener("click", () => {
     closeHomeMenu();
   });
-
-  window.addEventListener("resize", () => {
-    closeHomeMenu();
-  });
 }
 
-function setLoggedOutState() {
+async function bootHome() {
   const loginNavLink = document.getElementById("loginNavLink");
   const dashboardNavLink = document.getElementById("dashboardNavLink");
   const logoutHomeBtn = document.getElementById("logoutHomeBtn");
   const heroEnterLink = document.getElementById("heroEnterLink");
   const heroSecondaryLink = document.getElementById("heroSecondaryLink");
+
   const homeMenuWrap = document.getElementById("homeMenuWrap");
   const homeMenuDashboardLink = document.getElementById("homeMenuDashboardLink");
   const homeMenuCompaniesLink = document.getElementById("homeMenuCompaniesLink");
   const homeMenuLogoutBtn = document.getElementById("homeMenuLogoutBtn");
 
-  setDisplay(loginNavLink, "");
-  setDisplay(dashboardNavLink, "none");
-  setDisplay(logoutHomeBtn, "none");
-  setDisplay(homeMenuWrap, "none");
-
-  if (heroEnterLink) {
-    heroEnterLink.href = "/evaraos/login.html";
-    heroEnterLink.textContent = "Enter Platform";
-  }
-
-  if (heroSecondaryLink) {
-    heroSecondaryLink.href = "/evaraos/companies.html";
-    heroSecondaryLink.textContent = "Get Started";
-  }
-
-  if (homeMenuDashboardLink) {
-    homeMenuDashboardLink.href = "/evaraos/login.html";
-  }
-
-  if (homeMenuCompaniesLink) {
-    homeMenuCompaniesLink.href = "/evaraos/companies.html";
-  }
-
-  if (homeMenuLogoutBtn) {
-    homeMenuLogoutBtn.onclick = null;
-  }
-}
-
-function setLoggedInState(role) {
-  const loginNavLink = document.getElementById("loginNavLink");
-  const dashboardNavLink = document.getElementById("dashboardNavLink");
-  const logoutHomeBtn = document.getElementById("logoutHomeBtn");
-  const heroEnterLink = document.getElementById("heroEnterLink");
-  const heroSecondaryLink = document.getElementById("heroSecondaryLink");
-  const homeMenuWrap = document.getElementById("homeMenuWrap");
-  const homeMenuDashboardLink = document.getElementById("homeMenuDashboardLink");
-  const homeMenuCompaniesLink = document.getElementById("homeMenuCompaniesLink");
-  const homeMenuLogoutBtn = document.getElementById("homeMenuLogoutBtn");
-
-  const path = dashboardPath(role || "customer");
-
-  setDisplay(loginNavLink, "none");
-  setDisplay(dashboardNavLink, "");
-  setDisplay(logoutHomeBtn, "");
-  setDisplay(homeMenuWrap, "");
-
-  if (dashboardNavLink) {
-    dashboardNavLink.href = path;
-  }
-
-  if (heroEnterLink) {
-    heroEnterLink.href = path;
-    heroEnterLink.textContent = "Go to Dashboard";
-  }
-
-  if (heroSecondaryLink) {
-    heroSecondaryLink.href = path;
-    heroSecondaryLink.textContent = "Stay in Session";
-  }
-
-  if (homeMenuDashboardLink) {
-    homeMenuDashboardLink.href = path;
-  }
-
-  if (homeMenuCompaniesLink) {
-    homeMenuCompaniesLink.href = "/evaraos/companies.html";
-  }
-
-  if (logoutHomeBtn) {
-    logoutHomeBtn.onclick = async () => {
-      try {
-        await signOut(auth);
-      } catch (error) {
-        console.error("Logout failed:", error);
-      } finally {
-        window.location.href = "/evaraos/index.html";
-      }
-    };
-  }
-
-  if (homeMenuLogoutBtn) {
-    homeMenuLogoutBtn.onclick = async () => {
-      try {
-        await signOut(auth);
-      } catch (error) {
-        console.error("Logout failed:", error);
-      } finally {
-        window.location.href = "/evaraos/index.html";
-      }
-    };
-  }
-}
-
-window.addEventListener("DOMContentLoaded", () => {
   wireHomeMenu();
 
   onAuthStateChanged(auth, async (user) => {
-    closeHomeMenu();
-
     if (!user) {
-      setLoggedOutState();
+      setDisplay(loginNavLink, "");
+      setDisplay(dashboardNavLink, "none");
+      setDisplay(logoutHomeBtn, "none");
+
+      if (heroEnterLink) {
+        heroEnterLink.href = "/evaraos/login.html";
+        heroEnterLink.textContent = "Enter Platform";
+      }
+
+      if (heroSecondaryLink) {
+        heroSecondaryLink.href = "/evaraos/companies.html";
+        heroSecondaryLink.textContent = "Get Started";
+      }
+
+      if (homeMenuWrap) {
+        homeMenuWrap.classList.remove("hidden");
+      }
+
+      if (homeMenuDashboardLink) {
+        homeMenuDashboardLink.href = "/evaraos/login.html";
+        homeMenuDashboardLink.innerHTML = `
+          <strong>Login</strong>
+          <span>Sign in to enter the platform</span>
+        `;
+      }
+
+      if (homeMenuCompaniesLink) {
+        homeMenuCompaniesLink.href = "/evaraos/companies.html";
+        homeMenuCompaniesLink.innerHTML = `
+          <strong>Companies</strong>
+          <span>Open companies and platform setup</span>
+        `;
+      }
+
+      if (homeMenuLogoutBtn) {
+        homeMenuLogoutBtn.classList.add("hidden");
+      }
+
       return;
     }
 
     const userDoc = await getCurrentUserDoc(user);
-    const role = userDoc?.role || "customer";
-    setLoggedInState(role);
+    const path = dashboardPath(userDoc?.role || "customer");
+
+    setDisplay(loginNavLink, "none");
+    setDisplay(dashboardNavLink, "");
+    setDisplay(logoutHomeBtn, "");
+
+    if (dashboardNavLink) {
+      dashboardNavLink.href = path;
+    }
+
+    if (heroEnterLink) {
+      heroEnterLink.href = path;
+      heroEnterLink.textContent = "Go to Dashboard";
+    }
+
+    if (heroSecondaryLink) {
+      heroSecondaryLink.href = path;
+      heroSecondaryLink.textContent = "Stay in Session";
+    }
+
+    if (logoutHomeBtn) {
+      logoutHomeBtn.onclick = async () => {
+        await signOut(auth);
+        window.location.href = "/evaraos/index.html";
+      };
+    }
+
+    if (homeMenuWrap) {
+      homeMenuWrap.classList.remove("hidden");
+    }
+
+    if (homeMenuDashboardLink) {
+      homeMenuDashboardLink.href = path;
+      homeMenuDashboardLink.innerHTML = `
+        <strong>Dashboard</strong>
+        <span>Go to your account dashboard</span>
+      `;
+    }
+
+    if (homeMenuCompaniesLink) {
+      homeMenuCompaniesLink.href = "/evaraos/companies.html";
+      homeMenuCompaniesLink.innerHTML = `
+        <strong>Companies</strong>
+        <span>Open companies and platform setup</span>
+      `;
+    }
+
+    if (homeMenuLogoutBtn) {
+      homeMenuLogoutBtn.classList.remove("hidden");
+      homeMenuLogoutBtn.innerHTML = `
+        <strong>Logout</strong>
+        <span>End your current session</span>
+      `;
+      homeMenuLogoutBtn.onclick = async () => {
+        await signOut(auth);
+        window.location.href = "/evaraos/index.html";
+      };
+    }
   });
-});
+}
+
+window.addEventListener("DOMContentLoaded", bootHome);
