@@ -1,4 +1,5 @@
 import {
+  db,
   collection,
   getDocs,
   query,
@@ -10,15 +11,19 @@ import {
   deleteDoc,
   serverTimestamp,
   setDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+} from "./firebase.js";
 
-import { db } from "./firebase.js";
 import {
   listenAuth,
   logout,
   syncUsernameDirectoryByUserDoc
 } from "./auth.js";
-import { canAccess, getAllowedSections, getRoleLabel } from "./roles.js";
+
+import {
+  canAccess,
+  getAllowedSections,
+  getRoleLabel
+} from "./roles.js";
 
 export const SERVICE_LIBRARY = {
   exterior: [
@@ -213,7 +218,10 @@ export function buildNormalizedUserPayload(existing = {}) {
 export async function normalizeUserDoc(userId) {
   const userRef = doc(db, "users", userId);
   const snap = await getDoc(userRef);
-  if (!snap.exists()) throw new Error("User not found.");
+
+  if (!snap.exists()) {
+    throw new Error("User not found.");
+  }
 
   const existing = snap.data();
   const normalized = buildNormalizedUserPayload(existing);
@@ -234,7 +242,11 @@ export function buildNormalizedCompanyPayload(existing = {}, companyId = "") {
   const normalizedId = sanitizeCompanyId(
     companyId || existing.id || existing.companyId || existing.slug || existing.name || ""
   );
-  const slug = String(existing.slug || companyIdToSlug(normalizedId)).trim().toLowerCase().replace(/_/g, "-");
+
+  const slug = String(existing.slug || companyIdToSlug(normalizedId))
+    .trim()
+    .toLowerCase()
+    .replace(/_/g, "-");
 
   return {
     name: existing.name || "",
@@ -435,7 +447,10 @@ export function buildNormalizedLeadPayload(existing = {}) {
 export async function normalizeLeadDoc(leadId) {
   const leadRef = doc(db, "leads", leadId);
   const snap = await getDoc(leadRef);
-  if (!snap.exists()) throw new Error("Lead not found.");
+
+  if (!snap.exists()) {
+    throw new Error("Lead not found.");
+  }
 
   const normalized = buildNormalizedLeadPayload(snap.data());
 
@@ -488,7 +503,10 @@ export function buildNormalizedJobPayload(existing = {}) {
 export async function normalizeJobDoc(jobId) {
   const jobRef = doc(db, "jobs", jobId);
   const snap = await getDoc(jobRef);
-  if (!snap.exists()) throw new Error("Job not found.");
+
+  if (!snap.exists()) {
+    throw new Error("Job not found.");
+  }
 
   const normalized = buildNormalizedJobPayload(snap.data());
 
@@ -502,6 +520,7 @@ export async function normalizeJobDoc(jobId) {
 
 export function buildNormalizedServicePayload(existing = {}) {
   const slug = String(existing.slug || existing.name || "").trim().toLowerCase().replace(/\s+/g, "_");
+
   return {
     companyId: sanitizeCompanyId(existing.companyId || ""),
     name: existing.name || "",
@@ -529,7 +548,10 @@ export function buildNormalizedServicePayload(existing = {}) {
 export async function normalizeServiceDoc(serviceId) {
   const serviceRef = doc(db, "services", serviceId);
   const snap = await getDoc(serviceRef);
-  if (!snap.exists()) throw new Error("Service not found.");
+
+  if (!snap.exists()) {
+    throw new Error("Service not found.");
+  }
 
   const normalized = buildNormalizedServicePayload(snap.data());
 
@@ -643,7 +665,7 @@ export async function loadCompany(companyId) {
 }
 
 export function getDashboardPath(role) {
-  return role === "customer" ? "customer_dashboard.html" : "dashboard.html";
+  return role === "customer" ? "/evaraos/customer_dashboard.html" : "/evaraos/dashboard.html";
 }
 
 export function hasPermission(user, permission) {
@@ -854,14 +876,14 @@ function injectTopbarStyles() {
 
 function getGlobalNavItems(role) {
   const items = [
-    { key: "overview", label: "Overview", href: "dashboard.html", desc: "Main dashboard and KPIs" },
-    { key: "users", label: "Users", href: "users.html", desc: "User accounts and staff records" },
-    { key: "leads", label: "Leads", href: "leads.html", desc: "Pipeline, assignments, conversions" },
-    { key: "sales_reps", label: "Sales Reps", href: "sales_reps.html", desc: "Rep creation and management" },
-    { key: "companies", label: "Companies", href: "companies.html", desc: "Company records and brand settings" },
-    { key: "jobs", label: "Jobs", href: "jobs.html", desc: "Scheduling and operations" },
-    { key: "users", label: "Org Chart", href: "org.html", desc: "Interactive hierarchy and reporting lines" },
-    { key: "users", label: "Performance", href: "performance.html", desc: "User performance and productivity metrics" },
+    { key: "overview", label: "Overview", href: "/evaraos/dashboard.html", desc: "Main dashboard and KPIs" },
+    { key: "users", label: "Users", href: "/evaraos/users.html", desc: "User accounts and staff records" },
+    { key: "leads", label: "Leads", href: "/evaraos/leads.html", desc: "Pipeline, assignments, conversions" },
+    { key: "sales_reps", label: "Sales Reps", href: "/evaraos/sales_reps.html", desc: "Rep creation and management" },
+    { key: "companies", label: "Companies", href: "/evaraos/companies.html", desc: "Company records and brand settings" },
+    { key: "jobs", label: "Jobs", href: "/evaraos/jobs.html", desc: "Scheduling and operations" },
+    { key: "users", label: "Org Chart", href: "/evaraos/org.html", desc: "Interactive hierarchy and reporting lines" },
+    { key: "users", label: "Performance", href: "/evaraos/performance.html", desc: "User performance and productivity metrics" },
     { key: "customers", label: "Customers", href: "#", desc: "Customer tools and accounts" },
     { key: "settings", label: "Settings", href: "#", desc: "Application preferences" }
   ];
@@ -870,7 +892,7 @@ function getGlobalNavItems(role) {
     items.push({
       key: "audit",
       label: "Audit",
-      href: "audit.html",
+      href: "/evaraos/audit.html",
       desc: "Repair and integrity tools"
     });
   }
@@ -900,7 +922,7 @@ function wireTopbarMenu() {
   });
 
   dropdown.addEventListener("click", (e) => e.stopPropagation());
-  document.addEventListener("click", closeAllTopbarMenus, { once: false });
+  document.addEventListener("click", closeAllTopbarMenus);
 }
 
 export async function bindTopbar(user = null) {
@@ -911,8 +933,8 @@ export async function bindTopbar(user = null) {
 
   const settings = await loadBrandSettings();
   const company = user?.companyId ? await loadCompany(user.companyId) : null;
-  const homeHref = "index.html";
-  const dashboardHref = user ? getDashboardPath(user.role) : "dashboard.html";
+  const homeHref = "/evaraos/index.html";
+  const dashboardHref = user ? getDashboardPath(user.role) : "/evaraos/dashboard.html";
 
   const identityName = user ? user.name || formatDisplayUsername(user) : "Guest";
   const identityHandle = user ? formatHandle(user) : "";
@@ -923,7 +945,7 @@ export async function bindTopbar(user = null) {
     <div class="app-topbar-shell">
       <div class="app-topbar-inner">
         <a class="app-brand" href="${homeHref}">
-          <img src="${settings?.logoUrl || "assets/img/evaraos_logo.png"}" alt="logo">
+          <img src="${settings?.logoUrl || "/evaraos/assets/img/evaraos_logo.png"}" alt="logo">
           <div class="app-brand-text">
             <strong>${settings?.platformName || "Evaraos Inc"}</strong>
             <span>${identityCompany}</span>
@@ -978,7 +1000,7 @@ export async function bindTopbar(user = null) {
 
   document.getElementById("logoutBtn")?.addEventListener("click", async () => {
     await logout();
-    window.location.href = "login.html";
+    window.location.href = "/evaraos/login.html";
   });
 
   wireTopbarMenu();
@@ -987,7 +1009,7 @@ export async function bindTopbar(user = null) {
 export function requireAuth(renderFn) {
   listenAuth(async (user) => {
     if (!user) {
-      window.location.href = "login.html";
+      window.location.href = "/evaraos/login.html";
       return;
     }
 
@@ -1014,8 +1036,11 @@ export function requireAuth(renderFn) {
 }
 
 export async function fetchCompanyCollection(name, companyId) {
-  const q = query(collection(db, name), where("companyId", "==", sanitizeCompanyId(companyId)));
-  const snap = await getDocs(q);
+  const qRef = query(
+    collection(db, name),
+    where("companyId", "==", sanitizeCompanyId(companyId))
+  );
+  const snap = await getDocs(qRef);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
@@ -1025,8 +1050,11 @@ export async function fetchAllCollection(name) {
 }
 
 export async function fetchUsersByCompany(companyId) {
-  const q = query(collection(db, "users"), where("companyId", "==", sanitizeCompanyId(companyId)));
-  const snap = await getDocs(q);
+  const qRef = query(
+    collection(db, "users"),
+    where("companyId", "==", sanitizeCompanyId(companyId))
+  );
+  const snap = await getDocs(qRef);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
@@ -1048,26 +1076,26 @@ export async function fetchPendingUsersByCompany(companyId, includeAll = false) 
 }
 
 export async function fetchActiveSalesReps(companyId) {
-  const q = query(
+  const qRef = query(
     collection(db, "users"),
     where("companyId", "==", sanitizeCompanyId(companyId)),
     where("role", "==", "sales_rep"),
     where("status", "==", "active"),
     where("approvalStatus", "==", "approved")
   );
-  const snap = await getDocs(q);
+  const snap = await getDocs(qRef);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
 export async function fetchActiveTechnicians(companyId) {
-  const q = query(
+  const qRef = query(
     collection(db, "users"),
     where("companyId", "==", sanitizeCompanyId(companyId)),
     where("role", "==", "technician"),
     where("status", "==", "active"),
     where("approvalStatus", "==", "approved")
   );
-  const snap = await getDocs(q);
+  const snap = await getDocs(qRef);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
@@ -1175,225 +1203,66 @@ export async function updateCompany(companyId, payload) {
   });
 }
 
-export function renderSidebar(role, active = "overview") {
-  const links = [
-    { key: "overview", label: "Overview", href: role === "customer" ? "customer_dashboard.html" : "dashboard.html" },
-    { key: "users", label: "Users", href: "users.html" },
-    { key: "leads", label: "Leads", href: "leads.html" },
-    { key: "sales_reps", label: "Sales Reps", href: "sales_reps.html" },
-    { key: "companies", label: "Companies", href: "companies.html" },
-    { key: "jobs", label: "Jobs", href: "jobs.html" },
-    { key: "customers", label: "Customers", href: "#" },
-    { key: "settings", label: "Settings", href: "#" }
-  ];
+export async function fetchCustomerServices(user) {
+  if (!user) return [];
 
-  if (role === "super_admin") {
-    links.push({ key: "audit", label: "Audit", href: "audit.html" });
+  const company = await loadCompany(user.companyId);
+
+  const companyServices = Array.isArray(company?.serviceCategories)
+    ? company.serviceCategories
+    : [];
+
+  if (companyServices.length) {
+    return companyServices.map((name, index) => ({
+      id: `service_${index + 1}`,
+      name,
+      status: "active",
+      billingType: "Subscription / Company Plan",
+      cancellationPolicy: "Changes may require review depending on contract timing.",
+      canRequestChanges: true
+    }));
   }
 
-  return links
-    .filter((link) => link.key === "audit" || canAccess(role, link.key))
-    .map((link) => `<a class="${active === link.key ? "active" : ""}" href="${link.href}">${link.label}</a>`)
-    .join("");
-}
-
-export function renderRoleSummary(user) {
-  const sections = getAllowedSections(user.role);
-  const prettyRole = getRoleLabel(user.role);
-
-  return `
-    <strong>${user.name || user.email}</strong><br>
-    Display Username: ${formatDisplayUsername(user)}<br>
-    Handle: ${formatHandle(user)}<br>
-    Role: ${prettyRole}<br>
-    Company: ${user.companyId}<br>
-    Access Level: ${user.companyAccessLevel || "subsidiary"}<br>
-    Sections: ${sections.join(", ")}<br>
-    Org Level: ${user.organizationLevel || "—"}
-  `;
-}
-
-export function renderPermissionBadges(user) {
-  const permissions = Array.isArray(user?.permissions) ? user.permissions : [];
-  if (!permissions.length) return `<span class="muted">No permissions found</span>`;
-  return permissions.map((item) => `<span class="badge">${item}</span>`).join("");
-}
-
-export function roleGuard(user, requiredSection) {
-  if (!user) return false;
-  if (user.role === "super_admin") return true;
-  return canAccess(user.role, requiredSection);
-}
-
-export function groupUsersByRole(users) {
-  const order = [
-    "super_admin",
-    "admin",
-    "manager",
-    "operations_coordinator",
-    "sales_rep",
-    "technician",
-    "hr",
-    "customer"
+  return [
+    {
+      id: "default_service_1",
+      name: "Exterior Cleaning Service",
+      status: "active",
+      billingType: "Subscription / Company Plan",
+      cancellationPolicy: "Changes may require review depending on contract timing.",
+      canRequestChanges: true
+    }
   ];
-
-  const groups = {};
-  order.forEach((role) => {
-    groups[role] = users.filter((user) => user.role === role);
-  });
-
-  const extras = users.filter((user) => !order.includes(user.role));
-  if (extras.length) groups.other = extras;
-
-  return groups;
 }
 
-export async function scanSystemDiscrepancies() {
-  const [users, usernames, companies, leads, jobs, services] = await Promise.all([
-    fetchAllCollection("users").catch(() => []),
-    fetchAllCollection("usernames").catch(() => []),
-    fetchAllCollection("companies").catch(() => []),
-    fetchAllCollection("leads").catch(() => []),
-    fetchAllCollection("jobs").catch(() => []),
-    fetchAllCollection("services").catch(() => [])
-  ]);
+export async function updateOwnCustomerProfile(userId, payload = {}) {
+  if (!userId) throw new Error("User ID is required.");
 
-  const discrepancies = {
-    users: [],
-    usernames: [],
-    companies: [],
-    leads: [],
-    jobs: [],
-    services: []
+  const usernameFields = buildNormalizedUsernameFields(payload.username || "");
+  const patch = {
+    name: payload.name || "",
+    email: payload.email || "",
+    phone: payload.phone || "",
+    preferredContactMethod: payload.preferredContactMethod || "",
+    address: payload.address || "",
+    city: payload.city || "",
+    state: payload.state || "",
+    zip: payload.zip || "",
+    photoUrl: payload.photoUrl || "",
+    updatedAt: serverTimestamp()
   };
 
-  const usernameMap = new Map(usernames.map((item) => [item.id, item]));
+  if (usernameFields.username) {
+    patch.username = usernameFields.username;
+    patch.handle = usernameFields.handle;
+    patch.displayUsername = usernameFields.displayUsername;
+  }
 
-  users.forEach((user) => {
-    const normalized = buildNormalizedUserPayload(user);
-    const missingFields = USER_REQUIRED_FIELDS.filter((field) => {
-      if (field === "permissions") return !Array.isArray(user.permissions) || !user.permissions.length;
-      return user[field] === undefined;
-    });
+  await updateDoc(doc(db, "users", userId), patch);
 
-    const mismatchFields = [];
+  if (usernameFields.username) {
+    await syncUsernameDirectoryByUserDoc(userId);
+  }
 
-    if ((user.companyId || "") !== normalized.companyId) mismatchFields.push("companyId");
-    if ((user.handle || "") !== normalized.handle) mismatchFields.push("handle");
-    if ((user.displayUsername || "") !== normalized.displayUsername) mismatchFields.push("displayUsername");
-    if ((user.companyAccessLevel || "") !== normalized.companyAccessLevel) mismatchFields.push("companyAccessLevel");
-    if (typeof user.organizationLevel !== "number" || user.organizationLevel !== normalized.organizationLevel) {
-      mismatchFields.push("organizationLevel");
-    }
-    if (!Array.isArray(user.permissions) || JSON.stringify(user.permissions) !== JSON.stringify(normalized.permissions)) {
-      mismatchFields.push("permissions");
-    }
-
-    const usernameDoc = usernameMap.get(normalized.username);
-    if (!normalized.username) mismatchFields.push("username");
-    if (!usernameDoc) mismatchFields.push("username_directory_missing");
-
-    if (missingFields.length || mismatchFields.length) {
-      discrepancies.users.push({
-        id: user.id,
-        name: user.name || user.email || user.id,
-        role: user.role || "unknown",
-        missingFields,
-        mismatchFields
-      });
-    }
-  });
-
-  usernames.forEach((entry) => {
-    const linkedUser = users.find((u) => u.id === entry.uid);
-    const issues = [];
-
-    if (!linkedUser) issues.push("uid_missing_in_users");
-    if (entry.id !== (linkedUser?.username || entry.id)) issues.push("doc_id_username_mismatch");
-    if ((entry.companyId || "") !== sanitizeCompanyId(entry.companyId || "")) issues.push("companyId_not_standardized");
-    if (entry.handle !== `@${entry.id}`) issues.push("handle_mismatch");
-
-    if (issues.length) {
-      discrepancies.usernames.push({ id: entry.id, issues });
-    }
-  });
-
-  companies.forEach((company) => {
-    const issues = [];
-    const normalized = buildNormalizedCompanyPayload(company, company.id);
-
-    if (company.id !== sanitizeCompanyId(company.id)) issues.push("doc_id_not_standardized");
-    if ((company.slug || "") !== normalized.slug) issues.push("slug_mismatch");
-    if (!company.ownerName) issues.push("ownerName_missing");
-    if (!company.ownerEmail) issues.push("ownerEmail_missing");
-    if (company.active === undefined) issues.push("active_missing");
-    if (!company.brandColor) issues.push("brandColor_missing");
-
-    if (issues.length) {
-      discrepancies.companies.push({ id: company.id, issues });
-    }
-  });
-
-  leads.forEach((lead) => {
-    const issues = [];
-    const normalized = buildNormalizedLeadPayload(lead);
-
-    if ((lead.companyId || "") !== normalized.companyId) issues.push("companyId_not_standardized");
-    if (lead.status !== normalized.status) issues.push("status_outside_allowed_values");
-    if (!lead.createdAt) issues.push("createdAt_missing");
-    if (!lead.updatedAt) issues.push("updatedAt_missing");
-
-    if (issues.length) {
-      discrepancies.leads.push({ id: lead.id, issues });
-    }
-  });
-
-  jobs.forEach((job) => {
-    const issues = [];
-    const normalized = buildNormalizedJobPayload(job);
-
-    if ((job.companyId || "") !== normalized.companyId) issues.push("companyId_not_standardized");
-    if (job.status !== normalized.status) issues.push("status_outside_allowed_values");
-    if ((job.paymentStatus || "unpaid") !== normalized.paymentStatus) issues.push("paymentStatus_outside_allowed_values");
-
-    [
-      "sourceLeadId",
-      "assignedTechnician",
-      "serviceAddOns",
-      "assignedCrewIds",
-      "arrivalTime",
-      "departureTime",
-      "crewNotes",
-      "beforePhotos",
-      "afterPhotos",
-      "completionNotes",
-      "paymentStatus",
-      "invoiceId",
-      "customerSignature",
-      "routeOrder"
-    ].forEach((field) => {
-      if (job[field] === undefined) issues.push(`${field}_missing`);
-    });
-
-    if (issues.length) {
-      discrepancies.jobs.push({ id: job.id, issues });
-    }
-  });
-
-  services.forEach((service) => {
-    const issues = [];
-    const normalized = buildNormalizedServicePayload(service);
-
-    if ((service.companyId || "") !== normalized.companyId) issues.push("companyId_not_standardized");
-    if ((service.slug || "") !== normalized.slug) issues.push("slug_missing_or_mismatch");
-    if (service.active === undefined) issues.push("active_missing");
-    if (!service.category) issues.push("category_missing");
-    if (!service.pricingType) issues.push("pricingType_missing");
-
-    if (issues.length) {
-      discrepancies.services.push({ id: service.id, issues });
-    }
-  });
-
-  return discrepancies;
+  return patch;
 }
