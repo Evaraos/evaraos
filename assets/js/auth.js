@@ -21,7 +21,7 @@ import {
   updateDoc,
   deleteDoc,
   serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 function normalizeUsername(value = "") {
   return String(value).trim().replace(/^@+/, "").toLowerCase();
