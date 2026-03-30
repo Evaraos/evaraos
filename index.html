@@ -19,7 +19,9 @@
 
       <nav class="landing-nav">
         <a href="/evaraos/index.html" class="nav-pill active">Home</a>
-        <a href="/evaraos/login.html" class="nav-pill">Login</a>
+        <a href="/evaraos/login.html" class="nav-pill" id="loginNavLink">Login</a>
+        <a href="/evaraos/dashboard.html" class="nav-pill" id="dashboardNavLink" style="display:none;">Dashboard</a>
+        <button type="button" class="btn btn-secondary" id="logoutHomeBtn" style="display:none;">Logout</button>
       </nav>
     </div>
   </header>
@@ -36,8 +38,8 @@
         </p>
 
         <div class="hero-actions">
-          <a href="/evaraos/login.html" class="btn btn-primary">Enter Platform</a>
-          <a href="/evaraos/companies.html" class="btn btn-secondary">Get Started</a>
+          <a href="/evaraos/login.html" class="btn btn-primary" id="heroEnterLink">Enter Platform</a>
+          <a href="/evaraos/companies.html" class="btn btn-secondary" id="heroSecondaryLink">Get Started</a>
         </div>
       </div>
 
