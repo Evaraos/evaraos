@@ -9,7 +9,7 @@
 <body class="app-theme">
   <header class="landing-header">
     <div class="landing-header-inner">
-      <a href="/evaraos/index.html" class="brand-link">
+      <a href="/evaraos/index.html" class="brand-link no-underline">
         <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos logo" class="brand-logo" />
         <div class="brand-copy">
           <strong>Evaraos Inc</strong>
@@ -18,9 +18,30 @@
       </a>
 
       <nav class="landing-nav">
-        <a href="/evaraos/index.html" class="nav-pill">Home</a>
-        <a href="/evaraos/login.html" class="nav-pill active">Login</a>
+        <a href="/evaraos/index.html" class="nav-pill no-underline">Home</a>
+        <a href="/evaraos/login.html" class="nav-pill active no-underline">Login</a>
       </nav>
+
+      <div class="topbar-menu-wrap">
+        <button type="button" class="topbar-menu-btn" id="loginMenuBtn" aria-label="Open menu">
+          <span class="hamburger-lines">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </button>
+
+        <div class="topbar-dropdown" id="loginMenuDropdown">
+          <a href="/evaraos/index.html">
+            <strong>Home</strong>
+            <span>Back to the landing page</span>
+          </a>
+          <a href="/evaraos/login.html">
+            <strong>Login</strong>
+            <span>Sign in to your account</span>
+          </a>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -31,16 +52,16 @@
       </div>
 
       <h1 class="login-title">Welcome Back</h1>
-      <p class="login-subtitle">Login with your email, username, or @handle</p>
+      <p class="login-subtitle">Login with your email or username</p>
 
       <form id="loginForm" class="login-form">
-        <label class="field-label" for="username">Username</label>
+        <label class="field-label" for="username">Email or Username</label>
         <input
           id="username"
           name="username"
           type="text"
           class="input login-input"
-          placeholder="Email, username, or @handle"
+          placeholder="Email or username"
           autocomplete="username"
           required
         />
@@ -106,5 +127,24 @@
   </main>
 
   <script type="module" src="/evaraos/assets/js/auth.js"></script>
+  <script>
+    const loginMenuBtn = document.getElementById("loginMenuBtn");
+    const loginMenuDropdown = document.getElementById("loginMenuDropdown");
+
+    if (loginMenuBtn && loginMenuDropdown) {
+      loginMenuBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        loginMenuBtn.classList.toggle("open");
+        loginMenuDropdown.classList.toggle("open");
+      });
+
+      loginMenuDropdown.addEventListener("click", (e) => e.stopPropagation());
+
+      document.addEventListener("click", () => {
+        loginMenuBtn.classList.remove("open");
+        loginMenuDropdown.classList.remove("open");
+      });
+    }
+  </script>
 </body>
 </html>
