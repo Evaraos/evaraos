@@ -32,7 +32,7 @@ function formatLoginError(error) {
     code.includes("requests-from-referer-are-blocked") ||
     message.includes("requests-from-referer")
   ) {
-    return "Add evaraos.github.io to Firebase Authorized Domains.";
+    return "This domain is still being blocked by Firebase or Google Cloud restrictions.";
   }
 
   if (
@@ -85,22 +85,30 @@ async function resolveEmailFromLoginIdentifier(identifier) {
   const usernameDoc = await getDoc(doc(db, "usernames", normalized));
   if (usernameDoc.exists()) {
     const data = usernameDoc.data();
-    if (data?.email) return String(data.email).toLowerCase();
+
+    if (data?.email) {
+      return String(data.email).toLowerCase();
+    }
 
     if (data?.uid) {
       const userSnap = await getDoc(doc(db, "users", data.uid));
       if (userSnap.exists()) {
         const userData = userSnap.data();
-        if (userData?.email) return String(userData.email).toLowerCase();
+        if (userData?.email) {
+          return String(userData.email).toLowerCase();
+        }
       }
     }
   }
 
   const userQuery = query(collection(db, "users"), where("username", "==", normalized));
   const userSnap = await getDocs(userQuery);
+
   if (!userSnap.empty) {
     const userData = userSnap.docs[0].data();
-    if (userData?.email) return String(userData.email).toLowerCase();
+    if (userData?.email) {
+      return String(userData.email).toLowerCase();
+    }
   }
 
   throw new Error("No account found for that username or handle.");
@@ -278,7 +286,9 @@ function setupLoginForm() {
       const role = userData?.role || "customer";
 
       window.location.href =
-        role === "customer" ? "customer_dashboard.html" : "dashboard.html";
+        role === "customer"
+          ? "/evaraos/customer_dashboard.html"
+          : "/evaraos/dashboard.html";
     } catch (error) {
       console.error("Login failed:", error);
       setText("loginMessage", formatLoginError(error), true);
