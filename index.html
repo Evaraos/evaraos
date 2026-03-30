@@ -20,13 +20,32 @@
       <nav class="landing-nav" id="landingNav">
         <a href="/evaraos/index.html" class="nav-pill active no-underline">Home</a>
         <a href="/evaraos/login.html" class="nav-pill no-underline" id="loginNavLink">Login</a>
-        <a href="/evaraos/dashboard.html" class="nav-pill no-underline hidden" id="dashboardNavLink">Dashboard</a>
-        <button type="button" class="nav-pill hidden" id="logoutHomeBtn">Logout</button>
+        <a
+          href="/evaraos/dashboard.html"
+          class="nav-pill no-underline"
+          id="dashboardNavLink"
+          style="display:none;"
+        >
+          Dashboard
+        </a>
+        <button
+          type="button"
+          class="nav-pill"
+          id="logoutHomeBtn"
+          style="display:none;"
+        >
+          Logout
+        </button>
       </nav>
 
-      <div class="topbar-menu-wrap hidden" id="homeMenuWrap">
-        <button type="button" class="topbar-menu-btn" id="homeMenuBtn" aria-label="Open menu">
-          <span class="hamburger-lines">
+      <div class="topbar-menu-wrap" id="homeMenuWrap" style="display:none;">
+        <button
+          type="button"
+          class="topbar-menu-btn"
+          id="homeMenuBtn"
+          aria-label="Open menu"
+        >
+          <span class="hamburger-lines" aria-hidden="true">
             <span></span>
             <span></span>
             <span></span>
@@ -38,15 +57,20 @@
             <strong>Home</strong>
             <span>Main landing page</span>
           </a>
+
           <a href="/evaraos/dashboard.html" id="homeMenuDashboardLink">
             <strong>Dashboard</strong>
             <span>Go to your account dashboard</span>
           </a>
+
           <a href="/evaraos/companies.html" id="homeMenuCompaniesLink">
             <strong>Companies</strong>
             <span>Open companies and platform setup</span>
           </a>
-          <button type="button" class="dropdown-logout-btn" id="homeMenuLogoutBtn">Logout</button>
+
+          <button type="button" class="dropdown-logout-btn" id="homeMenuLogoutBtn">
+            Logout
+          </button>
         </div>
       </div>
     </div>
@@ -64,8 +88,21 @@
         </p>
 
         <div class="hero-actions">
-          <a href="/evaraos/login.html" class="btn btn-primary no-underline" id="heroEnterLink">Enter Platform</a>
-          <a href="/evaraos/companies.html" class="btn btn-secondary no-underline" id="heroSecondaryLink">Get Started</a>
+          <a
+            href="/evaraos/login.html"
+            class="btn btn-primary no-underline"
+            id="heroEnterLink"
+          >
+            Enter Platform
+          </a>
+
+          <a
+            href="/evaraos/companies.html"
+            class="btn btn-secondary no-underline"
+            id="heroSecondaryLink"
+          >
+            Get Started
+          </a>
         </div>
       </div>
 
