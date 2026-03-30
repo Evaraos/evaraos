@@ -5,8 +5,8 @@ import {
   signOut,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
-  reauthenticateWithCredential,
   EmailAuthProvider,
+  reauthenticateWithCredential,
   updatePassword
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -52,7 +52,8 @@ function formatLoginError(error) {
   if (
     code.includes("invalid-credential") ||
     code.includes("wrong-password") ||
-    code.includes("user-not-found")
+    code.includes("user-not-found") ||
+    code.includes("invalid-login-credentials")
   ) {
     return "Invalid email, username, handle, or password.";
   }
@@ -84,6 +85,20 @@ function showElement(el) {
 function hideElement(el) {
   if (!el) return;
   el.classList.add("hidden");
+  el.style.display = "none";
+}
+
+export async function getCurrentUserDoc(user = null) {
+  const uid = user?.uid || auth.currentUser?.uid;
+  if (!uid) return null;
+
+  try {
+    const snap = await getDoc(doc(db, "users", uid));
+    return snap.exists() ? { id: uid, uid, ...snap.data() } : null;
+  } catch (error) {
+    console.error("Failed to load current user doc:", error);
+    return null;
+  }
 }
 
 async function resolveEmailFromLoginIdentifier(identifier) {
@@ -138,21 +153,22 @@ export async function syncUsernameDirectoryByUserDoc(userId) {
 
   const user = userSnap.data();
   const identity = buildUserIdentity(user.username || "");
+  const username = identity.username;
 
   const existingEntriesQuery = query(collection(db, "usernames"), where("uid", "==", userId));
   const existingEntriesSnap = await getDocs(existingEntriesQuery);
 
   for (const entry of existingEntriesSnap.docs) {
-    if (entry.id !== identity.username) {
+    if (entry.id !== username) {
       await deleteDoc(doc(db, "usernames", entry.id));
     }
   }
 
-  if (!identity.username) return null;
+  if (!username) return null;
 
   const payload = {
     uid: userId,
-    username: identity.username,
+    username,
     handle: identity.handle,
     displayUsername: identity.displayUsername,
     email: user.email || "",
@@ -161,7 +177,7 @@ export async function syncUsernameDirectoryByUserDoc(userId) {
     updatedAt: serverTimestamp()
   };
 
-  const usernameRef = doc(db, "usernames", identity.username);
+  const usernameRef = doc(db, "usernames", username);
   const usernameSnap = await getDoc(usernameRef);
 
   if (!usernameSnap.exists()) {
@@ -172,28 +188,6 @@ export async function syncUsernameDirectoryByUserDoc(userId) {
   return payload;
 }
 
-export async function getCurrentUserDoc(firebaseUser = auth.currentUser) {
-  if (!firebaseUser) return null;
-
-  const snap = await getDoc(doc(db, "users", firebaseUser.uid));
-  if (!snap.exists()) {
-    return {
-      id: firebaseUser.uid,
-      uid: firebaseUser.uid,
-      email: firebaseUser.email || "",
-      role: "customer",
-      approvalStatus: "pending"
-    };
-  }
-
-  return {
-    id: firebaseUser.uid,
-    uid: firebaseUser.uid,
-    email: firebaseUser.email || snap.data().email || "",
-    ...snap.data()
-  };
-}
-
 export function listenAuth(callback) {
   return onAuthStateChanged(auth, async (firebaseUser) => {
     if (!firebaseUser) {
@@ -202,8 +196,28 @@ export function listenAuth(callback) {
     }
 
     try {
-      const userData = await getCurrentUserDoc(firebaseUser);
-      callback(userData);
+      const userRef = doc(db, "users", firebaseUser.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        callback({
+          id: firebaseUser.uid,
+          uid: firebaseUser.uid,
+          email: firebaseUser.email || "",
+          approvalStatus: "pending",
+          role: "customer"
+        });
+        return;
+      }
+
+      const userData = userSnap.data();
+
+      callback({
+        id: firebaseUser.uid,
+        uid: firebaseUser.uid,
+        email: firebaseUser.email || userData.email || "",
+        ...userData
+      });
     } catch (error) {
       console.error("listenAuth failed:", error);
       callback(null);
@@ -215,26 +229,34 @@ export async function logout() {
   await signOut(auth);
 }
 
-export async function updateOwnUsername(userId, nextUsername) {
-  const firebaseUser = auth.currentUser;
-  if (!firebaseUser || !userId) {
-    throw new Error("You must be logged in to update username.");
-  }
+export async function updateOwnUsername(userId, newUsername) {
+  const currentUser = auth.currentUser;
+  if (!currentUser) throw new Error("You must be logged in.");
 
-  const identity = buildUserIdentity(nextUsername);
-  if (!identity.username) {
-    throw new Error("Username cannot be empty.");
-  }
+  const identity = buildUserIdentity(newUsername);
+  if (!identity.username) throw new Error("Username is required.");
 
-  const existing = await getDoc(doc(db, "usernames", identity.username));
-  if (existing.exists()) {
-    const existingData = existing.data();
+  const existingUsernameRef = doc(db, "usernames", identity.username);
+  const existingUsernameSnap = await getDoc(existingUsernameRef);
+
+  if (existingUsernameSnap.exists()) {
+    const existingData = existingUsernameSnap.data();
     if (existingData?.uid && existingData.uid !== userId) {
       throw new Error("That username is already taken.");
     }
   }
 
-  await updateDoc(doc(db, "users", userId), {
+  const userRef = doc(db, "users", userId);
+  const userSnap = await getDoc(userRef);
+
+  if (!userSnap.exists()) {
+    throw new Error("User profile not found.");
+  }
+
+  const currentData = userSnap.data();
+  const oldUsername = normalizeUsername(currentData.username || "");
+
+  await updateDoc(userRef, {
     username: identity.username,
     handle: identity.handle,
     displayUsername: identity.displayUsername,
@@ -242,133 +264,126 @@ export async function updateOwnUsername(userId, nextUsername) {
   });
 
   await syncUsernameDirectoryByUserDoc(userId);
+
+  if (oldUsername && oldUsername !== identity.username) {
+    try {
+      await deleteDoc(doc(db, "usernames", oldUsername));
+    } catch (error) {
+      console.warn("Could not delete old username doc:", error);
+    }
+  }
+
   return identity;
 }
 
 export async function changeOwnPassword(currentPassword, newPassword) {
-  const firebaseUser = auth.currentUser;
-
-  if (!firebaseUser || !firebaseUser.email) {
-    throw new Error("You must be logged in to change password.");
+  const currentUser = auth.currentUser;
+  if (!currentUser || !currentUser.email) {
+    throw new Error("You must be logged in.");
   }
 
   if (!currentPassword || !newPassword) {
-    throw new Error("Enter current password and new password.");
+    throw new Error("Enter both current and new password.");
   }
 
   if (newPassword.length < 6) {
     throw new Error("New password must be at least 6 characters.");
   }
 
-  const credential = EmailAuthProvider.credential(firebaseUser.email, currentPassword);
-  await reauthenticateWithCredential(firebaseUser, credential);
-  await updatePassword(firebaseUser, newPassword);
-
-  try {
-    await updateDoc(doc(db, "users", firebaseUser.uid), {
-      updatedAt: serverTimestamp()
-    });
-  } catch (e) {
-    console.warn("Password change updated auth but not Firestore timestamp:", e);
-  }
-
-  return true;
+  const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
+  await reauthenticateWithCredential(currentUser, credential);
+  await updatePassword(currentUser, newPassword);
 }
 
 export async function updateOwnCustomerProfile(userId, payload = {}) {
-  const firebaseUser = auth.currentUser;
-  if (!firebaseUser || !userId || firebaseUser.uid !== userId) {
-    throw new Error("Unauthorized profile update.");
-  }
+  const userRef = doc(db, "users", userId);
+  const userSnap = await getDoc(userRef);
 
-  const currentSnap = await getDoc(doc(db, "users", userId));
-  if (!currentSnap.exists()) {
+  if (!userSnap.exists()) {
     throw new Error("User profile not found.");
   }
 
-  const current = currentSnap.data();
-  const nextUsername = normalizeUsername(payload.username || current.username || "");
-  const identity = buildUserIdentity(nextUsername);
-
-  if (identity.username) {
-    const existing = await getDoc(doc(db, "usernames", identity.username));
-    if (existing.exists()) {
-      const data = existing.data();
-      if (data?.uid && data.uid !== userId) {
-        throw new Error("That username is already taken.");
-      }
-    }
-  }
+  const current = userSnap.data();
+  const identity = buildUserIdentity(payload.username || current.username || "");
 
   const updatePayload = {
-    name: String(payload.name ?? current.name ?? "").trim(),
+    name: payload.name ?? current.name ?? "",
     username: identity.username,
     handle: identity.handle,
     displayUsername: identity.displayUsername,
-    email: String(payload.email ?? current.email ?? "").trim(),
-    phone: String(payload.phone ?? current.phone ?? "").trim(),
-    preferredContactMethod: String(
-      payload.preferredContactMethod ?? current.preferredContactMethod ?? ""
-    ).trim(),
-    address: String(payload.address ?? current.address ?? "").trim(),
-    city: String(payload.city ?? current.city ?? "").trim(),
-    state: String(payload.state ?? current.state ?? "").trim(),
-    zip: String(payload.zip ?? current.zip ?? "").trim(),
-    photoUrl: String(payload.photoUrl ?? current.photoUrl ?? "").trim(),
+    email: payload.email ?? current.email ?? "",
+    phone: payload.phone ?? current.phone ?? "",
+    preferredContactMethod:
+      payload.preferredContactMethod ?? current.preferredContactMethod ?? "",
+    address: payload.address ?? current.address ?? "",
+    city: payload.city ?? current.city ?? "",
+    state: payload.state ?? current.state ?? "",
+    zip: payload.zip ?? current.zip ?? "",
+    photoUrl: payload.photoUrl ?? current.photoUrl ?? "",
     updatedAt: serverTimestamp()
   };
 
-  await updateDoc(doc(db, "users", userId), updatePayload);
+  await updateDoc(userRef, updatePayload);
+  await syncUsernameDirectoryByUserDoc(userId);
 
-  if (identity.username) {
-    await syncUsernameDirectoryByUserDoc(userId);
-  }
-
-  return {
-    ...current,
-    ...updatePayload,
-    updatedAt: new Date().toISOString()
-  };
+  return updatePayload;
 }
 
 export async function fetchCustomerServices(user) {
-  if (!user?.companyId) return [];
+  if (!user) return [];
 
   try {
-    const qRef = query(
-      collection(db, "services"),
-      where("companyId", "==", String(user.companyId).trim().toLowerCase().replace(/-/g, "_").replace(/\s+/g, "_"))
-    );
+    const companyId = user.companyId || "";
+    const companyQuery = companyId
+      ? query(collection(db, "services"), where("companyId", "==", companyId))
+      : null;
 
-    const snap = await getDocs(qRef);
+    if (!companyQuery) {
+      return [];
+    }
 
-    if (!snap.empty) {
-      return snap.docs.map((docSnap) => {
-        const item = docSnap.data();
-        return {
-          id: docSnap.id,
-          name: item.name || "Service",
-          status: item.active === false ? "inactive" : "active",
-          billingType: item.pricingType || item.unit || "Custom",
-          cancellationPolicy: item.description || "Contact support for service change details.",
+    const snap = await getDocs(companyQuery);
+
+    if (snap.empty) {
+      return [
+        {
+          id: "customer_default_service",
+          name: "Supreme TrueClean Service Access",
+          status: "active",
+          billingType: "Subscription / Service Plan",
+          cancellationPolicy: "Changes may require internal approval.",
           canRequestChanges: true
-        };
-      });
+        }
+      ];
     }
-  } catch (e) {
-    console.warn("Could not load services collection, falling back:", e);
-  }
 
-  return [
-    {
-      id: "default_service",
-      name: "Active Customer Service",
-      status: "active",
-      billingType: "Custom Plan",
-      cancellationPolicy: "Contact support for service change details.",
-      canRequestChanges: true
-    }
-  ];
+    return snap.docs.map((serviceDoc) => {
+      const data = serviceDoc.data();
+      return {
+        id: serviceDoc.id,
+        name: data.name || "Service",
+        status: data.active === false ? "inactive" : "active",
+        billingType: data.pricingType || "Standard Billing",
+        cancellationPolicy:
+          data.customerVisible === false
+            ? "This service is managed internally."
+            : "Changes may require internal approval.",
+        canRequestChanges: true
+      };
+    });
+  } catch (error) {
+    console.error("Failed to fetch customer services:", error);
+    return [
+      {
+        id: "customer_default_service",
+        name: "Supreme TrueClean Service Access",
+        status: "active",
+        billingType: "Subscription / Service Plan",
+        cancellationPolicy: "Changes may require internal approval.",
+        canRequestChanges: true
+      }
+    ];
+  }
 }
 
 function setupPasswordToggle() {
