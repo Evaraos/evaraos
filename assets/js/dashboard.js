@@ -60,8 +60,12 @@ function getDashboardMetrics(leads, jobs, users) {
   const completedJobs = jobs.filter((job) => String(job.status || "").toLowerCase() === "completed");
   const scheduledJobs = jobs.filter((job) => String(job.status || "").toLowerCase() === "scheduled");
   const inProgressJobs = jobs.filter((job) => String(job.status || "").toLowerCase() === "in_progress");
-  const activeReps = users.filter((u) => u.role === "sales_rep" && String(u.status || "").toLowerCase() === "active");
-  const activeTechs = users.filter((u) => u.role === "technician" && String(u.status || "").toLowerCase() === "active");
+  const activeReps = users.filter(
+    (u) => u.role === "sales_rep" && String(u.status || "").toLowerCase() === "active"
+  );
+  const activeTechs = users.filter(
+    (u) => u.role === "technician" && String(u.status || "").toLowerCase() === "active"
+  );
 
   const revenue = completedJobs.reduce((sum, job) => sum + Number(job.estimatedPrice || 0), 0);
   const conversionRate = leads.length ? (wonLeads.length / leads.length) * 100 : 0;
@@ -121,12 +125,12 @@ function renderPipeline(stageCounts) {
 
 function renderQuickLinks(user) {
   const links = [
-    { key: "leads", label: "Open Leads", href: "leads.html", desc: "Manage pipeline and conversions" },
-    { key: "sales_reps", label: "Open Sales Reps", href: "sales_reps.html", desc: "Add and edit reps" },
-    { key: "companies", label: "Open Companies", href: "companies.html", desc: "Manage company records" },
-    { key: "jobs", label: "Open Jobs", href: "jobs.html", desc: "Track scheduled work" },
-    { key: "users", label: "Open Users", href: "users.html", desc: "Manage user accounts" },
-    { key: "audit", label: "Open Audit", href: "audit.html", desc: "Repair and integrity tools" }
+    { key: "leads", label: "Open Leads", href: "/evaraos/leads.html", desc: "Manage pipeline and conversions" },
+    { key: "sales_reps", label: "Open Sales Reps", href: "/evaraos/sales_reps.html", desc: "Add and edit reps" },
+    { key: "companies", label: "Open Companies", href: "/evaraos/companies.html", desc: "Manage company records" },
+    { key: "jobs", label: "Open Jobs", href: "/evaraos/jobs.html", desc: "Track scheduled work" },
+    { key: "users", label: "Open Users", href: "/evaraos/users.html", desc: "Manage user accounts" },
+    { key: "audit", label: "Open Audit", href: "/evaraos/audit.html", desc: "Repair and integrity tools" }
   ].filter((item) => canAccess(user.role, item.key));
 
   if (!links.length) return "";
