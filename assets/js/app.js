@@ -1,5 +1,4 @@
 import {
-  db,
   collection,
   getDocs,
   query,
@@ -11,19 +10,15 @@ import {
   deleteDoc,
   serverTimestamp,
   setDoc
-} from "./firebase.js";
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+import { db } from "./firebase.js";
 import {
   listenAuth,
   logout,
   syncUsernameDirectoryByUserDoc
 } from "./auth.js";
-
-import {
-  canAccess,
-  getAllowedSections,
-  getRoleLabel
-} from "./roles.js";
+import { canAccess, getAllowedSections, getRoleLabel } from "./roles.js";
 
 export const SERVICE_LIBRARY = {
   exterior: [
@@ -218,10 +213,7 @@ export function buildNormalizedUserPayload(existing = {}) {
 export async function normalizeUserDoc(userId) {
   const userRef = doc(db, "users", userId);
   const snap = await getDoc(userRef);
-
-  if (!snap.exists()) {
-    throw new Error("User not found.");
-  }
+  if (!snap.exists()) throw new Error("User not found.");
 
   const existing = snap.data();
   const normalized = buildNormalizedUserPayload(existing);
@@ -242,11 +234,7 @@ export function buildNormalizedCompanyPayload(existing = {}, companyId = "") {
   const normalizedId = sanitizeCompanyId(
     companyId || existing.id || existing.companyId || existing.slug || existing.name || ""
   );
-
-  const slug = String(existing.slug || companyIdToSlug(normalizedId))
-    .trim()
-    .toLowerCase()
-    .replace(/_/g, "-");
+  const slug = String(existing.slug || companyIdToSlug(normalizedId)).trim().toLowerCase().replace(/_/g, "-");
 
   return {
     name: existing.name || "",
@@ -447,10 +435,7 @@ export function buildNormalizedLeadPayload(existing = {}) {
 export async function normalizeLeadDoc(leadId) {
   const leadRef = doc(db, "leads", leadId);
   const snap = await getDoc(leadRef);
-
-  if (!snap.exists()) {
-    throw new Error("Lead not found.");
-  }
+  if (!snap.exists()) throw new Error("Lead not found.");
 
   const normalized = buildNormalizedLeadPayload(snap.data());
 
@@ -503,10 +488,7 @@ export function buildNormalizedJobPayload(existing = {}) {
 export async function normalizeJobDoc(jobId) {
   const jobRef = doc(db, "jobs", jobId);
   const snap = await getDoc(jobRef);
-
-  if (!snap.exists()) {
-    throw new Error("Job not found.");
-  }
+  if (!snap.exists()) throw new Error("Job not found.");
 
   const normalized = buildNormalizedJobPayload(snap.data());
 
@@ -520,7 +502,6 @@ export async function normalizeJobDoc(jobId) {
 
 export function buildNormalizedServicePayload(existing = {}) {
   const slug = String(existing.slug || existing.name || "").trim().toLowerCase().replace(/\s+/g, "_");
-
   return {
     companyId: sanitizeCompanyId(existing.companyId || ""),
     name: existing.name || "",
@@ -548,10 +529,7 @@ export function buildNormalizedServicePayload(existing = {}) {
 export async function normalizeServiceDoc(serviceId) {
   const serviceRef = doc(db, "services", serviceId);
   const snap = await getDoc(serviceRef);
-
-  if (!snap.exists()) {
-    throw new Error("Service not found.");
-  }
+  if (!snap.exists()) throw new Error("Service not found.");
 
   const normalized = buildNormalizedServicePayload(snap.data());
 
@@ -665,7 +643,9 @@ export async function loadCompany(companyId) {
 }
 
 export function getDashboardPath(role) {
-  return role === "customer" ? "/evaraos/customer_dashboard.html" : "/evaraos/dashboard.html";
+  return role === "customer"
+    ? "/evaraos/customer_dashboard.html"
+    : "/evaraos/dashboard.html";
 }
 
 export function hasPermission(user, permission) {
@@ -680,18 +660,39 @@ function injectTopbarStyles() {
   const style = document.createElement("style");
   style.id = "appTopbarEnhancements";
   style.textContent = `
+    #topbar{
+      width:100%;
+      position:relative;
+      z-index:2000;
+      padding:22px 22px 0;
+    }
+
     .app-topbar-shell{
       display:flex;
       flex-direction:column;
-      gap:18px;
-      padding:22px 22px 10px;
+      gap:16px;
+      width:100%;
+      max-width:1280px;
+      margin:0 auto;
+      padding:22px;
+      border-radius:32px;
+      background:
+        radial-gradient(circle at top right, rgba(227,6,19,.16), transparent 30%),
+        linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.08);
+      backdrop-filter:blur(18px);
+      -webkit-backdrop-filter:blur(18px);
+      box-shadow:0 20px 60px rgba(0,0,0,.22);
     }
+
     .app-topbar-inner{
-      display:grid;
-      grid-template-columns:minmax(0,1fr) auto;
+      display:flex;
+      justify-content:space-between;
       align-items:center;
       gap:16px;
+      width:100%;
     }
+
     .app-brand{
       display:flex;
       align-items:center;
@@ -699,29 +700,42 @@ function injectTopbarStyles() {
       color:#fff;
       text-decoration:none;
       min-width:0;
+      flex:1 1 auto;
     }
+
     .app-brand img{
-      width:48px;
-      height:48px;
+      width:52px;
+      height:52px;
       border-radius:50%;
       object-fit:cover;
       flex-shrink:0;
     }
+
     .app-brand-text{
       display:flex;
       flex-direction:column;
       min-width:0;
     }
+
     .app-brand-text strong{
       font-size:18px;
       line-height:1.1;
+      font-weight:800;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
+
     .app-brand-text span{
       color:#c0c8d6;
       font-size:13px;
       line-height:1.2;
       margin-top:4px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
+
     .topbar-identity{
       display:flex;
       flex-direction:column;
@@ -729,43 +743,56 @@ function injectTopbarStyles() {
       gap:3px;
       min-width:0;
     }
+
     .topbar-identity strong{
       font-size:14px;
       line-height:1.2;
       text-align:right;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:220px;
     }
+
     .topbar-identity span{
       font-size:12px;
       color:#b8c0d0;
       line-height:1.2;
       text-align:right;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:220px;
     }
+
     .app-nav{
-      display:grid;
-      grid-template-columns:repeat(4,minmax(0,auto));
-      justify-content:start;
+      display:flex;
       align-items:center;
       gap:12px;
+      flex-wrap:wrap;
+      width:100%;
     }
+
     .app-nav a,
     .app-nav button,
     .topbar-menu-btn{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      min-height:50px;
-      min-width:118px;
-      padding:12px 18px;
+      min-height:54px;
+      padding:14px 22px;
       border-radius:999px;
       background:rgba(255,255,255,.04);
       border:1px solid rgba(255,255,255,.08);
       color:#fff;
       text-decoration:none;
       font:inherit;
+      font-weight:700;
       cursor:pointer;
       transition:.2s ease;
       box-sizing:border-box;
     }
+
     .app-nav a:hover,
     .app-nav button:hover,
     .app-nav a.active,
@@ -774,22 +801,42 @@ function injectTopbarStyles() {
       background:rgba(255,255,255,.10);
       transform:translateY(-1px);
     }
+
     .topbar-menu-wrap{
       position:relative;
       display:inline-flex;
+      margin-left:auto;
     }
+
     .topbar-menu-btn{
-      gap:8px;
+      gap:10px;
+      min-width:54px;
+      padding:14px 18px;
     }
+
+    .topbar-hamburger{
+      font-size:20px;
+      line-height:1;
+    }
+
+    .topbar-menu-label{
+      font-size:14px;
+      font-weight:700;
+    }
+
     .topbar-menu-caret{
       transition:transform .22s ease;
+      font-size:12px;
+      line-height:1;
     }
+
     .topbar-menu-btn.open .topbar-menu-caret{
       transform:rotate(180deg);
     }
+
     .topbar-dropdown{
       position:absolute;
-      top:calc(100% + 10px);
+      top:calc(100% + 12px);
       right:0;
       min-width:300px;
       max-width:360px;
@@ -798,6 +845,7 @@ function injectTopbarStyles() {
       background:rgba(18,20,28,.96);
       border:1px solid rgba(255,255,255,.09);
       backdrop-filter:blur(18px);
+      -webkit-backdrop-filter:blur(18px);
       box-shadow:0 22px 50px rgba(0,0,0,.36);
       display:flex;
       flex-direction:column;
@@ -810,11 +858,13 @@ function injectTopbarStyles() {
       max-height:70vh;
       overflow:auto;
     }
+
     .topbar-dropdown.open{
       opacity:1;
       pointer-events:auto;
       transform:translateY(0) scale(1);
     }
+
     .topbar-dropdown a{
       display:flex;
       flex-direction:column;
@@ -827,37 +877,65 @@ function injectTopbarStyles() {
       border:1px solid rgba(255,255,255,.07);
       transition:.18s ease;
     }
+
     .topbar-dropdown a:hover{
       background:rgba(255,255,255,.08);
       transform:translateY(-1px);
     }
+
     .topbar-dropdown a strong{
       font-size:15px;
       line-height:1.2;
     }
+
     .topbar-dropdown a span{
       font-size:12px;
       color:#b2bbca;
       line-height:1.35;
     }
+
     @media (max-width: 900px){
+      #topbar{
+        padding:18px 16px 0;
+      }
+
+      .app-topbar-shell{
+        padding:18px;
+        border-radius:28px;
+      }
+
       .app-topbar-inner{
-        grid-template-columns:1fr;
+        flex-direction:column;
         align-items:flex-start;
       }
+
       .topbar-identity{
         align-items:flex-start;
       }
-      .app-nav{
-        grid-template-columns:repeat(2,minmax(0,1fr));
-        width:100%;
+
+      .topbar-identity strong,
+      .topbar-identity span{
+        text-align:left;
+        max-width:none;
       }
+
+      .app-nav{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:12px;
+      }
+
       .app-nav a,
       .app-nav button,
-      .topbar-menu-btn,
-      .topbar-menu-wrap{
+      .topbar-menu-wrap,
+      .topbar-menu-btn{
         width:100%;
       }
+
+      .topbar-menu-wrap{
+        margin-left:0;
+      }
+
       .topbar-dropdown{
         left:0;
         right:0;
@@ -865,9 +943,23 @@ function injectTopbarStyles() {
         max-width:unset;
       }
     }
+
     @media (max-width: 560px){
       .app-nav{
         grid-template-columns:1fr 1fr;
+      }
+
+      .app-brand img{
+        width:44px;
+        height:44px;
+      }
+
+      .app-brand-text strong{
+        font-size:16px;
+      }
+
+      .app-brand-text span{
+        font-size:12px;
       }
     }
   `;
@@ -940,12 +1032,13 @@ export async function bindTopbar(user = null) {
   const identityHandle = user ? formatHandle(user) : "";
   const identityCompany = company?.name || settings?.companyName || "Supreme TrueClean";
   const menuItems = user ? getGlobalNavItems(user.role) : [];
+  const isCustomer = user?.role === "customer";
 
   topbar.innerHTML = `
     <div class="app-topbar-shell">
       <div class="app-topbar-inner">
         <a class="app-brand" href="${homeHref}">
-          <img src="${settings?.logoUrl || "/evaraos/assets/img/evaraos_logo.png"}" alt="logo">
+          <img src="${settings?.logoUrl || "/evaraos/assets/img/evaraos_logo.png"}" alt="logo" />
           <div class="app-brand-text">
             <strong>${settings?.platformName || "Evaraos Inc"}</strong>
             <span>${identityCompany}</span>
@@ -969,11 +1062,12 @@ export async function bindTopbar(user = null) {
         <a href="${dashboardHref}" class="active">Dashboard</a>
 
         ${
-          user
+          user && !isCustomer
             ? `
           <div class="topbar-menu-wrap">
-            <button type="button" class="topbar-menu-btn" id="topbarMenuBtn">
-              Menu
+            <button type="button" class="topbar-menu-btn" id="topbarMenuBtn" aria-label="Open menu">
+              <span class="topbar-hamburger">☰</span>
+              <span class="topbar-menu-label">Menu</span>
               <span class="topbar-menu-caret">⌄</span>
             </button>
             <div class="topbar-dropdown" id="topbarDropdown">
@@ -993,7 +1087,7 @@ export async function bindTopbar(user = null) {
             : ""
         }
 
-        <button id="logoutBtn">Logout</button>
+        <button id="logoutBtn" type="button">Logout</button>
       </nav>
     </div>
   `;
@@ -1036,11 +1130,8 @@ export function requireAuth(renderFn) {
 }
 
 export async function fetchCompanyCollection(name, companyId) {
-  const qRef = query(
-    collection(db, name),
-    where("companyId", "==", sanitizeCompanyId(companyId))
-  );
-  const snap = await getDocs(qRef);
+  const q = query(collection(db, name), where("companyId", "==", sanitizeCompanyId(companyId)));
+  const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
@@ -1050,11 +1141,8 @@ export async function fetchAllCollection(name) {
 }
 
 export async function fetchUsersByCompany(companyId) {
-  const qRef = query(
-    collection(db, "users"),
-    where("companyId", "==", sanitizeCompanyId(companyId))
-  );
-  const snap = await getDocs(qRef);
+  const q = query(collection(db, "users"), where("companyId", "==", sanitizeCompanyId(companyId)));
+  const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
@@ -1076,26 +1164,26 @@ export async function fetchPendingUsersByCompany(companyId, includeAll = false) 
 }
 
 export async function fetchActiveSalesReps(companyId) {
-  const qRef = query(
+  const q = query(
     collection(db, "users"),
     where("companyId", "==", sanitizeCompanyId(companyId)),
     where("role", "==", "sales_rep"),
     where("status", "==", "active"),
     where("approvalStatus", "==", "approved")
   );
-  const snap = await getDocs(qRef);
+  const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
 export async function fetchActiveTechnicians(companyId) {
-  const qRef = query(
+  const q = query(
     collection(db, "users"),
     where("companyId", "==", sanitizeCompanyId(companyId)),
     where("role", "==", "technician"),
     where("status", "==", "active"),
     where("approvalStatus", "==", "approved")
   );
-  const snap = await getDocs(qRef);
+  const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
@@ -1203,66 +1291,225 @@ export async function updateCompany(companyId, payload) {
   });
 }
 
-export async function fetchCustomerServices(user) {
-  if (!user) return [];
+export function renderSidebar(role, active = "overview") {
+  const links = [
+    { key: "overview", label: "Overview", href: role === "customer" ? "/evaraos/customer_dashboard.html" : "/evaraos/dashboard.html" },
+    { key: "users", label: "Users", href: "/evaraos/users.html" },
+    { key: "leads", label: "Leads", href: "/evaraos/leads.html" },
+    { key: "sales_reps", label: "Sales Reps", href: "/evaraos/sales_reps.html" },
+    { key: "companies", label: "Companies", href: "/evaraos/companies.html" },
+    { key: "jobs", label: "Jobs", href: "/evaraos/jobs.html" },
+    { key: "customers", label: "Customers", href: "#" },
+    { key: "settings", label: "Settings", href: "#" }
+  ];
 
-  const company = await loadCompany(user.companyId);
-
-  const companyServices = Array.isArray(company?.serviceCategories)
-    ? company.serviceCategories
-    : [];
-
-  if (companyServices.length) {
-    return companyServices.map((name, index) => ({
-      id: `service_${index + 1}`,
-      name,
-      status: "active",
-      billingType: "Subscription / Company Plan",
-      cancellationPolicy: "Changes may require review depending on contract timing.",
-      canRequestChanges: true
-    }));
+  if (role === "super_admin") {
+    links.push({ key: "audit", label: "Audit", href: "/evaraos/audit.html" });
   }
 
-  return [
-    {
-      id: "default_service_1",
-      name: "Exterior Cleaning Service",
-      status: "active",
-      billingType: "Subscription / Company Plan",
-      cancellationPolicy: "Changes may require review depending on contract timing.",
-      canRequestChanges: true
-    }
-  ];
+  return links
+    .filter((link) => link.key === "audit" || canAccess(role, link.key))
+    .map((link) => `<a class="${active === link.key ? "active" : ""}" href="${link.href}">${link.label}</a>`)
+    .join("");
 }
 
-export async function updateOwnCustomerProfile(userId, payload = {}) {
-  if (!userId) throw new Error("User ID is required.");
+export function renderRoleSummary(user) {
+  const sections = getAllowedSections(user.role);
+  const prettyRole = getRoleLabel(user.role);
 
-  const usernameFields = buildNormalizedUsernameFields(payload.username || "");
-  const patch = {
-    name: payload.name || "",
-    email: payload.email || "",
-    phone: payload.phone || "",
-    preferredContactMethod: payload.preferredContactMethod || "",
-    address: payload.address || "",
-    city: payload.city || "",
-    state: payload.state || "",
-    zip: payload.zip || "",
-    photoUrl: payload.photoUrl || "",
-    updatedAt: serverTimestamp()
+  return `
+    <strong>${user.name || user.email}</strong><br>
+    Display Username: ${formatDisplayUsername(user)}<br>
+    Handle: ${formatHandle(user)}<br>
+    Role: ${prettyRole}<br>
+    Company: ${user.companyId}<br>
+    Access Level: ${user.companyAccessLevel || "subsidiary"}<br>
+    Sections: ${sections.join(", ")}<br>
+    Org Level: ${user.organizationLevel || "—"}
+  `;
+}
+
+export function renderPermissionBadges(user) {
+  const permissions = Array.isArray(user?.permissions) ? user.permissions : [];
+  if (!permissions.length) return `<span class="muted">No permissions found</span>`;
+  return permissions.map((item) => `<span class="badge">${item}</span>`).join("");
+}
+
+export function roleGuard(user, requiredSection) {
+  if (!user) return false;
+  if (user.role === "super_admin") return true;
+  return canAccess(user.role, requiredSection);
+}
+
+export function groupUsersByRole(users) {
+  const order = [
+    "super_admin",
+    "admin",
+    "manager",
+    "operations_coordinator",
+    "sales_rep",
+    "technician",
+    "hr",
+    "customer"
+  ];
+
+  const groups = {};
+  order.forEach((role) => {
+    groups[role] = users.filter((user) => user.role === role);
+  });
+
+  const extras = users.filter((user) => !order.includes(user.role));
+  if (extras.length) groups.other = extras;
+
+  return groups;
+}
+
+export async function scanSystemDiscrepancies() {
+  const [users, usernames, companies, leads, jobs, services] = await Promise.all([
+    fetchAllCollection("users").catch(() => []),
+    fetchAllCollection("usernames").catch(() => []),
+    fetchAllCollection("companies").catch(() => []),
+    fetchAllCollection("leads").catch(() => []),
+    fetchAllCollection("jobs").catch(() => []),
+    fetchAllCollection("services").catch(() => [])
+  ]);
+
+  const discrepancies = {
+    users: [],
+    usernames: [],
+    companies: [],
+    leads: [],
+    jobs: [],
+    services: []
   };
 
-  if (usernameFields.username) {
-    patch.username = usernameFields.username;
-    patch.handle = usernameFields.handle;
-    patch.displayUsername = usernameFields.displayUsername;
-  }
+  const usernameMap = new Map(usernames.map((item) => [item.id, item]));
 
-  await updateDoc(doc(db, "users", userId), patch);
+  users.forEach((user) => {
+    const normalized = buildNormalizedUserPayload(user);
+    const missingFields = USER_REQUIRED_FIELDS.filter((field) => {
+      if (field === "permissions") return !Array.isArray(user.permissions) || !user.permissions.length;
+      return user[field] === undefined;
+    });
 
-  if (usernameFields.username) {
-    await syncUsernameDirectoryByUserDoc(userId);
-  }
+    const mismatchFields = [];
 
-  return patch;
+    if ((user.companyId || "") !== normalized.companyId) mismatchFields.push("companyId");
+    if ((user.handle || "") !== normalized.handle) mismatchFields.push("handle");
+    if ((user.displayUsername || "") !== normalized.displayUsername) mismatchFields.push("displayUsername");
+    if ((user.companyAccessLevel || "") !== normalized.companyAccessLevel) mismatchFields.push("companyAccessLevel");
+    if (typeof user.organizationLevel !== "number" || user.organizationLevel !== normalized.organizationLevel) {
+      mismatchFields.push("organizationLevel");
+    }
+    if (!Array.isArray(user.permissions) || JSON.stringify(user.permissions) !== JSON.stringify(normalized.permissions)) {
+      mismatchFields.push("permissions");
+    }
+
+    const usernameDoc = usernameMap.get(normalized.username);
+    if (!normalized.username) mismatchFields.push("username");
+    if (!usernameDoc) mismatchFields.push("username_directory_missing");
+
+    if (missingFields.length || mismatchFields.length) {
+      discrepancies.users.push({
+        id: user.id,
+        name: user.name || user.email || user.id,
+        role: user.role || "unknown",
+        missingFields,
+        mismatchFields
+      });
+    }
+  });
+
+  usernames.forEach((entry) => {
+    const linkedUser = users.find((u) => u.id === entry.uid);
+    const issues = [];
+
+    if (!linkedUser) issues.push("uid_missing_in_users");
+    if (entry.id !== (linkedUser?.username || entry.id)) issues.push("doc_id_username_mismatch");
+    if ((entry.companyId || "") !== sanitizeCompanyId(entry.companyId || "")) issues.push("companyId_not_standardized");
+    if (entry.handle !== `@${entry.id}`) issues.push("handle_mismatch");
+
+    if (issues.length) {
+      discrepancies.usernames.push({ id: entry.id, issues });
+    }
+  });
+
+  companies.forEach((company) => {
+    const issues = [];
+    const normalized = buildNormalizedCompanyPayload(company, company.id);
+
+    if (company.id !== sanitizeCompanyId(company.id)) issues.push("doc_id_not_standardized");
+    if ((company.slug || "") !== normalized.slug) issues.push("slug_mismatch");
+    if (!company.ownerName) issues.push("ownerName_missing");
+    if (!company.ownerEmail) issues.push("ownerEmail_missing");
+    if (company.active === undefined) issues.push("active_missing");
+    if (!company.brandColor) issues.push("brandColor_missing");
+
+    if (issues.length) {
+      discrepancies.companies.push({ id: company.id, issues });
+    }
+  });
+
+  leads.forEach((lead) => {
+    const issues = [];
+    const normalized = buildNormalizedLeadPayload(lead);
+
+    if ((lead.companyId || "") !== normalized.companyId) issues.push("companyId_not_standardized");
+    if (lead.status !== normalized.status) issues.push("status_outside_allowed_values");
+    if (!lead.createdAt) issues.push("createdAt_missing");
+    if (!lead.updatedAt) issues.push("updatedAt_missing");
+
+    if (issues.length) {
+      discrepancies.leads.push({ id: lead.id, issues });
+    }
+  });
+
+  jobs.forEach((job) => {
+    const issues = [];
+    const normalized = buildNormalizedJobPayload(job);
+
+    if ((job.companyId || "") !== normalized.companyId) issues.push("companyId_not_standardized");
+    if (job.status !== normalized.status) issues.push("status_outside_allowed_values");
+    if ((job.paymentStatus || "unpaid") !== normalized.paymentStatus) issues.push("paymentStatus_outside_allowed_values");
+
+    [
+      "sourceLeadId",
+      "assignedTechnician",
+      "serviceAddOns",
+      "assignedCrewIds",
+      "arrivalTime",
+      "departureTime",
+      "crewNotes",
+      "beforePhotos",
+      "afterPhotos",
+      "completionNotes",
+      "paymentStatus",
+      "invoiceId",
+      "customerSignature",
+      "routeOrder"
+    ].forEach((field) => {
+      if (job[field] === undefined) issues.push(`${field}_missing`);
+    });
+
+    if (issues.length) {
+      discrepancies.jobs.push({ id: job.id, issues });
+    }
+  });
+
+  services.forEach((service) => {
+    const issues = [];
+    const normalized = buildNormalizedServicePayload(service);
+
+    if ((service.companyId || "") !== normalized.companyId) issues.push("companyId_not_standardized");
+    if ((service.slug || "") !== normalized.slug) issues.push("slug_missing_or_mismatch");
+    if (service.active === undefined) issues.push("active_missing");
+    if (!service.category) issues.push("category_missing");
+    if (!service.pricingType) issues.push("pricingType_missing");
+
+    if (issues.length) {
+      discrepancies.services.push({ id: service.id, issues });
+    }
+  });
+
+  return discrepancies;
 }
