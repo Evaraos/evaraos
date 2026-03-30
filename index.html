@@ -6,10 +6,10 @@
   <title>Evaraos Inc</title>
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
 </head>
-<body class="app-theme landing-page">
-  <header class="landing-header">
+<body class="landing-page">
+  <header class="landing-header" id="publicTopbar">
     <div class="landing-header-inner">
-      <a href="/evaraos/index.html" class="brand-link">
+      <a href="/evaraos/index.html" class="brand-link no-underline">
         <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos logo" class="brand-logo" />
         <div class="brand-copy">
           <strong>Evaraos Inc</strong>
@@ -17,12 +17,38 @@
         </div>
       </a>
 
-      <nav class="landing-nav">
-        <a href="/evaraos/index.html" class="nav-pill active">Home</a>
-        <a href="/evaraos/login.html" class="nav-pill" id="loginNavLink">Login</a>
-        <a href="/evaraos/dashboard.html" class="nav-pill" id="dashboardNavLink" style="display:none;">Dashboard</a>
-        <button type="button" class="btn btn-secondary" id="logoutHomeBtn" style="display:none;">Logout</button>
+      <nav class="landing-nav" id="landingNav">
+        <a href="/evaraos/index.html" class="nav-pill active no-underline">Home</a>
+        <a href="/evaraos/login.html" class="nav-pill no-underline" id="loginNavLink">Login</a>
+        <a href="/evaraos/dashboard.html" class="nav-pill no-underline hidden" id="dashboardNavLink">Dashboard</a>
+        <button type="button" class="nav-pill hidden" id="logoutHomeBtn">Logout</button>
       </nav>
+
+      <div class="topbar-menu-wrap hidden" id="homeMenuWrap">
+        <button type="button" class="topbar-menu-btn" id="homeMenuBtn" aria-label="Open menu">
+          <span class="hamburger-lines">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </button>
+
+        <div class="topbar-dropdown" id="homeMenuDropdown">
+          <a href="/evaraos/index.html">
+            <strong>Home</strong>
+            <span>Main landing page</span>
+          </a>
+          <a href="/evaraos/dashboard.html" id="homeMenuDashboardLink">
+            <strong>Dashboard</strong>
+            <span>Go to your account dashboard</span>
+          </a>
+          <a href="/evaraos/companies.html" id="homeMenuCompaniesLink">
+            <strong>Companies</strong>
+            <span>Open companies and platform setup</span>
+          </a>
+          <button type="button" class="dropdown-logout-btn" id="homeMenuLogoutBtn">Logout</button>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -38,12 +64,12 @@
         </p>
 
         <div class="hero-actions">
-          <a href="/evaraos/login.html" class="btn btn-primary" id="heroEnterLink">Enter Platform</a>
-          <a href="/evaraos/companies.html" class="btn btn-secondary" id="heroSecondaryLink">Get Started</a>
+          <a href="/evaraos/login.html" class="btn btn-primary no-underline" id="heroEnterLink">Enter Platform</a>
+          <a href="/evaraos/companies.html" class="btn btn-secondary no-underline" id="heroSecondaryLink">Get Started</a>
         </div>
       </div>
 
-      <div class="hero-visual glass-card">
+      <div class="hero-visual glass">
         <div class="hero-visual-inner">
           <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos" class="hero-logo" />
           <div class="hero-card-title">EVARAOS</div>
@@ -55,7 +81,7 @@
     </section>
 
     <section class="feature-grid">
-      <article class="feature-card glass-card">
+      <article class="feature-card glass">
         <h3>Identity</h3>
         <p>
           Multi-company foundation with Supreme TrueClean as the first active LLC
@@ -63,14 +89,14 @@
         </p>
       </article>
 
-      <article class="feature-card glass-card">
+      <article class="feature-card glass">
         <h3>Operations</h3>
         <p>
           Role-based infrastructure for admin, staff, customers, and future technicians.
         </p>
       </article>
 
-      <article class="feature-card glass-card">
+      <article class="feature-card glass">
         <h3>Growth</h3>
         <p>
           Built to expand into leads, jobs, maps, payments, automations, and
@@ -79,7 +105,7 @@
       </article>
     </section>
 
-    <section class="split-panel glass-card">
+    <section class="split-panel glass">
       <div class="split-copy">
         <div class="eyebrow">ENTERPRISE FOUNDATION</div>
         <h2>Premium on the front. Powerful in the back.</h2>
