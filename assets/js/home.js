@@ -25,6 +25,11 @@ function setDisplay(el, value) {
   el.style.display = value;
 }
 
+function setText(el, value) {
+  if (!el) return;
+  el.textContent = value;
+}
+
 onAuthStateChanged(auth, async (user) => {
   const loginNavLink = document.getElementById("loginNavLink");
   const dashboardNavLink = document.getElementById("dashboardNavLink");
@@ -39,12 +44,12 @@ onAuthStateChanged(auth, async (user) => {
 
     if (heroEnterLink) {
       heroEnterLink.href = "/evaraos/login.html";
-      heroEnterLink.textContent = "Enter Platform";
+      setText(heroEnterLink, "Enter Platform");
     }
 
     if (heroSecondaryLink) {
       heroSecondaryLink.href = "/evaraos/companies.html";
-      heroSecondaryLink.textContent = "Get Started";
+      setText(heroSecondaryLink, "Get Started");
     }
 
     return;
@@ -63,17 +68,21 @@ onAuthStateChanged(auth, async (user) => {
 
   if (heroEnterLink) {
     heroEnterLink.href = path;
-    heroEnterLink.textContent = "Go to Dashboard";
+    setText(heroEnterLink, "Go to Dashboard");
   }
 
   if (heroSecondaryLink) {
     heroSecondaryLink.href = path;
-    heroSecondaryLink.textContent = "Stay in Session";
+    setText(heroSecondaryLink, "Stay in Session");
   }
 
   if (logoutHomeBtn) {
     logoutHomeBtn.onclick = async () => {
-      await signOut(auth);
+      try {
+        await signOut(auth);
+      } catch (error) {
+        console.error("Home logout failed:", error);
+      }
       window.location.href = "/evaraos/index.html";
     };
   }
