@@ -30,37 +30,94 @@ function setText(el, value) {
   el.textContent = value;
 }
 
-onAuthStateChanged(auth, async (user) => {
+function closeHomeMenu() {
+  const btn = document.getElementById("homeMenuBtn");
+  const dropdown = document.getElementById("homeMenuDropdown");
+
+  btn?.classList.remove("open");
+  dropdown?.classList.remove("open");
+}
+
+function wireHomeMenu() {
+  const menuWrap = document.getElementById("homeMenuWrap");
+  const menuBtn = document.getElementById("homeMenuBtn");
+  const dropdown = document.getElementById("homeMenuDropdown");
+
+  if (!menuWrap || !menuBtn || !dropdown) return;
+
+  menuBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = dropdown.classList.contains("open");
+
+    closeHomeMenu();
+
+    if (!isOpen) {
+      menuBtn.classList.add("open");
+      dropdown.classList.add("open");
+    }
+  });
+
+  dropdown.addEventListener("click", (e) => {
+    e.stopPropagation();
+  });
+
+  document.addEventListener("click", closeHomeMenu);
+}
+
+function syncPublicNavForGuest() {
   const loginNavLink = document.getElementById("loginNavLink");
   const dashboardNavLink = document.getElementById("dashboardNavLink");
   const logoutHomeBtn = document.getElementById("logoutHomeBtn");
   const heroEnterLink = document.getElementById("heroEnterLink");
   const heroSecondaryLink = document.getElementById("heroSecondaryLink");
+  const homeMenuWrap = document.getElementById("homeMenuWrap");
+  const homeMenuDashboardLink = document.getElementById("homeMenuDashboardLink");
+  const homeMenuCompaniesLink = document.getElementById("homeMenuCompaniesLink");
+  const homeMenuLogoutBtn = document.getElementById("homeMenuLogoutBtn");
 
-  if (!user) {
-    setDisplay(loginNavLink, "");
-    setDisplay(dashboardNavLink, "none");
-    setDisplay(logoutHomeBtn, "none");
+  setDisplay(loginNavLink, "");
+  setDisplay(dashboardNavLink, "none");
+  setDisplay(logoutHomeBtn, "none");
+  setDisplay(homeMenuWrap, "none");
 
-    if (heroEnterLink) {
-      heroEnterLink.href = "/evaraos/login.html";
-      setText(heroEnterLink, "Enter Platform");
-    }
-
-    if (heroSecondaryLink) {
-      heroSecondaryLink.href = "/evaraos/companies.html";
-      setText(heroSecondaryLink, "Get Started");
-    }
-
-    return;
+  if (heroEnterLink) {
+    heroEnterLink.href = "/evaraos/login.html";
+    setText(heroEnterLink, "Enter Platform");
   }
 
-  const userDoc = await getCurrentUserDoc(user);
-  const path = dashboardPath(userDoc?.role || "customer");
+  if (heroSecondaryLink) {
+    heroSecondaryLink.href = "/evaraos/companies.html";
+    setText(heroSecondaryLink, "Get Started");
+  }
+
+  if (homeMenuDashboardLink) {
+    homeMenuDashboardLink.href = "/evaraos/login.html";
+  }
+
+  if (homeMenuCompaniesLink) {
+    homeMenuCompaniesLink.href = "/evaraos/companies.html";
+  }
+
+  if (homeMenuLogoutBtn) {
+    homeMenuLogoutBtn.onclick = null;
+  }
+}
+
+function syncPublicNavForUser(path) {
+  const loginNavLink = document.getElementById("loginNavLink");
+  const dashboardNavLink = document.getElementById("dashboardNavLink");
+  const logoutHomeBtn = document.getElementById("logoutHomeBtn");
+  const heroEnterLink = document.getElementById("heroEnterLink");
+  const heroSecondaryLink = document.getElementById("heroSecondaryLink");
+  const homeMenuWrap = document.getElementById("homeMenuWrap");
+  const homeMenuDashboardLink = document.getElementById("homeMenuDashboardLink");
+  const homeMenuCompaniesLink = document.getElementById("homeMenuCompaniesLink");
+  const homeMenuLogoutBtn = document.getElementById("homeMenuLogoutBtn");
 
   setDisplay(loginNavLink, "none");
   setDisplay(dashboardNavLink, "");
-  setDisplay(logoutHomeBtn, "");
+  setDisplay(logoutHomeBtn, "none");
+  setDisplay(homeMenuWrap, "");
 
   if (dashboardNavLink) {
     dashboardNavLink.href = path;
@@ -76,14 +133,43 @@ onAuthStateChanged(auth, async (user) => {
     setText(heroSecondaryLink, "Stay in Session");
   }
 
-  if (logoutHomeBtn) {
-    logoutHomeBtn.onclick = async () => {
-      try {
-        await signOut(auth);
-      } catch (error) {
-        console.error("Home logout failed:", error);
-      }
-      window.location.href = "/evaraos/index.html";
-    };
+  if (homeMenuDashboardLink) {
+    homeMenuDashboardLink.href = path;
   }
+
+  if (homeMenuCompaniesLink) {
+    homeMenuCompaniesLink.href = "/evaraos/companies.html";
+  }
+
+  const logoutHandler = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Home logout failed:", error);
+    }
+    window.location.href = "/evaraos/index.html";
+  };
+
+  if (logoutHomeBtn) {
+    logoutHomeBtn.onclick = logoutHandler;
+  }
+
+  if (homeMenuLogoutBtn) {
+    homeMenuLogoutBtn.onclick = logoutHandler;
+  }
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  wireHomeMenu();
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      syncPublicNavForGuest();
+      return;
+    }
+
+    const userDoc = await getCurrentUserDoc(user);
+    const path = dashboardPath(userDoc?.role || "customer");
+    syncPublicNavForUser(path);
+  });
 });
