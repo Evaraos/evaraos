@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Customer Dashboard - Evaraos Inc</title>
-  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
   <style>
     .customer-shell{
       display:grid;
@@ -274,6 +274,63 @@
       font-size:18px;
     }
 
+    .modal-backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.55);
+      backdrop-filter:blur(8px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:9999;
+    }
+
+    .modal-backdrop.active{
+      display:flex;
+    }
+
+    .modal-card{
+      width:min(920px,100%);
+      max-height:90vh;
+      overflow:auto;
+      border-radius:28px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(14,16,24,.96);
+      box-shadow:0 25px 60px rgba(0,0,0,.35);
+      padding:22px;
+    }
+
+    .modal-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:16px;
+    }
+
+    .modal-close{
+      border:none;
+      background:rgba(255,255,255,.08);
+      color:#fff;
+      padding:10px 14px;
+      border-radius:999px;
+      cursor:pointer;
+    }
+
+    .stack{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .status-text{
+      color:#b8c0d0;
+      font-size:14px;
+      line-height:1.6;
+      margin-top:12px;
+    }
+
     @media (max-width: 1100px){
       .customer-hero,
       .two-panel,
@@ -289,7 +346,7 @@
     }
   </style>
 </head>
-<body class="app-shell">
+<body class="app-theme">
   <header class="app-topbar" id="topbar"></header>
 
   <div class="app-layout">
@@ -297,7 +354,6 @@
 
     <main class="main-panel">
       <div class="customer-shell">
-
         <section class="customer-hero">
           <div class="hero-card">
             <div>
@@ -307,9 +363,9 @@
             </div>
 
             <div class="hero-actions">
-              <button class="btn" id="openProfileEditBtn">Edit Profile</button>
-              <button class="btn secondary" id="openAccountSecurityBtn">Account & Security</button>
-              <button class="btn secondary" id="jumpToServicesBtn">My Services</button>
+              <button class="btn btn-primary" id="openProfileEditBtn">Edit Profile</button>
+              <button class="btn btn-secondary" id="openAccountSecurityBtn">Account & Security</button>
+              <button class="btn btn-secondary" id="jumpToServicesBtn">My Services</button>
             </div>
           </div>
 
@@ -344,12 +400,11 @@
             <h2 class="panel-title">Subscription & Cancellation Policy</h2>
             <p class="panel-sub">Important information regarding service changes and billing impact.</p>
             <div class="policy-box">
-              Service removals, subscription cancellations, and early termination requests may trigger fees depending on contract timing and agreement terms.  
+              Service removals, subscription cancellations, and early termination requests may trigger fees depending on contract timing and agreement terms.
               Requests can be initiated through your customer account, but final billing-impacting adjustments may still require internal review and confirmation by the company.
             </div>
           </div>
         </section>
-
       </div>
     </main>
   </div>
@@ -358,7 +413,7 @@
     <div class="modal-card">
       <div class="modal-head">
         <h2 style="margin:0;">Edit Profile</h2>
-        <button class="modal-close" id="closeProfileModalBtn">Close</button>
+        <button class="modal-close" id="closeProfileModalBtn" type="button">Close</button>
       </div>
 
       <div class="avatar-edit-wrap">
@@ -370,15 +425,15 @@
       </div>
 
       <div class="portfolio-grid">
-        <input id="profileName" placeholder="Full Name">
-        <input id="profileUsername" placeholder="Username">
-        <input id="profileEmail" placeholder="Email">
-        <input id="profilePhone" placeholder="Phone">
-        <input id="profilePreferredContactMethod" placeholder="Preferred Contact Method">
-        <input id="profileAddress" placeholder="Address">
-        <input id="profileCity" placeholder="City">
+        <input id="profileName" class="input" placeholder="Full Name">
+        <input id="profileUsername" class="input" placeholder="Username">
+        <input id="profileEmail" class="input" placeholder="Email">
+        <input id="profilePhone" class="input" placeholder="Phone">
+        <input id="profilePreferredContactMethod" class="input" placeholder="Preferred Contact Method">
+        <input id="profileAddress" class="input" placeholder="Address">
+        <input id="profileCity" class="input" placeholder="City">
 
-        <select id="profileState">
+        <select id="profileState" class="input">
           <option value="">State</option>
           <option value="AL">Alabama</option>
           <option value="AK">Alaska</option>
@@ -432,11 +487,11 @@
           <option value="WY">Wyoming</option>
         </select>
 
-        <input id="profileZip" placeholder="Zip">
+        <input id="profileZip" class="input" placeholder="Zip">
       </div>
 
       <div class="stack">
-        <button class="btn" id="saveProfileBtn">Save Profile</button>
+        <button class="btn btn-primary" id="saveProfileBtn" type="button">Save Profile</button>
       </div>
       <p id="profileMsg" class="status-text"></p>
     </div>
@@ -446,26 +501,26 @@
     <div class="modal-card" style="max-width:640px;">
       <div class="modal-head">
         <h2 style="margin:0;">Account & Security</h2>
-        <button class="modal-close" id="closeAccountSecurityModalBtn">Close</button>
+        <button class="modal-close" id="closeAccountSecurityModalBtn" type="button">Close</button>
       </div>
 
       <div class="portfolio-grid">
-        <input id="securityUsername" placeholder="Username">
-        <input id="securityHandle" placeholder="@handle" disabled>
+        <input id="securityUsername" class="input" placeholder="Username">
+        <input id="securityHandle" class="input" placeholder="@handle" disabled>
 
         <div class="password-wrap">
-          <input id="currentPassword" type="password" placeholder="Current Password">
+          <input id="currentPassword" class="input" type="password" placeholder="Current Password">
           <button class="eye-toggle" type="button" id="toggleCurrentPasswordBtn">👁</button>
         </div>
 
         <div class="password-wrap">
-          <input id="newPassword" type="password" placeholder="New Password">
+          <input id="newPassword" class="input" type="password" placeholder="New Password">
           <button class="eye-toggle" type="button" id="toggleNewPasswordBtn">👁</button>
         </div>
       </div>
 
       <div class="stack" style="margin-top:18px;">
-        <button class="btn" id="saveSecurityBtn">Save Changes</button>
+        <button class="btn btn-primary" id="saveSecurityBtn" type="button">Save Changes</button>
       </div>
       <p id="securityMsg" class="status-text"></p>
     </div>
@@ -477,11 +532,16 @@
       requireAuth,
       loadCompany,
       renderSidebar,
+      hasPermission
+    } from "/evaraos/assets/js/app.js";
+
+    import {
       updateOwnCustomerProfile,
       fetchCustomerServices,
-      hasPermission
-    } from "./assets/app.js";
-    import { updateOwnUsername, changeOwnPassword, buildUserIdentity } from "./assets/auth.js";
+      updateOwnUsername,
+      changeOwnPassword,
+      buildUserIdentity
+    } from "/evaraos/assets/js/auth.js";
 
     function initials(name) {
       const parts = (name || "").trim().split(" ").filter(Boolean);
@@ -491,6 +551,8 @@
 
     function setAvatar(user) {
       const avatar = document.getElementById("avatarFallback");
+      if (!avatar) return;
+
       if (user.photoUrl) {
         avatar.innerHTML = `<img src="${user.photoUrl}" alt="Profile Photo">`;
       } else {
@@ -500,6 +562,7 @@
 
     function setModalAvatar(user, previewUrl = "") {
       const modalAvatarButton = document.getElementById("modalAvatarButton");
+      if (!modalAvatarButton) return;
 
       if (previewUrl) {
         modalAvatarButton.innerHTML = `
@@ -548,8 +611,8 @@
             </div>
           </div>
 
-          <div class="action-row" style="margin-top:16px;">
-            <button class="btn secondary" ${service.canRequestChanges ? "" : "disabled"}>
+          <div class="hero-actions" style="margin-top:16px;">
+            <button class="btn btn-secondary" ${service.canRequestChanges ? "" : "disabled"}>
               ${service.status === "active" ? "Request Change" : "Request Activation"}
             </button>
           </div>
@@ -558,11 +621,11 @@
     }
 
     function openModal(id) {
-      document.getElementById(id).classList.add("active");
+      document.getElementById(id)?.classList.add("active");
     }
 
     function closeModal(id) {
-      document.getElementById(id).classList.remove("active");
+      document.getElementById(id)?.classList.remove("active");
     }
 
     function fileToDataUrl(file) {
@@ -576,6 +639,7 @@
 
     function togglePasswordField(inputId, btn) {
       const input = document.getElementById(inputId);
+      if (!input) return;
       const isPassword = input.type === "password";
       input.type = isPassword ? "text" : "password";
       btn.textContent = isPassword ? "🙈" : "👁";
@@ -588,19 +652,26 @@
 
     requireAuth(async (user) => {
       if (user.role !== "customer") {
-        window.location.href = "dashboard.html";
+        window.location.href = "/evaraos/dashboard.html";
         return;
       }
 
       await bindTopbar(user);
-      document.getElementById("sidebar").innerHTML = renderSidebar(user.role, "overview");
+
+      const sidebar = document.getElementById("sidebar");
+      if (sidebar) {
+        sidebar.innerHTML = renderSidebar(user.role, "overview");
+      }
 
       const company = await loadCompany(user.companyId);
       const services = await fetchCustomerServices(user);
 
       document.getElementById("welcomeTitle").textContent = `Welcome, ${user.name || "Customer"}`;
-      document.getElementById("welcomeSubtext").textContent = `You are viewing your customer portal for ${company?.name || user.companyId}. Use this area to manage your profile, service visibility, and account identity.`;
-      document.getElementById("customerHandleChip").textContent = user.handle || `@${user.username || "user"}`;
+      document.getElementById("welcomeSubtext").textContent =
+        `You are viewing your customer portal for ${company?.name || user.companyId}. Use this area to manage your profile, service visibility, and account identity.`;
+
+      document.getElementById("customerHandleChip").textContent =
+        user.handle || `@${user.username || "user"}`;
 
       setAvatar(user);
       document.getElementById("customerName").textContent = user.name || "Customer";
@@ -609,6 +680,7 @@
 
       setProfileForm(user);
       setModalAvatar(user);
+
       document.getElementById("securityUsername").value = user.username || "";
       document.getElementById("securityHandle").value = user.handle || `@${user.username || ""}`;
 
@@ -653,7 +725,7 @@
 
       document.addEventListener("change", async (event) => {
         if (event.target && event.target.id === "profilePhotoFile") {
-          const file = event.target.files[0];
+          const file = event.target.files?.[0];
           if (!file) return;
           const previewUrl = await fileToDataUrl(file);
           setModalAvatar(user, previewUrl);
