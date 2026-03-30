@@ -8,7 +8,7 @@ import {
   reauthenticateWithCredential,
   EmailAuthProvider,
   updatePassword
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
   collection,
