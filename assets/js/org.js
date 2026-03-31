@@ -522,7 +522,7 @@ function openModal(user) {
       <div>
         <h2 style="margin:0;">${user.name || "User"}</h2>
         <p class="muted" style="margin:10px 0 0;">
-          ${user.email || "No email"} · ${user.handle || user.username || "No handle"}
+          ${user.email || "No email"} Â· ${user.handle || user.username || "No handle"}
         </p>
       </div>
       <div class="top-actions">
@@ -601,9 +601,9 @@ function openModal(user) {
     <div class="card" style="margin-top:18px; padding:16px;">
       <h3 style="margin-bottom:10px;">Quick Info</h3>
       <div class="muted">
-        Organization Level: ${user.organizationLevel || "—"}<br>
+        Organization Level: ${user.organizationLevel || "â"}<br>
         Reports To: ${getUserNameById(user.reportsTo) || "Root"}<br>
-        Company ID: ${user.companyId || "—"}
+        Company ID: ${user.companyId || "â"}
       </div>
     </div>
   `;
