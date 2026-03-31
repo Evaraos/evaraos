@@ -1066,9 +1066,9 @@ export async function bindTopbar(user = null) {
             ? `
           <div class="topbar-menu-wrap">
             <button type="button" class="topbar-menu-btn" id="topbarMenuBtn" aria-label="Open menu">
-              <span class="topbar-hamburger">☰</span>
+              <span class="topbar-hamburger">â°</span>
               <span class="topbar-menu-label">Menu</span>
-              <span class="topbar-menu-caret">⌄</span>
+              <span class="topbar-menu-caret">â</span>
             </button>
             <div class="topbar-dropdown" id="topbarDropdown">
               ${menuItems
@@ -1325,7 +1325,7 @@ export function renderRoleSummary(user) {
     Company: ${user.companyId}<br>
     Access Level: ${user.companyAccessLevel || "subsidiary"}<br>
     Sections: ${sections.join(", ")}<br>
-    Org Level: ${user.organizationLevel || "—"}
+    Org Level: ${user.organizationLevel || "â"}
   `;
 }
 
