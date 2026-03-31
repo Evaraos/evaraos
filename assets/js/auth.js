@@ -4,7 +4,11 @@ import {
   onAuthStateChanged,
   signOut,
   signInWithEmailAndPassword,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  createUserWithEmailAndPassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
@@ -343,9 +347,200 @@ function setupResetForm() {
   });
 }
 
+
+export function buildUserIdentity(value = "") {
+  const username = normalizeUsername(value);
+  return {
+    username,
+    handle: username ? `@${username}` : "",
+    displayUsername: username
+      ? username.charAt(0).toUpperCase() + username.slice(1)
+      : ""
+  };
+}
+
+export async function updateOwnUsername(userId, newUsername) {
+  const currentUser = auth.currentUser;
+  if (!currentUser || currentUser.uid !== userId) {
+    throw new Error("You can only update your own username.");
+  }
+
+  const identity = buildUserIdentity(newUsername);
+  if (!identity.username) throw new Error("Username is required.");
+
+  const takenSnap = await getDoc(doc(db, "usernames", identity.username));
+  if (takenSnap.exists()) {
+    const takenData = takenSnap.data();
+    if (takenData?.uid && takenData.uid !== userId) {
+      throw new Error("That username is already taken.");
+    }
+  }
+
+  await updateDoc(doc(db, "users", userId), {
+    username: identity.username,
+    handle: identity.handle,
+    displayUsername: identity.displayUsername,
+    updatedAt: serverTimestamp()
+  });
+
+  await syncUsernameDirectoryByUserDoc(userId);
+  return identity;
+}
+
+export async function changeOwnPassword(currentPassword, newPassword) {
+  const currentUser = auth.currentUser;
+  if (!currentUser?.email) throw new Error("No authenticated user found.");
+  if (!currentPassword || !newPassword) throw new Error("Current password and new password are required.");
+  if (newPassword.length < 6) throw new Error("New password must be at least 6 characters.");
+
+  const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
+  await reauthenticateWithCredential(currentUser, credential);
+  await updatePassword(currentUser, newPassword);
+}
+
+export async function updateOwnCustomerProfile(userId, payload = {}) {
+  const currentUser = auth.currentUser;
+  if (!currentUser || currentUser.uid !== userId) {
+    throw new Error("You can only update your own profile.");
+  }
+
+  const existingSnap = await getDoc(doc(db, "users", userId));
+  if (!existingSnap.exists()) throw new Error("User profile not found.");
+  const existing = existingSnap.data();
+  const nextUsername = normalizeUsername(payload.username || existing.username || "");
+  const identity = buildUserIdentity(nextUsername);
+  if (!identity.username) throw new Error("Username is required.");
+
+  const takenSnap = await getDoc(doc(db, "usernames", identity.username));
+  if (takenSnap.exists()) {
+    const takenData = takenSnap.data();
+    if (takenData?.uid && takenData.uid !== userId) {
+      throw new Error("That username is already taken.");
+    }
+  }
+
+  await updateDoc(doc(db, "users", userId), {
+    name: String(payload.name || "").trim(),
+    username: identity.username,
+    handle: identity.handle,
+    displayUsername: identity.displayUsername,
+    email: String(payload.email || "").trim(),
+    phone: String(payload.phone || "").trim(),
+    preferredContactMethod: String(payload.preferredContactMethod || "").trim(),
+    address: String(payload.address || "").trim(),
+    city: String(payload.city || "").trim(),
+    state: String(payload.state || "").trim(),
+    zip: String(payload.zip || "").trim(),
+    photoUrl: String(payload.photoUrl || existing.photoUrl || "").trim(),
+    updatedAt: serverTimestamp()
+  });
+
+  await syncUsernameDirectoryByUserDoc(userId);
+  return true;
+}
+
+export async function fetchCustomerServices(user) {
+  if (!user) return [];
+
+  const companyId = String(user.companyId || "").trim().toLowerCase().replace(/-/g, "_").replace(/\s+/g, "_");
+  const servicesSnap = await getDocs(query(collection(db, "services"), where("companyId", "==", companyId)));
+  const services = servicesSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+  if (!services.length) {
+    return [{
+      id: "default_service_1",
+      name: "Exterior Cleaning Service",
+      status: "active",
+      billingType: "Subscription / Internal Billing",
+      cancellationPolicy: "Cancellation may require review depending on agreement terms.",
+      canRequestChanges: true
+    }];
+  }
+
+  return services
+    .filter((service) => service.customerVisible !== false)
+    .map((service) => ({
+      id: service.id,
+      name: service.name || "Service",
+      status: service.active === false ? "inactive" : "active",
+      billingType: service.pricingType || "Standard Billing",
+      cancellationPolicy: service.description || "Change requests may require internal review.",
+      canRequestChanges: true
+    }));
+}
+
+async function setupSignupForm() {
+  const signupForm = document.getElementById("signupForm");
+  if (!signupForm) return;
+
+  signupForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("signupName")?.value?.trim() || "";
+    const usernameRaw = document.getElementById("signupUsername")?.value?.trim() || "";
+    const email = document.getElementById("signupEmail")?.value?.trim() || "";
+    const phone = document.getElementById("signupPhone")?.value?.trim() || "";
+    const companyId = normalizeUsername((document.getElementById("signupCompanyId")?.value?.trim() || "supreme_trueclean").replace(/\s+/g, "_").replace(/-/g, "_"));
+    const password = document.getElementById("signupPassword")?.value || "";
+    const msgEl = document.getElementById("signupMessage");
+    const submitBtn = signupForm.querySelector('button[type="submit"]');
+
+    setText("signupMessage", "");
+    if (!name || !usernameRaw || !email || !password) {
+      setText("signupMessage", "Complete all required fields.", true);
+      return;
+    }
+
+    const identity = buildUserIdentity(usernameRaw);
+
+    try {
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Creating..."; }
+
+      const takenSnap = await getDoc(doc(db, "usernames", identity.username));
+      if (takenSnap.exists()) throw new Error("That username is already taken.");
+
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await setDoc(doc(db, "users", cred.user.uid), {
+        name,
+        username: identity.username,
+        handle: identity.handle,
+        displayUsername: identity.displayUsername,
+        email,
+        phone,
+        role: "customer",
+        approvalStatus: "approved",
+        status: "active",
+        companyId: companyId || "supreme_trueclean",
+        companyAccessLevel: "subsidiary",
+        photoUrl: "",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        lastLogin: serverTimestamp(),
+        reportsTo: "",
+        organizationLevel: 6,
+        permissions: ["self"],
+        address: "",
+        city: "",
+        state: "",
+        zip: "",
+        preferredContactMethod: ""
+      }, { merge: true });
+
+      await syncUsernameDirectoryByUserDoc(cred.user.uid);
+      setText("signupMessage", "Account created. Redirecting...");
+      setTimeout(() => { window.location.href = "/evaraos/customer_dashboard.html"; }, 800);
+    } catch (error) {
+      console.error("Signup failed:", error);
+      setText("signupMessage", error?.message || "Could not create account.", true);
+    } finally {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = "Create Account"; }
+    }
+  });
+}
+
 window.addEventListener("DOMContentLoaded", () => {
   setupPasswordToggle();
   setupResetPanel();
   setupLoginForm();
   setupResetForm();
+  setupSignupForm();
 });
