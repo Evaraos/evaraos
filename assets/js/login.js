@@ -1,5 +1,8 @@
-import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { auth, db } from "./firebase.js";
+import { auth, db } from "../firebase.js";
+import {
+  signInWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
 import {
   collection,
   query,
@@ -7,43 +10,40 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const loginForm = document.getElementById("loginForm");
-const loginInput = document.getElementById("loginInput"); // username OR email
-const passwordInput = document.getElementById("passwordInput");
-const message = document.getElementById("loginMessage");
+import { initNavbar, watchAuth } from "../app.js";
 
-loginForm.addEventListener("submit", async (e) => {
+initNavbar();
+watchAuth();
+
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const loginValue = loginInput.value.trim().toLowerCase();
-  const password = passwordInput.value;
+  const input = document.getElementById("loginInput").value.trim();
+  const password = document.getElementById("password").value;
 
-  message.textContent = "Logging in...";
+  let email = input;
 
-  try {
-    let emailToUse = loginValue;
+  // 🔥 IF USERNAME → FIND EMAIL
+  if (!input.includes("@")) {
+    const q = query(
+      collection(db, "users"),
+      where("username", "==", input.toLowerCase())
+    );
 
-    // 🔥 If it's NOT an email → treat as username
-    if (!loginValue.includes("@")) {
-      const q = query(
-        collection(db, "users"),
-        where("username", "==", loginValue)
-      );
+    const snap = await getDocs(q);
 
-      const snap = await getDocs(q);
-
-      if (snap.empty) {
-        throw new Error("Username not found.");
-      }
-
-      emailToUse = snap.docs[0].data().email;
+    if (snap.empty) {
+      alert("Username not found");
+      return;
     }
 
-    // 🔥 Login with resolved email
-    await signInWithEmailAndPassword(auth, emailToUse, password);
+    email = snap.docs[0].data().email;
+  }
 
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
     window.location.href = "dashboard.html";
   } catch (err) {
-    message.textContent = err.message;
+    alert(err.message);
   }
 });
