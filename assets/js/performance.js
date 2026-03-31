@@ -373,7 +373,7 @@ function openUserDetailModal(userId) {
       <span class="perf-chip">${ROLE_LABELS[row.role] || row.role || "Unknown"}</span>
       <span class="perf-chip">${row.status || "inactive"}</span>
       <span class="perf-chip">${row.approvalStatus || "pending"}</span>
-      <span class="perf-chip">Level ${row.organizationLevel || "—"}</span>
+      <span class="perf-chip">Level ${row.organizationLevel || "â"}</span>
       <span class="perf-chip">Rank #${row.rank}</span>
     </div>
 
@@ -384,19 +384,19 @@ function openUserDetailModal(userId) {
     <div class="perf-detail-grid">
       <div class="perf-detail-box">
         <div class="perf-detail-label">Name</div>
-        <div class="perf-detail-value">${row.name || "—"}</div>
+        <div class="perf-detail-value">${row.name || "â"}</div>
       </div>
       <div class="perf-detail-box">
         <div class="perf-detail-label">Email</div>
-        <div class="perf-detail-value">${row.email || "—"}</div>
+        <div class="perf-detail-value">${row.email || "â"}</div>
       </div>
       <div class="perf-detail-box">
         <div class="perf-detail-label">Phone</div>
-        <div class="perf-detail-value">${row.phone || "—"}</div>
+        <div class="perf-detail-value">${row.phone || "â"}</div>
       </div>
       <div class="perf-detail-box">
         <div class="perf-detail-label">Username</div>
-        <div class="perf-detail-value">${row.username || "—"}</div>
+        <div class="perf-detail-value">${row.username || "â"}</div>
       </div>
       <div class="perf-detail-box">
         <div class="perf-detail-label">Assigned Leads</div>
@@ -710,7 +710,7 @@ function renderCard(row) {
       <div class="perf-chip-row">
         <span class="perf-chip">${row.status || "inactive"}</span>
         <span class="perf-chip">${row.approvalStatus || "pending"}</span>
-        <span class="perf-chip">Level ${row.organizationLevel || "—"}</span>
+        <span class="perf-chip">Level ${row.organizationLevel || "â"}</span>
       </div>
 
       <div class="perf-stats">
@@ -736,8 +736,8 @@ function renderCard(row) {
         Revenue from Leads: ${safeCurrency(row.revenueFromLeads)}<br>
         Revenue from Jobs: ${safeCurrency(row.revenueFromJobs)}<br>
         Conversion Rate: ${safePercent(row.conversionRate)}<br>
-        Email: ${row.email || "—"}<br>
-        Username: ${row.username || "—"}
+        Email: ${row.email || "â"}<br>
+        Username: ${row.username || "â"}
       </div>
     </div>
   `;
