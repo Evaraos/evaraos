@@ -227,7 +227,7 @@ function renderPage() {
                       <div class="company-card">
                         <div>
                           <strong>${company.name || company.id || "Unnamed Company"}</strong>
-                          <div class="muted" style="margin-top:6px;">${company.city || "—"} ${company.state || ""}</div>
+                          <div class="muted" style="margin-top:6px;">${company.city || "â"} ${company.state || ""}</div>
                         </div>
 
                         <div>
@@ -236,9 +236,9 @@ function renderPage() {
                         </div>
 
                         <div class="muted">
-                          Owner: ${company.ownerName || "—"}<br>
-                          Email: ${company.ownerEmail || company.email || "—"}<br>
-                          Phone: ${company.phone || "—"}
+                          Owner: ${company.ownerName || "â"}<br>
+                          Email: ${company.ownerEmail || company.email || "â"}<br>
+                          Phone: ${company.phone || "â"}
                         </div>
 
                         <div class="company-actions">
