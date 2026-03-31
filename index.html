@@ -4,164 +4,45 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Evaraos Inc</title>
-  <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
+
+  <link rel="stylesheet" href="assets/css/styles.css" />
 </head>
-<body class="landing-page">
-  <header class="landing-header" id="publicTopbar">
-    <div class="landing-header-inner">
-      <a href="/evaraos/index.html" class="brand-link no-underline">
-        <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos logo" class="brand-logo" />
-        <div class="brand-copy">
-          <strong>Evaraos Inc</strong>
-          <span>Subsidiaries Allocation SaaS</span>
-        </div>
-      </a>
 
-      <nav class="landing-nav" id="landingNav">
-        <a href="/evaraos/index.html" class="nav-pill active no-underline">Home</a>
-        <a href="/evaraos/login.html" class="nav-pill no-underline" id="loginNavLink">Login</a>
-        <a
-          href="/evaraos/dashboard.html"
-          class="nav-pill no-underline"
-          id="dashboardNavLink"
-          style="display:none;"
-        >
-          Dashboard
-        </a>
-        <button
-          type="button"
-          class="nav-pill"
-          id="logoutHomeBtn"
-          style="display:none;"
-        >
-          Logout
-        </button>
-      </nav>
+<body class="app">
 
-      <div class="topbar-menu-wrap" id="homeMenuWrap" style="display:none;">
-        <button
-          type="button"
-          class="topbar-menu-btn"
-          id="homeMenuBtn"
-          aria-label="Open menu"
-        >
-          <span class="hamburger-lines" aria-hidden="true">
-            <span></span>
-            <span></span>
-            <span></span>
-          </span>
-        </button>
+  <!-- 🔴 GLOBAL NAVBAR -->
+  <header id="navbar"></header>
 
-        <div class="topbar-dropdown" id="homeMenuDropdown">
-          <a href="/evaraos/index.html">
-            <strong>Home</strong>
-            <span>Main landing page</span>
-          </a>
+  <!-- 🔥 HERO -->
+  <main class="container hero">
 
-          <a href="/evaraos/dashboard.html" id="homeMenuDashboardLink">
-            <strong>Dashboard</strong>
-            <span>Go to your account dashboard</span>
-          </a>
+    <div class="hero-left">
+      <span class="eyebrow">SUBSIDIARIES ALLOCATION SAAS</span>
 
-          <a href="/evaraos/companies.html" id="homeMenuCompaniesLink">
-            <strong>Companies</strong>
-            <span>Open companies and platform setup</span>
-          </a>
+      <h1>
+        Run companies like a<br />
+        world-class operating system.
+      </h1>
 
-          <button type="button" class="dropdown-logout-btn" id="homeMenuLogoutBtn">
-            Logout
-          </button>
-        </div>
+      <p>
+        Evaraos Inc powers Supreme TrueClean first, then expands into a global
+        organization with one premium platform for operations, automation, and scale.
+      </p>
+
+      <div class="hero-actions">
+        <a href="dashboard.html" class="btn primary">Go to Dashboard</a>
+        <a href="login.html" class="btn glass">Login</a>
       </div>
     </div>
-  </header>
 
-  <main class="landing-shell">
-    <section class="hero-section">
-      <div class="hero-copy">
-        <div class="eyebrow">SUBSIDIARIES ALLOCATION SAAS</div>
-        <h1>Run companies like a world-class operating system.</h1>
-        <p>
-          Evaraos Inc powers Supreme TrueClean first, then expands into a global
-          organization with one premium platform for operations, approvals, users,
-          and automation.
-        </p>
+    <div class="hero-right glass-card center">
+      <img src="assets/img/evaraos_logo.png" class="logo-xl" />
+      <h2>EVARAOS</h2>
+      <p>Infrastructure for modern companies</p>
+    </div>
 
-        <div class="hero-actions">
-          <a
-            href="/evaraos/login.html"
-            class="btn btn-primary no-underline"
-            id="heroEnterLink"
-          >
-            Enter Platform
-          </a>
-
-          <a
-            href="/evaraos/companies.html"
-            class="btn btn-secondary no-underline"
-            id="heroSecondaryLink"
-          >
-            Get Started
-          </a>
-        </div>
-      </div>
-
-      <div class="hero-visual glass">
-        <div class="hero-visual-inner">
-          <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos" class="hero-logo" />
-          <div class="hero-card-title">EVARAOS</div>
-          <div class="hero-card-subtitle">
-            Premium software infrastructure for subsidiaries, operations, and scale.
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="feature-grid">
-      <article class="feature-card glass">
-        <h3>Identity</h3>
-        <p>
-          Multi-company foundation with Supreme TrueClean as the first active LLC
-          inside the Evaraos platform.
-        </p>
-      </article>
-
-      <article class="feature-card glass">
-        <h3>Operations</h3>
-        <p>
-          Role-based infrastructure for admin, staff, customers, and future technicians.
-        </p>
-      </article>
-
-      <article class="feature-card glass">
-        <h3>Growth</h3>
-        <p>
-          Built to expand into leads, jobs, maps, payments, automations, and
-          additional subsidiaries.
-        </p>
-      </article>
-    </section>
-
-    <section class="split-panel glass">
-      <div class="split-copy">
-        <div class="eyebrow">ENTERPRISE FOUNDATION</div>
-        <h2>Premium on the front. Powerful in the back.</h2>
-        <p>
-          The public experience carries the Evaraos brand. The private app runs
-          as a glass-themed operating system for real business execution.
-        </p>
-      </div>
-
-      <div class="split-visual">
-        <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos badge" class="split-logo" />
-      </div>
-    </section>
   </main>
 
-  <footer class="site-footer">
-    <span>© Evaraos Inc</span>
-  </footer>
-
-  <script type="module" src="/evaraos/assets/js/index.js"></script>
+  <script type="module" src="assets/js/pages/home.js"></script>
 </body>
 </html>
