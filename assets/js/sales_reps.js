@@ -217,7 +217,7 @@ function renderPage() {
                       <div class="rep-card">
                         <div>
                           <strong>${rep.name || "Unnamed Rep"}</strong>
-                          <div class="muted" style="margin-top:6px;">${rep.email || "No email"} · ${rep.phone || "No phone"}</div>
+                          <div class="muted" style="margin-top:6px;">${rep.email || "No email"} Â· ${rep.phone || "No phone"}</div>
                         </div>
 
                         <div>
@@ -226,8 +226,8 @@ function renderPage() {
                         </div>
 
                         <div class="muted">
-                          Company: ${rep.companyId || "—"}<br>
-                          Reports To: ${rep.reportsTo || "—"}
+                          Company: ${rep.companyId || "â"}<br>
+                          Reports To: ${rep.reportsTo || "â"}
                         </div>
 
                         <div class="rep-actions">
