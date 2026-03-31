@@ -1,4 +1,4 @@
-import {
+limport {
   requireAuth,
   bindTopbar
 } from "./app.js";
@@ -279,7 +279,7 @@ function showToast(message, variant = "success") {
 }
 
 function formatTimestamp(timestamp) {
-  if (!timestamp) return "—";
+  if (!timestamp) return "â";
 
   if (timestamp?.seconds) {
     return new Date(timestamp.seconds * 1000).toLocaleString();
@@ -290,7 +290,7 @@ function formatTimestamp(timestamp) {
     if (!Number.isNaN(parsed.getTime())) return parsed.toLocaleString();
   }
 
-  return "—";
+  return "â";
 }
 
 function normalizeText(value) {
@@ -358,13 +358,13 @@ function isRecentLog(log) {
 function renderAuditCard(log) {
   const roleLine =
     log.oldRole || log.newRole
-      ? `${log.oldRole || "—"} → ${log.newRole || "—"}`
-      : "—";
+      ? `${log.oldRole || "â"} â ${log.newRole || "â"}`
+      : "â";
 
   const companyLine =
     log.oldCompanyId || log.newCompanyId
-      ? `${log.oldCompanyId || "—"} → ${log.newCompanyId || "—"}`
-      : "—";
+      ? `${log.oldCompanyId || "â"} â ${log.newCompanyId || "â"}`
+      : "â";
 
   return `
     <div class="audit-card">
@@ -385,7 +385,7 @@ function renderAuditCard(log) {
         <div class="audit-box">
           <div class="audit-label">Actor</div>
           <div class="audit-value">
-            ${log.actorName || "—"}<br>
+            ${log.actorName || "â"}<br>
             ${log.actorUserId || ""}
           </div>
         </div>
@@ -393,7 +393,7 @@ function renderAuditCard(log) {
         <div class="audit-box">
           <div class="audit-label">Target User</div>
           <div class="audit-value">
-            ${log.targetUserName || "—"}<br>
+            ${log.targetUserName || "â"}<br>
             ${log.targetUserId || ""}
           </div>
         </div>
@@ -762,8 +762,8 @@ function exportPdf() {
                 <td>${labelForAction(log.action)}</td>
                 <td>${log.actorName || ""}<br>${log.actorRole || ""}</td>
                 <td>${log.targetUserName || ""}</td>
-                <td>${log.oldRole || "—"} → ${log.newRole || "—"}</td>
-                <td>${log.oldCompanyId || "—"} → ${log.newCompanyId || "—"}</td>
+                <td>${log.oldRole || "â"} â ${log.newRole || "â"}</td>
+                <td>${log.oldCompanyId || "â"} â ${log.newCompanyId || "â"}</td>
                 <td>${log.notes || ""}</td>
               </tr>
             `).join("")}
