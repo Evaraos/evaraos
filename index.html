@@ -1,66 +1,78 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Evaraos Inc</title>
-  <link rel="stylesheet" href="./assets/css/styles.css" />
+  <link rel="stylesheet" href="assets/style.css" />
 </head>
-<body class="landing-page">
+<body>
   <header class="site-header">
-    <div class="site-header-inner">
-      <a href="./index.html" class="site-brand">
-        <img src="./assets/img/evaraos_logo.png" alt="Evaraos Logo" class="site-brand-logo" />
-        <div class="site-brand-text">
-          <span class="site-brand-title">Evaraos Inc</span>
-          <span class="site-brand-subtitle">Subsidiaries Allocation SaaS</span>
-        </div>
+    <div class="container site-header-inner">
+      <a class="brand" href="index.html">
+        <img src="assets/img/logo.png" alt="Evaraos logo" />
+        <span>Evaraos Inc</span>
       </a>
 
       <nav class="site-nav">
-        <a href="./index.html" class="nav-pill active">Home</a>
-        <a href="./login.html" class="nav-link">Login</a>
-        <a href="./signup.html" class="nav-link">Sign Up</a>
+        <a class="active" href="index.html">Home</a>
+        <a href="login.html">Login</a>
       </nav>
     </div>
   </header>
 
-  <main class="hero-shell">
-    <section class="hero-section">
-      <p class="eyebrow">SUBSIDIARIES ALLOCATION SAAS</p>
-      <h1 class="hero-heading">Run companies like a world-class operating system.</h1>
-      <p class="hero-copy">
-        Evaraos Inc powers Supreme TrueClean first, then expands into a global organization with one premium platform for operations, approvals, users, and automation.
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <div class="hero-subtitle">SUBSIDIARIES ALLOCATION SAAS</div>
+        <h1>Run companies like a world-class operating system.</h1>
+        <p>
+          Evaraos Inc powers Supreme TrueClean first, then expands into a global organization
+          with one premium platform for operations, approvals, users, and automation.
+        </p>
+        <div class="hero-actions">
+          <a class="btn" href="login.html">Enter Platform</a>
+          <a class="btn secondary" href="login.html">Get Started</a>
+        </div>
+      </div>
+
+      <div class="hero-panel">
+        <div class="hero-card">
+          <img class="hero-logo" src="assets/img/logo.png" alt="Evaraos logo">
+          <h2 style="margin:0 0 8px;">EVARAOS</h2>
+          <p class="muted" style="margin:0;">Luxury software infrastructure for subsidiaries, operations, and scale.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <h2>Premium on the front. Powerful in the back.</h2>
+      <p class="lead">
+        The public experience carries the Evaraos brand. The private app runs as a glass-themed,
+        iOS-inspired operating system for real business execution.
       </p>
 
-      <div class="hero-actions">
-        <a class="hero-btn hero-btn-primary" href="./dashboard.html">Enter Platform</a>
-        <a class="hero-btn hero-btn-secondary" href="./signup.html">Get Started</a>
+      <div class="grid-3">
+        <div class="glow-card">
+          <h3>Identity</h3>
+          <p>Multi-company foundation with Supreme TrueClean as the first active LLC inside Evaraos Inc.</p>
+        </div>
+        <div class="glow-card">
+          <h3>Operations</h3>
+          <p>Role-based infrastructure for super admin, staff, customers, and future technicians.</p>
+        </div>
+        <div class="glow-card">
+          <h3>Growth</h3>
+          <p>Built to expand into leads, jobs, maps, payments, automations, and additional subsidiaries.</p>
+        </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="hero-visual-card">
-      <div class="hero-visual-inner">
-        <img src="./assets/img/evaraos_logo.png" alt="Evaraos Emblem" class="hero-emblem" />
-        <h2>EVARAOS</h2>
-        <p>Built for subsidiaries, approvals, users, and business scale.</p>
-      </div>
-    </section>
-
-    <section class="feature-grid">
-      <article class="feature-card">
-        <h3>Operations</h3>
-        <p>Manage jobs, teams, field technicians, workflows, and company activity from one system.</p>
-      </article>
-      <article class="feature-card">
-        <h3>Sales Infrastructure</h3>
-        <p>Track reps, leads, assignments, conversions, and performance across every subsidiary.</p>
-      </article>
-      <article class="feature-card">
-        <h3>Executive Control</h3>
-        <p>Give owners and admins one clean command center for users, organizations, approvals, and scale.</p>
-      </article>
-    </section>
-  </main>
+  <footer class="footer">
+    <div class="container">© Evaraos Inc</div>
+  </footer>
 </body>
 </html>
