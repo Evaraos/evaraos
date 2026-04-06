@@ -8,15 +8,32 @@ const ROLE_PERMISSIONS = {
   guest: []
 };
 
+function getRole() {
+  return localStorage.getItem("evaraos_role") || "guest";
+}
+
 function hasPermission(section) {
-  const role = localStorage.getItem("evaraos_role") || "guest";
+  const role = getRole();
   const permissions = ROLE_PERMISSIONS[role] || [];
   return permissions.includes("all") || permissions.includes(section);
 }
 
 function protectPage(section) {
-  if (!hasPermission(section)) {
-    alert("You do not have access to this page.");
-    window.location.href = "/evaraos/dashboard.html";
+  if (hasPermission(section)) return;
+
+  const role = getRole();
+
+  alert("You do not have access to this page.");
+
+  if (role === "customer") {
+    window.location.href = "/evaraos/customer_dashboard.html";
+    return;
   }
+
+  if (role === "guest") {
+    window.location.href = "/evaraos/login.html";
+    return;
+  }
+
+  window.location.href = "/evaraos/index.html";
 }
