@@ -5,7 +5,7 @@ import {
   signOut,
   signInWithEmailAndPassword,
   sendPasswordResetEmail
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
   collection,
@@ -18,10 +18,15 @@ import {
   updateDoc,
   deleteDoc,
   serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 function normalizeUsername(value = "") {
   return String(value).trim().replace(/^@+/, "").toLowerCase();
+}
+
+function looksLikeEmail(value = "") {
+  const raw = String(value).trim();
+  return raw.includes("@") && raw.includes(".");
 }
 
 function formatLoginError(error) {
@@ -32,13 +37,18 @@ function formatLoginError(error) {
     code.includes("requests-from-referer-are-blocked") ||
     message.includes("requests-from-referer")
   ) {
-    return "This domain is still being blocked by Firebase or Google Cloud restrictions.";
+    return "This domain is being blocked by Firebase or Google Cloud restrictions.";
+  }
+
+  if (code.includes("permission-denied")) {
+    return "Firestore security rules are blocking the username lookup. Try logging in with your email address.";
   }
 
   if (
     code.includes("invalid-credential") ||
     code.includes("wrong-password") ||
-    code.includes("user-not-found")
+    code.includes("user-not-found") ||
+    code.includes("invalid-login-credentials")
   ) {
     return "Invalid email, username, handle, or password.";
   }
@@ -76,39 +86,44 @@ async function resolveEmailFromLoginIdentifier(identifier) {
   const raw = String(identifier || "").trim();
   if (!raw) throw new Error("Missing login identifier.");
 
-  const normalized = normalizeUsername(raw);
-
-  if (raw.includes("@") && raw.includes(".")) {
+  if (looksLikeEmail(raw)) {
     return raw.toLowerCase();
   }
 
-  const usernameDoc = await getDoc(doc(db, "usernames", normalized));
-  if (usernameDoc.exists()) {
-    const data = usernameDoc.data();
+  const normalized = normalizeUsername(raw);
 
-    if (data?.email) {
-      return String(data.email).toLowerCase();
-    }
+  try {
+    const usernameDoc = await getDoc(doc(db, "usernames", normalized));
+    if (usernameDoc.exists()) {
+      const data = usernameDoc.data();
 
-    if (data?.uid) {
-      const userSnap = await getDoc(doc(db, "users", data.uid));
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        if (userData?.email) {
-          return String(userData.email).toLowerCase();
+      if (data?.email) {
+        return String(data.email).toLowerCase();
+      }
+
+      if (data?.uid) {
+        const userSnap = await getDoc(doc(db, "users", data.uid));
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          if (userData?.email) {
+            return String(userData.email).toLowerCase();
+          }
         }
       }
     }
-  }
 
-  const userQuery = query(collection(db, "users"), where("username", "==", normalized));
-  const userSnap = await getDocs(userQuery);
+    const userQuery = query(collection(db, "users"), where("username", "==", normalized));
+    const userSnap = await getDocs(userQuery);
 
-  if (!userSnap.empty) {
-    const userData = userSnap.docs[0].data();
-    if (userData?.email) {
-      return String(userData.email).toLowerCase();
+    if (!userSnap.empty) {
+      const userData = userSnap.docs[0].data();
+      if (userData?.email) {
+        return String(userData.email).toLowerCase();
+      }
     }
+  } catch (error) {
+    console.error("Username lookup failed:", error);
+    throw error;
   }
 
   throw new Error("No account found for that username or handle.");
@@ -263,7 +278,14 @@ function setupLoginForm() {
         submitBtn.textContent = "Signing In...";
       }
 
-      const email = await resolveEmailFromLoginIdentifier(identifier);
+      let email;
+
+      if (looksLikeEmail(identifier)) {
+        email = identifier.toLowerCase();
+      } else {
+        email = await resolveEmailFromLoginIdentifier(identifier);
+      }
+
       const credential = await signInWithEmailAndPassword(auth, email, password);
 
       try {
