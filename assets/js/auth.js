@@ -52,7 +52,7 @@ function formatLoginError(error) {
   }
 
   if (code.includes("permission-denied")) {
-    return "Username lookup is blocked by Firestore rules. Try logging in with your email.";
+    return "Username lookup is blocked by Firestore rules.";
   }
 
   if (
@@ -125,6 +125,7 @@ export async function syncUsernameDirectoryByUserDoc(userId) {
     email: user.email || "",
     companyId: user.companyId || "",
     role: user.role || "",
+    active: user.active ?? true,
     updatedAt: serverTimestamp()
   };
 
@@ -209,7 +210,7 @@ export async function changeOwnPassword(currentPassword, newPassword) {
     throw new Error("Current and new password are required.");
   }
 
-  throw new Error("Password change flow still needs re-auth wiring. We’ll wire that next.");
+  throw new Error("Password change flow still needs re-auth wiring.");
 }
 
 export async function fetchCustomerServices(user) {
@@ -219,13 +220,6 @@ export async function fetchCustomerServices(user) {
       status: "active",
       billingType: "Monthly Subscription",
       cancellationPolicy: "Early cancellation may involve contract review.",
-      canRequestChanges: true
-    },
-    {
-      name: "Additional Service Slot",
-      status: "inactive",
-      billingType: "Not Active",
-      cancellationPolicy: "Can be requested through account review.",
       canRequestChanges: true
     }
   ];
@@ -290,7 +284,6 @@ function setupLoginForm() {
       }
 
       const credential = await loginWithIdentifier(identifier, password);
-
       const userSnap = await getDoc(doc(db, "users", credential.user.uid));
       const userData = userSnap.exists() ? userSnap.data() : { role: "customer" };
       const role = userData?.role || "customer";
