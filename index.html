@@ -1,78 +1,104 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Evaraos Inc</title>
-  <link rel="stylesheet" href="assets/style.css" />
+  <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
 </head>
-<body>
-  <header class="site-header">
-    <div class="container site-header-inner">
-      <a class="brand" href="index.html">
-        <img src="assets/img/logo.png" alt="Evaraos logo" />
-        <span>Evaraos Inc</span>
+<body class="app-theme landing-page">
+  <header class="landing-header">
+    <div class="landing-header-inner">
+      <a href="/evaraos/index.html" class="brand-link">
+        <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos logo" class="brand-logo" />
+        <div class="brand-copy">
+          <strong>Evaraos Inc</strong>
+          <span>Subsidiaries Allocation SaaS</span>
+        </div>
       </a>
 
-      <nav class="site-nav">
-        <a class="active" href="index.html">Home</a>
-        <a href="login.html">Login</a>
+      <nav class="landing-nav">
+        <a href="/evaraos/index.html" class="nav-pill active">Home</a>
+        <a href="/evaraos/login.html" class="nav-pill" id="loginNavLink">Login</a>
+        <a href="/evaraos/dashboard.html" class="nav-pill" id="dashboardNavLink" style="display:none;">Dashboard</a>
+        <button type="button" class="btn btn-secondary" id="logoutHomeBtn" style="display:none;">Logout</button>
       </nav>
     </div>
   </header>
 
-  <section class="hero">
-    <div class="container hero-grid">
+  <main class="landing-shell">
+    <section class="hero-section">
       <div class="hero-copy">
-        <div class="hero-subtitle">SUBSIDIARIES ALLOCATION SAAS</div>
+        <div class="eyebrow">SUBSIDIARIES ALLOCATION SAAS</div>
         <h1>Run companies like a world-class operating system.</h1>
         <p>
-          Evaraos Inc powers Supreme TrueClean first, then expands into a global organization
-          with one premium platform for operations, approvals, users, and automation.
+          Evaraos Inc powers Supreme TrueClean first, then expands into a global
+          organization with one premium platform for operations, approvals, users,
+          and automation.
         </p>
+
         <div class="hero-actions">
-          <a class="btn" href="login.html">Enter Platform</a>
-          <a class="btn secondary" href="login.html">Get Started</a>
+          <a href="/evaraos/login.html" class="btn btn-primary" id="heroEnterLink">Enter Platform</a>
+          <a href="/evaraos/companies.html" class="btn btn-secondary" id="heroSecondaryLink">Get Started</a>
         </div>
       </div>
 
-      <div class="hero-panel">
-        <div class="hero-card">
-          <img class="hero-logo" src="assets/img/logo.png" alt="Evaraos logo">
-          <h2 style="margin:0 0 8px;">EVARAOS</h2>
-          <p class="muted" style="margin:0;">Luxury software infrastructure for subsidiaries, operations, and scale.</p>
+      <div class="hero-visual glass-card">
+        <div class="hero-visual-inner">
+          <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos" class="hero-logo" />
+          <div class="hero-card-title">EVARAOS</div>
+          <div class="hero-card-subtitle">
+            Premium software infrastructure for subsidiaries, operations, and scale.
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="section">
-    <div class="container">
-      <h2>Premium on the front. Powerful in the back.</h2>
-      <p class="lead">
-        The public experience carries the Evaraos brand. The private app runs as a glass-themed,
-        iOS-inspired operating system for real business execution.
-      </p>
+    <section class="feature-grid">
+      <article class="feature-card glass-card">
+        <h3>Identity</h3>
+        <p>
+          Multi-company foundation with Supreme TrueClean as the first active LLC
+          inside the Evaraos platform.
+        </p>
+      </article>
 
-      <div class="grid-3">
-        <div class="glow-card">
-          <h3>Identity</h3>
-          <p>Multi-company foundation with Supreme TrueClean as the first active LLC inside Evaraos Inc.</p>
-        </div>
-        <div class="glow-card">
-          <h3>Operations</h3>
-          <p>Role-based infrastructure for super admin, staff, customers, and future technicians.</p>
-        </div>
-        <div class="glow-card">
-          <h3>Growth</h3>
-          <p>Built to expand into leads, jobs, maps, payments, automations, and additional subsidiaries.</p>
-        </div>
+      <article class="feature-card glass-card">
+        <h3>Operations</h3>
+        <p>
+          Role-based infrastructure for admin, staff, customers, and future technicians.
+        </p>
+      </article>
+
+      <article class="feature-card glass-card">
+        <h3>Growth</h3>
+        <p>
+          Built to expand into leads, jobs, maps, payments, automations, and
+          additional subsidiaries.
+        </p>
+      </article>
+    </section>
+
+    <section class="split-panel glass-card">
+      <div class="split-copy">
+        <div class="eyebrow">ENTERPRISE FOUNDATION</div>
+        <h2>Premium on the front. Powerful in the back.</h2>
+        <p>
+          The public experience carries the Evaraos brand. The private app runs
+          as a glass-themed operating system for real business execution.
+        </p>
       </div>
-    </div>
-  </section>
 
-  <footer class="footer">
-    <div class="container">© Evaraos Inc</div>
+      <div class="split-visual">
+        <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos badge" class="split-logo" />
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>© Evaraos Inc</span>
   </footer>
+
+  <script type="module" src="/evaraos/assets/js/home.js"></script>
 </body>
 </html>
