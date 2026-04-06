@@ -4,13 +4,43 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard | Evaraos</title>
-  <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
+  <link rel="stylesheet" href="./assets/css/styles.css" />
 </head>
-<body class="app-theme">
-  <header id="topbar"></header>
-  <div id="sidebar" style="display:none;"></div>
-  <main id="dashboardRoot"></main>
+<body>
+  <header id="topbar" class="topbar"></header>
 
-  <script type="module" src="/evaraos/assets/js/dashboard.js"></script>
+  <div class="page-shell">
+    <aside id="sidebar" class="sidebar"></aside>
+
+    <main class="main-content">
+      <section class="grid grid-3">
+        <div class="card stat-card">
+          <h3>Active Companies</h3>
+          <p>12</p>
+        </div>
+        <div class="card stat-card">
+          <h3>Open Leads</h3>
+          <p>148</p>
+        </div>
+        <div class="card stat-card">
+          <h3>Jobs In Progress</h3>
+          <p>36</p>
+        </div>
+      </section>
+
+      <section class="section-space card">
+        <h2>Executive Overview</h2>
+        <p>
+          This is the central command dashboard for the Evaraos operating system. From here you will manage subsidiaries, sales, jobs, team structure, and performance.
+        </p>
+      </section>
+    </main>
+  </div>
+
+  <script src="./assets/js/app.js"></script>
+  <script src="./assets/js/roles.js"></script>
+  <script>
+    protectPage("dashboard");
+  </script>
 </body>
 </html>
