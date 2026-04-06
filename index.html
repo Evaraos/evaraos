@@ -2,47 +2,41 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Evaraos Inc</title>
-
-  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="stylesheet" href="./assets/css/styles.css" />
 </head>
+<body>
+  <header id="topbar" class="topbar"></header>
 
-<body class="app">
-
-  <!-- 🔴 GLOBAL NAVBAR -->
-  <header id="navbar"></header>
-
-  <!-- 🔥 HERO -->
-  <main class="container hero">
-
-    <div class="hero-left">
-      <span class="eyebrow">SUBSIDIARIES ALLOCATION SAAS</span>
-
-      <h1>
-        Run companies like a<br />
-        world-class operating system.
-      </h1>
-
-      <p>
-        Evaraos Inc powers Supreme TrueClean first, then expands into a global
-        organization with one premium platform for operations, automation, and scale.
+  <main class="landing-wrap">
+    <section class="card hero-card">
+      <h1 class="hero-title">Evaraos Inc</h1>
+      <p class="hero-subtitle">
+        The operating system for subsidiaries, field teams, service companies, sales reps, managers, and scalable business infrastructure.
       </p>
-
-      <div class="hero-actions">
-        <a href="dashboard.html" class="btn primary">Go to Dashboard</a>
-        <a href="login.html" class="btn glass">Login</a>
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <a class="btn btn-primary" href="./login.html">Enter Dashboard</a>
+        <a class="btn btn-outline" href="./signup.html">Create Account</a>
       </div>
-    </div>
+    </section>
 
-    <div class="hero-right glass-card center">
-      <img src="assets/img/evaraos_logo.png" class="logo-xl" />
-      <h2>EVARAOS</h2>
-      <p>Infrastructure for modern companies</p>
-    </div>
-
+    <section class="section-space grid grid-3">
+      <div class="card">
+        <h3>Operations</h3>
+        <p>Manage jobs, teams, field technicians, workflows, and company activity from one system.</p>
+      </div>
+      <div class="card">
+        <h3>Sales Infrastructure</h3>
+        <p>Track reps, leads, assignments, conversions, and performance across every subsidiary.</p>
+      </div>
+      <div class="card">
+        <h3>Executive Control</h3>
+        <p>Give owners and admins one clean command center for users, organizations, auditing, and scale.</p>
+      </div>
+    </section>
   </main>
 
-  <script type="module" src="assets/js/pages/home.js"></script>
+  <script src="./assets/js/app.js"></script>
 </body>
 </html>
