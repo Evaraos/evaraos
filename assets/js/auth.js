@@ -1,13 +1,10 @@
-import { auth, db } from "./firebase.js";
-
 import {
+  auth,
+  db,
   onAuthStateChanged,
   signOut,
   signInWithEmailAndPassword,
-  sendPasswordResetEmail
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-import {
+  sendPasswordResetEmail,
   collection,
   query,
   where,
@@ -18,7 +15,7 @@ import {
   updateDoc,
   deleteDoc,
   serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+} from "./firebase.js";
 
 function normalizeUsername(value = "") {
   return String(value).trim().replace(/^@+/, "").toLowerCase();
@@ -41,7 +38,7 @@ function formatLoginError(error) {
   }
 
   if (code.includes("permission-denied")) {
-    return "Firestore security rules are blocking the username lookup. Try logging in with your email address.";
+    return "Username lookup is blocked by Firestore rules. Try logging in with your email.";
   }
 
   if (
@@ -50,7 +47,7 @@ function formatLoginError(error) {
     code.includes("user-not-found") ||
     code.includes("invalid-login-credentials")
   ) {
-    return "Invalid email, username, handle, or password.";
+    return "Invalid email, username, or password.";
   }
 
   if (code.includes("too-many-requests")) {
@@ -91,42 +88,19 @@ async function resolveEmailFromLoginIdentifier(identifier) {
   }
 
   const normalized = normalizeUsername(raw);
+  const usernameSnap = await getDoc(doc(db, "usernames", normalized));
 
-  try {
-    const usernameDoc = await getDoc(doc(db, "usernames", normalized));
-    if (usernameDoc.exists()) {
-      const data = usernameDoc.data();
-
-      if (data?.email) {
-        return String(data.email).toLowerCase();
-      }
-
-      if (data?.uid) {
-        const userSnap = await getDoc(doc(db, "users", data.uid));
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          if (userData?.email) {
-            return String(userData.email).toLowerCase();
-          }
-        }
-      }
-    }
-
-    const userQuery = query(collection(db, "users"), where("username", "==", normalized));
-    const userSnap = await getDocs(userQuery);
-
-    if (!userSnap.empty) {
-      const userData = userSnap.docs[0].data();
-      if (userData?.email) {
-        return String(userData.email).toLowerCase();
-      }
-    }
-  } catch (error) {
-    console.error("Username lookup failed:", error);
-    throw error;
+  if (!usernameSnap.exists()) {
+    throw new Error("No account found for that username.");
   }
 
-  throw new Error("No account found for that username or handle.");
+  const data = usernameSnap.data();
+
+  if (!data?.email) {
+    throw new Error("Username record is missing an email.");
+  }
+
+  return String(data.email).toLowerCase();
 }
 
 export async function syncUsernameDirectoryByUserDoc(userId) {
@@ -139,10 +113,6 @@ export async function syncUsernameDirectoryByUserDoc(userId) {
 
   const user = userSnap.data();
   const username = normalizeUsername(user.username || "");
-  const handle = username ? `@${username}` : "";
-  const displayUsername = username
-    ? username.charAt(0).toUpperCase() + username.slice(1)
-    : "";
 
   const existingEntriesQuery = query(collection(db, "usernames"), where("uid", "==", userId));
   const existingEntriesSnap = await getDocs(existingEntriesQuery);
@@ -158,8 +128,6 @@ export async function syncUsernameDirectoryByUserDoc(userId) {
   const payload = {
     uid: userId,
     username,
-    handle,
-    displayUsername,
     email: user.email || "",
     companyId: user.companyId || "",
     role: user.role || "",
@@ -268,7 +236,7 @@ function setupLoginForm() {
     setText("loginMessage", "");
 
     if (!identifier || !password) {
-      setText("loginMessage", "Enter your email, username, or handle, and password.", true);
+      setText("loginMessage", "Enter your email or username and password.", true);
       return;
     }
 
@@ -278,14 +246,7 @@ function setupLoginForm() {
         submitBtn.textContent = "Signing In...";
       }
 
-      let email;
-
-      if (looksLikeEmail(identifier)) {
-        email = identifier.toLowerCase();
-      } else {
-        email = await resolveEmailFromLoginIdentifier(identifier);
-      }
-
+      const email = await resolveEmailFromLoginIdentifier(identifier);
       const credential = await signInWithEmailAndPassword(auth, email, password);
 
       try {
