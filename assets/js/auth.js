@@ -73,14 +73,19 @@ function formatLoginError(error) {
 
 async function resolveEmailFromLoginIdentifier(identifier) {
   const raw = String(identifier || "").trim();
-  if (!raw) throw new Error("Missing login identifier.");
+  if (!raw) {
+    throw new Error("Missing login identifier.");
+  }
 
   if (looksLikeEmail(raw)) {
     return raw.toLowerCase();
   }
 
   const normalized = normalizeUsername(raw);
-  const usernameSnap = await getDoc(doc(db, "usernames", normalized));
+
+  // Exact username lookup doc: /usernames/{username}
+  const usernameRef = doc(db, "usernames", normalized);
+  const usernameSnap = await getDoc(usernameRef);
 
   if (!usernameSnap.exists()) {
     throw new Error("No account found for that username.");
