@@ -143,7 +143,6 @@ export async function requireAuth(callback, options = {}) {
     const user = await hydrateCurrentUser(firebaseUser);
 
     if (!user) {
-      window.location.href = redirectTo;
       return;
     }
 
