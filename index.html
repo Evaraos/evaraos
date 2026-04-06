@@ -6,37 +6,61 @@
   <title>Evaraos Inc</title>
   <link rel="stylesheet" href="./assets/css/styles.css" />
 </head>
-<body>
-  <header id="topbar" class="topbar"></header>
+<body class="landing-page">
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a href="./index.html" class="site-brand">
+        <img src="./assets/img/evaraos_logo.png" alt="Evaraos Logo" class="site-brand-logo" />
+        <div class="site-brand-text">
+          <span class="site-brand-title">Evaraos Inc</span>
+          <span class="site-brand-subtitle">Subsidiaries Allocation SaaS</span>
+        </div>
+      </a>
 
-  <main class="landing-wrap">
-    <section class="card hero-card">
-      <h1 class="hero-title">Evaraos Inc</h1>
-      <p class="hero-subtitle">
-        The operating system for subsidiaries, field teams, service companies, sales reps, managers, and scalable business infrastructure.
+      <nav class="site-nav">
+        <a href="./index.html" class="nav-pill active">Home</a>
+        <a href="./login.html" class="nav-link">Login</a>
+        <a href="./signup.html" class="nav-link">Sign Up</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="hero-shell">
+    <section class="hero-section">
+      <p class="eyebrow">SUBSIDIARIES ALLOCATION SAAS</p>
+      <h1 class="hero-heading">Run companies like a world-class operating system.</h1>
+      <p class="hero-copy">
+        Evaraos Inc powers Supreme TrueClean first, then expands into a global organization with one premium platform for operations, approvals, users, and automation.
       </p>
-      <div style="display:flex; gap:12px; flex-wrap:wrap;">
-        <a class="btn btn-primary" href="./login.html">Enter Dashboard</a>
-        <a class="btn btn-outline" href="./signup.html">Create Account</a>
+
+      <div class="hero-actions">
+        <a class="hero-btn hero-btn-primary" href="./dashboard.html">Enter Platform</a>
+        <a class="hero-btn hero-btn-secondary" href="./signup.html">Get Started</a>
       </div>
     </section>
 
-    <section class="section-space grid grid-3">
-      <div class="card">
+    <section class="hero-visual-card">
+      <div class="hero-visual-inner">
+        <img src="./assets/img/evaraos_logo.png" alt="Evaraos Emblem" class="hero-emblem" />
+        <h2>EVARAOS</h2>
+        <p>Built for subsidiaries, approvals, users, and business scale.</p>
+      </div>
+    </section>
+
+    <section class="feature-grid">
+      <article class="feature-card">
         <h3>Operations</h3>
         <p>Manage jobs, teams, field technicians, workflows, and company activity from one system.</p>
-      </div>
-      <div class="card">
+      </article>
+      <article class="feature-card">
         <h3>Sales Infrastructure</h3>
         <p>Track reps, leads, assignments, conversions, and performance across every subsidiary.</p>
-      </div>
-      <div class="card">
+      </article>
+      <article class="feature-card">
         <h3>Executive Control</h3>
-        <p>Give owners and admins one clean command center for users, organizations, auditing, and scale.</p>
-      </div>
+        <p>Give owners and admins one clean command center for users, organizations, approvals, and scale.</p>
+      </article>
     </section>
   </main>
-
-  <script src="./assets/js/app.js"></script>
 </body>
 </html>
