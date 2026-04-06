@@ -79,6 +79,31 @@ function hideElement(el) {
   el.classList.add("hidden");
 }
 
+function setLegacySession(userData, firebaseUser) {
+  const sessionUser = {
+    uid: firebaseUser?.uid || "",
+    email: firebaseUser?.email || userData?.email || "",
+    name:
+      userData?.name ||
+      userData?.fullName ||
+      userData?.username ||
+      firebaseUser?.email ||
+      "User",
+    role: userData?.role || "customer",
+    companyId: userData?.companyId || ""
+  };
+
+  localStorage.setItem("evaraos_user", JSON.stringify(sessionUser));
+  localStorage.setItem("evaraos_role", sessionUser.role);
+
+  return sessionUser;
+}
+
+function clearLegacySession() {
+  localStorage.removeItem("evaraos_user");
+  localStorage.removeItem("evaraos_role");
+}
+
 async function resolveEmailFromLoginIdentifier(identifier) {
   const raw = String(identifier || "").trim();
   if (!raw) throw new Error("Missing login identifier.");
@@ -148,6 +173,7 @@ export async function syncUsernameDirectoryByUserDoc(userId) {
 export function listenAuth(callback) {
   return onAuthStateChanged(auth, async (firebaseUser) => {
     if (!firebaseUser) {
+      clearLegacySession();
       callback(null);
       return;
     }
@@ -157,24 +183,30 @@ export function listenAuth(callback) {
       const userSnap = await getDoc(userRef);
 
       if (!userSnap.exists()) {
-        callback({
+        const fallbackUser = {
           id: firebaseUser.uid,
           uid: firebaseUser.uid,
           email: firebaseUser.email || "",
           approvalStatus: "pending",
           role: "customer"
-        });
+        };
+
+        setLegacySession(fallbackUser, firebaseUser);
+        callback(fallbackUser);
         return;
       }
 
       const userData = userSnap.data();
 
-      callback({
+      const mergedUser = {
         id: firebaseUser.uid,
         uid: firebaseUser.uid,
         email: firebaseUser.email || userData.email || "",
         ...userData
-      });
+      };
+
+      setLegacySession(mergedUser, firebaseUser);
+      callback(mergedUser);
     } catch (error) {
       console.error("listenAuth failed:", error);
       callback(null);
@@ -183,6 +215,7 @@ export function listenAuth(callback) {
 }
 
 export async function logout() {
+  clearLegacySession();
   await signOut(auth);
 }
 
@@ -249,8 +282,20 @@ function setupLoginForm() {
       const email = await resolveEmailFromLoginIdentifier(identifier);
       const credential = await signInWithEmailAndPassword(auth, email, password);
 
+      let userData = {
+        role: "customer",
+        email: credential.user.email || email
+      };
+
+      const userRef = doc(db, "users", credential.user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        userData = userSnap.data();
+      }
+
       try {
-        await updateDoc(doc(db, "users", credential.user.uid), {
+        await updateDoc(userRef, {
           lastLogin: serverTimestamp(),
           updatedAt: serverTimestamp()
         });
@@ -264,9 +309,8 @@ function setupLoginForm() {
         console.warn("Could not sync username directory:", err);
       }
 
-      const userSnap = await getDoc(doc(db, "users", credential.user.uid));
-      const userData = userSnap.exists() ? userSnap.data() : {};
-      const role = userData?.role || "customer";
+      const sessionUser = setLegacySession(userData, credential.user);
+      const role = sessionUser.role || "customer";
 
       window.location.href =
         role === "customer"
