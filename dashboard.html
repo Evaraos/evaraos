@@ -5,145 +5,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard | Evaraos</title>
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
-  <style>
-    .boot-shell{
-      min-height:100vh;
-      display:grid;
-      place-items:center;
-      padding:24px;
-    }
-    .boot-card{
-      width:min(720px,100%);
-      border-radius:28px;
-      padding:28px;
-      border:1px solid rgba(255,255,255,.08);
-      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
-      box-shadow:0 24px 70px rgba(0,0,0,.34);
-    }
-    .boot-title{
-      margin:0 0 10px;
-      font-size:32px;
-      line-height:1.05;
-    }
-    .boot-text{
-      margin:0;
-      color:rgba(245,247,251,.72);
-      line-height:1.7;
-      font-size:15px;
-    }
-    .hidden{
-      display:none !important;
-    }
-  </style>
 </head>
 <body class="app-theme">
-  <div id="bootShell" class="boot-shell">
-    <div class="boot-card">
-      <h1 class="boot-title">Loading dashboard...</h1>
-      <p id="bootMessage" class="boot-text">Checking your session and role permissions.</p>
-    </div>
-  </div>
+  <header id="topbar" class="topbar"></header>
 
-  <div id="dashboardApp" class="hidden">
-    <header id="topbar" class="topbar"></header>
+  <div class="page-shell">
+    <aside id="sidebar" class="sidebar"></aside>
 
-    <div class="page-shell">
-      <aside id="sidebar" class="sidebar"></aside>
+    <main class="main-content">
+      <section class="grid grid-3">
+        <div class="card stat-card">
+          <h3>Active Companies</h3>
+          <p id="statCompanies">--</p>
+        </div>
+        <div class="card stat-card">
+          <h3>Open Leads</h3>
+          <p id="statLeads">--</p>
+        </div>
+        <div class="card stat-card">
+          <h3>Jobs In Progress</h3>
+          <p id="statJobs">--</p>
+        </div>
+      </section>
 
-      <main class="main-content">
-        <section class="grid grid-3">
-          <div class="card stat-card">
-            <h3>Active Companies</h3>
-            <p id="statCompanies">--</p>
-          </div>
-          <div class="card stat-card">
-            <h3>Open Leads</h3>
-            <p id="statLeads">--</p>
-          </div>
-          <div class="card stat-card">
-            <h3>Jobs In Progress</h3>
-            <p id="statJobs">--</p>
-          </div>
-        </section>
-
-        <section class="section-space card">
-          <h2>Executive Overview</h2>
-          <p id="overviewText">Loading dashboard...</p>
-        </section>
-      </main>
-    </div>
+      <section class="card">
+        <h2>Executive Overview</h2>
+        <p id="overviewText">Loading dashboard...</p>
+      </section>
+    </main>
   </div>
 
   <script type="module">
-    import { auth, onAuthStateChanged, db, doc, getDoc } from "/evaraos/assets/js/firebase.js";
-    import { bindTopbar, renderSidebar, hasPermission } from "/evaraos/assets/js/app.js";
+    import { requireAuth, bindTopbar, renderSidebar, hasPermission } from "/evaraos/assets/js/app.js";
 
-    const bootShell = document.getElementById("bootShell");
-    const bootMessage = document.getElementById("bootMessage");
-    const dashboardApp = document.getElementById("dashboardApp");
-
-    function showBoot(message) {
-      bootMessage.textContent = message;
-      bootShell.classList.remove("hidden");
-      dashboardApp.classList.add("hidden");
-    }
-
-    function showDashboard() {
-      bootShell.classList.add("hidden");
-      dashboardApp.classList.remove("hidden");
-    }
-
-    function go(path) {
-      window.location.href = path;
-    }
-
-    onAuthStateChanged(auth, async (firebaseUser) => {
-      if (!firebaseUser) {
-        go("/evaraos/login.html");
-        return;
-      }
-
-      showBoot("Loading your user profile...");
-
-      let user = null;
-
-      try {
-        const userSnap = await getDoc(doc(db, "users", firebaseUser.uid));
-
-        if (userSnap.exists()) {
-          user = {
-            id: firebaseUser.uid,
-            uid: firebaseUser.uid,
-            email: firebaseUser.email || "",
-            ...userSnap.data()
-          };
-        } else {
-          user = {
-            id: firebaseUser.uid,
-            uid: firebaseUser.uid,
-            email: firebaseUser.email || "",
-            role: "customer",
-            approvalStatus: "pending"
-          };
-        }
-      } catch (error) {
-        console.error("Dashboard user load failed:", error);
-        showBoot("Could not load your user document. Check Firestore rules and user profile data.");
-        return;
-      }
-
-      if (!user) {
-        go("/evaraos/login.html");
-        return;
-      }
-
+    requireAuth(async (user) => {
       if (!hasPermission(user, "dashboard")) {
         if (user.role === "customer") {
-          go("/evaraos/customer_dashboard.html");
+          window.location.href = "/evaraos/customer_dashboard.html";
           return;
         }
-
-        showBoot("Your account is signed in, but it does not have dashboard permission.");
+        window.location.href = "/evaraos/index.html";
         return;
       }
 
@@ -154,14 +55,12 @@
         sidebar.innerHTML = renderSidebar(user.role, "dashboard");
       }
 
-      document.getElementById("statCompanies").textContent = user.role === "owner" ? "12" : "3";
-      document.getElementById("statLeads").textContent = user.role === "sales_rep" ? "42" : "148";
+      document.getElementById("statCompanies").textContent = "12";
+      document.getElementById("statLeads").textContent = "148";
       document.getElementById("statJobs").textContent = "36";
 
       document.getElementById("overviewText").textContent =
-        `Welcome ${user.name || user.username || user.email}. Your ${user.role} dashboard is now using the unified Firebase module shell.`;
-
-      showDashboard();
+        `Welcome ${user.name || user.username || user.email}. You are logged in as ${user.role}. The dashboard shell is now running on the unified Firebase module structure.`;
     });
   </script>
 </body>
