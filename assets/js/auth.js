@@ -40,7 +40,7 @@ function setText(id, message = "", isError = false) {
   el.style.color = isError ? "#ff9b8f" : "rgba(245,247,251,.72)";
 }
 
-function formatLoginError(error) {
+function formatLoginError(error, resolvedEmail = "") {
   const code = error?.code || "";
   const message = error?.message || "";
 
@@ -61,7 +61,9 @@ function formatLoginError(error) {
     code.includes("user-not-found") ||
     code.includes("invalid-login-credentials")
   ) {
-    return "Invalid email, username, or password.";
+    return resolvedEmail
+      ? `Invalid password for ${resolvedEmail}.`
+      : "Invalid email, username, or password.";
   }
 
   if (code.includes("too-many-requests")) {
@@ -82,19 +84,17 @@ async function resolveEmailFromLoginIdentifier(identifier) {
   }
 
   const normalized = normalizeUsername(raw);
-
-  // Exact username lookup doc: /usernames/{username}
   const usernameRef = doc(db, "usernames", normalized);
   const usernameSnap = await getDoc(usernameRef);
 
   if (!usernameSnap.exists()) {
-    throw new Error("No account found for that username.");
+    throw new Error(`No username record found for "${normalized}".`);
   }
 
   const data = usernameSnap.data();
 
   if (!data?.email) {
-    throw new Error("Username record is missing an email.");
+    throw new Error(`Username "${normalized}" is missing its email field.`);
   }
 
   return String(data.email).toLowerCase();
@@ -166,68 +166,11 @@ export async function loginWithIdentifier(identifier, password) {
     console.warn("Could not sync username directory:", error);
   }
 
-  return credential;
+  return { credential, resolvedEmail: email };
 }
 
 export async function sendReset(email) {
   return sendPasswordResetEmail(auth, email);
-}
-
-export async function updateOwnUsername(userId, newUsername) {
-  const identity = buildUserIdentity(newUsername);
-
-  if (!identity.username) {
-    throw new Error("Username is required.");
-  }
-
-  const takenSnap = await getDoc(doc(db, "usernames", identity.username));
-  if (takenSnap.exists() && takenSnap.data()?.uid !== userId) {
-    throw new Error("That username is already taken.");
-  }
-
-  await updateDoc(doc(db, "users", userId), {
-    username: identity.username,
-    displayUsername: identity.displayUsername,
-    handle: identity.handle,
-    updatedAt: serverTimestamp()
-  });
-
-  await syncUsernameDirectoryByUserDoc(userId);
-  return identity;
-}
-
-export async function updateOwnCustomerProfile(userId, payload) {
-  const username = normalizeUsername(payload.username || "");
-
-  await updateDoc(doc(db, "users", userId), {
-    ...payload,
-    username,
-    displayUsername: username ? username.charAt(0).toUpperCase() + username.slice(1) : "",
-    handle: username ? `@${username}` : "",
-    updatedAt: serverTimestamp()
-  });
-
-  await syncUsernameDirectoryByUserDoc(userId);
-}
-
-export async function changeOwnPassword(currentPassword, newPassword) {
-  if (!currentPassword || !newPassword) {
-    throw new Error("Current and new password are required.");
-  }
-
-  throw new Error("Password change flow still needs re-auth wiring.");
-}
-
-export async function fetchCustomerServices(user) {
-  return [
-    {
-      name: "Supreme TrueClean Exterior Service",
-      status: "active",
-      billingType: "Monthly Subscription",
-      cancellationPolicy: "Early cancellation may involve contract review.",
-      canRequestChanges: true
-    }
-  ];
 }
 
 function setupPasswordToggle() {
@@ -288,18 +231,29 @@ function setupLoginForm() {
         submitBtn.textContent = "Signing In...";
       }
 
-      const credential = await loginWithIdentifier(identifier, password);
+      const { credential, resolvedEmail } = await loginWithIdentifier(identifier, password);
       const userSnap = await getDoc(doc(db, "users", credential.user.uid));
       const userData = userSnap.exists() ? userSnap.data() : { role: "customer" };
       const role = userData?.role || "customer";
+
+      if (!looksLikeEmail(identifier)) {
+        setText("loginMessage", `Username "${identifier}" resolved to ${resolvedEmail}.`);
+      }
 
       window.location.href =
         role === "customer"
           ? "/evaraos/customer_dashboard.html"
           : "/evaraos/dashboard.html";
     } catch (error) {
+      let resolvedEmail = "";
+      try {
+        if (!looksLikeEmail(identifier)) {
+          resolvedEmail = await resolveEmailFromLoginIdentifier(identifier);
+        }
+      } catch {}
+
       console.error("Login failed:", error);
-      setText("loginMessage", formatLoginError(error), true);
+      setText("loginMessage", formatLoginError(error, resolvedEmail), true);
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
