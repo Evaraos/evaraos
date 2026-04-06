@@ -3,51 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login — Evaraos</title>
-
-  <link rel="stylesheet" href="assets/css/styles.css" />
+  <title>Login | Evaraos</title>
+  <link rel="stylesheet" href="./assets/css/styles.css" />
 </head>
+<body>
+  <header id="topbar" class="topbar"></header>
 
-<body class="app">
-
-  <header id="navbar"></header>
-
-  <main class="center-screen">
-
-    <div class="glass-card auth-card">
-
-      <h2>Welcome Back</h2>
-
+  <main class="landing-wrap">
+    <section class="card form-wrap">
+      <h2>Login</h2>
       <form id="loginForm">
-
-        <input
-          type="text"
-          id="loginInput"
-          placeholder="Username or Email"
-          required
-        />
-
-        <input
-          type="password"
-          id="password"
-          placeholder="Password"
-          required
-        />
-
-        <button type="submit" class="btn primary full">
-          Login
-        </button>
-
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input class="input" id="email" type="email" required />
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input class="input" id="password" type="password" required />
+        </div>
+        <button class="btn btn-primary" type="submit">Login</button>
+        <div id="formStatus" class="form-status"></div>
       </form>
-
-      <p class="auth-link">
-        No account? <a href="signup.html">Sign up</a>
-      </p>
-
-    </div>
-
+    </section>
   </main>
 
-  <script type="module" src="assets/js/pages/login.js"></script>
+  <script src="./assets/js/app.js"></script>
+  <script src="./assets/js/auth.js"></script>
 </body>
 </html>
