@@ -33,27 +33,6 @@ export function hasPermission(user, section) {
   return permissions.includes("all") || permissions.includes(section);
 }
 
-export function buildPageTitle(pathname = window.location.pathname) {
-  const page = pathname.split("/").pop() || "index.html";
-
-  const titles = {
-    "dashboard.html": "Dashboard",
-    "customer_dashboard.html": "Customer Dashboard",
-    "companies.html": "Companies",
-    "users.html": "Users",
-    "sales_reps.html": "Sales Reps",
-    "leads.html": "Leads",
-    "jobs.html": "Jobs",
-    "audit.html": "Audit",
-    "org.html": "Organization",
-    "performance.html": "Performance",
-    "login.html": "Login",
-    "index.html": "Home"
-  };
-
-  return titles[page] || "Evaraos";
-}
-
 export function renderSidebar(role, active = "") {
   const links = [
     { key: "dashboard", href: "/evaraos/dashboard.html", label: "Dashboard", roles: ["owner", "admin", "manager", "sales_rep", "tech"] },
@@ -103,8 +82,7 @@ export async function hydrateCurrentUser(firebaseUser) {
   if (!firebaseUser) return null;
 
   try {
-    const userRef = doc(db, "users", firebaseUser.uid);
-    const snap = await getDoc(userRef);
+    const snap = await getDoc(doc(db, "users", firebaseUser.uid));
 
     if (!snap.exists()) {
       return {
@@ -129,10 +107,7 @@ export async function hydrateCurrentUser(firebaseUser) {
 }
 
 export async function requireAuth(callback, options = {}) {
-  const {
-    allowRoles = null,
-    redirectTo = "/evaraos/login.html"
-  } = options;
+  const { allowRoles = null, redirectTo = "/evaraos/login.html" } = options;
 
   onAuthStateChanged(auth, async (firebaseUser) => {
     if (!firebaseUser) {
@@ -142,9 +117,7 @@ export async function requireAuth(callback, options = {}) {
 
     const user = await hydrateCurrentUser(firebaseUser);
 
-    if (!user) {
-      return;
-    }
+    if (!user) return;
 
     if (Array.isArray(allowRoles) && allowRoles.length && !allowRoles.includes(user.role)) {
       if (user.role === "customer") {
@@ -168,19 +141,17 @@ export async function bindTopbar(user) {
   const topbar = document.getElementById("topbar");
   if (!topbar) return;
 
-  const pageTitle = buildPageTitle();
-
   topbar.innerHTML = `
     <div class="topbar-inner">
       <div class="topbar-left">
-        <a class="brand-link" href="${getAssetPath("index.html")}">
-          <img src="${getAssetPath("assets/img/evaraos_logo.png")}" alt="Evaraos Logo" class="brand-logo" />
+        <a class="brand-link" href="/evaraos/index.html">
+          <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos Logo" class="brand-logo" />
           <span class="brand-text">Evaraos</span>
         </a>
       </div>
 
       <div class="topbar-center">
-        <h1 class="page-title">${pageTitle}</h1>
+        <h1 class="page-title">Dashboard</h1>
       </div>
 
       <div class="topbar-right">
