@@ -3,7 +3,9 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import {
   getAuth,
   onAuthStateChanged,
-  signOut
+  signOut,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
@@ -43,6 +45,8 @@ export {
   db,
   onAuthStateChanged,
   signOut,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   collection,
   getDocs,
   getDoc,
