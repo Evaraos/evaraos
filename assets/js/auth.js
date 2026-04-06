@@ -1,19 +1,17 @@
 import {
   auth,
   db,
-  onAuthStateChanged,
-  signOut,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
-  collection,
-  query,
-  where,
-  getDocs,
   getDoc,
-  doc,
+  getDocs,
   setDoc,
   updateDoc,
   deleteDoc,
+  doc,
+  collection,
+  query,
+  where,
   serverTimestamp
 } from "./firebase.js";
 
@@ -24,6 +22,22 @@ function normalizeUsername(value = "") {
 function looksLikeEmail(value = "") {
   const raw = String(value).trim();
   return raw.includes("@") && raw.includes(".");
+}
+
+export function buildUserIdentity(username = "") {
+  const clean = normalizeUsername(username);
+  return {
+    username: clean,
+    displayUsername: clean ? clean.charAt(0).toUpperCase() + clean.slice(1) : "",
+    handle: clean ? `@${clean}` : ""
+  };
+}
+
+function setText(id, message = "", isError = false) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = message;
+  el.style.color = isError ? "#ff9b8f" : "rgba(245,247,251,.72)";
 }
 
 function formatLoginError(error) {
@@ -54,54 +68,7 @@ function formatLoginError(error) {
     return "Too many login attempts. Please wait a bit and try again.";
   }
 
-  if (code.includes("network-request-failed")) {
-    return "Network error. Check your internet connection and try again.";
-  }
-
   return error?.message || "Login failed. Please try again.";
-}
-
-function setText(id, message = "", isError = false) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.textContent = message;
-  el.style.color = isError ? "#ff9b8f" : "rgba(245,247,251,.72)";
-}
-
-function showElement(el) {
-  if (!el) return;
-  el.classList.remove("hidden");
-  el.style.display = "";
-}
-
-function hideElement(el) {
-  if (!el) return;
-  el.classList.add("hidden");
-}
-
-function setLegacySession(userData, firebaseUser) {
-  const sessionUser = {
-    uid: firebaseUser?.uid || "",
-    email: firebaseUser?.email || userData?.email || "",
-    name:
-      userData?.name ||
-      userData?.fullName ||
-      userData?.username ||
-      firebaseUser?.email ||
-      "User",
-    role: userData?.role || "customer",
-    companyId: userData?.companyId || ""
-  };
-
-  localStorage.setItem("evaraos_user", JSON.stringify(sessionUser));
-  localStorage.setItem("evaraos_role", sessionUser.role);
-
-  return sessionUser;
-}
-
-function clearLegacySession() {
-  localStorage.removeItem("evaraos_user");
-  localStorage.removeItem("evaraos_role");
 }
 
 async function resolveEmailFromLoginIdentifier(identifier) {
@@ -137,29 +104,31 @@ export async function syncUsernameDirectoryByUserDoc(userId) {
   }
 
   const user = userSnap.data();
-  const username = normalizeUsername(user.username || "");
+  const identity = buildUserIdentity(user.username || "");
 
   const existingEntriesQuery = query(collection(db, "usernames"), where("uid", "==", userId));
   const existingEntriesSnap = await getDocs(existingEntriesQuery);
 
   for (const entry of existingEntriesSnap.docs) {
-    if (entry.id !== username) {
+    if (entry.id !== identity.username) {
       await deleteDoc(doc(db, "usernames", entry.id));
     }
   }
 
-  if (!username) return null;
+  if (!identity.username) return null;
 
   const payload = {
     uid: userId,
-    username,
+    username: identity.username,
+    displayUsername: identity.displayUsername,
+    handle: identity.handle,
     email: user.email || "",
     companyId: user.companyId || "",
     role: user.role || "",
     updatedAt: serverTimestamp()
   };
 
-  const usernameRef = doc(db, "usernames", username);
+  const usernameRef = doc(db, "usernames", identity.username);
   const usernameSnap = await getDoc(usernameRef);
 
   if (!usernameSnap.exists()) {
@@ -170,53 +139,96 @@ export async function syncUsernameDirectoryByUserDoc(userId) {
   return payload;
 }
 
-export function listenAuth(callback) {
-  return onAuthStateChanged(auth, async (firebaseUser) => {
-    if (!firebaseUser) {
-      clearLegacySession();
-      callback(null);
-      return;
-    }
+export async function loginWithIdentifier(identifier, password) {
+  const email = await resolveEmailFromLoginIdentifier(identifier);
+  const credential = await signInWithEmailAndPassword(auth, email, password);
 
-    try {
-      const userRef = doc(db, "users", firebaseUser.uid);
-      const userSnap = await getDoc(userRef);
+  const userRef = doc(db, "users", credential.user.uid);
 
-      if (!userSnap.exists()) {
-        const fallbackUser = {
-          id: firebaseUser.uid,
-          uid: firebaseUser.uid,
-          email: firebaseUser.email || "",
-          approvalStatus: "pending",
-          role: "customer"
-        };
+  try {
+    await updateDoc(userRef, {
+      lastLogin: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.warn("Could not update lastLogin:", error);
+  }
 
-        setLegacySession(fallbackUser, firebaseUser);
-        callback(fallbackUser);
-        return;
-      }
+  try {
+    await syncUsernameDirectoryByUserDoc(credential.user.uid);
+  } catch (error) {
+    console.warn("Could not sync username directory:", error);
+  }
 
-      const userData = userSnap.data();
-
-      const mergedUser = {
-        id: firebaseUser.uid,
-        uid: firebaseUser.uid,
-        email: firebaseUser.email || userData.email || "",
-        ...userData
-      };
-
-      setLegacySession(mergedUser, firebaseUser);
-      callback(mergedUser);
-    } catch (error) {
-      console.error("listenAuth failed:", error);
-      callback(null);
-    }
-  });
+  return credential;
 }
 
-export async function logout() {
-  clearLegacySession();
-  await signOut(auth);
+export async function sendReset(email) {
+  return sendPasswordResetEmail(auth, email);
+}
+
+export async function updateOwnUsername(userId, newUsername) {
+  const identity = buildUserIdentity(newUsername);
+
+  if (!identity.username) {
+    throw new Error("Username is required.");
+  }
+
+  const takenSnap = await getDoc(doc(db, "usernames", identity.username));
+  if (takenSnap.exists() && takenSnap.data()?.uid !== userId) {
+    throw new Error("That username is already taken.");
+  }
+
+  await updateDoc(doc(db, "users", userId), {
+    username: identity.username,
+    displayUsername: identity.displayUsername,
+    handle: identity.handle,
+    updatedAt: serverTimestamp()
+  });
+
+  await syncUsernameDirectoryByUserDoc(userId);
+  return identity;
+}
+
+export async function updateOwnCustomerProfile(userId, payload) {
+  const username = normalizeUsername(payload.username || "");
+
+  await updateDoc(doc(db, "users", userId), {
+    ...payload,
+    username,
+    displayUsername: username ? username.charAt(0).toUpperCase() + username.slice(1) : "",
+    handle: username ? `@${username}` : "",
+    updatedAt: serverTimestamp()
+  });
+
+  await syncUsernameDirectoryByUserDoc(userId);
+}
+
+export async function changeOwnPassword(currentPassword, newPassword) {
+  if (!currentPassword || !newPassword) {
+    throw new Error("Current and new password are required.");
+  }
+
+  throw new Error("Password change flow still needs re-auth wiring. We’ll wire that next.");
+}
+
+export async function fetchCustomerServices(user) {
+  return [
+    {
+      name: "Supreme TrueClean Exterior Service",
+      status: "active",
+      billingType: "Monthly Subscription",
+      cancellationPolicy: "Early cancellation may involve contract review.",
+      canRequestChanges: true
+    },
+    {
+      name: "Additional Service Slot",
+      status: "inactive",
+      billingType: "Not Active",
+      cancellationPolicy: "Can be requested through account review.",
+      canRequestChanges: true
+    }
+  ];
 }
 
 function setupPasswordToggle() {
@@ -229,11 +241,9 @@ function setupPasswordToggle() {
 
   toggleBtn.addEventListener("click", () => {
     const shouldShow = passwordInput.type === "password";
-
     passwordInput.type = shouldShow ? "text" : "password";
     toggleBtn.setAttribute("aria-pressed", String(shouldShow));
     toggleBtn.setAttribute("aria-label", shouldShow ? "Hide password" : "Show password");
-
     openIcon.style.display = shouldShow ? "none" : "block";
     closedIcon.style.display = shouldShow ? "block" : "none";
   });
@@ -247,11 +257,11 @@ function setupResetPanel() {
   if (!resetPanel) return;
 
   openResetBtn?.addEventListener("click", () => {
-    showElement(resetPanel);
+    resetPanel.classList.remove("hidden");
   });
 
   closeResetBtn?.addEventListener("click", () => {
-    hideElement(resetPanel);
+    resetPanel.classList.add("hidden");
   });
 }
 
@@ -279,38 +289,11 @@ function setupLoginForm() {
         submitBtn.textContent = "Signing In...";
       }
 
-      const email = await resolveEmailFromLoginIdentifier(identifier);
-      const credential = await signInWithEmailAndPassword(auth, email, password);
+      const credential = await loginWithIdentifier(identifier, password);
 
-      let userData = {
-        role: "customer",
-        email: credential.user.email || email
-      };
-
-      const userRef = doc(db, "users", credential.user.uid);
-      const userSnap = await getDoc(userRef);
-
-      if (userSnap.exists()) {
-        userData = userSnap.data();
-      }
-
-      try {
-        await updateDoc(userRef, {
-          lastLogin: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        });
-      } catch (err) {
-        console.warn("Could not update lastLogin:", err);
-      }
-
-      try {
-        await syncUsernameDirectoryByUserDoc(credential.user.uid);
-      } catch (err) {
-        console.warn("Could not sync username directory:", err);
-      }
-
-      const sessionUser = setLegacySession(userData, credential.user);
-      const role = sessionUser.role || "customer";
+      const userSnap = await getDoc(doc(db, "users", credential.user.uid));
+      const userData = userSnap.exists() ? userSnap.data() : { role: "customer" };
+      const role = userData?.role || "customer";
 
       window.location.href =
         role === "customer"
@@ -335,12 +318,12 @@ function setupResetForm() {
   resetForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const resetEmail = document.getElementById("resetEmail")?.value?.trim() || "";
+    const email = document.getElementById("resetEmail")?.value?.trim() || "";
     const submitBtn = resetForm.querySelector('button[type="submit"]');
 
     setText("resetMessage", "");
 
-    if (!resetEmail) {
+    if (!email) {
       setText("resetMessage", "Enter your account email.", true);
       return;
     }
@@ -351,7 +334,7 @@ function setupResetForm() {
         submitBtn.textContent = "Sending...";
       }
 
-      await sendPasswordResetEmail(auth, resetEmail);
+      await sendReset(email);
       setText("resetMessage", "Reset email sent. Check your inbox.");
     } catch (error) {
       console.error("Reset email failed:", error);
