@@ -75,9 +75,7 @@ function formatLoginError(error, resolvedEmail = "") {
 
 async function resolveEmailFromLoginIdentifier(identifier) {
   const raw = String(identifier || "").trim();
-  if (!raw) {
-    throw new Error("Missing login identifier.");
-  }
+  if (!raw) throw new Error("Missing login identifier.");
 
   if (looksLikeEmail(raw)) {
     return raw.toLowerCase();
@@ -171,6 +169,63 @@ export async function loginWithIdentifier(identifier, password) {
 
 export async function sendReset(email) {
   return sendPasswordResetEmail(auth, email);
+}
+
+export async function updateOwnUsername(userId, newUsername) {
+  const identity = buildUserIdentity(newUsername);
+
+  if (!identity.username) {
+    throw new Error("Username is required.");
+  }
+
+  const takenSnap = await getDoc(doc(db, "usernames", identity.username));
+  if (takenSnap.exists() && takenSnap.data()?.uid !== userId) {
+    throw new Error("That username is already taken.");
+  }
+
+  await updateDoc(doc(db, "users", userId), {
+    username: identity.username,
+    displayUsername: identity.displayUsername,
+    handle: identity.handle,
+    updatedAt: serverTimestamp()
+  });
+
+  await syncUsernameDirectoryByUserDoc(userId);
+  return identity;
+}
+
+export async function updateOwnCustomerProfile(userId, payload) {
+  const username = normalizeUsername(payload.username || "");
+
+  await updateDoc(doc(db, "users", userId), {
+    ...payload,
+    username,
+    displayUsername: username ? username.charAt(0).toUpperCase() + username.slice(1) : "",
+    handle: username ? `@${username}` : "",
+    updatedAt: serverTimestamp()
+  });
+
+  await syncUsernameDirectoryByUserDoc(userId);
+}
+
+export async function changeOwnPassword(currentPassword, newPassword) {
+  if (!currentPassword || !newPassword) {
+    throw new Error("Current and new password are required.");
+  }
+
+  throw new Error("Password change flow still needs re-auth wiring.");
+}
+
+export async function fetchCustomerServices(user) {
+  return [
+    {
+      name: "Supreme TrueClean Exterior Service",
+      status: "active",
+      billingType: "Monthly Subscription",
+      cancellationPolicy: "Early cancellation may involve contract review.",
+      canRequestChanges: true
+    }
+  ];
 }
 
 function setupPasswordToggle() {
