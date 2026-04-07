@@ -137,7 +137,7 @@ export async function logoutUser() {
   window.location.href = "/evaraos/index.html";
 }
 
-export async function bindTopbar(user) {
+export async function bindTopbar(user, title = "Dashboard") {
   const topbar = document.getElementById("topbar");
   if (!topbar) return;
 
@@ -151,7 +151,7 @@ export async function bindTopbar(user) {
       </div>
 
       <div class="topbar-center">
-        <h1 class="page-title">Dashboard</h1>
+        <h1 class="page-title">${title}</h1>
       </div>
 
       <div class="topbar-right">
