@@ -2,36 +2,82 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sign Up | Evaraos</title>
-  <link rel="stylesheet" href="./assets/css/styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Sign Up • Evaraos Inc</title>
+  <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
 </head>
-<body>
-  <header id="topbar" class="topbar"></header>
+<body class="app-theme">
+  <header class="landing-header">
+    <div class="landing-header-inner">
+      <a href="/evaraos/index.html" class="brand-link">
+        <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos logo" class="brand-logo" />
+        <div class="brand-copy">
+          <strong>Evaraos Inc</strong>
+          <span>Subsidiaries Allocation SaaS</span>
+        </div>
+      </a>
 
-  <main class="landing-wrap">
-    <section class="card form-wrap">
-      <h2>Create Account</h2>
-      <form id="signupForm">
-        <div class="form-group">
-          <label for="name">Full Name</label>
-          <input class="input" id="name" type="text" required />
+      <nav class="landing-nav">
+        <a href="/evaraos/index.html" class="nav-pill">Home</a>
+        <a href="/evaraos/login.html" class="nav-pill">Login</a>
+        <a href="/evaraos/signup.html" class="nav-pill active">Sign Up</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="login-shell">
+    <section class="login-panel glass-card">
+      <div class="login-badge-wrap">
+        <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos" class="login-badge" />
+      </div>
+
+      <h1 class="login-title">Create Account</h1>
+      <p class="login-subtitle">Restore your signup page now. Account creation wiring comes next.</p>
+
+      <form id="signupForm" class="login-form">
+        <label class="field-label" for="signupName">Full Name</label>
+        <input
+          id="signupName"
+          name="signupName"
+          type="text"
+          class="input"
+          placeholder="Full Name"
+          autocomplete="name"
+          required
+        />
+
+        <label class="field-label" for="signupEmail">Email</label>
+        <input
+          id="signupEmail"
+          name="signupEmail"
+          type="email"
+          class="input"
+          placeholder="Email"
+          autocomplete="email"
+          required
+        />
+
+        <label class="field-label" for="signupUsername">Username</label>
+        <input
+          id="signupUsername"
+          name="signupUsername"
+          type="text"
+          class="input"
+          placeholder="Username"
+          autocomplete="username"
+          required
+        />
+
+        <div class="login-actions-row">
+          <button type="submit" class="btn btn-primary">Create Account</button>
+          <a href="/evaraos/login.html" class="btn btn-secondary">Back to Login</a>
         </div>
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input class="input" id="email" type="email" required />
-        </div>
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input class="input" id="password" type="password" required />
-        </div>
-        <button class="btn btn-primary" type="submit">Create Account</button>
-        <div id="formStatus" class="form-status"></div>
+
+        <p id="signupMessage" class="login-message"></p>
       </form>
     </section>
   </main>
 
-  <script src="./assets/js/app.js"></script>
-  <script src="./assets/js/auth.js"></script>
+  <script type="module" src="/evaraos/assets/js/auth.js"></script>
 </body>
 </html>
