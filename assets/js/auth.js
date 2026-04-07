@@ -208,24 +208,11 @@ export async function updateOwnCustomerProfile(userId, payload) {
   await syncUsernameDirectoryByUserDoc(userId);
 }
 
-export async function changeOwnPassword(currentPassword, newPassword) {
-  if (!currentPassword || !newPassword) {
-    throw new Error("Current and new password are required.");
-  }
-
-  throw new Error("Password change flow still needs re-auth wiring.");
-}
-
-export async function fetchCustomerServices(user) {
-  return [
-    {
-      name: "Supreme TrueClean Exterior Service",
-      status: "active",
-      billingType: "Monthly Subscription",
-      cancellationPolicy: "Early cancellation may involve contract review.",
-      canRequestChanges: true
-    }
-  ];
+export async function createAccount({ name, email, username }) {
+  return {
+    success: false,
+    message: "Signup UI is restored, but account creation wiring will be added in the next batch."
+  };
 }
 
 function setupPasswordToggle() {
@@ -355,9 +342,34 @@ function setupResetForm() {
   });
 }
 
+function setupSignupForm() {
+  const signupForm = document.getElementById("signupForm");
+  if (!signupForm) return;
+
+  signupForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById("signupName")?.value?.trim() || "";
+    const email = document.getElementById("signupEmail")?.value?.trim() || "";
+    const username = document.getElementById("signupUsername")?.value?.trim() || "";
+
+    setText("signupMessage", "");
+
+    const result = await createAccount({ name, email, username });
+
+    if (!result.success) {
+      setText("signupMessage", result.message, true);
+      return;
+    }
+
+    setText("signupMessage", "Account created.");
+  });
+}
+
 window.addEventListener("DOMContentLoaded", () => {
   setupPasswordToggle();
   setupResetPanel();
   setupLoginForm();
   setupResetForm();
+  setupSignupForm();
 });
