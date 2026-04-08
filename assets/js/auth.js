@@ -12,8 +12,11 @@ import {
   collection,
   query,
   where,
-  serverTimestamp
+  serverTimestamp,
+  getMultiFactorResolver
 } from "./firebase.js";
+
+import { beginMfaSignIn, completeMfaSignIn } from "./mfa.js";
 
 function normalizeUsername(value = "") {
   return String(value).trim().replace(/^@+/, "").toLowerCase();
@@ -145,26 +148,35 @@ export async function syncUsernameDirectoryByUserDoc(userId) {
 
 export async function loginWithIdentifier(identifier, password) {
   const email = await resolveEmailFromLoginIdentifier(identifier);
-  const credential = await signInWithEmailAndPassword(auth, email, password);
-
-  const userRef = doc(db, "users", credential.user.uid);
 
   try {
-    await updateDoc(userRef, {
-      lastLogin: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    });
-  } catch (error) {
-    console.warn("Could not update lastLogin:", error);
-  }
+    const credential = await signInWithEmailAndPassword(auth, email, password);
 
-  try {
-    await syncUsernameDirectoryByUserDoc(credential.user.uid);
-  } catch (error) {
-    console.warn("Could not sync username directory:", error);
-  }
+    const userRef = doc(db, "users", credential.user.uid);
 
-  return { credential, resolvedEmail: email };
+    try {
+      await updateDoc(userRef, {
+        lastLogin: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.warn("Could not update lastLogin:", error);
+    }
+
+    try {
+      await syncUsernameDirectoryByUserDoc(credential.user.uid);
+    } catch (error) {
+      console.warn("Could not sync username directory:", error);
+    }
+
+    return { credential, resolvedEmail: email };
+  } catch (error) {
+    if (error.code === "auth/multi-factor-auth-required") {
+      const resolver = getMultiFactorResolver(auth, error);
+      error.customData = { ...(error.customData || {}), resolver };
+    }
+    throw Object.assign(error, { resolvedEmail: email });
+  }
 }
 
 export async function sendReset(email) {
@@ -249,6 +261,45 @@ function setupResetPanel() {
   });
 }
 
+function setupMfaChallengePanel() {
+  const challengeForm = document.getElementById("mfaChallengeForm");
+  if (!challengeForm) return;
+
+  challengeForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const code = document.getElementById("mfaCode")?.value?.trim() || "";
+    const submitBtn = challengeForm.querySelector('button[type="submit"]');
+
+    setText("mfaChallengeMessage", "");
+
+    try {
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Verifying...";
+      }
+
+      const credential = await completeMfaSignIn(code);
+      const userSnap = await getDoc(doc(db, "users", credential.user.uid));
+      const userData = userSnap.exists() ? userSnap.data() : { role: "customer" };
+      const role = userData?.role || "customer";
+
+      window.location.href =
+        role === "customer"
+          ? "/evaraos/customer_dashboard.html"
+          : "/evaraos/dashboard.html";
+    } catch (error) {
+      console.error("MFA challenge failed:", error);
+      setText("mfaChallengeMessage", error.message || "Invalid code.", true);
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Verify Code";
+      }
+    }
+  });
+}
+
 function setupLoginForm() {
   const loginForm = document.getElementById("loginForm");
   if (!loginForm) return;
@@ -287,13 +338,23 @@ function setupLoginForm() {
           ? "/evaraos/customer_dashboard.html"
           : "/evaraos/dashboard.html";
     } catch (error) {
-      let resolvedEmail = "";
-      try {
-        if (!looksLikeEmail(identifier)) {
-          resolvedEmail = await resolveEmailFromLoginIdentifier(identifier);
+      if (error.code === "auth/multi-factor-auth-required") {
+        try {
+          const result = await beginMfaSignIn(error, "recaptcha-container");
+          document.getElementById("mfaChallengePanel")?.classList.remove("hidden");
+          setText("mfaChallengeMessage", `Code sent to ${result.maskedPhone}.`);
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Login";
+          }
+          return;
+        } catch (mfaError) {
+          console.error("MFA setup failed:", mfaError);
+          setText("loginMessage", mfaError.message || "Could not start MFA challenge.", true);
         }
-      } catch {}
+      }
 
+      const resolvedEmail = error.resolvedEmail || "";
       console.error("Login failed:", error);
       setText("loginMessage", formatLoginError(error, resolvedEmail), true);
     } finally {
@@ -372,4 +433,5 @@ window.addEventListener("DOMContentLoaded", () => {
   setupLoginForm();
   setupResetForm();
   setupSignupForm();
+  setupMfaChallengePanel();
 });
