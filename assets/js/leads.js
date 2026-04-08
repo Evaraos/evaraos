@@ -76,7 +76,9 @@ async function loadLeads(user) {
     : await fetchUsersByCompany(user.companyId);
 
   leadState.reps = allUsers.filter(item => item.role === "sales_rep");
-  leadState.technicians = allUsers.filter(item => ["technician", "tech"].includes(item.role));
+  leadState.technicians = allUsers.filter(item =>
+    ["technician", "tech"].includes(String(item.role || "").toLowerCase())
+  );
 
   const allLeads = await fetchAllCollection("leads", { max: 500 });
 
