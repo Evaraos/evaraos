@@ -6,128 +6,169 @@
   <title>Leads | Evaraos</title>
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
 </head>
-<body>
-  <header id="topbar"></header>
-  <div id="sidebar" style="display:none;"></div>
-  <main id="leadsRoot"></main>
+<body class="app-shell app-theme">
+  <div class="app-bg">
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-grid"></div>
+  </div>
+
+  <header id="topbar" class="topbar"></header>
+
+  <div class="page-shell">
+    <aside id="sidebar" class="sidebar"></aside>
+
+    <main class="main-content">
+      <section class="glass-card aurora-card shine-border">
+        <div class="section-title-row">
+          <div>
+            <h1 style="margin:0;">Leads</h1>
+            <p class="muted" style="margin:8px 0 0;">
+              Capture leads, assign reps, price services, add notes, and convert opportunities into jobs.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <main id="leadsRoot" class="content-root"></main>
+    </main>
+  </div>
 
   <div class="modal-backdrop" id="leadModal">
-    <div class="modal-card">
+    <div class="modal-card aurora-card shine-border">
       <div class="section-row">
         <h2 id="leadModalTitle" style="margin:0;">Add Lead</h2>
         <button class="btn secondary" id="leadModalCloseBtn" type="button">Close</button>
       </div>
 
       <form id="leadForm">
-        <div class="form-grid">
-          <div class="field">
-            <label for="leadFullName">Full Name</label>
-            <input id="leadFullName" required />
-          </div>
+        <section class="form-section">
+          <h3 class="form-section-title">Contact Info</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label for="leadFullName">Full Name</label>
+              <input id="leadFullName" required />
+            </div>
 
-          <div class="field">
-            <label for="leadPhone">Phone</label>
-            <input id="leadPhone" />
-          </div>
+            <div class="field">
+              <label for="leadPhone">Phone</label>
+              <input id="leadPhone" />
+            </div>
 
-          <div class="field">
-            <label for="leadEmail">Email</label>
-            <input id="leadEmail" type="email" />
-          </div>
+            <div class="field">
+              <label for="leadEmail">Email</label>
+              <input id="leadEmail" type="email" />
+            </div>
 
-          <div class="field">
-            <label for="leadAssignedRep">Assigned Rep</label>
-            <select id="leadAssignedRep"></select>
+            <div class="field">
+              <label for="leadAssignedRep">Assigned Rep</label>
+              <select id="leadAssignedRep"></select>
+            </div>
           </div>
+        </section>
 
-          <div class="field full">
-            <label for="leadAddress">Address</label>
-            <input id="leadAddress" />
-          </div>
+        <section class="form-section">
+          <h3 class="form-section-title">Location</h3>
+          <div class="form-grid">
+            <div class="field full">
+              <label for="leadAddress">Address</label>
+              <input id="leadAddress" />
+            </div>
 
-          <div class="field">
-            <label for="leadCity">City</label>
-            <input id="leadCity" />
-          </div>
+            <div class="field">
+              <label for="leadCity">City</label>
+              <input id="leadCity" />
+            </div>
 
-          <div class="field">
-            <label for="leadState">State</label>
-            <input id="leadState" />
-          </div>
+            <div class="field">
+              <label for="leadState">State</label>
+              <input id="leadState" />
+            </div>
 
-          <div class="field">
-            <label for="leadZip">Zip</label>
-            <input id="leadZip" />
+            <div class="field">
+              <label for="leadZip">Zip</label>
+              <input id="leadZip" />
+            </div>
           </div>
+        </section>
 
-          <div class="field">
-            <label for="leadCategory">Service Category</label>
-            <select id="leadCategory"></select>
-          </div>
+        <section class="form-section">
+          <h3 class="form-section-title">Service & Sales</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label for="leadCategory">Service Category</label>
+              <select id="leadCategory"></select>
+            </div>
 
-          <div class="field">
-            <label for="leadServiceType">Service Type</label>
-            <select id="leadServiceType"></select>
-          </div>
+            <div class="field">
+              <label for="leadServiceType">Service Type</label>
+              <select id="leadServiceType"></select>
+            </div>
 
-          <div class="field">
-            <label for="leadEstimatedSqFt">Estimated Sq Ft / Quantity</label>
-            <input id="leadEstimatedSqFt" type="number" min="0" step="1" />
-          </div>
+            <div class="field">
+              <label for="leadEstimatedSqFt">Estimated Sq Ft / Quantity</label>
+              <input id="leadEstimatedSqFt" type="number" min="0" step="1" />
+            </div>
 
-          <div class="field">
-            <label for="leadStatus">Status</label>
-            <select id="leadStatus">
-              <option value="new">New</option>
-              <option value="contacted">Contacted</option>
-              <option value="quoted">Quoted</option>
-              <option value="scheduled">Booked</option>
-              <option value="won">Won</option>
-              <option value="lost">Lost</option>
-            </select>
-          </div>
+            <div class="field">
+              <label for="leadStatus">Status</label>
+              <select id="leadStatus">
+                <option value="new">New</option>
+                <option value="contacted">Contacted</option>
+                <option value="quoted">Quoted</option>
+                <option value="scheduled">Booked</option>
+                <option value="won">Won</option>
+                <option value="lost">Lost</option>
+              </select>
+            </div>
 
-          <div class="field">
-            <label for="leadLeadSource">Lead Source</label>
-            <select id="leadLeadSource">
-              <option value="">Select source</option>
-              <option value="website">Website</option>
-              <option value="door_to_door">Door to Door</option>
-              <option value="referral">Referral</option>
-              <option value="phone">Phone</option>
-              <option value="manual">Manual</option>
-            </select>
-          </div>
+            <div class="field">
+              <label for="leadLeadSource">Lead Source</label>
+              <select id="leadLeadSource">
+                <option value="">Select source</option>
+                <option value="website">Website</option>
+                <option value="door_to_door">Door to Door</option>
+                <option value="referral">Referral</option>
+                <option value="phone">Phone</option>
+                <option value="manual">Manual</option>
+              </select>
+            </div>
 
-          <div class="field">
-            <label for="leadContactMethod">Preferred Contact</label>
-            <select id="leadContactMethod">
-              <option value="">Select method</option>
-              <option value="call">Call</option>
-              <option value="text">Text</option>
-              <option value="email">Email</option>
-            </select>
-          </div>
+            <div class="field">
+              <label for="leadContactMethod">Preferred Contact</label>
+              <select id="leadContactMethod">
+                <option value="">Select method</option>
+                <option value="call">Call</option>
+                <option value="text">Text</option>
+                <option value="email">Email</option>
+              </select>
+            </div>
 
-          <div class="field">
-            <label for="leadAppointmentDate">Appointment Date</label>
-            <input id="leadAppointmentDate" type="date" />
+            <div class="field">
+              <label for="leadAppointmentDate">Appointment Date</label>
+              <input id="leadAppointmentDate" type="date" />
+            </div>
           </div>
+        </section>
 
-          <div class="field full">
-            <label>Add-ons</label>
-            <div class="checkbox-grid" id="leadAddOnsWrap"></div>
-          </div>
+        <section class="form-section">
+          <h3 class="form-section-title">Add-ons & Notes</h3>
+          <div class="form-grid">
+            <div class="field full">
+              <label>Add-ons</label>
+              <div class="checkbox-grid" id="leadAddOnsWrap"></div>
+            </div>
 
-          <div class="field full">
-            <label for="leadNotes">Notes</label>
-            <textarea id="leadNotes" rows="4"></textarea>
-          </div>
+            <div class="field full">
+              <label for="leadNotes">Notes</label>
+              <textarea id="leadNotes" rows="4"></textarea>
+            </div>
 
-          <div class="field full">
-            <div id="leadEstimatePreview" class="muted">Estimated price: $0.00</div>
+            <div class="field full">
+              <div id="leadEstimatePreview" class="muted">Estimated price: $0.00</div>
+            </div>
           </div>
-        </div>
+        </section>
 
         <div class="top-actions" style="margin-top:18px;">
           <button class="btn" type="submit">Save Lead</button>
@@ -138,7 +179,7 @@
   </div>
 
   <div class="modal-backdrop" id="convertModal">
-    <div class="modal-card">
+    <div class="modal-card aurora-card shine-border">
       <div class="section-row">
         <h2 style="margin:0;">Convert Lead to Job</h2>
         <button class="btn secondary" id="convertModalCloseBtn" type="button">Close</button>
