@@ -129,9 +129,9 @@ export async function beginMfaSignIn(error, containerId = "recaptcha-container")
     throw new Error("MFA resolver missing.");
   }
 
-  const hint = activeResolver.hints.find(
-    h => h.factorId === PhoneMultiFactorGenerator.FACTOR_ID
-  ) || activeResolver.hints[0];
+  const hint =
+    activeResolver.hints.find(h => h.factorId === PhoneMultiFactorGenerator.FACTOR_ID) ||
+    activeResolver.hints[0];
 
   if (!hint) {
     throw new Error("No supported MFA factor found.");
