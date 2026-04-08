@@ -21,6 +21,11 @@ html, body {
   --red-1: #ff5a4e;
   --red-2: #ff7f5f;
   --shadow: 0 24px 70px rgba(0,0,0,0.34);
+  --aurora-1: rgba(255, 92, 125, 0.9);
+  --aurora-2: rgba(255, 183, 77, 0.85);
+  --aurora-3: rgba(80, 227, 194, 0.8);
+  --aurora-4: rgba(90, 103, 216, 0.9);
+  --aurora-5: rgba(214, 51, 132, 0.85);
 }
 
 body.app-theme,
@@ -49,6 +54,125 @@ a {
   display: none !important;
 }
 
+/* ---------- APPLE-INTELLIGENCE STYLE AURORA GLOW ---------- */
+.aurora-card,
+.aurora-field-group,
+.sidebar-inner,
+.topbar-inner,
+.feature-card,
+.hero-visual,
+.login-panel,
+.reset-panel,
+.card {
+  position: relative;
+  isolation: isolate;
+}
+
+.aurora-card::before,
+.aurora-field-group::before,
+.sidebar-inner::before,
+.topbar-inner::before,
+.feature-card::before,
+.hero-visual::before,
+.login-panel::before,
+.reset-panel::before,
+.card::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background:
+    linear-gradient(
+      135deg,
+      var(--aurora-1) 0%,
+      var(--aurora-2) 22%,
+      var(--aurora-3) 44%,
+      var(--aurora-4) 68%,
+      var(--aurora-5) 100%
+    );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  filter: blur(10px) saturate(1.15);
+  transition: opacity 0.3s ease, filter 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.aurora-card::after,
+.aurora-field-group::after,
+.sidebar-inner::after,
+.topbar-inner::after,
+.feature-card::after,
+.hero-visual::after,
+.login-panel::after,
+.reset-panel::after,
+.card::after {
+  content: "";
+  position: absolute;
+  inset: -18px;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 92, 125, 0.18), transparent 28%),
+    radial-gradient(circle at 78% 18%, rgba(255, 183, 77, 0.18), transparent 24%),
+    radial-gradient(circle at 18% 82%, rgba(80, 227, 194, 0.16), transparent 28%),
+    radial-gradient(circle at 86% 78%, rgba(90, 103, 216, 0.18), transparent 26%),
+    radial-gradient(circle at 50% 50%, rgba(214, 51, 132, 0.12), transparent 30%);
+  opacity: 0;
+  filter: blur(20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+  z-index: -2;
+}
+
+.aurora-card:hover::before,
+.aurora-card:focus-within::before,
+.aurora-field-group:hover::before,
+.aurora-field-group:focus-within::before,
+.sidebar-inner:hover::before,
+.sidebar-inner:focus-within::before,
+.topbar-inner:hover::before,
+.topbar-inner:focus-within::before,
+.feature-card:hover::before,
+.feature-card:focus-within::before,
+.hero-visual:hover::before,
+.hero-visual:focus-within::before,
+.login-panel:hover::before,
+.login-panel:focus-within::before,
+.reset-panel:hover::before,
+.reset-panel:focus-within::before,
+.card:hover::before,
+.card:focus-within::before {
+  opacity: 1;
+  filter: blur(8px) saturate(1.25);
+}
+
+.aurora-card:hover::after,
+.aurora-card:focus-within::after,
+.aurora-field-group:hover::after,
+.aurora-field-group:focus-within::after,
+.sidebar-inner:hover::after,
+.sidebar-inner:focus-within::after,
+.topbar-inner:hover::after,
+.topbar-inner:focus-within::after,
+.feature-card:hover::after,
+.feature-card:focus-within::after,
+.hero-visual:hover::after,
+.hero-visual:focus-within::after,
+.login-panel:hover::after,
+.login-panel:focus-within::after,
+.reset-panel:hover::after,
+.reset-panel:focus-within::after,
+.card:hover::after,
+.card:focus-within::after {
+  opacity: 1;
+}
+
+/* ---------- CORE SURFACES ---------- */
 .card,
 .glass-card {
   background: linear-gradient(180deg, var(--panel), var(--panel-2));
@@ -63,6 +187,7 @@ a {
   padding: 22px;
 }
 
+/* ---------- BUTTONS ---------- */
 .btn {
   appearance: none;
   border: none;
@@ -77,7 +202,7 @@ a {
   font-weight: 800;
   letter-spacing: 0.01em;
   font-size: 17px;
-  transition: transform 0.18s ease, opacity 0.18s ease, background 0.18s ease;
+  transition: transform 0.18s ease, opacity 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
 }
 
 .btn:hover {
@@ -90,6 +215,12 @@ a {
   box-shadow: 0 12px 30px rgba(255, 90, 78, 0.26);
 }
 
+.btn-primary:hover {
+  box-shadow:
+    0 12px 30px rgba(255, 90, 78, 0.28),
+    0 0 24px rgba(255, 127, 95, 0.16);
+}
+
 .btn-secondary,
 .btn-outline {
   color: #fff;
@@ -97,6 +228,23 @@ a {
   border: 1px solid rgba(255,255,255,0.1);
 }
 
+.text-link-btn {
+  border: none;
+  background: rgba(255,255,255,0.06);
+  border-radius: 999px;
+  padding: 12px 24px;
+  color: #fff;
+  font-size: 17px;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.text-link-btn:hover {
+  background: rgba(255,255,255,0.1);
+  transform: translateY(-1px);
+}
+
+/* ---------- LANDING HEADER ---------- */
 .landing-header {
   position: sticky;
   top: 0;
@@ -153,6 +301,7 @@ a {
   line-height: 1.15;
 }
 
+/* ---------- NAV ---------- */
 .landing-nav {
   display: flex;
   align-items: center;
@@ -186,6 +335,48 @@ a {
   background: rgba(255,255,255,0.05);
 }
 
+.nav-dropdown {
+  position: relative;
+}
+
+.nav-dropdown-toggle {
+  min-width: 118px;
+}
+
+.nav-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 220px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(10, 12, 20, 0.95);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.32);
+  padding: 10px;
+  display: none;
+  z-index: 100;
+}
+
+.nav-dropdown:hover .nav-dropdown-menu,
+.nav-dropdown:focus-within .nav-dropdown-menu {
+  display: block;
+}
+
+.nav-dropdown-menu a {
+  display: block;
+  padding: 12px 14px;
+  border-radius: 12px;
+  color: rgba(255,255,255,0.84);
+}
+
+.nav-dropdown-menu a:hover {
+  background: rgba(255,255,255,0.07);
+  color: #fff;
+}
+
+/* ---------- HOME ---------- */
 .landing-shell {
   max-width: 1240px;
   margin: 0 auto;
@@ -286,6 +477,11 @@ a {
 .feature-card {
   border-radius: 24px;
   padding: 24px;
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  border: 1px solid var(--border);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  box-shadow: var(--shadow);
 }
 
 .feature-card h3 {
@@ -300,6 +496,7 @@ a {
   font-size: 15px;
 }
 
+/* ---------- LOGIN / SIGNUP ---------- */
 .login-shell {
   max-width: 1240px;
   margin: 0 auto;
@@ -312,9 +509,14 @@ a {
 
 .login-panel {
   width: 100%;
-  max-width: 780px;
+  max-width: 880px;
   border-radius: 34px;
   padding: 34px 28px 30px;
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  border: 1px solid var(--border);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  box-shadow: var(--shadow);
 }
 
 .login-badge-wrap {
@@ -344,7 +546,7 @@ a {
   text-align: center;
   color: var(--muted);
   font-size: 18px;
-  max-width: 480px;
+  max-width: 560px;
   line-height: 1.45;
 }
 
@@ -352,9 +554,20 @@ a {
   margin-top: 28px;
 }
 
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.form-group {
+  display: grid;
+  gap: 10px;
+}
+
 .field-label {
   display: block;
-  margin-bottom: 10px;
+  margin-bottom: 0;
   font-size: 14px;
   color: rgba(255,255,255,0.88);
   font-weight: 700;
@@ -372,6 +585,7 @@ a {
   font-size: 18px;
   line-height: 1.2;
   min-height: 72px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
 
 .input::placeholder {
@@ -381,6 +595,7 @@ a {
 .input:focus {
   border-color: rgba(255,255,255,0.25);
   box-shadow: 0 0 0 4px rgba(255,255,255,0.04);
+  background: rgba(255,255,255,0.08);
 }
 
 .password-wrap {
@@ -407,6 +622,11 @@ a {
   align-items: center;
   justify-content: center;
   padding: 0;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.password-toggle:hover {
+  background: rgba(255,255,255,0.1);
 }
 
 .password-toggle svg {
@@ -424,16 +644,6 @@ a {
   margin-top: 18px;
 }
 
-.text-link-btn {
-  border: none;
-  background: rgba(255,255,255,0.06);
-  border-radius: 999px;
-  padding: 12px 24px;
-  color: #111;
-  font-size: 17px;
-  cursor: pointer;
-}
-
 .login-message {
   min-height: 28px;
   margin-top: 18px;
@@ -447,6 +657,11 @@ a {
   max-width: 780px;
   border-radius: 28px;
   padding: 24px;
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  border: 1px solid var(--border);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  box-shadow: var(--shadow);
 }
 
 .panel-head {
@@ -457,6 +672,42 @@ a {
   flex-wrap: wrap;
 }
 
+.security-inline-card {
+  margin-top: 22px;
+  padding: 20px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.025));
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.inline-card-title {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.inline-card-copy {
+  margin: 0 0 18px;
+  color: rgba(245,247,251,0.72);
+  line-height: 1.6;
+}
+
+.remember-row {
+  margin-top: 14px;
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.remember-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(245,247,251,0.8);
+  font-size: 15px;
+}
+
+/* ---------- APP SHELL ---------- */
 .topbar {
   position: sticky;
   top: 0;
@@ -606,9 +857,11 @@ a {
   line-height: 1;
 }
 
+/* ---------- RESPONSIVE ---------- */
 @media (max-width: 980px) {
   .hero-section,
-  .feature-grid {
+  .feature-grid,
+  .form-grid-2 {
     grid-template-columns: 1fr;
   }
 
@@ -657,7 +910,8 @@ a {
   .login-panel,
   .reset-panel,
   .sidebar-inner,
-  .card {
+  .card,
+  .feature-card {
     border-radius: 22px;
   }
 
