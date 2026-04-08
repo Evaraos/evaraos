@@ -3,24 +3,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Org Chart</title>
+  <title>Org Chart | Evaraos</title>
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
 </head>
-<body>
+<body class="app-shell app-theme">
+  <div class="app-bg">
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-grid"></div>
+  </div>
 
-  <div id="topbar"></div>
+  <header id="topbar" class="topbar"></header>
 
   <div class="page-container">
-    <div class="card">
-      <h1>Organization Structure</h1>
-      <p class="muted">Company-grouped hierarchy with role lanes and interactive staff management.</p>
-    </div>
+    <section class="card glass-card aurora-card shine-border">
+      <h1 style="margin:0;">Organization Structure</h1>
+      <p class="muted" style="margin:8px 0 0;">
+        Company-grouped hierarchy with role lanes and interactive staff management.
+      </p>
+    </section>
 
-    <div id="orgChartContainer"></div>
+    <section class="glass-card aurora-card shine-border">
+      <div id="orgChartContainer"></div>
+    </section>
   </div>
 
   <div id="modal" class="modal-backdrop">
-    <div class="modal-card">
+    <div class="modal-card aurora-card shine-border">
       <div class="section-title-row">
         <h2 style="margin:0;">Edit User</h2>
         <button class="btn secondary" onclick="closeModal()">Close</button>
