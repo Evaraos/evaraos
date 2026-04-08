@@ -1,19 +1,13 @@
 function closeAllNavDropdowns() {
   document.querySelectorAll("[data-nav-dropdown]").forEach((dropdown) => {
     dropdown.classList.remove("open");
+
     const toggle = dropdown.querySelector("[data-nav-toggle]");
-    if (toggle) toggle.setAttribute("aria-expanded", "false");
+    if (toggle) {
+      toggle.setAttribute("aria-expanded", "false");
+    }
   });
 }
-
-window.closeAllThemeMenus = function () {
-  document.querySelectorAll("[data-theme-menu]").forEach((menu) => {
-    menu.classList.remove("open");
-  });
-  document.querySelectorAll("[data-theme-toggle]").forEach((toggle) => {
-    toggle.setAttribute("aria-expanded", "false");
-  });
-};
 
 function bindNavDropdowns() {
   document.querySelectorAll("[data-nav-dropdown]").forEach((dropdown) => {
@@ -22,15 +16,19 @@ function bindNavDropdowns() {
 
     if (!toggle || !menu) return;
 
-    toggle.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
+    toggle.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
 
-      const isOpen = dropdown.classList.contains("open");
+      const wasOpen = dropdown.classList.contains("open");
+
       closeAllNavDropdowns();
-      if (window.closeAllThemeMenus) window.closeAllThemeMenus();
 
-      if (!isOpen) {
+      if (window.closeAllThemeControls) {
+        window.closeAllThemeControls();
+      }
+
+      if (!wasOpen) {
         dropdown.classList.add("open");
         toggle.setAttribute("aria-expanded", "true");
       }
@@ -52,13 +50,12 @@ function highlightCurrentPage() {
     const href = link.getAttribute("href");
     if (!href) return;
 
-    if (currentPath === href || currentPath.endsWith(href)) {
-      link.classList.add("active");
-    } else {
-      link.classList.remove("active");
-    }
+    const isMatch = currentPath === href || currentPath.endsWith(href);
+    link.classList.toggle("active", isMatch);
   });
 }
+
+window.closeAllNavDropdowns = closeAllNavDropdowns;
 
 window.addEventListener("DOMContentLoaded", () => {
   bindNavDropdowns();
@@ -66,13 +63,11 @@ window.addEventListener("DOMContentLoaded", () => {
 
   document.addEventListener("click", () => {
     closeAllNavDropdowns();
-    if (window.closeAllThemeMenus) window.closeAllThemeMenus();
   });
 
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
       closeAllNavDropdowns();
-      if (window.closeAllThemeMenus) window.closeAllThemeMenus();
     }
   });
 });
