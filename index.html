@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark-red">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -10,7 +10,7 @@
   <div class="page-grid-overlay"></div>
 
   <header class="landing-header">
-    <div class="landing-header-inner glass-shell">
+    <div class="landing-header-inner aurora-card">
       <a href="/evaraos/index.html" class="brand-link">
         <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos logo" class="brand-logo" />
         <div class="brand-copy">
@@ -22,42 +22,42 @@
       <nav class="landing-nav">
         <a href="/evaraos/index.html" class="nav-pill" data-nav-link>Home</a>
 
-        <div class="theme-picker" data-theme-picker>
+        <div class="theme-picker-wrap" data-theme-wrapper>
           <button
+            class="theme-picker-btn"
             type="button"
-            class="theme-picker-toggle"
-            data-theme-picker-toggle
-            aria-label="Open theme selector"
+            data-theme-toggle
+            aria-label="Choose theme"
             aria-expanded="false"
           >
-            <span class="theme-picker-dot current-theme-dot"></span>
-            <span class="theme-picker-label">Theme</span>
+            <span class="theme-picker-dot"></span>
+            <span class="theme-picker-text">Theme</span>
           </button>
 
-          <div class="theme-picker-menu glass-popover" data-theme-picker-menu>
-            <button type="button" class="theme-swatch" data-theme-value="dark-red">
-              <span class="theme-swatch-dot swatch-dark-red"></span>
-              <span>Dark Red</span>
+          <div class="theme-picker-menu aurora-card" data-theme-menu>
+            <button type="button" class="theme-chip" data-theme-chip data-theme-value="dark">
+              <span class="theme-swatch theme-dark"></span>
+              <span>Dark</span>
             </button>
-            <button type="button" class="theme-swatch" data-theme-value="light">
-              <span class="theme-swatch-dot swatch-light"></span>
+            <button type="button" class="theme-chip" data-theme-chip data-theme-value="light">
+              <span class="theme-swatch theme-light"></span>
               <span>Light</span>
             </button>
-            <button type="button" class="theme-swatch" data-theme-value="ocean-blue">
-              <span class="theme-swatch-dot swatch-ocean-blue"></span>
-              <span>Ocean Blue</span>
+            <button type="button" class="theme-chip" data-theme-chip data-theme-value="blue">
+              <span class="theme-swatch theme-blue"></span>
+              <span>Blue</span>
             </button>
-            <button type="button" class="theme-swatch" data-theme-value="royal-purple">
-              <span class="theme-swatch-dot swatch-royal-purple"></span>
-              <span>Royal Purple</span>
+            <button type="button" class="theme-chip" data-theme-chip data-theme-value="red">
+              <span class="theme-swatch theme-red"></span>
+              <span>Red</span>
             </button>
-            <button type="button" class="theme-swatch" data-theme-value="rose-pink">
-              <span class="theme-swatch-dot swatch-rose-pink"></span>
-              <span>Rose Pink</span>
+            <button type="button" class="theme-chip" data-theme-chip data-theme-value="pink">
+              <span class="theme-swatch theme-pink"></span>
+              <span>Pink</span>
             </button>
-            <button type="button" class="theme-swatch" data-theme-value="emerald-night">
-              <span class="theme-swatch-dot swatch-emerald-night"></span>
-              <span>Emerald Night</span>
+            <button type="button" class="theme-chip" data-theme-chip data-theme-value="purple">
+              <span class="theme-swatch theme-purple"></span>
+              <span>Purple</span>
             </button>
           </div>
         </div>
@@ -75,7 +75,7 @@
             <span class="hamburger-line"></span>
           </button>
 
-          <div class="nav-dropdown-menu glass-popover" data-nav-menu>
+          <div class="nav-dropdown-menu aurora-card" data-nav-menu>
             <a href="/evaraos/index.html" data-nav-link>Home</a>
             <a href="/evaraos/login.html" data-nav-link>Login</a>
             <a href="/evaraos/signup.html" data-nav-link>Sign Up</a>
@@ -101,12 +101,12 @@
         </p>
 
         <div class="hero-actions">
-          <a href="/evaraos/login.html" class="btn btn-primary">Enter Platform</a>
-          <a href="/evaraos/signup.html" class="btn btn-glass">Create Account</a>
+          <a href="/evaraos/login.html" class="btn btn-primary btn-glass-theme">Enter Platform</a>
+          <a href="/evaraos/signup.html" class="btn btn-outline btn-glass-theme">Create Account</a>
         </div>
       </div>
 
-      <div class="hero-visual glass-card">
+      <div class="hero-visual aurora-card">
         <div class="hero-visual-inner">
           <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos" class="hero-logo" />
           <div class="hero-card-title">EVARAOS</div>
@@ -118,17 +118,17 @@
     </section>
 
     <section class="feature-grid">
-      <article class="feature-card glass-card">
+      <article class="feature-card aurora-card">
         <h3>Operating System</h3>
         <p>One platform for roles, approvals, workflows, field activity, and scalable business infrastructure.</p>
       </article>
 
-      <article class="feature-card glass-card">
+      <article class="feature-card aurora-card">
         <h3>Multi-Company</h3>
         <p>Launch and manage multiple subsidiaries with a shared structure while keeping each business organized.</p>
       </article>
 
-      <article class="feature-card glass-card">
+      <article class="feature-card aurora-card">
         <h3>Future-Ready Security</h3>
         <p>Username login, optional number verification, trusted-device behavior, and a modern auth experience.</p>
       </article>
