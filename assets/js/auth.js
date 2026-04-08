@@ -18,6 +18,8 @@ import {
 
 import { beginMfaSignIn, completeMfaSignIn } from "./mfa.js";
 
+const TRUSTED_DEVICE_KEY = "evaraos_trusted_device_v1";
+
 function normalizeUsername(value = "") {
   return String(value).trim().replace(/^@+/, "").toLowerCase();
 }
@@ -27,13 +29,25 @@ function looksLikeEmail(value = "") {
   return raw.includes("@") && raw.includes(".");
 }
 
-export function buildUserIdentity(username = "") {
-  const clean = normalizeUsername(username);
-  return {
-    username: clean,
-    displayUsername: clean ? clean.charAt(0).toUpperCase() + clean.slice(1) : "",
-    handle: clean ? `@${clean}` : ""
-  };
+function makeTrustedDeviceKey(uid = "") {
+  return `${TRUSTED_DEVICE_KEY}:${uid}`;
+}
+
+function setTrustedDevice(uid) {
+  const expiresAt = Date.now() + 1000 * 60 * 60 * 24 * 30;
+  localStorage.setItem(makeTrustedDeviceKey(uid), JSON.stringify({ expiresAt }));
+}
+
+function isTrustedDevice(uid) {
+  const raw = localStorage.getItem(makeTrustedDeviceKey(uid));
+  if (!raw) return false;
+
+  try {
+    const parsed = JSON.parse(raw);
+    return !!parsed?.expiresAt && parsed.expiresAt > Date.now();
+  } catch {
+    return false;
+  }
 }
 
 function setText(id, message = "", isError = false) {
@@ -110,24 +124,26 @@ export async function syncUsernameDirectoryByUserDoc(userId) {
   }
 
   const user = userSnap.data();
-  const identity = buildUserIdentity(user.username || "");
+  const username = normalizeUsername(user.username || "");
+  const displayUsername = username ? username.charAt(0).toUpperCase() + username.slice(1) : "";
+  const handle = username ? `@${username}` : "";
 
   const existingEntriesQuery = query(collection(db, "usernames"), where("uid", "==", userId));
   const existingEntriesSnap = await getDocs(existingEntriesQuery);
 
   for (const entry of existingEntriesSnap.docs) {
-    if (entry.id !== identity.username) {
+    if (entry.id !== username) {
       await deleteDoc(doc(db, "usernames", entry.id));
     }
   }
 
-  if (!identity.username) return null;
+  if (!username) return null;
 
   const payload = {
     uid: userId,
-    username: identity.username,
-    displayUsername: identity.displayUsername,
-    handle: identity.handle,
+    username,
+    displayUsername,
+    handle,
     email: user.email || "",
     companyId: user.companyId || "",
     role: user.role || "",
@@ -135,7 +151,7 @@ export async function syncUsernameDirectoryByUserDoc(userId) {
     updatedAt: serverTimestamp()
   };
 
-  const usernameRef = doc(db, "usernames", identity.username);
+  const usernameRef = doc(db, "usernames", username);
   const usernameSnap = await getDoc(usernameRef);
 
   if (!usernameSnap.exists()) {
@@ -179,59 +195,34 @@ export async function loginWithIdentifier(identifier, password) {
   }
 }
 
+export async function createAccount({ name, email, username, password, confirmPassword, securityPhone, smsProtection }) {
+  if (!name || !email || !username || !password || !confirmPassword) {
+    return { success: false, message: "Fill in all required fields." };
+  }
+
+  if (password !== confirmPassword) {
+    return { success: false, message: "Passwords do not match." };
+  }
+
+  if (password.length < 8) {
+    return { success: false, message: "Password should be at least 8 characters." };
+  }
+
+  return {
+    success: false,
+    message: "Signup account creation wiring is the next backend-auth step. The UI is restored and ready."
+  };
+}
+
 export async function sendReset(email) {
   return sendPasswordResetEmail(auth, email);
 }
 
-export async function updateOwnUsername(userId, newUsername) {
-  const identity = buildUserIdentity(newUsername);
-
-  if (!identity.username) {
-    throw new Error("Username is required.");
-  }
-
-  const takenSnap = await getDoc(doc(db, "usernames", identity.username));
-  if (takenSnap.exists() && takenSnap.data()?.uid !== userId) {
-    throw new Error("That username is already taken.");
-  }
-
-  await updateDoc(doc(db, "users", userId), {
-    username: identity.username,
-    displayUsername: identity.displayUsername,
-    handle: identity.handle,
-    updatedAt: serverTimestamp()
-  });
-
-  await syncUsernameDirectoryByUserDoc(userId);
-  return identity;
-}
-
-export async function updateOwnCustomerProfile(userId, payload) {
-  const username = normalizeUsername(payload.username || "");
-
-  await updateDoc(doc(db, "users", userId), {
-    ...payload,
-    username,
-    displayUsername: username ? username.charAt(0).toUpperCase() + username.slice(1) : "",
-    handle: username ? `@${username}` : "",
-    updatedAt: serverTimestamp()
-  });
-
-  await syncUsernameDirectoryByUserDoc(userId);
-}
-
-export async function createAccount({ name, email, username }) {
-  return {
-    success: false,
-    message: "Signup UI is restored, but account creation wiring will be added in the next batch."
-  };
-}
-
-function setupPasswordToggle() {
-  const passwordInput = document.getElementById("password");
-  const toggleBtn = document.getElementById("togglePasswordBtn");
-  const openIcon = document.getElementById("passwordIconOpen");
-  const closedIcon = document.getElementById("passwordIconClosed");
+function setupPasswordToggle(inputId, btnId, openId, closedId) {
+  const passwordInput = document.getElementById(inputId);
+  const toggleBtn = document.getElementById(btnId);
+  const openIcon = document.getElementById(openId);
+  const closedIcon = document.getElementById(closedId);
 
   if (!passwordInput || !toggleBtn || !openIcon || !closedIcon) return;
 
@@ -280,6 +271,11 @@ function setupMfaChallengePanel() {
       }
 
       const credential = await completeMfaSignIn(code);
+      const remember = document.getElementById("rememberTrustedDevice");
+      if (remember?.checked) {
+        setTrustedDevice(credential.user.uid);
+      }
+
       const userSnap = await getDoc(doc(db, "users", credential.user.uid));
       const userData = userSnap.exists() ? userSnap.data() : { role: "customer" };
       const role = userData?.role || "customer";
@@ -328,9 +324,18 @@ function setupLoginForm() {
       const userSnap = await getDoc(doc(db, "users", credential.user.uid));
       const userData = userSnap.exists() ? userSnap.data() : { role: "customer" };
       const role = userData?.role || "customer";
+      const remember = document.getElementById("rememberTrustedDevice");
 
       if (!looksLikeEmail(identifier)) {
         setText("loginMessage", `Username "${identifier}" resolved to ${resolvedEmail}.`);
+      }
+
+      if (userData?.smsProtectionEnabled && userData?.securityPhone && !isTrustedDevice(credential.user.uid)) {
+        setText("loginMessage", "This account uses number verification on new devices. Complete the SMS step when enabled.");
+      }
+
+      if (remember?.checked) {
+        setTrustedDevice(credential.user.uid);
       }
 
       window.location.href =
@@ -350,7 +355,7 @@ function setupLoginForm() {
           return;
         } catch (mfaError) {
           console.error("MFA setup failed:", mfaError);
-          setText("loginMessage", mfaError.message || "Could not start MFA challenge.", true);
+          setText("loginMessage", mfaError.message || "Could not start number verification.", true);
         }
       }
 
@@ -413,10 +418,22 @@ function setupSignupForm() {
     const name = document.getElementById("signupName")?.value?.trim() || "";
     const email = document.getElementById("signupEmail")?.value?.trim() || "";
     const username = document.getElementById("signupUsername")?.value?.trim() || "";
+    const password = document.getElementById("signupPassword")?.value || "";
+    const confirmPassword = document.getElementById("signupPasswordConfirm")?.value || "";
+    const securityPhone = document.getElementById("signupSecurityPhone")?.value?.trim() || "";
+    const smsProtection = document.getElementById("signupSmsProtection")?.value === "on";
 
     setText("signupMessage", "");
 
-    const result = await createAccount({ name, email, username });
+    const result = await createAccount({
+      name,
+      email,
+      username,
+      password,
+      confirmPassword,
+      securityPhone,
+      smsProtection
+    });
 
     if (!result.success) {
       setText("signupMessage", result.message, true);
@@ -428,7 +445,10 @@ function setupSignupForm() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  setupPasswordToggle();
+  setupPasswordToggle("password", "togglePasswordBtn", "passwordIconOpen", "passwordIconClosed");
+  setupPasswordToggle("signupPassword", "toggleSignupPasswordBtn", "signupPasswordIconOpen", "signupPasswordIconClosed");
+  setupPasswordToggle("signupPasswordConfirm", "toggleSignupPasswordConfirmBtn", "signupPasswordConfirmIconOpen", "signupPasswordConfirmIconClosed");
+
   setupResetPanel();
   setupLoginForm();
   setupResetForm();
