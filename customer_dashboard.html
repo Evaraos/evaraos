@@ -1,66 +1,125 @@
-<script type="module">
-  import {
-    bindTopbar,
-    requireAuth,
-    loadCompany,
-    renderSidebar,
-    hasPermission
-  } from "/evaraos/assets/js/app.js";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Customer Dashboard | Evaraos</title>
+  <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
+</head>
+<body class="app-shell app-theme">
+  <div class="app-bg">
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-grid"></div>
+  </div>
 
-  import {
-    updateOwnUsername,
-    changeOwnPassword,
-    buildUserIdentity,
-    updateOwnCustomerProfile,
-    fetchCustomerServices
-  } from "/evaraos/assets/js/auth.js";
+  <header id="topbar" class="topbar"></header>
 
-  function initials(name) {
-    const parts = (name || "").trim().split(" ").filter(Boolean);
-    if (!parts.length) return "C";
-    return parts.slice(0, 2).map(part => part[0]?.toUpperCase()).join("");
-  }
+  <div class="page-shell">
+    <aside id="sidebar" class="sidebar"></aside>
 
-  requireAuth(async (user) => {
-    if (!hasPermission(user, "customer_dashboard")) {
-      window.location.href = "/evaraos/dashboard.html";
-      return;
-    }
-
-    await bindTopbar(user);
-
-    const sidebar = document.getElementById("sidebar");
-    if (sidebar) {
-      sidebar.innerHTML = renderSidebar(user.role, "customer_dashboard");
-    }
-
-    const company = await loadCompany(user.companyId);
-    const services = await fetchCustomerServices(user);
-
-    document.getElementById("welcomeTitle").textContent = `Welcome, ${user.name || "Customer"}`;
-    document.getElementById("welcomeSubtext").textContent =
-      `You are viewing your customer portal for ${company?.name || user.companyId || "Evaraos"}.`;
-
-    document.getElementById("customerHandleChip").textContent =
-      user.handle || `@${user.username || "user"}`;
-
-    document.getElementById("customerName").textContent = user.name || "Customer";
-    document.getElementById("customerEmail").textContent = user.email || "No email";
-    document.getElementById("customerCompany").textContent = company?.name || user.companyId || "No company";
-
-    document.getElementById("servicesList").innerHTML = services.map(service => `
-      <div class="service-card">
-        <div>
-          <div class="service-status ${service.status !== "active" ? "inactive" : ""}">
-            ${service.status === "active" ? "Active Service" : "Inactive Service"}
+    <main class="main-content">
+      <section class="glass-card aurora-card shine-border">
+        <div class="section-title-row">
+          <div>
+            <h1 id="welcomeTitle" style="margin:0;">Welcome</h1>
+            <p id="welcomeSubtext" class="muted" style="margin:8px 0 0;">
+              Loading your customer portal...
+            </p>
           </div>
-          <h3 class="service-title">${service.name}</h3>
-          <div class="service-meta">
-            Billing: ${service.billingType}<br>
-            ${service.cancellationPolicy}
+          <div class="chip" id="customerHandleChip">@user</div>
+        </div>
+      </section>
+
+      <section class="grid grid-3">
+        <div class="card aurora-card shine-border">
+          <h3>Customer Name</h3>
+          <p id="customerName">Loading...</p>
+        </div>
+        <div class="card aurora-card shine-border">
+          <h3>Email</h3>
+          <p id="customerEmail">Loading...</p>
+        </div>
+        <div class="card aurora-card shine-border">
+          <h3>Company</h3>
+          <p id="customerCompany">Loading...</p>
+        </div>
+      </section>
+
+      <section class="glass-card aurora-card shine-border">
+        <div class="section-title-row">
+          <h2 style="margin:0;">Your Services</h2>
+        </div>
+        <div id="servicesList" class="service-grid" style="margin-top:18px;"></div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+    import {
+      bindTopbar,
+      requireAuth,
+      loadCompany,
+      renderSidebar,
+      hasPermission
+    } from "/evaraos/assets/js/app.js";
+
+    import {
+      updateOwnUsername,
+      changeOwnPassword,
+      buildUserIdentity,
+      updateOwnCustomerProfile,
+      fetchCustomerServices
+    } from "/evaraos/assets/js/auth.js";
+
+    function initials(name) {
+      const parts = (name || "").trim().split(" ").filter(Boolean);
+      if (!parts.length) return "C";
+      return parts.slice(0, 2).map(part => part[0]?.toUpperCase()).join("");
+    }
+
+    requireAuth(async (user) => {
+      if (!hasPermission(user, "customer_dashboard")) {
+        window.location.href = "/evaraos/dashboard.html";
+        return;
+      }
+
+      await bindTopbar(user);
+
+      const sidebar = document.getElementById("sidebar");
+      if (sidebar) {
+        sidebar.innerHTML = renderSidebar(user.role, "customer_dashboard");
+      }
+
+      const company = await loadCompany(user.companyId);
+      const services = await fetchCustomerServices(user);
+
+      document.getElementById("welcomeTitle").textContent = `Welcome, ${user.name || "Customer"}`;
+      document.getElementById("welcomeSubtext").textContent =
+        `You are viewing your customer portal for ${company?.name || user.companyId || "Evaraos"}.`;
+
+      document.getElementById("customerHandleChip").textContent =
+        user.handle || `@${user.username || "user"}`;
+
+      document.getElementById("customerName").textContent = user.name || "Customer";
+      document.getElementById("customerEmail").textContent = user.email || "No email";
+      document.getElementById("customerCompany").textContent = company?.name || user.companyId || "No company";
+
+      document.getElementById("servicesList").innerHTML = services.map(service => `
+        <div class="service-card glass-card aurora-card shine-border">
+          <div>
+            <div class="service-status ${service.status !== "active" ? "inactive" : ""}">
+              ${service.status === "active" ? "Active Service" : "Inactive Service"}
+            </div>
+            <h3 class="service-title">${service.name}</h3>
+            <div class="service-meta">
+              Billing: ${service.billingType}<br>
+              ${service.cancellationPolicy}
+            </div>
           </div>
         </div>
-      </div>
-    `).join("");
-  });
-</script>
+      `).join("");
+    });
+  </script>
+</body>
+</html>
