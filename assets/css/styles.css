@@ -245,7 +245,9 @@ html[data-theme="dark"] .page-grid-overlay {
 .reset-panel,
 .hero-visual,
 .sidebar-inner,
-.topbar-inner {
+.topbar-inner,
+.landing-header-inner,
+.nav-dropdown-menu {
   border-radius: var(--radius-xl);
 }
 
@@ -254,8 +256,7 @@ html[data-theme="dark"] .page-grid-overlay {
 }
 
 /* =========================
-   STRONGER APPLE-STYLE
-   MOVING MULTICOLOR OUTLINE
+   MOVING COLOR OUTLINE
 ========================= */
 .aurora-card,
 .aurora-input-wrap,
@@ -263,9 +264,12 @@ html[data-theme="dark"] .page-grid-overlay {
 .nav-pill,
 .btn,
 .text-link-btn,
-.theme-toggle-compact {
+.theme-toggle-compact,
+.nav-hamburger,
+.password-toggle {
   position: relative;
   isolation: isolate;
+  border-radius: inherit;
 }
 
 .aurora-card::before,
@@ -274,7 +278,9 @@ html[data-theme="dark"] .page-grid-overlay {
 .nav-pill::before,
 .btn::before,
 .text-link-btn::before,
-.theme-toggle-compact::before {
+.theme-toggle-compact::before,
+.nav-hamburger::before,
+.password-toggle::before {
   content: "";
   position: absolute;
   inset: -1px;
@@ -298,7 +304,7 @@ html[data-theme="dark"] .page-grid-overlay {
   mask-composite: exclude;
   opacity: 0;
   filter: blur(4px) saturate(1.18);
-  transition: opacity var(--transition-med), filter var(--transition-med), transform var(--transition-med);
+  transition: opacity var(--transition-med), filter var(--transition-med);
   pointer-events: none;
   z-index: 0;
 }
@@ -309,14 +315,16 @@ html[data-theme="dark"] .page-grid-overlay {
 .nav-pill::after,
 .btn::after,
 .text-link-btn::after,
-.theme-toggle-compact::after {
+.theme-toggle-compact::after,
+.nav-hamburger::after,
+.password-toggle::after {
   content: "";
   position: absolute;
-  inset: -18px;
+  inset: -14px;
   border-radius: inherit;
   background:
-    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1), transparent 22%),
-    radial-gradient(circle at 85% 20%, rgba(255,255,255,0.08), transparent 20%);
+    radial-gradient(circle at 18% 18%, rgba(255,255,255,0.1), transparent 22%),
+    radial-gradient(circle at 84% 18%, rgba(255,255,255,0.08), transparent 20%);
   opacity: 0;
   filter: blur(16px);
   transition: opacity var(--transition-med);
@@ -337,7 +345,11 @@ html[data-theme="dark"] .page-grid-overlay {
 .text-link-btn:hover::before,
 .text-link-btn:focus-visible::before,
 .theme-toggle-compact:hover::before,
-.theme-toggle-compact:focus-visible::before {
+.theme-toggle-compact:focus-visible::before,
+.nav-hamburger:hover::before,
+.nav-hamburger:focus-visible::before,
+.password-toggle:hover::before,
+.password-toggle:focus-visible::before {
   opacity: 1;
 }
 
@@ -354,7 +366,11 @@ html[data-theme="dark"] .page-grid-overlay {
 .text-link-btn:hover::after,
 .text-link-btn:focus-visible::after,
 .theme-toggle-compact:hover::after,
-.theme-toggle-compact:focus-visible::after {
+.theme-toggle-compact:focus-visible::after,
+.nav-hamburger:hover::after,
+.nav-hamburger:focus-visible::after,
+.password-toggle:hover::after,
+.password-toggle:focus-visible::after {
   opacity: 0.42;
 }
 
@@ -366,40 +382,31 @@ html[data-theme="dark"] .page-grid-overlay {
   100% { background-position: 0% 50%; }
 }
 
-/* extra shine sweep */
+/* shine sweep */
+.nav-pill,
+.btn,
+.text-link-btn,
+.nav-dropdown-menu a,
+.nav-hamburger,
+.theme-toggle-compact,
+.password-toggle {
+  overflow: hidden;
+}
+
 .nav-pill > *,
 .btn > *,
 .text-link-btn > *,
-.theme-toggle-compact > * {
+.nav-hamburger > *,
+.theme-toggle-compact > *,
+.password-toggle > * {
   position: relative;
   z-index: 2;
-}
-
-.nav-pill span,
-.btn span,
-.text-link-btn span {
-  position: relative;
-  z-index: 2;
-}
-
-.nav-pill .shine,
-.btn .shine,
-.text-link-btn .shine,
-.theme-toggle-compact .shine,
-.nav-dropdown-menu a::after {
-  pointer-events: none;
 }
 
 .nav-pill::marker,
 .btn::marker,
 .text-link-btn::marker {
   content: "";
-}
-
-.nav-pill::selection,
-.btn::selection,
-.text-link-btn::selection {
-  background: transparent;
 }
 
 .nav-pill .nav-label,
@@ -409,10 +416,38 @@ html[data-theme="dark"] .page-grid-overlay {
   z-index: 2;
 }
 
+.nav-pill > .shine,
+.btn > .shine,
+.text-link-btn > .shine {
+  display: none;
+}
+
+.nav-pill .nav-label,
+.btn .btn-label,
+.text-link-btn .btn-label {
+  display: inline-flex;
+}
+
+.nav-pill::selection,
+.btn::selection,
+.text-link-btn::selection {
+  background: transparent;
+}
+
 .nav-pill::after,
 .btn::after,
 .text-link-btn::after,
-.nav-dropdown-menu a::after {
+.nav-dropdown-menu a::after,
+.nav-hamburger .hamburger-line::after,
+.theme-toggle-compact::selection {
+  pointer-events: none;
+}
+
+.nav-pill::after,
+.btn::after,
+.text-link-btn::after,
+.nav-dropdown-menu a::after,
+.nav-hamburger::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -435,7 +470,8 @@ html[data-theme="dark"] .page-grid-overlay {
 .nav-pill:hover::after,
 .btn:hover::after,
 .text-link-btn:hover::after,
-.nav-dropdown-menu a:hover::after {
+.nav-dropdown-menu a:hover::after,
+.nav-hamburger:hover::after {
   transform: translateX(145%);
 }
 
@@ -456,7 +492,6 @@ html[data-theme="dark"] .page-grid-overlay {
   font-weight: 800;
   letter-spacing: 0.01em;
   font-size: 17px;
-  overflow: hidden;
   transition:
     transform var(--transition-fast),
     opacity var(--transition-fast),
@@ -471,16 +506,22 @@ html[data-theme="dark"] .page-grid-overlay {
 
 .btn-primary {
   color: #fff;
-  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 102, 87, 0.72),
+    rgba(255, 145, 109, 0.66)
+  );
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   box-shadow:
-    0 14px 28px rgba(255, 111, 87, 0.18),
-    0 0 26px rgba(255, 155, 108, 0.14);
+    0 14px 28px rgba(255, 111, 87, 0.14),
+    0 0 26px rgba(255, 155, 108, 0.1);
 }
 
 .btn-primary:hover {
   box-shadow:
-    0 14px 32px rgba(255, 111, 87, 0.22),
-    0 0 34px rgba(255, 176, 124, 0.18);
+    0 14px 32px rgba(255, 111, 87, 0.18),
+    0 0 34px rgba(255, 176, 124, 0.14);
 }
 
 .btn-outline,
@@ -491,7 +532,9 @@ html[data-theme="dark"] .page-grid-overlay {
     rgba(255,255,255,0.08),
     rgba(255,255,255,0.04)
   );
-  box-shadow: 0 10px 24px rgba(0,0,0,0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.04);
 }
 
 .text-link-btn {
@@ -508,7 +551,6 @@ html[data-theme="dark"] .page-grid-overlay {
   font-size: 17px;
   font-weight: 700;
   cursor: pointer;
-  overflow: hidden;
   transition:
     background var(--transition-fast),
     transform var(--transition-fast),
@@ -596,11 +638,14 @@ html[data-theme="dark"] .page-grid-overlay {
   align-items: center;
   justify-content: center;
   color: var(--text);
-  background: transparent;
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.06),
+    rgba(255,255,255,0.03)
+  );
   border: 1px solid transparent;
   font-weight: 700;
   font-size: 16px;
-  overflow: hidden;
   transition:
     background var(--transition-fast),
     border-color var(--transition-fast),
@@ -615,26 +660,50 @@ html[data-theme="dark"] .page-grid-overlay {
 }
 
 .nav-pill.active {
-  background: var(--btn-glass);
+  background: var(--surface-4);
   border-color: var(--border-2);
   box-shadow:
     inset 0 0 0 1px rgba(255,255,255,0.04),
-    0 8px 20px rgba(0,0,0,0.06);
+    0 8px 20px rgba(0,0,0,0.05);
 }
 
 .nav-dropdown {
   position: relative;
 }
 
-.nav-dropdown-toggle {
+.nav-hamburger {
+  width: 56px;
+  height: 48px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.06),
+    rgba(255,255,255,0.03)
+  );
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
-.nav-caret {
-  font-size: 14px;
-  opacity: 0.84;
+.nav-hamburger:hover {
+  background: var(--btn-glass-hover);
+  transform: translateY(-1px);
+}
+
+.hamburger-line {
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--text);
+  display: block;
 }
 
 .nav-dropdown-menu {
@@ -642,7 +711,6 @@ html[data-theme="dark"] .page-grid-overlay {
   top: calc(100% + 12px);
   right: 0;
   min-width: 230px;
-  border-radius: var(--radius-md);
   border: 1px solid var(--border);
   background: var(--surface-2);
   backdrop-filter: var(--blur-lg);
@@ -651,7 +719,6 @@ html[data-theme="dark"] .page-grid-overlay {
   padding: 10px;
   display: none;
   z-index: 100;
-  overflow: hidden;
 }
 
 .nav-dropdown.open .nav-dropdown-menu {
@@ -659,26 +726,25 @@ html[data-theme="dark"] .page-grid-overlay {
 }
 
 .nav-dropdown-menu a {
-  position: relative;
   display: block;
   padding: 12px 14px;
   border-radius: var(--radius-xs);
   color: var(--text-2);
-  overflow: hidden;
   transition:
     background var(--transition-fast),
     color var(--transition-fast),
     transform var(--transition-fast);
 }
 
-.nav-dropdown-menu a:hover {
+.nav-dropdown-menu a:hover,
+.nav-dropdown-menu a.active {
   background: var(--btn-glass-hover);
   color: var(--text);
   transform: translateX(2px);
 }
 
 /* =========================
-   SMALL APPLE-LIKE THEME TOGGLE
+   SMALL THEME TOGGLE
 ========================= */
 .theme-toggle-compact {
   position: relative;
@@ -691,7 +757,6 @@ html[data-theme="dark"] .page-grid-overlay {
   border: 1px solid var(--border);
   padding: 4px;
   cursor: pointer;
-  overflow: hidden;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   transition:
@@ -736,6 +801,12 @@ html[data-theme="light"] .theme-toggle-compact::before {
   align-items: center;
   justify-content: center;
   color: var(--text);
+}
+
+.theme-toggle-icon svg {
+  width: 17px;
+  height: 17px;
+  fill: currentColor;
 }
 
 /* =========================
@@ -983,7 +1054,6 @@ html[data-theme="light"] .theme-toggle-compact::before {
     border-color var(--transition-fast),
     box-shadow var(--transition-fast);
   z-index: 2;
-  overflow: hidden;
 }
 
 .password-toggle:hover {
@@ -1279,7 +1349,9 @@ html[data-theme="light"] .theme-toggle-compact::before {
   .card,
   .feature-card,
   .hero-visual,
-  .security-inline-card {
+  .security-inline-card,
+  .nav-dropdown-menu,
+  .landing-header-inner {
     border-radius: 22px;
   }
 
