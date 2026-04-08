@@ -6,10 +6,33 @@
   <title>User Performance | Evaraos</title>
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
 </head>
-<body>
-  <header id="topbar"></header>
-  <div id="sidebar" style="display:none;"></div>
-  <main id="performanceRoot"></main>
+<body class="app-shell app-theme">
+  <div class="app-bg">
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-grid"></div>
+  </div>
+
+  <header id="topbar" class="topbar"></header>
+
+  <div class="page-shell">
+    <aside id="sidebar" class="sidebar"></aside>
+
+    <main class="main-content">
+      <section class="glass-card aurora-card shine-border">
+        <div class="section-title-row">
+          <div>
+            <h1 style="margin:0;">Performance</h1>
+            <p class="muted" style="margin:8px 0 0;">
+              Review team performance, productivity visibility, and role-based output.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <main id="performanceRoot" class="content-root"></main>
+    </main>
+  </div>
 
   <script type="module" src="/evaraos/assets/js/performance.js"></script>
 </body>
