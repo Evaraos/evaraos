@@ -2,9 +2,7 @@ function closeAllDropdowns() {
   document.querySelectorAll("[data-nav-dropdown]").forEach((dropdown) => {
     dropdown.classList.remove("open");
     const toggle = dropdown.querySelector("[data-nav-toggle]");
-    if (toggle) {
-      toggle.setAttribute("aria-expanded", "false");
-    }
+    if (toggle) toggle.setAttribute("aria-expanded", "false");
   });
 }
 
@@ -36,14 +34,10 @@ function bindDropdowns() {
     });
   });
 
-  document.addEventListener("click", () => {
-    closeAllDropdowns();
-  });
+  document.addEventListener("click", () => closeAllDropdowns());
 
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      closeAllDropdowns();
-    }
+    if (e.key === "Escape") closeAllDropdowns();
   });
 }
 
