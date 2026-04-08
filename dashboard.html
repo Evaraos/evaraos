@@ -6,31 +6,65 @@
   <title>Dashboard | Evaraos</title>
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
 </head>
-<body class="app-theme">
+<body class="app-shell app-theme">
+  <div class="app-bg">
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-grid"></div>
+  </div>
+
   <header id="topbar" class="topbar"></header>
 
   <div class="page-shell">
     <aside id="sidebar" class="sidebar"></aside>
 
     <main class="main-content">
+      <section class="glass-card aurora-card shine-border">
+        <div class="section-title-row">
+          <div>
+            <h1 style="margin:0;">Executive Dashboard</h1>
+            <p class="muted" style="margin:8px 0 0;">
+              Platform overview, company activity, lead flow, and job visibility.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section class="grid grid-3">
-        <div class="card stat-card aurora-card">
+        <div class="card stat-card aurora-card shine-border">
           <h3>Active Companies</h3>
           <p id="statCompanies">--</p>
         </div>
-        <div class="card stat-card aurora-card">
+        <div class="card stat-card aurora-card shine-border">
           <h3>Open Leads</h3>
           <p id="statLeads">--</p>
         </div>
-        <div class="card stat-card aurora-card">
+        <div class="card stat-card aurora-card shine-border">
           <h3>Jobs In Progress</h3>
           <p id="statJobs">--</p>
         </div>
       </section>
 
-      <section class="card aurora-card">
+      <section class="card aurora-card shine-border">
         <h2>Executive Overview</h2>
         <p id="overviewText">Loading dashboard...</p>
+      </section>
+
+      <section class="glass-card aurora-card shine-border">
+        <div class="section-title-row">
+          <h2 style="margin:0;">Quick Access</h2>
+        </div>
+
+        <div class="quick-links-grid" style="margin-top:18px;">
+          <a class="quick-link-card" href="/evaraos/companies.html">Companies</a>
+          <a class="quick-link-card" href="/evaraos/users.html">Users</a>
+          <a class="quick-link-card" href="/evaraos/leads.html">Leads</a>
+          <a class="quick-link-card" href="/evaraos/jobs.html">Jobs</a>
+          <a class="quick-link-card" href="/evaraos/sales_reps.html">Sales Reps</a>
+          <a class="quick-link-card" href="/evaraos/performance.html">Performance</a>
+          <a class="quick-link-card" href="/evaraos/audit.html">Audit Center</a>
+          <a class="quick-link-card" href="/evaraos/org.html">Org Chart</a>
+        </div>
       </section>
     </main>
   </div>
