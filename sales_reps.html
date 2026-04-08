@@ -4,55 +4,81 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sales Reps | Evaraos</title>
-  <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />/>
+  <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
 </head>
-<body>
-  <header id="topbar"></header>
-  <div id="sidebar" style="display:none;"></div>
-  <main id="salesRepsRoot"></main>
+<body class="app-shell app-theme">
+  <div class="app-bg">
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-grid"></div>
+  </div>
+
+  <header id="topbar" class="topbar"></header>
+
+  <div class="page-shell">
+    <aside id="sidebar" class="sidebar"></aside>
+
+    <main class="main-content">
+      <section class="glass-card aurora-card shine-border">
+        <div class="section-title-row">
+          <div>
+            <h1 style="margin:0;">Sales Reps</h1>
+            <p class="muted" style="margin:8px 0 0;">
+              Manage rep profiles, usernames, contact information, activity state, and notes.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <main id="salesRepsRoot" class="content-root"></main>
+    </main>
+  </div>
 
   <div class="modal-backdrop" id="repModal">
-    <div class="modal-card">
+    <div class="modal-card aurora-card shine-border">
       <div class="section-title-row">
         <h2 id="repModalTitle" style="margin:0;">Add Sales Rep</h2>
         <button class="btn secondary" id="repModalCloseBtn" type="button">Close</button>
       </div>
 
       <form id="repForm">
-        <div class="form-grid">
-          <div class="field">
-            <label for="repFullName">Full Name</label>
-            <input id="repFullName" required />
-          </div>
+        <section class="form-section">
+          <h3 class="form-section-title">Rep Profile</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label for="repFullName">Full Name</label>
+              <input id="repFullName" required />
+            </div>
 
-          <div class="field">
-            <label for="repUsername">Username</label>
-            <input id="repUsername" required />
-          </div>
+            <div class="field">
+              <label for="repUsername">Username</label>
+              <input id="repUsername" required />
+            </div>
 
-          <div class="field">
-            <label for="repEmail">Email</label>
-            <input id="repEmail" type="email" />
-          </div>
+            <div class="field">
+              <label for="repEmail">Email</label>
+              <input id="repEmail" type="email" />
+            </div>
 
-          <div class="field">
-            <label for="repPhone">Phone</label>
-            <input id="repPhone" />
-          </div>
+            <div class="field">
+              <label for="repPhone">Phone</label>
+              <input id="repPhone" />
+            </div>
 
-          <div class="field">
-            <label for="repStatus">Status</label>
-            <select id="repStatus">
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
+            <div class="field">
+              <label for="repStatus">Status</label>
+              <select id="repStatus">
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
 
-          <div class="field full">
-            <label for="repNotes">Notes</label>
-            <textarea id="repNotes" rows="4"></textarea>
+            <div class="field full">
+              <label for="repNotes">Notes</label>
+              <textarea id="repNotes" rows="4"></textarea>
+            </div>
           </div>
-        </div>
+        </section>
 
         <div class="top-actions" style="margin-top:18px;">
           <button class="btn" type="submit">Save Sales Rep</button>
