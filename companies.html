@@ -6,78 +6,114 @@
   <title>Companies | Evaraos</title>
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
 </head>
-<body>
-  <header id="topbar"></header>
-  <div id="sidebar" style="display:none;"></div>
-  <main id="companiesRoot"></main>
+<body class="app-shell app-theme">
+  <div class="app-bg">
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-grid"></div>
+  </div>
+
+  <header id="topbar" class="topbar"></header>
+
+  <div class="page-shell">
+    <aside id="sidebar" class="sidebar"></aside>
+
+    <main class="main-content">
+      <section class="glass-card aurora-card shine-border">
+        <div class="section-title-row">
+          <div>
+            <h1 style="margin:0;">Companies</h1>
+            <p class="muted" style="margin:8px 0 0;">
+              Manage active companies, ownership, status, brand settings, and notes.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <main id="companiesRoot" class="content-root"></main>
+    </main>
+  </div>
 
   <div class="modal-backdrop" id="companyModal">
-    <div class="modal-card">
+    <div class="modal-card aurora-card shine-border">
       <div class="section-title-row">
         <h2 id="companyModalTitle" style="margin:0;">Add Company</h2>
         <button class="btn secondary" id="companyModalCloseBtn" type="button">Close</button>
       </div>
 
       <form id="companyForm">
-        <div class="form-grid">
-          <div class="field">
-            <label for="companyName">Company Name</label>
-            <input id="companyName" required />
-          </div>
+        <section class="form-section">
+          <h3 class="form-section-title">Basic Company Info</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label for="companyName">Company Name</label>
+              <input id="companyName" required />
+            </div>
 
-          <div class="field">
-            <label for="companySlug">Slug</label>
-            <input id="companySlug" placeholder="supreme-trueclean" />
-          </div>
+            <div class="field">
+              <label for="companySlug">Slug</label>
+              <input id="companySlug" placeholder="supreme-trueclean" />
+            </div>
 
-          <div class="field">
-            <label for="companyCity">City</label>
-            <input id="companyCity" />
-          </div>
+            <div class="field">
+              <label for="companyCity">City</label>
+              <input id="companyCity" />
+            </div>
 
-          <div class="field">
-            <label for="companyStateField">State</label>
-            <input id="companyStateField" />
-          </div>
+            <div class="field">
+              <label for="companyStateField">State</label>
+              <input id="companyStateField" />
+            </div>
 
-          <div class="field">
-            <label for="companyPhone">Phone</label>
-            <input id="companyPhone" />
-          </div>
+            <div class="field">
+              <label for="companyPhone">Phone</label>
+              <input id="companyPhone" />
+            </div>
 
-          <div class="field">
-            <label for="companyEmail">Email</label>
-            <input id="companyEmail" type="email" />
+            <div class="field">
+              <label for="companyEmail">Email</label>
+              <input id="companyEmail" type="email" />
+            </div>
           </div>
+        </section>
 
-          <div class="field">
-            <label for="companyStatus">Status</label>
-            <select id="companyStatus">
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
+        <section class="form-section">
+          <h3 class="form-section-title">Status & Branding</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label for="companyStatus">Status</label>
+              <select id="companyStatus">
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
 
-          <div class="field">
-            <label for="companyBrandColor">Brand Color</label>
-            <input id="companyBrandColor" value="#E30613" />
+            <div class="field">
+              <label for="companyBrandColor">Brand Color</label>
+              <input id="companyBrandColor" value="#E30613" />
+            </div>
           </div>
+        </section>
 
-          <div class="field">
-            <label for="companyOwnerName">Owner Name</label>
-            <input id="companyOwnerName" />
-          </div>
+        <section class="form-section">
+          <h3 class="form-section-title">Ownership</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label for="companyOwnerName">Owner Name</label>
+              <input id="companyOwnerName" />
+            </div>
 
-          <div class="field">
-            <label for="companyOwnerEmail">Owner Email</label>
-            <input id="companyOwnerEmail" type="email" />
-          </div>
+            <div class="field">
+              <label for="companyOwnerEmail">Owner Email</label>
+              <input id="companyOwnerEmail" type="email" />
+            </div>
 
-          <div class="field full">
-            <label for="companyNotes">Notes</label>
-            <textarea id="companyNotes" rows="4"></textarea>
+            <div class="field full">
+              <label for="companyNotes">Notes</label>
+              <textarea id="companyNotes" rows="4"></textarea>
+            </div>
           </div>
-        </div>
+        </section>
 
         <div class="top-actions" style="margin-top:18px;">
           <button class="btn" type="submit">Save Company</button>
