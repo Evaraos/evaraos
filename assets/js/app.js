@@ -4,7 +4,18 @@ import {
   onAuthStateChanged,
   signOut,
   getDoc,
-  doc
+  getDocs,
+  addDoc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  serverTimestamp
 } from "./firebase.js";
 
 const BASE_PATH = "/evaraos";
@@ -12,10 +23,14 @@ const THEME_KEY = "evara-theme";
 
 const ROLE_PERMISSIONS = {
   owner: ["all"],
+  super_admin: ["all"],
   admin: ["dashboard", "companies", "users", "sales_reps", "leads", "jobs", "audit", "org", "performance", "customer_dashboard"],
   manager: ["dashboard", "users", "sales_reps", "leads", "jobs", "performance"],
-  sales_rep: ["dashboard", "leads"],
+  operations_coordinator: ["dashboard", "users", "jobs", "performance"],
+  sales_rep: ["dashboard", "leads", "sales_reps"],
+  technician: ["dashboard", "jobs"],
   tech: ["dashboard", "jobs"],
+  hr: ["dashboard", "users"],
   customer: ["customer_dashboard", "self"],
   guest: []
 };
@@ -28,27 +43,41 @@ export function getAssetPath(path = "") {
   return `${BASE_PATH}/${path}`;
 }
 
+export function normalizeRole(role = "") {
+  const value = String(role || "").trim().toLowerCase();
+  if (value === "tech") return "technician";
+  return value || "guest";
+}
+
 export function hasPermission(user, section) {
-  const role = user?.role || "guest";
+  const role = normalizeRole(user?.role);
   const permissions = ROLE_PERMISSIONS[role] || [];
   return permissions.includes("all") || permissions.includes(section);
 }
 
+export function canAccess(role, section) {
+  const normalizedRole = normalizeRole(role);
+  const permissions = ROLE_PERMISSIONS[normalizedRole] || [];
+  return permissions.includes("all") || permissions.includes(section);
+}
+
 export function renderSidebar(role, active = "") {
+  const normalizedRole = normalizeRole(role);
+
   const links = [
-    { key: "dashboard", href: "/evaraos/dashboard.html", label: "Dashboard", roles: ["owner", "admin", "manager", "sales_rep", "tech"] },
-    { key: "companies", href: "/evaraos/companies.html", label: "Companies", roles: ["owner", "admin"] },
-    { key: "users", href: "/evaraos/users.html", label: "Users", roles: ["owner", "admin", "manager"] },
-    { key: "sales_reps", href: "/evaraos/sales_reps.html", label: "Sales Reps", roles: ["owner", "admin", "manager"] },
-    { key: "leads", href: "/evaraos/leads.html", label: "Leads", roles: ["owner", "admin", "manager", "sales_rep"] },
-    { key: "jobs", href: "/evaraos/jobs.html", label: "Jobs", roles: ["owner", "admin", "manager", "tech"] },
-    { key: "audit", href: "/evaraos/audit.html", label: "Audit", roles: ["owner", "admin"] },
-    { key: "org", href: "/evaraos/org.html", label: "Organization", roles: ["owner", "admin"] },
-    { key: "performance", href: "/evaraos/performance.html", label: "Performance", roles: ["owner", "admin", "manager"] },
-    { key: "customer_dashboard", href: "/evaraos/customer_dashboard.html", label: "Customer Portal", roles: ["customer", "owner", "admin"] }
+    { key: "dashboard", href: "/evaraos/dashboard.html", label: "Dashboard", roles: ["owner", "super_admin", "admin", "manager", "sales_rep", "technician", "operations_coordinator", "hr"] },
+    { key: "companies", href: "/evaraos/companies.html", label: "Companies", roles: ["owner", "super_admin", "admin"] },
+    { key: "users", href: "/evaraos/users.html", label: "Users", roles: ["owner", "super_admin", "admin", "manager", "operations_coordinator", "hr"] },
+    { key: "sales_reps", href: "/evaraos/sales_reps.html", label: "Sales Reps", roles: ["owner", "super_admin", "admin", "manager"] },
+    { key: "leads", href: "/evaraos/leads.html", label: "Leads", roles: ["owner", "super_admin", "admin", "manager", "sales_rep"] },
+    { key: "jobs", href: "/evaraos/jobs.html", label: "Jobs", roles: ["owner", "super_admin", "admin", "manager", "technician", "operations_coordinator"] },
+    { key: "audit", href: "/evaraos/audit.html", label: "Audit", roles: ["owner", "super_admin", "admin"] },
+    { key: "org", href: "/evaraos/org.html", label: "Organization", roles: ["owner", "super_admin", "admin"] },
+    { key: "performance", href: "/evaraos/performance.html", label: "Performance", roles: ["owner", "super_admin", "admin", "manager", "operations_coordinator"] },
+    { key: "customer_dashboard", href: "/evaraos/customer_dashboard.html", label: "Customer Portal", roles: ["customer", "owner", "super_admin", "admin"] }
   ];
 
-  const filtered = links.filter(link => link.roles.includes(role));
+  const filtered = links.filter(link => link.roles.includes(normalizedRole));
 
   return `
     <div class="sidebar-inner">
@@ -91,7 +120,8 @@ export async function hydrateCurrentUser(firebaseUser) {
         uid: firebaseUser.uid,
         email: firebaseUser.email || "",
         role: "customer",
-        approvalStatus: "pending"
+        approvalStatus: "pending",
+        active: true
       };
     }
 
@@ -99,7 +129,8 @@ export async function hydrateCurrentUser(firebaseUser) {
       id: firebaseUser.uid,
       uid: firebaseUser.uid,
       email: firebaseUser.email || "",
-      ...snap.data()
+      ...snap.data(),
+      role: normalizeRole(snap.data()?.role)
     };
   } catch (error) {
     console.error("Failed to hydrate current user:", error);
@@ -117,16 +148,18 @@ export async function requireAuth(callback, options = {}) {
     }
 
     const user = await hydrateCurrentUser(firebaseUser);
-
     if (!user) return;
 
-    if (Array.isArray(allowRoles) && allowRoles.length && !allowRoles.includes(user.role)) {
-      if (user.role === "customer") {
-        window.location.href = "/evaraos/customer_dashboard.html";
-      } else {
-        window.location.href = "/evaraos/dashboard.html";
+    if (Array.isArray(allowRoles) && allowRoles.length) {
+      const allowed = allowRoles.map(normalizeRole);
+      if (!allowed.includes(normalizeRole(user.role))) {
+        if (normalizeRole(user.role) === "customer") {
+          window.location.href = "/evaraos/customer_dashboard.html";
+        } else {
+          window.location.href = "/evaraos/dashboard.html";
+        }
+        return;
       }
-      return;
     }
 
     callback(user);
@@ -159,7 +192,7 @@ export async function bindTopbar(user, title = "Dashboard") {
         ${renderThemeSwitcher()}
         <div class="user-pill">
           <span>${user?.name || user?.username || user?.email || "User"}</span>
-          <span class="user-role">${user?.role || "guest"}</span>
+          <span class="user-role">${normalizeRole(user?.role || "guest")}</span>
         </div>
         <button id="logoutBtn" class="btn btn-outline" type="button">Logout</button>
       </div>
@@ -172,6 +205,135 @@ export async function bindTopbar(user, title = "Dashboard") {
     await logoutUser();
   });
 }
+
+/* ---------- Firestore helpers ---------- */
+
+export async function fetchAllCollection(collectionName, options = {}) {
+  const {
+    filters = [],
+    orderByField = "",
+    orderDirection = "asc",
+    max = 500
+  } = options;
+
+  try {
+    const constraints = [];
+
+    for (const filter of filters) {
+      if (!filter?.field) continue;
+      constraints.push(where(filter.field, filter.op || "==", filter.value));
+    }
+
+    if (orderByField) {
+      constraints.push(orderBy(orderByField, orderDirection));
+    }
+
+    if (max) {
+      constraints.push(limit(max));
+    }
+
+    const ref = collection(db, collectionName);
+    const q = constraints.length ? query(ref, ...constraints) : query(ref, limit(max));
+    const snap = await getDocs(q);
+
+    return snap.docs.map(item => ({
+      id: item.id,
+      ...item.data()
+    }));
+  } catch (error) {
+    console.error(`Failed to fetch collection "${collectionName}":`, error);
+    throw error;
+  }
+}
+
+export async function fetchUsersByCompany(companyId) {
+  if (!companyId) return [];
+  return fetchAllCollection("users", {
+    filters: [{ field: "companyId", op: "==", value: companyId }],
+    max: 500
+  });
+}
+
+export async function createDocument(collectionName, payload = {}) {
+  const ref = collection(db, collectionName);
+  const finalPayload = {
+    ...payload,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  };
+  const created = await addDoc(ref, finalPayload);
+  return { id: created.id, ...finalPayload };
+}
+
+export async function updateDocument(collectionName, id, payload = {}) {
+  const ref = doc(db, collectionName, id);
+  await updateDoc(ref, {
+    ...payload,
+    updatedAt: serverTimestamp()
+  });
+  return true;
+}
+
+export async function deleteDocument(collectionName, id) {
+  const ref = doc(db, collectionName, id);
+  await deleteDoc(ref);
+  return true;
+}
+
+export async function saveUserProfile(uid, payload = {}) {
+  const ref = doc(db, "users", uid);
+  await setDoc(ref, {
+    ...payload,
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+  return true;
+}
+
+export async function createSalesRep(payload = {}, currentUser = null) {
+  const cleanUsername = String(payload.username || "").trim().toLowerCase();
+  const cleanName = String(payload.fullName || payload.name || "").trim();
+
+  if (!cleanName || !cleanUsername) {
+    throw new Error("Full name and username are required.");
+  }
+
+  const userPayload = {
+    name: cleanName,
+    username: cleanUsername,
+    email: String(payload.email || "").trim().toLowerCase(),
+    phone: String(payload.phone || "").trim(),
+    status: payload.status || "active",
+    active: payload.status !== "inactive",
+    notes: String(payload.notes || "").trim(),
+    role: "sales_rep",
+    companyId: currentUser?.companyId || payload.companyId || "",
+    reportsTo: currentUser?.uid || payload.reportsTo || "",
+    approvalStatus: "approved"
+  };
+
+  return createDocument("users", userPayload);
+}
+
+export async function updateSalesRep(id, payload = {}) {
+  const cleanUsername = String(payload.username || "").trim().toLowerCase();
+  const cleanName = String(payload.fullName || payload.name || "").trim();
+
+  if (!cleanName || !cleanUsername) {
+    throw new Error("Full name and username are required.");
+  }
+
+  return updateDocument("users", id, {
+    name: cleanName,
+    username: cleanUsername,
+    email: String(payload.email || "").trim().toLowerCase(),
+    phone: String(payload.phone || "").trim(),
+    status: payload.status || "active",
+    active: payload.status !== "inactive",
+    notes: String(payload.notes || "").trim()
+  });
+}
+
+/* ---------- Theme ---------- */
 
 function renderThemeSwitcher() {
   return `
@@ -265,33 +427,6 @@ function initModalBackdrops() {
   });
 }
 
-function initPasswordToggles() {
-  const pairs = [
-    ["togglePasswordBtn", "password", "passwordIconOpen", "passwordIconClosed"],
-    ["toggleSignupPasswordBtn", "signupPassword", "signupPasswordIconOpen", "signupPasswordIconClosed"],
-    ["toggleSignupPasswordConfirmBtn", "signupPasswordConfirm", "signupPasswordConfirmIconOpen", "signupPasswordConfirmIconClosed"]
-  ];
-
-  pairs.forEach(([buttonId, inputId, openId, closedId]) => {
-    const button = document.getElementById(buttonId);
-    const input = document.getElementById(inputId);
-    const openIcon = document.getElementById(openId);
-    const closedIcon = document.getElementById(closedId);
-
-    if (!button || !input) return;
-
-    button.addEventListener("click", () => {
-      const isPassword = input.type === "password";
-      input.type = isPassword ? "text" : "password";
-      button.setAttribute("aria-pressed", isPassword ? "true" : "false");
-      button.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
-
-      if (openIcon) openIcon.style.display = isPassword ? "none" : "";
-      if (closedIcon) closedIcon.style.display = isPassword ? "" : "none";
-    });
-  });
-}
-
 function initThemeBoot() {
   applyTheme(getStoredTheme());
 
@@ -312,7 +447,6 @@ function initSharedUI() {
   initLandingThemeSwitcher();
   initDropdowns();
   initModalBackdrops();
-  initPasswordToggles();
 }
 
 document.addEventListener("DOMContentLoaded", initSharedUI);
