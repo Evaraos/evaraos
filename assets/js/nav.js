@@ -1,6 +1,10 @@
 function closeAllDropdowns() {
   document.querySelectorAll("[data-nav-dropdown]").forEach((dropdown) => {
     dropdown.classList.remove("open");
+    const toggle = dropdown.querySelector("[data-nav-toggle]");
+    if (toggle) {
+      toggle.setAttribute("aria-expanded", "false");
+    }
   });
 }
 
@@ -20,12 +24,14 @@ function bindDropdowns() {
 
       if (!isOpen) {
         dropdown.classList.add("open");
+        toggle.setAttribute("aria-expanded", "true");
       }
     });
 
     menu.querySelectorAll("a").forEach((link) => {
       link.addEventListener("click", () => {
         dropdown.classList.remove("open");
+        toggle.setAttribute("aria-expanded", "false");
       });
     });
   });
