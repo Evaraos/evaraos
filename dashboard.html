@@ -5,41 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard | Evaraos</title>
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
-  <style>
-    .security-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-    .status-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .status-badge {
-      padding: 8px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(255,255,255,0.06);
-      font-size: 14px;
-    }
-    .mfa-form {
-      display: grid;
-      gap: 14px;
-      margin-top: 16px;
-    }
-    .mfa-msg {
-      min-height: 22px;
-      color: #ffb1a8;
-    }
-    @media (max-width: 980px) {
-      .security-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
 </head>
 <body class="app-theme">
   <header id="topbar" class="topbar"></header>
@@ -49,86 +14,29 @@
 
     <main class="main-content">
       <section class="grid grid-3">
-        <div class="card stat-card">
+        <div class="card stat-card aurora-card">
           <h3>Active Companies</h3>
           <p id="statCompanies">--</p>
         </div>
-        <div class="card stat-card">
+        <div class="card stat-card aurora-card">
           <h3>Open Leads</h3>
           <p id="statLeads">--</p>
         </div>
-        <div class="card stat-card">
+        <div class="card stat-card aurora-card">
           <h3>Jobs In Progress</h3>
           <p id="statJobs">--</p>
         </div>
       </section>
 
-      <section class="card">
+      <section class="card aurora-card">
         <h2>Executive Overview</h2>
         <p id="overviewText">Loading dashboard...</p>
-      </section>
-
-      <section class="security-grid">
-        <section class="card">
-          <div class="status-row">
-            <div>
-              <h3 style="margin:0 0 8px;">Account Security</h3>
-              <p style="margin:0;color:rgba(245,247,251,0.72);">Optional SMS MFA for this account.</p>
-            </div>
-            <div id="mfaStatusBadge" class="status-badge">Checking…</div>
-          </div>
-
-          <div class="mfa-form">
-            <label class="field-label" for="mfaPhone">Phone Number</label>
-            <input id="mfaPhone" class="input" type="tel" placeholder="+1 555 555 1234" />
-
-            <label class="field-label" for="mfaDisplayName">Display Name</label>
-            <input id="mfaDisplayName" class="input" type="text" placeholder="Primary phone" />
-
-            <button id="startMfaEnrollBtn" class="btn btn-primary" type="button">Send Verification Code</button>
-            <p id="mfaEnrollMsg" class="mfa-msg"></p>
-          </div>
-        </section>
-
-        <section class="card">
-          <h3 style="margin-top:0;">Verify & Manage MFA</h3>
-
-          <div class="mfa-form">
-            <label class="field-label" for="mfaEnrollCode">SMS Verification Code</label>
-            <input id="mfaEnrollCode" class="input" type="text" inputmode="numeric" placeholder="Enter SMS code" />
-
-            <div style="display:flex; gap:12px; flex-wrap:wrap;">
-              <button id="finishMfaEnrollBtn" class="btn btn-primary" type="button">Enable MFA</button>
-              <button id="disableMfaBtn" class="btn btn-secondary" type="button">Disable MFA</button>
-            </div>
-
-            <p id="mfaManageMsg" class="mfa-msg"></p>
-            <p id="mfaMaskedPhone" style="margin:0;color:rgba(245,247,251,0.72);"></p>
-          </div>
-        </section>
       </section>
     </main>
   </div>
 
-  <div id="recaptcha-container"></div>
-
   <script type="module">
     import { requireAuth, bindTopbar, renderSidebar, hasPermission } from "/evaraos/assets/js/app.js";
-    import { auth } from "/evaraos/assets/js/firebase.js";
-    import {
-      getCurrentMfaStatus,
-      startMfaEnrollment,
-      completeMfaEnrollment,
-      disableMfa,
-      maskPhoneNumber
-    } from "/evaraos/assets/js/mfa.js";
-
-    function setText(id, text, isError = false) {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.textContent = text;
-      el.style.color = isError ? "#ffb1a8" : "rgba(245,247,251,0.72)";
-    }
 
     requireAuth(async (user) => {
       if (!hasPermission(user, "dashboard")) {
@@ -152,68 +60,7 @@
       document.getElementById("statJobs").textContent = "36";
 
       document.getElementById("overviewText").textContent =
-        `Welcome ${user.name || user.username || user.email}. You are logged in as ${user.role}. Optional SMS MFA is available for this account.`;
-
-      async function refreshMfaStatus() {
-        const currentUser = auth.currentUser;
-        const status = await getCurrentMfaStatus(currentUser);
-
-        document.getElementById("mfaStatusBadge").textContent =
-          status.enabled ? "MFA Enabled" : "MFA Disabled";
-
-        document.getElementById("mfaMaskedPhone").textContent =
-          status.phoneLast4 ? `Saved number: ${maskPhoneNumber(status.phoneLast4)}` : "";
-      }
-
-      await refreshMfaStatus();
-
-      document.getElementById("startMfaEnrollBtn").addEventListener("click", async () => {
-        const currentUser = auth.currentUser;
-        const phone = document.getElementById("mfaPhone").value.trim();
-        const displayName = document.getElementById("mfaDisplayName").value.trim() || "Primary phone";
-
-        setText("mfaEnrollMsg", "");
-
-        try {
-          const result = await startMfaEnrollment(currentUser, phone, displayName);
-          setText("mfaEnrollMsg", `Code sent to ${result.maskedPhone}.`);
-        } catch (error) {
-          console.error(error);
-          setText("mfaEnrollMsg", error.message || "Could not send MFA code.", true);
-        }
-      });
-
-      document.getElementById("finishMfaEnrollBtn").addEventListener("click", async () => {
-        const currentUser = auth.currentUser;
-        const phone = document.getElementById("mfaPhone").value.trim();
-        const displayName = document.getElementById("mfaDisplayName").value.trim() || "Primary phone";
-        const code = document.getElementById("mfaEnrollCode").value.trim();
-
-        setText("mfaManageMsg", "");
-
-        try {
-          const result = await completeMfaEnrollment(currentUser, code, phone, displayName);
-          setText("mfaManageMsg", `MFA enabled for ${result.maskedPhone}.`);
-          await refreshMfaStatus();
-        } catch (error) {
-          console.error(error);
-          setText("mfaManageMsg", error.message || "Could not enable MFA.", true);
-        }
-      });
-
-      document.getElementById("disableMfaBtn").addEventListener("click", async () => {
-        const currentUser = auth.currentUser;
-        setText("mfaManageMsg", "");
-
-        try {
-          await disableMfa(currentUser);
-          setText("mfaManageMsg", "MFA disabled.");
-          await refreshMfaStatus();
-        } catch (error) {
-          console.error(error);
-          setText("mfaManageMsg", error.message || "Could not disable MFA.", true);
-        }
-      });
+        `Welcome ${user.name || user.username || user.email}. You are logged in as ${user.role}. Security now lives at sign up and sign in, with number verification available for new-device protection.`;
     });
   </script>
 </body>
