@@ -3,6 +3,8 @@ import {
   db,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
+  createUserWithEmailAndPassword,
+  updateProfile,
   getDoc,
   getDocs,
   setDoc,
@@ -12,8 +14,7 @@ import {
   collection,
   query,
   where,
-  serverTimestamp,
-  getMultiFactorResolver
+  serverTimestamp
 } from "./firebase.js";
 
 import { beginMfaSignIn, completeMfaSignIn } from "./mfa.js";
@@ -187,16 +188,24 @@ export async function loginWithIdentifier(identifier, password) {
 
     return { credential, resolvedEmail: email };
   } catch (error) {
-    if (error.code === "auth/multi-factor-auth-required") {
-      const resolver = getMultiFactorResolver(auth, error);
-      error.customData = { ...(error.customData || {}), resolver };
-    }
     throw Object.assign(error, { resolvedEmail: email });
   }
 }
 
-export async function createAccount({ name, email, username, password, confirmPassword, securityPhone, smsProtection }) {
-  if (!name || !email || !username || !password || !confirmPassword) {
+export async function createAccount({
+  name,
+  email,
+  username,
+  password,
+  confirmPassword,
+  securityPhone,
+  smsProtection
+}) {
+  const cleanName = String(name || "").trim();
+  const cleanEmail = String(email || "").trim().toLowerCase();
+  const cleanUsername = normalizeUsername(username);
+
+  if (!cleanName || !cleanEmail || !cleanUsername || !password || !confirmPassword) {
     return { success: false, message: "Fill in all required fields." };
   }
 
@@ -208,32 +217,131 @@ export async function createAccount({ name, email, username, password, confirmPa
     return { success: false, message: "Password should be at least 8 characters." };
   }
 
-  return {
-    success: false,
-    message: "Signup account creation wiring is the next backend-auth step. The UI is restored and ready."
-  };
+  const existingUsername = await getDoc(doc(db, "usernames", cleanUsername));
+  if (existingUsername.exists()) {
+    return { success: false, message: "That username is already taken." };
+  }
+
+  try {
+    const credential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
+
+    await updateProfile(credential.user, {
+      displayName: cleanName
+    });
+
+    await setDoc(doc(db, "users", credential.user.uid), {
+      uid: credential.user.uid,
+      name: cleanName,
+      email: cleanEmail,
+      username: cleanUsername,
+      handle: `@${cleanUsername}`,
+      role: "customer",
+      companyId: "",
+      active: true,
+      approvalStatus: "approved",
+      smsProtectionEnabled: !!smsProtection,
+      securityPhone: securityPhone ? String(securityPhone).trim() : "",
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+
+    await setDoc(doc(db, "usernames", cleanUsername), {
+      uid: credential.user.uid,
+      username: cleanUsername,
+      displayUsername: cleanUsername.charAt(0).toUpperCase() + cleanUsername.slice(1),
+      handle: `@${cleanUsername}`,
+      email: cleanEmail,
+      companyId: "",
+      role: "customer",
+      active: true,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+
+    return {
+      success: true,
+      message: "Account created successfully.",
+      uid: credential.user.uid
+    };
+  } catch (error) {
+    console.error("Create account failed:", error);
+
+    if (error?.code?.includes("email-already-in-use")) {
+      return { success: false, message: "That email is already in use." };
+    }
+
+    return {
+      success: false,
+      message: error?.message || "Could not create account."
+    };
+  }
 }
 
 export async function sendReset(email) {
   return sendPasswordResetEmail(auth, email);
 }
 
-function setupPasswordToggle(inputId, btnId, openId, closedId) {
-  const passwordInput = document.getElementById(inputId);
-  const toggleBtn = document.getElementById(btnId);
-  const openIcon = document.getElementById(openId);
-  const closedIcon = document.getElementById(closedId);
+export async function fetchCustomerServices(user) {
+  if (!user?.uid) return [];
 
-  if (!passwordInput || !toggleBtn || !openIcon || !closedIcon) return;
+  try {
+    const snap = await getDocs(
+      query(collection(db, "services"), where("customerId", "==", user.uid))
+    );
 
-  toggleBtn.addEventListener("click", () => {
-    const shouldShow = passwordInput.type === "password";
-    passwordInput.type = shouldShow ? "text" : "password";
-    toggleBtn.setAttribute("aria-pressed", String(shouldShow));
-    toggleBtn.setAttribute("aria-label", shouldShow ? "Hide password" : "Show password");
-    openIcon.style.display = shouldShow ? "none" : "block";
-    closedIcon.style.display = shouldShow ? "block" : "none";
+    return snap.docs.map(item => ({
+      id: item.id,
+      ...item.data()
+    }));
+  } catch (error) {
+    console.warn("Could not fetch customer services:", error);
+    return [];
+  }
+}
+
+export async function updateOwnUsername(user, nextUsername) {
+  if (!user?.uid) throw new Error("Missing user.");
+  const cleanUsername = normalizeUsername(nextUsername);
+
+  if (!cleanUsername) throw new Error("Username is required.");
+
+  const existingUsername = await getDoc(doc(db, "usernames", cleanUsername));
+  if (existingUsername.exists() && existingUsername.data()?.uid !== user.uid) {
+    throw new Error("Username is already taken.");
+  }
+
+  await updateDoc(doc(db, "users", user.uid), {
+    username: cleanUsername,
+    handle: `@${cleanUsername}`,
+    updatedAt: serverTimestamp()
   });
+
+  await syncUsernameDirectoryByUserDoc(user.uid);
+  return true;
+}
+
+export async function changeOwnPassword() {
+  throw new Error("Password change UI wiring is not connected yet.");
+}
+
+export async function updateOwnCustomerProfile(user, payload = {}) {
+  if (!user?.uid) throw new Error("Missing user.");
+
+  await updateDoc(doc(db, "users", user.uid), {
+    ...payload,
+    updatedAt: serverTimestamp()
+  });
+
+  return true;
+}
+
+export function buildUserIdentity(user) {
+  return {
+    name: user?.name || "",
+    email: user?.email || "",
+    username: user?.username || "",
+    handle: user?.handle || ""
+  };
 }
 
 function setupResetPanel() {
@@ -331,7 +439,7 @@ function setupLoginForm() {
       }
 
       if (userData?.smsProtectionEnabled && userData?.securityPhone && !isTrustedDevice(credential.user.uid)) {
-        setText("loginMessage", "This account uses number verification on new devices. Complete the SMS step when enabled.");
+        setText("loginMessage", "This account uses number verification on new devices.");
       }
 
       if (remember?.checked) {
@@ -422,33 +530,46 @@ function setupSignupForm() {
     const confirmPassword = document.getElementById("signupPasswordConfirm")?.value || "";
     const securityPhone = document.getElementById("signupSecurityPhone")?.value?.trim() || "";
     const smsProtection = document.getElementById("signupSmsProtection")?.value === "on";
+    const submitBtn = signupForm.querySelector('button[type="submit"]');
 
     setText("signupMessage", "");
 
-    const result = await createAccount({
-      name,
-      email,
-      username,
-      password,
-      confirmPassword,
-      securityPhone,
-      smsProtection
-    });
+    try {
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Creating...";
+      }
 
-    if (!result.success) {
-      setText("signupMessage", result.message, true);
-      return;
+      const result = await createAccount({
+        name,
+        email,
+        username,
+        password,
+        confirmPassword,
+        securityPhone,
+        smsProtection
+      });
+
+      if (!result.success) {
+        setText("signupMessage", result.message, true);
+        return;
+      }
+
+      setText("signupMessage", "Account created. Redirecting...");
+      window.location.href = "/evaraos/customer_dashboard.html";
+    } catch (error) {
+      console.error("Signup failed:", error);
+      setText("signupMessage", error.message || "Could not create account.", true);
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Create Account";
+      }
     }
-
-    setText("signupMessage", "Account created.");
   });
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  setupPasswordToggle("password", "togglePasswordBtn", "passwordIconOpen", "passwordIconClosed");
-  setupPasswordToggle("signupPassword", "toggleSignupPasswordBtn", "signupPasswordIconOpen", "signupPasswordIconClosed");
-  setupPasswordToggle("signupPasswordConfirm", "toggleSignupPasswordConfirmBtn", "signupPasswordConfirmIconOpen", "signupPasswordConfirmIconClosed");
-
   setupResetPanel();
   setupLoginForm();
   setupResetForm();
