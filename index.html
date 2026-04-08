@@ -2,7 +2,10 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
   <title>Evaraos Inc</title>
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
 </head>
@@ -11,51 +14,74 @@
 
   <header class="landing-header">
     <div class="landing-header-inner glass-shell">
-      <a href="/evaraos/index.html" class="brand-link">
-        <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos logo" class="brand-logo" />
+      <a href="/evaraos/index.html" class="brand-link" aria-label="Go home">
+        <img
+          src="/evaraos/assets/img/evaraos_logo.png"
+          alt="Evaraos logo"
+          class="brand-logo"
+        />
         <div class="brand-copy">
           <strong>Evaraos Inc</strong>
           <span>Subsidiaries Allocation SaaS</span>
         </div>
       </a>
 
-      <nav class="landing-nav">
+      <nav class="landing-nav" aria-label="Main navigation">
         <a href="/evaraos/index.html" class="nav-pill" data-nav-link>Home</a>
 
-        <div class="theme-picker-wrap" data-theme-wrapper>
+        <div class="theme-control" data-theme-control>
           <button
-            class="theme-picker-btn"
             type="button"
-            data-theme-toggle
-            aria-label="Choose theme"
+            class="theme-core-toggle"
+            data-theme-core-toggle
             aria-expanded="false"
+            aria-label="Theme options"
           >
-            <span class="theme-picker-dot current-theme-dot"></span>
-            <span class="theme-picker-text">Theme</span>
+            <span class="theme-core-dot"></span>
+            <span class="theme-core-label">Theme</span>
           </button>
 
-          <div class="theme-picker-menu glass-popover" data-theme-menu>
-            <button type="button" class="theme-chip" data-theme-chip data-theme-value="dark">
-              <span class="theme-swatch theme-dark"></span><span>Dark</span>
-            </button>
-            <button type="button" class="theme-chip" data-theme-chip data-theme-value="light">
-              <span class="theme-swatch theme-light"></span><span>Light</span>
-            </button>
-            <button type="button" class="theme-chip" data-theme-chip data-theme-value="blue">
-              <span class="theme-swatch theme-blue"></span><span>Blue</span>
-            </button>
-            <button type="button" class="theme-chip" data-theme-chip data-theme-value="red">
-              <span class="theme-swatch theme-red"></span><span>Red</span>
-            </button>
-            <button type="button" class="theme-chip" data-theme-chip data-theme-value="pink">
-              <span class="theme-swatch theme-pink"></span><span>Pink</span>
-            </button>
-            <button type="button" class="theme-chip" data-theme-chip data-theme-value="green">
-              <span class="theme-swatch theme-green"></span><span>Green</span>
-            </button>
-            <button type="button" class="theme-chip" data-theme-chip data-theme-value="purple">
-              <span class="theme-swatch theme-purple"></span><span>Purple</span>
-            </button>
+          <div class="theme-bubbles glass-popover" data-theme-bubbles>
+            <button
+              type="button"
+              class="theme-bubble blue"
+              data-theme-bubble
+              data-theme-value="blue"
+              aria-label="Blue theme"
+              title="Blue"
+            ></button>
+            <button
+              type="button"
+              class="theme-bubble red"
+              data-theme-bubble
+              data-theme-value="red"
+              aria-label="Red theme"
+              title="Red"
+            ></button>
+            <button
+              type="button"
+              class="theme-bubble pink"
+              data-theme-bubble
+              data-theme-value="pink"
+              aria-label="Pink theme"
+              title="Pink"
+            ></button>
+            <button
+              type="button"
+              class="theme-bubble green"
+              data-theme-bubble
+              data-theme-value="green"
+              aria-label="Green theme"
+              title="Green"
+            ></button>
+            <button
+              type="button"
+              class="theme-bubble purple"
+              data-theme-bubble
+              data-theme-value="purple"
+              aria-label="Purple theme"
+              title="Purple"
+            ></button>
           </div>
         </div>
 
@@ -104,7 +130,11 @@
 
       <div class="hero-visual glass-card">
         <div class="hero-visual-inner">
-          <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos" class="hero-logo" />
+          <img
+            src="/evaraos/assets/img/evaraos_logo.png"
+            alt="Evaraos"
+            class="hero-logo"
+          />
           <div class="hero-card-title">EVARAOS</div>
           <div class="hero-card-subtitle">
             Premium software infrastructure for subsidiaries, operations, control, and scale.
@@ -116,17 +146,23 @@
     <section class="feature-grid">
       <article class="feature-card glass-card">
         <h3>Operating System</h3>
-        <p>One platform for roles, approvals, workflows, field activity, and scalable business infrastructure.</p>
+        <p>
+          One platform for roles, approvals, workflows, field activity, and scalable business infrastructure.
+        </p>
       </article>
 
       <article class="feature-card glass-card">
         <h3>Multi-Company</h3>
-        <p>Launch and manage multiple subsidiaries with a shared structure while keeping each business organized.</p>
+        <p>
+          Launch and manage multiple subsidiaries with a shared structure while keeping each business organized.
+        </p>
       </article>
 
       <article class="feature-card glass-card">
         <h3>Future-Ready Security</h3>
-        <p>Username login, optional number verification, trusted-device behavior, and a modern auth experience.</p>
+        <p>
+          Username login, optional number verification, trusted-device behavior, and a modern auth experience.
+        </p>
       </article>
     </section>
   </main>
