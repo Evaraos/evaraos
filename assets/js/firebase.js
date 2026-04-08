@@ -5,7 +5,12 @@ import {
   onAuthStateChanged,
   signOut,
   signInWithEmailAndPassword,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  RecaptchaVerifier,
+  PhoneAuthProvider,
+  PhoneMultiFactorGenerator,
+  multiFactor,
+  getMultiFactorResolver
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
@@ -47,6 +52,11 @@ export {
   signOut,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
+  RecaptchaVerifier,
+  PhoneAuthProvider,
+  PhoneMultiFactorGenerator,
+  multiFactor,
+  getMultiFactorResolver,
   collection,
   getDocs,
   getDoc,
