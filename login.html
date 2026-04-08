@@ -21,26 +21,46 @@
 
       <nav class="landing-nav">
         <a href="/evaraos/index.html" class="nav-pill" data-nav-link>Home</a>
-        <a href="/evaraos/login.html" class="nav-pill" data-nav-link>Login</a>
 
-        <button
-          type="button"
-          class="theme-toggle-compact"
-          data-theme-toggle
-          aria-label="Switch theme"
-          aria-pressed="false"
-        >
-          <span class="theme-toggle-icon">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 4.75a.75.75 0 0 1 .75.75v1.25a.75.75 0 0 1-1.5 0V5.5a.75.75 0 0 1 .75-.75Zm0 12.5a.75.75 0 0 1 .75.75v1.25a.75.75 0 0 1-1.5 0V18a.75.75 0 0 1 .75-.75Zm7.25-4.5a.75.75 0 0 1 0-1.5h1.25a.75.75 0 0 1 0 1.5H19.25Zm-16 0a.75.75 0 0 1 0-1.5H4.5a.75.75 0 0 1 0 1.5H3.25Zm12.1 5.04a.75.75 0 0 1 1.06 0l.88.88a.75.75 0 0 1-1.06 1.06l-.88-.88a.75.75 0 0 1 0-1.06Zm-8.95-8.95a.75.75 0 0 1 1.06 0l.88.88A.75.75 0 0 1 7.28 10.8l-.88-.88a.75.75 0 0 1 0-1.06Zm10.01 1.94a.75.75 0 0 1 0-1.06l.88-.88a.75.75 0 1 1 1.06 1.06l-.88.88a.75.75 0 0 1-1.06 0Zm-8.95 8.95a.75.75 0 0 1 0-1.06l.88-.88a.75.75 0 1 1 1.06 1.06l-.88.88a.75.75 0 0 1-1.06 0ZM12 8a4 4 0 1 1 0 8a4 4 0 0 1 0-8Z"/>
-            </svg>
-          </span>
-          <span class="theme-toggle-icon">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M14.75 3.25a.75.75 0 0 1 .73.93a7.75 7.75 0 0 0 8.34 9.59a.75.75 0 0 1 .54 1.28A10.25 10.25 0 1 1 13.95 2.64a.75.75 0 0 1 .8.61Z"/>
-            </svg>
-          </span>
-        </button>
+        <div class="theme-picker-wrap" data-theme-wrapper>
+          <button
+            class="theme-picker-btn"
+            type="button"
+            data-theme-toggle
+            aria-label="Choose theme"
+            aria-expanded="false"
+          >
+            <span class="theme-picker-dot"></span>
+            <span class="theme-picker-text">Theme</span>
+          </button>
+
+          <div class="theme-picker-menu aurora-card" data-theme-menu>
+            <button type="button" class="theme-chip" data-theme-chip data-theme-value="dark">
+              <span class="theme-swatch theme-dark"></span>
+              <span>Dark</span>
+            </button>
+            <button type="button" class="theme-chip" data-theme-chip data-theme-value="light">
+              <span class="theme-swatch theme-light"></span>
+              <span>Light</span>
+            </button>
+            <button type="button" class="theme-chip" data-theme-chip data-theme-value="blue">
+              <span class="theme-swatch theme-blue"></span>
+              <span>Blue</span>
+            </button>
+            <button type="button" class="theme-chip" data-theme-chip data-theme-value="red">
+              <span class="theme-swatch theme-red"></span>
+              <span>Red</span>
+            </button>
+            <button type="button" class="theme-chip" data-theme-chip data-theme-value="pink">
+              <span class="theme-swatch theme-pink"></span>
+              <span>Pink</span>
+            </button>
+            <button type="button" class="theme-chip" data-theme-chip data-theme-value="purple">
+              <span class="theme-swatch theme-purple"></span>
+              <span>Purple</span>
+            </button>
+          </div>
+        </div>
 
         <div class="nav-dropdown" data-nav-dropdown>
           <button
@@ -135,7 +155,7 @@
         </div>
 
         <div class="login-actions-row">
-          <button type="submit" class="btn btn-primary">Login</button>
+          <button type="submit" class="btn btn-primary btn-glass-theme">Login</button>
           <button type="button" id="openResetBtn" class="text-link-btn">Forgot password?</button>
         </div>
 
@@ -164,7 +184,7 @@
           </div>
         </div>
 
-        <button type="submit" class="btn btn-primary">Verify Code</button>
+        <button type="submit" class="btn btn-primary btn-glass-theme">Verify Code</button>
         <p id="mfaChallengeMessage" class="login-message"></p>
       </form>
     </section>
