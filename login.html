@@ -83,6 +83,27 @@
       </form>
     </section>
 
+    <section id="mfaChallengePanel" class="reset-panel glass-card hidden">
+      <div class="panel-head">
+        <h2>Two-Step Verification</h2>
+      </div>
+
+      <form id="mfaChallengeForm" class="login-form">
+        <label class="field-label" for="mfaCode">Verification Code</label>
+        <input
+          id="mfaCode"
+          type="text"
+          class="input"
+          placeholder="Enter SMS code"
+          inputmode="numeric"
+          autocomplete="one-time-code"
+          required
+        />
+        <button type="submit" class="btn btn-primary">Verify Code</button>
+        <p id="mfaChallengeMessage" class="login-message"></p>
+      </form>
+    </section>
+
     <section id="resetPanel" class="reset-panel glass-card hidden">
       <div class="panel-head">
         <h2>Reset Password</h2>
@@ -104,5 +125,9 @@
       </form>
     </section>
   </main>
+
+  <div id="recaptcha-container"></div>
+
+  <script type="module" src="/evaraos/assets/js/auth.js"></script>
 </body>
 </html>
