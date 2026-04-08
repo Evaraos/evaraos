@@ -1,25 +1,25 @@
 import {
   bindTopbar,
   requireAuth,
+  renderSidebar,
   fetchAllCollection,
   fetchUsersByCompany,
-  createSalesRep,
-  updateSalesRep
+  updateDocument
 } from "./app.js";
 
 import { canAccess } from "./roles.js";
 
-const salesRepState = {
+const state = {
   user: null,
-  reps: [],
+  users: [],
   editingId: null
 };
 
 function showToast(message, variant = "success") {
-  let container = document.getElementById("salesRepToastContainer");
+  let container = document.getElementById("usersToastContainer");
   if (!container) {
     container = document.createElement("div");
-    container.id = "salesRepToastContainer";
+    container.id = "usersToastContainer";
     container.style.position = "fixed";
     container.style.top = "20px";
     container.style.right = "20px";
@@ -42,273 +42,150 @@ function showToast(message, variant = "success") {
   setTimeout(() => toast.remove(), 2600);
 }
 
-function injectStyles() {
-  if (document.getElementById("salesRepsUpgradeStyles")) return;
+async function loadUsers(user) {
+  state.user = user;
 
-  const style = document.createElement("style");
-  style.id = "salesRepsUpgradeStyles";
-  style.textContent = `
-    .page-main{
-      display:flex;
-      flex-direction:column;
-      gap:22px;
-      padding:22px;
-    }
-    .card-grid{
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:16px;
-    }
-    .rep-card{
-      border-radius:24px;
-      padding:18px;
-      background:rgba(255,255,255,.03);
-      border:1px solid rgba(255,255,255,.08);
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-    .rep-actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:8px;
-    }
-    .muted{
-      color:#aeb8c8;
-      font-size:13px;
-    }
-    .modal-backdrop{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.45);
-      backdrop-filter:blur(8px);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      z-index:9998;
-      padding:18px;
-    }
-    .modal-backdrop.open{
-      display:flex;
-    }
-    .modal-card{
-      width:min(720px,100%);
-      max-height:90vh;
-      overflow:auto;
-      border-radius:28px;
-      background:rgba(14,16,24,.96);
-      border:1px solid rgba(255,255,255,.08);
-      padding:22px;
-      box-shadow:0 25px 60px rgba(0,0,0,.35);
-    }
-    .form-grid{
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:14px;
-      margin-top:16px;
-    }
-    .full{
-      grid-column:1/-1;
-    }
-    .field{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-    .field label{
-      font-size:13px;
-      color:#b4bfd0;
-    }
-    .field input,
-    .field select,
-    .field textarea{
-      width:100%;
-      padding:14px 16px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.04);
-      color:#fff;
-      outline:none;
-    }
-    .top-actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-    .empty-state{
-      color:#aeb8c8;
-      padding:12px 0 4px;
-    }
-    .chip{
-      display:inline-flex;
-      padding:6px 10px;
-      border-radius:999px;
-      background:rgba(255,255,255,.08);
-      font-size:12px;
-      margin:6px 8px 0 0;
-      text-transform:capitalize;
-    }
-    @media (max-width: 700px){
-      .card-grid{ grid-template-columns:1fr; }
-      .form-grid{ grid-template-columns:1fr; }
-    }
-  `;
-  document.head.appendChild(style);
+  if (["super_admin", "owner", "admin"].includes(user.role)) {
+    state.users = await fetchAllCollection("users", { max: 500 });
+    return;
+  }
+
+  state.users = await fetchUsersByCompany(user.companyId);
 }
 
-async function loadSalesReps(user) {
-  salesRepState.user = user;
-  const users = user.role === "super_admin"
-    ? await fetchAllCollection("users")
-    : await fetchUsersByCompany(user.companyId);
+function openUserModal(user = null) {
+  state.editingId = user?.id || null;
 
-  salesRepState.reps = users.filter((item) => item.role === "sales_rep");
+  document.getElementById("userModal")?.classList.add("open");
+  document.getElementById("userModalTitle").textContent = user ? "Edit User" : "Edit User";
+
+  document.getElementById("editUserName").value = user?.name || "";
+  document.getElementById("editUserEmail").value = user?.email || "";
+  document.getElementById("editUserPhone").value = user?.phone || "";
+  document.getElementById("editUserRole").value = user?.role || "customer";
+  document.getElementById("editUserStatus").value = user?.status || "active";
+  document.getElementById("editUserApproval").value = user?.approvalStatus || "approved";
+  document.getElementById("editUserReportsTo").value = user?.reportsTo || "";
 }
 
-function openRepModal(rep = null) {
-  salesRepState.editingId = rep?.id || null;
-  document.getElementById("repModal").classList.add("open");
-  document.getElementById("repModalTitle").textContent = rep ? "Edit Sales Rep" : "Add Sales Rep";
-
-  document.getElementById("repFullName").value = rep?.name || "";
-  document.getElementById("repUsername").value = rep?.username || "";
-  document.getElementById("repEmail").value = rep?.email || "";
-  document.getElementById("repPhone").value = rep?.phone || "";
-  document.getElementById("repStatus").value = rep?.status || "active";
-  document.getElementById("repNotes").value = rep?.notes || "";
+function closeUserModal() {
+  document.getElementById("userModal")?.classList.remove("open");
+  state.editingId = null;
 }
 
-function closeRepModal() {
-  document.getElementById("repModal").classList.remove("open");
-  salesRepState.editingId = null;
-}
+function renderUsers() {
+  const root = document.getElementById("usersRoot");
+  if (!root) return;
 
-function renderPage() {
-  const root = document.getElementById("salesRepsRoot");
   root.innerHTML = `
-    <main class="page-main">
-      <section class="glass-card">
-        <div class="section-title-row">
-          <div>
-            <h1 style="margin:0;">Sales Reps Management</h1>
-            <p class="muted" style="margin:10px 0 0;">Add, edit, and manage your sales team.</p>
-          </div>
-          <div class="top-actions">
-            <button class="btn" id="openRepModalBtn">Add Sales Rep</button>
-          </div>
+    <section class="glass-card aurora-card shine-border">
+      <div class="section-title-row">
+        <div>
+          <h2 style="margin:0;">User Directory</h2>
+          <p class="muted" style="margin:8px 0 0;">Edit team members, roles, statuses, approvals, and reporting lines.</p>
         </div>
-      </section>
+        <div class="muted">${state.users.length} user(s)</div>
+      </div>
 
-      <section class="glass-card">
-        <div class="section-title-row">
-          <h2>Sales Reps List</h2>
-          <div class="muted">${salesRepState.reps.length} rep(s)</div>
-        </div>
+      ${
+        !state.users.length
+          ? `<div class="muted" style="padding-top:16px;">No users found.</div>`
+          : `
+            <div class="quick-links-grid" style="margin-top:18px;">
+              ${state.users.map(user => `
+                <div class="quick-link-card aurora-card shine-border" style="display:block; min-height:auto;">
+                  <div>
+                    <strong>${user.name || "Unnamed User"}</strong>
+                    <div class="muted" style="margin-top:8px;">
+                      ${user.email || "No email"}<br>
+                      ${user.phone || "No phone"}<br>
+                      Reports To: ${user.reportsTo || "—"}
+                    </div>
+                  </div>
 
-        ${
-          !salesRepState.reps.length
-            ? `<div class="empty-state">No sales reps found.</div>`
-            : `
-              <div class="card-grid" style="margin-top:14px;">
-                ${salesRepState.reps
-                  .map(
-                    (rep) => `
-                      <div class="rep-card">
-                        <div>
-                          <strong>${rep.name || "Unnamed Rep"}</strong>
-                          <div class="muted" style="margin-top:6px;">${rep.email || "No email"} Â· ${rep.phone || "No phone"}</div>
-                        </div>
+                  <div style="margin-top:12px;">
+                    <span class="chip">${user.role || "customer"}</span>
+                    <span class="chip">${user.status || "active"}</span>
+                    <span class="chip">${user.approvalStatus || "approved"}</span>
+                  </div>
 
-                        <div>
-                          <span class="chip">${rep.status || "active"}</span>
-                          <span class="chip">@${rep.username || "no-username"}</span>
-                        </div>
-
-                        <div class="muted">
-                          Company: ${rep.companyId || "â"}<br>
-                          Reports To: ${rep.reportsTo || "â"}
-                        </div>
-
-                        <div class="rep-actions">
-                          <button class="btn secondary edit-rep-btn" data-id="${rep.id}">Edit</button>
-                        </div>
-                      </div>
-                    `
-                  )
-                  .join("")}
-              </div>
-            `
-        }
-      </section>
-    </main>
+                  <div class="top-actions" style="margin-top:14px;">
+                    <button class="btn btn-secondary edit-user-btn" data-id="${user.id}" type="button">Edit</button>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          `
+      }
+    </section>
   `;
 
-  document.getElementById("openRepModalBtn")?.addEventListener("click", () => openRepModal());
-
-  document.querySelectorAll(".edit-rep-btn").forEach((btn) => {
+  document.querySelectorAll(".edit-user-btn").forEach(btn => {
     btn.addEventListener("click", () => {
-      const rep = salesRepState.reps.find((item) => item.id === btn.dataset.id);
-      openRepModal(rep);
+      const user = state.users.find(item => item.id === btn.dataset.id);
+      openUserModal(user);
     });
   });
 }
 
-async function saveRep(e) {
+async function saveUser(e) {
   e.preventDefault();
 
-  const payload = {
-    fullName: document.getElementById("repFullName").value.trim(),
-    username: document.getElementById("repUsername").value.trim(),
-    email: document.getElementById("repEmail").value.trim(),
-    phone: document.getElementById("repPhone").value.trim(),
-    status: document.getElementById("repStatus").value,
-    notes: document.getElementById("repNotes").value.trim()
-  };
-
-  if (!payload.fullName || !payload.username) {
-    showToast("Name and username are required.", "error");
+  if (!state.editingId) {
+    showToast("No user selected.", "error");
     return;
   }
 
-  if (salesRepState.editingId) {
-    await updateSalesRep(salesRepState.editingId, payload);
-    showToast("Sales rep updated.");
-  } else {
-    await createSalesRep(payload, salesRepState.user);
-    showToast("Sales rep created.");
-  }
+  const payload = {
+    name: document.getElementById("editUserName").value.trim(),
+    email: document.getElementById("editUserEmail").value.trim().toLowerCase(),
+    phone: document.getElementById("editUserPhone").value.trim(),
+    role: document.getElementById("editUserRole").value,
+    status: document.getElementById("editUserStatus").value,
+    approvalStatus: document.getElementById("editUserApproval").value,
+    reportsTo: document.getElementById("editUserReportsTo").value.trim(),
+    active: document.getElementById("editUserStatus").value !== "inactive"
+  };
 
-  closeRepModal();
-  await loadSalesReps(salesRepState.user);
-  renderPage();
+  try {
+    await updateDocument("users", state.editingId, payload);
+    closeUserModal();
+    await loadUsers(state.user);
+    renderUsers();
+    showToast("User updated.");
+  } catch (error) {
+    console.error(error);
+    showToast(error.message || "Could not update user.", "error");
+  }
 }
 
 requireAuth(async (user) => {
-  injectStyles();
-  await bindTopbar(user);
+  await bindTopbar(user, "Users");
 
-  if (!canAccess(user.role, "sales_reps")) {
-    document.getElementById("salesRepsRoot").innerHTML = `<section class="glass-card" style="margin:22px;">Access denied for sales reps.</section>`;
+  const sidebar = document.getElementById("sidebar");
+  if (sidebar) {
+    sidebar.innerHTML = renderSidebar(user.role, "users");
+  }
+
+  if (!canAccess(user.role, "users")) {
+    document.getElementById("usersRoot").innerHTML =
+      `<section class="glass-card aurora-card shine-border">Access denied.</section>`;
     return;
   }
 
-  const topSidebar = document.getElementById("sidebar");
-  if (topSidebar) {
-    topSidebar.innerHTML = "";
-  }
-
-  const root = document.getElementById("salesRepsRoot");
-  root.innerHTML = `<section class="glass-card" style="margin:22px;">Loading sales reps...</section>`;
+  document.getElementById("usersRoot").innerHTML =
+    `<section class="glass-card aurora-card shine-border">Loading users...</section>`;
 
   try {
-    await loadSalesReps(user);
-    renderPage();
-  } catch (e) {
-    root.innerHTML = `<section class="glass-card" style="margin:22px;">Sales reps page failed: ${e.message || e}</section>`;
+    await loadUsers(user);
+    renderUsers();
+  } catch (error) {
+    console.error(error);
+    document.getElementById("usersRoot").innerHTML =
+      `<section class="glass-card aurora-card shine-border">Users page failed: ${error.message || error}</section>`;
   }
 
-  document.getElementById("repModalCloseBtn")?.addEventListener("click", closeRepModal);
-  document.getElementById("repModalCancelBtn")?.addEventListener("click", closeRepModal);
-  document.getElementById("repForm")?.addEventListener("submit", saveRep);
+  document.getElementById("userModalCloseBtn")?.addEventListener("click", closeUserModal);
+  document.getElementById("userModalCancelBtn")?.addEventListener("click", closeUserModal);
+  document.getElementById("userForm")?.addEventListener("submit", saveUser);
 });
