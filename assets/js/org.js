@@ -37,8 +37,10 @@ let CURRENT_MODAL_USER_ID = null;
 requireAuth(async (user) => {
   CURRENT_USER = user;
   await bindTopbar(user, "Organization");
+
   const sidebar = document.getElementById("sidebar");
   if (sidebar) sidebar.innerHTML = renderSidebar(user.role, "org");
+
   await loadOrgChart();
 });
 
