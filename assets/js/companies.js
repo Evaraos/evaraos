@@ -1,10 +1,10 @@
 import {
   bindTopbar,
   requireAuth,
+  renderSidebar,
   fetchAllCollection,
-  fetchCompanyCollection,
-  createCompany,
-  updateCompany
+  createDocument,
+  updateDocument
 } from "./app.js";
 
 import { canAccess } from "./roles.js";
@@ -42,138 +42,26 @@ function showToast(message, variant = "success") {
   setTimeout(() => toast.remove(), 2600);
 }
 
-function injectStyles() {
-  if (document.getElementById("companiesUpgradeStyles")) return;
-
-  const style = document.createElement("style");
-  style.id = "companiesUpgradeStyles";
-  style.textContent = `
-    .page-main{
-      display:flex;
-      flex-direction:column;
-      gap:22px;
-      padding:22px;
-    }
-    .card-grid{
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:16px;
-    }
-    .company-card{
-      border-radius:24px;
-      padding:18px;
-      background:rgba(255,255,255,.03);
-      border:1px solid rgba(255,255,255,.08);
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-    .company-actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:8px;
-    }
-    .muted{
-      color:#aeb8c8;
-      font-size:13px;
-    }
-    .modal-backdrop{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.45);
-      backdrop-filter:blur(8px);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      z-index:9998;
-      padding:18px;
-    }
-    .modal-backdrop.open{
-      display:flex;
-    }
-    .modal-card{
-      width:min(760px,100%);
-      max-height:90vh;
-      overflow:auto;
-      border-radius:28px;
-      background:rgba(14,16,24,.96);
-      border:1px solid rgba(255,255,255,.08);
-      padding:22px;
-      box-shadow:0 25px 60px rgba(0,0,0,.35);
-    }
-    .form-grid{
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:14px;
-      margin-top:16px;
-    }
-    .full{
-      grid-column:1/-1;
-    }
-    .field{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-    .field label{
-      font-size:13px;
-      color:#b4bfd0;
-    }
-    .field input,
-    .field select,
-    .field textarea{
-      width:100%;
-      padding:14px 16px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.04);
-      color:#fff;
-      outline:none;
-    }
-    .top-actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-    .empty-state{
-      color:#aeb8c8;
-      padding:12px 0 4px;
-    }
-    .chip{
-      display:inline-flex;
-      padding:6px 10px;
-      border-radius:999px;
-      background:rgba(255,255,255,.08);
-      font-size:12px;
-      margin:6px 8px 0 0;
-      text-transform:capitalize;
-    }
-    @media (max-width: 700px){
-      .card-grid{ grid-template-columns:1fr; }
-      .form-grid{ grid-template-columns:1fr; }
-    }
-  `;
-  document.head.appendChild(style);
+function sanitizeSlug(value = "") {
+  return String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 async function loadCompanies(user) {
   companyState.user = user;
-
-  if (user.role === "super_admin") {
-    companyState.companies = await fetchAllCollection("companies");
-  } else {
-    companyState.companies = await fetchCompanyCollection("companies", user.companyId).catch(() => []);
-    if (!companyState.companies.length) {
-      const all = await fetchAllCollection("companies");
-      companyState.companies = all.filter((item) => item.id === user.companyId || item.companyId === user.companyId);
-    }
-  }
+  companyState.companies = await fetchAllCollection("companies", {
+    orderByField: "name",
+    orderDirection: "asc",
+    max: 500
+  });
 }
 
 function openCompanyModal(company = null) {
   companyState.editingId = company?.id || null;
-  document.getElementById("companyModal").classList.add("open");
+  document.getElementById("companyModal")?.classList.add("open");
   document.getElementById("companyModalTitle").textContent = company ? "Edit Company" : "Add Company";
 
   document.getElementById("companyName").value = company?.name || "";
@@ -190,76 +78,64 @@ function openCompanyModal(company = null) {
 }
 
 function closeCompanyModal() {
-  document.getElementById("companyModal").classList.remove("open");
+  document.getElementById("companyModal")?.classList.remove("open");
   companyState.editingId = null;
 }
 
-function renderPage() {
+function renderCompanies() {
   const root = document.getElementById("companiesRoot");
+  if (!root) return;
+
   root.innerHTML = `
-    <main class="page-main">
-      <section class="glass-card">
-        <div class="section-title-row">
-          <div>
-            <h1 style="margin:0;">Companies</h1>
-            <p class="muted" style="margin:10px 0 0;">Create, edit, and manage company records.</p>
-          </div>
-          <div class="top-actions">
-            <button class="btn" id="openCompanyModalBtn">Add Company</button>
-          </div>
+    <section class="glass-card aurora-card shine-border">
+      <div class="section-title-row">
+        <div>
+          <h2 style="margin:0;">Company Records</h2>
+          <p class="muted" style="margin:8px 0 0;">Create, edit, and manage company records.</p>
         </div>
-      </section>
-
-      <section class="glass-card">
-        <div class="section-title-row">
-          <h2>Companies List</h2>
-          <div class="muted">${companyState.companies.length} company record(s)</div>
+        <div class="top-actions">
+          <button class="btn" id="openCompanyModalBtn" type="button">Add Company</button>
         </div>
+      </div>
 
-        ${
-          !companyState.companies.length
-            ? `<div class="empty-state">No companies found.</div>`
-            : `
-              <div class="card-grid" style="margin-top:14px;">
-                ${companyState.companies
-                  .map(
-                    (company) => `
-                      <div class="company-card">
-                        <div>
-                          <strong>${company.name || company.id || "Unnamed Company"}</strong>
-                          <div class="muted" style="margin-top:6px;">${company.city || "â"} ${company.state || ""}</div>
-                        </div>
+      ${
+        !companyState.companies.length
+          ? `<div class="muted" style="padding-top:16px;">No companies found.</div>`
+          : `
+            <div class="quick-links-grid" style="margin-top:18px;">
+              ${companyState.companies.map(company => `
+                <div class="quick-link-card aurora-card shine-border" style="display:block; min-height:auto;">
+                  <div>
+                    <strong>${company.name || company.id || "Unnamed Company"}</strong>
+                    <div class="muted" style="margin-top:8px;">
+                      ${company.city || "—"} ${company.state || ""}<br>
+                      Owner: ${company.ownerName || "—"}<br>
+                      Email: ${company.ownerEmail || company.email || "—"}<br>
+                      Phone: ${company.phone || "—"}
+                    </div>
+                  </div>
 
-                        <div>
-                          <span class="chip">${company.status || "active"}</span>
-                          <span class="chip">${company.slug || company.id || "no-slug"}</span>
-                        </div>
+                  <div style="margin-top:12px;">
+                    <span class="chip">${company.status || "active"}</span>
+                    <span class="chip">${company.slug || company.id || "no-slug"}</span>
+                  </div>
 
-                        <div class="muted">
-                          Owner: ${company.ownerName || "â"}<br>
-                          Email: ${company.ownerEmail || company.email || "â"}<br>
-                          Phone: ${company.phone || "â"}
-                        </div>
-
-                        <div class="company-actions">
-                          <button class="btn secondary edit-company-btn" data-id="${company.id}">Edit</button>
-                        </div>
-                      </div>
-                    `
-                  )
-                  .join("")}
-              </div>
-            `
-        }
-      </section>
-    </main>
+                  <div class="top-actions" style="margin-top:14px;">
+                    <button class="btn btn-secondary edit-company-btn" data-id="${company.id}" type="button">Edit</button>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          `
+      }
+    </section>
   `;
 
   document.getElementById("openCompanyModalBtn")?.addEventListener("click", () => openCompanyModal());
 
-  document.querySelectorAll(".edit-company-btn").forEach((btn) => {
+  document.querySelectorAll(".edit-company-btn").forEach(btn => {
     btn.addEventListener("click", () => {
-      const company = companyState.companies.find((item) => item.id === btn.dataset.id);
+      const company = companyState.companies.find(item => item.id === btn.dataset.id);
       openCompanyModal(company);
     });
   });
@@ -270,16 +146,17 @@ async function saveCompany(e) {
 
   const payload = {
     name: document.getElementById("companyName").value.trim(),
-    slug: document.getElementById("companySlug").value.trim(),
+    slug: sanitizeSlug(document.getElementById("companySlug").value || document.getElementById("companyName").value),
     city: document.getElementById("companyCity").value.trim(),
     state: document.getElementById("companyStateField").value.trim(),
     phone: document.getElementById("companyPhone").value.trim(),
-    email: document.getElementById("companyEmail").value.trim(),
+    email: document.getElementById("companyEmail").value.trim().toLowerCase(),
     status: document.getElementById("companyStatus").value,
     brandColor: document.getElementById("companyBrandColor").value.trim(),
     ownerName: document.getElementById("companyOwnerName").value.trim(),
-    ownerEmail: document.getElementById("companyOwnerEmail").value.trim(),
-    notes: document.getElementById("companyNotes").value.trim()
+    ownerEmail: document.getElementById("companyOwnerEmail").value.trim().toLowerCase(),
+    notes: document.getElementById("companyNotes").value.trim(),
+    companyId: sanitizeSlug(document.getElementById("companySlug").value || document.getElementById("companyName").value)
   };
 
   if (!payload.name) {
@@ -287,47 +164,48 @@ async function saveCompany(e) {
     return;
   }
 
-  if (companyState.editingId) {
-    await updateCompany(companyState.editingId, payload);
-    showToast("Company updated.");
-  } else {
-    await createCompany(
-      {
-        ...payload,
-        companyId: payload.slug || payload.name
-      },
-      companyState.user
-    );
-    showToast("Company created.");
-  }
+  try {
+    if (companyState.editingId) {
+      await updateDocument("companies", companyState.editingId, payload);
+      showToast("Company updated.");
+    } else {
+      await createDocument("companies", payload);
+      showToast("Company created.");
+    }
 
-  closeCompanyModal();
-  await loadCompanies(companyState.user);
-  renderPage();
+    closeCompanyModal();
+    await loadCompanies(companyState.user);
+    renderCompanies();
+  } catch (error) {
+    console.error(error);
+    showToast(error.message || "Could not save company.", "error");
+  }
 }
 
 requireAuth(async (user) => {
-  injectStyles();
-  await bindTopbar(user);
+  await bindTopbar(user, "Companies");
+
+  const sidebar = document.getElementById("sidebar");
+  if (sidebar) {
+    sidebar.innerHTML = renderSidebar(user.role, "companies");
+  }
 
   if (!canAccess(user.role, "companies")) {
-    document.getElementById("companiesRoot").innerHTML = `<section class="glass-card" style="margin:22px;">Access denied for companies.</section>`;
+    document.getElementById("companiesRoot").innerHTML =
+      `<section class="glass-card aurora-card shine-border">Access denied.</section>`;
     return;
   }
 
-  const topSidebar = document.getElementById("sidebar");
-  if (topSidebar) {
-    topSidebar.innerHTML = "";
-  }
-
-  const root = document.getElementById("companiesRoot");
-  root.innerHTML = `<section class="glass-card" style="margin:22px;">Loading companies...</section>`;
+  document.getElementById("companiesRoot").innerHTML =
+    `<section class="glass-card aurora-card shine-border">Loading companies...</section>`;
 
   try {
     await loadCompanies(user);
-    renderPage();
-  } catch (e) {
-    root.innerHTML = `<section class="glass-card" style="margin:22px;">Companies page failed: ${e.message || e}</section>`;
+    renderCompanies();
+  } catch (error) {
+    console.error(error);
+    document.getElementById("companiesRoot").innerHTML =
+      `<section class="glass-card aurora-card shine-border">Companies page failed: ${error.message || error}</section>`;
   }
 
   document.getElementById("companyModalCloseBtn")?.addEventListener("click", closeCompanyModal);
