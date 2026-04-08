@@ -21,52 +21,164 @@
         <a href="/evaraos/index.html" class="nav-pill">Home</a>
         <a href="/evaraos/login.html" class="nav-pill">Login</a>
         <a href="/evaraos/signup.html" class="nav-pill active">Sign Up</a>
+
+        <div class="nav-dropdown">
+          <button class="nav-pill nav-dropdown-toggle" type="button">Pages</button>
+          <div class="nav-dropdown-menu">
+            <a href="/evaraos/dashboard.html">Dashboard</a>
+            <a href="/evaraos/companies.html">Companies</a>
+            <a href="/evaraos/users.html">Users</a>
+            <a href="/evaraos/leads.html">Leads</a>
+            <a href="/evaraos/jobs.html">Jobs</a>
+          </div>
+        </div>
       </nav>
     </div>
   </header>
 
   <main class="login-shell">
-    <section class="login-panel glass-card">
+    <section class="login-panel glass-card aurora-card">
       <div class="login-badge-wrap">
         <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos" class="login-badge" />
       </div>
 
       <h1 class="login-title">Create Account</h1>
-      <p class="login-subtitle">Restore your signup page now. Account creation wiring comes next.</p>
+      <p class="login-subtitle">
+        Set up your account, choose your username, and add an optional security phone for new-device verification later.
+      </p>
 
       <form id="signupForm" class="login-form">
-        <label class="field-label" for="signupName">Full Name</label>
-        <input
-          id="signupName"
-          name="signupName"
-          type="text"
-          class="input"
-          placeholder="Full Name"
-          autocomplete="name"
-          required
-        />
+        <div class="form-grid-2">
+          <div class="form-group aurora-field-group">
+            <label class="field-label" for="signupName">Full Name</label>
+            <input
+              id="signupName"
+              name="signupName"
+              type="text"
+              class="input"
+              placeholder="Full Name"
+              autocomplete="name"
+              required
+            />
+          </div>
 
-        <label class="field-label" for="signupEmail">Email</label>
-        <input
-          id="signupEmail"
-          name="signupEmail"
-          type="email"
-          class="input"
-          placeholder="Email"
-          autocomplete="email"
-          required
-        />
+          <div class="form-group aurora-field-group">
+            <label class="field-label" for="signupUsername">Username</label>
+            <input
+              id="signupUsername"
+              name="signupUsername"
+              type="text"
+              class="input"
+              placeholder="Username"
+              autocomplete="username"
+              required
+            />
+          </div>
+        </div>
 
-        <label class="field-label" for="signupUsername">Username</label>
-        <input
-          id="signupUsername"
-          name="signupUsername"
-          type="text"
-          class="input"
-          placeholder="Username"
-          autocomplete="username"
-          required
-        />
+        <div class="form-group aurora-field-group">
+          <label class="field-label" for="signupEmail">Email</label>
+          <input
+            id="signupEmail"
+            name="signupEmail"
+            type="email"
+            class="input"
+            placeholder="Email"
+            autocomplete="email"
+            required
+          />
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group aurora-field-group">
+            <label class="field-label" for="signupPassword">Create Password</label>
+            <div class="password-wrap">
+              <input
+                id="signupPassword"
+                name="signupPassword"
+                type="password"
+                class="input"
+                placeholder="Create Password"
+                autocomplete="new-password"
+                required
+              />
+              <button
+                type="button"
+                id="toggleSignupPasswordBtn"
+                class="password-toggle"
+                aria-label="Show password"
+                aria-pressed="false"
+              >
+                <svg id="signupPasswordIconOpen" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 5c5.6 0 9.7 4.7 10.9 6.4.27.36.27.86 0 1.22C21.7 14.3 17.6 19 12 19S2.3 14.3 1.1 12.62a1 1 0 0 1 0-1.22C2.3 9.7 6.4 5 12 5Zm0 2C8.52 7 5.6 9.74 3.98 12 5.6 14.26 8.52 17 12 17s6.4-2.74 8.02-5C18.4 9.74 15.48 7 12 7Zm0 1.8A3.2 3.2 0 1 1 8.8 12 3.2 3.2 0 0 1 12 8.8Zm0 2A1.2 1.2 0 1 0 13.2 12 1.2 1.2 0 0 0 12 10.8Z"/>
+                </svg>
+                <svg id="signupPasswordIconClosed" viewBox="0 0 24 24" aria-hidden="true" style="display:none;">
+                  <path d="M3.28 2.22 21.78 20.72l-1.06 1.06-3.16-3.15A12.9 12.9 0 0 1 12 19c-5.6 0-9.7-4.7-10.9-6.4a1 1 0 0 1 0-1.22A18.3 18.3 0 0 1 6 7.02L2.22 3.28l1.06-1.06ZM7.5 8.52A15.24 15.24 0 0 0 3.98 12C5.6 14.26 8.52 17 12 17c1.45 0 2.8-.32 4.02-.9l-2.17-2.17A3.18 3.18 0 0 1 10.07 10L7.5 8.52Zm4.82-1.48c5.1.13 8.84 4.52 9.58 5.36.27.36.27.86 0 1.22-.45.63-1.34 1.7-2.62 2.76l-1.43-1.43A13.42 13.42 0 0 0 20.02 12c-1.4-1.79-4.06-4.87-7.7-4.97V7.04Zm-.5 2.06a3.2 3.2 0 0 1 3.08 3.96l-3.95-3.95c.28-.01.57-.01.87-.01Z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group aurora-field-group">
+            <label class="field-label" for="signupPasswordConfirm">Confirm Password</label>
+            <div class="password-wrap">
+              <input
+                id="signupPasswordConfirm"
+                name="signupPasswordConfirm"
+                type="password"
+                class="input"
+                placeholder="Confirm Password"
+                autocomplete="new-password"
+                required
+              />
+              <button
+                type="button"
+                id="toggleSignupPasswordConfirmBtn"
+                class="password-toggle"
+                aria-label="Show password"
+                aria-pressed="false"
+              >
+                <svg id="signupPasswordConfirmIconOpen" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 5c5.6 0 9.7 4.7 10.9 6.4.27.36.27.86 0 1.22C21.7 14.3 17.6 19 12 19S2.3 14.3 1.1 12.62a1 1 0 0 1 0-1.22C2.3 9.7 6.4 5 12 5Zm0 2C8.52 7 5.6 9.74 3.98 12 5.6 14.26 8.52 17 12 17s6.4-2.74 8.02-5C18.4 9.74 15.48 7 12 7Zm0 1.8A3.2 3.2 0 1 1 8.8 12 3.2 3.2 0 0 1 12 8.8Zm0 2A1.2 1.2 0 1 0 13.2 12 1.2 1.2 0 0 0 12 10.8Z"/>
+                </svg>
+                <svg id="signupPasswordConfirmIconClosed" viewBox="0 0 24 24" aria-hidden="true" style="display:none;">
+                  <path d="M3.28 2.22 21.78 20.72l-1.06 1.06-3.16-3.15A12.9 12.9 0 0 1 12 19c-5.6 0-9.7-4.7-10.9-6.4a1 1 0 0 1 0-1.22A18.3 18.3 0 0 1 6 7.02L2.22 3.28l1.06-1.06ZM7.5 8.52A15.24 15.24 0 0 0 3.98 12C5.6 14.26 8.52 17 12 17c1.45 0 2.8-.32 4.02-.9l-2.17-2.17A3.18 3.18 0 0 1 10.07 10L7.5 8.52Zm4.82-1.48c5.1.13 8.84 4.52 9.58 5.36.27.36.27.86 0 1.22-.45.63-1.34 1.7-2.62 2.76l-1.43-1.43A13.42 13.42 0 0 0 20.02 12c-1.4-1.79-4.06-4.87-7.7-4.97V7.04Zm-.5 2.06a3.2 3.2 0 0 1 3.08 3.96l-3.95-3.95c.28-.01.57-.01.87-.01Z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <section class="security-inline-card aurora-card">
+          <h3 class="inline-card-title">Optional Security Phone</h3>
+          <p class="inline-card-copy">
+            Add a phone number now so your account can use number verification later for a new device or extra account recovery protection.
+          </p>
+
+          <div class="form-grid-2">
+            <div class="form-group aurora-field-group">
+              <label class="field-label" for="signupSecurityPhone">Security Phone</label>
+              <input
+                id="signupSecurityPhone"
+                name="signupSecurityPhone"
+                type="tel"
+                class="input"
+                placeholder="+1 555 555 1234"
+                autocomplete="tel"
+              />
+            </div>
+
+            <div class="form-group aurora-field-group">
+              <label class="field-label" for="signupSmsProtection">
+                New Device Protection
+              </label>
+              <select id="signupSmsProtection" class="input">
+                <option value="off">Off</option>
+                <option value="on">On</option>
+              </select>
+            </div>
+          </div>
+        </section>
 
         <div class="login-actions-row">
           <button type="submit" class="btn btn-primary">Create Account</button>
