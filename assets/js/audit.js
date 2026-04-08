@@ -10,8 +10,7 @@ import { canAccess } from "./roles.js";
 const auditState = {
   user: null,
   logs: [],
-  filtered: [],
-  rollbackTarget: null
+  filtered: []
 };
 
 function formatDate(value) {
@@ -39,6 +38,7 @@ function applyFilters() {
 
   auditState.filtered = auditState.logs.filter(log => {
     const matchesAction = action === "all" ? true : String(log.action || "") === action;
+
     const haystack = [
       log.actorName,
       log.targetUserName,
@@ -47,90 +47,105 @@ function applyFilters() {
       log.oldRole,
       log.newRole,
       log.oldCompanyId,
-      log.newCompanyId
+      log.newCompanyId,
+      log.actorRole
     ]
       .filter(Boolean)
       .join(" ")
       .toLowerCase();
 
     const matchesSearch = !search || haystack.includes(search);
+
     return matchesAction && matchesSearch;
   }).reverse();
 
   renderAudit();
 }
 
+function renderAnalytics() {
+  const root = document.getElementById("auditAnalyticsRoot");
+  if (!root) return;
+
+  const uniqueActors = new Set(auditState.filtered.map(item => item.actorUserId).filter(Boolean)).size;
+  const roleChanges = auditState.filtered.filter(item => String(item.action || "").includes("role")).length;
+  const companyMoves = auditState.filtered.filter(item => String(item.action || "").includes("company")).length;
+
+  root.innerHTML = `
+    <div class="grid grid-3">
+      <div class="card aurora-card shine-border">
+        <h3>Total Visible Logs</h3>
+        <p style="font-size:32px; font-weight:800;">${auditState.filtered.length}</p>
+      </div>
+      <div class="card aurora-card shine-border">
+        <h3>Unique Actors</h3>
+        <p style="font-size:32px; font-weight:800;">${uniqueActors}</p>
+      </div>
+      <div class="card aurora-card shine-border">
+        <h3>Role / Company Changes</h3>
+        <p style="font-size:32px; font-weight:800;">${roleChanges + companyMoves}</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderSuspicious() {
+  const root = document.getElementById("auditSuspiciousRoot");
+  if (!root) return;
+
+  const suspiciousLogs = auditState.filtered.filter(item =>
+    String(item.action || "").includes("company") &&
+    String(item.oldCompanyId || "") !== String(item.newCompanyId || "")
+  );
+
+  root.innerHTML = suspiciousLogs.length
+    ? suspiciousLogs.slice(0, 5).map(item => `
+        <div class="card aurora-card shine-border" style="margin-top:10px;">
+          <strong>${item.targetUserName || "User"}</strong>
+          <div class="muted" style="margin-top:8px;">
+            ${item.action || "change"}<br>
+            ${item.oldCompanyId || "—"} → ${item.newCompanyId || "—"}<br>
+            ${formatDate(item.createdAt)}
+          </div>
+        </div>
+      `).join("")
+    : `<div class="audit-empty">No suspicious signals found.</div>`;
+}
+
+function renderCharts() {
+  const root = document.getElementById("auditChartsRoot");
+  if (!root) return;
+
+  const counts = {};
+  auditState.filtered.forEach(item => {
+    const key = item.action || "unknown";
+    counts[key] = (counts[key] || 0) + 1;
+  });
+
+  root.innerHTML = Object.keys(counts).length
+    ? `
+      <div class="grid grid-3">
+        ${Object.entries(counts).map(([key, value]) => `
+          <div class="card aurora-card shine-border">
+            <h3>${key}</h3>
+            <p style="font-size:32px; font-weight:800;">${value}</p>
+          </div>
+        `).join("")}
+      </div>
+    `
+    : `<div class="audit-empty">No chart data.</div>`;
+}
+
 function renderAudit() {
   const root = document.getElementById("auditRoot");
   const countLabel = document.getElementById("auditCountLabel");
-  const analytics = document.getElementById("auditAnalyticsRoot");
-  const suspicious = document.getElementById("auditSuspiciousRoot");
-  const charts = document.getElementById("auditChartsRoot");
 
-  if (countLabel) countLabel.textContent = `${auditState.filtered.length} logs`;
-
-  if (analytics) {
-    const uniqueActors = new Set(auditState.filtered.map(item => item.actorUserId).filter(Boolean)).size;
-    const roleChanges = auditState.filtered.filter(item => String(item.action || "").includes("role")).length;
-    const companyMoves = auditState.filtered.filter(item => String(item.action || "").includes("company")).length;
-
-    analytics.innerHTML = `
-      <div class="grid grid-3">
-        <div class="card aurora-card shine-border">
-          <h3>Total Visible Logs</h3>
-          <p style="font-size:32px; font-weight:800;">${auditState.filtered.length}</p>
-        </div>
-        <div class="card aurora-card shine-border">
-          <h3>Unique Actors</h3>
-          <p style="font-size:32px; font-weight:800;">${uniqueActors}</p>
-        </div>
-        <div class="card aurora-card shine-border">
-          <h3>Role / Company Changes</h3>
-          <p style="font-size:32px; font-weight:800;">${roleChanges + companyMoves}</p>
-        </div>
-      </div>
-    `;
+  if (countLabel) {
+    countLabel.textContent = `${auditState.filtered.length} logs`;
   }
 
-  if (suspicious) {
-    const suspiciousLogs = auditState.filtered.filter(item =>
-      String(item.action || "").includes("company") && String(item.oldCompanyId || "") !== String(item.newCompanyId || "")
-    );
-
-    suspicious.innerHTML = suspiciousLogs.length
-      ? suspiciousLogs.slice(0, 5).map(item => `
-          <div class="card aurora-card shine-border" style="margin-top:10px;">
-            <strong>${item.targetUserName || "User"}</strong>
-            <div class="muted" style="margin-top:8px;">
-              ${item.action || "change"}<br>
-              ${item.oldCompanyId || "—"} → ${item.newCompanyId || "—"}<br>
-              ${formatDate(item.createdAt)}
-            </div>
-          </div>
-        `).join("")
-      : `<div class="audit-empty">No suspicious signals found.</div>`;
-  }
-
-  if (charts) {
-    const counts = {};
-    auditState.filtered.forEach(item => {
-      const key = item.action || "unknown";
-      counts[key] = (counts[key] || 0) + 1;
-    });
-
-    charts.innerHTML = Object.keys(counts).length
-      ? `
-          <div class="grid grid-3">
-            ${Object.entries(counts).map(([key, value]) => `
-              <div class="card aurora-card shine-border">
-                <h3>${key}</h3>
-                <p style="font-size:32px; font-weight:800;">${value}</p>
-              </div>
-            `).join("")}
-          </div>
-        `
-      : `<div class="audit-empty">No chart data.</div>`;
-  }
+  renderAnalytics();
+  renderSuspicious();
+  renderCharts();
 
   if (!root) return;
 
