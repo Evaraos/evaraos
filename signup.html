@@ -10,7 +10,7 @@
   <div class="page-grid-overlay"></div>
 
   <header class="landing-header">
-    <div class="landing-header-inner aurora-card">
+    <div class="landing-header-inner glass-shell">
       <a href="/evaraos/index.html" class="brand-link">
         <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos logo" class="brand-logo" />
         <div class="brand-copy">
@@ -21,26 +21,29 @@
 
       <nav class="landing-nav">
         <a href="/evaraos/index.html" class="nav-pill" data-nav-link>Home</a>
-        <a href="/evaraos/login.html" class="nav-pill" data-nav-link>Login</a>
 
-        <button
-          type="button"
-          class="theme-toggle-compact"
-          data-theme-toggle
-          aria-label="Switch theme"
-          aria-pressed="false"
-        >
-          <span class="theme-toggle-icon">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 4.75a.75.75 0 0 1 .75.75v1.25a.75.75 0 0 1-1.5 0V5.5a.75.75 0 0 1 .75-.75Zm0 12.5a.75.75 0 0 1 .75.75v1.25a.75.75 0 0 1-1.5 0V18a.75.75 0 0 1 .75-.75Zm7.25-4.5a.75.75 0 0 1 0-1.5h1.25a.75.75 0 0 1 0 1.5H19.25Zm-16 0a.75.75 0 0 1 0-1.5H4.5a.75.75 0 0 1 0 1.5H3.25Zm12.1 5.04a.75.75 0 0 1 1.06 0l.88.88a.75.75 0 0 1-1.06 1.06l-.88-.88a.75.75 0 0 1 0-1.06Zm-8.95-8.95a.75.75 0 0 1 1.06 0l.88.88A.75.75 0 0 1 7.28 10.8l-.88-.88a.75.75 0 0 1 0-1.06Zm10.01 1.94a.75.75 0 0 1 0-1.06l.88-.88a.75.75 0 1 1 1.06 1.06l-.88.88a.75.75 0 0 1-1.06 0Zm-8.95 8.95a.75.75 0 0 1 0-1.06l.88-.88a.75.75 0 1 1 1.06 1.06l-.88.88a.75.75 0 0 1-1.06 0ZM12 8a4 4 0 1 1 0 8a4 4 0 0 1 0-8Z"/>
-            </svg>
-          </span>
-          <span class="theme-toggle-icon">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M14.75 3.25a.75.75 0 0 1 .73.93a7.75 7.75 0 0 0 8.34 9.59a.75.75 0 0 1 .54 1.28A10.25 10.25 0 1 1 13.95 2.64a.75.75 0 0 1 .8.61Z"/>
-            </svg>
-          </span>
-        </button>
+        <div class="theme-picker-wrap" data-theme-wrapper>
+          <button
+            class="theme-picker-btn"
+            type="button"
+            data-theme-toggle
+            aria-label="Choose theme"
+            aria-expanded="false"
+          >
+            <span class="theme-picker-dot current-theme-dot"></span>
+            <span class="theme-picker-text">Theme</span>
+          </button>
+
+          <div class="theme-picker-menu glass-popover" data-theme-menu>
+            <button type="button" class="theme-chip" data-theme-chip data-theme-value="dark"><span class="theme-swatch theme-dark"></span><span>Dark</span></button>
+            <button type="button" class="theme-chip" data-theme-chip data-theme-value="light"><span class="theme-swatch theme-light"></span><span>Light</span></button>
+            <button type="button" class="theme-chip" data-theme-chip data-theme-value="blue"><span class="theme-swatch theme-blue"></span><span>Blue</span></button>
+            <button type="button" class="theme-chip" data-theme-chip data-theme-value="red"><span class="theme-swatch theme-red"></span><span>Red</span></button>
+            <button type="button" class="theme-chip" data-theme-chip data-theme-value="pink"><span class="theme-swatch theme-pink"></span><span>Pink</span></button>
+            <button type="button" class="theme-chip" data-theme-chip data-theme-value="green"><span class="theme-swatch theme-green"></span><span>Green</span></button>
+            <button type="button" class="theme-chip" data-theme-chip data-theme-value="purple"><span class="theme-swatch theme-purple"></span><span>Purple</span></button>
+          </div>
+        </div>
 
         <div class="nav-dropdown" data-nav-dropdown>
           <button
@@ -55,8 +58,7 @@
             <span class="hamburger-line"></span>
           </button>
 
-          <div class="nav-dropdown-menu aurora-card" data-nav-menu>
-            <a href="/evaraos/index.html" data-nav-link>Home</a>
+          <div class="nav-dropdown-menu glass-popover" data-nav-menu>
             <a href="/evaraos/login.html" data-nav-link>Login</a>
             <a href="/evaraos/signup.html" data-nav-link>Sign Up</a>
             <a href="/evaraos/dashboard.html" data-nav-link>Dashboard</a>
@@ -71,7 +73,7 @@
   </header>
 
   <main class="login-shell">
-    <section class="login-panel aurora-card">
+    <section class="login-panel glass-card">
       <div class="login-badge-wrap">
         <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos" class="login-badge" />
       </div>
@@ -85,7 +87,7 @@
         <div class="form-grid-2">
           <div class="form-group">
             <label class="field-label" for="signupName">Full Name</label>
-            <div class="aurora-input-wrap">
+            <div class="input-shell">
               <input
                 id="signupName"
                 name="signupName"
@@ -100,7 +102,7 @@
 
           <div class="form-group">
             <label class="field-label" for="signupUsername">Username</label>
-            <div class="aurora-input-wrap">
+            <div class="input-shell">
               <input
                 id="signupUsername"
                 name="signupUsername"
@@ -116,7 +118,7 @@
 
         <div class="form-group">
           <label class="field-label" for="signupEmail">Email</label>
-          <div class="aurora-input-wrap">
+          <div class="input-shell">
             <input
               id="signupEmail"
               name="signupEmail"
@@ -132,7 +134,7 @@
         <div class="form-grid-2">
           <div class="form-group">
             <label class="field-label" for="signupPassword">Create Password</label>
-            <div class="aurora-input-wrap password-wrap">
+            <div class="input-shell password-wrap">
               <input
                 id="signupPassword"
                 name="signupPassword"
@@ -161,7 +163,7 @@
 
           <div class="form-group">
             <label class="field-label" for="signupPasswordConfirm">Confirm Password</label>
-            <div class="aurora-input-wrap password-wrap">
+            <div class="input-shell password-wrap">
               <input
                 id="signupPasswordConfirm"
                 name="signupPasswordConfirm"
@@ -189,7 +191,7 @@
           </div>
         </div>
 
-        <section class="security-inline-card aurora-card">
+        <section class="security-inline-card glass-card">
           <h3 class="inline-card-title">Optional Security Phone</h3>
           <p class="inline-card-copy">
             Add a phone number now so your account can use number authorization later for a new device or extra account recovery protection.
@@ -198,7 +200,7 @@
           <div class="form-grid-2">
             <div class="form-group">
               <label class="field-label" for="signupSecurityPhone">Security Phone</label>
-              <div class="aurora-input-wrap">
+              <div class="input-shell">
                 <input
                   id="signupSecurityPhone"
                   name="signupSecurityPhone"
@@ -212,7 +214,7 @@
 
             <div class="form-group">
               <label class="field-label" for="signupSmsProtection">New Device Protection</label>
-              <div class="aurora-input-wrap">
+              <div class="input-shell">
                 <select id="signupSmsProtection" class="input">
                   <option value="off">Off</option>
                   <option value="on">On</option>
@@ -223,8 +225,8 @@
         </section>
 
         <div class="login-actions-row">
-          <button type="submit" class="btn btn-primary">Create Account</button>
-          <a href="/evaraos/login.html" class="btn btn-outline">Back to Login</a>
+          <button type="submit" class="btn btn-theme-primary">Create Account</button>
+          <a href="/evaraos/login.html" class="btn btn-theme-secondary">Back to Login</a>
         </div>
 
         <p id="signupMessage" class="login-message"></p>
