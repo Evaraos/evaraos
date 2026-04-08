@@ -1,20 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Evaraos Inc</title>
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
 </head>
-<body class="landing-page app-theme">
-  <div class="app-bg">
-    <div class="bg-orb bg-orb-1"></div>
-    <div class="bg-orb bg-orb-2"></div>
-    <div class="bg-grid"></div>
-  </div>
+<body class="landing-page">
+  <div class="page-grid-overlay"></div>
 
   <header class="landing-header">
-    <div class="landing-header-inner glass-card aurora-card">
+    <div class="landing-header-inner aurora-card">
       <a href="/evaraos/index.html" class="brand-link">
         <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos logo" class="brand-logo" />
         <div class="brand-copy">
@@ -29,25 +25,32 @@
         <a href="/evaraos/signup.html" class="nav-pill">Sign Up</a>
 
         <div class="nav-dropdown">
-          <button class="nav-pill nav-dropdown-toggle" type="button">Explore</button>
+          <button class="nav-pill nav-dropdown-toggle" type="button">Pages</button>
           <div class="nav-dropdown-menu">
             <a href="/evaraos/dashboard.html">Dashboard</a>
             <a href="/evaraos/companies.html">Companies</a>
             <a href="/evaraos/users.html">Users</a>
             <a href="/evaraos/leads.html">Leads</a>
             <a href="/evaraos/jobs.html">Jobs</a>
-            <a href="/evaraos/sales_reps.html">Sales Reps</a>
-            <a href="/evaraos/performance.html">Performance</a>
-            <a href="/evaraos/audit.html">Audit</a>
-            <a href="/evaraos/org.html">Org Chart</a>
           </div>
         </div>
+
+        <button
+          type="button"
+          class="theme-toggle-compact"
+          data-theme-toggle
+          aria-label="Switch theme"
+          aria-pressed="false"
+        >
+          <span class="theme-toggle-icon">☀</span>
+          <span class="theme-toggle-icon">☾</span>
+        </button>
       </nav>
     </div>
   </header>
 
   <main class="landing-shell">
-    <section class="hero-section glass-card aurora-card shine-border">
+    <section class="hero-section">
       <div class="hero-copy">
         <div class="eyebrow">SUBSIDIARIES ALLOCATION SAAS</div>
         <h1>Run companies like a world-class operating system.</h1>
@@ -58,61 +61,39 @@
 
         <div class="hero-actions">
           <a href="/evaraos/login.html" class="btn btn-primary">Enter Platform</a>
-          <a href="/evaraos/signup.html" class="btn btn-secondary">Create Account</a>
+          <a href="/evaraos/signup.html" class="btn btn-outline">Create Account</a>
         </div>
       </div>
 
-      <div class="hero-visual glass-card aurora-card shine-border">
+      <div class="hero-visual aurora-card">
         <div class="hero-visual-inner">
           <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos" class="hero-logo" />
           <div class="hero-card-title">EVARAOS</div>
           <div class="hero-card-subtitle">
-            Premium infrastructure for subsidiaries, staff, customers, field work, and scale.
+            Premium software infrastructure for subsidiaries, operations, control, and scale.
           </div>
         </div>
       </div>
     </section>
 
     <section class="feature-grid">
-      <article class="feature-card glass-card aurora-card shine-border">
-        <h3>Identity</h3>
-        <p>Multi-company foundation with role-based access and clean company allocation.</p>
+      <article class="feature-card aurora-card">
+        <h3>Operating System</h3>
+        <p>One platform for roles, approvals, workflows, field activity, and scalable business infrastructure.</p>
       </article>
 
-      <article class="feature-card glass-card aurora-card shine-border">
-        <h3>Operations</h3>
-        <p>Manage leads, jobs, users, sales reps, customers, and staff from one system.</p>
+      <article class="feature-card aurora-card">
+        <h3>Multi-Company</h3>
+        <p>Launch and manage multiple subsidiaries with a shared structure while keeping each business organized.</p>
       </article>
 
-      <article class="feature-card glass-card aurora-card shine-border">
-        <h3>Growth</h3>
-        <p>Built to expand into maps, automations, billing, analytics, approvals, and scale.</p>
+      <article class="feature-card aurora-card">
+        <h3>Future-Ready Security</h3>
+        <p>Username login, optional number verification, trusted-device behavior, and a modern auth experience.</p>
       </article>
-    </section>
-
-    <section class="glass-card aurora-card shine-border">
-      <div class="section-title-row">
-        <div>
-          <h2 style="margin:0;">Platform Navigation</h2>
-          <p class="muted" style="margin:8px 0 0;">
-            Jump directly into the main pages of the app.
-          </p>
-        </div>
-      </div>
-
-      <div class="quick-links-grid" style="margin-top:18px;">
-        <a class="quick-link-card" href="/evaraos/dashboard.html">Dashboard</a>
-        <a class="quick-link-card" href="/evaraos/companies.html">Companies</a>
-        <a class="quick-link-card" href="/evaraos/users.html">Users</a>
-        <a class="quick-link-card" href="/evaraos/leads.html">Leads</a>
-        <a class="quick-link-card" href="/evaraos/jobs.html">Jobs</a>
-        <a class="quick-link-card" href="/evaraos/customer_dashboard.html">Customer Portal</a>
-        <a class="quick-link-card" href="/evaraos/performance.html">Performance</a>
-        <a class="quick-link-card" href="/evaraos/audit.html">Audit</a>
-      </div>
     </section>
   </main>
 
-  <script type="module" src="/evaraos/assets/js/app.js"></script>
+  <script type="module" src="/evaraos/assets/js/theme.js"></script>
 </body>
 </html>
