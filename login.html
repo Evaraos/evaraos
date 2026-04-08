@@ -2,7 +2,10 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
   <title>Login • Evaraos Inc</title>
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
 </head>
@@ -11,37 +14,39 @@
 
   <header class="landing-header">
     <div class="landing-header-inner glass-shell">
-      <a href="/evaraos/index.html" class="brand-link">
-        <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos logo" class="brand-logo" />
+      <a href="/evaraos/index.html" class="brand-link" aria-label="Go home">
+        <img
+          src="/evaraos/assets/img/evaraos_logo.png"
+          alt="Evaraos logo"
+          class="brand-logo"
+        />
         <div class="brand-copy">
           <strong>Evaraos Inc</strong>
           <span>Subsidiaries Allocation SaaS</span>
         </div>
       </a>
 
-      <nav class="landing-nav">
+      <nav class="landing-nav" aria-label="Main navigation">
         <a href="/evaraos/index.html" class="nav-pill" data-nav-link>Home</a>
 
-        <div class="theme-picker-wrap" data-theme-wrapper>
+        <div class="theme-control" data-theme-control>
           <button
-            class="theme-picker-btn"
             type="button"
-            data-theme-toggle
-            aria-label="Choose theme"
+            class="theme-core-toggle"
+            data-theme-core-toggle
             aria-expanded="false"
+            aria-label="Theme options"
           >
-            <span class="theme-picker-dot current-theme-dot"></span>
-            <span class="theme-picker-text">Theme</span>
+            <span class="theme-core-dot"></span>
+            <span class="theme-core-label">Theme</span>
           </button>
 
-          <div class="theme-picker-menu glass-popover" data-theme-menu>
-            <button type="button" class="theme-chip" data-theme-chip data-theme-value="dark"><span class="theme-swatch theme-dark"></span><span>Dark</span></button>
-            <button type="button" class="theme-chip" data-theme-chip data-theme-value="light"><span class="theme-swatch theme-light"></span><span>Light</span></button>
-            <button type="button" class="theme-chip" data-theme-chip data-theme-value="blue"><span class="theme-swatch theme-blue"></span><span>Blue</span></button>
-            <button type="button" class="theme-chip" data-theme-chip data-theme-value="red"><span class="theme-swatch theme-red"></span><span>Red</span></button>
-            <button type="button" class="theme-chip" data-theme-chip data-theme-value="pink"><span class="theme-swatch theme-pink"></span><span>Pink</span></button>
-            <button type="button" class="theme-chip" data-theme-chip data-theme-value="green"><span class="theme-swatch theme-green"></span><span>Green</span></button>
-            <button type="button" class="theme-chip" data-theme-chip data-theme-value="purple"><span class="theme-swatch theme-purple"></span><span>Purple</span></button>
+          <div class="theme-bubbles glass-popover" data-theme-bubbles>
+            <button type="button" class="theme-bubble blue" data-theme-bubble data-theme-value="blue" aria-label="Blue theme" title="Blue"></button>
+            <button type="button" class="theme-bubble red" data-theme-bubble data-theme-value="red" aria-label="Red theme" title="Red"></button>
+            <button type="button" class="theme-bubble pink" data-theme-bubble data-theme-value="pink" aria-label="Pink theme" title="Pink"></button>
+            <button type="button" class="theme-bubble green" data-theme-bubble data-theme-value="green" aria-label="Green theme" title="Green"></button>
+            <button type="button" class="theme-bubble purple" data-theme-bubble data-theme-value="purple" aria-label="Purple theme" title="Purple"></button>
           </div>
         </div>
 
@@ -75,7 +80,11 @@
   <main class="login-shell">
     <section class="login-panel glass-card">
       <div class="login-badge-wrap">
-        <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos" class="login-badge" />
+        <img
+          src="/evaraos/assets/img/evaraos_logo.png"
+          alt="Evaraos"
+          class="login-badge"
+        />
       </div>
 
       <h1 class="login-title">Welcome Back</h1>
@@ -83,7 +92,7 @@
         Login first, then handle the extra verification layer only when needed.
       </p>
 
-      <form id="loginForm" class="login-form">
+      <form id="loginForm" class="login-form" novalidate>
         <div class="form-group">
           <label class="field-label" for="username">Email or Username</label>
           <div class="input-shell">
