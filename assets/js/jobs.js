@@ -58,7 +58,9 @@ async function loadJobs(user) {
     ? await fetchAllCollection("users", { max: 500 })
     : await fetchUsersByCompany(user.companyId);
 
-  jobState.technicians = users.filter(item => ["technician", "tech"].includes(String(item.role || "").toLowerCase()));
+  jobState.technicians = users.filter(item =>
+    ["technician", "tech"].includes(String(item.role || "").toLowerCase())
+  );
 
   const allJobs = await fetchAllCollection("jobs", { max: 500 });
 
@@ -75,9 +77,11 @@ function populateTechnicians() {
   const select = document.getElementById("jobAssignedTechnician");
   if (!select) return;
 
-  select.innerHTML = `<option value="">Assigned Technician</option>` + jobState.technicians.map(tech => `
-    <option value="${tech.id}">${tech.name || tech.email || tech.username}</option>
-  `).join("");
+  select.innerHTML =
+    `<option value="">Assigned Technician</option>` +
+    jobState.technicians.map(tech => `
+      <option value="${tech.id}">${tech.name || tech.email || tech.username}</option>
+    `).join("");
 }
 
 function openJobModal(job = null) {
@@ -107,6 +111,12 @@ function closeJobModal() {
   document.getElementById("jobModal")?.classList.remove("open");
   jobState.editingId = null;
   document.getElementById("jobMsg").textContent = "";
+}
+
+function resolveTechName(id) {
+  if (!id) return "—";
+  const tech = jobState.technicians.find(item => item.id === id);
+  return tech?.name || tech?.email || tech?.username || id;
 }
 
 function renderJobs() {
@@ -169,12 +179,6 @@ function renderJobs() {
   });
 
   document.getElementById("openJobModalBtn")?.addEventListener("click", () => openJobModal());
-}
-
-function resolveTechName(id) {
-  if (!id) return "—";
-  const tech = jobState.technicians.find(item => item.id === id);
-  return tech?.name || tech?.email || tech?.username || id;
 }
 
 async function saveJob(e) {
