@@ -20,18 +20,24 @@
       </a>
 
       <nav class="landing-nav">
-        <a href="/evaraos/index.html" class="nav-pill">Home</a>
-        <a href="/evaraos/login.html" class="nav-pill active">Login</a>
-        <a href="/evaraos/signup.html" class="nav-pill">Sign Up</a>
+        <a href="/evaraos/index.html" class="nav-pill" data-nav-link>Home</a>
+        <a href="/evaraos/login.html" class="nav-pill" data-nav-link>Login</a>
+        <a href="/evaraos/signup.html" class="nav-pill" data-nav-link>Sign Up</a>
 
-        <div class="nav-dropdown">
-          <button class="nav-pill nav-dropdown-toggle" type="button">Pages</button>
-          <div class="nav-dropdown-menu">
-            <a href="/evaraos/dashboard.html">Dashboard</a>
-            <a href="/evaraos/companies.html">Companies</a>
-            <a href="/evaraos/users.html">Users</a>
-            <a href="/evaraos/leads.html">Leads</a>
-            <a href="/evaraos/jobs.html">Jobs</a>
+        <div class="nav-dropdown" data-nav-dropdown>
+          <button class="nav-pill nav-dropdown-toggle" type="button" data-nav-toggle aria-expanded="false">
+            <span>Pages</span>
+            <svg class="nav-caret" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 9l6 6 6-6"></path>
+            </svg>
+          </button>
+
+          <div class="nav-dropdown-menu aurora-card" data-nav-menu>
+            <a href="/evaraos/dashboard.html" data-nav-link>Dashboard</a>
+            <a href="/evaraos/companies.html" data-nav-link>Companies</a>
+            <a href="/evaraos/users.html" data-nav-link>Users</a>
+            <a href="/evaraos/leads.html" data-nav-link>Leads</a>
+            <a href="/evaraos/jobs.html" data-nav-link>Jobs</a>
           </div>
         </div>
 
@@ -42,8 +48,17 @@
           aria-label="Switch theme"
           aria-pressed="false"
         >
-          <span class="theme-toggle-icon">☀</span>
-          <span class="theme-toggle-icon">☾</span>
+          <span class="theme-toggle-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="4.2"></circle>
+              <path d="M12 2.2v2.2M12 19.6v2.2M21.8 12h-2.2M4.4 12H2.2M18.9 5.1l-1.6 1.6M6.7 17.3l-1.6 1.6M18.9 18.9l-1.6-1.6M6.7 6.7L5.1 5.1"></path>
+            </svg>
+          </span>
+          <span class="theme-toggle-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20.2 14.8A8.8 8.8 0 0 1 9.2 3.8a9.4 9.4 0 1 0 11 11z"></path>
+            </svg>
+          </span>
         </button>
       </nav>
     </div>
@@ -178,6 +193,7 @@
   <div id="recaptcha-container"></div>
 
   <script type="module" src="/evaraos/assets/js/theme.js"></script>
+  <script type="module" src="/evaraos/assets/js/nav.js"></script>
   <script type="module" src="/evaraos/assets/js/auth.js"></script>
 </body>
 </html>
