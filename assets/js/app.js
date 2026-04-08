@@ -8,6 +8,7 @@ import {
 } from "./firebase.js";
 
 const BASE_PATH = "/evaraos";
+const THEME_KEY = "evara-theme";
 
 const ROLE_PERMISSIONS = {
   owner: ["all"],
@@ -155,6 +156,7 @@ export async function bindTopbar(user, title = "Dashboard") {
       </div>
 
       <div class="topbar-right">
+        ${renderThemeSwitcher()}
         <div class="user-pill">
           <span>${user?.name || user?.username || user?.email || "User"}</span>
           <span class="user-role">${user?.role || "guest"}</span>
@@ -164,7 +166,153 @@ export async function bindTopbar(user, title = "Dashboard") {
     </div>
   `;
 
+  initThemeUI(topbar);
+
   document.getElementById("logoutBtn")?.addEventListener("click", async () => {
     await logoutUser();
   });
 }
+
+function renderThemeSwitcher() {
+  return `
+    <div class="theme-switcher" aria-label="Theme switcher">
+      <button type="button" class="theme-btn" data-theme-choice="light">Light</button>
+      <button type="button" class="theme-btn" data-theme-choice="dark">Dark</button>
+      <button type="button" class="theme-btn" data-theme-choice="system">System</button>
+    </div>
+  `;
+}
+
+function getStoredTheme() {
+  return localStorage.getItem(THEME_KEY) || "system";
+}
+
+function getResolvedTheme(choice) {
+  if (choice === "system") {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  return choice;
+}
+
+function applyTheme(choice) {
+  const resolved = getResolvedTheme(choice);
+  document.documentElement.setAttribute("data-theme", resolved);
+  document.documentElement.setAttribute("data-theme-choice", choice);
+  syncThemeButtons(choice);
+}
+
+function syncThemeButtons(choice = getStoredTheme()) {
+  document.querySelectorAll(".theme-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.themeChoice === choice);
+  });
+}
+
+function initThemeUI(scope = document) {
+  scope.querySelectorAll(".theme-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const choice = btn.dataset.themeChoice || "system";
+      localStorage.setItem(THEME_KEY, choice);
+      applyTheme(choice);
+    });
+  });
+
+  syncThemeButtons();
+}
+
+function initLandingThemeSwitcher() {
+  const navTargets = document.querySelectorAll(".landing-nav");
+
+  navTargets.forEach(nav => {
+    if (nav.querySelector(".theme-switcher")) return;
+    nav.insertAdjacentHTML("beforeend", renderThemeSwitcher());
+  });
+
+  initThemeUI(document);
+}
+
+function initDropdowns() {
+  document.querySelectorAll(".nav-dropdown-toggle").forEach(toggle => {
+    toggle.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const dropdown = toggle.closest(".nav-dropdown");
+      if (!dropdown) return;
+
+      document.querySelectorAll(".nav-dropdown.open").forEach(item => {
+        if (item !== dropdown) item.classList.remove("open");
+      });
+
+      dropdown.classList.toggle("open");
+    });
+  });
+
+  document.addEventListener("click", (event) => {
+    document.querySelectorAll(".nav-dropdown.open").forEach(dropdown => {
+      if (!dropdown.contains(event.target)) {
+        dropdown.classList.remove("open");
+      }
+    });
+  });
+}
+
+function initModalBackdrops() {
+  document.querySelectorAll(".modal-backdrop").forEach(modal => {
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) {
+        modal.classList.remove("open");
+      }
+    });
+  });
+}
+
+function initPasswordToggles() {
+  const pairs = [
+    ["togglePasswordBtn", "password", "passwordIconOpen", "passwordIconClosed"],
+    ["toggleSignupPasswordBtn", "signupPassword", "signupPasswordIconOpen", "signupPasswordIconClosed"],
+    ["toggleSignupPasswordConfirmBtn", "signupPasswordConfirm", "signupPasswordConfirmIconOpen", "signupPasswordConfirmIconClosed"]
+  ];
+
+  pairs.forEach(([buttonId, inputId, openId, closedId]) => {
+    const button = document.getElementById(buttonId);
+    const input = document.getElementById(inputId);
+    const openIcon = document.getElementById(openId);
+    const closedIcon = document.getElementById(closedId);
+
+    if (!button || !input) return;
+
+    button.addEventListener("click", () => {
+      const isPassword = input.type === "password";
+      input.type = isPassword ? "text" : "password";
+      button.setAttribute("aria-pressed", isPassword ? "true" : "false");
+      button.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
+
+      if (openIcon) openIcon.style.display = isPassword ? "none" : "";
+      if (closedIcon) closedIcon.style.display = isPassword ? "" : "none";
+    });
+  });
+}
+
+function initThemeBoot() {
+  applyTheme(getStoredTheme());
+
+  const media = window.matchMedia("(prefers-color-scheme: dark)");
+  if (typeof media.addEventListener === "function") {
+    media.addEventListener("change", () => {
+      if (getStoredTheme() === "system") applyTheme("system");
+    });
+  } else if (typeof media.addListener === "function") {
+    media.addListener(() => {
+      if (getStoredTheme() === "system") applyTheme("system");
+    });
+  }
+}
+
+function initSharedUI() {
+  initThemeBoot();
+  initLandingThemeSwitcher();
+  initDropdowns();
+  initModalBackdrops();
+  initPasswordToggles();
+}
+
+document.addEventListener("DOMContentLoaded", initSharedUI);
