@@ -1,222 +1,393 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Jobs - Evaraos Inc</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Jobs • Evaraos Inc</title>
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
 </head>
-<body class="app-shell app-theme">
-  <div class="app-bg">
-    <div class="bg-orb bg-orb-1"></div>
-    <div class="bg-orb bg-orb-2"></div>
-    <div class="bg-grid"></div>
-  </div>
+<body class="dashboard-body">
+  <div class="page-grid-overlay"></div>
+  <div id="universalNav"></div>
 
-  <header class="app-topbar" id="topbar"></header>
-
-  <div class="page-shell">
-    <aside class="sidebar" id="sidebar"></aside>
-
-    <main class="main-content">
-      <section class="glass-card aurora-card shine-border">
-        <div class="section-title-row">
-          <div>
-            <h1 style="margin:0;">Jobs</h1>
-            <p class="muted" style="margin:8px 0 0;">
-              Track scheduled work, field execution, customer details, and job status.
-            </p>
+  <div class="dashboard-shell">
+    <aside class="dashboard-sidebar" id="dashboardSidebar">
+      <div class="dashboard-sidebar-inner glass-shell aurora-card">
+        <div class="dashboard-sidebar-search">
+          <div class="dashboard-search-shell input-shell aurora-card">
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
+              <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
+            </svg>
+            <input
+              type="search"
+              class="dashboard-search-input input"
+              placeholder="Search jobs..."
+              aria-label="Search jobs"
+            />
           </div>
-          <div class="top-actions">
-            <button class="btn" id="openJobModalBtn" type="button">Add Job</button>
+        </div>
+
+        <div class="dashboard-sidebar-head">
+          <p class="dashboard-sidebar-eyebrow">Job Navigation</p>
+          <h2 id="dashboardOverviewTitle">Jobs Overview</h2>
+        </div>
+
+        <nav class="dashboard-sidebar-nav" aria-label="Job sections">
+          <a href="#jobsOverviewSection" class="dashboard-nav-link active aurora-card">
+            <span class="dashboard-nav-icon">◉</span>
+            <span>Overview</span>
+          </a>
+
+          <a href="#activeJobsSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◎</span>
+            <span>Active Jobs</span>
+          </a>
+
+          <a href="#routesSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◌</span>
+            <span>Routes</span>
+          </a>
+
+          <a href="#completionSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◐</span>
+            <span>Completion</span>
+          </a>
+
+          <a href="#jobFeedSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◈</span>
+            <span>Activity</span>
+          </a>
+        </nav>
+
+        <div class="dashboard-sidebar-foot glass-card aurora-card">
+          <div class="dashboard-sidebar-foot-copy">
+            <strong>Job Center</strong>
+            <span>Track service execution, routes, technician progress, and completed work from one dashboard.</span>
+          </div>
+          <a href="/evaraos/dashboard.html" class="btn btn-theme-primary">Back to Dashboard</a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="dashboard-main">
+      <section class="dashboard-hero glass-card aurora-card" id="jobsOverviewSection">
+        <div class="dashboard-hero-copy">
+          <p class="dashboard-eyebrow">JOB CENTER</p>
+          <h1>Track every service job in one execution flow.</h1>
+          <p class="dashboard-hero-text">
+            Monitor active work, route assignments, completion progress, and technician
+            execution across your companies from one premium Evaraos workspace.
+          </p>
+
+          <div class="dashboard-hero-actions">
+            <button type="button" id="refreshJobsBtn" class="btn btn-theme-primary">Refresh Jobs</button>
+            <button type="button" id="sortJobsBtn" class="btn btn-theme-secondary">Sort by Status</button>
+          </div>
+        </div>
+
+        <div class="dashboard-hero-panel glass-card aurora-card">
+          <div class="dashboard-hero-panel-top">
+            <span class="dashboard-mini-badge">Live Execution</span>
+            <span class="dashboard-live-dot"></span>
+          </div>
+
+          <div class="dashboard-hero-logo-wrap">
+            <img
+              src="/evaraos/assets/img/evaraos_logo.png"
+              alt="Evaraos"
+              class="dashboard-hero-logo"
+            />
+          </div>
+
+          <div class="dashboard-hero-panel-copy">
+            <strong id="jobsHeroTitle">Operational Visibility</strong>
+            <span id="jobsHeroSubline">Jobs, routes, and completions flowing through one platform.</span>
           </div>
         </div>
       </section>
 
-      <main id="jobsRoot" class="content-root">
-        <section class="glass-card aurora-card shine-border">
-          <div class="muted">Loading jobs...</div>
+      <section class="dashboard-overview glass-card aurora-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Snapshot</p>
+            <h2>Jobs Overview</h2>
+          </div>
+        </div>
+
+        <div class="dashboard-stats-grid">
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Total Jobs</p>
+            <h3 id="jobsTotalStat">6</h3>
+            <span>Current workload</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>In Progress</p>
+            <h3 id="jobsProgressStat">3</h3>
+            <span>Technician activity live</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Pending</p>
+            <h3 id="jobsPendingStat">2</h3>
+            <span>Waiting on next step</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Completed</p>
+            <h3 id="jobsCompleteStat">1</h3>
+            <span>Finished successfully</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-panel glass-card aurora-card" id="activeJobsSection">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Execution Queue</p>
+            <h2>Active Jobs</h2>
+          </div>
+        </div>
+
+        <div class="dashboard-list" id="jobsList">
+          <article class="dashboard-list-item glass-card aurora-card job-item" data-status-order="2" data-status="progress">
+            <div>
+              <strong>Trash Bin Cleaning Route • South Jacksonville</strong>
+              <span>In progress • 7 stops remaining • Technician crew assigned</span>
+            </div>
+            <span class="dashboard-status-pill working">In Progress</span>
+          </article>
+
+          <article class="dashboard-list-item glass-card aurora-card job-item" data-status-order="1" data-status="pending">
+            <div>
+              <strong>Pressure Washing • Driveway + Walkway</strong>
+              <span>Pending • Waiting for customer approval on upsell</span>
+            </div>
+            <span class="dashboard-status-pill alert">Pending</span>
+          </article>
+
+          <article class="dashboard-list-item glass-card aurora-card job-item" data-status-order="3" data-status="complete">
+            <div>
+              <strong>House Wash • Premium Residential</strong>
+              <span>Completed • Before and after media uploaded</span>
+            </div>
+            <span class="dashboard-status-pill good">Complete</span>
+          </article>
+
+          <article class="dashboard-list-item glass-card aurora-card job-item" data-status-order="2" data-status="progress">
+            <div>
+              <strong>Interior Cleaning • OneofOne Assignment</strong>
+              <span>In progress • Vendor dispatched • Arrival confirmed</span>
+            </div>
+            <span class="dashboard-status-pill working">In Progress</span>
+          </article>
+
+          <article class="dashboard-list-item glass-card aurora-card job-item" data-status-order="1" data-status="pending">
+            <div>
+              <strong>Recurring Subscription Onboarding</strong>
+              <span>Pending • Route integration and customer scheduling</span>
+            </div>
+            <span class="dashboard-status-pill alert">Pending</span>
+          </article>
+
+          <article class="dashboard-list-item glass-card aurora-card job-item" data-status-order="2" data-status="progress">
+            <div>
+              <strong>Patio + Fence Wash Combo</strong>
+              <span>In progress • Equipment active • Crew on-site</span>
+            </div>
+            <span class="dashboard-status-pill working">In Progress</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card aurora-card" id="routesSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Movement</p>
+              <h2>Routes + Dispatch</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-feed">
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Jacksonville South Route</strong>
+              <span>Bin cleaning stops remain active with field crew moving through the schedule.</span>
+            </article>
+
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Residential Wash Queue</strong>
+              <span>High-visibility jobs remain staged for technician execution and upsell review.</span>
+            </article>
+
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Marketplace Dispatch</strong>
+              <span>Interior cleaning flow continues through vendor assignment logic.</span>
+            </article>
+          </div>
         </section>
-      </main>
+
+        <section class="dashboard-panel glass-card aurora-card" id="completionSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Progress</p>
+              <h2>Completion Flow</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-progress-stack">
+            <div class="dashboard-progress-row">
+              <div class="dashboard-progress-copy">
+                <strong>Pending</strong>
+                <span>Jobs waiting for approval, dispatch, or start</span>
+              </div>
+              <div class="dashboard-progress-bar"><span style="width: 34%;"></span></div>
+            </div>
+
+            <div class="dashboard-progress-row">
+              <div class="dashboard-progress-copy">
+                <strong>In Progress</strong>
+                <span>Crews actively executing jobs</span>
+              </div>
+              <div class="dashboard-progress-bar"><span style="width: 58%;"></span></div>
+            </div>
+
+            <div class="dashboard-progress-row">
+              <div class="dashboard-progress-copy">
+                <strong>Complete</strong>
+                <span>Finished with customer-facing deliverables</span>
+              </div>
+              <div class="dashboard-progress-bar"><span style="width: 22%;"></span></div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="dashboard-panel glass-card aurora-card" id="jobFeedSection">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Recent Updates</p>
+            <h2>Job Feed</h2>
+          </div>
+        </div>
+
+        <div class="dashboard-feed" id="jobsFeed">
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Job board loaded</strong>
+            <span>Execution queue is visible inside the job center.</span>
+          </article>
+
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Field activity active</strong>
+            <span>Technician progress and route visibility remain live.</span>
+          </article>
+
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Completion tracking connected</strong>
+            <span>Pending, in-progress, and completed states are visible from one page.</span>
+          </article>
+        </div>
+      </section>
     </main>
   </div>
 
-  <div class="modal-backdrop" id="jobModal">
-    <div class="modal-card aurora-card shine-border">
-      <div class="modal-head">
-        <h2 id="jobModalTitle" style="margin:0;">Edit Job</h2>
-        <button class="btn secondary" id="closeJobModalBtn" type="button">Close</button>
-      </div>
+  <script type="module">
+    import {
+      auth,
+      protectRoute,
+      onAuthStateChanged,
+      syncUserSession
+    } from "/evaraos/assets/js/firebase.js";
 
-      <form id="jobForm">
-        <section class="form-section">
-          <h3 class="form-section-title">Customer</h3>
-          <div class="form-grid">
-            <div class="field">
-              <label for="jobCustomerName">Customer Name</label>
-              <input id="jobCustomerName" placeholder="Customer Name" />
-            </div>
+    protectRoute({
+      requireAuth: true,
+      redirectGuestTo: "/evaraos/login.html"
+    });
 
-            <div class="field">
-              <label for="jobCustomerPhone">Customer Phone</label>
-              <input id="jobCustomerPhone" placeholder="Customer Phone" />
-            </div>
+    const refreshJobsBtn = document.getElementById("refreshJobsBtn");
+    const sortJobsBtn = document.getElementById("sortJobsBtn");
+    const jobsList = document.getElementById("jobsList");
+    const jobsFeed = document.getElementById("jobsFeed");
 
-            <div class="field full">
-              <label for="jobCustomerEmail">Customer Email</label>
-              <input id="jobCustomerEmail" placeholder="Customer Email" type="email" />
-            </div>
-          </div>
-        </section>
+    const jobsTotalStat = document.getElementById("jobsTotalStat");
+    const jobsProgressStat = document.getElementById("jobsProgressStat");
+    const jobsPendingStat = document.getElementById("jobsPendingStat");
+    const jobsCompleteStat = document.getElementById("jobsCompleteStat");
 
-        <section class="form-section">
-          <h3 class="form-section-title">Location</h3>
-          <div class="form-grid">
-            <div class="field full">
-              <label for="jobAddress">Address</label>
-              <input id="jobAddress" placeholder="Address" />
-            </div>
+    function refreshJobStats() {
+      const items = Array.from(document.querySelectorAll(".job-item"));
+      const total = items.length;
+      const progress = items.filter((item) => item.dataset.status === "progress").length;
+      const pending = items.filter((item) => item.dataset.status === "pending").length;
+      const complete = items.filter((item) => item.dataset.status === "complete").length;
 
-            <div class="field">
-              <label for="jobCity">City</label>
-              <input id="jobCity" placeholder="City" />
-            </div>
+      if (jobsTotalStat) jobsTotalStat.textContent = String(total);
+      if (jobsProgressStat) jobsProgressStat.textContent = String(progress);
+      if (jobsPendingStat) jobsPendingStat.textContent = String(pending);
+      if (jobsCompleteStat) jobsCompleteStat.textContent = String(complete);
 
-            <div class="field">
-              <label for="jobState">State</label>
-              <select id="jobState">
-                <option value="">State</option>
-                <option value="AL">Alabama</option>
-                <option value="AK">Alaska</option>
-                <option value="AZ">Arizona</option>
-                <option value="AR">Arkansas</option>
-                <option value="CA">California</option>
-                <option value="CO">Colorado</option>
-                <option value="CT">Connecticut</option>
-                <option value="DE">Delaware</option>
-                <option value="FL">Florida</option>
-                <option value="GA">Georgia</option>
-                <option value="HI">Hawaii</option>
-                <option value="ID">Idaho</option>
-                <option value="IL">Illinois</option>
-                <option value="IN">Indiana</option>
-                <option value="IA">Iowa</option>
-                <option value="KS">Kansas</option>
-                <option value="KY">Kentucky</option>
-                <option value="LA">Louisiana</option>
-                <option value="ME">Maine</option>
-                <option value="MD">Maryland</option>
-                <option value="MA">Massachusetts</option>
-                <option value="MI">Michigan</option>
-                <option value="MN">Minnesota</option>
-                <option value="MS">Mississippi</option>
-                <option value="MO">Missouri</option>
-                <option value="MT">Montana</option>
-                <option value="NE">Nebraska</option>
-                <option value="NV">Nevada</option>
-                <option value="NH">New Hampshire</option>
-                <option value="NJ">New Jersey</option>
-                <option value="NM">New Mexico</option>
-                <option value="NY">New York</option>
-                <option value="NC">North Carolina</option>
-                <option value="ND">North Dakota</option>
-                <option value="OH">Ohio</option>
-                <option value="OK">Oklahoma</option>
-                <option value="OR">Oregon</option>
-                <option value="PA">Pennsylvania</option>
-                <option value="RI">Rhode Island</option>
-                <option value="SC">South Carolina</option>
-                <option value="SD">South Dakota</option>
-                <option value="TN">Tennessee</option>
-                <option value="TX">Texas</option>
-                <option value="UT">Utah</option>
-                <option value="VT">Vermont</option>
-                <option value="VA">Virginia</option>
-                <option value="WA">Washington</option>
-                <option value="WV">West Virginia</option>
-                <option value="WI">Wisconsin</option>
-                <option value="WY">Wyoming</option>
-              </select>
-            </div>
+      if (jobsFeed) {
+        jobsFeed.innerHTML = `
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Job board refreshed</strong>
+            <span>${total} jobs are visible in the current queue.</span>
+          </article>
 
-            <div class="field">
-              <label for="jobZip">Zip</label>
-              <input id="jobZip" placeholder="Zip" />
-            </div>
-          </div>
-        </section>
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Execution activity updated</strong>
+            <span>${progress} jobs are currently in progress and ${pending} are pending.</span>
+          </article>
 
-        <section class="form-section">
-          <h3 class="form-section-title">Service & Schedule</h3>
-          <div class="form-grid">
-            <div class="field">
-              <label for="jobServiceType">Service Type</label>
-              <input id="jobServiceType" placeholder="Service Type" />
-            </div>
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Completion count updated</strong>
+            <span>${complete} jobs are currently marked complete.</span>
+          </article>
+        `;
+      }
+    }
 
-            <div class="field">
-              <label for="jobAssignedTechnician">Assigned Technician</label>
-              <select id="jobAssignedTechnician">
-                <option value="">Assigned Technician</option>
-              </select>
-            </div>
+    function sortJobsByStatus() {
+      if (!jobsList) return;
 
-            <div class="field">
-              <label for="jobScheduledDate">Scheduled Date</label>
-              <input id="jobScheduledDate" type="date" />
-            </div>
+      const items = Array.from(jobsList.querySelectorAll(".job-item"));
+      items.sort((a, b) => Number(a.dataset.statusOrder) - Number(b.dataset.statusOrder));
+      items.forEach((item) => jobsList.appendChild(item));
+    }
 
-            <div class="field">
-              <label for="jobScheduledTimeWindow">Time Window</label>
-              <select id="jobScheduledTimeWindow">
-                <option value="">Time Window</option>
-                <option value="8am-10am">8am - 10am</option>
-                <option value="10am-12pm">10am - 12pm</option>
-                <option value="12pm-2pm">12pm - 2pm</option>
-                <option value="2pm-4pm">2pm - 4pm</option>
-                <option value="4pm-6pm">4pm - 6pm</option>
-              </select>
-            </div>
+    refreshJobsBtn?.addEventListener("click", () => {
+      refreshJobsBtn.classList.add("active-glow");
+      setTimeout(() => refreshJobsBtn.classList.remove("active-glow"), 260);
+      refreshJobStats();
+    });
 
-            <div class="field">
-              <label for="jobEstimatedSqFt">Estimated Sq Ft</label>
-              <input id="jobEstimatedSqFt" type="number" placeholder="Estimated Sq Ft" />
-            </div>
+    sortJobsBtn?.addEventListener("click", () => {
+      sortJobsBtn.classList.add("active-glow");
+      setTimeout(() => sortJobsBtn.classList.remove("active-glow"), 260);
+      sortJobsByStatus();
+      refreshJobStats();
+    });
 
-            <div class="field">
-              <label for="jobEstimatedPrice">Estimated Price</label>
-              <input id="jobEstimatedPrice" type="number" placeholder="Estimated Price" />
-            </div>
+    onAuthStateChanged(auth, (user) => {
+      if (!user) return;
+      syncUserSession(user);
+    });
 
-            <div class="field">
-              <label for="jobStatus">Status</label>
-              <select id="jobStatus">
-                <option value="scheduled">Scheduled</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-          </div>
-        </section>
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".dashboard-nav-link").forEach((link) => {
+        link.addEventListener("click", () => {
+          document.querySelectorAll(".dashboard-nav-link").forEach((item) => {
+            item.classList.remove("active");
+          });
+          link.classList.add("active");
+        });
+      });
 
-        <section class="form-section">
-          <div class="field">
-            <label for="jobNotes">Notes</label>
-            <textarea id="jobNotes" class="notes-field" placeholder="Notes"></textarea>
-          </div>
-        </section>
+      refreshJobStats();
+    });
+  </script>
 
-        <div class="top-actions">
-          <button class="btn" id="saveJobBtn" type="submit">Save Job</button>
-          <button class="btn secondary" id="cancelJobModalBtn" type="button">Cancel</button>
-        </div>
-
-        <p id="jobMsg" class="status-text"></p>
-      </form>
-    </div>
-  </div>
-
-  <script type="module" src="/evaraos/assets/js/jobs.js"></script>
+  <script type="module" src="/evaraos/assets/js/theme.js"></script>
+  <script type="module" src="/evaraos/assets/js/nav.js"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js"></script>
 </body>
 </html>
