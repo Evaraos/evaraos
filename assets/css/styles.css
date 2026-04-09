@@ -1,7 +1,9 @@
 /* =========================
    RESET
 ========================= */
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -12,6 +14,12 @@ body {
   min-height: 100%;
   width: 100%;
   overflow-x: hidden;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 img {
@@ -112,7 +120,7 @@ html[data-theme="dark"] {
     linear-gradient(180deg, #05070d 0%, #0a0e17 55%, #05070d 100%);
 }
 
-/* Neutral Light - Apple Intelligence style */
+/* Neutral Light */
 html[data-theme="light"] {
   --bg: #f8f5f7;
   --bg-2: #fcfafc;
@@ -639,10 +647,9 @@ html[data-theme="yellow-dark"] {
 }
 
 /* =========================
-   BODY / GLOBAL
+   GLOBAL
 ========================= */
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
   background: var(--page-bg);
   color: var(--text);
   transition: background var(--transition-slow), color var(--transition-med);
@@ -704,7 +711,12 @@ html[data-theme="yellow-light"] .page-grid-overlay {
 .overview-card,
 .topbar-inner,
 .sidebar-inner,
-.nav-dropdown-menu {
+.nav-dropdown-menu,
+.dashboard-topbar-inner,
+.dashboard-sidebar-inner,
+.dashboard-panel,
+.dashboard-overview,
+.dashboard-hero {
   position: relative;
   background:
     linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04)),
@@ -727,6 +739,13 @@ html[data-theme="light"] .login-panel,
 html[data-theme="light"] .reset-panel,
 html[data-theme="light"] .security-inline-card,
 html[data-theme="light"] .hero-visual,
+html[data-theme="light"] .overview-shell,
+html[data-theme="light"] .overview-card,
+html[data-theme="light"] .dashboard-topbar-inner,
+html[data-theme="light"] .dashboard-sidebar-inner,
+html[data-theme="light"] .dashboard-panel,
+html[data-theme="light"] .dashboard-overview,
+html[data-theme="light"] .dashboard-hero,
 html[data-theme="blue-light"] .glass-shell,
 html[data-theme="blue-light"] .glass-card,
 html[data-theme="blue-light"] .feature-card,
@@ -734,6 +753,13 @@ html[data-theme="blue-light"] .login-panel,
 html[data-theme="blue-light"] .reset-panel,
 html[data-theme="blue-light"] .security-inline-card,
 html[data-theme="blue-light"] .hero-visual,
+html[data-theme="blue-light"] .overview-shell,
+html[data-theme="blue-light"] .overview-card,
+html[data-theme="blue-light"] .dashboard-topbar-inner,
+html[data-theme="blue-light"] .dashboard-sidebar-inner,
+html[data-theme="blue-light"] .dashboard-panel,
+html[data-theme="blue-light"] .dashboard-overview,
+html[data-theme="blue-light"] .dashboard-hero,
 html[data-theme="red-light"] .glass-shell,
 html[data-theme="red-light"] .glass-card,
 html[data-theme="red-light"] .feature-card,
@@ -741,6 +767,13 @@ html[data-theme="red-light"] .login-panel,
 html[data-theme="red-light"] .reset-panel,
 html[data-theme="red-light"] .security-inline-card,
 html[data-theme="red-light"] .hero-visual,
+html[data-theme="red-light"] .overview-shell,
+html[data-theme="red-light"] .overview-card,
+html[data-theme="red-light"] .dashboard-topbar-inner,
+html[data-theme="red-light"] .dashboard-sidebar-inner,
+html[data-theme="red-light"] .dashboard-panel,
+html[data-theme="red-light"] .dashboard-overview,
+html[data-theme="red-light"] .dashboard-hero,
 html[data-theme="pink-light"] .glass-shell,
 html[data-theme="pink-light"] .glass-card,
 html[data-theme="pink-light"] .feature-card,
@@ -748,6 +781,13 @@ html[data-theme="pink-light"] .login-panel,
 html[data-theme="pink-light"] .reset-panel,
 html[data-theme="pink-light"] .security-inline-card,
 html[data-theme="pink-light"] .hero-visual,
+html[data-theme="pink-light"] .overview-shell,
+html[data-theme="pink-light"] .overview-card,
+html[data-theme="pink-light"] .dashboard-topbar-inner,
+html[data-theme="pink-light"] .dashboard-sidebar-inner,
+html[data-theme="pink-light"] .dashboard-panel,
+html[data-theme="pink-light"] .dashboard-overview,
+html[data-theme="pink-light"] .dashboard-hero,
 html[data-theme="green-light"] .glass-shell,
 html[data-theme="green-light"] .glass-card,
 html[data-theme="green-light"] .feature-card,
@@ -755,6 +795,13 @@ html[data-theme="green-light"] .login-panel,
 html[data-theme="green-light"] .reset-panel,
 html[data-theme="green-light"] .security-inline-card,
 html[data-theme="green-light"] .hero-visual,
+html[data-theme="green-light"] .overview-shell,
+html[data-theme="green-light"] .overview-card,
+html[data-theme="green-light"] .dashboard-topbar-inner,
+html[data-theme="green-light"] .dashboard-sidebar-inner,
+html[data-theme="green-light"] .dashboard-panel,
+html[data-theme="green-light"] .dashboard-overview,
+html[data-theme="green-light"] .dashboard-hero,
 html[data-theme="purple-light"] .glass-shell,
 html[data-theme="purple-light"] .glass-card,
 html[data-theme="purple-light"] .feature-card,
@@ -762,18 +809,32 @@ html[data-theme="purple-light"] .login-panel,
 html[data-theme="purple-light"] .reset-panel,
 html[data-theme="purple-light"] .security-inline-card,
 html[data-theme="purple-light"] .hero-visual,
+html[data-theme="purple-light"] .overview-shell,
+html[data-theme="purple-light"] .overview-card,
+html[data-theme="purple-light"] .dashboard-topbar-inner,
+html[data-theme="purple-light"] .dashboard-sidebar-inner,
+html[data-theme="purple-light"] .dashboard-panel,
+html[data-theme="purple-light"] .dashboard-overview,
+html[data-theme="purple-light"] .dashboard-hero,
 html[data-theme="yellow-light"] .glass-shell,
 html[data-theme="yellow-light"] .glass-card,
 html[data-theme="yellow-light"] .feature-card,
 html[data-theme="yellow-light"] .login-panel,
 html[data-theme="yellow-light"] .reset-panel,
 html[data-theme="yellow-light"] .security-inline-card,
-html[data-theme="yellow-light"] .hero-visual {
+html[data-theme="yellow-light"] .hero-visual,
+html[data-theme="yellow-light"] .overview-shell,
+html[data-theme="yellow-light"] .overview-card,
+html[data-theme="yellow-light"] .dashboard-topbar-inner,
+html[data-theme="yellow-light"] .dashboard-sidebar-inner,
+html[data-theme="yellow-light"] .dashboard-panel,
+html[data-theme="yellow-light"] .dashboard-overview,
+html[data-theme="yellow-light"] .dashboard-hero {
   background:
     linear-gradient(180deg, rgba(255,255,255,0.34), rgba(255,255,255,0.12)),
     var(--card-fill);
   box-shadow:
-    0 24px 70px rgba(55, 60, 92, 0.1),
+    0 24px 70px rgba(55, 60, 92, 0.10),
     inset 0 1px 0 rgba(255,255,255,0.48);
 }
 
@@ -783,7 +844,12 @@ html[data-theme="yellow-light"] .hero-visual {
 .hero-visual,
 .topbar-inner,
 .sidebar-inner,
-.overview-shell {
+.overview-shell,
+.dashboard-topbar-inner,
+.dashboard-sidebar-inner,
+.dashboard-panel,
+.dashboard-overview,
+.dashboard-hero {
   border-radius: var(--radius-xl);
 }
 
@@ -805,7 +871,7 @@ html[data-theme="yellow-light"] .hero-visual {
 }
 
 /* =========================
-   AURORA OUTLINE
+   AURORA
 ========================= */
 .aurora-card,
 .input-shell,
@@ -814,7 +880,9 @@ html[data-theme="yellow-light"] .hero-visual {
 .theme-bubble,
 .password-toggle,
 .btn,
-.menu-link {
+.menu-link,
+.dashboard-nav-link,
+.dashboard-avatar-btn {
   position: relative;
   isolation: isolate;
   border-radius: inherit;
@@ -827,7 +895,9 @@ html[data-theme="yellow-light"] .hero-visual {
 .theme-bubble::before,
 .password-toggle::before,
 .btn::before,
-.menu-link::before {
+.menu-link::before,
+.dashboard-nav-link::before,
+.dashboard-avatar-btn::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -867,6 +937,8 @@ html[data-theme="light"] .theme-bubble::before,
 html[data-theme="light"] .password-toggle::before,
 html[data-theme="light"] .btn::before,
 html[data-theme="light"] .menu-link::before,
+html[data-theme="light"] .dashboard-nav-link::before,
+html[data-theme="light"] .dashboard-avatar-btn::before,
 html[data-theme="blue-light"] .aurora-card::before,
 html[data-theme="blue-light"] .input-shell::before,
 html[data-theme="blue-light"] .nav-hamburger::before,
@@ -875,6 +947,8 @@ html[data-theme="blue-light"] .theme-bubble::before,
 html[data-theme="blue-light"] .password-toggle::before,
 html[data-theme="blue-light"] .btn::before,
 html[data-theme="blue-light"] .menu-link::before,
+html[data-theme="blue-light"] .dashboard-nav-link::before,
+html[data-theme="blue-light"] .dashboard-avatar-btn::before,
 html[data-theme="red-light"] .aurora-card::before,
 html[data-theme="red-light"] .input-shell::before,
 html[data-theme="red-light"] .nav-hamburger::before,
@@ -883,6 +957,8 @@ html[data-theme="red-light"] .theme-bubble::before,
 html[data-theme="red-light"] .password-toggle::before,
 html[data-theme="red-light"] .btn::before,
 html[data-theme="red-light"] .menu-link::before,
+html[data-theme="red-light"] .dashboard-nav-link::before,
+html[data-theme="red-light"] .dashboard-avatar-btn::before,
 html[data-theme="pink-light"] .aurora-card::before,
 html[data-theme="pink-light"] .input-shell::before,
 html[data-theme="pink-light"] .nav-hamburger::before,
@@ -891,6 +967,8 @@ html[data-theme="pink-light"] .theme-bubble::before,
 html[data-theme="pink-light"] .password-toggle::before,
 html[data-theme="pink-light"] .btn::before,
 html[data-theme="pink-light"] .menu-link::before,
+html[data-theme="pink-light"] .dashboard-nav-link::before,
+html[data-theme="pink-light"] .dashboard-avatar-btn::before,
 html[data-theme="green-light"] .aurora-card::before,
 html[data-theme="green-light"] .input-shell::before,
 html[data-theme="green-light"] .nav-hamburger::before,
@@ -899,6 +977,8 @@ html[data-theme="green-light"] .theme-bubble::before,
 html[data-theme="green-light"] .password-toggle::before,
 html[data-theme="green-light"] .btn::before,
 html[data-theme="green-light"] .menu-link::before,
+html[data-theme="green-light"] .dashboard-nav-link::before,
+html[data-theme="green-light"] .dashboard-avatar-btn::before,
 html[data-theme="purple-light"] .aurora-card::before,
 html[data-theme="purple-light"] .input-shell::before,
 html[data-theme="purple-light"] .nav-hamburger::before,
@@ -907,6 +987,8 @@ html[data-theme="purple-light"] .theme-bubble::before,
 html[data-theme="purple-light"] .password-toggle::before,
 html[data-theme="purple-light"] .btn::before,
 html[data-theme="purple-light"] .menu-link::before,
+html[data-theme="purple-light"] .dashboard-nav-link::before,
+html[data-theme="purple-light"] .dashboard-avatar-btn::before,
 html[data-theme="yellow-light"] .aurora-card::before,
 html[data-theme="yellow-light"] .input-shell::before,
 html[data-theme="yellow-light"] .nav-hamburger::before,
@@ -914,7 +996,9 @@ html[data-theme="yellow-light"] .theme-core-toggle::before,
 html[data-theme="yellow-light"] .theme-bubble::before,
 html[data-theme="yellow-light"] .password-toggle::before,
 html[data-theme="yellow-light"] .btn::before,
-html[data-theme="yellow-light"] .menu-link::before {
+html[data-theme="yellow-light"] .menu-link::before,
+html[data-theme="yellow-light"] .dashboard-nav-link::before,
+html[data-theme="yellow-light"] .dashboard-avatar-btn::before {
   padding: 2px;
   filter: blur(6px) saturate(1.22);
 }
@@ -942,7 +1026,12 @@ html[data-theme="yellow-light"] .menu-link::before {
 .btn.active-glow::before,
 .menu-link:hover::before,
 .menu-link.active::before,
-.menu-link.active-glow::before {
+.menu-link.active-glow::before,
+.dashboard-nav-link:hover::before,
+.dashboard-nav-link.active::before,
+.dashboard-nav-link.active-glow::before,
+.dashboard-avatar-btn:hover::before,
+.dashboard-avatar-btn.active-glow::before {
   opacity: 1;
   filter: blur(3px) saturate(1.22);
   transform: scale(1.002);
@@ -972,24 +1061,11 @@ html[data-theme="light"] .btn.active-glow::before,
 html[data-theme="light"] .menu-link:hover::before,
 html[data-theme="light"] .menu-link.active::before,
 html[data-theme="light"] .menu-link.active-glow::before,
-html[data-theme="blue-light"] .aurora-card:hover::before,
-html[data-theme="blue-light"] .aurora-card:focus-within::before,
-html[data-theme="blue-light"] .aurora-card.active-glow::before,
-html[data-theme="red-light"] .aurora-card:hover::before,
-html[data-theme="red-light"] .aurora-card:focus-within::before,
-html[data-theme="red-light"] .aurora-card.active-glow::before,
-html[data-theme="pink-light"] .aurora-card:hover::before,
-html[data-theme="pink-light"] .aurora-card:focus-within::before,
-html[data-theme="pink-light"] .aurora-card.active-glow::before,
-html[data-theme="green-light"] .aurora-card:hover::before,
-html[data-theme="green-light"] .aurora-card:focus-within::before,
-html[data-theme="green-light"] .aurora-card.active-glow::before,
-html[data-theme="purple-light"] .aurora-card:hover::before,
-html[data-theme="purple-light"] .aurora-card:focus-within::before,
-html[data-theme="purple-light"] .aurora-card.active-glow::before,
-html[data-theme="yellow-light"] .aurora-card:hover::before,
-html[data-theme="yellow-light"] .aurora-card:focus-within::before,
-html[data-theme="yellow-light"] .aurora-card.active-glow::before {
+html[data-theme="light"] .dashboard-nav-link:hover::before,
+html[data-theme="light"] .dashboard-nav-link.active::before,
+html[data-theme="light"] .dashboard-nav-link.active-glow::before,
+html[data-theme="light"] .dashboard-avatar-btn:hover::before,
+html[data-theme="light"] .dashboard-avatar-btn.active-glow::before {
   opacity: 1;
   filter: blur(10px) saturate(1.28);
 }
@@ -1000,7 +1076,10 @@ html[data-theme="yellow-light"] .aurora-card.active-glow::before {
 .reset-panel,
 .security-inline-card,
 .overview-shell,
-.overview-card {
+.overview-card,
+.dashboard-panel,
+.dashboard-overview,
+.dashboard-hero {
   position: relative;
   overflow: hidden;
   border-radius: inherit;
@@ -1012,7 +1091,10 @@ html[data-theme="yellow-light"] .aurora-card.active-glow::before {
 .reset-panel::before,
 .security-inline-card::before,
 .overview-shell::before,
-.overview-card::before {
+.overview-card::before,
+.dashboard-panel::before,
+.dashboard-overview::before,
+.dashboard-hero::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -1047,6 +1129,9 @@ html[data-theme="light"] .reset-panel::before,
 html[data-theme="light"] .security-inline-card::before,
 html[data-theme="light"] .overview-shell::before,
 html[data-theme="light"] .overview-card::before,
+html[data-theme="light"] .dashboard-panel::before,
+html[data-theme="light"] .dashboard-overview::before,
+html[data-theme="light"] .dashboard-hero::before,
 html[data-theme="blue-light"] .glass-card::before,
 html[data-theme="blue-light"] .feature-card::before,
 html[data-theme="blue-light"] .login-panel::before,
@@ -1054,6 +1139,9 @@ html[data-theme="blue-light"] .reset-panel::before,
 html[data-theme="blue-light"] .security-inline-card::before,
 html[data-theme="blue-light"] .overview-shell::before,
 html[data-theme="blue-light"] .overview-card::before,
+html[data-theme="blue-light"] .dashboard-panel::before,
+html[data-theme="blue-light"] .dashboard-overview::before,
+html[data-theme="blue-light"] .dashboard-hero::before,
 html[data-theme="red-light"] .glass-card::before,
 html[data-theme="red-light"] .feature-card::before,
 html[data-theme="red-light"] .login-panel::before,
@@ -1061,6 +1149,9 @@ html[data-theme="red-light"] .reset-panel::before,
 html[data-theme="red-light"] .security-inline-card::before,
 html[data-theme="red-light"] .overview-shell::before,
 html[data-theme="red-light"] .overview-card::before,
+html[data-theme="red-light"] .dashboard-panel::before,
+html[data-theme="red-light"] .dashboard-overview::before,
+html[data-theme="red-light"] .dashboard-hero::before,
 html[data-theme="pink-light"] .glass-card::before,
 html[data-theme="pink-light"] .feature-card::before,
 html[data-theme="pink-light"] .login-panel::before,
@@ -1068,6 +1159,9 @@ html[data-theme="pink-light"] .reset-panel::before,
 html[data-theme="pink-light"] .security-inline-card::before,
 html[data-theme="pink-light"] .overview-shell::before,
 html[data-theme="pink-light"] .overview-card::before,
+html[data-theme="pink-light"] .dashboard-panel::before,
+html[data-theme="pink-light"] .dashboard-overview::before,
+html[data-theme="pink-light"] .dashboard-hero::before,
 html[data-theme="green-light"] .glass-card::before,
 html[data-theme="green-light"] .feature-card::before,
 html[data-theme="green-light"] .login-panel::before,
@@ -1075,6 +1169,9 @@ html[data-theme="green-light"] .reset-panel::before,
 html[data-theme="green-light"] .security-inline-card::before,
 html[data-theme="green-light"] .overview-shell::before,
 html[data-theme="green-light"] .overview-card::before,
+html[data-theme="green-light"] .dashboard-panel::before,
+html[data-theme="green-light"] .dashboard-overview::before,
+html[data-theme="green-light"] .dashboard-hero::before,
 html[data-theme="purple-light"] .glass-card::before,
 html[data-theme="purple-light"] .feature-card::before,
 html[data-theme="purple-light"] .login-panel::before,
@@ -1082,13 +1179,19 @@ html[data-theme="purple-light"] .reset-panel::before,
 html[data-theme="purple-light"] .security-inline-card::before,
 html[data-theme="purple-light"] .overview-shell::before,
 html[data-theme="purple-light"] .overview-card::before,
+html[data-theme="purple-light"] .dashboard-panel::before,
+html[data-theme="purple-light"] .dashboard-overview::before,
+html[data-theme="purple-light"] .dashboard-hero::before,
 html[data-theme="yellow-light"] .glass-card::before,
 html[data-theme="yellow-light"] .feature-card::before,
 html[data-theme="yellow-light"] .login-panel::before,
 html[data-theme="yellow-light"] .reset-panel::before,
 html[data-theme="yellow-light"] .security-inline-card::before,
 html[data-theme="yellow-light"] .overview-shell::before,
-html[data-theme="yellow-light"] .overview-card::before {
+html[data-theme="yellow-light"] .overview-card::before,
+html[data-theme="yellow-light"] .dashboard-panel::before,
+html[data-theme="yellow-light"] .dashboard-overview::before,
+html[data-theme="yellow-light"] .dashboard-hero::before {
   opacity: 0.44;
   padding: 2px;
   filter: blur(10px) saturate(1.22);
@@ -1114,7 +1217,16 @@ html[data-theme="yellow-light"] .overview-card::before {
 .overview-shell.active-glow::before,
 .overview-card:hover::before,
 .overview-card:focus-within::before,
-.overview-card.active-glow::before {
+.overview-card.active-glow::before,
+.dashboard-panel:hover::before,
+.dashboard-panel:focus-within::before,
+.dashboard-panel.active-glow::before,
+.dashboard-overview:hover::before,
+.dashboard-overview:focus-within::before,
+.dashboard-overview.active-glow::before,
+.dashboard-hero:hover::before,
+.dashboard-hero:focus-within::before,
+.dashboard-hero.active-glow::before {
   opacity: 0.8;
   filter: blur(3px) saturate(1.14);
 }
@@ -1139,7 +1251,16 @@ html[data-theme="light"] .overview-shell:focus-within::before,
 html[data-theme="light"] .overview-shell.active-glow::before,
 html[data-theme="light"] .overview-card:hover::before,
 html[data-theme="light"] .overview-card:focus-within::before,
-html[data-theme="light"] .overview-card.active-glow::before {
+html[data-theme="light"] .overview-card.active-glow::before,
+html[data-theme="light"] .dashboard-panel:hover::before,
+html[data-theme="light"] .dashboard-panel:focus-within::before,
+html[data-theme="light"] .dashboard-panel.active-glow::before,
+html[data-theme="light"] .dashboard-overview:hover::before,
+html[data-theme="light"] .dashboard-overview:focus-within::before,
+html[data-theme="light"] .dashboard-overview.active-glow::before,
+html[data-theme="light"] .dashboard-hero:hover::before,
+html[data-theme="light"] .dashboard-hero:focus-within::before,
+html[data-theme="light"] .dashboard-hero.active-glow::before {
   opacity: 0.92;
   filter: blur(12px) saturate(1.28);
 }
@@ -2157,8 +2278,640 @@ textarea:-webkit-autofill {
 }
 
 /* =========================
+   DASHBOARD
+========================= */
+.dashboard-body {
+  min-height: 100vh;
+}
+
+.dashboard-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  padding: max(14px, env(safe-area-inset-top)) 14px 0;
+}
+
+.dashboard-topbar-inner {
+  width: min(1320px, calc(100% - 28px));
+  margin: 0 auto;
+  min-height: 84px;
+  padding: 14px 18px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  border-radius: var(--radius-xl);
+}
+
+.dashboard-topbar-left,
+.dashboard-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-topbar-center {
+  min-width: 0;
+}
+
+.dashboard-brand {
+  min-width: 0;
+}
+
+.dashboard-sidebar-toggle {
+  flex-shrink: 0;
+}
+
+.dashboard-search-shell {
+  position: relative;
+  border-radius: 999px;
+}
+
+.dashboard-search-input {
+  min-height: 56px;
+  padding: 14px 18px 14px 50px;
+  border-radius: 999px;
+  font-size: 15px;
+}
+
+.dashboard-search-icon {
+  position: absolute;
+  top: 50%;
+  left: 18px;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  color: var(--text-3);
+  z-index: 2;
+}
+
+.dashboard-avatar-btn {
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.05)),
+    var(--card-fill);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.dashboard-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent-1) 72%, transparent),
+      color-mix(in srgb, var(--accent-2) 62%, transparent)
+    );
+  color: #fff;
+  font-weight: 900;
+  font-size: 14px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.26),
+    0 10px 20px color-mix(in srgb, var(--accent-1) 18%, transparent);
+}
+
+html[data-theme="light"] .dashboard-avatar,
+html[data-theme="blue-light"] .dashboard-avatar,
+html[data-theme="red-light"] .dashboard-avatar,
+html[data-theme="pink-light"] .dashboard-avatar,
+html[data-theme="green-light"] .dashboard-avatar,
+html[data-theme="purple-light"] .dashboard-avatar,
+html[data-theme="yellow-light"] .dashboard-avatar {
+  color: var(--text);
+}
+
+.dashboard-avatar-large {
+  width: 44px;
+  height: 44px;
+  font-size: 16px;
+}
+
+.dashboard-profile-card {
+  padding: 6px 4px 4px;
+}
+
+.dashboard-profile-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-profile-main strong {
+  display: block;
+  color: var(--text);
+  font-size: 15px;
+}
+
+.dashboard-profile-main span {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.dashboard-menu-button {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  cursor: pointer;
+}
+
+.dashboard-shell {
+  position: relative;
+  z-index: 1;
+  width: min(1320px, calc(100% - 28px));
+  margin: 18px auto 42px;
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.dashboard-sidebar {
+  position: sticky;
+  top: 108px;
+}
+
+.dashboard-sidebar-inner {
+  padding: 20px;
+  display: grid;
+  gap: 20px;
+  border-radius: var(--radius-xl);
+}
+
+.dashboard-sidebar-head h2 {
+  margin: 6px 0 0;
+  font-size: 24px;
+  line-height: 1.05;
+  color: var(--text);
+}
+
+.dashboard-sidebar-eyebrow {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+
+.dashboard-sidebar-nav {
+  display: grid;
+  gap: 10px;
+}
+
+.dashboard-nav-link {
+  min-height: 54px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04)),
+    var(--card-fill);
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-2);
+  font-weight: 700;
+  transition:
+    transform var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.dashboard-nav-link:hover,
+.dashboard-nav-link.active {
+  transform: translateX(2px);
+  color: var(--text);
+  border-color: var(--border-2);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.08);
+}
+
+.dashboard-nav-icon {
+  width: 22px;
+  flex: 0 0 22px;
+  display: inline-flex;
+  justify-content: center;
+  color: var(--text-3);
+}
+
+.dashboard-sidebar-foot {
+  padding: 18px;
+  display: grid;
+  gap: 16px;
+}
+
+.dashboard-sidebar-foot-copy strong {
+  display: block;
+  font-size: 18px;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.dashboard-sidebar-foot-copy span {
+  display: block;
+  color: var(--text-2);
+  line-height: 1.55;
+  font-size: 14px;
+}
+
+.dashboard-main {
+  min-width: 0;
+  display: grid;
+  gap: 22px;
+}
+
+.dashboard-hero {
+  padding: 28px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(300px, 0.88fr);
+  gap: 20px;
+  align-items: stretch;
+  border-radius: var(--radius-xl);
+}
+
+.dashboard-eyebrow,
+.dashboard-section-kicker {
+  margin: 0 0 10px;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.dashboard-hero h1 {
+  margin: 0;
+  font-size: clamp(38px, 5vw, 62px);
+  line-height: 0.96;
+  letter-spacing: -0.045em;
+  color: var(--text);
+  max-width: 760px;
+}
+
+.dashboard-hero-text {
+  margin: 18px 0 0;
+  max-width: 700px;
+  color: var(--text-2);
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.dashboard-hero-actions {
+  margin-top: 24px;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.dashboard-hero-panel {
+  padding: 20px;
+  display: grid;
+  gap: 18px;
+  align-content: space-between;
+}
+
+.dashboard-hero-panel-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dashboard-mini-badge {
+  min-height: 34px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.dashboard-live-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  box-shadow: 0 0 18px color-mix(in srgb, var(--accent-1) 48%, transparent);
+}
+
+.dashboard-hero-logo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+}
+
+.dashboard-hero-logo {
+  width: min(210px, 56vw);
+}
+
+.dashboard-hero-panel-copy strong {
+  display: block;
+  color: var(--text);
+  font-size: 20px;
+  margin-bottom: 6px;
+}
+
+.dashboard-hero-panel-copy span {
+  display: block;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+.dashboard-overview,
+.dashboard-panel {
+  padding: 24px;
+  border-radius: var(--radius-xl);
+}
+
+.dashboard-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.dashboard-section-head h2 {
+  margin: 0;
+  font-size: clamp(24px, 3vw, 34px);
+  color: var(--text);
+}
+
+.dashboard-inline-link {
+  color: var(--text-2);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.dashboard-inline-link:hover {
+  color: var(--text);
+}
+
+.dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.dashboard-stat-card {
+  padding: 18px;
+  display: grid;
+  gap: 10px;
+}
+
+.dashboard-stat-card p {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.dashboard-stat-card h3 {
+  margin: 0;
+  font-size: clamp(26px, 4vw, 44px);
+  color: var(--text);
+  line-height: 1;
+}
+
+.dashboard-stat-card span {
+  color: var(--text-3);
+  font-size: 13px;
+}
+
+.dashboard-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.dashboard-list {
+  display: grid;
+  gap: 14px;
+}
+
+.dashboard-list-item {
+  min-height: 76px;
+  padding: 16px 18px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)),
+    var(--card-fill);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.dashboard-list-item strong {
+  display: block;
+  color: var(--text);
+  margin-bottom: 4px;
+  font-size: 15px;
+}
+
+.dashboard-list-item span {
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.dashboard-status-pill,
+.dashboard-trend {
+  min-height: 34px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.dashboard-status-pill.good,
+.dashboard-trend.up {
+  color: #9df1b9;
+  background: rgba(87, 211, 138, 0.12);
+}
+
+html[data-theme="light"] .dashboard-status-pill.good,
+html[data-theme="blue-light"] .dashboard-status-pill.good,
+html[data-theme="red-light"] .dashboard-status-pill.good,
+html[data-theme="pink-light"] .dashboard-status-pill.good,
+html[data-theme="green-light"] .dashboard-status-pill.good,
+html[data-theme="purple-light"] .dashboard-status-pill.good,
+html[data-theme="yellow-light"] .dashboard-status-pill.good,
+html[data-theme="light"] .dashboard-trend.up,
+html[data-theme="blue-light"] .dashboard-trend.up,
+html[data-theme="red-light"] .dashboard-trend.up,
+html[data-theme="pink-light"] .dashboard-trend.up,
+html[data-theme="green-light"] .dashboard-trend.up,
+html[data-theme="purple-light"] .dashboard-trend.up,
+html[data-theme="yellow-light"] .dashboard-trend.up {
+  color: #20784a;
+  background: rgba(71, 170, 109, 0.12);
+}
+
+.dashboard-status-pill.alert {
+  color: #ffd58d;
+  background: rgba(255, 183, 63, 0.14);
+}
+
+html[data-theme="light"] .dashboard-status-pill.alert,
+html[data-theme="blue-light"] .dashboard-status-pill.alert,
+html[data-theme="red-light"] .dashboard-status-pill.alert,
+html[data-theme="pink-light"] .dashboard-status-pill.alert,
+html[data-theme="green-light"] .dashboard-status-pill.alert,
+html[data-theme="purple-light"] .dashboard-status-pill.alert,
+html[data-theme="yellow-light"] .dashboard-status-pill.alert {
+  color: #8f5b12;
+  background: rgba(255, 195, 86, 0.18);
+}
+
+.dashboard-status-pill.working,
+.dashboard-trend.flat {
+  color: var(--text);
+  background: rgba(255,255,255,0.08);
+}
+
+.dashboard-role-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.dashboard-role-card,
+.dashboard-portal-card {
+  padding: 18px;
+  display: grid;
+  gap: 8px;
+}
+
+.dashboard-role-card strong,
+.dashboard-portal-card strong {
+  color: var(--text);
+  font-size: 16px;
+}
+
+.dashboard-role-card span,
+.dashboard-portal-card span {
+  color: var(--text-2);
+  font-size: 14px;
+}
+
+.dashboard-progress-stack {
+  display: grid;
+  gap: 16px;
+}
+
+.dashboard-progress-row {
+  display: grid;
+  gap: 10px;
+}
+
+.dashboard-progress-copy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.dashboard-progress-copy strong {
+  color: var(--text);
+}
+
+.dashboard-progress-copy span {
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.dashboard-progress-bar {
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.dashboard-progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--accent-1) 72%, transparent),
+      color-mix(in srgb, var(--accent-2) 66%, transparent),
+      color-mix(in srgb, var(--accent-4) 40%, transparent)
+    );
+  box-shadow: 0 0 20px color-mix(in srgb, var(--accent-1) 18%, transparent);
+}
+
+.dashboard-feed {
+  display: grid;
+  gap: 14px;
+}
+
+.dashboard-feed-item {
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)),
+    var(--card-fill);
+}
+
+.dashboard-feed-item strong {
+  display: block;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.dashboard-feed-item span {
+  color: var(--text-2);
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.dashboard-portal-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+/* =========================
    RESPONSIVE
 ========================= */
+@media (max-width: 1180px) {
+  .dashboard-shell {
+    grid-template-columns: 250px minmax(0, 1fr);
+  }
+
+  .dashboard-stats-grid,
+  .dashboard-portal-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 1100px) {
   .overview-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2183,6 +2936,35 @@ textarea:-webkit-autofill {
 
   .sidebar {
     position: static;
+  }
+
+  .dashboard-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-hero,
+  .dashboard-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-sidebar {
+    position: fixed;
+    top: 102px;
+    left: 14px;
+    right: 14px;
+    z-index: 90;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-10px);
+    transition:
+      opacity var(--transition-med),
+      transform var(--transition-med);
+  }
+
+  .dashboard-sidebar.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
   }
 }
 
@@ -2238,5 +3020,38 @@ textarea:-webkit-autofill {
 
   .panel-head {
     align-items: stretch;
+  }
+
+  .dashboard-topbar-inner {
+    width: min(1320px, calc(100% - 28px));
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .dashboard-topbar-left,
+  .dashboard-topbar-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .dashboard-topbar-center {
+    order: 3;
+  }
+
+  .dashboard-stats-grid,
+  .dashboard-role-grid,
+  .dashboard-portal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-overview,
+  .dashboard-panel,
+  .dashboard-hero {
+    padding: 20px;
+  }
+
+  .dashboard-list-item {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
