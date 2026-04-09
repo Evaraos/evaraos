@@ -85,88 +85,9 @@
     </section>
   </main>
 
-  <script type="module">
-    import {
-      auth,
-      signInWithEmailAndPassword,
-      setAuthPersistence,
-      syncUserSession,
-      protectRoute
-    } from "/evaraos/assets/js/firebase.js";
-
-    protectRoute({
-      requireAuth: false,
-      redirectAuthedTo: "/evaraos/dashboard.html"
-    });
-
-    const form = document.getElementById("loginForm");
-    const emailInput = document.getElementById("loginEmail");
-    const passwordInput = document.getElementById("loginPassword");
-    const rememberDeviceInput = document.getElementById("rememberDevice");
-    const messageEl = document.getElementById("loginMessage");
-    const toggleBtn = document.getElementById("loginPasswordToggle");
-
-    function setMessage(message = "") {
-      if (messageEl) messageEl.textContent = message;
-    }
-
-    function togglePasswordVisibility(input, button) {
-      const isPassword = input.type === "password";
-      input.type = isPassword ? "text" : "password";
-      button.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
-      button.classList.add("active-glow");
-      setTimeout(() => button.classList.remove("active-glow"), 220);
-    }
-
-    if (toggleBtn && passwordInput) {
-      toggleBtn.addEventListener("click", () => {
-        togglePasswordVisibility(passwordInput, toggleBtn);
-      });
-    }
-
-    form?.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      setMessage("");
-
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
-      const rememberDevice = Boolean(rememberDeviceInput?.checked);
-
-      if (!email || !password) {
-        setMessage("Please enter your email and password.");
-        return;
-      }
-
-      try {
-        await setAuthPersistence(rememberDevice);
-        const credential = await signInWithEmailAndPassword(auth, email, password);
-        syncUserSession(credential.user);
-        window.location.href = "/evaraos/dashboard.html";
-      } catch (error) {
-        console.error("Login failed:", error);
-
-        switch (error.code) {
-          case "auth/invalid-email":
-            setMessage("That email format is invalid.");
-            break;
-          case "auth/user-not-found":
-          case "auth/wrong-password":
-          case "auth/invalid-credential":
-            setMessage("Incorrect email or password.");
-            break;
-          case "auth/too-many-requests":
-            setMessage("Too many attempts. Try again in a bit.");
-            break;
-          default:
-            setMessage("Unable to sign in right now. Please try again.");
-            break;
-        }
-      }
-    });
-  </script>
-
   <script type="module" src="/evaraos/assets/js/theme.js"></script>
   <script type="module" src="/evaraos/assets/js/nav.js"></script>
   <script type="module" src="/evaraos/assets/js/firebase.js"></script>
+  <script type="module" src="/evaraos/assets/js/auth.js"></script>
 </body>
 </html>
