@@ -6,107 +6,36 @@
   <title>Sign Up • Evaraos Inc</title>
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
 </head>
-<body class="app-theme">
+<body class="signup-page">
   <div class="page-grid-overlay"></div>
-
-  <header class="landing-header">
-    <div class="landing-header-inner glass-shell aurora-card">
-      <a href="/evaraos/index.html" class="brand-link" aria-label="Go home">
-        <img
-          src="/evaraos/assets/img/evaraos_logo.png"
-          alt="Evaraos logo"
-          class="brand-logo"
-        />
-        <div class="brand-copy">
-          <strong>Evaraos Inc</strong>
-          <span>Subsidiaries Allocation SaaS</span>
-        </div>
-      </a>
-
-      <nav class="landing-nav" aria-label="Main navigation">
-        <div class="nav-dropdown" data-nav-dropdown>
-          <button
-            class="nav-hamburger"
-            type="button"
-            data-nav-toggle
-            aria-label="Open menu"
-            aria-expanded="false"
-          >
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-          </button>
-
-          <div class="nav-dropdown-menu glass-popover aurora-card" data-nav-menu>
-            <a href="/evaraos/login.html" class="menu-link" data-nav-link>Login</a>
-            <a href="/evaraos/signup.html" class="menu-link" data-nav-link>Sign Up</a>
-            <a href="/evaraos/dashboard.html" class="menu-link" data-nav-link>Dashboard</a>
-            <a href="/evaraos/companies.html" class="menu-link" data-nav-link>Companies</a>
-            <a href="/evaraos/users.html" class="menu-link" data-nav-link>Users</a>
-            <a href="/evaraos/leads.html" class="menu-link" data-nav-link>Leads</a>
-            <a href="/evaraos/jobs.html" class="menu-link" data-nav-link>Jobs</a>
-
-            <div class="menu-divider"></div>
-
-            <div class="menu-theme-block" data-theme-control>
-              <button
-                type="button"
-                class="theme-core-toggle"
-                data-theme-core-toggle
-                aria-expanded="false"
-                aria-label="Toggle light and dark mode"
-                title="Tap to switch light and dark"
-              >
-                <span class="theme-core-dot"></span>
-                <span class="theme-core-label" data-theme-mode-text>Dark</span>
-                <span class="theme-core-sep">•</span>
-                <span class="theme-core-group" data-theme-group-text>Neutral</span>
-                <span class="theme-core-sep">•</span>
-                <span class="theme-core-hint" data-theme-hint-text>tap</span>
-              </button>
-
-              <div class="theme-bubbles" data-theme-bubbles>
-                <button type="button" class="theme-bubble light" data-theme-bubble data-theme-group="neutral" aria-label="Neutral theme"></button>
-                <button type="button" class="theme-bubble blue" data-theme-bubble data-theme-group="blue" aria-label="Blue theme"></button>
-                <button type="button" class="theme-bubble red" data-theme-bubble data-theme-group="red" aria-label="Red theme"></button>
-                <button type="button" class="theme-bubble pink" data-theme-bubble data-theme-group="pink" aria-label="Pink theme"></button>
-                <button type="button" class="theme-bubble green" data-theme-bubble data-theme-group="green" aria-label="Green theme"></button>
-                <button type="button" class="theme-bubble purple" data-theme-bubble data-theme-group="purple" aria-label="Purple theme"></button>
-                <button type="button" class="theme-bubble yellow" data-theme-bubble data-theme-group="yellow" aria-label="Yellow theme"></button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
-    </div>
-  </header>
+  <div id="universalNav"></div>
 
   <main class="login-shell">
-    <section class="login-panel glass-card">
+    <section class="login-panel glass-card aurora-card">
       <div class="login-badge-wrap">
         <img
           src="/evaraos/assets/img/evaraos_logo.png"
-          alt="Evaraos"
+          alt="Evaraos logo"
           class="login-badge"
         />
       </div>
 
       <h1 class="login-title">Create Account</h1>
       <p class="login-subtitle">
-        Set up your account, create your password, and optionally add a security phone for new-device protection later.
+        Create your secure Evaraos account and start building inside the platform.
       </p>
 
       <form id="signupForm" class="login-form" novalidate>
         <div class="form-grid-2">
           <div class="form-group">
             <label class="field-label" for="signupName">Full Name</label>
-            <div class="input-shell">
+            <div class="input-shell aurora-card">
               <input
                 id="signupName"
-                name="signupName"
+                name="name"
                 type="text"
                 class="input"
-                placeholder="Full Name"
+                placeholder="Enter your full name"
                 autocomplete="name"
                 required
               />
@@ -114,61 +43,42 @@
           </div>
 
           <div class="form-group">
-            <label class="field-label" for="signupUsername">Username</label>
-            <div class="input-shell">
+            <label class="field-label" for="signupEmail">Email</label>
+            <div class="input-shell aurora-card">
               <input
-                id="signupUsername"
-                name="signupUsername"
-                type="text"
+                id="signupEmail"
+                name="email"
+                type="email"
                 class="input"
-                placeholder="Username"
-                autocomplete="username"
+                placeholder="Enter your email"
+                autocomplete="email"
                 required
               />
             </div>
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="field-label" for="signupEmail">Email</label>
-          <div class="input-shell">
-            <input
-              id="signupEmail"
-              name="signupEmail"
-              type="email"
-              class="input"
-              placeholder="Email"
-              autocomplete="email"
-              required
-            />
-          </div>
-        </div>
-
         <div class="form-grid-2">
           <div class="form-group">
             <label class="field-label" for="signupPassword">Create Password</label>
-            <div class="input-shell password-wrap">
+            <div class="password-wrap input-shell aurora-card">
               <input
                 id="signupPassword"
-                name="signupPassword"
+                name="password"
                 type="password"
                 class="input"
-                placeholder="Create Password"
+                placeholder="Create your password"
                 autocomplete="new-password"
                 required
               />
               <button
                 type="button"
-                id="toggleSignupPasswordBtn"
                 class="password-toggle"
+                id="signupPasswordToggle"
                 aria-label="Show password"
-                aria-pressed="false"
               >
-                <svg id="signupPasswordIconOpen" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12 5c5.6 0 9.7 4.7 10.9 6.4.27.36.27.86 0 1.22C21.7 14.3 17.6 19 12 19S2.3 14.3 1.1 12.62a1 1 0 0 1 0-1.22C2.3 9.7 6.4 5 12 5Zm0 2C8.52 7 5.6 9.74 3.98 12 5.6 14.26 8.52 17 12 17s6.4-2.74 8.02-5C18.4 9.74 15.48 7 12 7Zm0 1.8A3.2 3.2 0 1 1 8.8 12 3.2 3.2 0 0 1 12 8.8Zm0 2A1.2 1.2 0 1 0 13.2 12 1.2 1.2 0 0 0 12 10.8Z"/>
-                </svg>
-                <svg id="signupPasswordIconClosed" viewBox="0 0 24 24" aria-hidden="true" style="display:none;">
-                  <path d="M3.28 2.22 21.78 20.72l-1.06 1.06-3.16-3.15A12.9 12.9 0 0 1 12 19c-5.6 0-9.7-4.7-10.9-6.4a1 1 0 0 1 0-1.22A18.3 18.3 0 0 1 6 7.02L2.22 3.28l1.06-1.06ZM7.5 8.52A15.24 15.24 0 0 0 3.98 12C5.6 14.26 8.52 17 12 17c1.45 0 2.8-.32 4.02-.9l-2.17-2.17A3.18 3.18 0 0 1 10.07 10L7.5 8.52Zm4.82-1.48c5.1.13 8.84 4.52 9.58 5.36.27.36.27.86 0 1.22-.45.63-1.34 1.7-2.62 2.76l-1.43-1.43A13.42 13.42 0 0 0 20.02 12c-1.4-1.79-4.06-4.87-7.7-4.97V7.04Zm-.5 2.06a3.2 3.2 0 0 1 3.08 3.96l-3.95-3.95c.28-.01.57-.01.87-.01Z"/>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 5c5.5 0 9.5 5.1 10.7 6.9.2.3.2.8 0 1.1C21.5 14.9 17.5 20 12 20S2.5 14.9 1.3 13.1a1 1 0 0 1 0-1.1C2.5 10.1 6.5 5 12 5Zm0 2C8 7 4.8 10.3 3.4 12 4.8 13.7 8 17 12 17s7.2-3.3 8.6-5C19.2 10.3 16 7 12 7Zm0 1.8A3.2 3.2 0 1 1 8.8 12 3.2 3.2 0 0 1 12 8.8Zm0 2A1.2 1.2 0 1 0 13.2 12 1.2 1.2 0 0 0 12 10.8Z"/>
                 </svg>
               </button>
             </div>
@@ -176,79 +86,171 @@
 
           <div class="form-group">
             <label class="field-label" for="signupPasswordConfirm">Confirm Password</label>
-            <div class="input-shell password-wrap">
+            <div class="password-wrap input-shell aurora-card">
               <input
                 id="signupPasswordConfirm"
-                name="signupPasswordConfirm"
+                name="passwordConfirm"
                 type="password"
                 class="input"
-                placeholder="Confirm Password"
+                placeholder="Re-enter your password"
                 autocomplete="new-password"
                 required
               />
               <button
                 type="button"
-                id="toggleSignupPasswordConfirmBtn"
                 class="password-toggle"
-                aria-label="Show password"
-                aria-pressed="false"
+                id="signupPasswordConfirmToggle"
+                aria-label="Show password confirmation"
               >
-                <svg id="signupPasswordConfirmIconOpen" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12 5c5.6 0 9.7 4.7 10.9 6.4.27.36.27.86 0 1.22C21.7 14.3 17.6 19 12 19S2.3 14.3 1.1 12.62a1 1 0 0 1 0-1.22C2.3 9.7 6.4 5 12 5Zm0 2C8.52 7 5.6 9.74 3.98 12 5.6 14.26 8.52 17 12 17s6.4-2.74 8.02-5C18.4 9.74 15.48 7 12 7Zm0 1.8A3.2 3.2 0 1 1 8.8 12 3.2 3.2 0 0 1 12 8.8Zm0 2A1.2 1.2 0 1 0 13.2 12 1.2 1.2 0 0 0 12 10.8Z"/>
-                </svg>
-                <svg id="signupPasswordConfirmIconClosed" viewBox="0 0 24 24" aria-hidden="true" style="display:none;">
-                  <path d="M3.28 2.22 21.78 20.72l-1.06 1.06-3.16-3.15A12.9 12.9 0 0 1 12 19c-5.6 0-9.7-4.7-10.9-6.4a1 1 0 0 1 0-1.22A18.3 18.3 0 0 1 6 7.02L2.22 3.28l1.06-1.06ZM7.5 8.52A15.24 15.24 0 0 0 3.98 12C5.6 14.26 8.52 17 12 17c1.45 0 2.8-.32 4.02-.9l-2.17-2.17A3.18 3.18 0 0 1 10.07 10L7.5 8.52Zm4.82-1.48c5.1.13 8.84 4.52 9.58 5.36.27.36.27.86 0 1.22-.45.63-1.34 1.7-2.62 2.76l-1.43-1.43A13.42 13.42 0 0 0 20.02 12c-1.4-1.79-4.06-4.87-7.7-4.97V7.04Zm-.5 2.06a3.2 3.2 0 0 1 3.08 3.96l-3.95-3.95c.28-.01.57-.01.87-.01Z"/>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 5c5.5 0 9.5 5.1 10.7 6.9.2.3.2.8 0 1.1C21.5 14.9 17.5 20 12 20S2.5 14.9 1.3 13.1a1 1 0 0 1 0-1.1C2.5 10.1 6.5 5 12 5Zm0 2C8 7 4.8 10.3 3.4 12 4.8 13.7 8 17 12 17s7.2-3.3 8.6-5C19.2 10.3 16 7 12 7Zm0 1.8A3.2 3.2 0 1 1 8.8 12 3.2 3.2 0 0 1 12 8.8Zm0 2A1.2 1.2 0 1 0 13.2 12 1.2 1.2 0 0 0 12 10.8Z"/>
                 </svg>
               </button>
             </div>
           </div>
         </div>
 
-        <section class="security-inline-card glass-card">
-          <h3 class="inline-card-title">Optional Security Phone</h3>
-          <p class="inline-card-copy">
-            Add a phone number now so your account can use number authorization later for a new device or extra account recovery protection.
-          </p>
-
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label class="field-label" for="signupSecurityPhone">Security Phone</label>
-              <div class="input-shell">
-                <input
-                  id="signupSecurityPhone"
-                  name="signupSecurityPhone"
-                  type="tel"
-                  class="input"
-                  placeholder="+1 555 555 1234"
-                  autocomplete="tel"
-                />
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label class="field-label" for="signupSmsProtection">New Device Protection</label>
-              <div class="input-shell">
-                <select id="signupSmsProtection" class="input">
-                  <option value="off">Off</option>
-                  <option value="on">On</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </section>
+        <div class="remember-row aurora-card">
+          <label class="remember-check" for="signupRememberDevice">
+            <input id="signupRememberDevice" name="rememberDevice" type="checkbox" checked />
+            <span>Remember this device</span>
+          </label>
+        </div>
 
         <div class="login-actions-row">
           <button type="submit" class="btn btn-theme-primary">Create Account</button>
-          <a href="/evaraos/login.html" class="btn btn-theme-secondary">Back to Login</a>
+          <a href="/evaraos/login.html" class="btn btn-theme-secondary">Already Have Login</a>
         </div>
 
-        <p id="signupMessage" class="login-message"></p>
+        <p id="signupMessage" class="login-message" aria-live="polite"></p>
       </form>
     </section>
   </main>
 
+  <script type="module">
+    import {
+      auth,
+      createUserWithEmailAndPassword,
+      updateProfile,
+      setAuthPersistence,
+      saveUserRole,
+      syncUserSession,
+      protectRoute
+    } from "/evaraos/assets/js/firebase.js";
+
+    protectRoute({
+      requireAuth: false,
+      redirectAuthedTo: "/evaraos/dashboard.html"
+    });
+
+    const form = document.getElementById("signupForm");
+    const nameInput = document.getElementById("signupName");
+    const emailInput = document.getElementById("signupEmail");
+    const passwordInput = document.getElementById("signupPassword");
+    const passwordConfirmInput = document.getElementById("signupPasswordConfirm");
+    const rememberDeviceInput = document.getElementById("signupRememberDevice");
+    const messageEl = document.getElementById("signupMessage");
+
+    const passwordToggle = document.getElementById("signupPasswordToggle");
+    const passwordConfirmToggle = document.getElementById("signupPasswordConfirmToggle");
+
+    function setMessage(message = "") {
+      if (messageEl) messageEl.textContent = message;
+    }
+
+    function togglePasswordVisibility(input, button, showLabel, hideLabel) {
+      const isPassword = input.type === "password";
+      input.type = isPassword ? "text" : "password";
+      button.setAttribute("aria-label", isPassword ? hideLabel : showLabel);
+      button.classList.add("active-glow");
+      setTimeout(() => button.classList.remove("active-glow"), 220);
+    }
+
+    passwordToggle?.addEventListener("click", () => {
+      togglePasswordVisibility(
+        passwordInput,
+        passwordToggle,
+        "Show password",
+        "Hide password"
+      );
+    });
+
+    passwordConfirmToggle?.addEventListener("click", () => {
+      togglePasswordVisibility(
+        passwordConfirmInput,
+        passwordConfirmToggle,
+        "Show password confirmation",
+        "Hide password confirmation"
+      );
+    });
+
+    form?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      setMessage("");
+
+      const fullName = nameInput.value.trim();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      const confirmPassword = passwordConfirmInput.value;
+      const rememberDevice = Boolean(rememberDeviceInput?.checked);
+
+      if (!fullName || !email || !password || !confirmPassword) {
+        setMessage("Please complete every field.");
+        return;
+      }
+
+      if (password.length < 6) {
+        setMessage("Password must be at least 6 characters.");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        setMessage("Passwords do not match.");
+        return;
+      }
+
+      try {
+        await setAuthPersistence(rememberDevice);
+
+        const credential = await createUserWithEmailAndPassword(auth, email, password);
+
+        await updateProfile(credential.user, {
+          displayName: fullName
+        });
+
+        saveUserRole("owner");
+        syncUserSession(
+          {
+            ...credential.user,
+            displayName: fullName
+          },
+          "owner"
+        );
+
+        window.location.href = "/evaraos/dashboard.html";
+      } catch (error) {
+        console.error("Signup failed:", error);
+
+        switch (error.code) {
+          case "auth/email-already-in-use":
+            setMessage("That email is already in use.");
+            break;
+          case "auth/invalid-email":
+            setMessage("That email format is invalid.");
+            break;
+          case "auth/weak-password":
+            setMessage("Use a stronger password.");
+            break;
+          default:
+            setMessage("Unable to create account right now. Please try again.");
+            break;
+        }
+      }
+    });
+  </script>
+
   <script type="module" src="/evaraos/assets/js/theme.js"></script>
   <script type="module" src="/evaraos/assets/js/nav.js"></script>
-  <script type="module" src="/evaraos/assets/js/auth.js"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js"></script>
 </body>
 </html>
