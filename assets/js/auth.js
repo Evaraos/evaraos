@@ -1,543 +1,567 @@
+import { auth, db } from "./firebase.js";
+
 import {
-  auth,
-  db,
-  signInWithEmailAndPassword,
+  browserLocalPersistence,
+  browserSessionPersistence,
+  createUserWithEmailAndPassword,
+  getMultiFactorResolver,
+  onAuthStateChanged,
   sendPasswordResetEmail,
-  getDoc,
-  getDocs,
-  setDoc,
-  updateDoc,
-  deleteDoc,
+  setPersistence,
+  signInWithEmailAndPassword,
+  updateProfile,
+  PhoneAuthProvider,
+  PhoneMultiFactorGenerator,
+  RecaptchaVerifier
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
   doc,
-  collection,
-  query,
-  where,
+  getDoc,
   serverTimestamp,
-  getMultiFactorResolver
-} from "./firebase.js";
+  setDoc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-import { beginMfaSignIn, completeMfaSignIn } from "./mfa.js";
+const ROUTES = {
+  home: "/evaraos/index.html",
+  login: "/evaraos/login.html",
+  signup: "/evaraos/signup.html",
+  dashboard: "/evaraos/dashboard.html"
+};
 
-const TRUSTED_DEVICE_KEY = "evaraos_trusted_device_v2";
+const TRUSTED_DEVICE_KEY_PREFIX = "evaraos_trusted_device_";
 
-function normalizeUsername(value = "") {
-  return String(value).trim().replace(/^@+/, "").toLowerCase();
+let recaptchaVerifier = null;
+let mfaResolver = null;
+let mfaVerificationId = null;
+
+const els = {
+  loginForm: document.getElementById("loginForm"),
+  signupForm: document.getElementById("signupForm"),
+  resetForm: document.getElementById("resetForm"),
+
+  loginMessage: document.getElementById("loginMessage"),
+  signupMessage: document.getElementById("signupMessage"),
+  resetMessage: document.getElementById("resetMessage"),
+  mfaChallengeMessage: document.getElementById("mfaChallengeMessage"),
+
+  openResetBtn: document.getElementById("openResetBtn"),
+  closeResetBtn: document.getElementById("closeResetBtn"),
+  resetPanel: document.getElementById("resetPanel"),
+
+  mfaChallengePanel: document.getElementById("mfaChallengePanel"),
+  mfaChallengeForm: document.getElementById("mfaChallengeForm"),
+  mfaCode: document.getElementById("mfaCode"),
+
+  loginIdentifier: document.getElementById("username"),
+  loginPassword: document.getElementById("password"),
+  rememberTrustedDevice: document.getElementById("rememberTrustedDevice"),
+
+  signupName: document.getElementById("signupName"),
+  signupUsername: document.getElementById("signupUsername"),
+  signupEmail: document.getElementById("signupEmail"),
+  signupPassword: document.getElementById("signupPassword"),
+  signupPasswordConfirm: document.getElementById("signupPasswordConfirm"),
+  signupSecurityPhone: document.getElementById("signupSecurityPhone"),
+  signupSmsProtection: document.getElementById("signupSmsProtection"),
+
+  resetEmail: document.getElementById("resetEmail"),
+
+  recaptchaContainer: document.getElementById("recaptcha-container")
+};
+
+function setText(idOrElement, text = "", isError = false) {
+  const element =
+    typeof idOrElement === "string"
+      ? document.getElementById(idOrElement)
+      : idOrElement;
+
+  if (!element) return;
+  element.textContent = text;
+  element.style.color = isError ? "#ff9b8f" : "";
+}
+
+function clearMessages() {
+  setText(els.loginMessage, "");
+  setText(els.signupMessage, "");
+  setText(els.resetMessage, "");
+  setText(els.mfaChallengeMessage, "");
+}
+
+function sanitizeUsername(value = "") {
+  return value.trim().toLowerCase().replace(/^@+/, "");
 }
 
 function looksLikeEmail(value = "") {
-  const raw = String(value).trim();
-  return raw.includes("@") && raw.includes(".");
+  return /\S+@\S+\.\S+/.test(value.trim());
 }
 
-function makeTrustedDeviceKey(uid = "") {
-  return `${TRUSTED_DEVICE_KEY}:${uid}`;
+function normalizePhone(value = "") {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (trimmed.startsWith("+")) return trimmed.replace(/[^\d+]/g, "");
+  const digits = trimmed.replace(/\D/g, "");
+  return digits ? `+1${digits}` : "";
 }
 
-function setTrustedDevice(uid) {
+function passwordStrongEnough(password = "") {
+  return typeof password === "string" && password.length >= 8;
+}
+
+function trustedDeviceKey(uid) {
+  return `${TRUSTED_DEVICE_KEY_PREFIX}${uid}`;
+}
+
+function rememberTrustedDevice(uid) {
   if (!uid) return;
-  const expiresAt = Date.now() + 1000 * 60 * 60 * 24 * 30;
-  localStorage.setItem(
-    makeTrustedDeviceKey(uid),
-    JSON.stringify({
-      expiresAt
-    })
-  );
+  localStorage.setItem(trustedDeviceKey(uid), "true");
 }
 
-function isTrustedDevice(uid) {
-  if (!uid) return false;
-
-  const raw = localStorage.getItem(makeTrustedDeviceKey(uid));
-  if (!raw) return false;
-
-  try {
-    const parsed = JSON.parse(raw);
-    return !!parsed?.expiresAt && parsed.expiresAt > Date.now();
-  } catch {
-    return false;
-  }
-}
-
-function setText(id, message = "", isError = false) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.textContent = message;
-  el.style.color = isError ? "#ff9b8f" : "";
-}
-
-function formatLoginError(error, resolvedEmail = "") {
+function getFriendlyAuthError(error) {
   const code = error?.code || "";
-  const message = error?.message || "";
 
-  if (
-    code.includes("requests-from-referer-are-blocked") ||
-    message.includes("requests-from-referer")
-  ) {
-    return "This domain is being blocked by Firebase or Google Cloud restrictions.";
+  switch (code) {
+    case "auth/user-not-found":
+    case "auth/wrong-password":
+    case "auth/invalid-login-credentials":
+    case "auth/invalid-credential":
+      return "Invalid email, username, or password.";
+    case "auth/too-many-requests":
+      return "Too many attempts. Try again in a little bit.";
+    case "auth/network-request-failed":
+      return "Network error. Check your connection and try again.";
+    case "auth/email-already-in-use":
+      return "That email is already in use.";
+    case "auth/invalid-email":
+      return "Please enter a valid email address.";
+    case "auth/weak-password":
+      return "Password is too weak. Use at least 8 characters.";
+    case "auth/missing-password":
+      return "Please enter your password.";
+    case "auth/code-expired":
+      return "That verification code expired. Try again.";
+    case "auth/invalid-verification-code":
+      return "That verification code is invalid.";
+    default:
+      return "Something went wrong. Please try again.";
   }
-
-  if (code.includes("permission-denied")) {
-    return "Username lookup is blocked by Firestore rules.";
-  }
-
-  if (
-    code.includes("invalid-credential") ||
-    code.includes("wrong-password") ||
-    code.includes("user-not-found") ||
-    code.includes("invalid-login-credentials")
-  ) {
-    return resolvedEmail
-      ? `Invalid password for ${resolvedEmail}.`
-      : "Invalid email, username, or password.";
-  }
-
-  if (code.includes("too-many-requests")) {
-    return "Too many login attempts. Please wait a bit and try again.";
-  }
-
-  return error?.message || "Login failed. Please try again.";
 }
 
-async function resolveEmailFromLoginIdentifier(identifier) {
-  const raw = String(identifier || "").trim();
-  if (!raw) {
+async function resolveEmailFromIdentifier(identifier) {
+  const clean = identifier.trim();
+
+  if (!clean) {
     throw new Error("Missing login identifier.");
   }
 
-  if (looksLikeEmail(raw)) {
-    return raw.toLowerCase();
+  if (looksLikeEmail(clean)) {
+    return clean;
   }
 
-  const normalized = normalizeUsername(raw);
-  const usernameRef = doc(db, "usernames", normalized);
+  const normalizedUsername = sanitizeUsername(clean);
+  const usernameRef = doc(db, "usernames", normalizedUsername);
   const usernameSnap = await getDoc(usernameRef);
 
   if (!usernameSnap.exists()) {
-    throw new Error(`No username record found for "${normalized}".`);
+    throw new Error("Username not found.");
   }
 
-  const data = usernameSnap.data();
-
-  if (!data?.email) {
-    throw new Error(`Username "${normalized}" is missing its email field.`);
+  const usernameData = usernameSnap.data() || {};
+  if (!usernameData.email) {
+    throw new Error("Username record missing email.");
   }
 
-  return String(data.email).toLowerCase();
+  return usernameData.email;
 }
 
-export async function syncUsernameDirectoryByUserDoc(userId) {
-  const userRef = doc(db, "users", userId);
-  const userSnap = await getDoc(userRef);
-
-  if (!userSnap.exists()) {
-    throw new Error("User document not found.");
-  }
-
-  const user = userSnap.data();
-  const username = normalizeUsername(user.username || "");
-  const displayUsername = username
-    ? username.charAt(0).toUpperCase() + username.slice(1)
-    : "";
-  const handle = username ? `@${username}` : "";
-
-  const existingEntriesQuery = query(
-    collection(db, "usernames"),
-    where("uid", "==", userId)
-  );
-  const existingEntriesSnap = await getDocs(existingEntriesQuery);
-
-  for (const entry of existingEntriesSnap.docs) {
-    if (entry.id !== username) {
-      await deleteDoc(doc(db, "usernames", entry.id));
-    }
-  }
-
-  if (!username) return null;
-
-  const payload = {
-    uid: userId,
-    username,
-    displayUsername,
-    handle,
-    email: user.email || "",
-    companyId: user.companyId || "",
-    role: user.role || "",
-    active: user.active ?? true,
-    updatedAt: serverTimestamp()
-  };
-
-  const usernameRef = doc(db, "usernames", username);
-  const usernameSnap = await getDoc(usernameRef);
-
-  if (!usernameSnap.exists()) {
-    payload.createdAt = serverTimestamp();
-  }
-
-  await setDoc(usernameRef, payload, { merge: true });
-  return payload;
+async function usernameExists(username) {
+  const usernameRef = doc(db, "usernames", sanitizeUsername(username));
+  const snap = await getDoc(usernameRef);
+  return snap.exists();
 }
 
-export async function loginWithIdentifier(identifier, password) {
-  const email = await resolveEmailFromLoginIdentifier(identifier);
-
-  try {
-    const credential = await signInWithEmailAndPassword(auth, email, password);
-
-    const userRef = doc(db, "users", credential.user.uid);
-
-    try {
-      await updateDoc(userRef, {
-        lastLogin: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
-    } catch (error) {
-      console.warn("Could not update lastLogin:", error);
-    }
-
-    try {
-      await syncUsernameDirectoryByUserDoc(credential.user.uid);
-    } catch (error) {
-      console.warn("Could not sync username directory:", error);
-    }
-
-    return { credential, resolvedEmail: email };
-  } catch (error) {
-    if (error.code === "auth/multi-factor-auth-required") {
-      const resolver = getMultiFactorResolver(auth, error);
-      error.customData = { ...(error.customData || {}), resolver };
-    }
-
-    throw Object.assign(error, { resolvedEmail: email });
-  }
-}
-
-export async function createAccount({
-  name,
-  email,
+async function createUserDocuments({
+  uid,
+  fullName,
   username,
-  password,
-  confirmPassword,
+  email,
   securityPhone,
   smsProtection
 }) {
-  if (!name || !email || !username || !password || !confirmPassword) {
-    return { success: false, message: "Fill in all required fields." };
+  const normalizedUsername = sanitizeUsername(username);
+  const normalizedPhone = normalizePhone(securityPhone);
+
+  const userRef = doc(db, "users", uid);
+  const usernameRef = doc(db, "usernames", normalizedUsername);
+
+  await setDoc(userRef, {
+    uid,
+    fullName: fullName.trim(),
+    displayName: fullName.trim(),
+    displayUsername: username.trim(),
+    username: normalizedUsername,
+    email: email.trim().toLowerCase(),
+    role: "customer",
+    active: true,
+    approvalStatus: "approved",
+    companyAccessLevel: "standard",
+    smsProtection: smsProtection === "on",
+    securityPhone: normalizedPhone || "",
+    mfaPhone: normalizedPhone || "",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    lastLogin: serverTimestamp()
+  });
+
+  await setDoc(usernameRef, {
+    uid,
+    username: normalizedUsername,
+    email: email.trim().toLowerCase(),
+    active: true,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  });
+}
+
+function createRecaptchaIfNeeded() {
+  if (recaptchaVerifier || !els.recaptchaContainer) return recaptchaVerifier;
+
+  recaptchaVerifier = new RecaptchaVerifier(
+    auth,
+    els.recaptchaContainer,
+    {
+      size: "invisible"
+    }
+  );
+
+  return recaptchaVerifier;
+}
+
+async function beginMfaChallenge(mfaError) {
+  try {
+    mfaResolver = getMultiFactorResolver(auth, mfaError);
+    const hint = mfaResolver.hints?.[0];
+
+    if (!hint) {
+      throw new Error("No MFA hint available.");
+    }
+
+    createRecaptchaIfNeeded();
+
+    const phoneAuthProvider = new PhoneAuthProvider(auth);
+    mfaVerificationId = await phoneAuthProvider.verifyPhoneNumber(
+      {
+        multiFactorHint: hint,
+        session: mfaResolver.session
+      },
+      recaptchaVerifier
+    );
+
+    if (els.mfaChallengePanel) {
+      els.mfaChallengePanel.classList.remove("hidden");
+    }
+
+    setText(
+      els.mfaChallengeMessage,
+      `Verification code sent to ${hint.phoneNumber || "your phone"}.`,
+      false
+    );
+  } catch (error) {
+    console.error("MFA challenge start failed:", error);
+    setText(
+      els.loginMessage,
+      "Could not start number verification. Try again.",
+      true
+    );
+  }
+}
+
+async function finishMfaChallenge(code) {
+  if (!mfaResolver || !mfaVerificationId) {
+    throw new Error("Missing MFA state.");
+  }
+
+  const credential = PhoneAuthProvider.credential(
+    mfaVerificationId,
+    code.trim()
+  );
+  const assertion = PhoneMultiFactorGenerator.assertion(credential);
+  const result = await mfaResolver.resolveSignIn(assertion);
+
+  if (els.rememberTrustedDevice?.checked && result?.user?.uid) {
+    rememberTrustedDevice(result.user.uid);
+  }
+
+  await safelyUpdateLastLogin(result.user?.uid);
+  window.location.href = ROUTES.dashboard;
+}
+
+async function safelyUpdateLastLogin(uid) {
+  if (!uid) return;
+
+  try {
+    const userRef = doc(db, "users", uid);
+    await updateDoc(userRef, {
+      lastLogin: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.warn("Could not update lastLogin:", error);
+  }
+}
+
+function wirePasswordToggle(buttonId, inputId, openIconId, closedIconId) {
+  const button = document.getElementById(buttonId);
+  const input = document.getElementById(inputId);
+  const openIcon = document.getElementById(openIconId);
+  const closedIcon = document.getElementById(closedIconId);
+
+  if (!button || !input) return;
+
+  button.addEventListener("click", () => {
+    const nextType = input.type === "password" ? "text" : "password";
+    const isVisible = nextType === "text";
+
+    input.type = nextType;
+    button.setAttribute("aria-pressed", String(isVisible));
+    button.setAttribute(
+      "aria-label",
+      isVisible ? "Hide password" : "Show password"
+    );
+
+    if (openIcon) openIcon.style.display = isVisible ? "none" : "";
+    if (closedIcon) closedIcon.style.display = isVisible ? "" : "none";
+  });
+}
+
+async function handleLoginSubmit(event) {
+  event.preventDefault();
+  clearMessages();
+
+  const identifier = els.loginIdentifier?.value?.trim() || "";
+  const password = els.loginPassword?.value || "";
+
+  if (!identifier || !password) {
+    setText(els.loginMessage, "Please enter your email or username and password.", true);
+    return;
+  }
+
+  try {
+    const resolvedEmail = await resolveEmailFromIdentifier(identifier);
+
+    await setPersistence(
+      auth,
+      els.rememberTrustedDevice?.checked
+        ? browserLocalPersistence
+        : browserSessionPersistence
+    );
+
+    const result = await signInWithEmailAndPassword(auth, resolvedEmail, password);
+
+    if (els.rememberTrustedDevice?.checked && result?.user?.uid) {
+      rememberTrustedDevice(result.user.uid);
+    }
+
+    await safelyUpdateLastLogin(result.user?.uid);
+    window.location.href = ROUTES.dashboard;
+  } catch (error) {
+    console.error("Login failed:", error);
+
+    if (error?.code === "auth/multi-factor-auth-required") {
+      await beginMfaChallenge(error);
+      return;
+    }
+
+    setText(els.loginMessage, "Invalid email, username, or password.", true);
+  }
+}
+
+async function handleSignupSubmit(event) {
+  event.preventDefault();
+  clearMessages();
+
+  const fullName = els.signupName?.value?.trim() || "";
+  const username = els.signupUsername?.value?.trim() || "";
+  const email = els.signupEmail?.value?.trim() || "";
+  const password = els.signupPassword?.value || "";
+  const confirmPassword = els.signupPasswordConfirm?.value || "";
+  const securityPhone = els.signupSecurityPhone?.value?.trim() || "";
+  const smsProtection = els.signupSmsProtection?.value || "off";
+
+  if (!fullName || !username || !email || !password || !confirmPassword) {
+    setText(els.signupMessage, "Please fill out all required fields.", true);
+    return;
+  }
+
+  if (!passwordStrongEnough(password)) {
+    setText(els.signupMessage, "Use at least 8 characters for your password.", true);
+    return;
   }
 
   if (password !== confirmPassword) {
-    return { success: false, message: "Passwords do not match." };
+    setText(els.signupMessage, "Passwords do not match.", true);
+    return;
   }
 
-  if (password.length < 8) {
-    return {
-      success: false,
-      message: "Password should be at least 8 characters."
-    };
+  if (!looksLikeEmail(email)) {
+    setText(els.signupMessage, "Please enter a valid email address.", true);
+    return;
   }
 
-  return {
-    success: false,
-    message:
-      "Signup account creation wiring is the next backend-auth step. The UI is restored and ready."
-  };
-}
+  if (sanitizeUsername(username).length < 2) {
+    setText(els.signupMessage, "Username must be at least 2 characters.", true);
+    return;
+  }
 
-export async function sendReset(email) {
-  return sendPasswordResetEmail(auth, email);
-}
+  try {
+    const taken = await usernameExists(username);
+    if (taken) {
+      setText(els.signupMessage, "That username is already taken.", true);
+      return;
+    }
 
-function setupPasswordToggle(inputId, btnId, openId, closedId) {
-  const passwordInput = document.getElementById(inputId);
-  const toggleBtn = document.getElementById(btnId);
-  const openIcon = document.getElementById(openId);
-  const closedIcon = document.getElementById(closedId);
+    await setPersistence(auth, browserLocalPersistence);
 
-  if (!passwordInput || !toggleBtn || !openIcon || !closedIcon) return;
-
-  toggleBtn.addEventListener("click", () => {
-    const shouldShow = passwordInput.type === "password";
-    passwordInput.type = shouldShow ? "text" : "password";
-    toggleBtn.setAttribute("aria-pressed", String(shouldShow));
-    toggleBtn.setAttribute(
-      "aria-label",
-      shouldShow ? "Hide password" : "Show password"
+    const credential = await createUserWithEmailAndPassword(
+      auth,
+      email.trim().toLowerCase(),
+      password
     );
-    openIcon.style.display = shouldShow ? "none" : "block";
-    closedIcon.style.display = shouldShow ? "block" : "none";
-  });
-}
 
-function setupResetPanel() {
-  const openResetBtn = document.getElementById("openResetBtn");
-  const closeResetBtn = document.getElementById("closeResetBtn");
-  const resetPanel = document.getElementById("resetPanel");
+    await updateProfile(credential.user, {
+      displayName: fullName.trim()
+    });
 
-  if (!resetPanel) return;
-
-  openResetBtn?.addEventListener("click", () => {
-    resetPanel.classList.remove("hidden");
-  });
-
-  closeResetBtn?.addEventListener("click", () => {
-    resetPanel.classList.add("hidden");
-  });
-}
-
-function setupMfaChallengePanel() {
-  const challengeForm = document.getElementById("mfaChallengeForm");
-  if (!challengeForm) return;
-
-  challengeForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const code = document.getElementById("mfaCode")?.value?.trim() || "";
-    const submitBtn = challengeForm.querySelector('button[type="submit"]');
-
-    setText("mfaChallengeMessage", "");
-
-    try {
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = "Verifying...";
-      }
-
-      const credential = await completeMfaSignIn(code);
-
-      const remember = document.getElementById("rememberTrustedDevice");
-      if (remember?.checked) {
-        setTrustedDevice(credential.user.uid);
-      }
-
-      const userSnap = await getDoc(doc(db, "users", credential.user.uid));
-      const userData = userSnap.exists() ? userSnap.data() : { role: "customer" };
-      const role = userData?.role || "customer";
-
-      window.location.href =
-        role === "customer"
-          ? "/evaraos/customer_dashboard.html"
-          : "/evaraos/dashboard.html";
-    } catch (error) {
-      console.error("MFA challenge failed:", error);
-      setText(
-        "mfaChallengeMessage",
-        error.message || "Invalid verification code.",
-        true
-      );
-    } finally {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Verify Code";
-      }
-    }
-  });
-}
-
-function setupLoginForm() {
-  const loginForm = document.getElementById("loginForm");
-  if (!loginForm) return;
-
-  loginForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const identifier = document.getElementById("username")?.value?.trim() || "";
-    const password = document.getElementById("password")?.value || "";
-    const submitBtn = loginForm.querySelector('button[type="submit"]');
-
-    setText("loginMessage", "");
-
-    if (!identifier || !password) {
-      setText(
-        "loginMessage",
-        "Enter your email or username and password.",
-        true
-      );
-      return;
-    }
-
-    try {
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = "Signing In...";
-      }
-
-      const { credential, resolvedEmail } = await loginWithIdentifier(
-        identifier,
-        password
-      );
-
-      const userSnap = await getDoc(doc(db, "users", credential.user.uid));
-      const userData = userSnap.exists() ? userSnap.data() : { role: "customer" };
-      const role = userData?.role || "customer";
-      const remember = document.getElementById("rememberTrustedDevice");
-
-      if (!looksLikeEmail(identifier)) {
-        setText(
-          "loginMessage",
-          `Username "${identifier}" resolved to ${resolvedEmail}.`
-        );
-      }
-
-      if (
-        userData?.smsProtectionEnabled &&
-        userData?.securityPhone &&
-        !isTrustedDevice(credential.user.uid)
-      ) {
-        setText(
-          "loginMessage",
-          "This account uses number verification on new devices. Complete the SMS step when enabled."
-        );
-      }
-
-      if (remember?.checked) {
-        setTrustedDevice(credential.user.uid);
-      }
-
-      window.location.href =
-        role === "customer"
-          ? "/evaraos/customer_dashboard.html"
-          : "/evaraos/dashboard.html";
-    } catch (error) {
-      if (error.code === "auth/multi-factor-auth-required") {
-        try {
-          const result = await beginMfaSignIn(error, "recaptcha-container");
-          document.getElementById("mfaChallengePanel")?.classList.remove("hidden");
-          setText(
-            "mfaChallengeMessage",
-            `Code sent to ${result.maskedPhone}.`
-          );
-
-          if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.textContent = "Login";
-          }
-          return;
-        } catch (mfaError) {
-          console.error("MFA setup failed:", mfaError);
-          setText(
-            "loginMessage",
-            mfaError.message || "Could not start number verification.",
-            true
-          );
-        }
-      }
-
-      const resolvedEmail = error.resolvedEmail || "";
-      console.error("Login failed:", error);
-      setText("loginMessage", formatLoginError(error, resolvedEmail), true);
-    } finally {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Login";
-      }
-    }
-  });
-}
-
-function setupResetForm() {
-  const resetForm = document.getElementById("resetForm");
-  if (!resetForm) return;
-
-  resetForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const email = document.getElementById("resetEmail")?.value?.trim() || "";
-    const submitBtn = resetForm.querySelector('button[type="submit"]');
-
-    setText("resetMessage", "");
-
-    if (!email) {
-      setText("resetMessage", "Enter your account email.", true);
-      return;
-    }
-
-    try {
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = "Sending...";
-      }
-
-      await sendReset(email);
-      setText("resetMessage", "Reset email sent. Check your inbox.");
-    } catch (error) {
-      console.error("Reset email failed:", error);
-      setText(
-        "resetMessage",
-        "Could not send reset email. Check the address and try again.",
-        true
-      );
-    } finally {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Send Reset Email";
-      }
-    }
-  });
-}
-
-function setupSignupForm() {
-  const signupForm = document.getElementById("signupForm");
-  if (!signupForm) return;
-
-  signupForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const name = document.getElementById("signupName")?.value?.trim() || "";
-    const email = document.getElementById("signupEmail")?.value?.trim() || "";
-    const username = document.getElementById("signupUsername")?.value?.trim() || "";
-    const password = document.getElementById("signupPassword")?.value || "";
-    const confirmPassword =
-      document.getElementById("signupPasswordConfirm")?.value || "";
-    const securityPhone =
-      document.getElementById("signupSecurityPhone")?.value?.trim() || "";
-    const smsProtection =
-      document.getElementById("signupSmsProtection")?.value === "on";
-
-    setText("signupMessage", "");
-
-    const result = await createAccount({
-      name,
-      email,
+    await createUserDocuments({
+      uid: credential.user.uid,
+      fullName,
       username,
-      password,
-      confirmPassword,
+      email,
       securityPhone,
       smsProtection
     });
 
-    if (!result.success) {
-      setText("signupMessage", result.message, true);
-      return;
-    }
+    setText(els.signupMessage, "Account created successfully. Redirecting...");
+    window.location.href = ROUTES.dashboard;
+  } catch (error) {
+    console.error("Signup failed:", error);
+    setText(els.signupMessage, getFriendlyAuthError(error), true);
+  }
+}
 
-    setText("signupMessage", "Account created.");
+async function handleResetSubmit(event) {
+  event.preventDefault();
+  clearMessages();
+
+  const email = els.resetEmail?.value?.trim() || "";
+
+  if (!looksLikeEmail(email)) {
+    setText(els.resetMessage, "Enter a valid email address.", true);
+    return;
+  }
+
+  try {
+    await sendPasswordResetEmail(auth, email);
+    setText(els.resetMessage, "Reset email sent. Check your inbox.");
+  } catch (error) {
+    console.error("Reset failed:", error);
+    setText(els.resetMessage, getFriendlyAuthError(error), true);
+  }
+}
+
+async function handleMfaSubmit(event) {
+  event.preventDefault();
+  clearMessages();
+
+  const code = els.mfaCode?.value?.trim() || "";
+
+  if (!code) {
+    setText(els.mfaChallengeMessage, "Enter the verification code.", true);
+    return;
+  }
+
+  try {
+    await finishMfaChallenge(code);
+  } catch (error) {
+    console.error("MFA verify failed:", error);
+    setText(els.mfaChallengeMessage, getFriendlyAuthError(error), true);
+  }
+}
+
+function bindResetPanel() {
+  if (els.openResetBtn && els.resetPanel) {
+    els.openResetBtn.addEventListener("click", () => {
+      els.resetPanel.classList.remove("hidden");
+      setText(els.resetMessage, "");
+    });
+  }
+
+  if (els.closeResetBtn && els.resetPanel) {
+    els.closeResetBtn.addEventListener("click", () => {
+      els.resetPanel.classList.add("hidden");
+      setText(els.resetMessage, "");
+    });
+  }
+}
+
+function guardAuthPages() {
+  const path = window.location.pathname;
+
+  if (
+    !path.endsWith("/login.html") &&
+    !path.endsWith("/signup.html")
+  ) {
+    return;
+  }
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      window.location.href = ROUTES.dashboard;
+    }
   });
 }
 
-window.addEventListener("DOMContentLoaded", () => {
-  setupPasswordToggle(
-    "password",
+function init() {
+  wirePasswordToggle(
     "togglePasswordBtn",
+    "password",
     "passwordIconOpen",
     "passwordIconClosed"
   );
 
-  setupPasswordToggle(
-    "signupPassword",
+  wirePasswordToggle(
     "toggleSignupPasswordBtn",
+    "signupPassword",
     "signupPasswordIconOpen",
     "signupPasswordIconClosed"
   );
 
-  setupPasswordToggle(
-    "signupPasswordConfirm",
+  wirePasswordToggle(
     "toggleSignupPasswordConfirmBtn",
+    "signupPasswordConfirm",
     "signupPasswordConfirmIconOpen",
     "signupPasswordConfirmIconClosed"
   );
 
-  setupResetPanel();
-  setupLoginForm();
-  setupResetForm();
-  setupSignupForm();
-  setupMfaChallengePanel();
-});
+  if (els.loginForm) {
+    els.loginForm.addEventListener("submit", handleLoginSubmit);
+  }
+
+  if (els.signupForm) {
+    els.signupForm.addEventListener("submit", handleSignupSubmit);
+  }
+
+  if (els.resetForm) {
+    els.resetForm.addEventListener("submit", handleResetSubmit);
+  }
+
+  if (els.mfaChallengeForm) {
+    els.mfaChallengeForm.addEventListener("submit", handleMfaSubmit);
+  }
+
+  bindResetPanel();
+  guardAuthPages();
+}
+
+window.addEventListener("DOMContentLoaded", init);
