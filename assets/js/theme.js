@@ -1,4 +1,4 @@
-const STORAGE_KEY = "evaraos_theme_v7";
+const STORAGE_KEY = "evaraos_theme_v8";
 
 const ALL_THEMES = [
   "light",
@@ -17,15 +17,14 @@ const ALL_THEMES = [
   "yellow-dark"
 ];
 
-const BUBBLE_GROUPS = {
-  light: ["light", "dark"],
-  dark: ["light", "dark"],
-  blue: ["blue-light", "blue-dark"],
-  red: ["red-light", "red-dark"],
-  pink: ["pink-light", "pink-dark"],
-  green: ["green-light", "green-dark"],
-  purple: ["purple-light", "purple-dark"],
-  yellow: ["yellow-light", "yellow-dark"]
+const COLOR_GROUPS = {
+  neutral: { light: "light", dark: "dark", label: "Neutral" },
+  blue: { light: "blue-light", dark: "blue-dark", label: "Blue" },
+  red: { light: "red-light", dark: "red-dark", label: "Red" },
+  pink: { light: "pink-light", dark: "pink-dark", label: "Pink" },
+  green: { light: "green-light", dark: "green-dark", label: "Green" },
+  purple: { light: "purple-light", dark: "purple-dark", label: "Purple" },
+  yellow: { light: "yellow-light", dark: "yellow-dark", label: "Yellow" }
 };
 
 function isValidTheme(theme) {
@@ -42,61 +41,73 @@ function getCurrentTheme() {
   return isValidTheme(current) ? current : getSavedTheme();
 }
 
+function getThemeMode(theme) {
+  if (theme === "light") return "light";
+  if (theme === "dark") return "dark";
+  return theme.endsWith("-light") ? "light" : "dark";
+}
+
+function getThemeGroup(theme) {
+  if (theme === "light" || theme === "dark") return "neutral";
+  return theme.split("-")[0];
+}
+
+function getThemeFromGroup(group, mode) {
+  const entry = COLOR_GROUPS[group] || COLOR_GROUPS.neutral;
+  return entry[mode] || entry.dark;
+}
+
+function getGroupLabel(group) {
+  return (COLOR_GROUPS[group] || COLOR_GROUPS.neutral).label;
+}
+
 function setExpanded(element, isExpanded) {
   if (!element) return;
   element.setAttribute("aria-expanded", isExpanded ? "true" : "false");
 }
 
-function getThemeLabel(theme) {
-  const labels = {
-    light: "Light",
-    dark: "Dark",
-    "blue-light": "Blue Light",
-    "blue-dark": "Blue Dark",
-    "red-light": "Red Light",
-    "red-dark": "Red Dark",
-    "pink-light": "Pink Light",
-    "pink-dark": "Pink Dark",
-    "green-light": "Green Light",
-    "green-dark": "Green Dark",
-    "purple-light": "Purple Light",
-    "purple-dark": "Purple Dark",
-    "yellow-light": "Yellow Light",
-    "yellow-dark": "Yellow Dark"
-  };
-
-  return labels[theme] || "Theme";
-}
-
-function getDotClass(theme) {
-  return `theme-dot-${theme}`;
-}
-
-function applyTheme(theme) {
-  const nextTheme = isValidTheme(theme) ? theme : "dark";
-
-  document.documentElement.setAttribute("data-theme", nextTheme);
-  localStorage.setItem(STORAGE_KEY, nextTheme);
+function updateThemeUI(theme) {
+  const group = getThemeGroup(theme);
+  const mode = getThemeMode(theme);
 
   document.querySelectorAll("[data-theme-bubble]").forEach((bubble) => {
-    const bubbleValue = bubble.getAttribute("data-theme-value");
-    const isActive = bubbleValue === nextTheme;
-    bubble.classList.toggle("active", isActive);
+    const bubbleGroup = bubble.getAttribute("data-theme-group");
+    bubble.classList.toggle("active", bubbleGroup === group);
   });
 
   document.querySelectorAll("[data-theme-core-toggle]").forEach((toggle) => {
     const label = toggle.querySelector(".theme-core-label");
     const dot = toggle.querySelector(".theme-core-dot");
+    const modeText = toggle.querySelector("[data-theme-mode-text]");
+    const groupText = toggle.querySelector("[data-theme-group-text]");
 
     if (label) {
-      label.textContent = getThemeLabel(nextTheme);
+      label.textContent = `${mode === "dark" ? "Dark" : "Light"}`;
+    }
+
+    if (modeText) {
+      modeText.textContent = mode === "dark" ? "Dark" : "Light";
+    }
+
+    if (groupText) {
+      groupText.textContent = getGroupLabel(group);
     }
 
     if (dot) {
       dot.className = "theme-core-dot";
-      dot.classList.add(getDotClass(nextTheme));
+      dot.classList.add(`theme-dot-${theme}`);
     }
+
+    toggle.dataset.currentGroup = group;
+    toggle.dataset.currentMode = mode;
   });
+}
+
+function applyTheme(theme) {
+  const nextTheme = isValidTheme(theme) ? theme : "dark";
+  document.documentElement.setAttribute("data-theme", nextTheme);
+  localStorage.setItem(STORAGE_KEY, nextTheme);
+  updateThemeUI(nextTheme);
 }
 
 function closeAllThemeMenus() {
@@ -123,28 +134,6 @@ function toggleThemeMenu(container) {
   }
 }
 
-function getGroupFromBubble(bubble) {
-  const group = bubble.getAttribute("data-theme-group");
-  if (group && BUBBLE_GROUPS[group]) return group;
-
-  const value = bubble.getAttribute("data-theme-value");
-  if (!value) return null;
-
-  const matched = Object.keys(BUBBLE_GROUPS).find((key) => BUBBLE_GROUPS[key].includes(value));
-  return matched || null;
-}
-
-function getPairedTheme(group, currentTheme) {
-  const pair = BUBBLE_GROUPS[group];
-  if (!pair) return currentTheme;
-
-  if (pair.length === 2) {
-    return currentTheme === pair[0] ? pair[1] : pair[0];
-  }
-
-  return pair[0];
-}
-
 function bindThemeContainer(container) {
   if (!container || container.dataset.themeBound === "true") return;
 
@@ -159,11 +148,22 @@ function bindThemeContainer(container) {
     event.preventDefault();
     event.stopPropagation();
 
+    const currentTheme = getCurrentTheme();
+    const currentGroup = getThemeGroup(currentTheme);
+    const currentMode = getThemeMode(currentTheme);
+    const nextMode = currentMode === "dark" ? "light" : "dark";
+    const nextTheme = getThemeFromGroup(currentGroup, nextMode);
+
+    applyTheme(nextTheme);
+  });
+
+  toggle.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
     if (window.closeAllNavDropdowns) {
       const insideNavMenu = !!container.closest("[data-nav-menu]");
-      if (!insideNavMenu) {
-        window.closeAllNavDropdowns();
-      }
+      if (!insideNavMenu) window.closeAllNavDropdowns();
     }
 
     toggleThemeMenu(container);
@@ -178,21 +178,9 @@ function bindThemeContainer(container) {
       event.preventDefault();
       event.stopPropagation();
 
-      const theme = bubble.getAttribute("data-theme-value");
-      if (isValidTheme(theme)) {
-        applyTheme(theme);
-      }
-    });
-
-    bubble.addEventListener("dblclick", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-
-      const group = getGroupFromBubble(bubble);
-      if (!group) return;
-
-      const currentTheme = getCurrentTheme();
-      const nextTheme = getPairedTheme(group, currentTheme);
+      const group = bubble.getAttribute("data-theme-group") || "neutral";
+      const currentMode = getThemeMode(getCurrentTheme());
+      const nextTheme = getThemeFromGroup(group, currentMode);
 
       applyTheme(nextTheme);
     });
