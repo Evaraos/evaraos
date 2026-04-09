@@ -16,8 +16,9 @@
           type="button"
           class="nav-hamburger dashboard-sidebar-toggle"
           id="dashboardSidebarToggle"
-          aria-label="Toggle sidebar"
+          aria-label="Open executive overview"
           aria-expanded="false"
+          aria-controls="dashboardSidebar"
         >
           <span class="hamburger-line"></span>
           <span class="hamburger-line"></span>
@@ -32,7 +33,7 @@
           />
           <div class="brand-copy">
             <strong>Evaraos Inc</strong>
-            <span>Executive Control Center</span>
+            <span id="dashboardBrandSubline">Executive Control Center</span>
           </div>
         </a>
       </div>
@@ -49,20 +50,20 @@
             <span class="dashboard-avatar" id="dashboardAvatar">G</span>
           </button>
 
-          <div class="nav-dropdown-menu glass-popover aurora-card" data-nav-menu>
+          <div class="nav-dropdown-menu glass-popover aurora-card dashboard-profile-dropdown" data-nav-menu>
             <div class="dashboard-profile-card">
               <div class="dashboard-profile-main">
                 <span class="dashboard-avatar dashboard-avatar-large" id="dashboardAvatarLarge">G</span>
                 <div>
                   <strong id="dashboardProfileName">Owner Account</strong>
-                  <span id="dashboardProfileRole">Owner • Parent Access</span>
+                  <span id="dashboardProfileRole">Executive Access</span>
                 </div>
               </div>
             </div>
 
             <div class="menu-divider"></div>
 
-            <a href="/evaraos/dashboard.html" class="menu-link" data-nav-link>Overview</a>
+            <a href="/evaraos/profile.html" class="menu-link" data-nav-link>Edit Profile</a>
             <a href="/evaraos/settings.html" class="menu-link" data-nav-link>Settings</a>
             <a href="/evaraos/security.html" class="menu-link" data-nav-link>Account Security</a>
             <button type="button" id="logoutBtn" class="menu-link dashboard-menu-button">Logout</button>
@@ -120,7 +121,7 @@
 
         <div class="dashboard-sidebar-head">
           <p class="dashboard-sidebar-eyebrow">Platform Navigation</p>
-          <h2>Executive Overview</h2>
+          <h2 id="dashboardOverviewTitle">Executive Overview</h2>
         </div>
 
         <nav class="dashboard-sidebar-nav" aria-label="Dashboard sections">
@@ -165,10 +166,10 @@
           </a>
         </nav>
 
-        <div class="dashboard-sidebar-foot glass-card">
+        <div class="dashboard-sidebar-foot glass-card aurora-card">
           <div class="dashboard-sidebar-foot-copy">
             <strong>Organization Performance</strong>
-            <span>Track operations, growth, approvals, and team execution in one place.</span>
+            <span>Track operations, growth, approvals, team execution, and customer flow in one place.</span>
           </div>
           <a href="/evaraos/organization.html" class="btn btn-theme-primary">Open Org View</a>
         </div>
@@ -181,7 +182,7 @@
           <p class="dashboard-eyebrow">OWNER DASHBOARD</p>
           <h1>Run the entire operation from one control center.</h1>
           <p class="dashboard-hero-text">
-            Watch companies, users, leads, jobs, approvals, and customer activity in a single
+            Watch companies, users, leads, jobs, approvals, and customer activity in one premium
             Apple-glass-style dashboard built for Evaraos Inc.
           </p>
 
@@ -191,7 +192,7 @@
           </div>
         </div>
 
-        <div class="dashboard-hero-panel glass-card">
+        <div class="dashboard-hero-panel glass-card aurora-card">
           <div class="dashboard-hero-panel-top">
             <span class="dashboard-mini-badge">Live Platform</span>
             <span class="dashboard-live-dot"></span>
@@ -222,25 +223,25 @@
         </div>
 
         <div class="dashboard-stats-grid">
-          <article class="dashboard-stat-card glass-card">
+          <article class="dashboard-stat-card glass-card aurora-card">
             <p>Active Companies</p>
             <h3>12</h3>
             <span>3 added this quarter</span>
           </article>
 
-          <article class="dashboard-stat-card glass-card">
+          <article class="dashboard-stat-card glass-card aurora-card">
             <p>Open Leads</p>
             <h3>148</h3>
             <span>24 high-priority</span>
           </article>
 
-          <article class="dashboard-stat-card glass-card">
+          <article class="dashboard-stat-card glass-card aurora-card">
             <p>Jobs In Progress</p>
             <h3>39</h3>
             <span>8 require review</span>
           </article>
 
-          <article class="dashboard-stat-card glass-card">
+          <article class="dashboard-stat-card glass-card aurora-card">
             <p>Monthly Revenue</p>
             <h3>$84.2K</h3>
             <span>+18.4% vs last month</span>
@@ -259,7 +260,7 @@
           </div>
 
           <div class="dashboard-list">
-            <article class="dashboard-list-item">
+            <article class="dashboard-list-item glass-card aurora-card">
               <div>
                 <strong>Supreme True Clean</strong>
                 <span>Exterior cleaning operations • Jacksonville</span>
@@ -267,7 +268,7 @@
               <span class="dashboard-status-pill good">Healthy</span>
             </article>
 
-            <article class="dashboard-list-item">
+            <article class="dashboard-list-item glass-card aurora-card">
               <div>
                 <strong>OneofOne Cleaning</strong>
                 <span>Interior cleaning marketplace layer</span>
@@ -275,7 +276,7 @@
               <span class="dashboard-status-pill good">Growing</span>
             </article>
 
-            <article class="dashboard-list-item">
+            <article class="dashboard-list-item glass-card aurora-card">
               <div>
                 <strong>Evaraos Parent</strong>
                 <span>Core SaaS, payments, admin, and reporting</span>
@@ -295,19 +296,19 @@
           </div>
 
           <div class="dashboard-role-grid">
-            <article class="dashboard-role-card glass-card">
+            <article class="dashboard-role-card glass-card aurora-card">
               <strong>Owners</strong>
               <span>4 users</span>
             </article>
-            <article class="dashboard-role-card glass-card">
+            <article class="dashboard-role-card glass-card aurora-card">
               <strong>Admins</strong>
               <span>9 users</span>
             </article>
-            <article class="dashboard-role-card glass-card">
+            <article class="dashboard-role-card glass-card aurora-card">
               <strong>Sales Reps</strong>
               <span>27 users</span>
             </article>
-            <article class="dashboard-role-card glass-card">
+            <article class="dashboard-role-card glass-card aurora-card">
               <strong>Technicians</strong>
               <span>18 users</span>
             </article>
@@ -326,7 +327,7 @@
           </div>
 
           <div class="dashboard-list">
-            <article class="dashboard-list-item">
+            <article class="dashboard-list-item glass-card aurora-card">
               <div>
                 <strong>Territory Alpha</strong>
                 <span>112 doors • 18 lead captures today</span>
@@ -334,7 +335,7 @@
               <span class="dashboard-trend up">↑ 22%</span>
             </article>
 
-            <article class="dashboard-list-item">
+            <article class="dashboard-list-item glass-card aurora-card">
               <div>
                 <strong>Territory Beta</strong>
                 <span>96 doors • 13 lead captures today</span>
@@ -342,7 +343,7 @@
               <span class="dashboard-trend up">↑ 11%</span>
             </article>
 
-            <article class="dashboard-list-item">
+            <article class="dashboard-list-item glass-card aurora-card">
               <div>
                 <strong>Territory Gamma</strong>
                 <span>74 doors • 7 lead captures today</span>
@@ -408,7 +409,7 @@
           </div>
 
           <div class="dashboard-list">
-            <article class="dashboard-list-item">
+            <article class="dashboard-list-item glass-card aurora-card">
               <div>
                 <strong>Trash Bin Route • Jacksonville South</strong>
                 <span>7 stops remaining • Technician team assigned</span>
@@ -416,7 +417,7 @@
               <span class="dashboard-status-pill working">In Progress</span>
             </article>
 
-            <article class="dashboard-list-item">
+            <article class="dashboard-list-item glass-card aurora-card">
               <div>
                 <strong>Pressure Wash • Residential Package</strong>
                 <span>Awaiting customer approval for upsell</span>
@@ -424,10 +425,10 @@
               <span class="dashboard-status-pill alert">Pending</span>
             </article>
 
-            <article class="dashboard-list-item">
+            <article class="dashboard-list-item glass-card aurora-card">
               <div>
                 <strong>House Wash • Priority Customer</strong>
-                <span>Before/after media uploaded successfully</span>
+                <span>Before / after media uploaded successfully</span>
               </div>
               <span class="dashboard-status-pill good">Complete</span>
             </article>
@@ -444,17 +445,17 @@
           </div>
 
           <div class="dashboard-feed">
-            <article class="dashboard-feed-item">
+            <article class="dashboard-feed-item glass-card aurora-card">
               <strong>Owner access confirmed</strong>
               <span>Gilbert Ramos opened dashboard overview 2 min ago</span>
             </article>
 
-            <article class="dashboard-feed-item">
+            <article class="dashboard-feed-item glass-card aurora-card">
               <strong>Lead updated</strong>
               <span>Status changed from New to Contacted • 11 min ago</span>
             </article>
 
-            <article class="dashboard-feed-item">
+            <article class="dashboard-feed-item glass-card aurora-card">
               <strong>User permission changed</strong>
               <span>Admin role granted to operations manager • 34 min ago</span>
             </article>
@@ -472,22 +473,22 @@
         </div>
 
         <div class="dashboard-portal-grid">
-          <article class="dashboard-portal-card glass-card">
+          <article class="dashboard-portal-card glass-card aurora-card">
             <strong>Subscriptions</strong>
             <span>63 active monthly plans</span>
           </article>
 
-          <article class="dashboard-portal-card glass-card">
+          <article class="dashboard-portal-card glass-card aurora-card">
             <strong>Invoices</strong>
             <span>91 ready for delivery</span>
           </article>
 
-          <article class="dashboard-portal-card glass-card">
+          <article class="dashboard-portal-card glass-card aurora-card">
             <strong>Before / After Media</strong>
             <span>126 project folders synced</span>
           </article>
 
-          <article class="dashboard-portal-card glass-card">
+          <article class="dashboard-portal-card glass-card aurora-card">
             <strong>Support Requests</strong>
             <span>8 open conversations</span>
           </article>
@@ -499,19 +500,64 @@
   <script type="module" src="/evaraos/assets/js/theme.js"></script>
   <script type="module" src="/evaraos/assets/js/nav.js"></script>
   <script type="module" src="/evaraos/assets/js/firebase.js"></script>
+
   <script type="module">
     import { auth, onAuthStateChanged, signOut } from "/evaraos/assets/js/firebase.js";
 
     const sidebarToggle = document.getElementById("dashboardSidebarToggle");
     const sidebar = document.getElementById("dashboardSidebar");
     const logoutBtn = document.getElementById("logoutBtn");
+
     const avatar = document.getElementById("dashboardAvatar");
     const avatarLarge = document.getElementById("dashboardAvatarLarge");
     const profileName = document.getElementById("dashboardProfileName");
     const profileRole = document.getElementById("dashboardProfileRole");
+    const brandSubline = document.getElementById("dashboardBrandSubline");
+    const overviewTitle = document.getElementById("dashboardOverviewTitle");
+
+    const ROLE_MAP = {
+      owner: {
+        heading: "Executive Overview",
+        subline: "Executive Control Center",
+        profile: "Executive Access"
+      },
+      admin: {
+        heading: "Admin Overview",
+        subline: "Administrative Control Center",
+        profile: "Admin Access"
+      },
+      manager: {
+        heading: "Management Overview",
+        subline: "Management Control Center",
+        profile: "Manager Access"
+      },
+      sales: {
+        heading: "Sales Overview",
+        subline: "Sales Control Center",
+        profile: "Sales Access"
+      },
+      technician: {
+        heading: "Technician Overview",
+        subline: "Technician Control Center",
+        profile: "Technician Access"
+      },
+      customer: {
+        heading: "Customer Overview",
+        subline: "Customer Control Center",
+        profile: "Customer Access"
+      }
+    };
+
+    function applyRolePresentation(roleKey = "owner") {
+      const role = ROLE_MAP[roleKey] || ROLE_MAP.owner;
+      if (overviewTitle) overviewTitle.textContent = role.heading;
+      if (brandSubline) brandSubline.textContent = role.subline;
+      if (profileRole) profileRole.textContent = role.profile;
+    }
 
     if (sidebarToggle && sidebar) {
-      sidebarToggle.addEventListener("click", () => {
+      sidebarToggle.addEventListener("click", (event) => {
+        event.stopPropagation();
         const isOpen = sidebar.classList.toggle("open");
         sidebarToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
       });
@@ -519,6 +565,9 @@
 
     document.querySelectorAll(".dashboard-nav-link").forEach((link) => {
       link.addEventListener("click", () => {
+        document.querySelectorAll(".dashboard-nav-link").forEach((item) => item.classList.remove("active"));
+        link.classList.add("active");
+
         if (window.innerWidth <= 980 && sidebar) {
           sidebar.classList.remove("open");
           sidebarToggle?.setAttribute("aria-expanded", "false");
@@ -537,6 +586,17 @@
       });
     }
 
+    document.addEventListener("click", (event) => {
+      if (window.innerWidth <= 980 && sidebar && sidebarToggle) {
+        const insideSidebar = sidebar.contains(event.target);
+        const insideToggle = sidebarToggle.contains(event.target);
+        if (!insideSidebar && !insideToggle) {
+          sidebar.classList.remove("open");
+          sidebarToggle.setAttribute("aria-expanded", "false");
+        }
+      }
+    });
+
     onAuthStateChanged(auth, (user) => {
       if (!user) {
         window.location.href = "/evaraos/login.html";
@@ -544,13 +604,21 @@
       }
 
       const displayName = user.displayName || user.email || "Owner Account";
-      const roleText = "Authenticated User";
+      const email = (user.email || "").toLowerCase();
       const initial = (displayName || "U").trim().charAt(0).toUpperCase();
+
+      let roleKey = "owner";
+      if (email.includes("admin")) roleKey = "admin";
+      else if (email.includes("manager")) roleKey = "manager";
+      else if (email.includes("sales")) roleKey = "sales";
+      else if (email.includes("tech")) roleKey = "technician";
+      else if (email.includes("customer")) roleKey = "customer";
+
+      applyRolePresentation(roleKey);
 
       if (avatar) avatar.textContent = initial;
       if (avatarLarge) avatarLarge.textContent = initial;
       if (profileName) profileName.textContent = displayName;
-      if (profileRole) profileRole.textContent = roleText;
     });
   </script>
 </body>
