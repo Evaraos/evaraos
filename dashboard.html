@@ -1,101 +1,516 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard | Evaraos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Dashboard • Evaraos Inc</title>
+
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css" />
 </head>
-<body class="app-shell app-theme">
-  <div class="app-bg">
-    <div class="bg-orb bg-orb-1"></div>
-    <div class="bg-orb bg-orb-2"></div>
-    <div class="bg-grid"></div>
-  </div>
+<body class="dashboard-body">
+  <div class="page-grid-overlay"></div>
 
-  <header id="topbar" class="topbar"></header>
+  <header class="dashboard-topbar">
+    <div class="dashboard-topbar-inner glass-shell aurora-card">
+      <div class="dashboard-topbar-left">
+        <button
+          type="button"
+          class="nav-hamburger dashboard-sidebar-toggle"
+          id="dashboardSidebarToggle"
+          aria-label="Toggle sidebar"
+          aria-expanded="false"
+        >
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+        </button>
 
-  <div class="page-shell">
-    <aside id="sidebar" class="sidebar"></aside>
+        <a href="/evaraos/index.html" class="brand-link dashboard-brand" aria-label="Go home">
+          <img
+            src="/evaraos/assets/img/evaraos_logo.png"
+            alt="Evaraos logo"
+            class="brand-logo"
+          />
+          <div class="brand-copy">
+            <strong>Evaraos Inc</strong>
+            <span>Executive Control Center</span>
+          </div>
+        </a>
+      </div>
 
-    <main class="main-content">
-      <section class="glass-card aurora-card shine-border">
-        <div class="section-title-row">
-          <div>
-            <h1 style="margin:0;">Executive Dashboard</h1>
-            <p class="muted" style="margin:8px 0 0;">
-              Platform overview, company activity, lead flow, and job visibility.
-            </p>
+      <div class="dashboard-topbar-center">
+        <div class="dashboard-search-shell input-shell">
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
+            <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
+          </svg>
+          <input
+            type="search"
+            class="dashboard-search-input input"
+            placeholder="Search companies, users, leads, jobs..."
+            aria-label="Search dashboard"
+          />
+        </div>
+      </div>
+
+      <div class="dashboard-topbar-right">
+        <div class="nav-dropdown dashboard-profile-menu" data-nav-dropdown>
+          <button
+            class="dashboard-avatar-btn aurora-card"
+            type="button"
+            data-nav-toggle
+            aria-label="Open profile menu"
+            aria-expanded="false"
+          >
+            <span class="dashboard-avatar">G</span>
+          </button>
+
+          <div class="nav-dropdown-menu glass-popover aurora-card" data-nav-menu>
+            <div class="dashboard-profile-card">
+              <div class="dashboard-profile-main">
+                <span class="dashboard-avatar dashboard-avatar-large">G</span>
+                <div>
+                  <strong>Gilbert Ramos</strong>
+                  <span>Owner • Parent Access</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="menu-divider"></div>
+
+            <a href="/evaraos/dashboard.html" class="menu-link" data-nav-link>Overview</a>
+            <a href="/evaraos/settings.html" class="menu-link" data-nav-link>Settings</a>
+            <a href="/evaraos/security.html" class="menu-link" data-nav-link>Account Security</a>
+            <button type="button" id="logoutBtn" class="menu-link dashboard-menu-button">Logout</button>
+
+            <div class="menu-divider"></div>
+
+            <div class="menu-theme-block" data-theme-control>
+              <button
+                type="button"
+                class="theme-core-toggle"
+                data-theme-core-toggle
+                aria-expanded="false"
+                aria-label="Toggle light and dark mode"
+                title="Tap to switch light and dark"
+              >
+                <span class="theme-core-dot"></span>
+                <span class="theme-core-label" data-theme-mode-text>Dark</span>
+                <span class="theme-core-sep">•</span>
+                <span class="theme-core-group" data-theme-group-text>Neutral</span>
+                <span class="theme-core-sep">•</span>
+                <span class="theme-core-hint" data-theme-hint-text>tap</span>
+              </button>
+
+              <div class="theme-bubbles" data-theme-bubbles>
+                <button type="button" class="theme-bubble light" data-theme-bubble data-theme-group="neutral" aria-label="Neutral theme"></button>
+                <button type="button" class="theme-bubble blue" data-theme-bubble data-theme-group="blue" aria-label="Blue theme"></button>
+                <button type="button" class="theme-bubble red" data-theme-bubble data-theme-group="red" aria-label="Red theme"></button>
+                <button type="button" class="theme-bubble pink" data-theme-bubble data-theme-group="pink" aria-label="Pink theme"></button>
+                <button type="button" class="theme-bubble green" data-theme-bubble data-theme-group="green" aria-label="Green theme"></button>
+                <button type="button" class="theme-bubble purple" data-theme-bubble data-theme-group="purple" aria-label="Purple theme"></button>
+                <button type="button" class="theme-bubble yellow" data-theme-bubble data-theme-group="yellow" aria-label="Yellow theme"></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="dashboard-shell">
+    <aside class="dashboard-sidebar" id="dashboardSidebar">
+      <div class="dashboard-sidebar-inner glass-shell aurora-card">
+        <div class="dashboard-sidebar-head">
+          <p class="dashboard-sidebar-eyebrow">Platform Navigation</p>
+          <h2>Executive Overview</h2>
+        </div>
+
+        <nav class="dashboard-sidebar-nav" aria-label="Dashboard sections">
+          <a href="#overviewSection" class="dashboard-nav-link active aurora-card">
+            <span class="dashboard-nav-icon">◉</span>
+            <span>Overview</span>
+          </a>
+
+          <a href="#companiesSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◎</span>
+            <span>Companies</span>
+          </a>
+
+          <a href="#usersSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◌</span>
+            <span>Users</span>
+          </a>
+
+          <a href="#salesSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◐</span>
+            <span>Sales Reps</span>
+          </a>
+
+          <a href="#leadsSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◍</span>
+            <span>Leads</span>
+          </a>
+
+          <a href="#jobsSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◒</span>
+            <span>Jobs</span>
+          </a>
+
+          <a href="#auditSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◈</span>
+            <span>Audit</span>
+          </a>
+
+          <a href="#portalSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◔</span>
+            <span>Customer Portal</span>
+          </a>
+        </nav>
+
+        <div class="dashboard-sidebar-foot glass-card">
+          <div class="dashboard-sidebar-foot-copy">
+            <strong>Organization Performance</strong>
+            <span>Track operations, growth, approvals, and team execution in one place.</span>
+          </div>
+          <a href="/evaraos/organization.html" class="btn btn-theme-primary">Open Org View</a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="dashboard-main">
+      <section class="dashboard-hero glass-card aurora-card" id="overviewSection">
+        <div class="dashboard-hero-copy">
+          <p class="dashboard-eyebrow">OWNER DASHBOARD</p>
+          <h1>Run the entire operation from one control center.</h1>
+          <p class="dashboard-hero-text">
+            Watch companies, users, leads, jobs, approvals, and customer activity in a single
+            Apple-glass-style dashboard built for Evaraos Inc.
+          </p>
+
+          <div class="dashboard-hero-actions">
+            <a href="/evaraos/companies.html" class="btn btn-theme-primary">Manage Companies</a>
+            <a href="/evaraos/leads.html" class="btn btn-theme-secondary">Open Leads</a>
+          </div>
+        </div>
+
+        <div class="dashboard-hero-panel glass-card">
+          <div class="dashboard-hero-panel-top">
+            <span class="dashboard-mini-badge">Live Platform</span>
+            <span class="dashboard-live-dot"></span>
+          </div>
+
+          <div class="dashboard-hero-logo-wrap">
+            <img
+              src="/evaraos/assets/img/evaraos_logo.png"
+              alt="Evaraos"
+              class="dashboard-hero-logo"
+            />
+          </div>
+
+          <div class="dashboard-hero-panel-copy">
+            <strong>Executive Visibility</strong>
+            <span>One premium OS for multi-company scale.</span>
           </div>
         </div>
       </section>
 
-      <section class="grid grid-3">
-        <div class="card stat-card aurora-card shine-border">
-          <h3>Active Companies</h3>
-          <p id="statCompanies">--</p>
+      <section class="dashboard-overview glass-card aurora-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Snapshot</p>
+            <h2>Organization Overview</h2>
+          </div>
+          <a href="/evaraos/reports.html" class="btn btn-theme-secondary">Open Reports</a>
         </div>
-        <div class="card stat-card aurora-card shine-border">
-          <h3>Open Leads</h3>
-          <p id="statLeads">--</p>
-        </div>
-        <div class="card stat-card aurora-card shine-border">
-          <h3>Jobs In Progress</h3>
-          <p id="statJobs">--</p>
+
+        <div class="dashboard-stats-grid">
+          <article class="dashboard-stat-card glass-card">
+            <p>Active Companies</p>
+            <h3>12</h3>
+            <span>3 added this quarter</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card">
+            <p>Open Leads</p>
+            <h3>148</h3>
+            <span>24 high-priority</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card">
+            <p>Jobs In Progress</p>
+            <h3>39</h3>
+            <span>8 require review</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card">
+            <p>Monthly Revenue</p>
+            <h3>$84.2K</h3>
+            <span>+18.4% vs last month</span>
+          </article>
         </div>
       </section>
 
-      <section class="card aurora-card shine-border">
-        <h2>Executive Overview</h2>
-        <p id="overviewText">Loading dashboard...</p>
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card aurora-card" id="companiesSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Subsidiaries</p>
+              <h2>Company Health</h2>
+            </div>
+            <a href="/evaraos/companies.html" class="dashboard-inline-link">View all</a>
+          </div>
+
+          <div class="dashboard-list">
+            <article class="dashboard-list-item">
+              <div>
+                <strong>Supreme True Clean</strong>
+                <span>Exterior cleaning operations • Jacksonville</span>
+              </div>
+              <span class="dashboard-status-pill good">Healthy</span>
+            </article>
+
+            <article class="dashboard-list-item">
+              <div>
+                <strong>OneofOne Cleaning</strong>
+                <span>Interior cleaning marketplace layer</span>
+              </div>
+              <span class="dashboard-status-pill good">Growing</span>
+            </article>
+
+            <article class="dashboard-list-item">
+              <div>
+                <strong>Evaraos Parent</strong>
+                <span>Core SaaS, payments, admin, and reporting</span>
+              </div>
+              <span class="dashboard-status-pill alert">Review</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card aurora-card" id="usersSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Access</p>
+              <h2>User Roles</h2>
+            </div>
+            <a href="/evaraos/users.html" class="dashboard-inline-link">Manage</a>
+          </div>
+
+          <div class="dashboard-role-grid">
+            <article class="dashboard-role-card glass-card">
+              <strong>Owners</strong>
+              <span>4 users</span>
+            </article>
+            <article class="dashboard-role-card glass-card">
+              <strong>Admins</strong>
+              <span>9 users</span>
+            </article>
+            <article class="dashboard-role-card glass-card">
+              <strong>Sales Reps</strong>
+              <span>27 users</span>
+            </article>
+            <article class="dashboard-role-card glass-card">
+              <strong>Technicians</strong>
+              <span>18 users</span>
+            </article>
+          </div>
+        </section>
       </section>
 
-      <section class="glass-card aurora-card shine-border">
-        <div class="section-title-row">
-          <h2 style="margin:0;">Quick Access</h2>
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card aurora-card" id="salesSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Field Activity</p>
+              <h2>Sales Rep Performance</h2>
+            </div>
+            <a href="/evaraos/sales.html" class="dashboard-inline-link">Open board</a>
+          </div>
+
+          <div class="dashboard-list">
+            <article class="dashboard-list-item">
+              <div>
+                <strong>Territory Alpha</strong>
+                <span>112 doors • 18 lead captures today</span>
+              </div>
+              <span class="dashboard-trend up">↑ 22%</span>
+            </article>
+
+            <article class="dashboard-list-item">
+              <div>
+                <strong>Territory Beta</strong>
+                <span>96 doors • 13 lead captures today</span>
+              </div>
+              <span class="dashboard-trend up">↑ 11%</span>
+            </article>
+
+            <article class="dashboard-list-item">
+              <div>
+                <strong>Territory Gamma</strong>
+                <span>74 doors • 7 lead captures today</span>
+              </div>
+              <span class="dashboard-trend flat">→ Stable</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card aurora-card" id="leadsSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Pipeline</p>
+              <h2>Lead Flow</h2>
+            </div>
+            <a href="/evaraos/leads.html" class="dashboard-inline-link">Review queue</a>
+          </div>
+
+          <div class="dashboard-progress-stack">
+            <div class="dashboard-progress-row">
+              <div class="dashboard-progress-copy">
+                <strong>New Leads</strong>
+                <span>58 waiting assignment</span>
+              </div>
+              <div class="dashboard-progress-bar"><span style="width: 74%;"></span></div>
+            </div>
+
+            <div class="dashboard-progress-row">
+              <div class="dashboard-progress-copy">
+                <strong>Contacted</strong>
+                <span>44 follow-up in motion</span>
+              </div>
+              <div class="dashboard-progress-bar"><span style="width: 56%;"></span></div>
+            </div>
+
+            <div class="dashboard-progress-row">
+              <div class="dashboard-progress-copy">
+                <strong>Quoted</strong>
+                <span>27 sent to customers</span>
+              </div>
+              <div class="dashboard-progress-bar"><span style="width: 39%;"></span></div>
+            </div>
+
+            <div class="dashboard-progress-row">
+              <div class="dashboard-progress-copy">
+                <strong>Closed Won</strong>
+                <span>19 completed conversions</span>
+              </div>
+              <div class="dashboard-progress-bar"><span style="width: 28%;"></span></div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card aurora-card" id="jobsSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Execution</p>
+              <h2>Jobs In Motion</h2>
+            </div>
+            <a href="/evaraos/jobs.html" class="dashboard-inline-link">Open jobs</a>
+          </div>
+
+          <div class="dashboard-list">
+            <article class="dashboard-list-item">
+              <div>
+                <strong>Trash Bin Route • Jacksonville South</strong>
+                <span>7 stops remaining • Technician team assigned</span>
+              </div>
+              <span class="dashboard-status-pill working">In Progress</span>
+            </article>
+
+            <article class="dashboard-list-item">
+              <div>
+                <strong>Pressure Wash • Residential Package</strong>
+                <span>Awaiting customer approval for upsell</span>
+              </div>
+              <span class="dashboard-status-pill alert">Pending</span>
+            </article>
+
+            <article class="dashboard-list-item">
+              <div>
+                <strong>House Wash • Priority Customer</strong>
+                <span>Before/after media uploaded successfully</span>
+              </div>
+              <span class="dashboard-status-pill good">Complete</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card aurora-card" id="auditSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Security + Activity</p>
+              <h2>Audit Feed</h2>
+            </div>
+            <a href="/evaraos/audit.html" class="dashboard-inline-link">Full log</a>
+          </div>
+
+          <div class="dashboard-feed">
+            <article class="dashboard-feed-item">
+              <strong>Owner access confirmed</strong>
+              <span>Gilbert Ramos opened dashboard overview 2 min ago</span>
+            </article>
+
+            <article class="dashboard-feed-item">
+              <strong>Lead updated</strong>
+              <span>Status changed from New to Contacted • 11 min ago</span>
+            </article>
+
+            <article class="dashboard-feed-item">
+              <strong>User permission changed</strong>
+              <span>Admin role granted to operations manager • 34 min ago</span>
+            </article>
+          </div>
+        </section>
+      </section>
+
+      <section class="dashboard-panel glass-card aurora-card" id="portalSection">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Customer Experience</p>
+            <h2>Customer Portal Summary</h2>
+          </div>
+          <a href="/evaraos/customer-portal.html" class="btn btn-theme-secondary">Open Portal</a>
         </div>
 
-        <div class="quick-links-grid" style="margin-top:18px;">
-          <a class="quick-link-card" href="/evaraos/companies.html">Companies</a>
-          <a class="quick-link-card" href="/evaraos/users.html">Users</a>
-          <a class="quick-link-card" href="/evaraos/leads.html">Leads</a>
-          <a class="quick-link-card" href="/evaraos/jobs.html">Jobs</a>
-          <a class="quick-link-card" href="/evaraos/sales_reps.html">Sales Reps</a>
-          <a class="quick-link-card" href="/evaraos/performance.html">Performance</a>
-          <a class="quick-link-card" href="/evaraos/audit.html">Audit Center</a>
-          <a class="quick-link-card" href="/evaraos/org.html">Org Chart</a>
+        <div class="dashboard-portal-grid">
+          <article class="dashboard-portal-card glass-card">
+            <strong>Subscriptions</strong>
+            <span>63 active monthly plans</span>
+          </article>
+
+          <article class="dashboard-portal-card glass-card">
+            <strong>Invoices</strong>
+            <span>91 ready for delivery</span>
+          </article>
+
+          <article class="dashboard-portal-card glass-card">
+            <strong>Before / After Media</strong>
+            <span>126 project folders synced</span>
+          </article>
+
+          <article class="dashboard-portal-card glass-card">
+            <strong>Support Requests</strong>
+            <span>8 open conversations</span>
+          </article>
         </div>
       </section>
     </main>
   </div>
 
+  <script type="module" src="/evaraos/assets/js/theme.js"></script>
+  <script type="module" src="/evaraos/assets/js/nav.js"></script>
   <script type="module">
-    import { requireAuth, bindTopbar, renderSidebar, hasPermission } from "/evaraos/assets/js/app.js";
+    const sidebarToggle = document.getElementById("dashboardSidebarToggle");
+    const sidebar = document.getElementById("dashboardSidebar");
 
-    requireAuth(async (user) => {
-      if (!hasPermission(user, "dashboard")) {
-        if (user.role === "customer") {
-          window.location.href = "/evaraos/customer_dashboard.html";
-          return;
-        }
-        window.location.href = "/evaraos/index.html";
-        return;
-      }
-
-      await bindTopbar(user, "Dashboard");
-
-      const sidebar = document.getElementById("sidebar");
-      if (sidebar) {
-        sidebar.innerHTML = renderSidebar(user.role, "dashboard");
-      }
-
-      document.getElementById("statCompanies").textContent = "12";
-      document.getElementById("statLeads").textContent = "148";
-      document.getElementById("statJobs").textContent = "36";
-
-      document.getElementById("overviewText").textContent =
-        `Welcome ${user.name || user.username || user.email}. You are logged in as ${user.role}. Security now lives at sign up and sign in, with number verification available for new-device protection.`;
-    });
+    if (sidebarToggle && sidebar) {
+      sidebarToggle.addEventListener("click", () => {
+        const isOpen = sidebar.classList.toggle("open");
+        sidebarToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      });
+    }
   </script>
 </body>
 </html>
