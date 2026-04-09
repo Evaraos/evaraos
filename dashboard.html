@@ -4,9 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Dashboard • Evaraos Inc</title>
-
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
-  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css" />
 </head>
 <body class="dashboard-body">
   <div class="page-grid-overlay"></div>
@@ -62,16 +60,16 @@
             aria-label="Open profile menu"
             aria-expanded="false"
           >
-            <span class="dashboard-avatar">G</span>
+            <span class="dashboard-avatar" id="dashboardAvatar">G</span>
           </button>
 
           <div class="nav-dropdown-menu glass-popover aurora-card" data-nav-menu>
             <div class="dashboard-profile-card">
               <div class="dashboard-profile-main">
-                <span class="dashboard-avatar dashboard-avatar-large">G</span>
+                <span class="dashboard-avatar dashboard-avatar-large" id="dashboardAvatarLarge">G</span>
                 <div>
-                  <strong>Gilbert Ramos</strong>
-                  <span>Owner • Parent Access</span>
+                  <strong id="dashboardProfileName">Owner Account</strong>
+                  <span id="dashboardProfileRole">Owner • Parent Access</span>
                 </div>
               </div>
             </div>
@@ -501,9 +499,17 @@
 
   <script type="module" src="/evaraos/assets/js/theme.js"></script>
   <script type="module" src="/evaraos/assets/js/nav.js"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js"></script>
   <script type="module">
+    import { auth, onAuthStateChanged, signOut } from "/evaraos/assets/js/firebase.js";
+
     const sidebarToggle = document.getElementById("dashboardSidebarToggle");
     const sidebar = document.getElementById("dashboardSidebar");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const avatar = document.getElementById("dashboardAvatar");
+    const avatarLarge = document.getElementById("dashboardAvatarLarge");
+    const profileName = document.getElementById("dashboardProfileName");
+    const profileRole = document.getElementById("dashboardProfileRole");
 
     if (sidebarToggle && sidebar) {
       sidebarToggle.addEventListener("click", () => {
@@ -511,6 +517,34 @@
         sidebarToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
       });
     }
+
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", async () => {
+        try {
+          await signOut(auth);
+          window.location.href = "/evaraos/login.html";
+        } catch (error) {
+          console.error("Logout failed:", error);
+        }
+      });
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = "/evaraos/login.html";
+        return;
+      }
+
+      const displayName = user.displayName || user.email || "Owner Account";
+      const roleText = "Authenticated User";
+
+      const initial = (displayName || "U").trim().charAt(0).toUpperCase();
+
+      if (avatar) avatar.textContent = initial;
+      if (avatarLarge) avatarLarge.textContent = initial;
+      if (profileName) profileName.textContent = displayName;
+      if (profileRole) profileRole.textContent = roleText;
+    });
   </script>
 </body>
 </html>
