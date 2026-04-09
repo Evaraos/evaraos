@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Reset Password • Evaraos Inc</title>
+  <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
+</head>
+<body class="reset-page">
+  <div class="page-grid-overlay"></div>
+  <div id="universalNav"></div>
+
+  <main class="login-shell">
+    <section class="reset-panel glass-card aurora-card">
+      <div class="login-badge-wrap">
+        <img
+          src="/evaraos/assets/img/evaraos_logo.png"
+          alt="Evaraos logo"
+          class="login-badge"
+        />
+      </div>
+
+      <div class="panel-head">
+        <div>
+          <h1 class="login-title">Reset Password</h1>
+          <p class="login-subtitle">
+            Enter the email tied to your account and we’ll send you a password reset link.
+          </p>
+        </div>
+
+        <a href="/evaraos/login.html" class="btn btn-theme-secondary">Back to Login</a>
+      </div>
+
+      <form id="resetForm" class="login-form" novalidate>
+        <div class="form-group">
+          <label class="field-label" for="resetEmail">Email</label>
+          <div class="input-shell aurora-card">
+            <input
+              id="resetEmail"
+              name="email"
+              type="email"
+              class="input"
+              placeholder="Enter your account email"
+              autocomplete="email"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="login-actions-row">
+          <button type="submit" class="btn btn-theme-primary">Send Reset Link</button>
+          <a href="/evaraos/signup.html" class="btn btn-theme-secondary">Create Account</a>
+        </div>
+
+        <p id="resetMessage" class="login-message" aria-live="polite"></p>
+      </form>
+
+      <div class="security-inline-card glass-card aurora-card">
+        <h2 class="inline-card-title">Security Note</h2>
+        <p class="inline-card-copy">
+          For your protection, password reset links expire. If you do not see the email,
+          check spam or promotions first, then request a new one.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/evaraos/assets/js/theme.js"></script>
+  <script type="module" src="/evaraos/assets/js/nav.js"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js"></script>
+  <script type="module" src="/evaraos/assets/js/auth.js"></script>
+</body>
+</html>
