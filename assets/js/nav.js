@@ -67,7 +67,7 @@ function getUniversalNavbarMarkup() {
                 <div class="menu-theme-block" data-theme-control>
                   <button
                     type="button"
-                    class="theme-core-toggle"
+                    class="theme-core-toggle aurora-card"
                     data-theme-core-toggle
                     aria-label="Toggle light and dark mode"
                     title="Tap to switch light and dark"
@@ -81,13 +81,13 @@ function getUniversalNavbarMarkup() {
                   </button>
 
                   <div class="theme-bubbles" data-theme-bubbles>
-                    <button type="button" class="theme-bubble light" data-theme-bubble data-theme-group="neutral" aria-label="Neutral theme"></button>
-                    <button type="button" class="theme-bubble blue" data-theme-bubble data-theme-group="blue" aria-label="Blue theme"></button>
-                    <button type="button" class="theme-bubble red" data-theme-bubble data-theme-group="red" aria-label="Red theme"></button>
-                    <button type="button" class="theme-bubble pink" data-theme-bubble data-theme-group="pink" aria-label="Pink theme"></button>
-                    <button type="button" class="theme-bubble green" data-theme-bubble data-theme-group="green" aria-label="Green theme"></button>
-                    <button type="button" class="theme-bubble purple" data-theme-bubble data-theme-group="purple" aria-label="Purple theme"></button>
-                    <button type="button" class="theme-bubble yellow" data-theme-bubble data-theme-group="yellow" aria-label="Yellow theme"></button>
+                    <button type="button" class="theme-bubble light aurora-card" data-theme-bubble data-theme-group="neutral" aria-label="Neutral theme"></button>
+                    <button type="button" class="theme-bubble blue aurora-card" data-theme-bubble data-theme-group="blue" aria-label="Blue theme"></button>
+                    <button type="button" class="theme-bubble red aurora-card" data-theme-bubble data-theme-group="red" aria-label="Red theme"></button>
+                    <button type="button" class="theme-bubble pink aurora-card" data-theme-bubble data-theme-group="pink" aria-label="Pink theme"></button>
+                    <button type="button" class="theme-bubble green aurora-card" data-theme-bubble data-theme-group="green" aria-label="Green theme"></button>
+                    <button type="button" class="theme-bubble purple aurora-card" data-theme-bubble data-theme-group="purple" aria-label="Purple theme"></button>
+                    <button type="button" class="theme-bubble yellow aurora-card" data-theme-bubble data-theme-group="yellow" aria-label="Yellow theme"></button>
                   </div>
                 </div>
               </div>
@@ -116,7 +116,7 @@ function getUniversalNavbarMarkup() {
         <nav class="landing-nav" aria-label="Main navigation">
           <div class="nav-dropdown" data-nav-dropdown>
             <button
-              class="nav-hamburger"
+              class="nav-hamburger aurora-card"
               type="button"
               data-nav-toggle
               aria-label="Open menu"
@@ -142,7 +142,7 @@ function getUniversalNavbarMarkup() {
               <div class="menu-theme-block" data-theme-control>
                 <button
                   type="button"
-                  class="theme-core-toggle"
+                  class="theme-core-toggle aurora-card"
                   data-theme-core-toggle
                   aria-label="Toggle light and dark mode"
                   title="Tap to switch light and dark"
@@ -156,13 +156,13 @@ function getUniversalNavbarMarkup() {
                 </button>
 
                 <div class="theme-bubbles" data-theme-bubbles>
-                  <button type="button" class="theme-bubble light" data-theme-bubble data-theme-group="neutral" aria-label="Neutral theme"></button>
-                  <button type="button" class="theme-bubble blue" data-theme-bubble data-theme-group="blue" aria-label="Blue theme"></button>
-                  <button type="button" class="theme-bubble red" data-theme-bubble data-theme-group="red" aria-label="Red theme"></button>
-                  <button type="button" class="theme-bubble pink" data-theme-bubble data-theme-group="pink" aria-label="Pink theme"></button>
-                  <button type="button" class="theme-bubble green" data-theme-bubble data-theme-group="green" aria-label="Green theme"></button>
-                  <button type="button" class="theme-bubble purple" data-theme-bubble data-theme-group="purple" aria-label="Purple theme"></button>
-                  <button type="button" class="theme-bubble yellow" data-theme-bubble data-theme-group="yellow" aria-label="Yellow theme"></button>
+                  <button type="button" class="theme-bubble light aurora-card" data-theme-bubble data-theme-group="neutral" aria-label="Neutral theme"></button>
+                  <button type="button" class="theme-bubble blue aurora-card" data-theme-bubble data-theme-group="blue" aria-label="Blue theme"></button>
+                  <button type="button" class="theme-bubble red aurora-card" data-theme-bubble data-theme-group="red" aria-label="Red theme"></button>
+                  <button type="button" class="theme-bubble pink aurora-card" data-theme-bubble data-theme-group="pink" aria-label="Pink theme"></button>
+                  <button type="button" class="theme-bubble green aurora-card" data-theme-bubble data-theme-group="green" aria-label="Green theme"></button>
+                  <button type="button" class="theme-bubble purple aurora-card" data-theme-bubble data-theme-group="purple" aria-label="Purple theme"></button>
+                  <button type="button" class="theme-bubble yellow aurora-card" data-theme-bubble data-theme-group="yellow" aria-label="Yellow theme"></button>
                 </div>
               </div>
             </div>
@@ -175,9 +175,11 @@ function getUniversalNavbarMarkup() {
 
 function injectUniversalNavbar() {
   const mount = document.getElementById("universalNav");
-  if (!mount || mount.dataset.rendered === "true") return;
+  if (!mount || mount.dataset.rendered === "true") return false;
+
   mount.dataset.rendered = "true";
   mount.innerHTML = getUniversalNavbarMarkup();
+  return true;
 }
 
 function closeAllNavDropdowns(except = null) {
@@ -201,6 +203,10 @@ function toggleNavDropdown(dropdown) {
   if (!isOpen) {
     dropdown.classList.add("open");
     if (toggle) toggle.setAttribute("aria-expanded", "true");
+
+    if (window.EvaraTheme?.syncThemeControls) {
+      window.EvaraTheme.syncThemeControls(window.EvaraTheme.getStoredTheme());
+    }
   } else {
     dropdown.classList.remove("open");
     if (toggle) toggle.setAttribute("aria-expanded", "false");
@@ -216,8 +222,8 @@ function markActiveLinks() {
 
     const isActive =
       currentPath === normalizedHref ||
-      (currentPath.endsWith("/index.html") && normalizedHref.endsWith("/index.html")) ||
-      (currentPath.endsWith("/") && normalizedHref.endsWith("/index.html"));
+      (currentPath.endsWith("/") && normalizedHref.endsWith("/index.html")) ||
+      (currentPath.endsWith("/index.html") && normalizedHref.endsWith("/index.html"));
 
     link.classList.toggle("active", isActive);
   });
@@ -243,11 +249,9 @@ function bindNavDropdowns() {
       event.stopPropagation();
     });
 
-    menu.querySelectorAll("a, button").forEach((item) => {
+    menu.querySelectorAll("a").forEach((item) => {
       item.addEventListener("click", () => {
-        if (!item.classList.contains("dashboard-menu-button")) {
-          closeAllNavDropdowns();
-        }
+        closeAllNavDropdowns();
       });
     });
   });
@@ -270,10 +274,6 @@ function bindGlobalNavClose() {
 
       if (sidebar) sidebar.classList.remove("open");
       if (sidebarToggle) sidebarToggle.setAttribute("aria-expanded", "false");
-
-      if (window.closeAllThemeMenus) {
-        window.closeAllThemeMenus();
-      }
     }
   });
 }
@@ -288,8 +288,11 @@ function bindDashboardSidebar() {
   sidebarToggle.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
+
     const isOpen = sidebar.classList.toggle("open");
     sidebarToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    sidebarToggle.classList.add("active-glow");
+    setTimeout(() => sidebarToggle.classList.remove("active-glow"), 220);
   });
 
   document.addEventListener("click", (event) => {
@@ -309,7 +312,7 @@ function bindAuraGroups() {
     group.dataset.auraBound = "true";
 
     const focusables = group.querySelectorAll(
-      ".btn, .dashboard-nav-link, .dashboard-list-item, .dashboard-role-card, .dashboard-stat-card, .dashboard-portal-card, .dashboard-feed-item, .input-shell, .dashboard-inline-link, .menu-link"
+      ".btn, .dashboard-nav-link, .dashboard-list-item, .dashboard-role-card, .dashboard-stat-card, .dashboard-portal-card, .dashboard-feed-item, .input-shell, .dashboard-inline-link, .menu-link, .theme-core-toggle, .theme-bubble"
     );
 
     focusables.forEach((item) => {
@@ -344,6 +347,16 @@ function bindAuraGroups() {
   });
 }
 
+function syncThemeAfterNavRender() {
+  if (window.EvaraTheme?.bindAllThemeControls) {
+    window.EvaraTheme.bindAllThemeControls();
+  }
+
+  if (window.EvaraTheme?.syncThemeControls) {
+    window.EvaraTheme.syncThemeControls(window.EvaraTheme.getStoredTheme());
+  }
+}
+
 function initNav() {
   injectUniversalNavbar();
   bindNavDropdowns();
@@ -351,6 +364,7 @@ function initNav() {
   bindDashboardSidebar();
   bindAuraGroups();
   markActiveLinks();
+  syncThemeAfterNavRender();
 }
 
 window.closeAllNavDropdowns = closeAllNavDropdowns;
