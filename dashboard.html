@@ -8,105 +8,13 @@
 </head>
 <body class="dashboard-body">
   <div class="page-grid-overlay"></div>
-
-  <header class="dashboard-topbar">
-    <div class="dashboard-topbar-inner glass-shell aurora-card">
-      <div class="dashboard-topbar-left">
-        <button
-          type="button"
-          class="nav-hamburger dashboard-sidebar-toggle"
-          id="dashboardSidebarToggle"
-          aria-label="Open executive overview"
-          aria-expanded="false"
-          aria-controls="dashboardSidebar"
-        >
-          <span class="hamburger-line"></span>
-          <span class="hamburger-line"></span>
-          <span class="hamburger-line"></span>
-        </button>
-
-        <a href="/evaraos/index.html" class="brand-link dashboard-brand" aria-label="Go home">
-          <img
-            src="/evaraos/assets/img/evaraos_logo.png"
-            alt="Evaraos logo"
-            class="brand-logo"
-          />
-          <div class="brand-copy">
-            <strong>Evaraos Inc</strong>
-            <span id="dashboardBrandSubline">Executive Control Center</span>
-          </div>
-        </a>
-      </div>
-
-      <div class="dashboard-topbar-right">
-        <div class="nav-dropdown dashboard-profile-menu" data-nav-dropdown>
-          <button
-            class="dashboard-avatar-btn aurora-card"
-            type="button"
-            data-nav-toggle
-            aria-label="Open profile menu"
-            aria-expanded="false"
-          >
-            <span class="dashboard-avatar" id="dashboardAvatar">G</span>
-          </button>
-
-          <div class="nav-dropdown-menu glass-popover aurora-card dashboard-profile-dropdown" data-nav-menu>
-            <div class="dashboard-profile-card">
-              <div class="dashboard-profile-main">
-                <span class="dashboard-avatar dashboard-avatar-large" id="dashboardAvatarLarge">G</span>
-                <div>
-                  <strong id="dashboardProfileName">Owner Account</strong>
-                  <span id="dashboardProfileRole">Executive Access</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="menu-divider"></div>
-
-            <a href="/evaraos/profile.html" class="menu-link" data-nav-link>Edit Profile</a>
-            <a href="/evaraos/settings.html" class="menu-link" data-nav-link>Settings</a>
-            <a href="/evaraos/security.html" class="menu-link" data-nav-link>Account Security</a>
-            <button type="button" id="logoutBtn" class="menu-link dashboard-menu-button">Logout</button>
-
-            <div class="menu-divider"></div>
-
-            <div class="menu-theme-block" data-theme-control>
-              <button
-                type="button"
-                class="theme-core-toggle"
-                data-theme-core-toggle
-                aria-label="Toggle light and dark mode"
-                title="Tap to switch light and dark"
-              >
-                <span class="theme-core-dot"></span>
-                <span class="theme-core-label" data-theme-mode-text>Dark</span>
-                <span class="theme-core-sep">•</span>
-                <span class="theme-core-group" data-theme-group-text>Neutral</span>
-                <span class="theme-core-sep">•</span>
-                <span class="theme-core-hint" data-theme-hint-text>tap</span>
-              </button>
-
-              <div class="theme-bubbles" data-theme-bubbles>
-                <button type="button" class="theme-bubble light" data-theme-bubble data-theme-group="neutral" aria-label="Neutral theme"></button>
-                <button type="button" class="theme-bubble blue" data-theme-bubble data-theme-group="blue" aria-label="Blue theme"></button>
-                <button type="button" class="theme-bubble red" data-theme-bubble data-theme-group="red" aria-label="Red theme"></button>
-                <button type="button" class="theme-bubble pink" data-theme-bubble data-theme-group="pink" aria-label="Pink theme"></button>
-                <button type="button" class="theme-bubble green" data-theme-bubble data-theme-group="green" aria-label="Green theme"></button>
-                <button type="button" class="theme-bubble purple" data-theme-bubble data-theme-group="purple" aria-label="Purple theme"></button>
-                <button type="button" class="theme-bubble yellow" data-theme-bubble data-theme-group="yellow" aria-label="Yellow theme"></button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </header>
+  <div id="universalNav"></div>
 
   <div class="dashboard-shell">
     <aside class="dashboard-sidebar" id="dashboardSidebar">
       <div class="dashboard-sidebar-inner glass-shell aurora-card">
         <div class="dashboard-sidebar-search">
-          <div class="dashboard-search-shell input-shell">
+          <div class="dashboard-search-shell input-shell aurora-card">
             <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
               <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
             </svg>
@@ -497,129 +405,28 @@
     </main>
   </div>
 
+  <script type="module">
+    import { protectRoute } from "/evaraos/assets/js/firebase.js";
+
+    protectRoute({
+      requireAuth: true,
+      redirectGuestTo: "/evaraos/login.html"
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".dashboard-nav-link").forEach((link) => {
+        link.addEventListener("click", () => {
+          document.querySelectorAll(".dashboard-nav-link").forEach((item) => {
+            item.classList.remove("active");
+          });
+          link.classList.add("active");
+        });
+      });
+    });
+  </script>
+
   <script type="module" src="/evaraos/assets/js/theme.js"></script>
   <script type="module" src="/evaraos/assets/js/nav.js"></script>
   <script type="module" src="/evaraos/assets/js/firebase.js"></script>
-
-  <script type="module">
-    import { auth, onAuthStateChanged, signOut } from "/evaraos/assets/js/firebase.js";
-
-    const sidebarToggle = document.getElementById("dashboardSidebarToggle");
-    const sidebar = document.getElementById("dashboardSidebar");
-    const logoutBtn = document.getElementById("logoutBtn");
-
-    const avatar = document.getElementById("dashboardAvatar");
-    const avatarLarge = document.getElementById("dashboardAvatarLarge");
-    const profileName = document.getElementById("dashboardProfileName");
-    const profileRole = document.getElementById("dashboardProfileRole");
-    const brandSubline = document.getElementById("dashboardBrandSubline");
-    const overviewTitle = document.getElementById("dashboardOverviewTitle");
-
-    const ROLE_MAP = {
-      owner: {
-        heading: "Executive Overview",
-        subline: "Executive Control Center",
-        profile: "Executive Access"
-      },
-      admin: {
-        heading: "Admin Overview",
-        subline: "Administrative Control Center",
-        profile: "Admin Access"
-      },
-      manager: {
-        heading: "Management Overview",
-        subline: "Management Control Center",
-        profile: "Manager Access"
-      },
-      sales: {
-        heading: "Sales Overview",
-        subline: "Sales Control Center",
-        profile: "Sales Access"
-      },
-      technician: {
-        heading: "Technician Overview",
-        subline: "Technician Control Center",
-        profile: "Technician Access"
-      },
-      customer: {
-        heading: "Customer Overview",
-        subline: "Customer Control Center",
-        profile: "Customer Access"
-      }
-    };
-
-    function applyRolePresentation(roleKey = "owner") {
-      const role = ROLE_MAP[roleKey] || ROLE_MAP.owner;
-      if (overviewTitle) overviewTitle.textContent = role.heading;
-      if (brandSubline) brandSubline.textContent = role.subline;
-      if (profileRole) profileRole.textContent = role.profile;
-    }
-
-    if (sidebarToggle && sidebar) {
-      sidebarToggle.addEventListener("click", (event) => {
-        event.stopPropagation();
-        const isOpen = sidebar.classList.toggle("open");
-        sidebarToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
-      });
-    }
-
-    document.querySelectorAll(".dashboard-nav-link").forEach((link) => {
-      link.addEventListener("click", () => {
-        document.querySelectorAll(".dashboard-nav-link").forEach((item) => item.classList.remove("active"));
-        link.classList.add("active");
-
-        if (window.innerWidth <= 980 && sidebar) {
-          sidebar.classList.remove("open");
-          sidebarToggle?.setAttribute("aria-expanded", "false");
-        }
-      });
-    });
-
-    if (logoutBtn) {
-      logoutBtn.addEventListener("click", async () => {
-        try {
-          await signOut(auth);
-          window.location.href = "/evaraos/login.html";
-        } catch (error) {
-          console.error("Logout failed:", error);
-        }
-      });
-    }
-
-    document.addEventListener("click", (event) => {
-      if (window.innerWidth <= 980 && sidebar && sidebarToggle) {
-        const insideSidebar = sidebar.contains(event.target);
-        const insideToggle = sidebarToggle.contains(event.target);
-        if (!insideSidebar && !insideToggle) {
-          sidebar.classList.remove("open");
-          sidebarToggle.setAttribute("aria-expanded", "false");
-        }
-      }
-    });
-
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        window.location.href = "/evaraos/login.html";
-        return;
-      }
-
-      const displayName = user.displayName || user.email || "Owner Account";
-      const email = (user.email || "").toLowerCase();
-      const initial = (displayName || "U").trim().charAt(0).toUpperCase();
-
-      let roleKey = "owner";
-      if (email.includes("admin")) roleKey = "admin";
-      else if (email.includes("manager")) roleKey = "manager";
-      else if (email.includes("sales")) roleKey = "sales";
-      else if (email.includes("tech")) roleKey = "technician";
-      else if (email.includes("customer")) roleKey = "customer";
-
-      applyRolePresentation(roleKey);
-
-      if (avatar) avatar.textContent = initial;
-      if (avatarLarge) avatarLarge.textContent = initial;
-      if (profileName) profileName.textContent = displayName;
-    });
-  </script>
 </body>
 </html>
