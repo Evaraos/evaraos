@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Profile • Evaraos Inc</title>
+  <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
+</head>
+<body class="dashboard-body">
+  <div class="page-grid-overlay"></div>
+  <div id="universalNav"></div>
+
+  <div class="dashboard-shell">
+    <aside class="dashboard-sidebar" id="dashboardSidebar">
+      <div class="dashboard-sidebar-inner glass-shell aurora-card">
+        <div class="dashboard-sidebar-search">
+          <div class="dashboard-search-shell input-shell aurora-card">
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
+              <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
+            </svg>
+            <input
+              type="search"
+              class="dashboard-search-input input"
+              placeholder="Search profile settings..."
+              aria-label="Search profile settings"
+            />
+          </div>
+        </div>
+
+        <div class="dashboard-sidebar-head">
+          <p class="dashboard-sidebar-eyebrow">Account Navigation</p>
+          <h2 id="dashboardOverviewTitle">Profile Overview</h2>
+        </div>
+
+        <nav class="dashboard-sidebar-nav" aria-label="Profile sections">
+          <a href="#profileOverviewSection" class="dashboard-nav-link active aurora-card">
+            <span class="dashboard-nav-icon">◉</span>
+            <span>Overview</span>
+          </a>
+
+          <a href="#personalInfoSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◎</span>
+            <span>Personal Info</span>
+          </a>
+
+          <a href="#securitySection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◌</span>
+            <span>Security</span>
+          </a>
+
+          <a href="#preferencesSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◐</span>
+            <span>Preferences</span>
+          </a>
+
+          <a href="#activitySection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◈</span>
+            <span>Activity</span>
+          </a>
+        </nav>
+
+        <div class="dashboard-sidebar-foot glass-card aurora-card">
+          <div class="dashboard-sidebar-foot-copy">
+            <strong>Account Center</strong>
+            <span>Manage your identity, profile settings, access, and preferences in one place.</span>
+          </div>
+          <a href="/evaraos/dashboard.html" class="btn btn-theme-primary">Back to Dashboard</a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="dashboard-main">
+      <section class="dashboard-hero glass-card aurora-card" id="profileOverviewSection">
+        <div class="dashboard-hero-copy">
+          <p class="dashboard-eyebrow">PROFILE CENTER</p>
+          <h1>Control your account identity and settings.</h1>
+          <p class="dashboard-hero-text">
+            Update your name, review your email access, check account activity, and manage
+            your preferences with the same premium Evaraos experience.
+          </p>
+
+          <div class="dashboard-hero-actions">
+            <button type="button" id="saveProfileBtnTop" class="btn btn-theme-primary">Save Changes</button>
+            <a href="/evaraos/security.html" class="btn btn-theme-secondary">Open Security</a>
+          </div>
+        </div>
+
+        <div class="dashboard-hero-panel glass-card aurora-card">
+          <div class="dashboard-hero-panel-top">
+            <span class="dashboard-mini-badge">Account Status</span>
+            <span class="dashboard-live-dot"></span>
+          </div>
+
+          <div class="dashboard-hero-logo-wrap">
+            <div
+              id="profileAvatarHero"
+              class="dashboard-avatar dashboard-avatar-large"
+              style="width:88px;height:88px;font-size:30px;"
+            >
+              G
+            </div>
+          </div>
+
+          <div class="dashboard-hero-panel-copy">
+            <strong id="profileHeroName">Owner Account</strong>
+            <span id="profileHeroRole">Executive Access</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-overview glass-card aurora-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Snapshot</p>
+            <h2>Account Overview</h2>
+          </div>
+        </div>
+
+        <div class="dashboard-stats-grid">
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Role</p>
+            <h3 id="profileRoleStat">Owner</h3>
+            <span>Current platform access</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Status</p>
+            <h3>Active</h3>
+            <span>Account is operational</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Theme</p>
+            <h3 id="profileThemeStat">Dark</h3>
+            <span>Current interface mode</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Security</p>
+            <h3>Ready</h3>
+            <span>Password reset available</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card aurora-card" id="personalInfoSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Identity</p>
+              <h2>Personal Information</h2>
+            </div>
+          </div>
+
+          <form id="profileForm" class="login-form" novalidate>
+            <div class="form-group">
+              <label class="field-label" for="profileFullName">Full Name</label>
+              <div class="input-shell aurora-card">
+                <input
+                  id="profileFullName"
+                  name="fullName"
+                  type="text"
+                  class="input"
+                  placeholder="Enter your full name"
+                  autocomplete="name"
+                />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="field-label" for="profileEmail">Email</label>
+              <div class="input-shell aurora-card">
+                <input
+                  id="profileEmail"
+                  name="email"
+                  type="email"
+                  class="input"
+                  placeholder="Your email"
+                  autocomplete="email"
+                  disabled
+                />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="field-label" for="profileRole">Role</label>
+              <div class="input-shell aurora-card">
+                <input
+                  id="profileRole"
+                  name="role"
+                  type="text"
+                  class="input"
+                  placeholder="Your role"
+                  disabled
+                />
+              </div>
+            </div>
+
+            <div class="login-actions-row">
+              <button type="submit" class="btn btn-theme-primary">Save Profile</button>
+              <button type="button" id="resetProfileBtn" class="btn btn-theme-secondary">Reset Changes</button>
+            </div>
+
+            <p id="profileMessage" class="login-message" aria-live="polite"></p>
+          </form>
+        </section>
+
+        <section class="dashboard-panel glass-card aurora-card" id="securitySection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Protection</p>
+              <h2>Security Center</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-list">
+            <article class="dashboard-list-item glass-card aurora-card">
+              <div>
+                <strong>Password</strong>
+                <span>Reset your password anytime from the recovery page</span>
+              </div>
+              <a href="/evaraos/reset.html" class="btn btn-theme-secondary">Reset</a>
+            </article>
+
+            <article class="dashboard-list-item glass-card aurora-card">
+              <div>
+                <strong>Session</strong>
+                <span>Your active session is protected by Firebase authentication</span>
+              </div>
+              <span class="dashboard-status-pill good">Secure</span>
+            </article>
+
+            <article class="dashboard-list-item glass-card aurora-card">
+              <div>
+                <strong>Role Access</strong>
+                <span>Role permissions are currently assigned to your account</span>
+              </div>
+              <span class="dashboard-status-pill working" id="profileRolePill">Owner</span>
+            </article>
+          </div>
+        </section>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card aurora-card" id="preferencesSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Experience</p>
+              <h2>Preferences</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-role-grid">
+            <article class="dashboard-role-card glass-card aurora-card">
+              <strong>Theme Mode</strong>
+              <span>Use the universal nav theme switcher</span>
+            </article>
+
+            <article class="dashboard-role-card glass-card aurora-card">
+              <strong>Color Style</strong>
+              <span>Blue, red, pink, green, purple, yellow, or neutral</span>
+            </article>
+
+            <article class="dashboard-role-card glass-card aurora-card">
+              <strong>Universal Nav</strong>
+              <span>Shared across profile, auth, landing, and dashboard pages</span>
+            </article>
+
+            <article class="dashboard-role-card glass-card aurora-card">
+              <strong>Glass Interface</strong>
+              <span>Apple-style translucent premium UI</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card aurora-card" id="activitySection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Recent Activity</p>
+              <h2>Account Feed</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-feed">
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Profile page opened</strong>
+              <span>Your account center is active and ready for updates.</span>
+            </article>
+
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Theme synced</strong>
+              <span id="profileThemeFeed">Current theme applied to your account session.</span>
+            </article>
+
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Account role loaded</strong>
+              <span id="profileRoleFeed">Role permissions were loaded successfully.</span>
+            </article>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+    import {
+      auth,
+      db,
+      protectRoute,
+      onAuthStateChanged,
+      updateProfile,
+      doc,
+      getDoc,
+      setDoc,
+      updateDoc,
+      serverTimestamp,
+      syncUserSession,
+      getSavedUserProfile
+    } from "/evaraos/assets/js/firebase.js";
+
+    protectRoute({
+      requireAuth: true,
+      redirectGuestTo: "/evaraos/login.html"
+    });
+
+    const profileForm = document.getElementById("profileForm");
+    const profileMessage = document.getElementById("profileMessage");
+    const fullNameInput = document.getElementById("profileFullName");
+    const emailInput = document.getElementById("profileEmail");
+    const roleInput = document.getElementById("profileRole");
+    const resetProfileBtn = document.getElementById("resetProfileBtn");
+    const saveProfileBtnTop = document.getElementById("saveProfileBtnTop");
+
+    const profileAvatarHero = document.getElementById("profileAvatarHero");
+    const profileHeroName = document.getElementById("profileHeroName");
+    const profileHeroRole = document.getElementById("profileHeroRole");
+    const profileRoleStat = document.getElementById("profileRoleStat");
+    const profileThemeStat = document.getElementById("profileThemeStat");
+    const profileRolePill = document.getElementById("profileRolePill");
+    const profileThemeFeed = document.getElementById("profileThemeFeed");
+    const profileRoleFeed = document.getElementById("profileRoleFeed");
+
+    let currentUser = null;
+    let initialNameValue = "";
+
+    function setMessage(message = "", isError = false) {
+      if (!profileMessage) return;
+      profileMessage.textContent = message;
+      profileMessage.style.color = isError ? "#ff9b8f" : "";
+    }
+
+    function formatRole(role = "owner") {
+      const value = String(role || "owner").toLowerCase();
+
+      if (value === "owner") return "Owner";
+      if (value === "admin") return "Admin";
+      if (value === "manager") return "Manager";
+      if (value === "sales") return "Sales";
+      if (value === "technician") return "Technician";
+      if (value === "customer") return "Customer";
+
+      return "Owner";
+    }
+
+    function getThemeLabel() {
+      const activeTheme = document.documentElement.getAttribute("data-theme") || "dark";
+      if (activeTheme.includes("light")) return "Light";
+      return "Dark";
+    }
+
+    function applyThemeInfo() {
+      const activeTheme = document.documentElement.getAttribute("data-theme") || "dark";
+      const modeText = activeTheme.includes("light") ? "Light" : "Dark";
+
+      if (profileThemeStat) profileThemeStat.textContent = modeText;
+      if (profileThemeFeed) profileThemeFeed.textContent = `${activeTheme} theme is currently active on your account session.`;
+    }
+
+    function applyProfileUi(profile) {
+      if (!profile) return;
+
+      const displayName = profile.displayName || profile.fullName || profile.email || "Owner Account";
+      const email = profile.email || "";
+      const role = formatRole(profile.role || "owner");
+      const initial = displayName.trim().charAt(0).toUpperCase() || "U";
+
+      if (fullNameInput) fullNameInput.value = displayName;
+      if (emailInput) emailInput.value = email;
+      if (roleInput) roleInput.value = role;
+
+      if (profileAvatarHero) profileAvatarHero.textContent = initial;
+      if (profileHeroName) profileHeroName.textContent = displayName;
+      if (profileHeroRole) profileHeroRole.textContent = `${role} Access`;
+      if (profileRoleStat) profileRoleStat.textContent = role;
+      if (profileRolePill) profileRolePill.textContent = role;
+      if (profileRoleFeed) profileRoleFeed.textContent = `${role} permissions were loaded successfully.`;
+
+      initialNameValue = displayName;
+      applyThemeInfo();
+    }
+
+    async function loadFirestoreProfile(user) {
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+
+      if (!snap.exists()) {
+        const fallbackProfile = {
+          uid: user.uid,
+          email: user.email || "",
+          displayName: user.displayName || user.email || "Owner Account",
+          fullName: user.displayName || user.email || "Owner Account",
+          role: "owner"
+        };
+
+        await setDoc(ref, {
+          uid: user.uid,
+          email: user.email || "",
+          fullName: fallbackProfile.fullName,
+          displayName: fallbackProfile.displayName,
+          role: "owner",
+          active: true,
+          approvalStatus: "approved",
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+
+        return fallbackProfile;
+      }
+
+      return snap.data();
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
+
+      currentUser = user;
+
+      try {
+        const dbProfile = await loadFirestoreProfile(user);
+        const mergedProfile = {
+          uid: user.uid,
+          email: user.email || dbProfile.email || "",
+          displayName: user.displayName || dbProfile.displayName || dbProfile.fullName || user.email || "Owner Account",
+          fullName: dbProfile.fullName || user.displayName || user.email || "Owner Account",
+          role: dbProfile.role || "owner"
+        };
+
+        syncUserSession(
+          {
+            ...user,
+            displayName: mergedProfile.displayName
+          },
+          mergedProfile.role
+        );
+
+        applyProfileUi(mergedProfile);
+      } catch (error) {
+        console.error("Profile load failed:", error);
+        const saved = getSavedUserProfile();
+        if (saved) {
+          applyProfileUi(saved);
+        }
+      }
+    });
+
+    profileForm?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      setMessage("");
+
+      if (!currentUser) {
+        setMessage("No active user session found.", true);
+        return;
+      }
+
+      const newName = String(fullNameInput?.value || "").trim();
+
+      if (!newName) {
+        setMessage("Please enter your full name.", true);
+        return;
+      }
+
+      try {
+        await updateProfile(currentUser, {
+          displayName: newName
+        });
+
+        const ref = doc(db, "users", currentUser.uid);
+        await updateDoc(ref, {
+          fullName: newName,
+          displayName: newName,
+          updatedAt: serverTimestamp()
+        });
+
+        const roleValue = (roleInput?.value || "Owner").toLowerCase();
+        syncUserSession(
+          {
+            ...currentUser,
+            displayName: newName
+          },
+          roleValue
+        );
+
+        applyProfileUi({
+          uid: currentUser.uid,
+          email: currentUser.email || "",
+          displayName: newName,
+          fullName: newName,
+          role: roleValue
+        });
+
+        setMessage("Profile updated successfully.");
+      } catch (error) {
+        console.error("Profile save failed:", error);
+        setMessage("Unable to save profile right now.", true);
+      }
+    });
+
+    resetProfileBtn?.addEventListener("click", () => {
+      if (fullNameInput) fullNameInput.value = initialNameValue;
+      setMessage("");
+    });
+
+    saveProfileBtnTop?.addEventListener("click", () => {
+      profileForm?.requestSubmit();
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".dashboard-nav-link").forEach((link) => {
+        link.addEventListener("click", () => {
+          document.querySelectorAll(".dashboard-nav-link").forEach((item) => {
+            item.classList.remove("active");
+          });
+          link.classList.add("active");
+        });
+      });
+
+      applyThemeInfo();
+
+      const observer = new MutationObserver(() => {
+        applyThemeInfo();
+      });
+
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["data-theme"]
+      });
+    });
+  </script>
+
+  <script type="module" src="/evaraos/assets/js/theme.js"></script>
+  <script type="module" src="/evaraos/assets/js/nav.js"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js"></script>
+</body>
+</html>
