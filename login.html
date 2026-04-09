@@ -6,214 +6,167 @@
   <title>Login • Evaraos Inc</title>
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
 </head>
-<body class="app-theme">
+<body class="login-page">
   <div class="page-grid-overlay"></div>
-
-  <header class="landing-header">
-    <div class="landing-header-inner glass-shell aurora-card">
-      <a href="/evaraos/index.html" class="brand-link" aria-label="Go home">
-        <img
-          src="/evaraos/assets/img/evaraos_logo.png"
-          alt="Evaraos logo"
-          class="brand-logo"
-        />
-        <div class="brand-copy">
-          <strong>Evaraos Inc</strong>
-          <span>Subsidiaries Allocation SaaS</span>
-        </div>
-      </a>
-
-      <nav class="landing-nav" aria-label="Main navigation">
-        <div class="nav-dropdown" data-nav-dropdown>
-          <button
-            class="nav-hamburger"
-            type="button"
-            data-nav-toggle
-            aria-label="Open menu"
-            aria-expanded="false"
-          >
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-          </button>
-
-          <div class="nav-dropdown-menu glass-popover aurora-card" data-nav-menu>
-            <a href="/evaraos/login.html" class="menu-link" data-nav-link>Login</a>
-            <a href="/evaraos/signup.html" class="menu-link" data-nav-link>Sign Up</a>
-            <a href="/evaraos/dashboard.html" class="menu-link" data-nav-link>Dashboard</a>
-            <a href="/evaraos/companies.html" class="menu-link" data-nav-link>Companies</a>
-            <a href="/evaraos/users.html" class="menu-link" data-nav-link>Users</a>
-            <a href="/evaraos/leads.html" class="menu-link" data-nav-link>Leads</a>
-            <a href="/evaraos/jobs.html" class="menu-link" data-nav-link>Jobs</a>
-
-            <div class="menu-divider"></div>
-
-            <div class="menu-theme-block" data-theme-control>
-              <button
-                type="button"
-                class="theme-core-toggle"
-                data-theme-core-toggle
-                aria-expanded="false"
-                aria-label="Toggle light and dark mode"
-                title="Tap to switch light and dark"
-              >
-                <span class="theme-core-dot"></span>
-                <span class="theme-core-label" data-theme-mode-text>Dark</span>
-                <span class="theme-core-sep">•</span>
-                <span class="theme-core-group" data-theme-group-text>Neutral</span>
-                <span class="theme-core-sep">•</span>
-                <span class="theme-core-hint" data-theme-hint-text>tap</span>
-              </button>
-
-              <div class="theme-bubbles" data-theme-bubbles>
-                <button type="button" class="theme-bubble light" data-theme-bubble data-theme-group="neutral" aria-label="Neutral theme"></button>
-                <button type="button" class="theme-bubble blue" data-theme-bubble data-theme-group="blue" aria-label="Blue theme"></button>
-                <button type="button" class="theme-bubble red" data-theme-bubble data-theme-group="red" aria-label="Red theme"></button>
-                <button type="button" class="theme-bubble pink" data-theme-bubble data-theme-group="pink" aria-label="Pink theme"></button>
-                <button type="button" class="theme-bubble green" data-theme-bubble data-theme-group="green" aria-label="Green theme"></button>
-                <button type="button" class="theme-bubble purple" data-theme-bubble data-theme-group="purple" aria-label="Purple theme"></button>
-                <button type="button" class="theme-bubble yellow" data-theme-bubble data-theme-group="yellow" aria-label="Yellow theme"></button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
-    </div>
-  </header>
+  <div id="universalNav"></div>
 
   <main class="login-shell">
-    <section class="login-panel glass-card">
+    <section class="login-panel glass-card aurora-card">
       <div class="login-badge-wrap">
         <img
           src="/evaraos/assets/img/evaraos_logo.png"
-          alt="Evaraos"
+          alt="Evaraos logo"
           class="login-badge"
         />
       </div>
 
       <h1 class="login-title">Welcome Back</h1>
       <p class="login-subtitle">
-        Login first, then handle the extra verification layer only when needed.
+        Sign in to access your Evaraos control center, companies, leads, jobs, and platform tools.
       </p>
 
       <form id="loginForm" class="login-form" novalidate>
-        <div class="form-group">
-          <label class="field-label" for="username">Email or Username</label>
-          <div class="input-shell">
-            <input
-              id="username"
-              name="username"
-              type="text"
-              class="input"
-              placeholder="Email or username"
-              autocomplete="username"
-              required
-            />
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="field-label" for="loginEmail">Email</label>
+            <div class="input-shell aurora-card">
+              <input
+                id="loginEmail"
+                name="email"
+                type="email"
+                class="input"
+                placeholder="Enter your email"
+                autocomplete="email"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="field-label" for="loginPassword">Password</label>
+            <div class="password-wrap input-shell aurora-card">
+              <input
+                id="loginPassword"
+                name="password"
+                type="password"
+                class="input"
+                placeholder="Enter your password"
+                autocomplete="current-password"
+                required
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                id="loginPasswordToggle"
+                aria-label="Show password"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 5c5.5 0 9.5 5.1 10.7 6.9.2.3.2.8 0 1.1C21.5 14.9 17.5 20 12 20S2.5 14.9 1.3 13.1a1 1 0 0 1 0-1.1C2.5 10.1 6.5 5 12 5Zm0 2C8 7 4.8 10.3 3.4 12 4.8 13.7 8 17 12 17s7.2-3.3 8.6-5C19.2 10.3 16 7 12 7Zm0 1.8A3.2 3.2 0 1 1 8.8 12 3.2 3.2 0 0 1 12 8.8Zm0 2A1.2 1.2 0 1 0 13.2 12 1.2 1.2 0 0 0 12 10.8Z"/>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="field-label" for="password">Password</label>
-          <div class="input-shell password-wrap">
-            <input
-              id="password"
-              name="password"
-              type="password"
-              class="input"
-              placeholder="Password"
-              autocomplete="current-password"
-              required
-            />
-            <button
-              type="button"
-              id="togglePasswordBtn"
-              class="password-toggle"
-              aria-label="Show password"
-              aria-pressed="false"
-            >
-              <svg id="passwordIconOpen" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 5c5.6 0 9.7 4.7 10.9 6.4.27.36.27.86 0 1.22C21.7 14.3 17.6 19 12 19S2.3 14.3 1.1 12.62a1 1 0 0 1 0-1.22C2.3 9.7 6.4 5 12 5Zm0 2C8.52 7 5.6 9.74 3.98 12 5.6 14.26 8.52 17 12 17s6.4-2.74 8.02-5C18.4 9.74 15.48 7 12 7Zm0 1.8A3.2 3.2 0 1 1 8.8 12 3.2 3.2 0 0 1 12 8.8Zm0 2A1.2 1.2 0 1 0 13.2 12 1.2 1.2 0 0 0 12 10.8Z"/>
-              </svg>
-              <svg id="passwordIconClosed" viewBox="0 0 24 24" aria-hidden="true" style="display:none;">
-                <path d="M3.28 2.22 21.78 20.72l-1.06 1.06-3.16-3.15A12.9 12.9 0 0 1 12 19c-5.6 0-9.7-4.7-10.9-6.4a1 1 0 0 1 0-1.22A18.3 18.3 0 0 1 6 7.02L2.22 3.28l1.06-1.06ZM7.5 8.52A15.24 15.24 0 0 0 3.98 12C5.6 14.26 8.52 17 12 17c1.45 0 2.8-.32 4.02-.9l-2.17-2.17A3.18 3.18 0 0 1 10.07 10L7.5 8.52Zm4.82-1.48c5.1.13 8.84 4.52 9.58 5.36.27.36.27.86 0 1.22-.45.63-1.34 1.7-2.62 2.76l-1.43-1.43A13.42 13.42 0 0 0 20.02 12c-1.4-1.79-4.06-4.87-7.7-4.97V7.04Zm-.5 2.06a3.2 3.2 0 0 1 3.08 3.96l-3.95-3.95c.28-.01.57-.01.87-.01Z"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <div class="remember-row input-shell">
-          <label class="remember-check">
-            <input id="rememberTrustedDevice" type="checkbox" />
+        <div class="remember-row aurora-card">
+          <label class="remember-check" for="rememberDevice">
+            <input id="rememberDevice" name="rememberDevice" type="checkbox" checked />
             <span>Remember this device</span>
           </label>
         </div>
 
         <div class="login-actions-row">
           <button type="submit" class="btn btn-theme-primary">Login</button>
-          <button type="button" id="openResetBtn" class="btn btn-theme-secondary">Forgot password?</button>
+          <a href="/evaraos/reset.html" class="btn btn-theme-secondary">Forgot Password</a>
         </div>
 
-        <p id="loginMessage" class="login-message"></p>
-      </form>
-    </section>
-
-    <section id="mfaChallengePanel" class="reset-panel glass-card hidden">
-      <div class="panel-head">
-        <h2>Number Verification</h2>
-      </div>
-
-      <form id="mfaChallengeForm" class="login-form">
-        <div class="form-group">
-          <label class="field-label" for="mfaCode">Verification Code</label>
-          <div class="input-shell">
-            <input
-              id="mfaCode"
-              type="text"
-              class="input"
-              placeholder="Enter SMS code"
-              inputmode="numeric"
-              autocomplete="one-time-code"
-              required
-            />
-          </div>
-        </div>
-
-        <button type="submit" class="btn btn-theme-primary">Verify Code</button>
-        <p id="mfaChallengeMessage" class="login-message"></p>
-      </form>
-    </section>
-
-    <section id="resetPanel" class="reset-panel glass-card hidden">
-      <div class="panel-head">
-        <h2>Reset Password</h2>
-        <button type="button" id="closeResetBtn" class="btn btn-theme-secondary">Close</button>
-      </div>
-
-      <form id="resetForm" class="login-form">
-        <div class="form-group">
-          <label class="field-label" for="resetEmail">Account Email</label>
-          <div class="input-shell">
-            <input
-              id="resetEmail"
-              type="email"
-              class="input"
-              placeholder="Account Email"
-              autocomplete="email"
-              required
-            />
-          </div>
-        </div>
-
-        <button type="submit" class="btn btn-theme-secondary">Send Reset Email</button>
-        <p id="resetMessage" class="login-message"></p>
+        <p id="loginMessage" class="login-message" aria-live="polite"></p>
       </form>
     </section>
   </main>
 
-  <div id="recaptcha-container"></div>
+  <script type="module">
+    import {
+      auth,
+      signInWithEmailAndPassword,
+      setAuthPersistence,
+      syncUserSession,
+      protectRoute
+    } from "/evaraos/assets/js/firebase.js";
+
+    protectRoute({
+      requireAuth: false,
+      redirectAuthedTo: "/evaraos/dashboard.html"
+    });
+
+    const form = document.getElementById("loginForm");
+    const emailInput = document.getElementById("loginEmail");
+    const passwordInput = document.getElementById("loginPassword");
+    const rememberDeviceInput = document.getElementById("rememberDevice");
+    const messageEl = document.getElementById("loginMessage");
+    const toggleBtn = document.getElementById("loginPasswordToggle");
+
+    function setMessage(message = "") {
+      if (messageEl) messageEl.textContent = message;
+    }
+
+    function togglePasswordVisibility(input, button) {
+      const isPassword = input.type === "password";
+      input.type = isPassword ? "text" : "password";
+      button.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
+      button.classList.add("active-glow");
+      setTimeout(() => button.classList.remove("active-glow"), 220);
+    }
+
+    if (toggleBtn && passwordInput) {
+      toggleBtn.addEventListener("click", () => {
+        togglePasswordVisibility(passwordInput, toggleBtn);
+      });
+    }
+
+    form?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      setMessage("");
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      const rememberDevice = Boolean(rememberDeviceInput?.checked);
+
+      if (!email || !password) {
+        setMessage("Please enter your email and password.");
+        return;
+      }
+
+      try {
+        await setAuthPersistence(rememberDevice);
+        const credential = await signInWithEmailAndPassword(auth, email, password);
+        syncUserSession(credential.user);
+        window.location.href = "/evaraos/dashboard.html";
+      } catch (error) {
+        console.error("Login failed:", error);
+
+        switch (error.code) {
+          case "auth/invalid-email":
+            setMessage("That email format is invalid.");
+            break;
+          case "auth/user-not-found":
+          case "auth/wrong-password":
+          case "auth/invalid-credential":
+            setMessage("Incorrect email or password.");
+            break;
+          case "auth/too-many-requests":
+            setMessage("Too many attempts. Try again in a bit.");
+            break;
+          default:
+            setMessage("Unable to sign in right now. Please try again.");
+            break;
+        }
+      }
+    });
+  </script>
 
   <script type="module" src="/evaraos/assets/js/theme.js"></script>
   <script type="module" src="/evaraos/assets/js/nav.js"></script>
-  <script type="module" src="/evaraos/assets/js/auth.js"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js"></script>
 </body>
 </html>
