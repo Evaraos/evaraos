@@ -3,22 +3,16 @@ const STORAGE_KEY = "evaraos_theme_v9";
 const ALL_THEMES = [
   "dark",
   "light",
-
   "blue-dark",
   "blue-light",
-
   "red-dark",
   "red-light",
-
   "pink-dark",
   "pink-light",
-
   "green-dark",
   "green-light",
-
   "purple-dark",
   "purple-light",
-
   "yellow-dark",
   "yellow-light"
 ];
