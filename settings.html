@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Settings • Evaraos Inc</title>
+  <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
+</head>
+<body class="dashboard-body">
+  <div class="page-grid-overlay"></div>
+  <div id="universalNav"></div>
+
+  <div class="dashboard-shell">
+    <aside class="dashboard-sidebar" id="dashboardSidebar">
+      <div class="dashboard-sidebar-inner glass-shell aurora-card">
+        <div class="dashboard-sidebar-search">
+          <div class="dashboard-search-shell input-shell aurora-card">
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
+              <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
+            </svg>
+            <input
+              type="search"
+              class="dashboard-search-input input"
+              placeholder="Search settings..."
+              aria-label="Search settings"
+            />
+          </div>
+        </div>
+
+        <div class="dashboard-sidebar-head">
+          <p class="dashboard-sidebar-eyebrow">Settings Navigation</p>
+          <h2 id="dashboardOverviewTitle">Settings Overview</h2>
+        </div>
+
+        <nav class="dashboard-sidebar-nav" aria-label="Settings sections">
+          <a href="#settingsOverviewSection" class="dashboard-nav-link active aurora-card">
+            <span class="dashboard-nav-icon">◉</span>
+            <span>Overview</span>
+          </a>
+
+          <a href="#appearanceSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◎</span>
+            <span>Appearance</span>
+          </a>
+
+          <a href="#accountSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◌</span>
+            <span>Account</span>
+          </a>
+
+          <a href="#notificationsSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◐</span>
+            <span>Notifications</span>
+          </a>
+
+          <a href="#privacySection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◈</span>
+            <span>Privacy</span>
+          </a>
+        </nav>
+
+        <div class="dashboard-sidebar-foot glass-card aurora-card">
+          <div class="dashboard-sidebar-foot-copy">
+            <strong>Settings Center</strong>
+            <span>Control your theme, account behavior, communication preferences, and privacy from one place.</span>
+          </div>
+          <a href="/evaraos/profile.html" class="btn btn-theme-primary">Open Profile</a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="dashboard-main">
+      <section class="dashboard-hero glass-card aurora-card" id="settingsOverviewSection">
+        <div class="dashboard-hero-copy">
+          <p class="dashboard-eyebrow">SETTINGS CENTER</p>
+          <h1>Fine-tune your account experience.</h1>
+          <p class="dashboard-hero-text">
+            Manage appearance, account behavior, notifications, and privacy preferences
+            using the same premium Evaraos glass interface.
+          </p>
+
+          <div class="dashboard-hero-actions">
+            <button type="button" id="saveSettingsTopBtn" class="btn btn-theme-primary">Save Settings</button>
+            <a href="/evaraos/security.html" class="btn btn-theme-secondary">Security Center</a>
+          </div>
+        </div>
+
+        <div class="dashboard-hero-panel glass-card aurora-card">
+          <div class="dashboard-hero-panel-top">
+            <span class="dashboard-mini-badge">Preferences</span>
+            <span class="dashboard-live-dot"></span>
+          </div>
+
+          <div class="dashboard-hero-logo-wrap">
+            <div
+              id="settingsAvatarHero"
+              class="dashboard-avatar dashboard-avatar-large"
+              style="width:88px;height:88px;font-size:30px;"
+            >
+              G
+            </div>
+          </div>
+
+          <div class="dashboard-hero-panel-copy">
+            <strong id="settingsHeroName">Owner Account</strong>
+            <span id="settingsHeroRole">Executive Access</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-overview glass-card aurora-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Snapshot</p>
+            <h2>Settings Overview</h2>
+          </div>
+        </div>
+
+        <div class="dashboard-stats-grid">
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Theme Mode</p>
+            <h3 id="settingsThemeModeStat">Dark</h3>
+            <span>Current interface mode</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Theme Style</p>
+            <h3 id="settingsThemeStyleStat">Neutral</h3>
+            <span>Current color family</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Notifications</p>
+            <h3 id="settingsNotificationStat">On</h3>
+            <span>Platform alert preference</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Privacy</p>
+            <h3 id="settingsPrivacyStat">Standard</h3>
+            <span>Current visibility mode</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card aurora-card" id="appearanceSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Visuals</p>
+              <h2>Appearance</h2>
+            </div>
+          </div>
+
+          <form id="appearanceForm" class="login-form" novalidate>
+            <div class="form-group">
+              <label class="field-label" for="themeModeSelect">Theme Mode</label>
+              <div class="input-shell aurora-card">
+                <select id="themeModeSelect" class="input">
+                  <option value="dark">Dark</option>
+                  <option value="light">Light</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="field-label" for="themeStyleSelect">Theme Style</label>
+              <div class="input-shell aurora-card">
+                <select id="themeStyleSelect" class="input">
+                  <option value="neutral">Neutral</option>
+                  <option value="blue">Blue</option>
+                  <option value="red">Red</option>
+                  <option value="pink">Pink</option>
+                  <option value="green">Green</option>
+                  <option value="purple">Purple</option>
+                  <option value="yellow">Yellow</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="login-actions-row">
+              <button type="submit" class="btn btn-theme-primary">Apply Appearance</button>
+            </div>
+
+            <p id="appearanceMessage" class="login-message" aria-live="polite"></p>
+          </form>
+        </section>
+
+        <section class="dashboard-panel glass-card aurora-card" id="accountSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Identity</p>
+              <h2>Account</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-list">
+            <article class="dashboard-list-item glass-card aurora-card">
+              <div>
+                <strong>Name</strong>
+                <span id="settingsAccountName">Owner Account</span>
+              </div>
+              <a href="/evaraos/profile.html" class="btn btn-theme-secondary">Edit</a>
+            </article>
+
+            <article class="dashboard-list-item glass-card aurora-card">
+              <div>
+                <strong>Email</strong>
+                <span id="settingsAccountEmail">email@example.com</span>
+              </div>
+              <span class="dashboard-status-pill good">Verified</span>
+            </article>
+
+            <article class="dashboard-list-item glass-card aurora-card">
+              <div>
+                <strong>Role</strong>
+                <span id="settingsAccountRole">Owner</span>
+              </div>
+              <span class="dashboard-status-pill working">Active</span>
+            </article>
+          </div>
+        </section>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card aurora-card" id="notificationsSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Communication</p>
+              <h2>Notifications</h2>
+            </div>
+          </div>
+
+          <form id="notificationForm" class="login-form" novalidate>
+            <div class="remember-row aurora-card">
+              <label class="remember-check" for="notifyPlatform">
+                <input id="notifyPlatform" type="checkbox" checked />
+                <span>Enable platform activity notifications</span>
+              </label>
+            </div>
+
+            <div class="remember-row aurora-card">
+              <label class="remember-check" for="notifySecurity">
+                <input id="notifySecurity" type="checkbox" checked />
+                <span>Enable security alerts</span>
+              </label>
+            </div>
+
+            <div class="remember-row aurora-card">
+              <label class="remember-check" for="notifyMarketing">
+                <input id="notifyMarketing" type="checkbox" />
+                <span>Enable product and platform updates</span>
+              </label>
+            </div>
+
+            <div class="login-actions-row">
+              <button type="submit" class="btn btn-theme-primary">Save Notifications</button>
+            </div>
+
+            <p id="notificationMessage" class="login-message" aria-live="polite"></p>
+          </form>
+        </section>
+
+        <section class="dashboard-panel glass-card aurora-card" id="privacySection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Protection</p>
+              <h2>Privacy</h2>
+            </div>
+          </div>
+
+          <form id="privacyForm" class="login-form" novalidate>
+            <div class="form-group">
+              <label class="field-label" for="privacySelect">Privacy Mode</label>
+              <div class="input-shell aurora-card">
+                <select id="privacySelect" class="input">
+                  <option value="standard">Standard</option>
+                  <option value="private">Private</option>
+                  <option value="restricted">Restricted</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="remember-row aurora-card">
+              <label class="remember-check" for="privacyActivity">
+                <input id="privacyActivity" type="checkbox" checked />
+                <span>Store account activity history</span>
+              </label>
+            </div>
+
+            <div class="login-actions-row">
+              <button type="submit" class="btn btn-theme-primary">Save Privacy</button>
+            </div>
+
+            <p id="privacyMessage" class="login-message" aria-live="polite"></p>
+          </form>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+    import {
+      auth,
+      db,
+      protectRoute,
+      onAuthStateChanged,
+      doc,
+      getDoc,
+      setDoc,
+      updateDoc,
+      serverTimestamp,
+      syncUserSession,
+      getSavedUserProfile
+    } from "/evaraos/assets/js/firebase.js";
+
+    protectRoute({
+      requireAuth: true,
+      redirectGuestTo: "/evaraos/login.html"
+    });
+
+    const saveSettingsTopBtn = document.getElementById("saveSettingsTopBtn");
+
+    const settingsAvatarHero = document.getElementById("settingsAvatarHero");
+    const settingsHeroName = document.getElementById("settingsHeroName");
+    const settingsHeroRole = document.getElementById("settingsHeroRole");
+
+    const settingsAccountName = document.getElementById("settingsAccountName");
+    const settingsAccountEmail = document.getElementById("settingsAccountEmail");
+    const settingsAccountRole = document.getElementById("settingsAccountRole");
+
+    const settingsThemeModeStat = document.getElementById("settingsThemeModeStat");
+    const settingsThemeStyleStat = document.getElementById("settingsThemeStyleStat");
+    const settingsNotificationStat = document.getElementById("settingsNotificationStat");
+    const settingsPrivacyStat = document.getElementById("settingsPrivacyStat");
+
+    const appearanceForm = document.getElementById("appearanceForm");
+    const notificationForm = document.getElementById("notificationForm");
+    const privacyForm = document.getElementById("privacyForm");
+
+    const themeModeSelect = document.getElementById("themeModeSelect");
+    const themeStyleSelect = document.getElementById("themeStyleSelect");
+
+    const notifyPlatform = document.getElementById("notifyPlatform");
+    const notifySecurity = document.getElementById("notifySecurity");
+    const notifyMarketing = document.getElementById("notifyMarketing");
+
+    const privacySelect = document.getElementById("privacySelect");
+    const privacyActivity = document.getElementById("privacyActivity");
+
+    const appearanceMessage = document.getElementById("appearanceMessage");
+    const notificationMessage = document.getElementById("notificationMessage");
+    const privacyMessage = document.getElementById("privacyMessage");
+
+    let currentUser = null;
+
+    function setMessage(element, message = "", isError = false) {
+      if (!element) return;
+      element.textContent = message;
+      element.style.color = isError ? "#ff9b8f" : "";
+    }
+
+    function clearMessages() {
+      setMessage(appearanceMessage, "");
+      setMessage(notificationMessage, "");
+      setMessage(privacyMessage, "");
+    }
+
+    function formatRole(role = "owner") {
+      const value = String(role || "owner").toLowerCase();
+      if (value === "owner") return "Owner";
+      if (value === "admin") return "Admin";
+      if (value === "manager") return "Manager";
+      if (value === "sales") return "Sales";
+      if (value === "technician") return "Technician";
+      if (value === "customer") return "Customer";
+      return "Owner";
+    }
+
+    function readThemeDetails() {
+      const activeTheme = document.documentElement.getAttribute("data-theme") || "dark";
+      const mode = activeTheme.includes("light") ? "light" : "dark";
+      const style = activeTheme.replace("-light", "").replace("-dark", "");
+
+      return {
+        full: activeTheme,
+        mode,
+        style: style === "light" || style === "dark" ? "neutral" : style || "neutral"
+      };
+    }
+
+    function buildThemeValue(mode, style) {
+      if (style === "neutral") {
+        return mode;
+      }
+      return `${style}-${mode}`;
+    }
+
+    function applyThemeStats() {
+      const theme = readThemeDetails();
+      if (settingsThemeModeStat) settingsThemeModeStat.textContent = theme.mode === "light" ? "Light" : "Dark";
+      if (settingsThemeStyleStat) {
+        settingsThemeStyleStat.textContent = theme.style.charAt(0).toUpperCase() + theme.style.slice(1);
+      }
+      if (themeModeSelect) themeModeSelect.value = theme.mode;
+      if (themeStyleSelect) themeStyleSelect.value = theme.style;
+    }
+
+    async function ensureSettingsDoc(uid) {
+      const ref = doc(db, "userSettings", uid);
+      const snap = await getDoc(ref);
+
+      if (!snap.exists()) {
+        const initialSettings = {
+          notifyPlatform: true,
+          notifySecurity: true,
+          notifyMarketing: false,
+          privacyMode: "standard",
+          storeActivity: true,
+          updatedAt: serverTimestamp()
+        };
+
+        await setDoc(ref, initialSettings, { merge: true });
+        return initialSettings;
+      }
+
+      return snap.data();
+    }
+
+    async function loadUserUi(user) {
+      const displayName = user.displayName || user.email || "Owner Account";
+      const initial = displayName.trim().charAt(0).toUpperCase() || "U";
+      const saved = getSavedUserProfile();
+      const role = formatRole(saved?.role || "owner");
+
+      if (settingsAvatarHero) settingsAvatarHero.textContent = initial;
+      if (settingsHeroName) settingsHeroName.textContent = displayName;
+      if (settingsHeroRole) settingsHeroRole.textContent = `${role} Access`;
+
+      if (settingsAccountName) settingsAccountName.textContent = displayName;
+      if (settingsAccountEmail) settingsAccountEmail.textContent = user.email || "";
+      if (settingsAccountRole) settingsAccountRole.textContent = role;
+    }
+
+    async function loadSettings(user) {
+      const settings = await ensureSettingsDoc(user.uid);
+
+      if (notifyPlatform) notifyPlatform.checked = Boolean(settings.notifyPlatform);
+      if (notifySecurity) notifySecurity.checked = Boolean(settings.notifySecurity);
+      if (notifyMarketing) notifyMarketing.checked = Boolean(settings.notifyMarketing);
+
+      if (privacySelect) privacySelect.value = settings.privacyMode || "standard";
+      if (privacyActivity) privacyActivity.checked = Boolean(settings.storeActivity);
+
+      const notificationsOn =
+        Boolean(settings.notifyPlatform) ||
+        Boolean(settings.notifySecurity) ||
+        Boolean(settings.notifyMarketing);
+
+      if (settingsNotificationStat) settingsNotificationStat.textContent = notificationsOn ? "On" : "Off";
+      if (settingsPrivacyStat) {
+        const privacyLabel = String(settings.privacyMode || "standard");
+        settingsPrivacyStat.textContent = privacyLabel.charAt(0).toUpperCase() + privacyLabel.slice(1);
+      }
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
+
+      currentUser = user;
+
+      try {
+        syncUserSession(user);
+        await loadUserUi(user);
+        await loadSettings(user);
+        applyThemeStats();
+      } catch (error) {
+        console.error("Settings load failed:", error);
+      }
+    });
+
+    appearanceForm?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      clearMessages();
+
+      const mode = themeModeSelect?.value || "dark";
+      const style = themeStyleSelect?.value || "neutral";
+      const themeValue = buildThemeValue(mode, style);
+
+      document.documentElement.setAttribute("data-theme", themeValue);
+      localStorage.setItem("evaraos-theme", themeValue);
+
+      applyThemeStats();
+      setMessage(appearanceMessage, "Appearance updated.");
+    });
+
+    notificationForm?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      clearMessages();
+
+      if (!currentUser) {
+        setMessage(notificationMessage, "No active session found.", true);
+        return;
+      }
+
+      try {
+        const ref = doc(db, "userSettings", currentUser.uid);
+        await setDoc(ref, {
+          notifyPlatform: Boolean(notifyPlatform?.checked),
+          notifySecurity: Boolean(notifySecurity?.checked),
+          notifyMarketing: Boolean(notifyMarketing?.checked),
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+
+        const notificationsOn =
+          Boolean(notifyPlatform?.checked) ||
+          Boolean(notifySecurity?.checked) ||
+          Boolean(notifyMarketing?.checked);
+
+        if (settingsNotificationStat) settingsNotificationStat.textContent = notificationsOn ? "On" : "Off";
+        setMessage(notificationMessage, "Notification settings saved.");
+      } catch (error) {
+        console.error("Notification save failed:", error);
+        setMessage(notificationMessage, "Unable to save notifications.", true);
+      }
+    });
+
+    privacyForm?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      clearMessages();
+
+      if (!currentUser) {
+        setMessage(privacyMessage, "No active session found.", true);
+        return;
+      }
+
+      try {
+        const ref = doc(db, "userSettings", currentUser.uid);
+        await setDoc(ref, {
+          privacyMode: privacySelect?.value || "standard",
+          storeActivity: Boolean(privacyActivity?.checked),
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+
+        const privacyLabel = String(privacySelect?.value || "standard");
+        if (settingsPrivacyStat) {
+          settingsPrivacyStat.textContent = privacyLabel.charAt(0).toUpperCase() + privacyLabel.slice(1);
+        }
+
+        setMessage(privacyMessage, "Privacy settings saved.");
+      } catch (error) {
+        console.error("Privacy save failed:", error);
+        setMessage(privacyMessage, "Unable to save privacy settings.", true);
+      }
+    });
+
+    saveSettingsTopBtn?.addEventListener("click", async () => {
+      appearanceForm?.requestSubmit();
+      notificationForm?.requestSubmit();
+      privacyForm?.requestSubmit();
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".dashboard-nav-link").forEach((link) => {
+        link.addEventListener("click", () => {
+          document.querySelectorAll(".dashboard-nav-link").forEach((item) => {
+            item.classList.remove("active");
+          });
+          link.classList.add("active");
+        });
+      });
+
+      applyThemeStats();
+
+      const observer = new MutationObserver(() => {
+        applyThemeStats();
+      });
+
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["data-theme"]
+      });
+    });
+  </script>
+
+  <script type="module" src="/evaraos/assets/js/theme.js"></script>
+  <script type="module" src="/evaraos/assets/js/nav.js"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js"></script>
+</body>
+</html>
