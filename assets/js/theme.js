@@ -64,14 +64,6 @@ function buildTheme(group = DEFAULT_GROUP, mode = DEFAULT_MODE) {
   return `${safeGroup}-${safeMode}`;
 }
 
-function applyTheme(theme) {
-  const safeTheme = normalizeTheme(theme);
-  document.documentElement.setAttribute("data-theme", safeTheme);
-  setStoredTheme(safeTheme);
-  syncThemeControls(safeTheme);
-  return safeTheme;
-}
-
 function getModeLabel(mode = "dark") {
   return mode === "light" ? "Light" : "Dark";
 }
@@ -102,8 +94,9 @@ function syncThemeControls(theme = getStoredTheme()) {
 
   document.querySelectorAll("[data-theme-bubble]").forEach((bubble) => {
     const bubbleGroup = bubble.getAttribute("data-theme-group") || "neutral";
-    bubble.classList.toggle("active", bubbleGroup === group);
-    bubble.setAttribute("aria-pressed", bubbleGroup === group ? "true" : "false");
+    const isActive = bubbleGroup === group;
+    bubble.classList.toggle("active", isActive);
+    bubble.setAttribute("aria-pressed", isActive ? "true" : "false");
   });
 
   document.querySelectorAll("[data-theme-core-toggle]").forEach((toggle) => {
@@ -114,6 +107,14 @@ function syncThemeControls(theme = getStoredTheme()) {
     toggle.dataset.themeMode = mode;
     toggle.dataset.themeGroup = group;
   });
+}
+
+function applyTheme(theme) {
+  const safeTheme = normalizeTheme(theme);
+  document.documentElement.setAttribute("data-theme", safeTheme);
+  setStoredTheme(safeTheme);
+  syncThemeControls(safeTheme);
+  return safeTheme;
 }
 
 function toggleMode() {
@@ -185,6 +186,7 @@ window.EvaraTheme = {
   getThemeParts,
   buildTheme,
   syncThemeControls,
+  bindAllThemeControls,
   initTheme
 };
 
