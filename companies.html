@@ -1,128 +1,405 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Companies | Evaraos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Companies • Evaraos Inc</title>
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
 </head>
-<body class="app-shell app-theme">
-  <div class="app-bg">
-    <div class="bg-orb bg-orb-1"></div>
-    <div class="bg-orb bg-orb-2"></div>
-    <div class="bg-grid"></div>
-  </div>
+<body class="dashboard-body">
+  <div class="page-grid-overlay"></div>
+  <div id="universalNav"></div>
 
-  <header id="topbar" class="topbar"></header>
+  <div class="dashboard-shell">
+    <aside class="dashboard-sidebar" id="dashboardSidebar">
+      <div class="dashboard-sidebar-inner glass-shell aurora-card">
+        <div class="dashboard-sidebar-search">
+          <div class="dashboard-search-shell input-shell aurora-card">
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
+              <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
+            </svg>
+            <input
+              type="search"
+              class="dashboard-search-input input"
+              placeholder="Search companies..."
+              aria-label="Search companies"
+            />
+          </div>
+        </div>
 
-  <div class="page-shell">
-    <aside id="sidebar" class="sidebar"></aside>
+        <div class="dashboard-sidebar-head">
+          <p class="dashboard-sidebar-eyebrow">Company Navigation</p>
+          <h2 id="dashboardOverviewTitle">Companies Overview</h2>
+        </div>
 
-    <main class="main-content">
-      <section class="glass-card aurora-card shine-border">
-        <div class="section-title-row">
-          <div>
-            <h1 style="margin:0;">Companies</h1>
-            <p class="muted" style="margin:8px 0 0;">
-              Manage active companies, ownership, status, brand settings, and notes.
-            </p>
+        <nav class="dashboard-sidebar-nav" aria-label="Company sections">
+          <a href="#companiesOverviewSection" class="dashboard-nav-link active aurora-card">
+            <span class="dashboard-nav-icon">◉</span>
+            <span>Overview</span>
+          </a>
+
+          <a href="#portfolioSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◎</span>
+            <span>Portfolio</span>
+          </a>
+
+          <a href="#performanceSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◌</span>
+            <span>Performance</span>
+          </a>
+
+          <a href="#operationsSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◐</span>
+            <span>Operations</span>
+          </a>
+
+          <a href="#expansionSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◈</span>
+            <span>Expansion</span>
+          </a>
+        </nav>
+
+        <div class="dashboard-sidebar-foot glass-card aurora-card">
+          <div class="dashboard-sidebar-foot-copy">
+            <strong>Company Center</strong>
+            <span>Track subsidiary health, operations, revenue flow, and scale planning from one place.</span>
+          </div>
+          <a href="/evaraos/dashboard.html" class="btn btn-theme-primary">Back to Dashboard</a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="dashboard-main">
+      <section class="dashboard-hero glass-card aurora-card" id="companiesOverviewSection">
+        <div class="dashboard-hero-copy">
+          <p class="dashboard-eyebrow">COMPANY CENTER</p>
+          <h1>Manage every company under one operating system.</h1>
+          <p class="dashboard-hero-text">
+            Watch subsidiary performance, review operational health, and keep every company
+            aligned under the Evaraos structure with one premium control experience.
+          </p>
+
+          <div class="dashboard-hero-actions">
+            <button type="button" id="refreshCompaniesBtn" class="btn btn-theme-primary">Refresh Companies</button>
+            <a href="/evaraos/reports.html" class="btn btn-theme-secondary">Open Reports</a>
+          </div>
+        </div>
+
+        <div class="dashboard-hero-panel glass-card aurora-card">
+          <div class="dashboard-hero-panel-top">
+            <span class="dashboard-mini-badge">Live Portfolio</span>
+            <span class="dashboard-live-dot"></span>
+          </div>
+
+          <div class="dashboard-hero-logo-wrap">
+            <img
+              src="/evaraos/assets/img/evaraos_logo.png"
+              alt="Evaraos"
+              class="dashboard-hero-logo"
+            />
+          </div>
+
+          <div class="dashboard-hero-panel-copy">
+            <strong id="companiesHeroTitle">Evaraos Portfolio</strong>
+            <span id="companiesHeroSubline">Multi-company control from one platform.</span>
           </div>
         </div>
       </section>
 
-      <main id="companiesRoot" class="content-root"></main>
+      <section class="dashboard-overview glass-card aurora-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Snapshot</p>
+            <h2>Portfolio Overview</h2>
+          </div>
+        </div>
+
+        <div class="dashboard-stats-grid">
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Total Companies</p>
+            <h3 id="companiesCountStat">3</h3>
+            <span>Current active entities</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Healthy Companies</p>
+            <h3 id="companiesHealthyStat">2</h3>
+            <span>Strong operational standing</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Needs Review</p>
+            <h3 id="companiesReviewStat">1</h3>
+            <span>Requires closer attention</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Expansion Ready</p>
+            <h3 id="companiesExpansionStat">2</h3>
+            <span>Prepared for scale</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-panel glass-card aurora-card" id="portfolioSection">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Subsidiaries</p>
+            <h2>Company Portfolio</h2>
+          </div>
+          <button type="button" id="companySortBtn" class="btn btn-theme-secondary">Sort by Health</button>
+        </div>
+
+        <div class="dashboard-list" id="companiesList">
+          <article class="dashboard-list-item glass-card aurora-card company-item" data-health="healthy">
+            <div>
+              <strong>Supreme True Clean</strong>
+              <span>Exterior cleaning operations • Jacksonville • Residential service growth</span>
+            </div>
+            <span class="dashboard-status-pill good">Healthy</span>
+          </article>
+
+          <article class="dashboard-list-item glass-card aurora-card company-item" data-health="healthy">
+            <div>
+              <strong>OneofOne Cleaning</strong>
+              <span>Interior cleaning marketplace layer • Flexible vendor network model</span>
+            </div>
+            <span class="dashboard-status-pill good">Growing</span>
+          </article>
+
+          <article class="dashboard-list-item glass-card aurora-card company-item" data-health="review">
+            <div>
+              <strong>Evaraos Parent</strong>
+              <span>Core SaaS, payments, admin routing, and ecosystem control</span>
+            </div>
+            <span class="dashboard-status-pill alert">Review</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card aurora-card" id="performanceSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Performance</p>
+              <h2>Revenue + Growth</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-progress-stack">
+            <div class="dashboard-progress-row">
+              <div class="dashboard-progress-copy">
+                <strong>Supreme True Clean</strong>
+                <span>$28.4K monthly movement</span>
+              </div>
+              <div class="dashboard-progress-bar"><span style="width: 76%;"></span></div>
+            </div>
+
+            <div class="dashboard-progress-row">
+              <div class="dashboard-progress-copy">
+                <strong>OneofOne Cleaning</strong>
+                <span>$21.7K marketplace throughput</span>
+              </div>
+              <div class="dashboard-progress-bar"><span style="width: 61%;"></span></div>
+            </div>
+
+            <div class="dashboard-progress-row">
+              <div class="dashboard-progress-copy">
+                <strong>Evaraos Parent</strong>
+                <span>$34.1K platform-linked volume</span>
+              </div>
+              <div class="dashboard-progress-bar"><span style="width: 84%;"></span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card aurora-card" id="operationsSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Execution</p>
+              <h2>Operational Health</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-feed">
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Supreme True Clean</strong>
+              <span>Route efficiency and recurring service structure are stable.</span>
+            </article>
+
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>OneofOne Cleaning</strong>
+              <span>Vendor fulfillment model is flexible and positioned for wider dispatch coverage.</span>
+            </article>
+
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Evaraos Parent</strong>
+              <span>Payments, auth, and admin routing should continue being tightened for scale.</span>
+            </article>
+          </div>
+        </section>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card aurora-card" id="expansionSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Scale Plan</p>
+              <h2>Expansion Readiness</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-role-grid">
+            <article class="dashboard-role-card glass-card aurora-card">
+              <strong>Jacksonville Growth</strong>
+              <span>Strong base market for Supreme True Clean</span>
+            </article>
+
+            <article class="dashboard-role-card glass-card aurora-card">
+              <strong>Marketplace Rollout</strong>
+              <span>OneofOne model is ready for broader vendor coverage</span>
+            </article>
+
+            <article class="dashboard-role-card glass-card aurora-card">
+              <strong>Parent OS Structure</strong>
+              <span>Evaraos is positioned to onboard additional companies</span>
+            </article>
+
+            <article class="dashboard-role-card glass-card aurora-card">
+              <strong>Leadership Capacity</strong>
+              <span>Executive visibility is already centralized</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card aurora-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Recent Updates</p>
+              <h2>Company Feed</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-feed" id="companiesFeed">
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Portfolio synced</strong>
+              <span>Company overview loaded successfully.</span>
+            </article>
+
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Operating system aligned</strong>
+              <span>Evaraos continues functioning as the parent control layer.</span>
+            </article>
+
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Expansion watch active</strong>
+              <span>Growth-ready companies remain visible from one interface.</span>
+            </article>
+          </div>
+        </section>
+      </section>
     </main>
   </div>
 
-  <div class="modal-backdrop" id="companyModal">
-    <div class="modal-card aurora-card shine-border">
-      <div class="section-title-row">
-        <h2 id="companyModalTitle" style="margin:0;">Add Company</h2>
-        <button class="btn secondary" id="companyModalCloseBtn" type="button">Close</button>
-      </div>
+  <script type="module">
+    import {
+      auth,
+      protectRoute,
+      onAuthStateChanged,
+      syncUserSession
+    } from "/evaraos/assets/js/firebase.js";
 
-      <form id="companyForm">
-        <section class="form-section">
-          <h3 class="form-section-title">Basic Company Info</h3>
-          <div class="form-grid">
-            <div class="field">
-              <label for="companyName">Company Name</label>
-              <input id="companyName" required />
-            </div>
+    protectRoute({
+      requireAuth: true,
+      redirectGuestTo: "/evaraos/login.html"
+    });
 
-            <div class="field">
-              <label for="companySlug">Slug</label>
-              <input id="companySlug" placeholder="supreme-trueclean" />
-            </div>
+    const refreshCompaniesBtn = document.getElementById("refreshCompaniesBtn");
+    const companySortBtn = document.getElementById("companySortBtn");
+    const companiesList = document.getElementById("companiesList");
+    const companiesFeed = document.getElementById("companiesFeed");
 
-            <div class="field">
-              <label for="companyCity">City</label>
-              <input id="companyCity" />
-            </div>
+    const companiesCountStat = document.getElementById("companiesCountStat");
+    const companiesHealthyStat = document.getElementById("companiesHealthyStat");
+    const companiesReviewStat = document.getElementById("companiesReviewStat");
+    const companiesExpansionStat = document.getElementById("companiesExpansionStat");
 
-            <div class="field">
-              <label for="companyStateField">State</label>
-              <input id="companyStateField" />
-            </div>
+    function refreshCompanyStats() {
+      const items = Array.from(document.querySelectorAll(".company-item"));
+      const healthy = items.filter((item) => item.dataset.health === "healthy").length;
+      const review = items.filter((item) => item.dataset.health === "review").length;
 
-            <div class="field">
-              <label for="companyPhone">Phone</label>
-              <input id="companyPhone" />
-            </div>
+      if (companiesCountStat) companiesCountStat.textContent = String(items.length);
+      if (companiesHealthyStat) companiesHealthyStat.textContent = String(healthy);
+      if (companiesReviewStat) companiesReviewStat.textContent = String(review);
+      if (companiesExpansionStat) companiesExpansionStat.textContent = "2";
 
-            <div class="field">
-              <label for="companyEmail">Email</label>
-              <input id="companyEmail" type="email" />
-            </div>
-          </div>
-        </section>
+      if (companiesFeed) {
+        companiesFeed.innerHTML = `
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Portfolio refreshed</strong>
+            <span>Company overview was refreshed successfully.</span>
+          </article>
 
-        <section class="form-section">
-          <h3 class="form-section-title">Status & Branding</h3>
-          <div class="form-grid">
-            <div class="field">
-              <label for="companyStatus">Status</label>
-              <select id="companyStatus">
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Healthy entities tracked</strong>
+            <span>${healthy} companies are currently in strong standing.</span>
+          </article>
 
-            <div class="field">
-              <label for="companyBrandColor">Brand Color</label>
-              <input id="companyBrandColor" value="#E30613" />
-            </div>
-          </div>
-        </section>
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Review queue visible</strong>
+            <span>${review} company requires closer attention.</span>
+          </article>
+        `;
+      }
+    }
 
-        <section class="form-section">
-          <h3 class="form-section-title">Ownership</h3>
-          <div class="form-grid">
-            <div class="field">
-              <label for="companyOwnerName">Owner Name</label>
-              <input id="companyOwnerName" />
-            </div>
+    function sortCompaniesByHealth() {
+      if (!companiesList) return;
 
-            <div class="field">
-              <label for="companyOwnerEmail">Owner Email</label>
-              <input id="companyOwnerEmail" type="email" />
-            </div>
+      const items = Array.from(companiesList.querySelectorAll(".company-item"));
+      items.sort((a, b) => {
+        const score = { healthy: 0, review: 1 };
+        return (score[a.dataset.health] ?? 9) - (score[b.dataset.health] ?? 9);
+      });
 
-            <div class="field full">
-              <label for="companyNotes">Notes</label>
-              <textarea id="companyNotes" rows="4"></textarea>
-            </div>
-          </div>
-        </section>
+      items.forEach((item) => companiesList.appendChild(item));
+    }
 
-        <div class="top-actions" style="margin-top:18px;">
-          <button class="btn" type="submit">Save Company</button>
-          <button class="btn secondary" id="companyModalCancelBtn" type="button">Cancel</button>
-        </div>
-      </form>
-    </div>
-  </div>
+    refreshCompaniesBtn?.addEventListener("click", () => {
+      refreshCompaniesBtn.classList.add("active-glow");
+      setTimeout(() => refreshCompaniesBtn.classList.remove("active-glow"), 260);
+      refreshCompanyStats();
+    });
 
-  <script type="module" src="/evaraos/assets/js/companies.js"></script>
+    companySortBtn?.addEventListener("click", () => {
+      companySortBtn.classList.add("active-glow");
+      setTimeout(() => companySortBtn.classList.remove("active-glow"), 260);
+      sortCompaniesByHealth();
+      refreshCompanyStats();
+    });
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) return;
+      syncUserSession(user);
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".dashboard-nav-link").forEach((link) => {
+        link.addEventListener("click", () => {
+          document.querySelectorAll(".dashboard-nav-link").forEach((item) => {
+            item.classList.remove("active");
+          });
+          link.classList.add("active");
+        });
+      });
+
+      refreshCompanyStats();
+    });
+  </script>
+
+  <script type="module" src="/evaraos/assets/js/theme.js"></script>
+  <script type="module" src="/evaraos/assets/js/nav.js"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js"></script>
 </body>
 </html>
