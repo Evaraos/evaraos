@@ -37,20 +37,6 @@
         </a>
       </div>
 
-      <div class="dashboard-topbar-center">
-        <div class="dashboard-search-shell input-shell">
-          <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
-            <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
-          </svg>
-          <input
-            type="search"
-            class="dashboard-search-input input"
-            placeholder="Search companies, users, leads, jobs..."
-            aria-label="Search dashboard"
-          />
-        </div>
-      </div>
-
       <div class="dashboard-topbar-right">
         <div class="nav-dropdown dashboard-profile-menu" data-nav-dropdown>
           <button
@@ -88,7 +74,6 @@
                 type="button"
                 class="theme-core-toggle"
                 data-theme-core-toggle
-                aria-expanded="false"
                 aria-label="Toggle light and dark mode"
                 title="Tap to switch light and dark"
               >
@@ -119,6 +104,20 @@
   <div class="dashboard-shell">
     <aside class="dashboard-sidebar" id="dashboardSidebar">
       <div class="dashboard-sidebar-inner glass-shell aurora-card">
+        <div class="dashboard-sidebar-search">
+          <div class="dashboard-search-shell input-shell">
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
+              <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
+            </svg>
+            <input
+              type="search"
+              class="dashboard-search-input input"
+              placeholder="Search companies, users, leads, jobs..."
+              aria-label="Search dashboard"
+            />
+          </div>
+        </div>
+
         <div class="dashboard-sidebar-head">
           <p class="dashboard-sidebar-eyebrow">Platform Navigation</p>
           <h2>Executive Overview</h2>
@@ -518,6 +517,15 @@
       });
     }
 
+    document.querySelectorAll(".dashboard-nav-link").forEach((link) => {
+      link.addEventListener("click", () => {
+        if (window.innerWidth <= 980 && sidebar) {
+          sidebar.classList.remove("open");
+          sidebarToggle?.setAttribute("aria-expanded", "false");
+        }
+      });
+    });
+
     if (logoutBtn) {
       logoutBtn.addEventListener("click", async () => {
         try {
@@ -537,7 +545,6 @@
 
       const displayName = user.displayName || user.email || "Owner Account";
       const roleText = "Authenticated User";
-
       const initial = (displayName || "U").trim().charAt(0).toUpperCase();
 
       if (avatar) avatar.textContent = initial;
