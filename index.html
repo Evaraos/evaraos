@@ -8,78 +8,7 @@
 </head>
 <body class="landing-page">
   <div class="page-grid-overlay"></div>
-
-  <header class="landing-header">
-    <div class="landing-header-inner glass-shell aurora-card">
-      <a href="/evaraos/index.html" class="brand-link" aria-label="Go home">
-        <img
-          src="/evaraos/assets/img/evaraos_logo.png"
-          alt="Evaraos logo"
-          class="brand-logo"
-        />
-        <div class="brand-copy">
-          <strong>Evaraos Inc</strong>
-          <span>Subsidiaries Allocation SaaS</span>
-        </div>
-      </a>
-
-      <nav class="landing-nav" aria-label="Main navigation">
-        <div class="nav-dropdown" data-nav-dropdown>
-          <button
-            class="nav-hamburger"
-            type="button"
-            data-nav-toggle
-            aria-label="Open menu"
-            aria-expanded="false"
-          >
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-          </button>
-
-          <div class="nav-dropdown-menu glass-popover aurora-card" data-nav-menu>
-            <a href="/evaraos/login.html" class="menu-link" data-nav-link>Login</a>
-            <a href="/evaraos/signup.html" class="menu-link" data-nav-link>Sign Up</a>
-            <a href="/evaraos/dashboard.html" class="menu-link" data-nav-link>Dashboard</a>
-            <a href="/evaraos/companies.html" class="menu-link" data-nav-link>Companies</a>
-            <a href="/evaraos/users.html" class="menu-link" data-nav-link>Users</a>
-            <a href="/evaraos/leads.html" class="menu-link" data-nav-link>Leads</a>
-            <a href="/evaraos/jobs.html" class="menu-link" data-nav-link>Jobs</a>
-
-            <div class="menu-divider"></div>
-
-            <div class="menu-theme-block" data-theme-control>
-              <button
-                type="button"
-                class="theme-core-toggle"
-                data-theme-core-toggle
-                aria-expanded="false"
-                aria-label="Toggle light and dark mode"
-                title="Tap to switch light and dark"
-              >
-                <span class="theme-core-dot"></span>
-                <span class="theme-core-label" data-theme-mode-text>Dark</span>
-                <span class="theme-core-sep">•</span>
-                <span class="theme-core-group" data-theme-group-text>Neutral</span>
-                <span class="theme-core-sep">•</span>
-                <span class="theme-core-hint" data-theme-hint-text>tap</span>
-              </button>
-
-              <div class="theme-bubbles" data-theme-bubbles>
-                <button type="button" class="theme-bubble light" data-theme-bubble data-theme-group="neutral" aria-label="Neutral theme"></button>
-                <button type="button" class="theme-bubble blue" data-theme-bubble data-theme-group="blue" aria-label="Blue theme"></button>
-                <button type="button" class="theme-bubble red" data-theme-bubble data-theme-group="red" aria-label="Red theme"></button>
-                <button type="button" class="theme-bubble pink" data-theme-bubble data-theme-group="pink" aria-label="Pink theme"></button>
-                <button type="button" class="theme-bubble green" data-theme-bubble data-theme-group="green" aria-label="Green theme"></button>
-                <button type="button" class="theme-bubble purple" data-theme-bubble data-theme-group="purple" aria-label="Purple theme"></button>
-                <button type="button" class="theme-bubble yellow" data-theme-bubble data-theme-group="yellow" aria-label="Yellow theme"></button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
-    </div>
-  </header>
+  <div id="universalNav"></div>
 
   <main class="landing-shell">
     <section class="hero-section">
@@ -97,7 +26,7 @@
         </div>
       </div>
 
-      <div class="hero-visual glass-card">
+      <div class="hero-visual glass-card aurora-card">
         <div class="hero-visual-inner">
           <img
             src="/evaraos/assets/img/evaraos_logo.png"
@@ -113,21 +42,21 @@
     </section>
 
     <section class="feature-grid">
-      <article class="feature-card glass-card">
+      <article class="feature-card glass-card aurora-card">
         <h3>Operating System</h3>
         <p>
           One platform for roles, approvals, workflows, field activity, and scalable business infrastructure.
         </p>
       </article>
 
-      <article class="feature-card glass-card">
+      <article class="feature-card glass-card aurora-card">
         <h3>Multi-Company</h3>
         <p>
           Launch and manage multiple subsidiaries with a shared structure while keeping each business organized.
         </p>
       </article>
 
-      <article class="feature-card glass-card">
+      <article class="feature-card glass-card aurora-card">
         <h3>Future-Ready Security</h3>
         <p>
           Username login, optional number verification, trusted-device behavior, and a modern auth experience.
@@ -138,5 +67,6 @@
 
   <script type="module" src="/evaraos/assets/js/theme.js"></script>
   <script type="module" src="/evaraos/assets/js/nav.js"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js"></script>
 </body>
 </html>
