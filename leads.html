@@ -1,223 +1,430 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Leads | Evaraos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Leads • Evaraos Inc</title>
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
 </head>
-<body class="app-shell app-theme">
-  <div class="app-bg">
-    <div class="bg-orb bg-orb-1"></div>
-    <div class="bg-orb bg-orb-2"></div>
-    <div class="bg-grid"></div>
-  </div>
+<body class="dashboard-body">
+  <div class="page-grid-overlay"></div>
+  <div id="universalNav"></div>
 
-  <header id="topbar" class="topbar"></header>
+  <div class="dashboard-shell">
+    <aside class="dashboard-sidebar" id="dashboardSidebar">
+      <div class="dashboard-sidebar-inner glass-shell aurora-card">
+        <div class="dashboard-sidebar-search">
+          <div class="dashboard-search-shell input-shell aurora-card">
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
+              <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
+            </svg>
+            <input
+              type="search"
+              class="dashboard-search-input input"
+              placeholder="Search leads..."
+              aria-label="Search leads"
+            />
+          </div>
+        </div>
 
-  <div class="page-shell">
-    <aside id="sidebar" class="sidebar"></aside>
+        <div class="dashboard-sidebar-head">
+          <p class="dashboard-sidebar-eyebrow">Lead Navigation</p>
+          <h2 id="dashboardOverviewTitle">Leads Overview</h2>
+        </div>
 
-    <main class="main-content">
-      <section class="glass-card aurora-card shine-border">
-        <div class="section-title-row">
-          <div>
-            <h1 style="margin:0;">Leads</h1>
-            <p class="muted" style="margin:8px 0 0;">
-              Capture leads, assign reps, price services, add notes, and convert opportunities into jobs.
-            </p>
+        <nav class="dashboard-sidebar-nav" aria-label="Lead sections">
+          <a href="#leadsOverviewSection" class="dashboard-nav-link active aurora-card">
+            <span class="dashboard-nav-icon">◉</span>
+            <span>Overview</span>
+          </a>
+
+          <a href="#pipelineSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◎</span>
+            <span>Pipeline</span>
+          </a>
+
+          <a href="#hotLeadsSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◌</span>
+            <span>Hot Leads</span>
+          </a>
+
+          <a href="#assignmentSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◐</span>
+            <span>Assignments</span>
+          </a>
+
+          <a href="#activitySection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◈</span>
+            <span>Activity</span>
+          </a>
+        </nav>
+
+        <div class="dashboard-sidebar-foot glass-card aurora-card">
+          <div class="dashboard-sidebar-foot-copy">
+            <strong>Lead Center</strong>
+            <span>Track incoming leads, rep assignments, quote flow, and conversions in one place.</span>
+          </div>
+          <a href="/evaraos/dashboard.html" class="btn btn-theme-primary">Back to Dashboard</a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="dashboard-main">
+      <section class="dashboard-hero glass-card aurora-card" id="leadsOverviewSection">
+        <div class="dashboard-hero-copy">
+          <p class="dashboard-eyebrow">LEAD CENTER</p>
+          <h1>Watch every lead move through the pipeline.</h1>
+          <p class="dashboard-hero-text">
+            Track new opportunities, monitor sales progress, assign reps, and keep conversion
+            flow visible under one premium Evaraos operating system.
+          </p>
+
+          <div class="dashboard-hero-actions">
+            <button type="button" id="refreshLeadsBtn" class="btn btn-theme-primary">Refresh Leads</button>
+            <button type="button" id="sortLeadsBtn" class="btn btn-theme-secondary">Sort by Priority</button>
+          </div>
+        </div>
+
+        <div class="dashboard-hero-panel glass-card aurora-card">
+          <div class="dashboard-hero-panel-top">
+            <span class="dashboard-mini-badge">Live Pipeline</span>
+            <span class="dashboard-live-dot"></span>
+          </div>
+
+          <div class="dashboard-hero-logo-wrap">
+            <img
+              src="/evaraos/assets/img/evaraos_logo.png"
+              alt="Evaraos"
+              class="dashboard-hero-logo"
+            />
+          </div>
+
+          <div class="dashboard-hero-panel-copy">
+            <strong id="leadsHeroTitle">Pipeline Visibility</strong>
+            <span id="leadsHeroSubline">Lead generation, follow-up, and conversions in one control center.</span>
           </div>
         </div>
       </section>
 
-      <main id="leadsRoot" class="content-root"></main>
+      <section class="dashboard-overview glass-card aurora-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Snapshot</p>
+            <h2>Lead Overview</h2>
+          </div>
+        </div>
+
+        <div class="dashboard-stats-grid">
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Total Leads</p>
+            <h3 id="leadsTotalStat">8</h3>
+            <span>Current working pipeline</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>High Priority</p>
+            <h3 id="leadsHotStat">3</h3>
+            <span>Immediate attention needed</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Quoted</p>
+            <h3 id="leadsQuotedStat">2</h3>
+            <span>Pricing already sent</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Closed Won</p>
+            <h3 id="leadsWonStat">1</h3>
+            <span>Converted successfully</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-panel glass-card aurora-card" id="pipelineSection">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Pipeline</p>
+            <h2>Lead Queue</h2>
+          </div>
+        </div>
+
+        <div class="dashboard-list" id="leadsList">
+          <article class="dashboard-list-item glass-card aurora-card lead-item" data-priority="1" data-stage="new">
+            <div>
+              <strong>Trash Bin Cleaning • Jacksonville South</strong>
+              <span>New lead • 2 bins • Website form • Awaiting first contact</span>
+            </div>
+            <span class="dashboard-status-pill alert">Hot</span>
+          </article>
+
+          <article class="dashboard-list-item glass-card aurora-card lead-item" data-priority="2" data-stage="contacted">
+            <div>
+              <strong>Pressure Washing • Driveway + Sidewalk</strong>
+              <span>Contacted • Rep assigned • Customer asked for quote follow-up</span>
+            </div>
+            <span class="dashboard-status-pill working">Contacted</span>
+          </article>
+
+          <article class="dashboard-list-item glass-card aurora-card lead-item" data-priority="1" data-stage="quoted">
+            <div>
+              <strong>House Wash • Residential Package</strong>
+              <span>Quoted • Awaiting approval • Strong close potential</span>
+            </div>
+            <span class="dashboard-status-pill good">Quoted</span>
+          </article>
+
+          <article class="dashboard-list-item glass-card aurora-card lead-item" data-priority="3" data-stage="new">
+            <div>
+              <strong>Interior Cleaning Inquiry • OneofOne</strong>
+              <span>New lead • Marketplace intake • Needs vendor routing</span>
+            </div>
+            <span class="dashboard-status-pill alert">New</span>
+          </article>
+
+          <article class="dashboard-list-item glass-card aurora-card lead-item" data-priority="2" data-stage="won">
+            <div>
+              <strong>Monthly Bin Subscription • 3 bins</strong>
+              <span>Closed won • Subscription ready • Route onboarding next</span>
+            </div>
+            <span class="dashboard-status-pill good">Won</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card aurora-card" id="hotLeadsSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Priority</p>
+              <h2>Hot Leads</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-list">
+            <article class="dashboard-list-item glass-card aurora-card">
+              <div>
+                <strong>Jacksonville South Bin Lead</strong>
+                <span>Fast close potential with recurring revenue opportunity</span>
+              </div>
+              <span class="dashboard-status-pill alert">Priority 1</span>
+            </article>
+
+            <article class="dashboard-list-item glass-card aurora-card">
+              <div>
+                <strong>Residential House Wash</strong>
+                <span>Quote already sent, customer still engaged</span>
+              </div>
+              <span class="dashboard-status-pill alert">Priority 1</span>
+            </article>
+
+            <article class="dashboard-list-item glass-card aurora-card">
+              <div>
+                <strong>Interior Cleaning Intake</strong>
+                <span>Needs vendor assignment before momentum cools down</span>
+              </div>
+              <span class="dashboard-status-pill working">Priority 2</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card aurora-card" id="assignmentSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Ownership</p>
+              <h2>Rep Assignments</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-feed">
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Territory Alpha Rep</strong>
+              <span>Assigned to new Jacksonville South bin lead.</span>
+            </article>
+
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Operations Admin</strong>
+              <span>Monitoring quote follow-up and routing status.</span>
+            </article>
+
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Marketplace Intake Flow</strong>
+              <span>OneofOne interior inquiry still waiting vendor confirmation.</span>
+            </article>
+          </div>
+        </section>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card aurora-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Conversion Flow</p>
+              <h2>Stage Progress</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-progress-stack">
+            <div class="dashboard-progress-row">
+              <div class="dashboard-progress-copy">
+                <strong>New</strong>
+                <span>Fresh opportunities entering the system</span>
+              </div>
+              <div class="dashboard-progress-bar"><span style="width: 62%;"></span></div>
+            </div>
+
+            <div class="dashboard-progress-row">
+              <div class="dashboard-progress-copy">
+                <strong>Contacted</strong>
+                <span>Rep follow-up in motion</span>
+              </div>
+              <div class="dashboard-progress-bar"><span style="width: 48%;"></span></div>
+            </div>
+
+            <div class="dashboard-progress-row">
+              <div class="dashboard-progress-copy">
+                <strong>Quoted</strong>
+                <span>Pricing delivered to the customer</span>
+              </div>
+              <div class="dashboard-progress-bar"><span style="width: 34%;"></span></div>
+            </div>
+
+            <div class="dashboard-progress-row">
+              <div class="dashboard-progress-copy">
+                <strong>Won</strong>
+                <span>Closed and ready for ops</span>
+              </div>
+              <div class="dashboard-progress-bar"><span style="width: 22%;"></span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card aurora-card" id="activitySection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Recent Updates</p>
+              <h2>Lead Feed</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-feed" id="leadsFeed">
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Lead queue loaded</strong>
+              <span>Pipeline data is visible in the lead center.</span>
+            </article>
+
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Hot lead tracking active</strong>
+              <span>Priority follow-up remains visible from this dashboard.</span>
+            </article>
+
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Assignment flow active</strong>
+              <span>Rep ownership and routing remain visible across the system.</span>
+            </article>
+          </div>
+        </section>
+      </section>
     </main>
   </div>
 
-  <div class="modal-backdrop" id="leadModal">
-    <div class="modal-card aurora-card shine-border">
-      <div class="section-row">
-        <h2 id="leadModalTitle" style="margin:0;">Add Lead</h2>
-        <button class="btn secondary" id="leadModalCloseBtn" type="button">Close</button>
-      </div>
+  <script type="module">
+    import {
+      auth,
+      protectRoute,
+      onAuthStateChanged,
+      syncUserSession
+    } from "/evaraos/assets/js/firebase.js";
 
-      <form id="leadForm">
-        <section class="form-section">
-          <h3 class="form-section-title">Contact Info</h3>
-          <div class="form-grid">
-            <div class="field">
-              <label for="leadFullName">Full Name</label>
-              <input id="leadFullName" required />
-            </div>
+    protectRoute({
+      requireAuth: true,
+      redirectGuestTo: "/evaraos/login.html"
+    });
 
-            <div class="field">
-              <label for="leadPhone">Phone</label>
-              <input id="leadPhone" />
-            </div>
+    const refreshLeadsBtn = document.getElementById("refreshLeadsBtn");
+    const sortLeadsBtn = document.getElementById("sortLeadsBtn");
+    const leadsList = document.getElementById("leadsList");
+    const leadsFeed = document.getElementById("leadsFeed");
 
-            <div class="field">
-              <label for="leadEmail">Email</label>
-              <input id="leadEmail" type="email" />
-            </div>
+    const leadsTotalStat = document.getElementById("leadsTotalStat");
+    const leadsHotStat = document.getElementById("leadsHotStat");
+    const leadsQuotedStat = document.getElementById("leadsQuotedStat");
+    const leadsWonStat = document.getElementById("leadsWonStat");
 
-            <div class="field">
-              <label for="leadAssignedRep">Assigned Rep</label>
-              <select id="leadAssignedRep"></select>
-            </div>
-          </div>
-        </section>
+    function refreshLeadStats() {
+      const items = Array.from(document.querySelectorAll(".lead-item"));
+      const total = items.length;
+      const hot = items.filter((item) => Number(item.dataset.priority) === 1).length;
+      const quoted = items.filter((item) => item.dataset.stage === "quoted").length;
+      const won = items.filter((item) => item.dataset.stage === "won").length;
 
-        <section class="form-section">
-          <h3 class="form-section-title">Location</h3>
-          <div class="form-grid">
-            <div class="field full">
-              <label for="leadAddress">Address</label>
-              <input id="leadAddress" />
-            </div>
+      if (leadsTotalStat) leadsTotalStat.textContent = String(total);
+      if (leadsHotStat) leadsHotStat.textContent = String(hot);
+      if (leadsQuotedStat) leadsQuotedStat.textContent = String(quoted);
+      if (leadsWonStat) leadsWonStat.textContent = String(won);
 
-            <div class="field">
-              <label for="leadCity">City</label>
-              <input id="leadCity" />
-            </div>
+      if (leadsFeed) {
+        leadsFeed.innerHTML = `
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Lead queue refreshed</strong>
+            <span>${total} active leads are visible in the current pipeline.</span>
+          </article>
 
-            <div class="field">
-              <label for="leadState">State</label>
-              <input id="leadState" />
-            </div>
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Priority watch updated</strong>
+            <span>${hot} high-priority leads need quick attention.</span>
+          </article>
 
-            <div class="field">
-              <label for="leadZip">Zip</label>
-              <input id="leadZip" />
-            </div>
-          </div>
-        </section>
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Conversion flow visible</strong>
+            <span>${quoted} quoted leads and ${won} closed-won leads are in view.</span>
+          </article>
+        `;
+      }
+    }
 
-        <section class="form-section">
-          <h3 class="form-section-title">Service & Sales</h3>
-          <div class="form-grid">
-            <div class="field">
-              <label for="leadCategory">Service Category</label>
-              <select id="leadCategory"></select>
-            </div>
+    function sortLeadsByPriority() {
+      if (!leadsList) return;
 
-            <div class="field">
-              <label for="leadServiceType">Service Type</label>
-              <select id="leadServiceType"></select>
-            </div>
+      const items = Array.from(leadsList.querySelectorAll(".lead-item"));
+      items.sort((a, b) => Number(a.dataset.priority) - Number(b.dataset.priority));
+      items.forEach((item) => leadsList.appendChild(item));
+    }
 
-            <div class="field">
-              <label for="leadEstimatedSqFt">Estimated Sq Ft / Quantity</label>
-              <input id="leadEstimatedSqFt" type="number" min="0" step="1" />
-            </div>
+    refreshLeadsBtn?.addEventListener("click", () => {
+      refreshLeadsBtn.classList.add("active-glow");
+      setTimeout(() => refreshLeadsBtn.classList.remove("active-glow"), 260);
+      refreshLeadStats();
+    });
 
-            <div class="field">
-              <label for="leadStatus">Status</label>
-              <select id="leadStatus">
-                <option value="new">New</option>
-                <option value="contacted">Contacted</option>
-                <option value="quoted">Quoted</option>
-                <option value="scheduled">Booked</option>
-                <option value="won">Won</option>
-                <option value="lost">Lost</option>
-              </select>
-            </div>
+    sortLeadsBtn?.addEventListener("click", () => {
+      sortLeadsBtn.classList.add("active-glow");
+      setTimeout(() => sortLeadsBtn.classList.remove("active-glow"), 260);
+      sortLeadsByPriority();
+      refreshLeadStats();
+    });
 
-            <div class="field">
-              <label for="leadLeadSource">Lead Source</label>
-              <select id="leadLeadSource">
-                <option value="">Select source</option>
-                <option value="website">Website</option>
-                <option value="door_to_door">Door to Door</option>
-                <option value="referral">Referral</option>
-                <option value="phone">Phone</option>
-                <option value="manual">Manual</option>
-              </select>
-            </div>
+    onAuthStateChanged(auth, (user) => {
+      if (!user) return;
+      syncUserSession(user);
+    });
 
-            <div class="field">
-              <label for="leadContactMethod">Preferred Contact</label>
-              <select id="leadContactMethod">
-                <option value="">Select method</option>
-                <option value="call">Call</option>
-                <option value="text">Text</option>
-                <option value="email">Email</option>
-              </select>
-            </div>
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".dashboard-nav-link").forEach((link) => {
+        link.addEventListener("click", () => {
+          document.querySelectorAll(".dashboard-nav-link").forEach((item) => {
+            item.classList.remove("active");
+          });
+          link.classList.add("active");
+        });
+      });
 
-            <div class="field">
-              <label for="leadAppointmentDate">Appointment Date</label>
-              <input id="leadAppointmentDate" type="date" />
-            </div>
-          </div>
-        </section>
+      refreshLeadStats();
+    });
+  </script>
 
-        <section class="form-section">
-          <h3 class="form-section-title">Add-ons & Notes</h3>
-          <div class="form-grid">
-            <div class="field full">
-              <label>Add-ons</label>
-              <div class="checkbox-grid" id="leadAddOnsWrap"></div>
-            </div>
-
-            <div class="field full">
-              <label for="leadNotes">Notes</label>
-              <textarea id="leadNotes" rows="4"></textarea>
-            </div>
-
-            <div class="field full">
-              <div id="leadEstimatePreview" class="muted">Estimated price: $0.00</div>
-            </div>
-          </div>
-        </section>
-
-        <div class="top-actions" style="margin-top:18px;">
-          <button class="btn" type="submit">Save Lead</button>
-          <button class="btn secondary" id="leadModalCancelBtn" type="button">Cancel</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <div class="modal-backdrop" id="convertModal">
-    <div class="modal-card aurora-card shine-border">
-      <div class="section-row">
-        <h2 style="margin:0;">Convert Lead to Job</h2>
-        <button class="btn secondary" id="convertModalCloseBtn" type="button">Close</button>
-      </div>
-
-      <form id="convertForm">
-        <input id="convertLeadId" type="hidden" />
-
-        <div class="form-grid">
-          <div class="field">
-            <label for="convertTechnician">Technician</label>
-            <select id="convertTechnician"></select>
-          </div>
-
-          <div class="field">
-            <label for="convertScheduledDate">Scheduled Date</label>
-            <input id="convertScheduledDate" type="date" />
-          </div>
-
-          <div class="field">
-            <label for="convertTimeWindow">Time Window</label>
-            <input id="convertTimeWindow" placeholder="8am–12pm" />
-          </div>
-
-          <div class="field full">
-            <label for="convertNotes">Job Notes</label>
-            <textarea id="convertNotes" rows="4"></textarea>
-          </div>
-        </div>
-
-        <div class="top-actions" style="margin-top:18px;">
-          <button class="btn" type="submit">Create Job</button>
-          <button class="btn secondary" id="convertModalCancelBtn" type="button">Cancel</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <script type="module" src="/evaraos/assets/js/leads.js"></script>
+  <script type="module" src="/evaraos/assets/js/theme.js"></script>
+  <script type="module" src="/evaraos/assets/js/nav.js"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js"></script>
 </body>
 </html>
