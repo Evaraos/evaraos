@@ -1,116 +1,419 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Users | Evaraos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Users • Evaraos Inc</title>
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
 </head>
-<body class="app-shell app-theme">
-  <div class="app-bg">
-    <div class="bg-orb bg-orb-1"></div>
-    <div class="bg-orb bg-orb-2"></div>
-    <div class="bg-grid"></div>
-  </div>
+<body class="dashboard-body">
+  <div class="page-grid-overlay"></div>
+  <div id="universalNav"></div>
 
-  <header id="topbar" class="topbar"></header>
+  <div class="dashboard-shell">
+    <aside class="dashboard-sidebar" id="dashboardSidebar">
+      <div class="dashboard-sidebar-inner glass-shell aurora-card">
+        <div class="dashboard-sidebar-search">
+          <div class="dashboard-search-shell input-shell aurora-card">
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
+              <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
+            </svg>
+            <input
+              type="search"
+              class="dashboard-search-input input"
+              placeholder="Search users..."
+              aria-label="Search users"
+            />
+          </div>
+        </div>
 
-  <div class="page-shell">
-    <aside id="sidebar" class="sidebar"></aside>
+        <div class="dashboard-sidebar-head">
+          <p class="dashboard-sidebar-eyebrow">User Navigation</p>
+          <h2 id="dashboardOverviewTitle">Users Overview</h2>
+        </div>
 
-    <main class="main-content">
-      <section class="glass-card aurora-card shine-border">
-        <div class="section-title-row">
-          <div>
-            <h1 style="margin:0;">Users</h1>
-            <p class="muted" style="margin:8px 0 0;">
-              Manage internal users, status, approval state, reporting lines, and role assignment.
-            </p>
+        <nav class="dashboard-sidebar-nav" aria-label="User sections">
+          <a href="#usersOverviewSection" class="dashboard-nav-link active aurora-card">
+            <span class="dashboard-nav-icon">◉</span>
+            <span>Overview</span>
+          </a>
+
+          <a href="#directorySection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◎</span>
+            <span>Directory</span>
+          </a>
+
+          <a href="#rolesSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◌</span>
+            <span>Roles</span>
+          </a>
+
+          <a href="#permissionsSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◐</span>
+            <span>Permissions</span>
+          </a>
+
+          <a href="#activitySection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◈</span>
+            <span>Activity</span>
+          </a>
+        </nav>
+
+        <div class="dashboard-sidebar-foot glass-card aurora-card">
+          <div class="dashboard-sidebar-foot-copy">
+            <strong>User Center</strong>
+            <span>Track platform members, roles, permissions, and account activity from one place.</span>
+          </div>
+          <a href="/evaraos/dashboard.html" class="btn btn-theme-primary">Back to Dashboard</a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="dashboard-main">
+      <section class="dashboard-hero glass-card aurora-card" id="usersOverviewSection">
+        <div class="dashboard-hero-copy">
+          <p class="dashboard-eyebrow">USER CENTER</p>
+          <h1>Manage every account inside the platform.</h1>
+          <p class="dashboard-hero-text">
+            Review users, role distribution, access status, and activity across the Evaraos
+            ecosystem with one premium operating view.
+          </p>
+
+          <div class="dashboard-hero-actions">
+            <button type="button" id="refreshUsersBtn" class="btn btn-theme-primary">Refresh Users</button>
+            <a href="/evaraos/profile.html" class="btn btn-theme-secondary">Open Profile</a>
+          </div>
+        </div>
+
+        <div class="dashboard-hero-panel glass-card aurora-card">
+          <div class="dashboard-hero-panel-top">
+            <span class="dashboard-mini-badge">Live Accounts</span>
+            <span class="dashboard-live-dot"></span>
+          </div>
+
+          <div class="dashboard-hero-logo-wrap">
+            <img
+              src="/evaraos/assets/img/evaraos_logo.png"
+              alt="Evaraos"
+              class="dashboard-hero-logo"
+            />
+          </div>
+
+          <div class="dashboard-hero-panel-copy">
+            <strong id="usersHeroTitle">Evaraos Members</strong>
+            <span id="usersHeroSubline">User access managed from one platform.</span>
           </div>
         </div>
       </section>
 
-      <main id="usersRoot" class="content-root"></main>
+      <section class="dashboard-overview glass-card aurora-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Snapshot</p>
+            <h2>User Overview</h2>
+          </div>
+        </div>
+
+        <div class="dashboard-stats-grid">
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Total Users</p>
+            <h3 id="usersCountStat">58</h3>
+            <span>Current active records</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Admin + Owners</p>
+            <h3 id="usersLeadersStat">13</h3>
+            <span>Leadership accounts</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Field Team</p>
+            <h3 id="usersFieldStat">45</h3>
+            <span>Sales + technicians + staff</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Active Access</p>
+            <h3 id="usersAccessStat">56</h3>
+            <span>Currently enabled users</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-panel glass-card aurora-card" id="directorySection">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Directory</p>
+            <h2>User Directory</h2>
+          </div>
+          <button type="button" id="sortUsersBtn" class="btn btn-theme-secondary">Sort by Role</button>
+        </div>
+
+        <div class="dashboard-list" id="usersList">
+          <article class="dashboard-list-item glass-card aurora-card user-item" data-role-order="1">
+            <div>
+              <strong>Gilbert Ramos</strong>
+              <span>Owner • Executive access • Parent platform visibility</span>
+            </div>
+            <span class="dashboard-status-pill good">Owner</span>
+          </article>
+
+          <article class="dashboard-list-item glass-card aurora-card user-item" data-role-order="2">
+            <div>
+              <strong>Operations Admin</strong>
+              <span>Admin • Company controls • Workflow management</span>
+            </div>
+            <span class="dashboard-status-pill working">Admin</span>
+          </article>
+
+          <article class="dashboard-list-item glass-card aurora-card user-item" data-role-order="3">
+            <div>
+              <strong>Field Manager</strong>
+              <span>Manager • Team assignment • Lead oversight</span>
+            </div>
+            <span class="dashboard-status-pill working">Manager</span>
+          </article>
+
+          <article class="dashboard-list-item glass-card aurora-card user-item" data-role-order="4">
+            <div>
+              <strong>Sales Rep Team</strong>
+              <span>Sales • Territory activity • Lead generation</span>
+            </div>
+            <span class="dashboard-status-pill good">Sales</span>
+          </article>
+
+          <article class="dashboard-list-item glass-card aurora-card user-item" data-role-order="5">
+            <div>
+              <strong>Technician Crew</strong>
+              <span>Technician • Service execution • Route completion</span>
+            </div>
+            <span class="dashboard-status-pill good">Technician</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card aurora-card" id="rolesSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Structure</p>
+              <h2>Role Distribution</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-role-grid">
+            <article class="dashboard-role-card glass-card aurora-card">
+              <strong>Owner</strong>
+              <span>1 executive-level account</span>
+            </article>
+
+            <article class="dashboard-role-card glass-card aurora-card">
+              <strong>Admin</strong>
+              <span>12 operational leadership accounts</span>
+            </article>
+
+            <article class="dashboard-role-card glass-card aurora-card">
+              <strong>Sales</strong>
+              <span>27 field-facing revenue accounts</span>
+            </article>
+
+            <article class="dashboard-role-card glass-card aurora-card">
+              <strong>Technician</strong>
+              <span>18 service execution accounts</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card aurora-card" id="permissionsSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Control</p>
+              <h2>Permissions</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-feed">
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Owner Access</strong>
+              <span>Full platform visibility, profile controls, dashboard reach, and company control.</span>
+            </article>
+
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Admin Access</strong>
+              <span>Workflow control, user operations, and company-level management tools.</span>
+            </article>
+
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Team Access</strong>
+              <span>Sales and technician roles stay focused on field activity, jobs, and task execution.</span>
+            </article>
+          </div>
+        </section>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card aurora-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Health</p>
+              <h2>Access Status</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-progress-stack">
+            <div class="dashboard-progress-row">
+              <div class="dashboard-progress-copy">
+                <strong>Leadership Accounts</strong>
+                <span>Stable access structure</span>
+              </div>
+              <div class="dashboard-progress-bar"><span style="width: 88%;"></span></div>
+            </div>
+
+            <div class="dashboard-progress-row">
+              <div class="dashboard-progress-copy">
+                <strong>Field Accounts</strong>
+                <span>High operational readiness</span>
+              </div>
+              <div class="dashboard-progress-bar"><span style="width: 74%;"></span></div>
+            </div>
+
+            <div class="dashboard-progress-row">
+              <div class="dashboard-progress-copy">
+                <strong>Role Sync</strong>
+                <span>Permissions aligned to current auth logic</span>
+              </div>
+              <div class="dashboard-progress-bar"><span style="width: 82%;"></span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card aurora-card" id="activitySection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Recent Updates</p>
+              <h2>User Feed</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-feed" id="usersFeed">
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>User directory loaded</strong>
+              <span>Platform accounts were loaded into the user center.</span>
+            </article>
+
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Roles aligned</strong>
+              <span>Permission structure remains visible by role grouping.</span>
+            </article>
+
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Access state active</strong>
+              <span>Authenticated session continues to control platform visibility.</span>
+            </article>
+          </div>
+        </section>
+      </section>
     </main>
   </div>
 
-  <div class="modal-backdrop" id="userModal">
-    <div class="modal-card aurora-card shine-border">
-      <div class="section-title-row">
-        <h2 id="userModalTitle" style="margin:0;">Edit User</h2>
-        <button class="btn secondary" id="userModalCloseBtn" type="button">Close</button>
-      </div>
+  <script type="module">
+    import {
+      auth,
+      protectRoute,
+      onAuthStateChanged,
+      syncUserSession
+    } from "/evaraos/assets/js/firebase.js";
 
-      <form id="userForm">
-        <section class="form-section">
-          <h3 class="form-section-title">Identity</h3>
-          <div class="form-grid">
-            <div class="field">
-              <label for="editUserName">Full Name</label>
-              <input id="editUserName" />
-            </div>
+    protectRoute({
+      requireAuth: true,
+      redirectGuestTo: "/evaraos/login.html"
+    });
 
-            <div class="field">
-              <label for="editUserEmail">Email</label>
-              <input id="editUserEmail" type="email" />
-            </div>
+    const refreshUsersBtn = document.getElementById("refreshUsersBtn");
+    const sortUsersBtn = document.getElementById("sortUsersBtn");
+    const usersList = document.getElementById("usersList");
+    const usersFeed = document.getElementById("usersFeed");
 
-            <div class="field">
-              <label for="editUserPhone">Phone</label>
-              <input id="editUserPhone" />
-            </div>
+    const usersCountStat = document.getElementById("usersCountStat");
+    const usersLeadersStat = document.getElementById("usersLeadersStat");
+    const usersFieldStat = document.getElementById("usersFieldStat");
+    const usersAccessStat = document.getElementById("usersAccessStat");
 
-            <div class="field full">
-              <label for="editUserReportsTo">Reports To</label>
-              <input id="editUserReportsTo" />
-            </div>
-          </div>
-        </section>
+    function refreshUserStats() {
+      const items = Array.from(document.querySelectorAll(".user-item"));
+      const total = items.length;
+      const leaders = items.filter((item) => Number(item.dataset.roleOrder) <= 2).length;
+      const field = Math.max(total - leaders, 0);
+      const active = Math.max(total - 1, 0);
 
-        <section class="form-section">
-          <h3 class="form-section-title">Role & Approval</h3>
-          <div class="form-grid">
-            <div class="field">
-              <label for="editUserRole">Role</label>
-              <select id="editUserRole">
-                <option value="super_admin">Super Admin</option>
-                <option value="admin">Admin</option>
-                <option value="manager">Manager</option>
-                <option value="operations_coordinator">Operations Coordinator</option>
-                <option value="sales_rep">Sales Rep</option>
-                <option value="technician">Technician</option>
-                <option value="hr">HR</option>
-                <option value="customer">Customer</option>
-              </select>
-            </div>
+      if (usersCountStat) usersCountStat.textContent = String(total);
+      if (usersLeadersStat) usersLeadersStat.textContent = String(leaders);
+      if (usersFieldStat) usersFieldStat.textContent = String(field);
+      if (usersAccessStat) usersAccessStat.textContent = String(active);
 
-            <div class="field">
-              <label for="editUserStatus">Status</label>
-              <select id="editUserStatus">
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
+      if (usersFeed) {
+        usersFeed.innerHTML = `
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>User directory refreshed</strong>
+            <span>${total} user records are visible in the current view.</span>
+          </article>
 
-            <div class="field">
-              <label for="editUserApproval">Approval</label>
-              <select id="editUserApproval">
-                <option value="approved">Approved</option>
-                <option value="pending">Pending</option>
-                <option value="denied">Denied</option>
-              </select>
-            </div>
-          </div>
-        </section>
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Leadership accounts tracked</strong>
+            <span>${leaders} leadership-level accounts are currently visible.</span>
+          </article>
 
-        <div class="top-actions" style="margin-top:18px;">
-          <button class="btn" type="submit">Save User</button>
-          <button class="btn secondary" id="userModalCancelBtn" type="button">Cancel</button>
-        </div>
-      </form>
-    </div>
-  </div>
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Field structure active</strong>
+            <span>${field} non-leadership accounts are positioned in the working team flow.</span>
+          </article>
+        `;
+      }
+    }
 
-  <script type="module" src="/evaraos/assets/js/users.js"></script>
+    function sortUsersByRole() {
+      if (!usersList) return;
+
+      const items = Array.from(usersList.querySelectorAll(".user-item"));
+      items.sort((a, b) => Number(a.dataset.roleOrder) - Number(b.dataset.roleOrder));
+      items.forEach((item) => usersList.appendChild(item));
+    }
+
+    refreshUsersBtn?.addEventListener("click", () => {
+      refreshUsersBtn.classList.add("active-glow");
+      setTimeout(() => refreshUsersBtn.classList.remove("active-glow"), 260);
+      refreshUserStats();
+    });
+
+    sortUsersBtn?.addEventListener("click", () => {
+      sortUsersBtn.classList.add("active-glow");
+      setTimeout(() => sortUsersBtn.classList.remove("active-glow"), 260);
+      sortUsersByRole();
+      refreshUserStats();
+    });
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) return;
+      syncUserSession(user);
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".dashboard-nav-link").forEach((link) => {
+        link.addEventListener("click", () => {
+          document.querySelectorAll(".dashboard-nav-link").forEach((item) => {
+            item.classList.remove("active");
+          });
+          link.classList.add("active");
+        });
+      });
+
+      refreshUserStats();
+    });
+  </script>
+
+  <script type="module" src="/evaraos/assets/js/theme.js"></script>
+  <script type="module" src="/evaraos/assets/js/nav.js"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js"></script>
 </body>
 </html>
