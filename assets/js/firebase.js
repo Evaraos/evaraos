@@ -1,41 +1,21 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+// assets/js/firebase.js
 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getAuth,
-  onAuthStateChanged,
-  signOut,
-  signInWithEmailAndPassword,
-  sendPasswordResetEmail,
-  createUserWithEmailAndPassword,
-  updateProfile,
   setPersistence,
   browserLocalPersistence,
   browserSessionPersistence,
-  RecaptchaVerifier,
-  PhoneAuthProvider,
-  PhoneMultiFactorGenerator,
-  multiFactor,
-  getMultiFactorResolver
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  updateProfile,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  getDoc,
-  addDoc,
-  setDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  query,
-  where,
-  orderBy,
-  limit,
-  onSnapshot,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
+/* YOUR REAL CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyAg12tiBifLswke_km3nY6YQpf8ROyqup4",
   authDomain: "evaraos-web.firebaseapp.com",
@@ -47,277 +27,170 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
 
-const USER_ROLE_KEY = "evaraos_user_role";
-const USER_PROFILE_KEY = "evaraos_user_profile";
+export const auth = getAuth(app);
+export const db = getFirestore(app);
 
-async function setAuthPersistence(rememberDevice = true) {
-  const mode = rememberDevice ? browserLocalPersistence : browserSessionPersistence;
-  await setPersistence(auth, mode);
+/* passthrough exports so auth.js can stay clean */
+export {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  updateProfile,
+  signOut
+};
+
+const STORAGE_KEYS = {
+  role: "evaraos-role",
+  user: "evaraos-user"
+};
+
+export async function setAuthPersistence(rememberDevice = true) {
+  const persistence = rememberDevice ? browserLocalPersistence : browserSessionPersistence;
+  await setPersistence(auth, persistence);
 }
 
-function normalizeRole(rawRole = "") {
-  const value = String(rawRole || "").trim().toLowerCase();
-
-  if (["owner", "founder", "executive"].includes(value)) return "owner";
-  if (["admin", "administrator"].includes(value)) return "admin";
-  if (["manager", "management", "ops"].includes(value)) return "manager";
-  if (["sales", "salesrep", "sales_rep", "rep"].includes(value)) return "sales";
-  if (["technician", "tech"].includes(value)) return "technician";
-  if (["customer", "client"].includes(value)) return "customer";
-
-  return "owner";
-}
-
-function inferRoleFromEmail(email = "") {
-  const value = String(email || "").toLowerCase();
-
-  if (value.includes("admin")) return "admin";
-  if (value.includes("manager")) return "manager";
-  if (value.includes("sales")) return "sales";
-  if (value.includes("tech")) return "technician";
-  if (value.includes("customer") || value.includes("client")) return "customer";
-
-  return "owner";
-}
-
-function saveUserRole(role) {
+export function saveUserRole(role = "owner") {
   try {
-    localStorage.setItem(USER_ROLE_KEY, normalizeRole(role));
-  } catch (error) {
-    console.warn("Could not save role:", error);
+    localStorage.setItem(STORAGE_KEYS.role, String(role || "owner"));
+  } catch {
+    // ignore storage issues
   }
 }
 
-function getSavedUserRole() {
+export function getSavedUserRole() {
   try {
-    return normalizeRole(localStorage.getItem(USER_ROLE_KEY) || "owner");
-  } catch (error) {
-    console.warn("Could not read saved role:", error);
+    return localStorage.getItem(STORAGE_KEYS.role) || "owner";
+  } catch {
     return "owner";
   }
 }
 
-function clearSavedUserRole() {
+export function clearSavedUserRole() {
   try {
-    localStorage.removeItem(USER_ROLE_KEY);
-  } catch (error) {
-    console.warn("Could not clear saved role:", error);
+    localStorage.removeItem(STORAGE_KEYS.role);
+  } catch {
+    // ignore
   }
 }
 
-function saveUserProfile(profile = {}) {
+export function saveUserProfile(profile = {}) {
   try {
-    localStorage.setItem(USER_PROFILE_KEY, JSON.stringify(profile));
-  } catch (error) {
-    console.warn("Could not save user profile:", error);
+    localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(profile));
+  } catch {
+    // ignore
   }
 }
 
-function getSavedUserProfile() {
+export function getSavedUserProfile() {
   try {
-    const raw = localStorage.getItem(USER_PROFILE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEYS.user);
     return raw ? JSON.parse(raw) : null;
-  } catch (error) {
-    console.warn("Could not parse saved profile:", error);
+  } catch {
     return null;
   }
 }
 
-function clearSavedUserProfile() {
+export function clearSavedUserProfile() {
   try {
-    localStorage.removeItem(USER_PROFILE_KEY);
-  } catch (error) {
-    console.warn("Could not clear saved profile:", error);
+    localStorage.removeItem(STORAGE_KEYS.user);
+  } catch {
+    // ignore
   }
 }
 
-function getUserDisplayName(user) {
-  if (!user) return "Owner Account";
-  return user.displayName || user.email || "Owner Account";
-}
+export function syncUserSession(user, role = "owner") {
+  if (!user) return;
 
-function getUserInitial(user) {
-  const source = getUserDisplayName(user);
-  return source.trim().charAt(0).toUpperCase() || "U";
-}
-
-function buildSessionProfile(user, explicitRole = "") {
-  if (!user) return null;
-
-  const role = normalizeRole(explicitRole || getSavedUserRole() || inferRoleFromEmail(user.email || ""));
-
-  return {
-    uid: user.uid,
+  const profile = {
+    uid: user.uid || "",
     email: user.email || "",
-    displayName: getUserDisplayName(user),
-    initial: getUserInitial(user),
-    role
+    displayName: user.displayName || "",
+    role: role || "owner"
   };
-}
 
-function syncUserSession(user, explicitRole = "") {
-  if (!user) {
-    clearSavedUserRole();
-    clearSavedUserProfile();
-    return null;
-  }
-
-  const profile = buildSessionProfile(user, explicitRole);
   saveUserRole(profile.role);
   saveUserProfile(profile);
-  return profile;
+  applyUserToUi(profile);
 }
 
-function applyUserToUi(profile = null) {
-  const safeProfile = profile || getSavedUserProfile();
-  if (!safeProfile) return;
+export function clearUserSession() {
+  clearSavedUserRole();
+  clearSavedUserProfile();
+}
+
+export function roleLabelFromRole(role = "") {
+  const value = String(role || "").trim().toLowerCase();
+
+  if (value === "owner") return "Executive Access";
+  if (value === "admin") return "Admin Access";
+  if (value === "manager") return "Manager Access";
+  if (value === "sales") return "Sales Access";
+  if (value === "technician") return "Technician Access";
+  if (value === "customer") return "Customer Access";
+
+  return "Executive Access";
+}
+
+export function applyUserToUi(profile = null) {
+  if (!profile) return;
+
+  const displayName = profile.displayName || profile.email || "Owner Account";
+  const initial = displayName.trim().charAt(0).toUpperCase() || "U";
+  const roleText = roleLabelFromRole(profile.role || "owner");
 
   const avatar = document.getElementById("dashboardAvatar");
   const avatarLarge = document.getElementById("dashboardAvatarLarge");
   const profileName = document.getElementById("dashboardProfileName");
   const profileRole = document.getElementById("dashboardProfileRole");
-  const brandSubline = document.getElementById("dashboardBrandSubline");
-  const overviewTitle = document.getElementById("dashboardOverviewTitle");
 
-  const roleMap = {
-    owner: {
-      heading: "Executive Overview",
-      subline: "Executive Control Center",
-      profile: "Executive Access"
-    },
-    admin: {
-      heading: "Admin Overview",
-      subline: "Administrative Control Center",
-      profile: "Admin Access"
-    },
-    manager: {
-      heading: "Management Overview",
-      subline: "Management Control Center",
-      profile: "Manager Access"
-    },
-    sales: {
-      heading: "Sales Overview",
-      subline: "Sales Control Center",
-      profile: "Sales Access"
-    },
-    technician: {
-      heading: "Technician Overview",
-      subline: "Technician Control Center",
-      profile: "Technician Access"
-    },
-    customer: {
-      heading: "Customer Overview",
-      subline: "Customer Control Center",
-      profile: "Customer Access"
-    }
-  };
-
-  const roleUi = roleMap[safeProfile.role] || roleMap.owner;
-
-  if (avatar) avatar.textContent = safeProfile.initial;
-  if (avatarLarge) avatarLarge.textContent = safeProfile.initial;
-  if (profileName) profileName.textContent = safeProfile.displayName;
-  if (profileRole) profileRole.textContent = roleUi.profile;
-  if (brandSubline) brandSubline.textContent = roleUi.subline;
-  if (overviewTitle) overviewTitle.textContent = roleUi.heading;
+  if (avatar) avatar.textContent = initial;
+  if (avatarLarge) avatarLarge.textContent = initial;
+  if (profileName) profileName.textContent = displayName;
+  if (profileRole) profileRole.textContent = roleText;
 }
 
-async function logoutAndRedirect(path = "/evaraos/login.html") {
-  clearSavedUserRole();
-  clearSavedUserProfile();
+export async function logoutAndRedirect(path = "/evaraos/login.html") {
   await signOut(auth);
+  clearUserSession();
   window.location.href = path;
 }
 
-function wireLogoutButton() {
-  const logoutBtn = document.getElementById("logoutBtn");
-  if (!logoutBtn || logoutBtn.dataset.bound === "true") return;
-
-  logoutBtn.dataset.bound = "true";
-  logoutBtn.addEventListener("click", async () => {
-    try {
-      await logoutAndRedirect("/evaraos/login.html");
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
-  });
-}
-
-function protectRoute({
-  requireAuth = false,
-  redirectAuthedTo = "/evaraos/dashboard.html",
-  redirectGuestTo = "/evaraos/login.html"
+export function protectRoute({
+  requireAuth = true,
+  redirectGuestTo = "/evaraos/login.html",
+  redirectAuthedTo = "/evaraos/dashboard.html"
 } = {}) {
   onAuthStateChanged(auth, (user) => {
-    if (requireAuth && !user) {
-      window.location.href = redirectGuestTo;
-      return;
-    }
-
-    if (!requireAuth && user) {
-      syncUserSession(user);
-      window.location.href = redirectAuthedTo;
-      return;
-    }
+    const path = window.location.pathname;
+    const isAuthPage =
+      path.endsWith("/login.html") ||
+      path.endsWith("/signup.html") ||
+      path.endsWith("/reset.html");
 
     if (user) {
-      const profile = syncUserSession(user);
-      applyUserToUi(profile);
-      wireLogoutButton();
+      const saved = getSavedUserProfile();
+      if (saved) applyUserToUi(saved);
+
+      if (!requireAuth && isAuthPage) {
+        window.location.href = redirectAuthedTo;
+      }
+      return;
+    }
+
+    if (requireAuth) {
+      window.location.href = redirectGuestTo;
     }
   });
 }
 
-export {
-  app,
-  auth,
-  db,
-  onAuthStateChanged,
-  signOut,
-  signInWithEmailAndPassword,
-  sendPasswordResetEmail,
-  createUserWithEmailAndPassword,
-  updateProfile,
-  setPersistence,
-  browserLocalPersistence,
-  browserSessionPersistence,
-  RecaptchaVerifier,
-  PhoneAuthProvider,
-  PhoneMultiFactorGenerator,
-  multiFactor,
-  getMultiFactorResolver,
-  collection,
-  getDocs,
-  getDoc,
-  addDoc,
-  setDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  query,
-  where,
-  orderBy,
-  limit,
-  onSnapshot,
-  serverTimestamp,
-  setAuthPersistence,
-  normalizeRole,
-  inferRoleFromEmail,
-  saveUserRole,
-  getSavedUserRole,
-  clearSavedUserRole,
-  saveUserProfile,
-  getSavedUserProfile,
-  clearSavedUserProfile,
-  getUserDisplayName,
-  getUserInitial,
-  buildSessionProfile,
-  syncUserSession,
-  applyUserToUi,
-  logoutAndRedirect,
-  wireLogoutButton,
-  protectRoute
-};
+/* passive sync so nav/profile UI stays updated */
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    clearUserSession();
+    return;
+  }
+
+  const savedRole = getSavedUserRole() || "owner";
+  syncUserSession(user, savedRole);
+});
