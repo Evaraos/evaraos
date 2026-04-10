@@ -21,6 +21,7 @@
             <input
               type="search"
               class="dashboard-search-input input"
+              id="leadsSearch"
               placeholder="Search leads..."
               aria-label="Search leads"
             />
@@ -32,39 +33,31 @@
           <h2 id="dashboardOverviewTitle">Leads Overview</h2>
         </div>
 
-        <nav class="dashboard-sidebar-nav" aria-label="Lead sections">
+        <nav class="dashboard-sidebar-nav" aria-label="Leads sections">
           <a href="#leadsOverviewSection" class="dashboard-nav-link active aurora-card">
             <span class="dashboard-nav-icon">◉</span>
             <span>Overview</span>
           </a>
 
-          <a href="#pipelineSection" class="dashboard-nav-link aurora-card">
+          <a href="#leadsListSection" class="dashboard-nav-link aurora-card">
             <span class="dashboard-nav-icon">◎</span>
-            <span>Pipeline</span>
+            <span>Lead Queue</span>
           </a>
 
-          <a href="#hotLeadsSection" class="dashboard-nav-link aurora-card">
+          <a href="#leadsFlowSection" class="dashboard-nav-link aurora-card">
             <span class="dashboard-nav-icon">◌</span>
-            <span>Hot Leads</span>
-          </a>
-
-          <a href="#assignmentSection" class="dashboard-nav-link aurora-card">
-            <span class="dashboard-nav-icon">◐</span>
-            <span>Assignments</span>
-          </a>
-
-          <a href="#activitySection" class="dashboard-nav-link aurora-card">
-            <span class="dashboard-nav-icon">◈</span>
-            <span>Activity</span>
+            <span>Pipeline</span>
           </a>
         </nav>
 
         <div class="dashboard-sidebar-foot glass-card aurora-card">
           <div class="dashboard-sidebar-foot-copy">
-            <strong>Lead Center</strong>
-            <span>Track incoming leads, rep assignments, quote flow, and conversions in one place.</span>
+            <strong>Pipeline Control</strong>
+            <span>
+              Review lead records, priority, status, and flow activity directly from Firestore.
+            </span>
           </div>
-          <a href="/evaraos/dashboard.html" class="btn btn-theme-primary">Back to Dashboard</a>
+          <button type="button" id="leadsRefreshBtnSide" class="btn btn-theme-primary">Refresh Leads</button>
         </div>
       </div>
     </aside>
@@ -72,22 +65,22 @@
     <main class="dashboard-main">
       <section class="dashboard-hero glass-card aurora-card" id="leadsOverviewSection">
         <div class="dashboard-hero-copy">
-          <p class="dashboard-eyebrow">LEAD CENTER</p>
-          <h1>Watch every lead move through the pipeline.</h1>
+          <p class="dashboard-eyebrow">LEAD PIPELINE</p>
+          <h1>Watch opportunities move through your system in real time.</h1>
           <p class="dashboard-hero-text">
-            Track new opportunities, monitor sales progress, assign reps, and keep conversion
-            flow visible under one premium Evaraos operating system.
+            Track every lead from new to won, monitor high-priority opportunities, and keep your
+            sales pipeline organized with live Firestore records.
           </p>
 
           <div class="dashboard-hero-actions">
-            <button type="button" id="refreshLeadsBtn" class="btn btn-theme-primary">Refresh Leads</button>
-            <button type="button" id="sortLeadsBtn" class="btn btn-theme-secondary">Sort by Priority</button>
+            <button type="button" id="leadsRefreshBtnTop" class="btn btn-theme-primary">Refresh Data</button>
+            <a href="/evaraos/dashboard.html" class="btn btn-theme-secondary">Back to Dashboard</a>
           </div>
         </div>
 
         <div class="dashboard-hero-panel glass-card aurora-card">
           <div class="dashboard-hero-panel-top">
-            <span class="dashboard-mini-badge">Live Pipeline</span>
+            <span class="dashboard-mini-badge">Lead Status</span>
             <span class="dashboard-live-dot"></span>
           </div>
 
@@ -100,8 +93,8 @@
           </div>
 
           <div class="dashboard-hero-panel-copy">
-            <strong id="leadsHeroTitle">Pipeline Visibility</strong>
-            <span id="leadsHeroSubline">Lead generation, follow-up, and conversions in one control center.</span>
+            <strong id="leadsHeroTitle">Loading leads...</strong>
+            <span id="leadsHeroText">Connecting to Firestore lead records.</span>
           </div>
         </div>
       </section>
@@ -117,296 +110,361 @@
         <div class="dashboard-stats-grid">
           <article class="dashboard-stat-card glass-card aurora-card">
             <p>Total Leads</p>
-            <h3 id="leadsTotalStat">8</h3>
-            <span>Current working pipeline</span>
+            <h3 id="leadsStatTotal">0</h3>
+            <span id="leadsStatTotalMeta">Loading pipeline...</span>
           </article>
 
           <article class="dashboard-stat-card glass-card aurora-card">
-            <p>High Priority</p>
-            <h3 id="leadsHotStat">3</h3>
-            <span>Immediate attention needed</span>
+            <p>Open Leads</p>
+            <h3 id="leadsStatOpen">0</h3>
+            <span id="leadsStatOpenMeta">Checking statuses...</span>
           </article>
 
           <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Quoted</p>
-            <h3 id="leadsQuotedStat">2</h3>
-            <span>Pricing already sent</span>
+            <p>Hot Leads</p>
+            <h3 id="leadsStatHot">0</h3>
+            <span id="leadsStatHotMeta">Checking priority...</span>
           </article>
 
           <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Closed Won</p>
-            <h3 id="leadsWonStat">1</h3>
-            <span>Converted successfully</span>
+            <p>Filtered</p>
+            <h3 id="leadsStatFiltered">0</h3>
+            <span id="leadsStatFilteredMeta">Matches current search</span>
           </article>
         </div>
       </section>
 
-      <section class="dashboard-panel glass-card aurora-card" id="pipelineSection">
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card aurora-card" id="leadsListSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Queue</p>
+              <h2>Lead List</h2>
+            </div>
+
+            <button type="button" id="leadsSortBtn" class="btn btn-theme-secondary">Sort A–Z</button>
+          </div>
+
+          <div class="dashboard-list" id="leadsList">
+            <article class="dashboard-list-item glass-card aurora-card">
+              <div>
+                <strong>Loading leads...</strong>
+                <span>Please wait while lead records are loaded.</span>
+              </div>
+              <span class="dashboard-status-pill working">Loading</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card aurora-card" id="leadsFlowSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Pipeline</p>
+              <h2>Lead Flow</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-progress-stack" id="leadFlowStack">
+            <div class="dashboard-progress-row">
+              <div class="dashboard-progress-copy">
+                <strong>Loading lead flow...</strong>
+                <span>Reading Firestore data</span>
+              </div>
+              <div class="dashboard-progress-bar"><span style="width: 20%;"></span></div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="dashboard-panel glass-card aurora-card">
         <div class="dashboard-section-head">
           <div>
-            <p class="dashboard-section-kicker">Pipeline</p>
-            <h2>Lead Queue</h2>
+            <p class="dashboard-section-kicker">Activity</p>
+            <h2>Lead Feed</h2>
           </div>
         </div>
 
-        <div class="dashboard-list" id="leadsList">
-          <article class="dashboard-list-item glass-card aurora-card lead-item" data-priority="1" data-stage="new">
-            <div>
-              <strong>Trash Bin Cleaning • Jacksonville South</strong>
-              <span>New lead • 2 bins • Website form • Awaiting first contact</span>
-            </div>
-            <span class="dashboard-status-pill alert">Hot</span>
-          </article>
-
-          <article class="dashboard-list-item glass-card aurora-card lead-item" data-priority="2" data-stage="contacted">
-            <div>
-              <strong>Pressure Washing • Driveway + Sidewalk</strong>
-              <span>Contacted • Rep assigned • Customer asked for quote follow-up</span>
-            </div>
-            <span class="dashboard-status-pill working">Contacted</span>
-          </article>
-
-          <article class="dashboard-list-item glass-card aurora-card lead-item" data-priority="1" data-stage="quoted">
-            <div>
-              <strong>House Wash • Residential Package</strong>
-              <span>Quoted • Awaiting approval • Strong close potential</span>
-            </div>
-            <span class="dashboard-status-pill good">Quoted</span>
-          </article>
-
-          <article class="dashboard-list-item glass-card aurora-card lead-item" data-priority="3" data-stage="new">
-            <div>
-              <strong>Interior Cleaning Inquiry • OneofOne</strong>
-              <span>New lead • Marketplace intake • Needs vendor routing</span>
-            </div>
-            <span class="dashboard-status-pill alert">New</span>
-          </article>
-
-          <article class="dashboard-list-item glass-card aurora-card lead-item" data-priority="2" data-stage="won">
-            <div>
-              <strong>Monthly Bin Subscription • 3 bins</strong>
-              <span>Closed won • Subscription ready • Route onboarding next</span>
-            </div>
-            <span class="dashboard-status-pill good">Won</span>
+        <div class="dashboard-feed" id="leadsFeed">
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Loading lead feed...</strong>
+            <span>Recent lead activity will appear here once records are loaded.</span>
           </article>
         </div>
-      </section>
-
-      <section class="dashboard-grid-2">
-        <section class="dashboard-panel glass-card aurora-card" id="hotLeadsSection">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Priority</p>
-              <h2>Hot Leads</h2>
-            </div>
-          </div>
-
-          <div class="dashboard-list">
-            <article class="dashboard-list-item glass-card aurora-card">
-              <div>
-                <strong>Jacksonville South Bin Lead</strong>
-                <span>Fast close potential with recurring revenue opportunity</span>
-              </div>
-              <span class="dashboard-status-pill alert">Priority 1</span>
-            </article>
-
-            <article class="dashboard-list-item glass-card aurora-card">
-              <div>
-                <strong>Residential House Wash</strong>
-                <span>Quote already sent, customer still engaged</span>
-              </div>
-              <span class="dashboard-status-pill alert">Priority 1</span>
-            </article>
-
-            <article class="dashboard-list-item glass-card aurora-card">
-              <div>
-                <strong>Interior Cleaning Intake</strong>
-                <span>Needs vendor assignment before momentum cools down</span>
-              </div>
-              <span class="dashboard-status-pill working">Priority 2</span>
-            </article>
-          </div>
-        </section>
-
-        <section class="dashboard-panel glass-card aurora-card" id="assignmentSection">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Ownership</p>
-              <h2>Rep Assignments</h2>
-            </div>
-          </div>
-
-          <div class="dashboard-feed">
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Territory Alpha Rep</strong>
-              <span>Assigned to new Jacksonville South bin lead.</span>
-            </article>
-
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Operations Admin</strong>
-              <span>Monitoring quote follow-up and routing status.</span>
-            </article>
-
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Marketplace Intake Flow</strong>
-              <span>OneofOne interior inquiry still waiting vendor confirmation.</span>
-            </article>
-          </div>
-        </section>
-      </section>
-
-      <section class="dashboard-grid-2">
-        <section class="dashboard-panel glass-card aurora-card">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Conversion Flow</p>
-              <h2>Stage Progress</h2>
-            </div>
-          </div>
-
-          <div class="dashboard-progress-stack">
-            <div class="dashboard-progress-row">
-              <div class="dashboard-progress-copy">
-                <strong>New</strong>
-                <span>Fresh opportunities entering the system</span>
-              </div>
-              <div class="dashboard-progress-bar"><span style="width: 62%;"></span></div>
-            </div>
-
-            <div class="dashboard-progress-row">
-              <div class="dashboard-progress-copy">
-                <strong>Contacted</strong>
-                <span>Rep follow-up in motion</span>
-              </div>
-              <div class="dashboard-progress-bar"><span style="width: 48%;"></span></div>
-            </div>
-
-            <div class="dashboard-progress-row">
-              <div class="dashboard-progress-copy">
-                <strong>Quoted</strong>
-                <span>Pricing delivered to the customer</span>
-              </div>
-              <div class="dashboard-progress-bar"><span style="width: 34%;"></span></div>
-            </div>
-
-            <div class="dashboard-progress-row">
-              <div class="dashboard-progress-copy">
-                <strong>Won</strong>
-                <span>Closed and ready for ops</span>
-              </div>
-              <div class="dashboard-progress-bar"><span style="width: 22%;"></span></div>
-            </div>
-          </div>
-        </section>
-
-        <section class="dashboard-panel glass-card aurora-card" id="activitySection">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Recent Updates</p>
-              <h2>Lead Feed</h2>
-            </div>
-          </div>
-
-          <div class="dashboard-feed" id="leadsFeed">
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Lead queue loaded</strong>
-              <span>Pipeline data is visible in the lead center.</span>
-            </article>
-
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Hot lead tracking active</strong>
-              <span>Priority follow-up remains visible from this dashboard.</span>
-            </article>
-
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Assignment flow active</strong>
-              <span>Rep ownership and routing remain visible across the system.</span>
-            </article>
-          </div>
-        </section>
       </section>
     </main>
   </div>
 
   <script type="module">
-    import {
-      auth,
-      protectRoute,
-      onAuthStateChanged,
-      syncUserSession
-    } from "/evaraos/assets/js/firebase.js";
+    import { auth, db } from "/evaraos/assets/js/firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    protectRoute({
-      requireAuth: true,
-      redirectGuestTo: "/evaraos/login.html"
-    });
-
-    const refreshLeadsBtn = document.getElementById("refreshLeadsBtn");
-    const sortLeadsBtn = document.getElementById("sortLeadsBtn");
+    const leadsSearch = document.getElementById("leadsSearch");
     const leadsList = document.getElementById("leadsList");
+    const leadFlowStack = document.getElementById("leadFlowStack");
     const leadsFeed = document.getElementById("leadsFeed");
 
-    const leadsTotalStat = document.getElementById("leadsTotalStat");
-    const leadsHotStat = document.getElementById("leadsHotStat");
-    const leadsQuotedStat = document.getElementById("leadsQuotedStat");
-    const leadsWonStat = document.getElementById("leadsWonStat");
+    const leadsHeroTitle = document.getElementById("leadsHeroTitle");
+    const leadsHeroText = document.getElementById("leadsHeroText");
 
-    function refreshLeadStats() {
-      const items = Array.from(document.querySelectorAll(".lead-item"));
-      const total = items.length;
-      const hot = items.filter((item) => Number(item.dataset.priority) === 1).length;
-      const quoted = items.filter((item) => item.dataset.stage === "quoted").length;
-      const won = items.filter((item) => item.dataset.stage === "won").length;
+    const leadsStatTotal = document.getElementById("leadsStatTotal");
+    const leadsStatOpen = document.getElementById("leadsStatOpen");
+    const leadsStatHot = document.getElementById("leadsStatHot");
+    const leadsStatFiltered = document.getElementById("leadsStatFiltered");
 
-      if (leadsTotalStat) leadsTotalStat.textContent = String(total);
-      if (leadsHotStat) leadsHotStat.textContent = String(hot);
-      if (leadsQuotedStat) leadsQuotedStat.textContent = String(quoted);
-      if (leadsWonStat) leadsWonStat.textContent = String(won);
+    const leadsStatTotalMeta = document.getElementById("leadsStatTotalMeta");
+    const leadsStatOpenMeta = document.getElementById("leadsStatOpenMeta");
+    const leadsStatHotMeta = document.getElementById("leadsStatHotMeta");
+    const leadsStatFilteredMeta = document.getElementById("leadsStatFilteredMeta");
 
-      if (leadsFeed) {
+    const leadsRefreshBtnTop = document.getElementById("leadsRefreshBtnTop");
+    const leadsRefreshBtnSide = document.getElementById("leadsRefreshBtnSide");
+    const leadsSortBtn = document.getElementById("leadsSortBtn");
+
+    let leadRecords = [];
+    let filteredLeads = [];
+    let sortAscending = true;
+
+    function normalize(value = "") {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function leadTitle(lead) {
+      return lead.name || lead.title || lead.customerName || lead.email || "Untitled Lead";
+    }
+
+    function leadSubtitle(lead) {
+      return lead.description || lead.address || lead.location || lead.phone || "Lead record from Firestore";
+    }
+
+    function niceStatus(status = "") {
+      const value = String(status || "").trim();
+      return value ? value.charAt(0).toUpperCase() + value.slice(1) : "New";
+    }
+
+    function statusClass(status = "") {
+      const value = normalize(status);
+
+      if (["won", "closed", "complete", "completed"].includes(value)) return "good";
+      if (["quoted", "pending", "new", "hot"].includes(value)) return "alert";
+      return "working";
+    }
+
+    function renderStats() {
+      const openCount = leadRecords.filter((lead) =>
+        !["won", "closed", "complete", "completed"].includes(normalize(lead.status))
+      ).length;
+
+      const hotCount = leadRecords.filter((lead) =>
+        ["hot", "high", "priority"].includes(normalize(lead.priority || lead.status))
+      ).length;
+
+      leadsStatTotal.textContent = String(leadRecords.length);
+      leadsStatOpen.textContent = String(openCount);
+      leadsStatHot.textContent = String(hotCount);
+      leadsStatFiltered.textContent = String(filteredLeads.length);
+
+      leadsStatTotalMeta.textContent = "Lead records loaded";
+      leadsStatOpenMeta.textContent = "Open pipeline opportunities";
+      leadsStatHotMeta.textContent = "High-priority opportunities";
+      leadsStatFilteredMeta.textContent = "Matches current search";
+    }
+
+    function renderLeadList() {
+      if (!filteredLeads.length) {
+        leadsList.innerHTML = `
+          <article class="dashboard-list-item glass-card aurora-card">
+            <div>
+              <strong>No leads found</strong>
+              <span>Try a different search or add lead records to Firestore.</span>
+            </div>
+            <span class="dashboard-status-pill alert">Empty</span>
+          </article>
+        `;
+        return;
+      }
+
+      leadsList.innerHTML = filteredLeads.map((lead) => {
+        const status = niceStatus(lead.status || "new");
+        const pill = statusClass(lead.status || lead.priority || "new");
+
+        return `
+          <article class="dashboard-list-item glass-card aurora-card">
+            <div>
+              <strong>${leadTitle(lead)}</strong>
+              <span>${leadSubtitle(lead)}</span>
+            </div>
+            <span class="dashboard-status-pill ${pill}">${status}</span>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function renderLeadFlow() {
+      const total = leadRecords.length || 1;
+
+      const statuses = {
+        new: 0,
+        contacted: 0,
+        quoted: 0,
+        won: 0
+      };
+
+      leadRecords.forEach((lead) => {
+        const status = normalize(lead.status || "new");
+        if (statuses[status] !== undefined) {
+          statuses[status] += 1;
+        }
+      });
+
+      const rows = [
+        ["New Leads", statuses.new],
+        ["Contacted", statuses.contacted],
+        ["Quoted", statuses.quoted],
+        ["Closed Won", statuses.won]
+      ];
+
+      leadFlowStack.innerHTML = rows.map(([label, count]) => {
+        const width = Math.max(8, Math.round((count / total) * 100));
+        return `
+          <div class="dashboard-progress-row">
+            <div class="dashboard-progress-copy">
+              <strong>${label}</strong>
+              <span>${count} record${count === 1 ? "" : "s"}</span>
+            </div>
+            <div class="dashboard-progress-bar">
+              <span style="width: ${width}%;"></span>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderLeadFeed() {
+      if (!leadRecords.length) {
         leadsFeed.innerHTML = `
           <article class="dashboard-feed-item glass-card aurora-card">
-            <strong>Lead queue refreshed</strong>
-            <span>${total} active leads are visible in the current pipeline.</span>
+            <strong>No lead activity</strong>
+            <span>Lead feed will appear once records are available.</span>
           </article>
+        `;
+        return;
+      }
 
-          <article class="dashboard-feed-item glass-card aurora-card">
-            <strong>Priority watch updated</strong>
-            <span>${hot} high-priority leads need quick attention.</span>
+      leadsFeed.innerHTML = leadRecords.slice(0, 6).map((lead) => `
+        <article class="dashboard-feed-item glass-card aurora-card">
+          <strong>${leadTitle(lead)}</strong>
+          <span>Status: ${niceStatus(lead.status || "new")} • ${leadSubtitle(lead)}</span>
+        </article>
+      `).join("");
+    }
+
+    function applySearchAndSort() {
+      const query = normalize(leadsSearch.value);
+
+      filteredLeads = leadRecords.filter((lead) => {
+        const haystack = [
+          lead.name,
+          lead.title,
+          lead.customerName,
+          lead.email,
+          lead.phone,
+          lead.address,
+          lead.location,
+          lead.description,
+          lead.status,
+          lead.priority
+        ].map((value) => normalize(value)).join(" ");
+
+        return haystack.includes(query);
+      });
+
+      filteredLeads.sort((a, b) => {
+        const first = leadTitle(a).toLowerCase();
+        const second = leadTitle(b).toLowerCase();
+        return sortAscending ? first.localeCompare(second) : second.localeCompare(first);
+      });
+
+      renderStats();
+      renderLeadList();
+    }
+
+    async function loadLeads() {
+      leadsHeroTitle.textContent = "Loading leads...";
+      leadsHeroText.textContent = "Connecting to Firestore lead records.";
+
+      try {
+        const snap = await getDocs(collection(db, "leads"));
+        leadRecords = snap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+
+        filteredLeads = [...leadRecords];
+        applySearchAndSort();
+        renderLeadFlow();
+        renderLeadFeed();
+
+        leadsHeroTitle.textContent = "Pipeline connected";
+        leadsHeroText.textContent = `${leadRecords.length} leads loaded from Firestore.`;
+      } catch (error) {
+        console.error("Failed loading leads:", error);
+
+        leadsHeroTitle.textContent = "Load failed";
+        leadsHeroText.textContent = "Check Firestore rules and the leads collection.";
+
+        leadsList.innerHTML = `
+          <article class="dashboard-list-item glass-card aurora-card">
+            <div>
+              <strong>Unable to load leads</strong>
+              <span>${error.message || "Unknown Firestore error."}</span>
+            </div>
+            <span class="dashboard-status-pill alert">Error</span>
           </article>
+        `;
 
+        leadFlowStack.innerHTML = `
+          <div class="dashboard-progress-row">
+            <div class="dashboard-progress-copy">
+              <strong>Load error</strong>
+              <span>Leads could not be read</span>
+            </div>
+            <div class="dashboard-progress-bar"><span style="width: 8%;"></span></div>
+          </div>
+        `;
+
+        leadsFeed.innerHTML = `
           <article class="dashboard-feed-item glass-card aurora-card">
-            <strong>Conversion flow visible</strong>
-            <span>${quoted} quoted leads and ${won} closed-won leads are in view.</span>
+            <strong>Lead feed unavailable</strong>
+            <span>${error.message || "Unknown Firestore error."}</span>
           </article>
         `;
       }
     }
 
-    function sortLeadsByPriority() {
-      if (!leadsList) return;
+    leadsSearch?.addEventListener("input", applySearchAndSort);
 
-      const items = Array.from(leadsList.querySelectorAll(".lead-item"));
-      items.sort((a, b) => Number(a.dataset.priority) - Number(b.dataset.priority));
-      items.forEach((item) => leadsList.appendChild(item));
-    }
-
-    refreshLeadsBtn?.addEventListener("click", () => {
-      refreshLeadsBtn.classList.add("active-glow");
-      setTimeout(() => refreshLeadsBtn.classList.remove("active-glow"), 260);
-      refreshLeadStats();
+    leadsSortBtn?.addEventListener("click", () => {
+      sortAscending = !sortAscending;
+      leadsSortBtn.textContent = sortAscending ? "Sort A–Z" : "Sort Z–A";
+      applySearchAndSort();
     });
 
-    sortLeadsBtn?.addEventListener("click", () => {
-      sortLeadsBtn.classList.add("active-glow");
-      setTimeout(() => sortLeadsBtn.classList.remove("active-glow"), 260);
-      sortLeadsByPriority();
-      refreshLeadStats();
+    leadsRefreshBtnTop?.addEventListener("click", async () => {
+      await loadLeads();
     });
 
-    onAuthStateChanged(auth, (user) => {
-      if (!user) return;
-      syncUserSession(user);
+    leadsRefreshBtnSide?.addEventListener("click", async () => {
+      await loadLeads();
+    });
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "/evaraos/login.html";
+        return;
+      }
+
+      await loadLeads();
     });
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -418,8 +476,6 @@
           link.classList.add("active");
         });
       });
-
-      refreshLeadStats();
     });
   </script>
 
