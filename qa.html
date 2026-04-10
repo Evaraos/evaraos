@@ -55,7 +55,7 @@
         <div class="dashboard-sidebar-foot glass-card aurora-card">
           <div class="dashboard-sidebar-foot-copy">
             <strong>QA Command Center</strong>
-            <span>Track page migration, structural audit, and ship-readiness inside Evaraos.</span>
+            <span>Track page migration, repo structure, and ship-readiness in one place.</span>
           </div>
           <button type="button" id="resetQaBtn" class="btn btn-theme-primary">Reset QA Checks</button>
         </div>
@@ -66,10 +66,10 @@
       <section class="dashboard-hero glass-card aurora-card" id="qaOverviewSection">
         <div class="dashboard-hero-copy">
           <p class="dashboard-eyebrow">QA DASHBOARD</p>
-          <h1>Track manual QA and repo audit in one place.</h1>
+          <h1>Track manual QA and repo audit together.</h1>
           <p class="dashboard-hero-text">
             This page combines your visual migration checklist with the generated JSON repo audit
-            report so you can catch both UI issues and structure issues together.
+            report so you can catch both UI issues and structure issues in one place.
           </p>
 
           <div class="dashboard-hero-actions">
@@ -95,7 +95,7 @@
 
           <div class="dashboard-hero-panel-copy">
             <strong>Migration Progress</strong>
-            <span>Manual checks + repo audit + ship readiness.</span>
+            <span>Manual checks, repo audit, and ship readiness.</span>
           </div>
         </div>
       </section>
@@ -188,7 +188,7 @@
             <h2>Repo Audit Viewer</h2>
           </div>
           <a
-            href="/evaraos/tools/reports/repo-audit-report.json"
+            href="/evaraos/tools/reports/repo-audit-ui.json"
             target="_blank"
             rel="noopener noreferrer"
             class="btn btn-theme-secondary"
@@ -200,7 +200,7 @@
         <div class="dashboard-feed">
           <article class="dashboard-feed-item glass-card aurora-card">
             <strong>Audit source</strong>
-            <span id="auditSourceText">/evaraos/tools/reports/repo-audit-report.json</span>
+            <span id="auditSourceText">/evaraos/tools/reports/repo-audit-ui.json</span>
           </article>
           <article class="dashboard-feed-item glass-card aurora-card">
             <strong>Latest audit message</strong>
@@ -239,7 +239,7 @@
 
   <script type="module">
     const STORAGE_KEY = "evaraos-qa-checks";
-    const AUDIT_JSON_URL = "/evaraos/tools/reports/repo-audit-report.json";
+    const AUDIT_JSON_URL = "/evaraos/tools/reports/repo-audit-ui.json";
 
     const qaData = {
       "index.html": [
@@ -261,6 +261,7 @@
       "signup.html": [
         "Signup form IDs match auth.js",
         "Password confirm field present",
+        "Password toggle icons present",
         "No inline auth logic",
         "auth.js loaded",
         "Script order correct"
@@ -277,43 +278,46 @@
         "Executive overview aligned",
         "Cards rounded",
         "Aura glow works",
-        "Logo click keeps session"
+        "Dashboard uses Firestore data"
       ],
       "profile.html": [
         "Profile fields load correctly",
         "Save action works",
         "Avatar sync works",
-        "Theme info displays correctly"
+        "Role displays correctly"
       ],
       "settings.html": [
-        "Theme controls save correctly",
+        "Theme settings save correctly",
         "Notification settings save correctly",
-        "Privacy settings save correctly",
         "Stats reflect current settings"
       ],
       "security.html": [
         "Session info visible",
-        "Reset password entry works",
+        "Reset password action works",
         "Security feed updates correctly"
       ],
       "companies.html": [
         "Portfolio cards visible",
         "Sort works",
+        "Search works",
         "Stats update correctly"
       ],
       "users.html": [
         "Directory visible",
         "Role sorting works",
+        "Search works",
         "Stats update correctly"
       ],
       "leads.html": [
         "Pipeline visible",
-        "Priority sort works",
+        "Search works",
+        "Sort works",
         "Stats update correctly"
       ],
       "jobs.html": [
         "Execution queue visible",
-        "Status sort works",
+        "Search works",
+        "Sort works",
         "Stats update correctly"
       ],
       "theme.js": [
@@ -331,12 +335,14 @@
       "firebase.js": [
         "Auth session sync works",
         "Logout works",
-        "Profile sync works"
+        "Exports match JS imports",
+        "Firestore is initialized"
       ],
       "auth.js": [
         "Login handled centrally",
         "Signup handled centrally",
-        "Reset handled centrally"
+        "Reset handled centrally",
+        "Password toggle animation works"
       ],
       "styles.css": [
         "Rounded cards everywhere",
@@ -370,6 +376,7 @@
     const refreshAuditBtn = document.getElementById("refreshAuditBtn");
 
     let auditSummary = null;
+    let state = loadState();
 
     function loadState() {
       try {
@@ -379,11 +386,9 @@
       }
     }
 
-    function saveState(state) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    function saveState(nextState) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
     }
-
-    let state = loadState();
 
     function keyFor(file, item) {
       return `${file}::${item}`;
@@ -492,31 +497,29 @@
     function renderAuditSummary(summary) {
       auditSummary = summary;
 
-      const totalScore = summary?.totals?.score ?? 0;
-      const totalPossible = summary?.totals?.total ?? 0;
       const files = Array.isArray(summary?.files) ? summary.files : [];
+      const passing = Number(summary?.passingFiles ?? 0);
+      const failing = Number(summary?.failingFiles ?? 0);
+      const missing = Number(summary?.missingFiles ?? 0);
 
-      const passing = files.filter((file) => file.total > 0 && file.score === file.total).length;
-      const failing = files.filter((file) => file.total === 0 || file.score < file.total).length;
-
-      auditScoreStat.textContent = totalPossible ? `${totalScore}/${totalPossible}` : "--";
+      auditScoreStat.textContent = summary?.auditScoreText || "--";
       auditGeneratedAtStat.textContent = `Generated ${formatTimestamp(summary?.generatedAt)}`;
       auditPassingFilesStat.textContent = String(passing);
-      auditFailingFilesStat.textContent = String(failing);
-      setAuditStatus("Loaded", "Repo audit JSON loaded successfully.");
-      auditMessageText.textContent = `Loaded ${files.length} file entries from the audit report.`;
+      auditFailingFilesStat.textContent = String(failing + missing);
+      setAuditStatus("Loaded", "UI audit JSON loaded successfully.");
+      auditMessageText.textContent = `Loaded ${files.length} file entries from the UI audit report.`;
 
       const query = (searchInput.value || "").trim().toLowerCase();
       auditFilesRoot.innerHTML = "";
 
       files.forEach((file) => {
         const fileName = file.file || "Unknown file";
-        const missing = Array.isArray(file.missing) ? file.missing : [];
-        const score = file.score ?? 0;
-        const total = file.total ?? 0;
+        const issues = Array.isArray(file.issues) ? file.issues : [];
+        const status = file.status || "fail";
+        const scoreText = file.scoreText || "--";
 
         const fileMatches = fileName.toLowerCase().includes(query);
-        const issueMatches = missing.some((issue) => String(issue).toLowerCase().includes(query));
+        const issueMatches = issues.some((issue) => String(issue).toLowerCase().includes(query));
 
         if (query && !fileMatches && !issueMatches) return;
 
@@ -524,25 +527,30 @@
         article.className = "dashboard-feed-item glass-card aurora-card";
 
         const title = document.createElement("strong");
-        title.textContent = `${fileName} — ${score}/${total}`;
+        title.textContent = `${fileName} — ${scoreText}`;
 
         const detail = document.createElement("span");
         detail.style.display = "block";
         detail.style.marginTop = "8px";
-        detail.textContent = missing.length
-          ? "Outstanding issues are listed below."
-          : "All audit checks passed for this file.";
+
+        if (status === "pass") {
+          detail.textContent = "All audit checks passed for this file.";
+        } else if (status === "missing") {
+          detail.textContent = "This file is missing from the repo audit target.";
+        } else {
+          detail.textContent = `This file has ${issues.length} outstanding audit issue(s).`;
+        }
 
         article.appendChild(title);
         article.appendChild(detail);
 
-        if (missing.length) {
+        if (issues.length) {
           const issuesWrap = document.createElement("div");
           issuesWrap.style.marginTop = "14px";
           issuesWrap.style.display = "grid";
           issuesWrap.style.gap = "10px";
 
-          missing.forEach((issue) => {
+          issues.forEach((issue) => {
             if (query && !fileMatches && !String(issue).toLowerCase().includes(query)) return;
 
             const issueRow = document.createElement("div");
@@ -594,7 +602,7 @@
           <article class="dashboard-feed-item glass-card aurora-card">
             <strong>Audit report not loaded</strong>
             <span>
-              Could not read <code>/evaraos/tools/reports/repo-audit-report.json</code>.
+              Could not read <code>/evaraos/tools/reports/repo-audit-ui.json</code>.
               Run the audit script, make sure the JSON file exists in that path, then reload this page.
             </span>
           </article>
