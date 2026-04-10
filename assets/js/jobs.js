@@ -1,264 +1,300 @@
+// assets/js/jobs.js
+
+import { auth, db } from "./firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
-  bindTopbar,
-  requireAuth,
-  renderSidebar,
-  fetchAllCollection,
-  fetchUsersByCompany,
-  createDocument,
-  updateDocument
-} from "./app.js";
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-import { canAccess } from "./roles.js";
+const jobsSearch = document.getElementById("jobsSearch");
+const jobsList = document.getElementById("jobsList");
+const jobsFeed = document.getElementById("jobsFeed");
+const jobsProgressStack = document.getElementById("jobsProgressStack");
 
-const jobState = {
-  user: null,
-  jobs: [],
-  technicians: [],
-  editingId: null
-};
+const jobsHeroTitle = document.getElementById("jobsHeroTitle");
+const jobsHeroText = document.getElementById("jobsHeroText");
 
-function showToast(message, variant = "success") {
-  let container = document.getElementById("jobsToastContainer");
-  if (!container) {
-    container = document.createElement("div");
-    container.id = "jobsToastContainer";
-    container.style.position = "fixed";
-    container.style.top = "20px";
-    container.style.right = "20px";
-    container.style.zIndex = "9999";
-    container.style.display = "flex";
-    container.style.flexDirection = "column";
-    container.style.gap = "10px";
-    document.body.appendChild(container);
-  }
+const jobsStatTotal = document.getElementById("jobsStatTotal");
+const jobsStatActive = document.getElementById("jobsStatActive");
+const jobsStatCompleted = document.getElementById("jobsStatCompleted");
+const jobsStatFiltered = document.getElementById("jobsStatFiltered");
 
-  const toast = document.createElement("div");
-  toast.textContent = message;
-  toast.style.padding = "14px 16px";
-  toast.style.borderRadius = "16px";
-  toast.style.background = variant === "error" ? "rgba(180,40,40,.94)" : "rgba(25,110,55,.94)";
-  toast.style.color = "#fff";
-  toast.style.boxShadow = "0 12px 30px rgba(0,0,0,.28)";
-  container.appendChild(toast);
+const jobsStatTotalMeta = document.getElementById("jobsStatTotalMeta");
+const jobsStatActiveMeta = document.getElementById("jobsStatActiveMeta");
+const jobsStatCompletedMeta = document.getElementById("jobsStatCompletedMeta");
+const jobsStatFilteredMeta = document.getElementById("jobsStatFilteredMeta");
 
-  setTimeout(() => toast.remove(), 2600);
+const jobsRefreshBtnTop = document.getElementById("jobsRefreshBtnTop");
+const jobsRefreshBtnSide = document.getElementById("jobsRefreshBtnSide");
+const jobsSortBtn = document.getElementById("jobsSortBtn");
+
+let jobRecords = [];
+let filteredJobs = [];
+let sortAscending = true;
+
+function normalize(value = "") {
+  return String(value || "").trim().toLowerCase();
 }
 
-function money(value) {
-  return Number(value || 0).toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD"
-  });
+function jobTitle(job) {
+  return job.name || job.title || job.jobName || job.customerName || "Untitled Job";
 }
 
-async function loadJobs(user) {
-  jobState.user = user;
-
-  const users = ["super_admin", "owner", "admin"].includes(user.role)
-    ? await fetchAllCollection("users", { max: 500 })
-    : await fetchUsersByCompany(user.companyId);
-
-  jobState.technicians = users.filter(item =>
-    ["technician", "tech"].includes(String(item.role || "").toLowerCase())
-  );
-
-  const allJobs = await fetchAllCollection("jobs", { max: 500 });
-
-  if (["super_admin", "owner", "admin"].includes(user.role)) {
-    jobState.jobs = allJobs;
-  } else {
-    jobState.jobs = allJobs.filter(item => item.companyId === user.companyId);
-  }
-
-  populateTechnicians();
+function jobSubtitle(job) {
+  return job.description || job.address || job.location || job.serviceType || "Job record from Firestore";
 }
 
-function populateTechnicians() {
-  const select = document.getElementById("jobAssignedTechnician");
-  if (!select) return;
-
-  select.innerHTML =
-    `<option value="">Assigned Technician</option>` +
-    jobState.technicians.map(tech => `
-      <option value="${tech.id}">${tech.name || tech.email || tech.username}</option>
-    `).join("");
+function niceStatus(status = "") {
+  const value = String(status || "").trim();
+  return value ? value.charAt(0).toUpperCase() + value.slice(1) : "Pending";
 }
 
-function openJobModal(job = null) {
-  jobState.editingId = job?.id || null;
-  document.getElementById("jobModal")?.classList.add("open");
-  document.getElementById("jobModalTitle").textContent = job ? "Edit Job" : "Add Job";
+function statusClass(status = "") {
+  const value = normalize(status);
 
-  document.getElementById("jobCustomerName").value = job?.customerName || "";
-  document.getElementById("jobCustomerPhone").value = job?.customerPhone || "";
-  document.getElementById("jobCustomerEmail").value = job?.customerEmail || "";
-  document.getElementById("jobAddress").value = job?.address || "";
-  document.getElementById("jobCity").value = job?.city || "";
-  document.getElementById("jobState").value = job?.state || "";
-  document.getElementById("jobZip").value = job?.zip || "";
-  document.getElementById("jobServiceType").value = job?.serviceType || "";
-  document.getElementById("jobAssignedTechnician").value = job?.assignedTechnician || "";
-  document.getElementById("jobScheduledDate").value = job?.scheduledDate || "";
-  document.getElementById("jobScheduledTimeWindow").value = job?.scheduledTimeWindow || "";
-  document.getElementById("jobEstimatedSqFt").value = job?.estimatedSqFt || "";
-  document.getElementById("jobEstimatedPrice").value = job?.estimatedPrice || "";
-  document.getElementById("jobStatus").value = job?.status || "scheduled";
-  document.getElementById("jobNotes").value = job?.notes || "";
-  document.getElementById("jobMsg").textContent = "";
+  if (["complete", "completed", "done", "closed"].includes(value)) return "good";
+  if (["pending", "review", "queued"].includes(value)) return "alert";
+  return "working";
 }
 
-function closeJobModal() {
-  document.getElementById("jobModal")?.classList.remove("open");
-  jobState.editingId = null;
-  document.getElementById("jobMsg").textContent = "";
+function renderStats() {
+  const activeCount = jobRecords.filter((job) =>
+    ["in progress", "active", "working", "pending"].includes(normalize(job.status || ""))
+  ).length;
+
+  const completedCount = jobRecords.filter((job) =>
+    ["complete", "completed", "done", "closed"].includes(normalize(job.status || ""))
+  ).length;
+
+  jobsStatTotal.textContent = String(jobRecords.length);
+  jobsStatActive.textContent = String(activeCount);
+  jobsStatCompleted.textContent = String(completedCount);
+  jobsStatFiltered.textContent = String(filteredJobs.length);
+
+  jobsStatTotalMeta.textContent = "Job records loaded";
+  jobsStatActiveMeta.textContent = "Currently active or pending jobs";
+  jobsStatCompletedMeta.textContent = "Completed execution records";
+  jobsStatFilteredMeta.textContent = "Matches current search";
 }
 
-function resolveTechName(id) {
-  if (!id) return "—";
-  const tech = jobState.technicians.find(item => item.id === id);
-  return tech?.name || tech?.email || tech?.username || id;
-}
-
-function renderJobs() {
-  const root = document.getElementById("jobsRoot");
-  if (!root) return;
-
-  root.innerHTML = `
-    <section class="glass-card aurora-card shine-border">
-      <div class="section-title-row">
+function renderJobList() {
+  if (!filteredJobs.length) {
+    jobsList.innerHTML = `
+      <article class="dashboard-list-item glass-card aurora-card">
         <div>
-          <h2 style="margin:0;">Job List</h2>
-          <p class="muted" style="margin:8px 0 0;">View, edit, and schedule company jobs.</p>
+          <strong>No jobs found</strong>
+          <span>Try a different search or add job records to Firestore.</span>
         </div>
-        <div class="muted">${jobState.jobs.length} job(s)</div>
-      </div>
+        <span class="dashboard-status-pill alert">Empty</span>
+      </article>
+    `;
+    return;
+  }
 
-      ${
-        !jobState.jobs.length
-          ? `<div class="muted" style="padding-top:16px;">No jobs found.</div>`
-          : `
-            <div class="quick-links-grid" style="margin-top:18px;">
-              ${jobState.jobs.map(job => `
-                <div class="quick-link-card aurora-card shine-border" style="display:block; min-height:auto;">
-                  <div>
-                    <strong>${job.customerName || "Unnamed Job"}</strong>
-                    <div class="muted" style="margin-top:8px;">
-                      ${job.serviceType || "No service"}<br>
-                      ${job.address || "No address"}<br>
-                      ${job.city || ""} ${job.state || ""} ${job.zip || ""}
-                    </div>
-                  </div>
+  jobsList.innerHTML = filteredJobs.map((job) => {
+    const status = niceStatus(job.status || "pending");
+    const pill = statusClass(job.status || "pending");
 
-                  <div style="margin-top:12px;">
-                    <span class="chip">${job.status || "scheduled"}</span>
-                    <span class="chip">${job.scheduledTimeWindow || "no-window"}</span>
-                  </div>
-
-                  <div class="muted" style="margin-top:12px;">
-                    Date: ${job.scheduledDate || "—"}<br>
-                    Estimate: ${money(job.estimatedPrice || 0)}<br>
-                    Tech: ${resolveTechName(job.assignedTechnician)}
-                  </div>
-
-                  <div class="top-actions" style="margin-top:14px;">
-                    <button class="btn btn-secondary edit-job-btn" data-id="${job.id}" type="button">Edit</button>
-                  </div>
-                </div>
-              `).join("")}
-            </div>
-          `
-      }
-    </section>
-  `;
-
-  document.querySelectorAll(".edit-job-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const job = jobState.jobs.find(item => item.id === btn.dataset.id);
-      openJobModal(job);
-    });
-  });
-
-  document.getElementById("openJobModalBtn")?.addEventListener("click", () => openJobModal());
+    return `
+      <article class="dashboard-list-item glass-card aurora-card">
+        <div>
+          <strong>${jobTitle(job)}</strong>
+          <span>${jobSubtitle(job)}</span>
+        </div>
+        <span class="dashboard-status-pill ${pill}">${status}</span>
+      </article>
+    `;
+  }).join("");
 }
 
-async function saveJob(e) {
-  e.preventDefault();
+function renderJobFeed() {
+  if (!jobRecords.length) {
+    jobsFeed.innerHTML = `
+      <article class="dashboard-feed-item glass-card aurora-card">
+        <strong>No execution activity</strong>
+        <span>Job feed will appear once records are available.</span>
+      </article>
+    `;
+    return;
+  }
 
-  const payload = {
-    customerName: document.getElementById("jobCustomerName").value.trim(),
-    customerPhone: document.getElementById("jobCustomerPhone").value.trim(),
-    customerEmail: document.getElementById("jobCustomerEmail").value.trim().toLowerCase(),
-    address: document.getElementById("jobAddress").value.trim(),
-    city: document.getElementById("jobCity").value.trim(),
-    state: document.getElementById("jobState").value.trim(),
-    zip: document.getElementById("jobZip").value.trim(),
-    serviceType: document.getElementById("jobServiceType").value.trim(),
-    assignedTechnician: document.getElementById("jobAssignedTechnician").value,
-    scheduledDate: document.getElementById("jobScheduledDate").value,
-    scheduledTimeWindow: document.getElementById("jobScheduledTimeWindow").value,
-    estimatedSqFt: Number(document.getElementById("jobEstimatedSqFt").value || 0),
-    estimatedPrice: Number(document.getElementById("jobEstimatedPrice").value || 0),
-    status: document.getElementById("jobStatus").value,
-    notes: document.getElementById("jobNotes").value.trim(),
-    companyId: jobState.user.companyId || ""
+  jobsFeed.innerHTML = jobRecords.slice(0, 6).map((job) => `
+    <article class="dashboard-feed-item glass-card aurora-card">
+      <strong>${jobTitle(job)}</strong>
+      <span>Status: ${niceStatus(job.status || "pending")} • ${jobSubtitle(job)}</span>
+    </article>
+  `).join("");
+}
+
+function renderJobBreakdown() {
+  const total = jobRecords.length || 1;
+
+  const statuses = {
+    pending: 0,
+    inProgress: 0,
+    complete: 0,
+    review: 0
   };
 
-  if (!payload.customerName) {
-    document.getElementById("jobMsg").textContent = "Customer name is required.";
-    return;
-  }
+  jobRecords.forEach((job) => {
+    const value = normalize(job.status || "pending");
 
-  if (!payload.serviceType) {
-    document.getElementById("jobMsg").textContent = "Service type is required.";
-    return;
-  }
+    if (["pending", "queued"].includes(value)) statuses.pending += 1;
+    else if (["in progress", "active", "working"].includes(value)) statuses.inProgress += 1;
+    else if (["complete", "completed", "done", "closed"].includes(value)) statuses.complete += 1;
+    else statuses.review += 1;
+  });
+
+  const rows = [
+    ["Pending", statuses.pending],
+    ["In Progress", statuses.inProgress],
+    ["Completed", statuses.complete],
+    ["Review / Other", statuses.review]
+  ];
+
+  jobsProgressStack.innerHTML = rows.map(([label, count]) => {
+    const width = Math.max(8, Math.round((count / total) * 100));
+    return `
+      <div class="dashboard-progress-row">
+        <div class="dashboard-progress-copy">
+          <strong>${label}</strong>
+          <span>${count} record${count === 1 ? "" : "s"}</span>
+        </div>
+        <div class="dashboard-progress-bar">
+          <span style="width: ${width}%;"></span>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function applySearchAndSort() {
+  const query = normalize(jobsSearch?.value || "");
+
+  filteredJobs = jobRecords.filter((job) => {
+    const haystack = [
+      job.name,
+      job.title,
+      job.jobName,
+      job.customerName,
+      job.address,
+      job.location,
+      job.serviceType,
+      job.description,
+      job.status
+    ].map((value) => normalize(value)).join(" ");
+
+    return haystack.includes(query);
+  });
+
+  filteredJobs.sort((a, b) => {
+    const first = jobTitle(a).toLowerCase();
+    const second = jobTitle(b).toLowerCase();
+    return sortAscending ? first.localeCompare(second) : second.localeCompare(first);
+  });
+
+  renderStats();
+  renderJobList();
+}
+
+async function loadJobs() {
+  jobsHeroTitle.textContent = "Loading jobs...";
+  jobsHeroText.textContent = "Connecting to Firestore job records.";
 
   try {
-    if (jobState.editingId) {
-      await updateDocument("jobs", jobState.editingId, payload);
-      showToast("Job updated.");
-    } else {
-      await createDocument("jobs", payload);
-      showToast("Job created.");
-    }
+    const snap = await getDocs(collection(db, "jobs"));
+    jobRecords = snap.docs.map((docItem) => ({
+      id: docItem.id,
+      ...docItem.data()
+    }));
 
-    closeJobModal();
-    await loadJobs(jobState.user);
-    renderJobs();
+    filteredJobs = [...jobRecords];
+    applySearchAndSort();
+    renderJobFeed();
+    renderJobBreakdown();
+
+    jobsHeroTitle.textContent = "Execution connected";
+    jobsHeroText.textContent = `${jobRecords.length} jobs loaded from Firestore.`;
   } catch (error) {
-    console.error(error);
-    document.getElementById("jobMsg").textContent = error.message || "Could not save job.";
-    showToast(error.message || "Could not save job.", "error");
+    console.error("Failed loading jobs:", error);
+
+    jobsHeroTitle.textContent = "Load failed";
+    jobsHeroText.textContent = "Check Firestore rules and the jobs collection.";
+
+    jobsList.innerHTML = `
+      <article class="dashboard-list-item glass-card aurora-card">
+        <div>
+          <strong>Unable to load jobs</strong>
+          <span>${error.message || "Unknown Firestore error."}</span>
+        </div>
+        <span class="dashboard-status-pill alert">Error</span>
+      </article>
+    `;
+
+    jobsFeed.innerHTML = `
+      <article class="dashboard-feed-item glass-card aurora-card">
+        <strong>Job feed unavailable</strong>
+        <span>${error.message || "Unknown Firestore error."}</span>
+      </article>
+    `;
+
+    jobsProgressStack.innerHTML = `
+      <div class="dashboard-progress-row">
+        <div class="dashboard-progress-copy">
+          <strong>Load error</strong>
+          <span>Jobs could not be read</span>
+        </div>
+        <div class="dashboard-progress-bar"><span style="width: 8%;"></span></div>
+      </div>
+    `;
   }
 }
 
-requireAuth(async (user) => {
-  await bindTopbar(user, "Jobs");
+function bindSidebarAnchors() {
+  document.querySelectorAll(".dashboard-nav-link").forEach((link) => {
+    link.addEventListener("click", () => {
+      document.querySelectorAll(".dashboard-nav-link").forEach((item) => {
+        item.classList.remove("active");
+      });
+      link.classList.add("active");
+    });
+  });
+}
 
-  const sidebar = document.getElementById("sidebar");
-  if (sidebar) {
-    sidebar.innerHTML = renderSidebar(user.role, "jobs");
-  }
+if (jobsSearch) {
+  jobsSearch.addEventListener("input", applySearchAndSort);
+}
 
-  if (!canAccess(user.role, "jobs")) {
-    document.getElementById("jobsRoot").innerHTML =
-      `<section class="glass-card aurora-card shine-border">Access denied.</section>`;
-    return;
-  }
+if (jobsSortBtn) {
+  jobsSortBtn.addEventListener("click", () => {
+    sortAscending = !sortAscending;
+    jobsSortBtn.textContent = sortAscending ? "Sort A–Z" : "Sort Z–A";
+    applySearchAndSort();
+  });
+}
 
-  document.getElementById("jobsRoot").innerHTML =
-    `<section class="glass-card aurora-card shine-border">Loading jobs...</section>`;
+if (jobsRefreshBtnTop) {
+  jobsRefreshBtnTop.addEventListener("click", async () => {
+    await loadJobs();
+  });
+}
 
-  try {
-    await loadJobs(user);
-    renderJobs();
-  } catch (error) {
-    console.error(error);
-    document.getElementById("jobsRoot").innerHTML =
-      `<section class="glass-card aurora-card shine-border">Jobs page failed: ${error.message || error}</section>`;
-  }
+if (jobsRefreshBtnSide) {
+  jobsRefreshBtnSide.addEventListener("click", async () => {
+    await loadJobs();
+  });
+}
 
-  document.getElementById("closeJobModalBtn")?.addEventListener("click", closeJobModal);
-  document.getElementById("cancelJobModalBtn")?.addEventListener("click", closeJobModal);
-  document.getElementById("jobForm")?.addEventListener("submit", saveJob);
+document.addEventListener("DOMContentLoaded", () => {
+  bindSidebarAnchors();
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = "/evaraos/login.html";
+      return;
+    }
+
+    await loadJobs();
+  });
 });
