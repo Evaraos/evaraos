@@ -43,9 +43,14 @@
             <span>Notifications</span>
           </a>
 
-          <a href="#preferencesSection" class="dashboard-nav-link aurora-card">
+          <a href="#workspaceSection" class="dashboard-nav-link aurora-card">
             <span class="dashboard-nav-icon">◌</span>
-            <span>Preferences</span>
+            <span>Workspace</span>
+          </a>
+
+          <a href="#accountSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◐</span>
+            <span>Account</span>
           </a>
         </nav>
 
@@ -65,15 +70,15 @@
       <section class="dashboard-hero glass-card aurora-card" id="appearanceSection">
         <div class="dashboard-hero-copy">
           <p class="dashboard-eyebrow">SETTINGS CENTER</p>
-          <h1>Customize how Evaraos feels and behaves.</h1>
+          <h1>Customize how Evaraos looks and behaves.</h1>
           <p class="dashboard-hero-text">
-            Adjust theme preferences, notifications, and workflow defaults while keeping the platform
-            polished and consistent across your account.
+            Adjust account preferences, notifications, theme controls, and workspace defaults
+            while keeping your system polished and consistent across the platform.
           </p>
 
           <div class="dashboard-hero-actions">
-            <button type="button" id="saveSettingsTopBtn" class="btn btn-theme-primary">Save Settings</button>
-            <button type="button" id="resetSettingsTopBtn" class="btn btn-theme-secondary">Reset Changes</button>
+            <button type="submit" form="settingsForm" class="btn btn-theme-primary">Save Settings</button>
+            <button type="button" id="settingsResetBtnTop" class="btn btn-theme-secondary">Reset Changes</button>
           </div>
         </div>
 
@@ -133,16 +138,16 @@
         </div>
       </section>
 
-      <section class="dashboard-grid-2">
-        <section class="dashboard-panel glass-card aurora-card" id="notificationsSection">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Appearance + Alerts</p>
-              <h2>Settings</h2>
+      <form id="settingsForm" class="dashboard-main" novalidate>
+        <section class="dashboard-grid-2" id="notificationsSection">
+          <section class="dashboard-panel glass-card aurora-card">
+            <div class="dashboard-section-head">
+              <div>
+                <p class="dashboard-section-kicker">Appearance</p>
+                <h2>Theme Preferences</h2>
+              </div>
             </div>
-          </div>
 
-          <form id="settingsForm" class="login-form" novalidate>
             <div class="form-grid-2">
               <div class="form-group">
                 <label class="field-label" for="settingsThemeMode">Theme Mode</label>
@@ -170,17 +175,33 @@
               </div>
             </div>
 
+            <div class="security-inline-card glass-card aurora-card" style="margin-top: 18px;">
+              <h2 class="inline-card-title">Quick Theme Controls</h2>
+              <p class="inline-card-copy">
+                You can also change themes instantly from the universal nav theme controls.
+              </p>
+            </div>
+          </section>
+
+          <section class="dashboard-panel glass-card aurora-card">
+            <div class="dashboard-section-head">
+              <div>
+                <p class="dashboard-section-kicker">Alerts</p>
+                <h2>Notification Preferences</h2>
+              </div>
+            </div>
+
             <div class="form-grid-2">
               <div class="remember-row aurora-card">
                 <label class="remember-check" for="settingsEmailAlerts">
-                  <input id="settingsEmailAlerts" type="checkbox" />
+                  <input id="settingsEmailAlerts" name="emailAlerts" type="checkbox" />
                   <span>Email alerts enabled</span>
                 </label>
               </div>
 
               <div class="remember-row aurora-card">
                 <label class="remember-check" for="settingsPushAlerts">
-                  <input id="settingsPushAlerts" type="checkbox" />
+                  <input id="settingsPushAlerts" name="pushAlerts" type="checkbox" />
                   <span>Push alerts enabled</span>
                 </label>
               </div>
@@ -189,16 +210,27 @@
             <div class="form-grid-2">
               <div class="remember-row aurora-card">
                 <label class="remember-check" for="settingsLeadDigest">
-                  <input id="settingsLeadDigest" type="checkbox" />
+                  <input id="settingsLeadDigest" name="leadDigest" type="checkbox" />
                   <span>Daily lead digest</span>
                 </label>
               </div>
 
               <div class="remember-row aurora-card">
                 <label class="remember-check" for="settingsJobUpdates">
-                  <input id="settingsJobUpdates" type="checkbox" />
+                  <input id="settingsJobUpdates" name="jobUpdates" type="checkbox" />
                   <span>Job status updates</span>
                 </label>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <section class="dashboard-grid-2" id="workspaceSection">
+          <section class="dashboard-panel glass-card aurora-card">
+            <div class="dashboard-section-head">
+              <div>
+                <p class="dashboard-section-kicker">Workspace</p>
+                <h2>Default Workspace Settings</h2>
               </div>
             </div>
 
@@ -223,7 +255,62 @@
                     id="settingsTimezone"
                     class="input"
                     type="text"
+                    name="timezone"
                     placeholder="America/New_York"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="field-label" for="settingsWorkspaceNote">Workspace Note</label>
+              <div class="input-shell aurora-card">
+                <textarea
+                  id="settingsWorkspaceNote"
+                  class="input"
+                  name="workspaceNote"
+                  rows="5"
+                  placeholder="Optional note about your preferred workspace setup"
+                  style="resize: vertical; min-height: 140px;"
+                ></textarea>
+              </div>
+            </div>
+          </section>
+
+          <section class="dashboard-panel glass-card aurora-card" id="accountSection">
+            <div class="dashboard-section-head">
+              <div>
+                <p class="dashboard-section-kicker">Account</p>
+                <h2>Profile Settings</h2>
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="field-label" for="settingsName">Full Name</label>
+                <div class="input-shell aurora-card">
+                  <input
+                    id="settingsName"
+                    name="fullName"
+                    type="text"
+                    class="input"
+                    placeholder="Enter your full name"
+                    autocomplete="name"
+                  />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="field-label" for="settingsEmail">Email</label>
+                <div class="input-shell aurora-card">
+                  <input
+                    id="settingsEmail"
+                    name="email"
+                    type="email"
+                    class="input"
+                    placeholder="Your email"
+                    autocomplete="email"
+                    readonly
                   />
                 </div>
               </div>
@@ -235,290 +322,29 @@
             </div>
 
             <p id="settingsMessage" class="login-message" aria-live="polite"></p>
-          </form>
+          </section>
         </section>
+      </form>
 
-        <section class="dashboard-panel glass-card aurora-card" id="preferencesSection">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Summary</p>
-              <h2>Saved Preferences</h2>
-            </div>
+      <section class="dashboard-panel glass-card aurora-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Summary</p>
+            <h2>Saved Preferences</h2>
           </div>
+        </div>
 
-          <div class="dashboard-feed" id="settingsSummaryFeed">
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Loading settings...</strong>
-              <span>Your current saved preferences will appear here.</span>
-            </article>
-          </div>
-        </section>
+        <div class="dashboard-feed" id="settingsSummaryFeed">
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Loading settings...</strong>
+            <span>Your current saved preferences will appear here.</span>
+          </article>
+        </div>
       </section>
     </main>
   </div>
 
-  <script type="module">
-    import { auth, db } from "/evaraos/assets/js/firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import {
-      doc,
-      getDoc,
-      setDoc,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-    const settingsForm = document.getElementById("settingsForm");
-    const settingsMessage = document.getElementById("settingsMessage");
-    const settingsResetBtn = document.getElementById("settingsResetBtn");
-    const saveSettingsTopBtn = document.getElementById("saveSettingsTopBtn");
-    const resetSettingsTopBtn = document.getElementById("resetSettingsTopBtn");
-
-    const themeMode = document.getElementById("settingsThemeMode");
-    const themeFamily = document.getElementById("settingsThemeFamily");
-    const emailAlerts = document.getElementById("settingsEmailAlerts");
-    const pushAlerts = document.getElementById("settingsPushAlerts");
-    const leadDigest = document.getElementById("settingsLeadDigest");
-    const jobUpdates = document.getElementById("settingsJobUpdates");
-    const defaultView = document.getElementById("settingsDefaultView");
-    const timezone = document.getElementById("settingsTimezone");
-
-    const settingsHeroTitle = document.getElementById("settingsHeroTitle");
-    const settingsHeroText = document.getElementById("settingsHeroText");
-
-    const settingsThemeStat = document.getElementById("settingsThemeStat");
-    const settingsThemeMeta = document.getElementById("settingsThemeMeta");
-    const settingsEmailStat = document.getElementById("settingsEmailStat");
-    const settingsEmailMeta = document.getElementById("settingsEmailMeta");
-    const settingsPushStat = document.getElementById("settingsPushStat");
-    const settingsPushMeta = document.getElementById("settingsPushMeta");
-    const settingsWorkspaceStat = document.getElementById("settingsWorkspaceStat");
-    const settingsWorkspaceMeta = document.getElementById("settingsWorkspaceMeta");
-
-    const settingsSummaryFeed = document.getElementById("settingsSummaryFeed");
-
-    let currentUser = null;
-    let originalSettings = null;
-
-    function setMessage(text = "", isError = false) {
-      settingsMessage.textContent = text;
-      settingsMessage.style.color = isError ? "#ff9b8f" : "";
-    }
-
-    function buildThemeValue(mode, family) {
-      const safeMode = mode === "light" ? "light" : "dark";
-      const safeFamily = family || "neutral";
-      return safeFamily === "neutral" ? safeMode : `${safeFamily}-${safeMode}`;
-    }
-
-    function readThemePartsFromDom() {
-      const theme = document.documentElement.getAttribute("data-theme") || "dark";
-
-      if (theme === "dark" || theme === "light") {
-        return { mode: theme, family: "neutral" };
-      }
-
-      const [family, mode] = theme.split("-");
-      return {
-        mode: mode === "light" ? "light" : "dark",
-        family: family || "neutral"
-      };
-    }
-
-    function applyForm(data) {
-      themeMode.value = data.themeMode || "dark";
-      themeFamily.value = data.themeFamily || "neutral";
-      emailAlerts.checked = Boolean(data.emailAlerts);
-      pushAlerts.checked = Boolean(data.pushAlerts);
-      leadDigest.checked = Boolean(data.leadDigest);
-      jobUpdates.checked = Boolean(data.jobUpdates);
-      defaultView.value = data.defaultView || "overview";
-      timezone.value = data.timezone || "America/New_York";
-
-      const themeLabel = `${(data.themeFamily || "neutral").charAt(0).toUpperCase() + (data.themeFamily || "neutral").slice(1)} ${data.themeMode === "light" ? "Light" : "Dark"}`;
-      const emailLabel = data.emailAlerts ? "On" : "Off";
-      const pushLabel = data.pushAlerts ? "On" : "Off";
-      const workspaceLabel = (data.defaultView || "overview").charAt(0).toUpperCase() + (data.defaultView || "overview").slice(1);
-
-      settingsHeroTitle.textContent = "Preferences loaded";
-      settingsHeroText.textContent = `Theme ${themeLabel} • Default view ${workspaceLabel}`;
-
-      settingsThemeStat.textContent = data.themeMode === "light" ? "Light" : "Dark";
-      settingsThemeMeta.textContent = `${(data.themeFamily || "neutral").charAt(0).toUpperCase() + (data.themeFamily || "neutral").slice(1)} family`;
-      settingsEmailStat.textContent = emailLabel;
-      settingsEmailMeta.textContent = data.emailAlerts ? "Email notifications enabled" : "Email notifications disabled";
-      settingsPushStat.textContent = pushLabel;
-      settingsPushMeta.textContent = data.pushAlerts ? "Push notifications enabled" : "Push notifications disabled";
-      settingsWorkspaceStat.textContent = workspaceLabel;
-      settingsWorkspaceMeta.textContent = data.timezone || "America/New_York";
-
-      settingsSummaryFeed.innerHTML = `
-        <article class="dashboard-feed-item glass-card aurora-card">
-          <strong>Theme</strong>
-          <span>${themeLabel}</span>
-        </article>
-
-        <article class="dashboard-feed-item glass-card aurora-card">
-          <strong>Email Alerts</strong>
-          <span>${data.emailAlerts ? "Enabled" : "Disabled"}</span>
-        </article>
-
-        <article class="dashboard-feed-item glass-card aurora-card">
-          <strong>Push Alerts</strong>
-          <span>${data.pushAlerts ? "Enabled" : "Disabled"}</span>
-        </article>
-
-        <article class="dashboard-feed-item glass-card aurora-card">
-          <strong>Lead Digest</strong>
-          <span>${data.leadDigest ? "Enabled" : "Disabled"}</span>
-        </article>
-
-        <article class="dashboard-feed-item glass-card aurora-card">
-          <strong>Job Updates</strong>
-          <span>${data.jobUpdates ? "Enabled" : "Disabled"}</span>
-        </article>
-
-        <article class="dashboard-feed-item glass-card aurora-card">
-          <strong>Workspace</strong>
-          <span>${workspaceLabel} • ${data.timezone || "America/New_York"}</span>
-        </article>
-      `;
-    }
-
-    async function loadSettings(user) {
-      currentUser = user;
-      const userSettingsRef = doc(db, "user_settings", user.uid);
-      const snap = await getDoc(userSettingsRef);
-
-      const domTheme = readThemePartsFromDom();
-
-      let data;
-      if (snap.exists()) {
-        data = snap.data() || {};
-      } else {
-        data = {
-          themeMode: domTheme.mode,
-          themeFamily: domTheme.family,
-          emailAlerts: true,
-          pushAlerts: true,
-          leadDigest: true,
-          jobUpdates: true,
-          defaultView: "overview",
-          timezone: "America/New_York"
-        };
-
-        await setDoc(userSettingsRef, {
-          ...data,
-          uid: user.uid,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        }, { merge: true });
-      }
-
-      originalSettings = {
-        themeMode: data.themeMode || domTheme.mode,
-        themeFamily: data.themeFamily || domTheme.family,
-        emailAlerts: Boolean(data.emailAlerts),
-        pushAlerts: Boolean(data.pushAlerts),
-        leadDigest: Boolean(data.leadDigest),
-        jobUpdates: Boolean(data.jobUpdates),
-        defaultView: data.defaultView || "overview",
-        timezone: data.timezone || "America/New_York"
-      };
-
-      applyForm(originalSettings);
-    }
-
-    async function saveSettings() {
-      if (!currentUser) return;
-
-      const payload = {
-        themeMode: themeMode.value === "light" ? "light" : "dark",
-        themeFamily: themeFamily.value || "neutral",
-        emailAlerts: emailAlerts.checked,
-        pushAlerts: pushAlerts.checked,
-        leadDigest: leadDigest.checked,
-        jobUpdates: jobUpdates.checked,
-        defaultView: defaultView.value || "overview",
-        timezone: timezone.value.trim() || "America/New_York"
-      };
-
-      try {
-        const userSettingsRef = doc(db, "user_settings", currentUser.uid);
-
-        await setDoc(userSettingsRef, {
-          uid: currentUser.uid,
-          ...payload,
-          updatedAt: serverTimestamp()
-        }, { merge: true });
-
-        const nextTheme = buildThemeValue(payload.themeMode, payload.themeFamily);
-        document.documentElement.setAttribute("data-theme", nextTheme);
-
-        try {
-          localStorage.setItem("evaraos-theme", nextTheme);
-        } catch {}
-
-        originalSettings = { ...payload };
-        applyForm(originalSettings);
-        setMessage("Settings updated successfully.");
-      } catch (error) {
-        console.error("Settings update failed:", error);
-        setMessage(error.message || "Unable to save settings.", true);
-      }
-    }
-
-    function resetSettings() {
-      if (!originalSettings) return;
-      applyForm(originalSettings);
-
-      const theme = buildThemeValue(originalSettings.themeMode, originalSettings.themeFamily);
-      document.documentElement.setAttribute("data-theme", theme);
-
-      try {
-        localStorage.setItem("evaraos-theme", theme);
-      } catch {}
-
-      setMessage("Changes reset.");
-    }
-
-    settingsForm?.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      await saveSettings();
-    });
-
-    saveSettingsTopBtn?.addEventListener("click", async () => {
-      await saveSettings();
-    });
-
-    settingsResetBtn?.addEventListener("click", () => {
-      resetSettings();
-    });
-
-    resetSettingsTopBtn?.addEventListener("click", () => {
-      resetSettings();
-    });
-
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        window.location.href = "/evaraos/login.html";
-        return;
-      }
-
-      await loadSettings(user);
-    });
-
-    document.addEventListener("DOMContentLoaded", () => {
-      document.querySelectorAll(".dashboard-nav-link").forEach((link) => {
-        link.addEventListener("click", () => {
-          document.querySelectorAll(".dashboard-nav-link").forEach((item) => {
-            item.classList.remove("active");
-          });
-          link.classList.add("active");
-        });
-      });
-    });
-  </script>
-
+  <script type="module" src="/evaraos/assets/js/settings.js"></script>
   <script type="module" src="/evaraos/assets/js/theme.js"></script>
   <script type="module" src="/evaraos/assets/js/nav.js"></script>
   <script type="module" src="/evaraos/assets/js/firebase.js"></script>
