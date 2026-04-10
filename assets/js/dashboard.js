@@ -1,457 +1,463 @@
-import {
-  bindTopbar,
-  requireAuth,
-  fetchAllCollection,
-  fetchCompanyCollection,
-  fetchUsersByCompany
-} from "./app.js";
+// assets/js/dashboard.js
 
+import { auth, db } from "./firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
-  filterLeadsForUser,
-  filterJobsForUser,
-  filterUsersForUser,
-  canAccess
-} from "./roles.js";
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  limit
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-function currency(value) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0
-  }).format(Number(value || 0));
+const statCompanies = document.getElementById("statCompanies");
+const statUsers = document.getElementById("statUsers");
+const statLeads = document.getElementById("statLeads");
+const statJobs = document.getElementById("statJobs");
+
+const statCompaniesMeta = document.getElementById("statCompaniesMeta");
+const statUsersMeta = document.getElementById("statUsersMeta");
+const statLeadsMeta = document.getElementById("statLeadsMeta");
+const statJobsMeta = document.getElementById("statJobsMeta");
+
+const heroStatusTitle = document.getElementById("heroStatusTitle");
+const heroStatusText = document.getElementById("heroStatusText");
+
+const companiesList = document.getElementById("companiesList");
+const usersRoleGrid = document.getElementById("usersRoleGrid");
+const leadFlowStack = document.getElementById("leadFlowStack");
+const jobsList = document.getElementById("jobsList");
+const activityFeed = document.getElementById("activityFeed");
+
+const dashboardSearch = document.getElementById("dashboardSearch");
+
+let dashboardCache = {
+  companies: [],
+  users: [],
+  leads: [],
+  jobs: []
+};
+
+function safeArray(snapshot) {
+  return snapshot.docs.map((docItem) => ({
+    id: docItem.id,
+    ...docItem.data()
+  }));
 }
 
-function percent(value) {
-  return `${Number(value || 0).toFixed(1)}%`;
+function normalizedStatus(value = "") {
+  return String(value || "").trim().toLowerCase();
 }
 
-function formatDate(value) {
-  if (!value) return "—";
+function titleFromRecord(record, fallback = "Untitled") {
+  return (
+    record.name ||
+    record.title ||
+    record.companyName ||
+    record.fullName ||
+    record.customerName ||
+    record.email ||
+    fallback
+  );
+}
+
+function statusPillClass(status = "") {
+  const value = normalizedStatus(status);
+
+  if (["active", "healthy", "approved", "complete", "completed", "won", "closed"].includes(value)) {
+    return "good";
+  }
+
+  if (["review", "pending", "new", "quoted"].includes(value)) {
+    return "alert";
+  }
+
+  return "working";
+}
+
+function niceStatus(status = "") {
+  const value = String(status || "").trim();
+  if (!value) return "Active";
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+async function loadCollectionDocs(name, options = {}) {
+  const ref = collection(db, name);
+
   try {
-    return new Date(value).toLocaleDateString();
-  } catch {
-    return value;
+    if (options.orderField) {
+      const q = query(ref, orderBy(options.orderField, "desc"), limit(options.limitCount || 3));
+      const snap = await getDocs(q);
+      return safeArray(snap);
+    }
+
+    const snap = await getDocs(ref);
+    return safeArray(snap);
+  } catch (error) {
+    console.warn(`Failed loading collection "${name}" with query, retrying basic read.`, error);
+
+    const snap = await getDocs(ref);
+    return safeArray(snap);
   }
 }
 
-function getLeadStageCounts(leads) {
-  const base = {
+function renderCompanies(companies) {
+  if (!companies.length) {
+    companiesList.innerHTML = `
+      <article class="dashboard-list-item glass-card aurora-card">
+        <div>
+          <strong>No companies found</strong>
+          <span>Create company records in Firestore to populate this section.</span>
+        </div>
+        <span class="dashboard-status-pill alert">Empty</span>
+      </article>
+    `;
+    return;
+  }
+
+  companiesList.innerHTML = companies.slice(0, 3).map((company) => {
+    const status = niceStatus(company.status || company.health || "active");
+    const pill = statusPillClass(company.status || company.health || "active");
+    const subtitle =
+      company.description ||
+      company.location ||
+      company.category ||
+      "Company record from Firestore";
+
+    return `
+      <article class="dashboard-list-item glass-card aurora-card">
+        <div>
+          <strong>${titleFromRecord(company, "Company")}</strong>
+          <span>${subtitle}</span>
+        </div>
+        <span class="dashboard-status-pill ${pill}">${status}</span>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderUsers(users) {
+  const roleCounts = {
+    owner: 0,
+    admin: 0,
+    manager: 0,
+    sales: 0,
+    technician: 0,
+    customer: 0
+  };
+
+  users.forEach((user) => {
+    const role = normalizedStatus(user.role || "customer");
+    if (roleCounts[role] !== undefined) {
+      roleCounts[role] += 1;
+    }
+  });
+
+  const cards = [
+    ["Owners", roleCounts.owner],
+    ["Admins", roleCounts.admin],
+    ["Managers", roleCounts.manager],
+    ["Sales Reps", roleCounts.sales],
+    ["Technicians", roleCounts.technician],
+    ["Customers", roleCounts.customer]
+  ];
+
+  usersRoleGrid.innerHTML = cards.map(([label, count]) => `
+    <article class="dashboard-role-card glass-card aurora-card">
+      <strong>${label}</strong>
+      <span>${count} user${count === 1 ? "" : "s"}</span>
+    </article>
+  `).join("");
+}
+
+function renderLeadFlow(leads) {
+  const total = leads.length || 1;
+  const statuses = {
     new: 0,
     contacted: 0,
     quoted: 0,
-    booked: 0,
-    won: 0,
-    lost: 0
+    won: 0
   };
 
   leads.forEach((lead) => {
-    let status = String(lead.status || "").toLowerCase();
-    if (status === "scheduled") status = "booked";
-    if (base[status] !== undefined) base[status] += 1;
+    const status = normalizedStatus(lead.status || "new");
+    if (statuses[status] !== undefined) {
+      statuses[status] += 1;
+    }
   });
 
-  return base;
-}
-
-function getDashboardMetrics(leads, jobs, users) {
-  const wonLeads = leads.filter((lead) =>
-    ["won", "scheduled", "booked"].includes(String(lead.status || "").toLowerCase())
-  );
-  const completedJobs = jobs.filter((job) => String(job.status || "").toLowerCase() === "completed");
-  const scheduledJobs = jobs.filter((job) => String(job.status || "").toLowerCase() === "scheduled");
-  const inProgressJobs = jobs.filter((job) => String(job.status || "").toLowerCase() === "in_progress");
-  const activeReps = users.filter((u) => u.role === "sales_rep" && String(u.status || "").toLowerCase() === "active");
-  const activeTechs = users.filter((u) => u.role === "technician" && String(u.status || "").toLowerCase() === "active");
-
-  const revenue = completedJobs.reduce((sum, job) => sum + Number(job.estimatedPrice || 0), 0);
-  const conversionRate = leads.length ? (wonLeads.length / leads.length) * 100 : 0;
-
-  return {
-    revenue,
-    totalLeads: leads.length,
-    scheduledJobs: scheduledJobs.length,
-    completedJobs: completedJobs.length,
-    inProgressJobs: inProgressJobs.length,
-    activeReps: activeReps.length,
-    activeTechs: activeTechs.length,
-    conversionRate
-  };
-}
-
-function renderKpiCard(label, value, sub = "") {
-  return `
-    <div class="metric-card">
-      <div class="metric-label">${label}</div>
-      <div class="metric-value">${value}</div>
-      ${sub ? `<div class="metric-sub">${sub}</div>` : ""}
-    </div>
-  `;
-}
-
-function renderPipeline(stageCounts) {
-  const stages = [
-    ["new", "New"],
-    ["contacted", "Contacted"],
-    ["quoted", "Quoted"],
-    ["booked", "Booked"],
-    ["won", "Won"],
-    ["lost", "Lost"]
+  const rows = [
+    ["New Leads", statuses.new],
+    ["Contacted", statuses.contacted],
+    ["Quoted", statuses.quoted],
+    ["Closed Won", statuses.won]
   ];
 
-  return `
-    <section class="glass-card">
-      <div class="section-title-row">
-        <h2>Pipeline Snapshot</h2>
+  leadFlowStack.innerHTML = rows.map(([label, count]) => {
+    const width = Math.max(8, Math.round((count / total) * 100));
+    return `
+      <div class="dashboard-progress-row">
+        <div class="dashboard-progress-copy">
+          <strong>${label}</strong>
+          <span>${count} record${count === 1 ? "" : "s"}</span>
+        </div>
+        <div class="dashboard-progress-bar">
+          <span style="width: ${width}%;"></span>
+        </div>
       </div>
-      <div class="pipeline-grid">
-        ${stages
-          .map(
-            ([key, label]) => `
-              <div class="pipeline-stage">
-                <span class="pipeline-label">${label}</span>
-                <strong class="pipeline-count">${stageCounts[key] || 0}</strong>
-              </div>
-            `
-          )
-          .join("")}
-      </div>
-    </section>
-  `;
+    `;
+  }).join("");
 }
 
-function renderQuickLinks(user) {
-  const links = [
-    { key: "leads", label: "Open Leads", href: "leads.html", desc: "Manage pipeline and conversions" },
-    { key: "sales_reps", label: "Open Sales Reps", href: "sales_reps.html", desc: "Add and edit reps" },
-    { key: "companies", label: "Open Companies", href: "companies.html", desc: "Manage company records" },
-    { key: "jobs", label: "Open Jobs", href: "jobs.html", desc: "Track scheduled work" },
-    { key: "users", label: "Open Users", href: "users.html", desc: "Manage user accounts" },
-    { key: "audit", label: "Open Audit", href: "audit.html", desc: "Repair and integrity tools" }
-  ].filter((item) => canAccess(user.role, item.key));
-
-  if (!links.length) return "";
-
-  return `
-    <section class="glass-card">
-      <div class="section-title-row">
-        <h2>Quick Actions</h2>
-      </div>
-      <div class="quick-links-grid">
-        ${links
-          .map(
-            (item) => `
-              <a class="quick-link-card" href="${item.href}">
-                <strong>${item.label}</strong>
-                <span>${item.desc}</span>
-              </a>
-            `
-          )
-          .join("")}
-      </div>
-    </section>
-  `;
-}
-
-function renderRecentLeads(leads) {
-  const sorted = [...leads]
-    .sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")))
-    .slice(0, 6);
-
-  return `
-    <section class="glass-card">
-      <div class="section-title-row">
-        <h2>Recent Leads</h2>
-      </div>
-      ${
-        !sorted.length
-          ? `<div class="empty-state">No leads available.</div>`
-          : `
-            <div class="list-stack">
-              ${sorted
-                .map(
-                  (lead) => `
-                    <div class="list-row">
-                      <div>
-                        <strong>${lead.fullName || "Unnamed Lead"}</strong>
-                        <div class="muted">${lead.serviceInterest || lead.serviceType || "No service selected"}</div>
-                      </div>
-                      <div style="text-align:right;">
-                        <div class="status-pill">${lead.status || "new"}</div>
-                        <div class="muted">${currency(lead.estimatedPrice || 0)}</div>
-                      </div>
-                    </div>
-                  `
-                )
-                .join("")}
-            </div>
-          `
-      }
-    </section>
-  `;
-}
-
-function renderUpcomingJobs(jobs) {
-  const sorted = [...jobs]
-    .filter((job) => ["scheduled", "in_progress"].includes(String(job.status || "").toLowerCase()))
-    .sort((a, b) => String(a.scheduledDate || "").localeCompare(String(b.scheduledDate || "")))
-    .slice(0, 6);
-
-  return `
-    <section class="glass-card">
-      <div class="section-title-row">
-        <h2>Upcoming Jobs</h2>
-      </div>
-      ${
-        !sorted.length
-          ? `<div class="empty-state">No upcoming jobs.</div>`
-          : `
-            <div class="list-stack">
-              ${sorted
-                .map(
-                  (job) => `
-                    <div class="list-row">
-                      <div>
-                        <strong>${job.customerName || "Unnamed Customer"}</strong>
-                        <div class="muted">${job.serviceType || "Service not set"}</div>
-                      </div>
-                      <div style="text-align:right;">
-                        <div class="status-pill">${job.status || "scheduled"}</div>
-                        <div class="muted">${formatDate(job.scheduledDate)}</div>
-                      </div>
-                    </div>
-                  `
-                )
-                .join("")}
-            </div>
-          `
-      }
-    </section>
-  `;
-}
-
-function injectDashboardStyles() {
-  if (document.getElementById("dashboardUpgradeStyles")) return;
-
-  const style = document.createElement("style");
-  style.id = "dashboardUpgradeStyles";
-  style.textContent = `
-    .dashboard-main{
-      display:flex;
-      flex-direction:column;
-      gap:22px;
-      padding:22px;
-    }
-    .metric-grid{
-      display:grid;
-      grid-template-columns:repeat(4,minmax(0,1fr));
-      gap:16px;
-    }
-    .metric-card{
-      padding:18px;
-      border-radius:22px;
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.08);
-    }
-    .metric-label{
-      font-size:13px;
-      color:#adb7c7;
-      margin-bottom:8px;
-    }
-    .metric-value{
-      font-size:30px;
-      font-weight:800;
-      line-height:1.1;
-    }
-    .metric-sub{
-      margin-top:8px;
-      font-size:13px;
-      color:#9db0c9;
-    }
-    .pipeline-grid{
-      display:grid;
-      grid-template-columns:repeat(6,minmax(0,1fr));
-      gap:12px;
-      margin-top:14px;
-    }
-    .pipeline-stage{
-      border-radius:18px;
-      padding:16px;
-      background:rgba(255,255,255,.035);
-      border:1px solid rgba(255,255,255,.08);
-      text-align:center;
-    }
-    .pipeline-label{
-      display:block;
-      color:#aeb8c8;
-      font-size:13px;
-      margin-bottom:8px;
-    }
-    .pipeline-count{
-      font-size:28px;
-    }
-    .section-title-row{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      margin-bottom:8px;
-      flex-wrap:wrap;
-    }
-    .list-stack{
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-      margin-top:12px;
-    }
-    .list-row{
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      align-items:center;
-      padding:14px 16px;
-      border-radius:18px;
-      background:rgba(255,255,255,.03);
-      border:1px solid rgba(255,255,255,.07);
-    }
-    .status-pill{
-      display:inline-flex;
-      padding:6px 10px;
-      border-radius:999px;
-      background:rgba(255,255,255,.08);
-      font-size:12px;
-      text-transform:capitalize;
-    }
-    .empty-state{
-      color:#aeb8c8;
-      padding:12px 0 4px;
-    }
-    .muted{
-      color:#aeb8c8;
-      font-size:13px;
-    }
-    .quick-links-grid{
-      display:grid;
-      grid-template-columns:repeat(3,minmax(0,1fr));
-      gap:14px;
-      margin-top:12px;
-    }
-    .quick-link-card{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      padding:18px;
-      border-radius:22px;
-      text-decoration:none;
-      color:#fff;
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.08);
-      transition:.18s ease;
-    }
-    .quick-link-card:hover{
-      transform:translateY(-2px);
-      background:rgba(255,255,255,.08);
-    }
-    .quick-link-card span{
-      color:#aeb8c8;
-      font-size:13px;
-      line-height:1.4;
-    }
-    @media (max-width: 1100px){
-      .metric-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
-      .pipeline-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); }
-      .quick-links-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
-    }
-    @media (max-width: 700px){
-      .metric-grid{ grid-template-columns:1fr; }
-      .pipeline-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
-      .quick-links-grid{ grid-template-columns:1fr; }
-    }
-  `;
-  document.head.appendChild(style);
-}
-
-async function loadScopedData(user) {
-  const isGlobal = user.role === "super_admin";
-
-  let leads;
-  let jobs;
-  let users;
-
-  if (isGlobal) {
-    [leads, jobs, users] = await Promise.all([
-      fetchAllCollection("leads"),
-      fetchAllCollection("jobs"),
-      fetchAllCollection("users")
-    ]);
-  } else {
-    [leads, jobs, users] = await Promise.all([
-      fetchCompanyCollection("leads", user.companyId),
-      fetchCompanyCollection("jobs", user.companyId),
-      fetchUsersByCompany(user.companyId)
-    ]);
+function renderJobs(jobs) {
+  if (!jobs.length) {
+    jobsList.innerHTML = `
+      <article class="dashboard-list-item glass-card aurora-card">
+        <div>
+          <strong>No jobs found</strong>
+          <span>Create job records in Firestore to populate this section.</span>
+        </div>
+        <span class="dashboard-status-pill alert">Empty</span>
+      </article>
+    `;
+    return;
   }
 
-  return {
-    leads: filterLeadsForUser(user, leads),
-    jobs: filterJobsForUser(user, jobs),
-    users: filterUsersForUser(user, users)
-  };
+  jobsList.innerHTML = jobs.slice(0, 3).map((job) => {
+    const status = niceStatus(job.status || "active");
+    const pill = statusPillClass(job.status || "active");
+    const subtitle =
+      job.description ||
+      job.address ||
+      job.location ||
+      "Job record from Firestore";
+
+    return `
+      <article class="dashboard-list-item glass-card aurora-card">
+        <div>
+          <strong>${titleFromRecord(job, "Job")}</strong>
+          <span>${subtitle}</span>
+        </div>
+        <span class="dashboard-status-pill ${pill}">${status}</span>
+      </article>
+    `;
+  }).join("");
 }
 
-function renderDashboard(user, scoped) {
-  const metrics = getDashboardMetrics(scoped.leads, scoped.jobs, scoped.users);
-  const stageCounts = getLeadStageCounts(scoped.leads);
+function renderActivity(companies, users, leads, jobs) {
+  const merged = [
+    ...companies.slice(0, 2).map((item) => ({
+      kind: "Company",
+      title: titleFromRecord(item, "Company"),
+      detail: item.status || item.health || "updated"
+    })),
+    ...users.slice(0, 2).map((item) => ({
+      kind: "User",
+      title: titleFromRecord(item, "User"),
+      detail: item.role || "updated"
+    })),
+    ...leads.slice(0, 2).map((item) => ({
+      kind: "Lead",
+      title: titleFromRecord(item, "Lead"),
+      detail: item.status || "updated"
+    })),
+    ...jobs.slice(0, 2).map((item) => ({
+      kind: "Job",
+      title: titleFromRecord(item, "Job"),
+      detail: item.status || "updated"
+    }))
+  ].slice(0, 6);
 
-  const root = document.getElementById("dashboardRoot");
-  root.innerHTML = `
-    <main class="dashboard-main">
-      <section class="glass-card">
-        <div class="section-title-row">
-          <div>
-            <h1 style="margin:0;">Dashboard</h1>
-            <p class="muted" style="margin:10px 0 0;">Role-scoped analytics and real-time pipeline visibility.</p>
-          </div>
-        </div>
-
-        <div class="metric-grid" style="margin-top:16px;">
-          ${renderKpiCard("Revenue", currency(metrics.revenue), "Completed jobs")}
-          ${renderKpiCard("Total Leads", metrics.totalLeads)}
-          ${renderKpiCard("Scheduled Jobs", metrics.scheduledJobs)}
-          ${renderKpiCard("Completed Jobs", metrics.completedJobs)}
-          ${renderKpiCard("In Progress", metrics.inProgressJobs)}
-          ${renderKpiCard("Conversion Rate", percent(metrics.conversionRate))}
-          ${renderKpiCard("Active Reps", metrics.activeReps)}
-          ${renderKpiCard("Active Technicians", metrics.activeTechs)}
-        </div>
-      </section>
-
-      ${renderQuickLinks(user)}
-      ${canAccess(user.role, "leads") ? renderPipeline(stageCounts) : ""}
-
-      <div class="metric-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
-        ${canAccess(user.role, "leads") ? renderRecentLeads(scoped.leads) : ""}
-        ${canAccess(user.role, "jobs") ? renderUpcomingJobs(scoped.jobs) : ""}
-      </div>
-    </main>
-  `;
-}
-
-requireAuth(async (user) => {
-  injectDashboardStyles();
-  await bindTopbar(user);
-
-  const sidebarTop = document.getElementById("sidebar");
-  if (sidebarTop) {
-    sidebarTop.innerHTML = "";
+  if (!merged.length) {
+    activityFeed.innerHTML = `
+      <article class="dashboard-feed-item glass-card aurora-card">
+        <strong>No recent records</strong>
+        <span>Once collections are populated, recent activity will appear here.</span>
+      </article>
+    `;
+    return;
   }
 
-  const root = document.getElementById("dashboardRoot");
-  root.innerHTML = `<section class="glass-card" style="margin:22px;">Loading dashboard...</section>`;
+  activityFeed.innerHTML = merged.map((item) => `
+    <article class="dashboard-feed-item glass-card aurora-card">
+      <strong>${item.kind}: ${item.title}</strong>
+      <span>Status: ${niceStatus(item.detail)}</span>
+    </article>
+  `).join("");
+}
+
+function updateStats(companies, users, leads, jobs) {
+  statCompanies.textContent = String(companies.length);
+  statUsers.textContent = String(users.length);
+  statLeads.textContent = String(leads.length);
+  statJobs.textContent = String(jobs.length);
+
+  const activeCompanies = companies.filter((item) =>
+    ["active", "healthy", "approved"].includes(normalizedStatus(item.status || item.health || "active"))
+  ).length;
+
+  const openLeads = leads.filter((item) =>
+    !["won", "closed", "complete", "completed"].includes(normalizedStatus(item.status))
+  ).length;
+
+  const inProgressJobs = jobs.filter((item) =>
+    ["in progress", "active", "pending", "working"].includes(normalizedStatus(item.status))
+  ).length;
+
+  statCompaniesMeta.textContent = `${activeCompanies} active`;
+  statUsersMeta.textContent = `${users.filter((u) => normalizedStatus(u.active) !== "false").length} active accounts`;
+  statLeadsMeta.textContent = `${openLeads} currently open`;
+  statJobsMeta.textContent = `${inProgressJobs} in motion`;
+}
+
+function renderFilteredDashboard(queryText = "") {
+  const queryValue = String(queryText || "").trim().toLowerCase();
+
+  if (!queryValue) {
+    updateStats(dashboardCache.companies, dashboardCache.users, dashboardCache.leads, dashboardCache.jobs);
+    renderCompanies(dashboardCache.companies);
+    renderUsers(dashboardCache.users);
+    renderLeadFlow(dashboardCache.leads);
+    renderJobs(dashboardCache.jobs);
+    renderActivity(dashboardCache.companies, dashboardCache.users, dashboardCache.leads, dashboardCache.jobs);
+    return;
+  }
+
+  const filterItems = (items) => items.filter((item) => {
+    const haystack = [
+      item.name,
+      item.title,
+      item.companyName,
+      item.fullName,
+      item.customerName,
+      item.email,
+      item.description,
+      item.location,
+      item.address,
+      item.category,
+      item.status,
+      item.role
+    ]
+      .map((value) => String(value || "").toLowerCase())
+      .join(" ");
+
+    return haystack.includes(queryValue);
+  });
+
+  const companies = filterItems(dashboardCache.companies);
+  const users = filterItems(dashboardCache.users);
+  const leads = filterItems(dashboardCache.leads);
+  const jobs = filterItems(dashboardCache.jobs);
+
+  updateStats(companies, users, leads, jobs);
+  renderCompanies(companies);
+  renderUsers(users);
+  renderLeadFlow(leads);
+  renderJobs(jobs);
+  renderActivity(companies, users, leads, jobs);
+}
+
+async function loadDashboardData() {
+  heroStatusTitle.textContent = "Loading system data...";
+  heroStatusText.textContent = "Connecting to Firestore collections.";
 
   try {
-    const scoped = await loadScopedData(user);
-    renderDashboard(user, scoped);
-  } catch (e) {
-    root.innerHTML = `<section class="glass-card" style="margin:22px;">Dashboard failed to load: ${e.message || e}</section>`;
+    const [companies, users, leads, jobs] = await Promise.all([
+      loadCollectionDocs("companies", { orderField: "updatedAt", limitCount: 6 }),
+      loadCollectionDocs("users"),
+      loadCollectionDocs("leads"),
+      loadCollectionDocs("jobs", { orderField: "updatedAt", limitCount: 6 })
+    ]);
+
+    dashboardCache = { companies, users, leads, jobs };
+
+    renderFilteredDashboard(dashboardSearch?.value || "");
+
+    heroStatusTitle.textContent = "Live system connected";
+    heroStatusText.textContent = `Loaded ${companies.length} companies, ${users.length} users, ${leads.length} leads, and ${jobs.length} jobs.`;
+  } catch (error) {
+    console.error("Dashboard data load failed:", error);
+
+    heroStatusTitle.textContent = "Data load failed";
+    heroStatusText.textContent = "Check Firestore rules, collection names, or missing exports in firebase.js.";
+
+    companiesList.innerHTML = `
+      <article class="dashboard-list-item glass-card aurora-card">
+        <div>
+          <strong>Unable to load companies</strong>
+          <span>${error.message || "Unknown Firestore error."}</span>
+        </div>
+        <span class="dashboard-status-pill alert">Error</span>
+      </article>
+    `;
+
+    usersRoleGrid.innerHTML = `
+      <article class="dashboard-role-card glass-card aurora-card">
+        <strong>Load error</strong>
+        <span>Users could not be read</span>
+      </article>
+    `;
+
+    leadFlowStack.innerHTML = `
+      <div class="dashboard-progress-row">
+        <div class="dashboard-progress-copy">
+          <strong>Load error</strong>
+          <span>Leads could not be read</span>
+        </div>
+        <div class="dashboard-progress-bar"><span style="width: 8%;"></span></div>
+      </div>
+    `;
+
+    jobsList.innerHTML = `
+      <article class="dashboard-list-item glass-card aurora-card">
+        <div>
+          <strong>Unable to load jobs</strong>
+          <span>Check the jobs collection and Firestore permissions.</span>
+        </div>
+        <span class="dashboard-status-pill alert">Error</span>
+      </article>
+    `;
+
+    activityFeed.innerHTML = `
+      <article class="dashboard-feed-item glass-card aurora-card">
+        <strong>Dashboard activity unavailable</strong>
+        <span>${error.message || "Unknown Firestore error."}</span>
+      </article>
+    `;
   }
-});
+}
+
+function bindSidebarAnchors() {
+  document.querySelectorAll(".dashboard-nav-link").forEach((link) => {
+    link.addEventListener("click", () => {
+      document.querySelectorAll(".dashboard-nav-link").forEach((item) => {
+        item.classList.remove("active");
+      });
+      link.classList.add("active");
+    });
+  });
+}
+
+function bindSearch() {
+  if (!dashboardSearch) return;
+
+  dashboardSearch.addEventListener("input", () => {
+    renderFilteredDashboard(dashboardSearch.value);
+  });
+}
+
+function initDashboard() {
+  bindSidebarAnchors();
+  bindSearch();
+
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      window.location.href = "/evaraos/login.html";
+      return;
+    }
+
+    loadDashboardData();
+  });
+}
+
+document.addEventListener("DOMContentLoaded", initDashboard);
