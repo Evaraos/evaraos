@@ -1,6 +1,12 @@
 // assets/js/nav.js
 
-import { auth, logoutAndRedirect, getSavedUserProfile, applyUserToUi } from "./firebase.js";
+import {
+  auth,
+  logoutAndRedirect,
+  getSavedUserProfile,
+  applyUserToUi
+} from "./firebase.js";
+
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 function getThemeControlMarkup() {
@@ -197,6 +203,7 @@ function toggleNavDropdown(dropdown) {
     if (window.EvaraTheme?.syncThemeUI) {
       window.EvaraTheme.syncThemeUI();
     }
+
     if (window.EvaraTheme?.bindThemeControls) {
       window.EvaraTheme.bindThemeControls();
     }
