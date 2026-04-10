@@ -103,12 +103,26 @@ function getFriendlyAuthError(error) {
   }
 }
 
+function updatePasswordToggleVisual(button, isVisible, showLabel = "Show password", hideLabel = "Hide password") {
+  if (!button) return;
+
+  button.classList.toggle("is-visible", isVisible);
+  button.setAttribute("aria-label", isVisible ? hideLabel : showLabel);
+
+  const eyeOpen = button.querySelector(".eye-open");
+  const eyeClosed = button.querySelector(".eye-closed");
+
+  if (eyeOpen) eyeOpen.style.opacity = isVisible ? "0" : "1";
+  if (eyeClosed) eyeClosed.style.opacity = isVisible ? "1" : "0";
+}
+
 function togglePasswordVisibility(input, button, showLabel = "Show password", hideLabel = "Hide password") {
   if (!input || !button) return;
 
-  const isPassword = input.type === "password";
-  input.type = isPassword ? "text" : "password";
-  button.setAttribute("aria-label", isPassword ? hideLabel : showLabel);
+  const reveal = input.type === "password";
+  input.type = reveal ? "text" : "password";
+
+  updatePasswordToggleVisual(button, reveal, showLabel, hideLabel);
 
   button.classList.add("active-glow");
   setTimeout(() => button.classList.remove("active-glow"), 220);
@@ -116,18 +130,27 @@ function togglePasswordVisibility(input, button, showLabel = "Show password", hi
 
 function wirePasswordToggles() {
   if (els.loginPassword && els.loginPasswordToggle) {
+    updatePasswordToggleVisual(els.loginPasswordToggle, false);
     els.loginPasswordToggle.addEventListener("click", () => {
       togglePasswordVisibility(els.loginPassword, els.loginPasswordToggle);
     });
   }
 
   if (els.signupPassword && els.signupPasswordToggle) {
+    updatePasswordToggleVisual(els.signupPasswordToggle, false);
     els.signupPasswordToggle.addEventListener("click", () => {
       togglePasswordVisibility(els.signupPassword, els.signupPasswordToggle);
     });
   }
 
   if (els.signupPasswordConfirm && els.signupPasswordConfirmToggle) {
+    updatePasswordToggleVisual(
+      els.signupPasswordConfirmToggle,
+      false,
+      "Show password confirmation",
+      "Hide password confirmation"
+    );
+
     els.signupPasswordConfirmToggle.addEventListener("click", () => {
       togglePasswordVisibility(
         els.signupPasswordConfirm,
