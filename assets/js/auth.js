@@ -1,3 +1,5 @@
+// assets/js/auth.js
+
 import {
   auth,
   db,
@@ -17,10 +19,9 @@ import {
   setDoc,
   updateDoc,
   serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const ROUTES = {
-  home: "/evaraos/index.html",
   login: "/evaraos/login.html",
   signup: "/evaraos/signup.html",
   reset: "/evaraos/reset.html",
@@ -75,6 +76,16 @@ function passwordStrongEnough(password = "") {
 
 function normalizeEmail(value = "") {
   return String(value).trim().toLowerCase();
+}
+
+function inferRoleFromEmail(email = "") {
+  const value = normalizeEmail(email);
+  if (value.includes("admin")) return "admin";
+  if (value.includes("manager")) return "manager";
+  if (value.includes("sales")) return "sales";
+  if (value.includes("tech")) return "technician";
+  if (value.includes("customer")) return "customer";
+  return "owner";
 }
 
 function getFriendlyAuthError(error) {
@@ -197,20 +208,20 @@ async function createUserDocument({ uid, fullName, email, role = "owner" }) {
   );
 }
 
-async function getUserRoleFromFirestore(uid) {
-  if (!uid) return "owner";
+async function getUserRoleFromFirestore(uid, email = "") {
+  if (!uid) return inferRoleFromEmail(email);
 
   try {
     const userRef = doc(db, "users", uid);
     const snap = await getDoc(userRef);
 
-    if (!snap.exists()) return "owner";
+    if (!snap.exists()) return inferRoleFromEmail(email);
 
     const data = snap.data() || {};
-    return data.role || "owner";
+    return data.role || inferRoleFromEmail(email);
   } catch (error) {
     console.warn("Could not read user role:", error);
-    return "owner";
+    return inferRoleFromEmail(email);
   }
 }
 
@@ -237,8 +248,9 @@ async function handleLoginSubmit(event) {
 
     const credential = await signInWithEmailAndPassword(auth, email, password);
     const user = credential.user;
-    const role = await getUserRoleFromFirestore(user.uid);
+    const role = await getUserRoleFromFirestore(user.uid, user.email || email);
 
+    saveUserRole(role);
     syncUserSession(user, role);
     await safelyUpdateLastLogin(user.uid);
 
@@ -284,6 +296,7 @@ async function handleSignupSubmit(event) {
 
     const credential = await createUserWithEmailAndPassword(auth, email, password);
     const user = credential.user;
+    const role = inferRoleFromEmail(email);
 
     await updateProfile(user, {
       displayName: fullName
@@ -293,16 +306,16 @@ async function handleSignupSubmit(event) {
       uid: user.uid,
       fullName,
       email,
-      role: "owner"
+      role
     });
 
-    saveUserRole("owner");
+    saveUserRole(role);
     syncUserSession(
       {
         ...user,
         displayName: fullName
       },
-      "owner"
+      role
     );
 
     window.location.href = ROUTES.dashboard;
@@ -335,7 +348,11 @@ async function handleResetSubmit(event) {
 function guardCurrentPage() {
   const path = window.location.pathname;
 
-  if (path.endsWith("/login.html") || path.endsWith("/signup.html") || path.endsWith("/reset.html")) {
+  if (
+    path.endsWith("/login.html") ||
+    path.endsWith("/signup.html") ||
+    path.endsWith("/reset.html")
+  ) {
     protectRoute({
       requireAuth: false,
       redirectAuthedTo: ROUTES.dashboard
