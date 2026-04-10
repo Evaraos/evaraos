@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>QA Dashboard • Evaraos Inc</title>
+  <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
+</head>
+<body class="dashboard-body">
+  <div class="page-grid-overlay"></div>
+  <div id="universalNav"></div>
+
+  <div class="dashboard-shell">
+    <aside class="dashboard-sidebar" id="dashboardSidebar">
+      <div class="dashboard-sidebar-inner glass-shell aurora-card">
+        <div class="dashboard-sidebar-search">
+          <div class="dashboard-search-shell input-shell aurora-card">
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
+              <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
+            </svg>
+            <input
+              id="qaSearch"
+              type="search"
+              class="dashboard-search-input input"
+              placeholder="Search checklist or audit..."
+              aria-label="Search audit items"
+            />
+          </div>
+        </div>
+
+        <div class="dashboard-sidebar-head">
+          <p class="dashboard-sidebar-eyebrow">Quality Assurance</p>
+          <h2 id="dashboardOverviewTitle">Repo Migration</h2>
+        </div>
+
+        <nav class="dashboard-sidebar-nav" aria-label="QA sections">
+          <a href="#qaOverviewSection" class="dashboard-nav-link active aurora-card">
+            <span class="dashboard-nav-icon">◉</span>
+            <span>Overview</span>
+          </a>
+          <a href="#qaChecklistSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◎</span>
+            <span>Manual Checklist</span>
+          </a>
+          <a href="#qaAuditSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◌</span>
+            <span>Audit Report</span>
+          </a>
+          <a href="#qaNotesSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◐</span>
+            <span>Notes</span>
+          </a>
+        </nav>
+
+        <div class="dashboard-sidebar-foot glass-card aurora-card">
+          <div class="dashboard-sidebar-foot-copy">
+            <strong>QA Command Center</strong>
+            <span>Track page migration, structural audit, and ship-readiness inside Evaraos.</span>
+          </div>
+          <button type="button" id="resetQaBtn" class="btn btn-theme-primary">Reset QA Checks</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="dashboard-main">
+      <section class="dashboard-hero glass-card aurora-card" id="qaOverviewSection">
+        <div class="dashboard-hero-copy">
+          <p class="dashboard-eyebrow">QA DASHBOARD</p>
+          <h1>Track manual QA and repo audit in one place.</h1>
+          <p class="dashboard-hero-text">
+            This page combines your visual migration checklist with the generated JSON repo audit
+            report so you can catch both UI issues and structure issues together.
+          </p>
+
+          <div class="dashboard-hero-actions">
+            <button type="button" id="markAllDoneBtn" class="btn btn-theme-primary">Mark Visible Done</button>
+            <button type="button" id="clearVisibleBtn" class="btn btn-theme-secondary">Clear Visible</button>
+            <button type="button" id="refreshAuditBtn" class="btn btn-theme-secondary">Refresh Audit</button>
+          </div>
+        </div>
+
+        <div class="dashboard-hero-panel glass-card aurora-card">
+          <div class="dashboard-hero-panel-top">
+            <span class="dashboard-mini-badge">Live QA</span>
+            <span class="dashboard-live-dot"></span>
+          </div>
+
+          <div class="dashboard-hero-logo-wrap">
+            <img
+              src="/evaraos/assets/img/evaraos_logo.png"
+              alt="Evaraos"
+              class="dashboard-hero-logo"
+            />
+          </div>
+
+          <div class="dashboard-hero-panel-copy">
+            <strong>Migration Progress</strong>
+            <span>Manual checks + repo audit + ship readiness.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-overview glass-card aurora-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Snapshot</p>
+            <h2>QA Progress</h2>
+          </div>
+        </div>
+
+        <div class="dashboard-stats-grid">
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Manual Checks</p>
+            <h3 id="qaTotalChecks">0</h3>
+            <span>Total checklist items</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Manual Done</p>
+            <h3 id="qaCompletedChecks">0</h3>
+            <span>Completed manually</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Manual Left</p>
+            <h3 id="qaRemainingChecks">0</h3>
+            <span>Still unchecked</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Manual Progress</p>
+            <h3 id="qaPercent">0%</h3>
+            <span>Checklist completion</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-overview glass-card aurora-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Repo Audit</p>
+            <h2>JSON Report Summary</h2>
+          </div>
+        </div>
+
+        <div class="dashboard-stats-grid">
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Audit Score</p>
+            <h3 id="auditScoreStat">--</h3>
+            <span id="auditGeneratedAtStat">Waiting for report</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Files Passing</p>
+            <h3 id="auditPassingFilesStat">--</h3>
+            <span>Files with full score</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Files With Issues</p>
+            <h3 id="auditFailingFilesStat">--</h3>
+            <span>Need fixes</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Report Status</p>
+            <h3 id="auditStatusStat">--</h3>
+            <span id="auditStatusDetail">Not loaded yet</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-panel glass-card aurora-card" id="qaChecklistSection">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Manual QA</p>
+            <h2>Migration Checklist</h2>
+          </div>
+        </div>
+
+        <div id="qaChecklistRoot" class="dashboard-feed"></div>
+      </section>
+
+      <section class="dashboard-panel glass-card aurora-card" id="qaAuditSection">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Browser-Readable JSON</p>
+            <h2>Repo Audit Viewer</h2>
+          </div>
+          <a
+            href="/evaraos/tools/reports/repo-audit-report.json"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn btn-theme-secondary"
+          >
+            Open Raw JSON
+          </a>
+        </div>
+
+        <div class="dashboard-feed">
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Audit source</strong>
+            <span id="auditSourceText">/evaraos/tools/reports/repo-audit-report.json</span>
+          </article>
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Latest audit message</strong>
+            <span id="auditMessageText">Waiting for audit report...</span>
+          </article>
+        </div>
+
+        <div id="auditFilesRoot" class="dashboard-feed" style="margin-top:16px;"></div>
+      </section>
+
+      <section class="dashboard-panel glass-card aurora-card" id="qaNotesSection">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Notes</p>
+            <h2>How To Use</h2>
+          </div>
+        </div>
+
+        <div class="dashboard-feed">
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Manual QA</strong>
+            <span>Check items as you visually confirm them. These save in your browser.</span>
+          </article>
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Repo audit</strong>
+            <span>Run the Node audit script, commit the JSON report, then reload this page.</span>
+          </article>
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Best workflow</strong>
+            <span>Use the JSON viewer for structure and the manual checklist for visual polish and interaction testing.</span>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+    const STORAGE_KEY = "evaraos-qa-checks";
+    const AUDIT_JSON_URL = "/evaraos/tools/reports/repo-audit-report.json";
+
+    const qaData = {
+      "index.html": [
+        "Landing body class set",
+        "Universal nav mount present",
+        "No old hardcoded nav",
+        "Glass hero present",
+        "Rounded cards present",
+        "Script order correct"
+      ],
+      "login.html": [
+        "Login form IDs match auth.js",
+        "Remember device checkbox present",
+        "Password toggle present",
+        "No inline auth logic",
+        "auth.js loaded",
+        "Script order correct"
+      ],
+      "signup.html": [
+        "Signup form IDs match auth.js",
+        "Password confirm field present",
+        "No inline auth logic",
+        "auth.js loaded",
+        "Script order correct"
+      ],
+      "reset.html": [
+        "Reset form IDs match auth.js",
+        "No inline auth logic",
+        "auth.js loaded",
+        "Script order correct"
+      ],
+      "dashboard.html": [
+        "Universal nav visible",
+        "Sidebar works",
+        "Executive overview aligned",
+        "Cards rounded",
+        "Aura glow works",
+        "Logo click keeps session"
+      ],
+      "profile.html": [
+        "Profile fields load correctly",
+        "Save action works",
+        "Avatar sync works",
+        "Theme info displays correctly"
+      ],
+      "settings.html": [
+        "Theme controls save correctly",
+        "Notification settings save correctly",
+        "Privacy settings save correctly",
+        "Stats reflect current settings"
+      ],
+      "security.html": [
+        "Session info visible",
+        "Reset password entry works",
+        "Security feed updates correctly"
+      ],
+      "companies.html": [
+        "Portfolio cards visible",
+        "Sort works",
+        "Stats update correctly"
+      ],
+      "users.html": [
+        "Directory visible",
+        "Role sorting works",
+        "Stats update correctly"
+      ],
+      "leads.html": [
+        "Pipeline visible",
+        "Priority sort works",
+        "Stats update correctly"
+      ],
+      "jobs.html": [
+        "Execution queue visible",
+        "Status sort works",
+        "Stats update correctly"
+      ],
+      "theme.js": [
+        "Dark/light toggle works",
+        "Color bubbles work",
+        "Theme persists after reload",
+        "Active bubble sync works"
+      ],
+      "nav.js": [
+        "Universal nav injects on every page",
+        "Dropdown works correctly",
+        "Theme controls stay synced",
+        "Sidebar toggle works on dashboard pages"
+      ],
+      "firebase.js": [
+        "Auth session sync works",
+        "Logout works",
+        "Profile sync works"
+      ],
+      "auth.js": [
+        "Login handled centrally",
+        "Signup handled centrally",
+        "Reset handled centrally"
+      ],
+      "styles.css": [
+        "Rounded cards everywhere",
+        "Glass effect visible in light mode",
+        "Aura visible in dark and light",
+        "No sharp-edged panels"
+      ]
+    };
+
+    const root = document.getElementById("qaChecklistRoot");
+    const searchInput = document.getElementById("qaSearch");
+
+    const totalEl = document.getElementById("qaTotalChecks");
+    const completedEl = document.getElementById("qaCompletedChecks");
+    const remainingEl = document.getElementById("qaRemainingChecks");
+    const percentEl = document.getElementById("qaPercent");
+
+    const auditFilesRoot = document.getElementById("auditFilesRoot");
+    const auditScoreStat = document.getElementById("auditScoreStat");
+    const auditGeneratedAtStat = document.getElementById("auditGeneratedAtStat");
+    const auditPassingFilesStat = document.getElementById("auditPassingFilesStat");
+    const auditFailingFilesStat = document.getElementById("auditFailingFilesStat");
+    const auditStatusStat = document.getElementById("auditStatusStat");
+    const auditStatusDetail = document.getElementById("auditStatusDetail");
+    const auditSourceText = document.getElementById("auditSourceText");
+    const auditMessageText = document.getElementById("auditMessageText");
+
+    const markAllDoneBtn = document.getElementById("markAllDoneBtn");
+    const clearVisibleBtn = document.getElementById("clearVisibleBtn");
+    const resetQaBtn = document.getElementById("resetQaBtn");
+    const refreshAuditBtn = document.getElementById("refreshAuditBtn");
+
+    let auditSummary = null;
+
+    function loadState() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      } catch {
+        return {};
+      }
+    }
+
+    function saveState(state) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    let state = loadState();
+
+    function keyFor(file, item) {
+      return `${file}::${item}`;
+    }
+
+    function isChecked(file, item) {
+      return Boolean(state[keyFor(file, item)]);
+    }
+
+    function setChecked(file, item, checked) {
+      state[keyFor(file, item)] = checked;
+      saveState(state);
+    }
+
+    function getVisibleCards() {
+      return Array.from(root.querySelectorAll("[data-qa-card]"))
+        .filter((card) => !card.classList.contains("hidden"));
+    }
+
+    function updateManualStats() {
+      const allChecks = [];
+      Object.entries(qaData).forEach(([file, items]) => {
+        items.forEach((item) => allChecks.push({ file, item }));
+      });
+
+      const total = allChecks.length;
+      const completed = allChecks.filter(({ file, item }) => isChecked(file, item)).length;
+      const remaining = total - completed;
+      const percent = total ? Math.round((completed / total) * 100) : 0;
+
+      totalEl.textContent = String(total);
+      completedEl.textContent = String(completed);
+      remainingEl.textContent = String(remaining);
+      percentEl.textContent = `${percent}%`;
+    }
+
+    function renderChecklist() {
+      const query = (searchInput.value || "").trim().toLowerCase();
+      root.innerHTML = "";
+
+      Object.entries(qaData).forEach(([file, items]) => {
+        const matchesFile = file.toLowerCase().includes(query);
+        const matchingItems = items.filter((item) => item.toLowerCase().includes(query));
+
+        if (query && !matchesFile && !matchingItems.length) return;
+
+        const article = document.createElement("article");
+        article.className = "dashboard-feed-item glass-card aurora-card";
+        article.setAttribute("data-qa-card", file);
+
+        const title = document.createElement("strong");
+        title.textContent = file;
+
+        const listWrap = document.createElement("div");
+        listWrap.style.marginTop = "12px";
+        listWrap.style.display = "grid";
+        listWrap.style.gap = "10px";
+
+        items.forEach((item) => {
+          if (query && !matchesFile && !item.toLowerCase().includes(query)) return;
+
+          const row = document.createElement("label");
+          row.className = "remember-check";
+          row.style.display = "flex";
+          row.style.alignItems = "center";
+          row.style.gap = "12px";
+          row.style.padding = "8px 0";
+
+          const input = document.createElement("input");
+          input.type = "checkbox";
+          input.checked = isChecked(file, item);
+
+          input.addEventListener("change", () => {
+            setChecked(file, item, input.checked);
+            updateManualStats();
+          });
+
+          const text = document.createElement("span");
+          text.textContent = item;
+
+          row.appendChild(input);
+          row.appendChild(text);
+          listWrap.appendChild(row);
+        });
+
+        article.appendChild(title);
+        article.appendChild(listWrap);
+        root.appendChild(article);
+      });
+
+      updateManualStats();
+    }
+
+    function formatTimestamp(value) {
+      if (!value) return "Unknown";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value);
+      return date.toLocaleString();
+    }
+
+    function setAuditStatus(label, detail) {
+      auditStatusStat.textContent = label;
+      auditStatusDetail.textContent = detail;
+    }
+
+    function renderAuditSummary(summary) {
+      auditSummary = summary;
+
+      const totalScore = summary?.totals?.score ?? 0;
+      const totalPossible = summary?.totals?.total ?? 0;
+      const files = Array.isArray(summary?.files) ? summary.files : [];
+
+      const passing = files.filter((file) => file.total > 0 && file.score === file.total).length;
+      const failing = files.filter((file) => file.total === 0 || file.score < file.total).length;
+
+      auditScoreStat.textContent = totalPossible ? `${totalScore}/${totalPossible}` : "--";
+      auditGeneratedAtStat.textContent = `Generated ${formatTimestamp(summary?.generatedAt)}`;
+      auditPassingFilesStat.textContent = String(passing);
+      auditFailingFilesStat.textContent = String(failing);
+      setAuditStatus("Loaded", "Repo audit JSON loaded successfully.");
+      auditMessageText.textContent = `Loaded ${files.length} file entries from the audit report.`;
+
+      const query = (searchInput.value || "").trim().toLowerCase();
+      auditFilesRoot.innerHTML = "";
+
+      files.forEach((file) => {
+        const fileName = file.file || "Unknown file";
+        const missing = Array.isArray(file.missing) ? file.missing : [];
+        const score = file.score ?? 0;
+        const total = file.total ?? 0;
+
+        const fileMatches = fileName.toLowerCase().includes(query);
+        const issueMatches = missing.some((issue) => String(issue).toLowerCase().includes(query));
+
+        if (query && !fileMatches && !issueMatches) return;
+
+        const article = document.createElement("article");
+        article.className = "dashboard-feed-item glass-card aurora-card";
+
+        const title = document.createElement("strong");
+        title.textContent = `${fileName} — ${score}/${total}`;
+
+        const detail = document.createElement("span");
+        detail.style.display = "block";
+        detail.style.marginTop = "8px";
+        detail.textContent = missing.length
+          ? "Outstanding issues are listed below."
+          : "All audit checks passed for this file.";
+
+        article.appendChild(title);
+        article.appendChild(detail);
+
+        if (missing.length) {
+          const issuesWrap = document.createElement("div");
+          issuesWrap.style.marginTop = "14px";
+          issuesWrap.style.display = "grid";
+          issuesWrap.style.gap = "10px";
+
+          missing.forEach((issue) => {
+            if (query && !fileMatches && !String(issue).toLowerCase().includes(query)) return;
+
+            const issueRow = document.createElement("div");
+            issueRow.className = "remember-row aurora-card";
+            issueRow.style.padding = "12px 14px";
+            issueRow.innerHTML = `<span style="display:block;color:var(--text);font-size:14px;line-height:1.5;">[ ] ${issue}</span>`;
+            issuesWrap.appendChild(issueRow);
+          });
+
+          if (issuesWrap.children.length) {
+            article.appendChild(issuesWrap);
+          }
+        }
+
+        auditFilesRoot.appendChild(article);
+      });
+
+      if (!auditFilesRoot.children.length) {
+        const empty = document.createElement("article");
+        empty.className = "dashboard-feed-item glass-card aurora-card";
+        empty.innerHTML = `
+          <strong>No matching audit results</strong>
+          <span>Try a different search term or refresh the audit report.</span>
+        `;
+        auditFilesRoot.appendChild(empty);
+      }
+    }
+
+    async function loadAuditReport() {
+      auditSourceText.textContent = AUDIT_JSON_URL;
+
+      try {
+        setAuditStatus("Loading", "Trying to fetch repo audit JSON...");
+        auditMessageText.textContent = "Fetching audit report...";
+
+        const response = await fetch(`${AUDIT_JSON_URL}?ts=${Date.now()}`, {
+          cache: "no-store"
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const summary = await response.json();
+        renderAuditSummary(summary);
+      } catch (error) {
+        console.error("Audit report load failed:", error);
+        auditFilesRoot.innerHTML = `
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Audit report not loaded</strong>
+            <span>
+              Could not read <code>/evaraos/tools/reports/repo-audit-report.json</code>.
+              Run the audit script, make sure the JSON file exists in that path, then reload this page.
+            </span>
+          </article>
+        `;
+        auditScoreStat.textContent = "--";
+        auditGeneratedAtStat.textContent = "No report found";
+        auditPassingFilesStat.textContent = "--";
+        auditFailingFilesStat.textContent = "--";
+        setAuditStatus("Missing", "Audit JSON could not be fetched.");
+        auditMessageText.textContent = "Run node tools/repo-audit.js and commit the report.";
+      }
+    }
+
+    function rerenderAll() {
+      renderChecklist();
+      if (auditSummary) {
+        renderAuditSummary(auditSummary);
+      }
+    }
+
+    searchInput.addEventListener("input", () => {
+      rerenderAll();
+    });
+
+    markAllDoneBtn.addEventListener("click", () => {
+      getVisibleCards().forEach((card) => {
+        const file = card.getAttribute("data-qa-card");
+        (qaData[file] || []).forEach((item) => setChecked(file, item, true));
+      });
+      renderChecklist();
+    });
+
+    clearVisibleBtn.addEventListener("click", () => {
+      getVisibleCards().forEach((card) => {
+        const file = card.getAttribute("data-qa-card");
+        (qaData[file] || []).forEach((item) => setChecked(file, item, false));
+      });
+      renderChecklist();
+    });
+
+    resetQaBtn.addEventListener("click", () => {
+      state = {};
+      saveState(state);
+      renderChecklist();
+    });
+
+    refreshAuditBtn.addEventListener("click", async () => {
+      refreshAuditBtn.classList.add("active-glow");
+      setTimeout(() => refreshAuditBtn.classList.remove("active-glow"), 240);
+      await loadAuditReport();
+    });
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      document.querySelectorAll(".dashboard-nav-link").forEach((link) => {
+        link.addEventListener("click", () => {
+          document.querySelectorAll(".dashboard-nav-link").forEach((item) => {
+            item.classList.remove("active");
+          });
+          link.classList.add("active");
+        });
+      });
+
+      renderChecklist();
+      await loadAuditReport();
+    });
+  </script>
+
+  <script type="module" src="/evaraos/assets/js/theme.js"></script>
+  <script type="module" src="/evaraos/assets/js/nav.js"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js"></script>
+</body>
+</html>
