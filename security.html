@@ -22,7 +22,7 @@
               type="search"
               class="dashboard-search-input input"
               placeholder="Search security settings..."
-              aria-label="Search security settings"
+              aria-label="Search security"
             />
           </div>
         </div>
@@ -33,9 +33,9 @@
         </div>
 
         <nav class="dashboard-sidebar-nav" aria-label="Security sections">
-          <a href="#securityOverviewSection" class="dashboard-nav-link active aurora-card">
+          <a href="#securitySection" class="dashboard-nav-link active aurora-card">
             <span class="dashboard-nav-icon">◉</span>
-            <span>Overview</span>
+            <span>Security</span>
           </a>
 
           <a href="#passwordSection" class="dashboard-nav-link aurora-card">
@@ -45,43 +45,35 @@
 
           <a href="#sessionSection" class="dashboard-nav-link aurora-card">
             <span class="dashboard-nav-icon">◌</span>
-            <span>Sessions</span>
-          </a>
-
-          <a href="#verificationSection" class="dashboard-nav-link aurora-card">
-            <span class="dashboard-nav-icon">◐</span>
-            <span>Verification</span>
-          </a>
-
-          <a href="#activitySection" class="dashboard-nav-link aurora-card">
-            <span class="dashboard-nav-icon">◈</span>
-            <span>Activity</span>
+            <span>Session</span>
           </a>
         </nav>
 
         <div class="dashboard-sidebar-foot glass-card aurora-card">
           <div class="dashboard-sidebar-foot-copy">
             <strong>Security Center</strong>
-            <span>Review your account protection, reset access, and monitor security-related activity.</span>
+            <span>
+              Review account session details, password reset access, and recent security activity.
+            </span>
           </div>
-          <a href="/evaraos/settings.html" class="btn btn-theme-primary">Open Settings</a>
+          <a href="/evaraos/settings.html" class="btn btn-theme-primary">Back to Settings</a>
         </div>
       </div>
     </aside>
 
     <main class="dashboard-main">
-      <section class="dashboard-hero glass-card aurora-card" id="securityOverviewSection">
+      <section class="dashboard-hero glass-card aurora-card" id="securitySection">
         <div class="dashboard-hero-copy">
-          <p class="dashboard-eyebrow">SECURITY CENTER</p>
-          <h1>Protect your account and keep access under control.</h1>
+          <p class="dashboard-eyebrow">ACCOUNT SECURITY</p>
+          <h1>Keep your account protected and visible.</h1>
           <p class="dashboard-hero-text">
-            Review password recovery, session status, verification readiness, and recent
-            account activity using the same premium Evaraos control experience.
+            Monitor your session details, trigger secure password resets, and keep a clear view of
+            the account protecting your Evaraos workspace.
           </p>
 
           <div class="dashboard-hero-actions">
-            <a href="/evaraos/reset.html" class="btn btn-theme-primary">Reset Password</a>
-            <button type="button" id="refreshSecurityBtn" class="btn btn-theme-secondary">Refresh Status</button>
+            <button type="button" id="sendResetEmailTopBtn" class="btn btn-theme-primary">Send Password Reset</button>
+            <button type="button" id="refreshSecurityTopBtn" class="btn btn-theme-secondary">Refresh Security Data</button>
           </div>
         </div>
 
@@ -92,18 +84,16 @@
           </div>
 
           <div class="dashboard-hero-logo-wrap">
-            <div
-              id="securityAvatarHero"
-              class="dashboard-avatar dashboard-avatar-large"
-              style="width:88px;height:88px;font-size:30px;"
-            >
-              G
-            </div>
+            <img
+              src="/evaraos/assets/img/evaraos_logo.png"
+              alt="Evaraos"
+              class="dashboard-hero-logo"
+            />
           </div>
 
           <div class="dashboard-hero-panel-copy">
-            <strong id="securityHeroName">Owner Account</strong>
-            <span id="securityHeroRole">Executive Access</span>
+            <strong id="securityHeroTitle">Loading security data...</strong>
+            <span id="securityHeroText">Checking account session information.</span>
           </div>
         </div>
       </section>
@@ -118,27 +108,27 @@
 
         <div class="dashboard-stats-grid">
           <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Password Recovery</p>
-            <h3 id="securityPasswordStat">Ready</h3>
-            <span>Reset tools are available</span>
-          </article>
-
-          <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Session State</p>
-            <h3 id="securitySessionStat">Active</h3>
-            <span>Current login is authenticated</span>
+            <p>Email</p>
+            <h3 id="securityEmailStat">—</h3>
+            <span id="securityEmailMeta">Loading account email...</span>
           </article>
 
           <article class="dashboard-stat-card glass-card aurora-card">
             <p>Verification</p>
-            <h3 id="securityVerificationStat">Standard</h3>
-            <span>Optional account verification status</span>
+            <h3 id="securityVerifyStat">—</h3>
+            <span id="securityVerifyMeta">Checking verification status...</span>
           </article>
 
           <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Last Review</p>
-            <h3 id="securityReviewStat">Now</h3>
-            <span>Security data refreshed</span>
+            <p>Provider</p>
+            <h3 id="securityProviderStat">—</h3>
+            <span id="securityProviderMeta">Loading sign-in provider...</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Session</p>
+            <h3 id="securitySessionStat">Live</h3>
+            <span id="securitySessionMeta">Current account connected</span>
           </article>
         </div>
       </section>
@@ -147,128 +137,53 @@
         <section class="dashboard-panel glass-card aurora-card" id="passwordSection">
           <div class="dashboard-section-head">
             <div>
-              <p class="dashboard-section-kicker">Access Recovery</p>
-              <h2>Password</h2>
+              <p class="dashboard-section-kicker">Password</p>
+              <h2>Reset Access</h2>
             </div>
           </div>
 
-          <div class="dashboard-list">
-            <article class="dashboard-list-item glass-card aurora-card">
-              <div>
-                <strong>Password Reset</strong>
-                <span>Send a secure recovery email to regain access if needed</span>
+          <form id="securityForm" class="login-form" novalidate>
+            <div class="form-group">
+              <label class="field-label" for="securityEmail">Account Email</label>
+              <div class="input-shell aurora-card">
+                <input
+                  id="securityEmail"
+                  type="email"
+                  class="input"
+                  placeholder="Loading account email..."
+                  readonly
+                />
               </div>
-              <a href="/evaraos/reset.html" class="btn btn-theme-secondary">Open Reset</a>
-            </article>
+            </div>
 
-            <article class="dashboard-list-item glass-card aurora-card">
-              <div>
-                <strong>Reset Status</strong>
-                <span>Password recovery flow is connected to Firebase authentication</span>
-              </div>
-              <span class="dashboard-status-pill good">Ready</span>
-            </article>
+            <div class="remember-row aurora-card">
+              <label class="remember-check" for="securityEmailVerified">
+                <input id="securityEmailVerified" type="checkbox" disabled />
+                <span>Email verified</span>
+              </label>
+            </div>
 
-            <article class="dashboard-list-item glass-card aurora-card">
-              <div>
-                <strong>Password Handling</strong>
-                <span>Your password is handled through secure authentication methods</span>
-              </div>
-              <span class="dashboard-status-pill working">Protected</span>
-            </article>
-          </div>
+            <div class="login-actions-row">
+              <button type="submit" class="btn btn-theme-primary">Send Reset Email</button>
+              <button type="button" id="securityRefreshBtn" class="btn btn-theme-secondary">Refresh Security Data</button>
+            </div>
+
+            <p id="securityMessage" class="login-message" aria-live="polite"></p>
+          </form>
         </section>
 
         <section class="dashboard-panel glass-card aurora-card" id="sessionSection">
           <div class="dashboard-section-head">
             <div>
-              <p class="dashboard-section-kicker">Live Access</p>
-              <h2>Sessions</h2>
+              <p class="dashboard-section-kicker">Session</p>
+              <h2>Security Feed</h2>
             </div>
           </div>
 
-          <div class="dashboard-list">
-            <article class="dashboard-list-item glass-card aurora-card">
-              <div>
-                <strong>Current Session</strong>
-                <span id="securitySessionEmail">No active session detected</span>
-              </div>
-              <span class="dashboard-status-pill good" id="securitySessionPill">Active</span>
-            </article>
-
-            <article class="dashboard-list-item glass-card aurora-card">
-              <div>
-                <strong>Remember Device</strong>
-                <span>This is controlled during login based on your selected session persistence</span>
-              </div>
-              <span class="dashboard-status-pill working">Enabled</span>
-            </article>
-
-            <article class="dashboard-list-item glass-card aurora-card">
-              <div>
-                <strong>Logout</strong>
-                <span>Sign out instantly from the profile menu in the universal navbar</span>
-              </div>
-              <span class="dashboard-status-pill alert">Manual</span>
-            </article>
-          </div>
-        </section>
-      </section>
-
-      <section class="dashboard-grid-2">
-        <section class="dashboard-panel glass-card aurora-card" id="verificationSection">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Identity Protection</p>
-              <h2>Verification</h2>
-            </div>
-          </div>
-
-          <div class="dashboard-role-grid">
-            <article class="dashboard-role-card glass-card aurora-card">
-              <strong>Email Auth</strong>
-              <span>Primary sign-in method is active</span>
-            </article>
-
-            <article class="dashboard-role-card glass-card aurora-card">
-              <strong>Number Verification</strong>
-              <span>Available for future account hardening</span>
-            </article>
-
-            <article class="dashboard-role-card glass-card aurora-card">
-              <strong>Role Session Sync</strong>
-              <span>Access state follows your authenticated account</span>
-            </article>
-
-            <article class="dashboard-role-card glass-card aurora-card">
-              <strong>Recovery Flow</strong>
-              <span>Password reset is connected and ready to use</span>
-            </article>
-          </div>
-        </section>
-
-        <section class="dashboard-panel glass-card aurora-card" id="activitySection">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Recent Events</p>
-              <h2>Security Activity</h2>
-            </div>
-          </div>
-
-          <div class="dashboard-feed">
+          <div class="dashboard-feed" id="securityFeed">
             <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Authenticated session loaded</strong>
-              <span id="securityFeedSession">Current user session is active and protected.</span>
-            </article>
-
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Password recovery available</strong>
-              <span>Password reset page is ready if access recovery is needed.</span>
-            </article>
-
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Security center refreshed</strong>
-              <span id="securityFeedRefresh">Security status loaded successfully.</span>
+              <strong>Loading security feed...</strong>
+              <span>Security and session details will appear here.</span>
             </article>
           </div>
         </section>
@@ -277,101 +192,143 @@
   </div>
 
   <script type="module">
+    import { auth } from "/evaraos/assets/js/firebase.js";
     import {
-      auth,
-      protectRoute,
       onAuthStateChanged,
-      syncUserSession,
-      getSavedUserProfile
-    } from "/evaraos/assets/js/firebase.js";
+      sendPasswordResetEmail
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    protectRoute({
-      requireAuth: true,
-      redirectGuestTo: "/evaraos/login.html"
+    const securityForm = document.getElementById("securityForm");
+    const securityMessage = document.getElementById("securityMessage");
+    const securityEmail = document.getElementById("securityEmail");
+    const securityEmailVerified = document.getElementById("securityEmailVerified");
+
+    const sendResetEmailTopBtn = document.getElementById("sendResetEmailTopBtn");
+    const refreshSecurityTopBtn = document.getElementById("refreshSecurityTopBtn");
+    const securityRefreshBtn = document.getElementById("securityRefreshBtn");
+
+    const securityHeroTitle = document.getElementById("securityHeroTitle");
+    const securityHeroText = document.getElementById("securityHeroText");
+
+    const securityEmailStat = document.getElementById("securityEmailStat");
+    const securityEmailMeta = document.getElementById("securityEmailMeta");
+    const securityVerifyStat = document.getElementById("securityVerifyStat");
+    const securityVerifyMeta = document.getElementById("securityVerifyMeta");
+    const securityProviderStat = document.getElementById("securityProviderStat");
+    const securityProviderMeta = document.getElementById("securityProviderMeta");
+
+    const securityFeed = document.getElementById("securityFeed");
+
+    let currentUser = null;
+
+    function setMessage(text = "", isError = false) {
+      securityMessage.textContent = text;
+      securityMessage.style.color = isError ? "#ff9b8f" : "";
+    }
+
+    function shortEmailHead(email = "") {
+      const head = String(email || "").split("@")[0] || "—";
+      return head.length > 10 ? `${head.slice(0, 10)}…` : head;
+    }
+
+    function providerName(user) {
+      const providerId = user?.providerData?.[0]?.providerId || "password";
+      if (providerId === "password") return "Email";
+      return providerId.replace(".com", "");
+    }
+
+    function renderSecurity(user) {
+      currentUser = user;
+
+      const email = user.email || "";
+      const verified = Boolean(user.emailVerified);
+      const provider = providerName(user);
+
+      securityEmail.value = email;
+      securityEmailVerified.checked = verified;
+
+      securityHeroTitle.textContent = verified ? "Account verified" : "Verification recommended";
+      securityHeroText.textContent = verified
+        ? "Your login email is verified and active."
+        : "Verify your email to strengthen account recovery.";
+
+      securityEmailStat.textContent = shortEmailHead(email);
+      securityEmailMeta.textContent = email || "No email available";
+
+      securityVerifyStat.textContent = verified ? "Yes" : "No";
+      securityVerifyMeta.textContent = verified ? "Email verified" : "Email not verified";
+
+      securityProviderStat.textContent = provider;
+      securityProviderMeta.textContent = "Current sign-in provider";
+
+      securityFeed.innerHTML = `
+        <article class="dashboard-feed-item glass-card aurora-card">
+          <strong>Account Email</strong>
+          <span>${email || "No email available"}</span>
+        </article>
+
+        <article class="dashboard-feed-item glass-card aurora-card">
+          <strong>Email Verification</strong>
+          <span>${verified ? "Verified and ready for recovery workflows." : "Not verified yet."}</span>
+        </article>
+
+        <article class="dashboard-feed-item glass-card aurora-card">
+          <strong>Provider</strong>
+          <span>${provider}</span>
+        </article>
+
+        <article class="dashboard-feed-item glass-card aurora-card">
+          <strong>Session</strong>
+          <span>Authenticated and active in the current browser session.</span>
+        </article>
+      `;
+    }
+
+    async function sendResetEmail() {
+      if (!currentUser?.email) {
+        setMessage("No account email found for password reset.", true);
+        return;
+      }
+
+      try {
+        await sendPasswordResetEmail(auth, currentUser.email);
+        setMessage("Password reset email sent successfully.");
+      } catch (error) {
+        console.error("Password reset send failed:", error);
+        setMessage(error.message || "Unable to send password reset email.", true);
+      }
+    }
+
+    function refreshSecurityData() {
+      if (!auth.currentUser) return;
+      renderSecurity(auth.currentUser);
+      setMessage("Security data refreshed.");
+    }
+
+    securityForm?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      await sendResetEmail();
     });
 
-    const securityAvatarHero = document.getElementById("securityAvatarHero");
-    const securityHeroName = document.getElementById("securityHeroName");
-    const securityHeroRole = document.getElementById("securityHeroRole");
+    sendResetEmailTopBtn?.addEventListener("click", async () => {
+      await sendResetEmail();
+    });
 
-    const securityPasswordStat = document.getElementById("securityPasswordStat");
-    const securitySessionStat = document.getElementById("securitySessionStat");
-    const securityVerificationStat = document.getElementById("securityVerificationStat");
-    const securityReviewStat = document.getElementById("securityReviewStat");
+    refreshSecurityTopBtn?.addEventListener("click", () => {
+      refreshSecurityData();
+    });
 
-    const securitySessionEmail = document.getElementById("securitySessionEmail");
-    const securitySessionPill = document.getElementById("securitySessionPill");
-    const securityFeedSession = document.getElementById("securityFeedSession");
-    const securityFeedRefresh = document.getElementById("securityFeedRefresh");
-
-    const refreshSecurityBtn = document.getElementById("refreshSecurityBtn");
-
-    function formatRole(role = "owner") {
-      const value = String(role || "owner").toLowerCase();
-      if (value === "owner") return "Owner";
-      if (value === "admin") return "Admin";
-      if (value === "manager") return "Manager";
-      if (value === "sales") return "Sales";
-      if (value === "technician") return "Technician";
-      if (value === "customer") return "Customer";
-      return "Owner";
-    }
-
-    function getTimeStampLabel() {
-      const now = new Date();
-      const hours = now.getHours();
-      const minutes = String(now.getMinutes()).padStart(2, "0");
-      const suffix = hours >= 12 ? "PM" : "AM";
-      const normalizedHour = hours % 12 || 12;
-      return `${normalizedHour}:${minutes} ${suffix}`;
-    }
-
-    function applySecuritySnapshot() {
-      if (securityPasswordStat) securityPasswordStat.textContent = "Ready";
-      if (securitySessionStat) securitySessionStat.textContent = "Active";
-      if (securityVerificationStat) securityVerificationStat.textContent = "Standard";
-      if (securityReviewStat) securityReviewStat.textContent = "Now";
-      if (securityFeedRefresh) securityFeedRefresh.textContent = `Security status refreshed at ${getTimeStampLabel()}.`;
-    }
-
-    function applyUserUi(user, savedProfile = null) {
-      const profile = savedProfile || getSavedUserProfile() || {};
-      const displayName = user?.displayName || profile.displayName || user?.email || "Owner Account";
-      const email = user?.email || profile.email || "";
-      const role = formatRole(profile.role || "owner");
-      const initial = displayName.trim().charAt(0).toUpperCase() || "U";
-
-      if (securityAvatarHero) securityAvatarHero.textContent = initial;
-      if (securityHeroName) securityHeroName.textContent = displayName;
-      if (securityHeroRole) securityHeroRole.textContent = `${role} Access`;
-
-      if (securitySessionEmail) {
-        securitySessionEmail.textContent = email || "Authenticated session detected";
-      }
-
-      if (securitySessionPill) {
-        securitySessionPill.textContent = "Active";
-      }
-
-      if (securityFeedSession) {
-        securityFeedSession.textContent = email
-          ? `Authenticated session is active for ${email}.`
-          : "Current user session is active and protected.";
-      }
-    }
+    securityRefreshBtn?.addEventListener("click", () => {
+      refreshSecurityData();
+    });
 
     onAuthStateChanged(auth, (user) => {
-      if (!user) return;
+      if (!user) {
+        window.location.href = "/evaraos/login.html";
+        return;
+      }
 
-      const savedProfile = syncUserSession(user);
-      applyUserUi(user, savedProfile);
-      applySecuritySnapshot();
-    });
-
-    refreshSecurityBtn?.addEventListener("click", () => {
-      refreshSecurityBtn.classList.add("active-glow");
-      setTimeout(() => refreshSecurityBtn.classList.remove("active-glow"), 260);
-      applySecuritySnapshot();
+      renderSecurity(user);
     });
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -383,8 +340,6 @@
           link.classList.add("active");
         });
       });
-
-      applySecuritySnapshot();
     });
   </script>
 
