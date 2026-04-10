@@ -2,129 +2,650 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard • Evaraos</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Dashboard • Evaraos Inc</title>
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
 </head>
-
 <body class="dashboard-body">
-
   <div class="page-grid-overlay"></div>
-
-  <!-- UNIVERSAL NAV -->
   <div id="universalNav"></div>
 
   <div class="dashboard-shell">
-
-    <!-- SIDEBAR -->
-    <aside id="dashboardSidebar" class="dashboard-sidebar">
-      <div class="dashboard-sidebar-inner glass-card aurora-card">
-
-        <div class="dashboard-sidebar-head">
-          <p class="dashboard-sidebar-eyebrow">Overview</p>
-          <h2>Executive Dashboard</h2>
+    <aside class="dashboard-sidebar" id="dashboardSidebar">
+      <div class="dashboard-sidebar-inner glass-shell aurora-card">
+        <div class="dashboard-sidebar-search">
+          <div class="dashboard-search-shell input-shell aurora-card">
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
+              <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
+            </svg>
+            <input
+              type="search"
+              class="dashboard-search-input input"
+              id="dashboardSearch"
+              placeholder="Search companies, users, leads, jobs..."
+              aria-label="Search dashboard"
+            />
+          </div>
         </div>
 
-        <nav class="dashboard-sidebar-nav">
-          <a class="dashboard-nav-link active aurora-card">Overview</a>
-          <a class="dashboard-nav-link aurora-card">Companies</a>
-          <a class="dashboard-nav-link aurora-card">Users</a>
-          <a class="dashboard-nav-link aurora-card">Leads</a>
-          <a class="dashboard-nav-link aurora-card">Jobs</a>
+        <div class="dashboard-sidebar-head">
+          <p class="dashboard-sidebar-eyebrow">Platform Navigation</p>
+          <h2 id="dashboardOverviewTitle">Executive Overview</h2>
+        </div>
+
+        <nav class="dashboard-sidebar-nav" aria-label="Dashboard sections">
+          <a href="#overviewSection" class="dashboard-nav-link active aurora-card">
+            <span class="dashboard-nav-icon">◉</span>
+            <span>Overview</span>
+          </a>
+
+          <a href="#companiesSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◎</span>
+            <span>Companies</span>
+          </a>
+
+          <a href="#usersSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◌</span>
+            <span>Users</span>
+          </a>
+
+          <a href="#leadsSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◍</span>
+            <span>Leads</span>
+          </a>
+
+          <a href="#jobsSection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◒</span>
+            <span>Jobs</span>
+          </a>
+
+          <a href="#activitySection" class="dashboard-nav-link aurora-card">
+            <span class="dashboard-nav-icon">◈</span>
+            <span>Activity</span>
+          </a>
         </nav>
 
+        <div class="dashboard-sidebar-foot glass-card aurora-card">
+          <div class="dashboard-sidebar-foot-copy">
+            <strong>Organization Performance</strong>
+            <span>
+              Track operations, growth, approvals, team execution, and customer flow in one place.
+            </span>
+          </div>
+          <a href="/evaraos/companies.html" class="btn btn-theme-primary">Open Companies</a>
+        </div>
       </div>
     </aside>
 
-    <!-- MAIN -->
     <main class="dashboard-main">
-
-      <!-- HERO -->
-      <section class="dashboard-hero glass-card aurora-card">
-
-        <div>
-          <p class="dashboard-eyebrow">OWNER PANEL</p>
-
-          <h1>
-            Full system control in one place.
-          </h1>
-
+      <section class="dashboard-hero glass-card aurora-card" id="overviewSection">
+        <div class="dashboard-hero-copy">
+          <p class="dashboard-eyebrow">OWNER DASHBOARD</p>
+          <h1>Run the entire operation from one control center.</h1>
           <p class="dashboard-hero-text">
-            Track operations, companies, leads, jobs, and performance
-            across your entire ecosystem.
+            Watch companies, users, leads, jobs, approvals, and customer activity
+            in one premium Apple-glass-style dashboard built for Evaraos Inc.
           </p>
 
           <div class="dashboard-hero-actions">
-            <a href="#" class="btn btn-theme-primary">Manage Companies</a>
-            <a href="#" class="btn btn-theme-secondary">View Leads</a>
+            <a href="/evaraos/companies.html" class="btn btn-theme-primary">Manage Companies</a>
+            <a href="/evaraos/leads.html" class="btn btn-theme-secondary">Open Leads</a>
           </div>
         </div>
 
         <div class="dashboard-hero-panel glass-card aurora-card">
-          <img
-            src="/evaraos/assets/img/evaraos_logo.png"
-            class="dashboard-hero-logo"
-          />
-          <strong>Live System</strong>
-          <span>All systems operational</span>
-        </div>
+          <div class="dashboard-hero-panel-top">
+            <span class="dashboard-mini-badge">Live Platform</span>
+            <span class="dashboard-live-dot"></span>
+          </div>
 
+          <div class="dashboard-hero-logo-wrap">
+            <img
+              src="/evaraos/assets/img/evaraos_logo.png"
+              alt="Evaraos"
+              class="dashboard-hero-logo"
+            />
+          </div>
+
+          <div class="dashboard-hero-panel-copy">
+            <strong id="heroStatusTitle">Loading system data...</strong>
+            <span id="heroStatusText">Connecting to Firestore collections.</span>
+          </div>
+        </div>
       </section>
 
-      <!-- STATS -->
       <section class="dashboard-overview glass-card aurora-card">
-
         <div class="dashboard-section-head">
-          <h2>Overview</h2>
+          <div>
+            <p class="dashboard-section-kicker">Snapshot</p>
+            <h2>Organization Overview</h2>
+          </div>
+          <a href="/evaraos/qa.html" class="btn btn-theme-secondary">Open QA</a>
         </div>
 
         <div class="dashboard-stats-grid">
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Active Companies</p>
+            <h3 id="statCompanies">0</h3>
+            <span id="statCompaniesMeta">Loading companies...</span>
+          </article>
 
-          <div class="dashboard-stat-card glass-card aurora-card">
-            <p>Companies</p>
-            <h3>12</h3>
-          </div>
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Total Users</p>
+            <h3 id="statUsers">0</h3>
+            <span id="statUsersMeta">Loading users...</span>
+          </article>
 
-          <div class="dashboard-stat-card glass-card aurora-card">
-            <p>Leads</p>
-            <h3>148</h3>
-          </div>
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Open Leads</p>
+            <h3 id="statLeads">0</h3>
+            <span id="statLeadsMeta">Loading leads...</span>
+          </article>
 
-          <div class="dashboard-stat-card glass-card aurora-card">
+          <article class="dashboard-stat-card glass-card aurora-card">
             <p>Jobs</p>
-            <h3>39</h3>
-          </div>
-
-          <div class="dashboard-stat-card glass-card aurora-card">
-            <p>Revenue</p>
-            <h3>$84K</h3>
-          </div>
-
+            <h3 id="statJobs">0</h3>
+            <span id="statJobsMeta">Loading jobs...</span>
+          </article>
         </div>
-
       </section>
 
-    </main>
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card aurora-card" id="companiesSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Subsidiaries</p>
+              <h2>Company Health</h2>
+            </div>
+            <a href="/evaraos/companies.html" class="dashboard-inline-link">View all</a>
+          </div>
 
+          <div class="dashboard-list" id="companiesList">
+            <article class="dashboard-list-item glass-card aurora-card">
+              <div>
+                <strong>Loading companies...</strong>
+                <span>Please wait while Firestore data is retrieved.</span>
+              </div>
+              <span class="dashboard-status-pill working">Loading</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card aurora-card" id="usersSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Access</p>
+              <h2>User Roles</h2>
+            </div>
+            <a href="/evaraos/users.html" class="dashboard-inline-link">Manage</a>
+          </div>
+
+          <div class="dashboard-role-grid" id="usersRoleGrid">
+            <article class="dashboard-role-card glass-card aurora-card">
+              <strong>Loading roles...</strong>
+              <span>Counting users by role</span>
+            </article>
+          </div>
+        </section>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card aurora-card" id="leadsSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Pipeline</p>
+              <h2>Lead Flow</h2>
+            </div>
+            <a href="/evaraos/leads.html" class="dashboard-inline-link">Review queue</a>
+          </div>
+
+          <div class="dashboard-progress-stack" id="leadFlowStack">
+            <div class="dashboard-progress-row">
+              <div class="dashboard-progress-copy">
+                <strong>Loading lead flow...</strong>
+                <span>Reading Firestore data</span>
+              </div>
+              <div class="dashboard-progress-bar"><span style="width: 20%;"></span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card aurora-card" id="jobsSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Execution</p>
+              <h2>Jobs In Motion</h2>
+            </div>
+            <a href="/evaraos/jobs.html" class="dashboard-inline-link">Open jobs</a>
+          </div>
+
+          <div class="dashboard-list" id="jobsList">
+            <article class="dashboard-list-item glass-card aurora-card">
+              <div>
+                <strong>Loading jobs...</strong>
+                <span>Please wait while job records are retrieved.</span>
+              </div>
+              <span class="dashboard-status-pill working">Loading</span>
+            </article>
+          </div>
+        </section>
+      </section>
+
+      <section class="dashboard-panel glass-card aurora-card" id="activitySection">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Recent Activity</p>
+            <h2>Latest Records</h2>
+          </div>
+        </div>
+
+        <div class="dashboard-feed" id="activityFeed">
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Loading activity...</strong>
+            <span>Recent changes will appear here once records load.</span>
+          </article>
+        </div>
+      </section>
+    </main>
   </div>
 
-  <!-- AUTH GUARD -->
   <script type="module">
-    import { auth } from "/evaraos/assets/js/firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { auth, db } from "/evaraos/assets/js/firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import {
+      collection,
+      getDocs,
+      query,
+      orderBy,
+      limit
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const statCompanies = document.getElementById("statCompanies");
+    const statUsers = document.getElementById("statUsers");
+    const statLeads = document.getElementById("statLeads");
+    const statJobs = document.getElementById("statJobs");
+
+    const statCompaniesMeta = document.getElementById("statCompaniesMeta");
+    const statUsersMeta = document.getElementById("statUsersMeta");
+    const statLeadsMeta = document.getElementById("statLeadsMeta");
+    const statJobsMeta = document.getElementById("statJobsMeta");
+
+    const heroStatusTitle = document.getElementById("heroStatusTitle");
+    const heroStatusText = document.getElementById("heroStatusText");
+
+    const companiesList = document.getElementById("companiesList");
+    const usersRoleGrid = document.getElementById("usersRoleGrid");
+    const leadFlowStack = document.getElementById("leadFlowStack");
+    const jobsList = document.getElementById("jobsList");
+    const activityFeed = document.getElementById("activityFeed");
+
+    function safeArray(snapshot) {
+      return snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    }
+
+    function normalizedStatus(value = "") {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function titleFromRecord(record, fallback = "Untitled") {
+      return (
+        record.name ||
+        record.title ||
+        record.companyName ||
+        record.fullName ||
+        record.email ||
+        fallback
+      );
+    }
+
+    function statusPillClass(status = "") {
+      const value = normalizedStatus(status);
+
+      if (["active", "healthy", "approved", "complete", "completed", "won", "closed"].includes(value)) {
+        return "good";
+      }
+
+      if (["review", "pending", "new"].includes(value)) {
+        return "alert";
+      }
+
+      return "working";
+    }
+
+    function niceStatus(status = "") {
+      const value = String(status || "").trim();
+      if (!value) return "Active";
+      return value.charAt(0).toUpperCase() + value.slice(1);
+    }
+
+    async function loadCollectionDocs(name, options = {}) {
+      const ref = collection(db, name);
+
+      try {
+        if (options.orderField) {
+          const q = query(ref, orderBy(options.orderField, "desc"), limit(options.limitCount || 3));
+          const snap = await getDocs(q);
+          return safeArray(snap);
+        }
+
+        const snap = await getDocs(ref);
+        return safeArray(snap);
+      } catch (error) {
+        console.warn(`Failed loading collection "${name}" with query, retrying basic read.`, error);
+
+        const snap = await getDocs(ref);
+        return safeArray(snap);
+      }
+    }
+
+    function renderCompanies(companies) {
+      if (!companies.length) {
+        companiesList.innerHTML = `
+          <article class="dashboard-list-item glass-card aurora-card">
+            <div>
+              <strong>No companies found</strong>
+              <span>Create company records in Firestore to populate this section.</span>
+            </div>
+            <span class="dashboard-status-pill alert">Empty</span>
+          </article>
+        `;
+        return;
+      }
+
+      companiesList.innerHTML = companies.slice(0, 3).map((company) => {
+        const status = niceStatus(company.status || company.health || "active");
+        const pill = statusPillClass(company.status || company.health || "active");
+        const subtitle =
+          company.description ||
+          company.location ||
+          company.category ||
+          "Company record from Firestore";
+
+        return `
+          <article class="dashboard-list-item glass-card aurora-card">
+            <div>
+              <strong>${titleFromRecord(company, "Company")}</strong>
+              <span>${subtitle}</span>
+            </div>
+            <span class="dashboard-status-pill ${pill}">${status}</span>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function renderUsers(users) {
+      const roleCounts = {
+        owner: 0,
+        admin: 0,
+        manager: 0,
+        sales: 0,
+        technician: 0,
+        customer: 0
+      };
+
+      users.forEach((user) => {
+        const role = normalizedStatus(user.role || "customer");
+        if (roleCounts[role] !== undefined) {
+          roleCounts[role] += 1;
+        }
+      });
+
+      const cards = [
+        ["Owners", roleCounts.owner],
+        ["Admins", roleCounts.admin],
+        ["Managers", roleCounts.manager],
+        ["Sales Reps", roleCounts.sales],
+        ["Technicians", roleCounts.technician],
+        ["Customers", roleCounts.customer]
+      ];
+
+      usersRoleGrid.innerHTML = cards.map(([label, count]) => `
+        <article class="dashboard-role-card glass-card aurora-card">
+          <strong>${label}</strong>
+          <span>${count} user${count === 1 ? "" : "s"}</span>
+        </article>
+      `).join("");
+    }
+
+    function renderLeadFlow(leads) {
+      const total = leads.length || 1;
+      const statuses = {
+        new: 0,
+        contacted: 0,
+        quoted: 0,
+        won: 0
+      };
+
+      leads.forEach((lead) => {
+        const status = normalizedStatus(lead.status || "new");
+        if (statuses[status] !== undefined) {
+          statuses[status] += 1;
+        }
+      });
+
+      const rows = [
+        ["New Leads", statuses.new],
+        ["Contacted", statuses.contacted],
+        ["Quoted", statuses.quoted],
+        ["Closed Won", statuses.won]
+      ];
+
+      leadFlowStack.innerHTML = rows.map(([label, count]) => {
+        const width = Math.max(8, Math.round((count / total) * 100));
+        return `
+          <div class="dashboard-progress-row">
+            <div class="dashboard-progress-copy">
+              <strong>${label}</strong>
+              <span>${count} record${count === 1 ? "" : "s"}</span>
+            </div>
+            <div class="dashboard-progress-bar">
+              <span style="width: ${width}%;"></span>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderJobs(jobs) {
+      if (!jobs.length) {
+        jobsList.innerHTML = `
+          <article class="dashboard-list-item glass-card aurora-card">
+            <div>
+              <strong>No jobs found</strong>
+              <span>Create job records in Firestore to populate this section.</span>
+            </div>
+            <span class="dashboard-status-pill alert">Empty</span>
+          </article>
+        `;
+        return;
+      }
+
+      jobsList.innerHTML = jobs.slice(0, 3).map((job) => {
+        const status = niceStatus(job.status || "active");
+        const pill = statusPillClass(job.status || "active");
+        const subtitle =
+          job.description ||
+          job.address ||
+          job.location ||
+          "Job record from Firestore";
+
+        return `
+          <article class="dashboard-list-item glass-card aurora-card">
+            <div>
+              <strong>${titleFromRecord(job, "Job")}</strong>
+              <span>${subtitle}</span>
+            </div>
+            <span class="dashboard-status-pill ${pill}">${status}</span>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function renderActivity(companies, users, leads, jobs) {
+      const merged = [
+        ...companies.slice(0, 2).map((item) => ({
+          kind: "Company",
+          title: titleFromRecord(item, "Company"),
+          detail: item.status || item.health || "updated"
+        })),
+        ...users.slice(0, 2).map((item) => ({
+          kind: "User",
+          title: titleFromRecord(item, "User"),
+          detail: item.role || "updated"
+        })),
+        ...leads.slice(0, 2).map((item) => ({
+          kind: "Lead",
+          title: titleFromRecord(item, "Lead"),
+          detail: item.status || "updated"
+        })),
+        ...jobs.slice(0, 2).map((item) => ({
+          kind: "Job",
+          title: titleFromRecord(item, "Job"),
+          detail: item.status || "updated"
+        }))
+      ].slice(0, 6);
+
+      if (!merged.length) {
+        activityFeed.innerHTML = `
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>No recent records</strong>
+            <span>Once collections are populated, recent activity will appear here.</span>
+          </article>
+        `;
+        return;
+      }
+
+      activityFeed.innerHTML = merged.map((item) => `
+        <article class="dashboard-feed-item glass-card aurora-card">
+          <strong>${item.kind}: ${item.title}</strong>
+          <span>Status: ${niceStatus(item.detail)}</span>
+        </article>
+      `).join("");
+    }
+
+    function updateStats(companies, users, leads, jobs) {
+      statCompanies.textContent = String(companies.length);
+      statUsers.textContent = String(users.length);
+      statLeads.textContent = String(leads.length);
+      statJobs.textContent = String(jobs.length);
+
+      const activeCompanies = companies.filter((item) =>
+        ["active", "healthy", "approved"].includes(normalizedStatus(item.status || item.health || "active"))
+      ).length;
+
+      const openLeads = leads.filter((item) =>
+        !["won", "closed", "complete", "completed"].includes(normalizedStatus(item.status))
+      ).length;
+
+      const inProgressJobs = jobs.filter((item) =>
+        ["in progress", "active", "pending", "working"].includes(normalizedStatus(item.status))
+      ).length;
+
+      statCompaniesMeta.textContent = `${activeCompanies} active`;
+      statUsersMeta.textContent = `${users.filter((u) => normalizedStatus(u.active) !== "false").length} active accounts`;
+      statLeadsMeta.textContent = `${openLeads} currently open`;
+      statJobsMeta.textContent = `${inProgressJobs} in motion`;
+    }
+
+    async function loadDashboardData() {
+      heroStatusTitle.textContent = "Loading system data...";
+      heroStatusText.textContent = "Connecting to Firestore collections.";
+
+      try {
+        const [companies, users, leads, jobs] = await Promise.all([
+          loadCollectionDocs("companies", { orderField: "updatedAt", limitCount: 3 }),
+          loadCollectionDocs("users"),
+          loadCollectionDocs("leads"),
+          loadCollectionDocs("jobs", { orderField: "updatedAt", limitCount: 3 })
+        ]);
+
+        updateStats(companies, users, leads, jobs);
+        renderCompanies(companies);
+        renderUsers(users);
+        renderLeadFlow(leads);
+        renderJobs(jobs);
+        renderActivity(companies, users, leads, jobs);
+
+        heroStatusTitle.textContent = "Live system connected";
+        heroStatusText.textContent = `Loaded ${companies.length} companies, ${users.length} users, ${leads.length} leads, and ${jobs.length} jobs.`;
+      } catch (error) {
+        console.error("Dashboard data load failed:", error);
+
+        heroStatusTitle.textContent = "Data load failed";
+        heroStatusText.textContent = "Check Firestore rules, collection names, or missing exports in firebase.js.";
+
+        companiesList.innerHTML = `
+          <article class="dashboard-list-item glass-card aurora-card">
+            <div>
+              <strong>Unable to load companies</strong>
+              <span>${error.message || "Unknown Firestore error."}</span>
+            </div>
+            <span class="dashboard-status-pill alert">Error</span>
+          </article>
+        `;
+
+        usersRoleGrid.innerHTML = `
+          <article class="dashboard-role-card glass-card aurora-card">
+            <strong>Load error</strong>
+            <span>Users could not be read</span>
+          </article>
+        `;
+
+        leadFlowStack.innerHTML = `
+          <div class="dashboard-progress-row">
+            <div class="dashboard-progress-copy">
+              <strong>Load error</strong>
+              <span>Leads could not be read</span>
+            </div>
+            <div class="dashboard-progress-bar"><span style="width: 8%;"></span></div>
+          </div>
+        `;
+
+        jobsList.innerHTML = `
+          <article class="dashboard-list-item glass-card aurora-card">
+            <div>
+              <strong>Unable to load jobs</strong>
+              <span>Check the jobs collection and Firestore permissions.</span>
+            </div>
+            <span class="dashboard-status-pill alert">Error</span>
+          </article>
+        `;
+
+        activityFeed.innerHTML = `
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Dashboard activity unavailable</strong>
+            <span>${error.message || "Unknown Firestore error."}</span>
+          </article>
+        `;
+      }
+    }
 
     onAuthStateChanged(auth, (user) => {
       if (!user) {
         window.location.href = "/evaraos/login.html";
+        return;
       }
+
+      loadDashboardData();
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".dashboard-nav-link").forEach((link) => {
+        link.addEventListener("click", () => {
+          document.querySelectorAll(".dashboard-nav-link").forEach((item) => {
+            item.classList.remove("active");
+          });
+          link.classList.add("active");
+        });
+      });
     });
   </script>
 
-  <!-- Scripts -->
   <script type="module" src="/evaraos/assets/js/theme.js"></script>
   <script type="module" src="/evaraos/assets/js/nav.js"></script>
   <script type="module" src="/evaraos/assets/js/firebase.js"></script>
-
 </body>
 </html>
