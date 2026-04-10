@@ -21,6 +21,7 @@
             <input
               type="search"
               class="dashboard-search-input input"
+              id="jobsSearch"
               placeholder="Search jobs..."
               aria-label="Search jobs"
             />
@@ -32,39 +33,31 @@
           <h2 id="dashboardOverviewTitle">Jobs Overview</h2>
         </div>
 
-        <nav class="dashboard-sidebar-nav" aria-label="Job sections">
+        <nav class="dashboard-sidebar-nav" aria-label="Jobs sections">
           <a href="#jobsOverviewSection" class="dashboard-nav-link active aurora-card">
             <span class="dashboard-nav-icon">◉</span>
             <span>Overview</span>
           </a>
 
-          <a href="#activeJobsSection" class="dashboard-nav-link aurora-card">
+          <a href="#jobsListSection" class="dashboard-nav-link aurora-card">
             <span class="dashboard-nav-icon">◎</span>
-            <span>Active Jobs</span>
+            <span>Job Queue</span>
           </a>
 
-          <a href="#routesSection" class="dashboard-nav-link aurora-card">
+          <a href="#jobsFeedSection" class="dashboard-nav-link aurora-card">
             <span class="dashboard-nav-icon">◌</span>
-            <span>Routes</span>
-          </a>
-
-          <a href="#completionSection" class="dashboard-nav-link aurora-card">
-            <span class="dashboard-nav-icon">◐</span>
-            <span>Completion</span>
-          </a>
-
-          <a href="#jobFeedSection" class="dashboard-nav-link aurora-card">
-            <span class="dashboard-nav-icon">◈</span>
-            <span>Activity</span>
+            <span>Execution Feed</span>
           </a>
         </nav>
 
         <div class="dashboard-sidebar-foot glass-card aurora-card">
           <div class="dashboard-sidebar-foot-copy">
-            <strong>Job Center</strong>
-            <span>Track service execution, routes, technician progress, and completed work from one dashboard.</span>
+            <strong>Execution Control</strong>
+            <span>
+              Monitor jobs, statuses, and operations activity directly from Firestore job records.
+            </span>
           </div>
-          <a href="/evaraos/dashboard.html" class="btn btn-theme-primary">Back to Dashboard</a>
+          <button type="button" id="jobsRefreshBtnSide" class="btn btn-theme-primary">Refresh Jobs</button>
         </div>
       </div>
     </aside>
@@ -72,22 +65,22 @@
     <main class="dashboard-main">
       <section class="dashboard-hero glass-card aurora-card" id="jobsOverviewSection">
         <div class="dashboard-hero-copy">
-          <p class="dashboard-eyebrow">JOB CENTER</p>
-          <h1>Track every service job in one execution flow.</h1>
+          <p class="dashboard-eyebrow">JOB EXECUTION</p>
+          <h1>Track work in motion across your service operation.</h1>
           <p class="dashboard-hero-text">
-            Monitor active work, route assignments, completion progress, and technician
-            execution across your companies from one premium Evaraos workspace.
+            Keep a live view of job records, active statuses, and execution flow with data
+            connected directly to Firestore.
           </p>
 
           <div class="dashboard-hero-actions">
-            <button type="button" id="refreshJobsBtn" class="btn btn-theme-primary">Refresh Jobs</button>
-            <button type="button" id="sortJobsBtn" class="btn btn-theme-secondary">Sort by Status</button>
+            <button type="button" id="jobsRefreshBtnTop" class="btn btn-theme-primary">Refresh Data</button>
+            <a href="/evaraos/dashboard.html" class="btn btn-theme-secondary">Back to Dashboard</a>
           </div>
         </div>
 
         <div class="dashboard-hero-panel glass-card aurora-card">
           <div class="dashboard-hero-panel-top">
-            <span class="dashboard-mini-badge">Live Execution</span>
+            <span class="dashboard-mini-badge">Job Status</span>
             <span class="dashboard-live-dot"></span>
           </div>
 
@@ -100,8 +93,8 @@
           </div>
 
           <div class="dashboard-hero-panel-copy">
-            <strong id="jobsHeroTitle">Operational Visibility</strong>
-            <span id="jobsHeroSubline">Jobs, routes, and completions flowing through one platform.</span>
+            <strong id="jobsHeroTitle">Loading jobs...</strong>
+            <span id="jobsHeroText">Connecting to Firestore job records.</span>
           </div>
         </div>
       </section>
@@ -117,259 +110,362 @@
         <div class="dashboard-stats-grid">
           <article class="dashboard-stat-card glass-card aurora-card">
             <p>Total Jobs</p>
-            <h3 id="jobsTotalStat">6</h3>
-            <span>Current workload</span>
+            <h3 id="jobsStatTotal">0</h3>
+            <span id="jobsStatTotalMeta">Loading job queue...</span>
           </article>
 
           <article class="dashboard-stat-card glass-card aurora-card">
             <p>In Progress</p>
-            <h3 id="jobsProgressStat">3</h3>
-            <span>Technician activity live</span>
-          </article>
-
-          <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Pending</p>
-            <h3 id="jobsPendingStat">2</h3>
-            <span>Waiting on next step</span>
+            <h3 id="jobsStatActive">0</h3>
+            <span id="jobsStatActiveMeta">Checking statuses...</span>
           </article>
 
           <article class="dashboard-stat-card glass-card aurora-card">
             <p>Completed</p>
-            <h3 id="jobsCompleteStat">1</h3>
-            <span>Finished successfully</span>
-          </article>
-        </div>
-      </section>
-
-      <section class="dashboard-panel glass-card aurora-card" id="activeJobsSection">
-        <div class="dashboard-section-head">
-          <div>
-            <p class="dashboard-section-kicker">Execution Queue</p>
-            <h2>Active Jobs</h2>
-          </div>
-        </div>
-
-        <div class="dashboard-list" id="jobsList">
-          <article class="dashboard-list-item glass-card aurora-card job-item" data-status-order="2" data-status="progress">
-            <div>
-              <strong>Trash Bin Cleaning Route • South Jacksonville</strong>
-              <span>In progress • 7 stops remaining • Technician crew assigned</span>
-            </div>
-            <span class="dashboard-status-pill working">In Progress</span>
+            <h3 id="jobsStatCompleted">0</h3>
+            <span id="jobsStatCompletedMeta">Checking statuses...</span>
           </article>
 
-          <article class="dashboard-list-item glass-card aurora-card job-item" data-status-order="1" data-status="pending">
-            <div>
-              <strong>Pressure Washing • Driveway + Walkway</strong>
-              <span>Pending • Waiting for customer approval on upsell</span>
-            </div>
-            <span class="dashboard-status-pill alert">Pending</span>
-          </article>
-
-          <article class="dashboard-list-item glass-card aurora-card job-item" data-status-order="3" data-status="complete">
-            <div>
-              <strong>House Wash • Premium Residential</strong>
-              <span>Completed • Before and after media uploaded</span>
-            </div>
-            <span class="dashboard-status-pill good">Complete</span>
-          </article>
-
-          <article class="dashboard-list-item glass-card aurora-card job-item" data-status-order="2" data-status="progress">
-            <div>
-              <strong>Interior Cleaning • OneofOne Assignment</strong>
-              <span>In progress • Vendor dispatched • Arrival confirmed</span>
-            </div>
-            <span class="dashboard-status-pill working">In Progress</span>
-          </article>
-
-          <article class="dashboard-list-item glass-card aurora-card job-item" data-status-order="1" data-status="pending">
-            <div>
-              <strong>Recurring Subscription Onboarding</strong>
-              <span>Pending • Route integration and customer scheduling</span>
-            </div>
-            <span class="dashboard-status-pill alert">Pending</span>
-          </article>
-
-          <article class="dashboard-list-item glass-card aurora-card job-item" data-status-order="2" data-status="progress">
-            <div>
-              <strong>Patio + Fence Wash Combo</strong>
-              <span>In progress • Equipment active • Crew on-site</span>
-            </div>
-            <span class="dashboard-status-pill working">In Progress</span>
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Filtered</p>
+            <h3 id="jobsStatFiltered">0</h3>
+            <span id="jobsStatFilteredMeta">Matches current search</span>
           </article>
         </div>
       </section>
 
       <section class="dashboard-grid-2">
-        <section class="dashboard-panel glass-card aurora-card" id="routesSection">
+        <section class="dashboard-panel glass-card aurora-card" id="jobsListSection">
           <div class="dashboard-section-head">
             <div>
-              <p class="dashboard-section-kicker">Movement</p>
-              <h2>Routes + Dispatch</h2>
+              <p class="dashboard-section-kicker">Queue</p>
+              <h2>Job List</h2>
             </div>
+
+            <button type="button" id="jobsSortBtn" class="btn btn-theme-secondary">Sort A–Z</button>
           </div>
 
-          <div class="dashboard-feed">
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Jacksonville South Route</strong>
-              <span>Bin cleaning stops remain active with field crew moving through the schedule.</span>
-            </article>
-
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Residential Wash Queue</strong>
-              <span>High-visibility jobs remain staged for technician execution and upsell review.</span>
-            </article>
-
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Marketplace Dispatch</strong>
-              <span>Interior cleaning flow continues through vendor assignment logic.</span>
+          <div class="dashboard-list" id="jobsList">
+            <article class="dashboard-list-item glass-card aurora-card">
+              <div>
+                <strong>Loading jobs...</strong>
+                <span>Please wait while job records are loaded.</span>
+              </div>
+              <span class="dashboard-status-pill working">Loading</span>
             </article>
           </div>
         </section>
 
-        <section class="dashboard-panel glass-card aurora-card" id="completionSection">
+        <section class="dashboard-panel glass-card aurora-card" id="jobsFeedSection">
           <div class="dashboard-section-head">
             <div>
-              <p class="dashboard-section-kicker">Progress</p>
-              <h2>Completion Flow</h2>
+              <p class="dashboard-section-kicker">Execution</p>
+              <h2>Job Feed</h2>
             </div>
           </div>
 
-          <div class="dashboard-progress-stack">
-            <div class="dashboard-progress-row">
-              <div class="dashboard-progress-copy">
-                <strong>Pending</strong>
-                <span>Jobs waiting for approval, dispatch, or start</span>
-              </div>
-              <div class="dashboard-progress-bar"><span style="width: 34%;"></span></div>
-            </div>
-
-            <div class="dashboard-progress-row">
-              <div class="dashboard-progress-copy">
-                <strong>In Progress</strong>
-                <span>Crews actively executing jobs</span>
-              </div>
-              <div class="dashboard-progress-bar"><span style="width: 58%;"></span></div>
-            </div>
-
-            <div class="dashboard-progress-row">
-              <div class="dashboard-progress-copy">
-                <strong>Complete</strong>
-                <span>Finished with customer-facing deliverables</span>
-              </div>
-              <div class="dashboard-progress-bar"><span style="width: 22%;"></span></div>
-            </div>
+          <div class="dashboard-feed" id="jobsFeed">
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Loading job feed...</strong>
+              <span>Recent execution activity will appear here once records are loaded.</span>
+            </article>
           </div>
         </section>
       </section>
 
-      <section class="dashboard-panel glass-card aurora-card" id="jobFeedSection">
+      <section class="dashboard-panel glass-card aurora-card">
         <div class="dashboard-section-head">
           <div>
-            <p class="dashboard-section-kicker">Recent Updates</p>
-            <h2>Job Feed</h2>
+            <p class="dashboard-section-kicker">Status Mix</p>
+            <h2>Execution Breakdown</h2>
           </div>
         </div>
 
-        <div class="dashboard-feed" id="jobsFeed">
-          <article class="dashboard-feed-item glass-card aurora-card">
-            <strong>Job board loaded</strong>
-            <span>Execution queue is visible inside the job center.</span>
-          </article>
-
-          <article class="dashboard-feed-item glass-card aurora-card">
-            <strong>Field activity active</strong>
-            <span>Technician progress and route visibility remain live.</span>
-          </article>
-
-          <article class="dashboard-feed-item glass-card aurora-card">
-            <strong>Completion tracking connected</strong>
-            <span>Pending, in-progress, and completed states are visible from one page.</span>
-          </article>
+        <div class="dashboard-progress-stack" id="jobsProgressStack">
+          <div class="dashboard-progress-row">
+            <div class="dashboard-progress-copy">
+              <strong>Loading status breakdown...</strong>
+              <span>Reading Firestore job data</span>
+            </div>
+            <div class="dashboard-progress-bar"><span style="width: 20%;"></span></div>
+          </div>
         </div>
       </section>
     </main>
   </div>
 
   <script type="module">
-    import {
-      auth,
-      protectRoute,
-      onAuthStateChanged,
-      syncUserSession
-    } from "/evaraos/assets/js/firebase.js";
+    import { auth, db } from "/evaraos/assets/js/firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    protectRoute({
-      requireAuth: true,
-      redirectGuestTo: "/evaraos/login.html"
-    });
-
-    const refreshJobsBtn = document.getElementById("refreshJobsBtn");
-    const sortJobsBtn = document.getElementById("sortJobsBtn");
+    const jobsSearch = document.getElementById("jobsSearch");
     const jobsList = document.getElementById("jobsList");
     const jobsFeed = document.getElementById("jobsFeed");
+    const jobsProgressStack = document.getElementById("jobsProgressStack");
 
-    const jobsTotalStat = document.getElementById("jobsTotalStat");
-    const jobsProgressStat = document.getElementById("jobsProgressStat");
-    const jobsPendingStat = document.getElementById("jobsPendingStat");
-    const jobsCompleteStat = document.getElementById("jobsCompleteStat");
+    const jobsHeroTitle = document.getElementById("jobsHeroTitle");
+    const jobsHeroText = document.getElementById("jobsHeroText");
 
-    function refreshJobStats() {
-      const items = Array.from(document.querySelectorAll(".job-item"));
-      const total = items.length;
-      const progress = items.filter((item) => item.dataset.status === "progress").length;
-      const pending = items.filter((item) => item.dataset.status === "pending").length;
-      const complete = items.filter((item) => item.dataset.status === "complete").length;
+    const jobsStatTotal = document.getElementById("jobsStatTotal");
+    const jobsStatActive = document.getElementById("jobsStatActive");
+    const jobsStatCompleted = document.getElementById("jobsStatCompleted");
+    const jobsStatFiltered = document.getElementById("jobsStatFiltered");
 
-      if (jobsTotalStat) jobsTotalStat.textContent = String(total);
-      if (jobsProgressStat) jobsProgressStat.textContent = String(progress);
-      if (jobsPendingStat) jobsPendingStat.textContent = String(pending);
-      if (jobsCompleteStat) jobsCompleteStat.textContent = String(complete);
+    const jobsStatTotalMeta = document.getElementById("jobsStatTotalMeta");
+    const jobsStatActiveMeta = document.getElementById("jobsStatActiveMeta");
+    const jobsStatCompletedMeta = document.getElementById("jobsStatCompletedMeta");
+    const jobsStatFilteredMeta = document.getElementById("jobsStatFilteredMeta");
 
-      if (jobsFeed) {
+    const jobsRefreshBtnTop = document.getElementById("jobsRefreshBtnTop");
+    const jobsRefreshBtnSide = document.getElementById("jobsRefreshBtnSide");
+    const jobsSortBtn = document.getElementById("jobsSortBtn");
+
+    let jobRecords = [];
+    let filteredJobs = [];
+    let sortAscending = true;
+
+    function normalize(value = "") {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function jobTitle(job) {
+      return job.name || job.title || job.jobName || job.customerName || "Untitled Job";
+    }
+
+    function jobSubtitle(job) {
+      return job.description || job.address || job.location || job.serviceType || "Job record from Firestore";
+    }
+
+    function niceStatus(status = "") {
+      const value = String(status || "").trim();
+      return value ? value.charAt(0).toUpperCase() + value.slice(1) : "Pending";
+    }
+
+    function statusClass(status = "") {
+      const value = normalize(status);
+
+      if (["complete", "completed", "done", "closed"].includes(value)) return "good";
+      if (["pending", "review", "queued"].includes(value)) return "alert";
+      return "working";
+    }
+
+    function renderStats() {
+      const activeCount = jobRecords.filter((job) =>
+        ["in progress", "active", "working", "pending"].includes(normalize(job.status || ""))
+      ).length;
+
+      const completedCount = jobRecords.filter((job) =>
+        ["complete", "completed", "done", "closed"].includes(normalize(job.status || ""))
+      ).length;
+
+      jobsStatTotal.textContent = String(jobRecords.length);
+      jobsStatActive.textContent = String(activeCount);
+      jobsStatCompleted.textContent = String(completedCount);
+      jobsStatFiltered.textContent = String(filteredJobs.length);
+
+      jobsStatTotalMeta.textContent = "Job records loaded";
+      jobsStatActiveMeta.textContent = "Currently active or pending jobs";
+      jobsStatCompletedMeta.textContent = "Completed execution records";
+      jobsStatFilteredMeta.textContent = "Matches current search";
+    }
+
+    function renderJobList() {
+      if (!filteredJobs.length) {
+        jobsList.innerHTML = `
+          <article class="dashboard-list-item glass-card aurora-card">
+            <div>
+              <strong>No jobs found</strong>
+              <span>Try a different search or add job records to Firestore.</span>
+            </div>
+            <span class="dashboard-status-pill alert">Empty</span>
+          </article>
+        `;
+        return;
+      }
+
+      jobsList.innerHTML = filteredJobs.map((job) => {
+        const status = niceStatus(job.status || "pending");
+        const pill = statusClass(job.status || "pending");
+
+        return `
+          <article class="dashboard-list-item glass-card aurora-card">
+            <div>
+              <strong>${jobTitle(job)}</strong>
+              <span>${jobSubtitle(job)}</span>
+            </div>
+            <span class="dashboard-status-pill ${pill}">${status}</span>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function renderJobFeed() {
+      if (!jobRecords.length) {
         jobsFeed.innerHTML = `
           <article class="dashboard-feed-item glass-card aurora-card">
-            <strong>Job board refreshed</strong>
-            <span>${total} jobs are visible in the current queue.</span>
+            <strong>No execution activity</strong>
+            <span>Job feed will appear once records are available.</span>
           </article>
+        `;
+        return;
+      }
 
-          <article class="dashboard-feed-item glass-card aurora-card">
-            <strong>Execution activity updated</strong>
-            <span>${progress} jobs are currently in progress and ${pending} are pending.</span>
-          </article>
+      jobsFeed.innerHTML = jobRecords.slice(0, 6).map((job) => `
+        <article class="dashboard-feed-item glass-card aurora-card">
+          <strong>${jobTitle(job)}</strong>
+          <span>Status: ${niceStatus(job.status || "pending")} • ${jobSubtitle(job)}</span>
+        </article>
+      `).join("");
+    }
 
-          <article class="dashboard-feed-item glass-card aurora-card">
-            <strong>Completion count updated</strong>
-            <span>${complete} jobs are currently marked complete.</span>
+    function renderJobBreakdown() {
+      const total = jobRecords.length || 1;
+
+      const statuses = {
+        pending: 0,
+        inProgress: 0,
+        complete: 0,
+        review: 0
+      };
+
+      jobRecords.forEach((job) => {
+        const value = normalize(job.status || "pending");
+
+        if (["pending", "queued"].includes(value)) statuses.pending += 1;
+        else if (["in progress", "active", "working"].includes(value)) statuses.inProgress += 1;
+        else if (["complete", "completed", "done", "closed"].includes(value)) statuses.complete += 1;
+        else statuses.review += 1;
+      });
+
+      const rows = [
+        ["Pending", statuses.pending],
+        ["In Progress", statuses.inProgress],
+        ["Completed", statuses.complete],
+        ["Review / Other", statuses.review]
+      ];
+
+      jobsProgressStack.innerHTML = rows.map(([label, count]) => {
+        const width = Math.max(8, Math.round((count / total) * 100));
+        return `
+          <div class="dashboard-progress-row">
+            <div class="dashboard-progress-copy">
+              <strong>${label}</strong>
+              <span>${count} record${count === 1 ? "" : "s"}</span>
+            </div>
+            <div class="dashboard-progress-bar">
+              <span style="width: ${width}%;"></span>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function applySearchAndSort() {
+      const query = normalize(jobsSearch.value);
+
+      filteredJobs = jobRecords.filter((job) => {
+        const haystack = [
+          job.name,
+          job.title,
+          job.jobName,
+          job.customerName,
+          job.address,
+          job.location,
+          job.serviceType,
+          job.description,
+          job.status
+        ].map((value) => normalize(value)).join(" ");
+
+        return haystack.includes(query);
+      });
+
+      filteredJobs.sort((a, b) => {
+        const first = jobTitle(a).toLowerCase();
+        const second = jobTitle(b).toLowerCase();
+        return sortAscending ? first.localeCompare(second) : second.localeCompare(first);
+      });
+
+      renderStats();
+      renderJobList();
+    }
+
+    async function loadJobs() {
+      jobsHeroTitle.textContent = "Loading jobs...";
+      jobsHeroText.textContent = "Connecting to Firestore job records.";
+
+      try {
+        const snap = await getDocs(collection(db, "jobs"));
+        jobRecords = snap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+
+        filteredJobs = [...jobRecords];
+        applySearchAndSort();
+        renderJobFeed();
+        renderJobBreakdown();
+
+        jobsHeroTitle.textContent = "Execution connected";
+        jobsHeroText.textContent = `${jobRecords.length} jobs loaded from Firestore.`;
+      } catch (error) {
+        console.error("Failed loading jobs:", error);
+
+        jobsHeroTitle.textContent = "Load failed";
+        jobsHeroText.textContent = "Check Firestore rules and the jobs collection.";
+
+        jobsList.innerHTML = `
+          <article class="dashboard-list-item glass-card aurora-card">
+            <div>
+              <strong>Unable to load jobs</strong>
+              <span>${error.message || "Unknown Firestore error."}</span>
+            </div>
+            <span class="dashboard-status-pill alert">Error</span>
           </article>
+        `;
+
+        jobsFeed.innerHTML = `
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Job feed unavailable</strong>
+            <span>${error.message || "Unknown Firestore error."}</span>
+          </article>
+        `;
+
+        jobsProgressStack.innerHTML = `
+          <div class="dashboard-progress-row">
+            <div class="dashboard-progress-copy">
+              <strong>Load error</strong>
+              <span>Jobs could not be read</span>
+            </div>
+            <div class="dashboard-progress-bar"><span style="width: 8%;"></span></div>
+          </div>
         `;
       }
     }
 
-    function sortJobsByStatus() {
-      if (!jobsList) return;
+    jobsSearch?.addEventListener("input", applySearchAndSort);
 
-      const items = Array.from(jobsList.querySelectorAll(".job-item"));
-      items.sort((a, b) => Number(a.dataset.statusOrder) - Number(b.dataset.statusOrder));
-      items.forEach((item) => jobsList.appendChild(item));
-    }
-
-    refreshJobsBtn?.addEventListener("click", () => {
-      refreshJobsBtn.classList.add("active-glow");
-      setTimeout(() => refreshJobsBtn.classList.remove("active-glow"), 260);
-      refreshJobStats();
+    jobsSortBtn?.addEventListener("click", () => {
+      sortAscending = !sortAscending;
+      jobsSortBtn.textContent = sortAscending ? "Sort A–Z" : "Sort Z–A";
+      applySearchAndSort();
     });
 
-    sortJobsBtn?.addEventListener("click", () => {
-      sortJobsBtn.classList.add("active-glow");
-      setTimeout(() => sortJobsBtn.classList.remove("active-glow"), 260);
-      sortJobsByStatus();
-      refreshJobStats();
+    jobsRefreshBtnTop?.addEventListener("click", async () => {
+      await loadJobs();
     });
 
-    onAuthStateChanged(auth, (user) => {
-      if (!user) return;
-      syncUserSession(user);
+    jobsRefreshBtnSide?.addEventListener("click", async () => {
+      await loadJobs();
+    });
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "/evaraos/login.html";
+        return;
+      }
+
+      await loadJobs();
     });
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -381,8 +477,6 @@
           link.classList.add("active");
         });
       });
-
-      refreshJobStats();
     });
   </script>
 
