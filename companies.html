@@ -21,6 +21,7 @@
             <input
               type="search"
               class="dashboard-search-input input"
+              id="companiesSearch"
               placeholder="Search companies..."
               aria-label="Search companies"
             />
@@ -28,43 +29,35 @@
         </div>
 
         <div class="dashboard-sidebar-head">
-          <p class="dashboard-sidebar-eyebrow">Company Navigation</p>
+          <p class="dashboard-sidebar-eyebrow">Portfolio Navigation</p>
           <h2 id="dashboardOverviewTitle">Companies Overview</h2>
         </div>
 
-        <nav class="dashboard-sidebar-nav" aria-label="Company sections">
+        <nav class="dashboard-sidebar-nav" aria-label="Companies sections">
           <a href="#companiesOverviewSection" class="dashboard-nav-link active aurora-card">
             <span class="dashboard-nav-icon">◉</span>
             <span>Overview</span>
           </a>
 
-          <a href="#portfolioSection" class="dashboard-nav-link aurora-card">
+          <a href="#companiesListSection" class="dashboard-nav-link aurora-card">
             <span class="dashboard-nav-icon">◎</span>
-            <span>Portfolio</span>
+            <span>Company List</span>
           </a>
 
-          <a href="#performanceSection" class="dashboard-nav-link aurora-card">
+          <a href="#companiesFeedSection" class="dashboard-nav-link aurora-card">
             <span class="dashboard-nav-icon">◌</span>
-            <span>Performance</span>
-          </a>
-
-          <a href="#operationsSection" class="dashboard-nav-link aurora-card">
-            <span class="dashboard-nav-icon">◐</span>
-            <span>Operations</span>
-          </a>
-
-          <a href="#expansionSection" class="dashboard-nav-link aurora-card">
-            <span class="dashboard-nav-icon">◈</span>
-            <span>Expansion</span>
+            <span>Portfolio Feed</span>
           </a>
         </nav>
 
         <div class="dashboard-sidebar-foot glass-card aurora-card">
           <div class="dashboard-sidebar-foot-copy">
-            <strong>Company Center</strong>
-            <span>Track subsidiary health, operations, revenue flow, and scale planning from one place.</span>
+            <strong>Portfolio Control</strong>
+            <span>
+              Monitor every company record, health label, and portfolio-level change from one place.
+            </span>
           </div>
-          <a href="/evaraos/dashboard.html" class="btn btn-theme-primary">Back to Dashboard</a>
+          <button type="button" id="companiesRefreshBtnSide" class="btn btn-theme-primary">Refresh Companies</button>
         </div>
       </div>
     </aside>
@@ -72,22 +65,22 @@
     <main class="dashboard-main">
       <section class="dashboard-hero glass-card aurora-card" id="companiesOverviewSection">
         <div class="dashboard-hero-copy">
-          <p class="dashboard-eyebrow">COMPANY CENTER</p>
-          <h1>Manage every company under one operating system.</h1>
+          <p class="dashboard-eyebrow">COMPANY PORTFOLIO</p>
+          <h1>See the health of every company in your ecosystem.</h1>
           <p class="dashboard-hero-text">
-            Watch subsidiary performance, review operational health, and keep every company
-            aligned under the Evaraos structure with one premium control experience.
+            Track your company records, statuses, and portfolio activity in one premium
+            control center connected directly to Firestore.
           </p>
 
           <div class="dashboard-hero-actions">
-            <button type="button" id="refreshCompaniesBtn" class="btn btn-theme-primary">Refresh Companies</button>
-            <a href="/evaraos/reports.html" class="btn btn-theme-secondary">Open Reports</a>
+            <button type="button" id="companiesRefreshBtnTop" class="btn btn-theme-primary">Refresh Data</button>
+            <a href="/evaraos/dashboard.html" class="btn btn-theme-secondary">Back to Dashboard</a>
           </div>
         </div>
 
         <div class="dashboard-hero-panel glass-card aurora-card">
           <div class="dashboard-hero-panel-top">
-            <span class="dashboard-mini-badge">Live Portfolio</span>
+            <span class="dashboard-mini-badge">Portfolio Status</span>
             <span class="dashboard-live-dot"></span>
           </div>
 
@@ -100,8 +93,8 @@
           </div>
 
           <div class="dashboard-hero-panel-copy">
-            <strong id="companiesHeroTitle">Evaraos Portfolio</strong>
-            <span id="companiesHeroSubline">Multi-company control from one platform.</span>
+            <strong id="companiesHeroTitle">Loading companies...</strong>
+            <span id="companiesHeroText">Connecting to Firestore company records.</span>
           </div>
         </div>
       </section>
@@ -110,278 +103,302 @@
         <div class="dashboard-section-head">
           <div>
             <p class="dashboard-section-kicker">Snapshot</p>
-            <h2>Portfolio Overview</h2>
+            <h2>Company Overview</h2>
           </div>
         </div>
 
         <div class="dashboard-stats-grid">
           <article class="dashboard-stat-card glass-card aurora-card">
             <p>Total Companies</p>
-            <h3 id="companiesCountStat">3</h3>
-            <span>Current active entities</span>
+            <h3 id="companiesStatTotal">0</h3>
+            <span id="companiesStatTotalMeta">Loading portfolio...</span>
           </article>
 
           <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Healthy Companies</p>
-            <h3 id="companiesHealthyStat">2</h3>
-            <span>Strong operational standing</span>
+            <p>Healthy</p>
+            <h3 id="companiesStatHealthy">0</h3>
+            <span id="companiesStatHealthyMeta">Checking statuses...</span>
           </article>
 
           <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Needs Review</p>
-            <h3 id="companiesReviewStat">1</h3>
-            <span>Requires closer attention</span>
+            <p>Review</p>
+            <h3 id="companiesStatReview">0</h3>
+            <span id="companiesStatReviewMeta">Checking statuses...</span>
           </article>
 
           <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Expansion Ready</p>
-            <h3 id="companiesExpansionStat">2</h3>
-            <span>Prepared for scale</span>
+            <p>Filtered</p>
+            <h3 id="companiesStatFiltered">0</h3>
+            <span id="companiesStatFilteredMeta">Matches current search</span>
           </article>
         </div>
       </section>
 
-      <section class="dashboard-panel glass-card aurora-card" id="portfolioSection">
+      <section class="dashboard-panel glass-card aurora-card" id="companiesListSection">
         <div class="dashboard-section-head">
           <div>
-            <p class="dashboard-section-kicker">Subsidiaries</p>
-            <h2>Company Portfolio</h2>
+            <p class="dashboard-section-kicker">Directory</p>
+            <h2>Company List</h2>
           </div>
-          <button type="button" id="companySortBtn" class="btn btn-theme-secondary">Sort by Health</button>
+
+          <button type="button" id="companiesSortBtn" class="btn btn-theme-secondary">Sort A–Z</button>
         </div>
 
         <div class="dashboard-list" id="companiesList">
-          <article class="dashboard-list-item glass-card aurora-card company-item" data-health="healthy">
+          <article class="dashboard-list-item glass-card aurora-card">
             <div>
-              <strong>Supreme True Clean</strong>
-              <span>Exterior cleaning operations • Jacksonville • Residential service growth</span>
+              <strong>Loading companies...</strong>
+              <span>Please wait while portfolio records are loaded.</span>
             </div>
-            <span class="dashboard-status-pill good">Healthy</span>
-          </article>
-
-          <article class="dashboard-list-item glass-card aurora-card company-item" data-health="healthy">
-            <div>
-              <strong>OneofOne Cleaning</strong>
-              <span>Interior cleaning marketplace layer • Flexible vendor network model</span>
-            </div>
-            <span class="dashboard-status-pill good">Growing</span>
-          </article>
-
-          <article class="dashboard-list-item glass-card aurora-card company-item" data-health="review">
-            <div>
-              <strong>Evaraos Parent</strong>
-              <span>Core SaaS, payments, admin routing, and ecosystem control</span>
-            </div>
-            <span class="dashboard-status-pill alert">Review</span>
+            <span class="dashboard-status-pill working">Loading</span>
           </article>
         </div>
       </section>
 
-      <section class="dashboard-grid-2">
-        <section class="dashboard-panel glass-card aurora-card" id="performanceSection">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Performance</p>
-              <h2>Revenue + Growth</h2>
-            </div>
+      <section class="dashboard-panel glass-card aurora-card" id="companiesFeedSection">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Activity</p>
+            <h2>Portfolio Feed</h2>
           </div>
+        </div>
 
-          <div class="dashboard-progress-stack">
-            <div class="dashboard-progress-row">
-              <div class="dashboard-progress-copy">
-                <strong>Supreme True Clean</strong>
-                <span>$28.4K monthly movement</span>
-              </div>
-              <div class="dashboard-progress-bar"><span style="width: 76%;"></span></div>
-            </div>
-
-            <div class="dashboard-progress-row">
-              <div class="dashboard-progress-copy">
-                <strong>OneofOne Cleaning</strong>
-                <span>$21.7K marketplace throughput</span>
-              </div>
-              <div class="dashboard-progress-bar"><span style="width: 61%;"></span></div>
-            </div>
-
-            <div class="dashboard-progress-row">
-              <div class="dashboard-progress-copy">
-                <strong>Evaraos Parent</strong>
-                <span>$34.1K platform-linked volume</span>
-              </div>
-              <div class="dashboard-progress-bar"><span style="width: 84%;"></span></div>
-            </div>
-          </div>
-        </section>
-
-        <section class="dashboard-panel glass-card aurora-card" id="operationsSection">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Execution</p>
-              <h2>Operational Health</h2>
-            </div>
-          </div>
-
-          <div class="dashboard-feed">
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Supreme True Clean</strong>
-              <span>Route efficiency and recurring service structure are stable.</span>
-            </article>
-
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>OneofOne Cleaning</strong>
-              <span>Vendor fulfillment model is flexible and positioned for wider dispatch coverage.</span>
-            </article>
-
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Evaraos Parent</strong>
-              <span>Payments, auth, and admin routing should continue being tightened for scale.</span>
-            </article>
-          </div>
-        </section>
-      </section>
-
-      <section class="dashboard-grid-2">
-        <section class="dashboard-panel glass-card aurora-card" id="expansionSection">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Scale Plan</p>
-              <h2>Expansion Readiness</h2>
-            </div>
-          </div>
-
-          <div class="dashboard-role-grid">
-            <article class="dashboard-role-card glass-card aurora-card">
-              <strong>Jacksonville Growth</strong>
-              <span>Strong base market for Supreme True Clean</span>
-            </article>
-
-            <article class="dashboard-role-card glass-card aurora-card">
-              <strong>Marketplace Rollout</strong>
-              <span>OneofOne model is ready for broader vendor coverage</span>
-            </article>
-
-            <article class="dashboard-role-card glass-card aurora-card">
-              <strong>Parent OS Structure</strong>
-              <span>Evaraos is positioned to onboard additional companies</span>
-            </article>
-
-            <article class="dashboard-role-card glass-card aurora-card">
-              <strong>Leadership Capacity</strong>
-              <span>Executive visibility is already centralized</span>
-            </article>
-          </div>
-        </section>
-
-        <section class="dashboard-panel glass-card aurora-card">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Recent Updates</p>
-              <h2>Company Feed</h2>
-            </div>
-          </div>
-
-          <div class="dashboard-feed" id="companiesFeed">
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Portfolio synced</strong>
-              <span>Company overview loaded successfully.</span>
-            </article>
-
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Operating system aligned</strong>
-              <span>Evaraos continues functioning as the parent control layer.</span>
-            </article>
-
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Expansion watch active</strong>
-              <span>Growth-ready companies remain visible from one interface.</span>
-            </article>
-          </div>
-        </section>
+        <div class="dashboard-feed" id="companiesFeed">
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Loading portfolio feed...</strong>
+            <span>Recent company activity will appear here once records are loaded.</span>
+          </article>
+        </div>
       </section>
     </main>
   </div>
 
   <script type="module">
+    import { auth, db } from "/evaraos/assets/js/firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import {
-      auth,
-      protectRoute,
-      onAuthStateChanged,
-      syncUserSession
-    } from "/evaraos/assets/js/firebase.js";
+      collection,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    protectRoute({
-      requireAuth: true,
-      redirectGuestTo: "/evaraos/login.html"
-    });
-
-    const refreshCompaniesBtn = document.getElementById("refreshCompaniesBtn");
-    const companySortBtn = document.getElementById("companySortBtn");
+    const companiesSearch = document.getElementById("companiesSearch");
     const companiesList = document.getElementById("companiesList");
     const companiesFeed = document.getElementById("companiesFeed");
 
-    const companiesCountStat = document.getElementById("companiesCountStat");
-    const companiesHealthyStat = document.getElementById("companiesHealthyStat");
-    const companiesReviewStat = document.getElementById("companiesReviewStat");
-    const companiesExpansionStat = document.getElementById("companiesExpansionStat");
+    const companiesHeroTitle = document.getElementById("companiesHeroTitle");
+    const companiesHeroText = document.getElementById("companiesHeroText");
 
-    function refreshCompanyStats() {
-      const items = Array.from(document.querySelectorAll(".company-item"));
-      const healthy = items.filter((item) => item.dataset.health === "healthy").length;
-      const review = items.filter((item) => item.dataset.health === "review").length;
+    const companiesStatTotal = document.getElementById("companiesStatTotal");
+    const companiesStatHealthy = document.getElementById("companiesStatHealthy");
+    const companiesStatReview = document.getElementById("companiesStatReview");
+    const companiesStatFiltered = document.getElementById("companiesStatFiltered");
 
-      if (companiesCountStat) companiesCountStat.textContent = String(items.length);
-      if (companiesHealthyStat) companiesHealthyStat.textContent = String(healthy);
-      if (companiesReviewStat) companiesReviewStat.textContent = String(review);
-      if (companiesExpansionStat) companiesExpansionStat.textContent = "2";
+    const companiesStatTotalMeta = document.getElementById("companiesStatTotalMeta");
+    const companiesStatHealthyMeta = document.getElementById("companiesStatHealthyMeta");
+    const companiesStatReviewMeta = document.getElementById("companiesStatReviewMeta");
+    const companiesStatFilteredMeta = document.getElementById("companiesStatFilteredMeta");
 
-      if (companiesFeed) {
+    const companiesRefreshBtnTop = document.getElementById("companiesRefreshBtnTop");
+    const companiesRefreshBtnSide = document.getElementById("companiesRefreshBtnSide");
+    const companiesSortBtn = document.getElementById("companiesSortBtn");
+
+    let companyRecords = [];
+    let filteredCompanies = [];
+    let sortAscending = true;
+
+    function normalize(value = "") {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function niceStatus(status = "") {
+      const value = String(status || "").trim();
+      return value ? value.charAt(0).toUpperCase() + value.slice(1) : "Active";
+    }
+
+    function statusClass(status = "") {
+      const value = normalize(status);
+
+      if (["healthy", "active", "approved", "complete", "completed"].includes(value)) {
+        return "good";
+      }
+
+      if (["review", "pending", "new"].includes(value)) {
+        return "alert";
+      }
+
+      return "working";
+    }
+
+    function companyTitle(company) {
+      return company.name || company.title || company.companyName || "Untitled Company";
+    }
+
+    function companySubtitle(company) {
+      return company.description || company.location || company.category || "Company record from Firestore";
+    }
+
+    function renderStats() {
+      const healthyCount = companyRecords.filter((company) =>
+        ["healthy", "active", "approved"].includes(normalize(company.status || company.health || "active"))
+      ).length;
+
+      const reviewCount = companyRecords.filter((company) =>
+        ["review", "pending"].includes(normalize(company.status || company.health || ""))
+      ).length;
+
+      companiesStatTotal.textContent = String(companyRecords.length);
+      companiesStatHealthy.textContent = String(healthyCount);
+      companiesStatReview.textContent = String(reviewCount);
+      companiesStatFiltered.textContent = String(filteredCompanies.length);
+
+      companiesStatTotalMeta.textContent = "Company records loaded";
+      companiesStatHealthyMeta.textContent = "Healthy or active companies";
+      companiesStatReviewMeta.textContent = "Records needing review";
+      companiesStatFilteredMeta.textContent = "Matches current search";
+    }
+
+    function renderCompaniesList() {
+      if (!filteredCompanies.length) {
+        companiesList.innerHTML = `
+          <article class="dashboard-list-item glass-card aurora-card">
+            <div>
+              <strong>No companies found</strong>
+              <span>Try a different search or add company records to Firestore.</span>
+            </div>
+            <span class="dashboard-status-pill alert">Empty</span>
+          </article>
+        `;
+        return;
+      }
+
+      companiesList.innerHTML = filteredCompanies.map((company) => {
+        const status = niceStatus(company.status || company.health || "active");
+        const pill = statusClass(company.status || company.health || "active");
+
+        return `
+          <article class="dashboard-list-item glass-card aurora-card">
+            <div>
+              <strong>${companyTitle(company)}</strong>
+              <span>${companySubtitle(company)}</span>
+            </div>
+            <span class="dashboard-status-pill ${pill}">${status}</span>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function renderCompaniesFeed() {
+      if (!companyRecords.length) {
         companiesFeed.innerHTML = `
           <article class="dashboard-feed-item glass-card aurora-card">
-            <strong>Portfolio refreshed</strong>
-            <span>Company overview was refreshed successfully.</span>
+            <strong>No portfolio activity</strong>
+            <span>Company activity will appear once records are available.</span>
           </article>
+        `;
+        return;
+      }
 
-          <article class="dashboard-feed-item glass-card aurora-card">
-            <strong>Healthy entities tracked</strong>
-            <span>${healthy} companies are currently in strong standing.</span>
+      companiesFeed.innerHTML = companyRecords.slice(0, 6).map((company) => `
+        <article class="dashboard-feed-item glass-card aurora-card">
+          <strong>${companyTitle(company)}</strong>
+          <span>Status: ${niceStatus(company.status || company.health || "active")} • ${companySubtitle(company)}</span>
+        </article>
+      `).join("");
+    }
+
+    function applySearchAndSort() {
+      const query = normalize(companiesSearch.value);
+
+      filteredCompanies = companyRecords.filter((company) => {
+        const haystack = [
+          company.name,
+          company.title,
+          company.companyName,
+          company.description,
+          company.location,
+          company.category,
+          company.status,
+          company.health
+        ].map((value) => normalize(value)).join(" ");
+
+        return haystack.includes(query);
+      });
+
+      filteredCompanies.sort((a, b) => {
+        const first = companyTitle(a).toLowerCase();
+        const second = companyTitle(b).toLowerCase();
+        return sortAscending ? first.localeCompare(second) : second.localeCompare(first);
+      });
+
+      renderStats();
+      renderCompaniesList();
+    }
+
+    async function loadCompanies() {
+      companiesHeroTitle.textContent = "Loading companies...";
+      companiesHeroText.textContent = "Connecting to Firestore company records.";
+
+      try {
+        const snap = await getDocs(collection(db, "companies"));
+        companyRecords = snap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+
+        filteredCompanies = [...companyRecords];
+        applySearchAndSort();
+        renderCompaniesFeed();
+
+        companiesHeroTitle.textContent = "Portfolio connected";
+        companiesHeroText.textContent = `${companyRecords.length} companies loaded from Firestore.`;
+      } catch (error) {
+        console.error("Failed loading companies:", error);
+
+        companiesHeroTitle.textContent = "Load failed";
+        companiesHeroText.textContent = "Check Firestore rules and the companies collection.";
+
+        companiesList.innerHTML = `
+          <article class="dashboard-list-item glass-card aurora-card">
+            <div>
+              <strong>Unable to load companies</strong>
+              <span>${error.message || "Unknown Firestore error."}</span>
+            </div>
+            <span class="dashboard-status-pill alert">Error</span>
           </article>
+        `;
 
+        companiesFeed.innerHTML = `
           <article class="dashboard-feed-item glass-card aurora-card">
-            <strong>Review queue visible</strong>
-            <span>${review} company requires closer attention.</span>
+            <strong>Portfolio feed unavailable</strong>
+            <span>${error.message || "Unknown Firestore error."}</span>
           </article>
         `;
       }
     }
 
-    function sortCompaniesByHealth() {
-      if (!companiesList) return;
+    companiesSearch?.addEventListener("input", applySearchAndSort);
 
-      const items = Array.from(companiesList.querySelectorAll(".company-item"));
-      items.sort((a, b) => {
-        const score = { healthy: 0, review: 1 };
-        return (score[a.dataset.health] ?? 9) - (score[b.dataset.health] ?? 9);
-      });
-
-      items.forEach((item) => companiesList.appendChild(item));
-    }
-
-    refreshCompaniesBtn?.addEventListener("click", () => {
-      refreshCompaniesBtn.classList.add("active-glow");
-      setTimeout(() => refreshCompaniesBtn.classList.remove("active-glow"), 260);
-      refreshCompanyStats();
+    companiesSortBtn?.addEventListener("click", () => {
+      sortAscending = !sortAscending;
+      companiesSortBtn.textContent = sortAscending ? "Sort A–Z" : "Sort Z–A";
+      applySearchAndSort();
     });
 
-    companySortBtn?.addEventListener("click", () => {
-      companySortBtn.classList.add("active-glow");
-      setTimeout(() => companySortBtn.classList.remove("active-glow"), 260);
-      sortCompaniesByHealth();
-      refreshCompanyStats();
+    companiesRefreshBtnTop?.addEventListener("click", async () => {
+      await loadCompanies();
     });
 
-    onAuthStateChanged(auth, (user) => {
-      if (!user) return;
-      syncUserSession(user);
+    companiesRefreshBtnSide?.addEventListener("click", async () => {
+      await loadCompanies();
+    });
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "/evaraos/login.html";
+        return;
+      }
+
+      await loadCompanies();
     });
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -393,8 +410,6 @@
           link.classList.add("active");
         });
       });
-
-      refreshCompanyStats();
     });
   </script>
 
