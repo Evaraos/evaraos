@@ -1,214 +1,251 @@
+// assets/js/companies.js
+
+import { auth, db } from "./firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
-  bindTopbar,
-  requireAuth,
-  renderSidebar,
-  fetchAllCollection,
-  createDocument,
-  updateDocument
-} from "./app.js";
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-import { canAccess } from "./roles.js";
+const companiesSearch = document.getElementById("companiesSearch");
+const companiesList = document.getElementById("companiesList");
+const companiesFeed = document.getElementById("companiesFeed");
 
-const companyState = {
-  user: null,
-  companies: [],
-  editingId: null
-};
+const companiesHeroTitle = document.getElementById("companiesHeroTitle");
+const companiesHeroText = document.getElementById("companiesHeroText");
 
-function showToast(message, variant = "success") {
-  let container = document.getElementById("companiesToastContainer");
-  if (!container) {
-    container = document.createElement("div");
-    container.id = "companiesToastContainer";
-    container.style.position = "fixed";
-    container.style.top = "20px";
-    container.style.right = "20px";
-    container.style.zIndex = "9999";
-    container.style.display = "flex";
-    container.style.flexDirection = "column";
-    container.style.gap = "10px";
-    document.body.appendChild(container);
+const companiesStatTotal = document.getElementById("companiesStatTotal");
+const companiesStatHealthy = document.getElementById("companiesStatHealthy");
+const companiesStatReview = document.getElementById("companiesStatReview");
+const companiesStatFiltered = document.getElementById("companiesStatFiltered");
+
+const companiesStatTotalMeta = document.getElementById("companiesStatTotalMeta");
+const companiesStatHealthyMeta = document.getElementById("companiesStatHealthyMeta");
+const companiesStatReviewMeta = document.getElementById("companiesStatReviewMeta");
+const companiesStatFilteredMeta = document.getElementById("companiesStatFilteredMeta");
+
+const companiesRefreshBtnTop = document.getElementById("companiesRefreshBtnTop");
+const companiesRefreshBtnSide = document.getElementById("companiesRefreshBtnSide");
+const companiesSortBtn = document.getElementById("companiesSortBtn");
+
+let companyRecords = [];
+let filteredCompanies = [];
+let sortAscending = true;
+
+function normalize(value = "") {
+  return String(value || "").trim().toLowerCase();
+}
+
+function niceStatus(status = "") {
+  const value = String(status || "").trim();
+  return value ? value.charAt(0).toUpperCase() + value.slice(1) : "Active";
+}
+
+function statusClass(status = "") {
+  const value = normalize(status);
+
+  if (["healthy", "active", "approved", "complete", "completed"].includes(value)) {
+    return "good";
   }
 
-  const toast = document.createElement("div");
-  toast.textContent = message;
-  toast.style.padding = "14px 16px";
-  toast.style.borderRadius = "16px";
-  toast.style.background = variant === "error" ? "rgba(180,40,40,.94)" : "rgba(25,110,55,.94)";
-  toast.style.color = "#fff";
-  toast.style.boxShadow = "0 12px 30px rgba(0,0,0,.28)";
-  container.appendChild(toast);
+  if (["review", "pending", "new"].includes(value)) {
+    return "alert";
+  }
 
-  setTimeout(() => toast.remove(), 2600);
+  return "working";
 }
 
-function sanitizeSlug(value = "") {
-  return String(value)
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+function companyTitle(company) {
+  return company.name || company.title || company.companyName || "Untitled Company";
 }
 
-async function loadCompanies(user) {
-  companyState.user = user;
-  companyState.companies = await fetchAllCollection("companies", {
-    orderByField: "name",
-    orderDirection: "asc",
-    max: 500
-  });
+function companySubtitle(company) {
+  return company.description || company.location || company.category || "Company record from Firestore";
 }
 
-function openCompanyModal(company = null) {
-  companyState.editingId = company?.id || null;
-  document.getElementById("companyModal")?.classList.add("open");
-  document.getElementById("companyModalTitle").textContent = company ? "Edit Company" : "Add Company";
+function renderStats() {
+  const healthyCount = companyRecords.filter((company) =>
+    ["healthy", "active", "approved"].includes(normalize(company.status || company.health || "active"))
+  ).length;
 
-  document.getElementById("companyName").value = company?.name || "";
-  document.getElementById("companySlug").value = company?.slug || "";
-  document.getElementById("companyCity").value = company?.city || "";
-  document.getElementById("companyStateField").value = company?.state || "";
-  document.getElementById("companyPhone").value = company?.phone || "";
-  document.getElementById("companyEmail").value = company?.email || "";
-  document.getElementById("companyStatus").value = company?.status || "active";
-  document.getElementById("companyBrandColor").value = company?.brandColor || "#E30613";
-  document.getElementById("companyOwnerName").value = company?.ownerName || "";
-  document.getElementById("companyOwnerEmail").value = company?.ownerEmail || "";
-  document.getElementById("companyNotes").value = company?.notes || "";
+  const reviewCount = companyRecords.filter((company) =>
+    ["review", "pending"].includes(normalize(company.status || company.health || ""))
+  ).length;
+
+  companiesStatTotal.textContent = String(companyRecords.length);
+  companiesStatHealthy.textContent = String(healthyCount);
+  companiesStatReview.textContent = String(reviewCount);
+  companiesStatFiltered.textContent = String(filteredCompanies.length);
+
+  companiesStatTotalMeta.textContent = "Company records loaded";
+  companiesStatHealthyMeta.textContent = "Healthy or active companies";
+  companiesStatReviewMeta.textContent = "Records needing review";
+  companiesStatFilteredMeta.textContent = "Matches current search";
 }
 
-function closeCompanyModal() {
-  document.getElementById("companyModal")?.classList.remove("open");
-  companyState.editingId = null;
-}
-
-function renderCompanies() {
-  const root = document.getElementById("companiesRoot");
-  if (!root) return;
-
-  root.innerHTML = `
-    <section class="glass-card aurora-card shine-border">
-      <div class="section-title-row">
+function renderCompaniesList() {
+  if (!filteredCompanies.length) {
+    companiesList.innerHTML = `
+      <article class="dashboard-list-item glass-card aurora-card">
         <div>
-          <h2 style="margin:0;">Company Records</h2>
-          <p class="muted" style="margin:8px 0 0;">Create, edit, and manage company records.</p>
+          <strong>No companies found</strong>
+          <span>Try a different search or add company records to Firestore.</span>
         </div>
-        <div class="top-actions">
-          <button class="btn" id="openCompanyModalBtn" type="button">Add Company</button>
+        <span class="dashboard-status-pill alert">Empty</span>
+      </article>
+    `;
+    return;
+  }
+
+  companiesList.innerHTML = filteredCompanies.map((company) => {
+    const status = niceStatus(company.status || company.health || "active");
+    const pill = statusClass(company.status || company.health || "active");
+
+    return `
+      <article class="dashboard-list-item glass-card aurora-card">
+        <div>
+          <strong>${companyTitle(company)}</strong>
+          <span>${companySubtitle(company)}</span>
         </div>
-      </div>
+        <span class="dashboard-status-pill ${pill}">${status}</span>
+      </article>
+    `;
+  }).join("");
+}
 
-      ${
-        !companyState.companies.length
-          ? `<div class="muted" style="padding-top:16px;">No companies found.</div>`
-          : `
-            <div class="quick-links-grid" style="margin-top:18px;">
-              ${companyState.companies.map(company => `
-                <div class="quick-link-card aurora-card shine-border" style="display:block; min-height:auto;">
-                  <div>
-                    <strong>${company.name || company.id || "Unnamed Company"}</strong>
-                    <div class="muted" style="margin-top:8px;">
-                      ${company.city || "—"} ${company.state || ""}<br>
-                      Owner: ${company.ownerName || "—"}<br>
-                      Email: ${company.ownerEmail || company.email || "—"}<br>
-                      Phone: ${company.phone || "—"}
-                    </div>
-                  </div>
+function renderCompaniesFeed() {
+  if (!companyRecords.length) {
+    companiesFeed.innerHTML = `
+      <article class="dashboard-feed-item glass-card aurora-card">
+        <strong>No portfolio activity</strong>
+        <span>Company activity will appear once records are available.</span>
+      </article>
+    `;
+    return;
+  }
 
-                  <div style="margin-top:12px;">
-                    <span class="chip">${company.status || "active"}</span>
-                    <span class="chip">${company.slug || company.id || "no-slug"}</span>
-                  </div>
+  companiesFeed.innerHTML = companyRecords.slice(0, 6).map((company) => `
+    <article class="dashboard-feed-item glass-card aurora-card">
+      <strong>${companyTitle(company)}</strong>
+      <span>Status: ${niceStatus(company.status || company.health || "active")} • ${companySubtitle(company)}</span>
+    </article>
+  `).join("");
+}
 
-                  <div class="top-actions" style="margin-top:14px;">
-                    <button class="btn btn-secondary edit-company-btn" data-id="${company.id}" type="button">Edit</button>
-                  </div>
-                </div>
-              `).join("")}
-            </div>
-          `
-      }
-    </section>
-  `;
+function applySearchAndSort() {
+  const query = normalize(companiesSearch?.value || "");
 
-  document.getElementById("openCompanyModalBtn")?.addEventListener("click", () => openCompanyModal());
+  filteredCompanies = companyRecords.filter((company) => {
+    const haystack = [
+      company.name,
+      company.title,
+      company.companyName,
+      company.description,
+      company.location,
+      company.category,
+      company.status,
+      company.health
+    ].map((value) => normalize(value)).join(" ");
 
-  document.querySelectorAll(".edit-company-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const company = companyState.companies.find(item => item.id === btn.dataset.id);
-      openCompanyModal(company);
+    return haystack.includes(query);
+  });
+
+  filteredCompanies.sort((a, b) => {
+    const first = companyTitle(a).toLowerCase();
+    const second = companyTitle(b).toLowerCase();
+    return sortAscending ? first.localeCompare(second) : second.localeCompare(first);
+  });
+
+  renderStats();
+  renderCompaniesList();
+}
+
+async function loadCompanies() {
+  companiesHeroTitle.textContent = "Loading companies...";
+  companiesHeroText.textContent = "Connecting to Firestore company records.";
+
+  try {
+    const snap = await getDocs(collection(db, "companies"));
+    companyRecords = snap.docs.map((docItem) => ({
+      id: docItem.id,
+      ...docItem.data()
+    }));
+
+    filteredCompanies = [...companyRecords];
+    applySearchAndSort();
+    renderCompaniesFeed();
+
+    companiesHeroTitle.textContent = "Portfolio connected";
+    companiesHeroText.textContent = `${companyRecords.length} companies loaded from Firestore.`;
+  } catch (error) {
+    console.error("Failed loading companies:", error);
+
+    companiesHeroTitle.textContent = "Load failed";
+    companiesHeroText.textContent = "Check Firestore rules and the companies collection.";
+
+    companiesList.innerHTML = `
+      <article class="dashboard-list-item glass-card aurora-card">
+        <div>
+          <strong>Unable to load companies</strong>
+          <span>${error.message || "Unknown Firestore error."}</span>
+        </div>
+        <span class="dashboard-status-pill alert">Error</span>
+      </article>
+    `;
+
+    companiesFeed.innerHTML = `
+      <article class="dashboard-feed-item glass-card aurora-card">
+        <strong>Portfolio feed unavailable</strong>
+        <span>${error.message || "Unknown Firestore error."}</span>
+      </article>
+    `;
+  }
+}
+
+function bindSidebarAnchors() {
+  document.querySelectorAll(".dashboard-nav-link").forEach((link) => {
+    link.addEventListener("click", () => {
+      document.querySelectorAll(".dashboard-nav-link").forEach((item) => {
+        item.classList.remove("active");
+      });
+      link.classList.add("active");
     });
   });
 }
 
-async function saveCompany(e) {
-  e.preventDefault();
-
-  const payload = {
-    name: document.getElementById("companyName").value.trim(),
-    slug: sanitizeSlug(document.getElementById("companySlug").value || document.getElementById("companyName").value),
-    city: document.getElementById("companyCity").value.trim(),
-    state: document.getElementById("companyStateField").value.trim(),
-    phone: document.getElementById("companyPhone").value.trim(),
-    email: document.getElementById("companyEmail").value.trim().toLowerCase(),
-    status: document.getElementById("companyStatus").value,
-    brandColor: document.getElementById("companyBrandColor").value.trim(),
-    ownerName: document.getElementById("companyOwnerName").value.trim(),
-    ownerEmail: document.getElementById("companyOwnerEmail").value.trim().toLowerCase(),
-    notes: document.getElementById("companyNotes").value.trim(),
-    companyId: sanitizeSlug(document.getElementById("companySlug").value || document.getElementById("companyName").value)
-  };
-
-  if (!payload.name) {
-    showToast("Company name is required.", "error");
-    return;
-  }
-
-  try {
-    if (companyState.editingId) {
-      await updateDocument("companies", companyState.editingId, payload);
-      showToast("Company updated.");
-    } else {
-      await createDocument("companies", payload);
-      showToast("Company created.");
-    }
-
-    closeCompanyModal();
-    await loadCompanies(companyState.user);
-    renderCompanies();
-  } catch (error) {
-    console.error(error);
-    showToast(error.message || "Could not save company.", "error");
-  }
+if (companiesSearch) {
+  companiesSearch.addEventListener("input", applySearchAndSort);
 }
 
-requireAuth(async (user) => {
-  await bindTopbar(user, "Companies");
+if (companiesSortBtn) {
+  companiesSortBtn.addEventListener("click", () => {
+    sortAscending = !sortAscending;
+    companiesSortBtn.textContent = sortAscending ? "Sort A–Z" : "Sort Z–A";
+    applySearchAndSort();
+  });
+}
 
-  const sidebar = document.getElementById("sidebar");
-  if (sidebar) {
-    sidebar.innerHTML = renderSidebar(user.role, "companies");
-  }
+if (companiesRefreshBtnTop) {
+  companiesRefreshBtnTop.addEventListener("click", async () => {
+    await loadCompanies();
+  });
+}
 
-  if (!canAccess(user.role, "companies")) {
-    document.getElementById("companiesRoot").innerHTML =
-      `<section class="glass-card aurora-card shine-border">Access denied.</section>`;
-    return;
-  }
+if (companiesRefreshBtnSide) {
+  companiesRefreshBtnSide.addEventListener("click", async () => {
+    await loadCompanies();
+  });
+}
 
-  document.getElementById("companiesRoot").innerHTML =
-    `<section class="glass-card aurora-card shine-border">Loading companies...</section>`;
+document.addEventListener("DOMContentLoaded", () => {
+  bindSidebarAnchors();
 
-  try {
-    await loadCompanies(user);
-    renderCompanies();
-  } catch (error) {
-    console.error(error);
-    document.getElementById("companiesRoot").innerHTML =
-      `<section class="glass-card aurora-card shine-border">Companies page failed: ${error.message || error}</section>`;
-  }
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = "/evaraos/login.html";
+      return;
+    }
 
-  document.getElementById("companyModalCloseBtn")?.addEventListener("click", closeCompanyModal);
-  document.getElementById("companyModalCancelBtn")?.addEventListener("click", closeCompanyModal);
-  document.getElementById("companyForm")?.addEventListener("submit", saveCompany);
+    await loadCompanies();
+  });
 });
