@@ -42,16 +42,14 @@ const firebaseConfig = {
   projectId: "evaraos-web",
   storageBucket: "evaraos-web.firebasestorage.app",
   messagingSenderId: "125377381598",
-  appId: "1:125377381598:web:d63df45da3a09f0199ae4f"
+  appId: "1:125377381598:web:d63df45da3a09f0199ae4f",
+  measurementId: "G-296N94CKPR"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* =========================
-   SESSION + USER HELPERS
-========================= */
 const USER_ROLE_KEY = "evaraos_user_role";
 const USER_PROFILE_KEY = "evaraos_user_profile";
 
@@ -277,7 +275,6 @@ export {
   app,
   auth,
   db,
-
   onAuthStateChanged,
   signOut,
   signInWithEmailAndPassword,
@@ -287,13 +284,11 @@ export {
   setPersistence,
   browserLocalPersistence,
   browserSessionPersistence,
-
   RecaptchaVerifier,
   PhoneAuthProvider,
   PhoneMultiFactorGenerator,
   multiFactor,
   getMultiFactorResolver,
-
   collection,
   getDocs,
   getDoc,
@@ -308,7 +303,6 @@ export {
   limit,
   onSnapshot,
   serverTimestamp,
-
   setAuthPersistence,
   normalizeRole,
   inferRoleFromEmail,
