@@ -1,8 +1,7 @@
-import { auth } from "./firebase.js";
-import {
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+// assets/js/nav.js
+
+import { auth, logoutAndRedirect, getSavedUserProfile, applyUserToUi } from "./firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 function getThemeControlMarkup() {
   return `
@@ -10,7 +9,7 @@ function getThemeControlMarkup() {
       <button
         type="button"
         class="theme-core-toggle aurora-card"
-        data-theme-core-toggle
+        data-theme-pill
         aria-label="Toggle light and dark mode"
         title="Tap to switch light and dark"
       >
@@ -23,13 +22,13 @@ function getThemeControlMarkup() {
       </button>
 
       <div class="theme-bubbles" data-theme-bubbles>
-        <button type="button" class="theme-bubble light aurora-card" data-theme-bubble data-theme-group="neutral" aria-label="Neutral theme"></button>
-        <button type="button" class="theme-bubble blue aurora-card" data-theme-bubble data-theme-group="blue" aria-label="Blue theme"></button>
-        <button type="button" class="theme-bubble red aurora-card" data-theme-bubble data-theme-group="red" aria-label="Red theme"></button>
-        <button type="button" class="theme-bubble pink aurora-card" data-theme-bubble data-theme-group="pink" aria-label="Pink theme"></button>
-        <button type="button" class="theme-bubble green aurora-card" data-theme-bubble data-theme-group="green" aria-label="Green theme"></button>
-        <button type="button" class="theme-bubble purple aurora-card" data-theme-bubble data-theme-group="purple" aria-label="Purple theme"></button>
-        <button type="button" class="theme-bubble yellow aurora-card" data-theme-bubble data-theme-group="yellow" aria-label="Yellow theme"></button>
+        <button type="button" class="theme-bubble light aurora-card" data-theme-bubble data-theme-family="neutral" aria-label="Neutral theme"></button>
+        <button type="button" class="theme-bubble blue aurora-card" data-theme-bubble data-theme-family="blue" aria-label="Blue theme"></button>
+        <button type="button" class="theme-bubble red aurora-card" data-theme-bubble data-theme-family="red" aria-label="Red theme"></button>
+        <button type="button" class="theme-bubble pink aurora-card" data-theme-bubble data-theme-family="pink" aria-label="Pink theme"></button>
+        <button type="button" class="theme-bubble green aurora-card" data-theme-bubble data-theme-family="green" aria-label="Green theme"></button>
+        <button type="button" class="theme-bubble purple aurora-card" data-theme-bubble data-theme-family="purple" aria-label="Purple theme"></button>
+        <button type="button" class="theme-bubble yellow aurora-card" data-theme-bubble data-theme-family="yellow" aria-label="Yellow theme"></button>
       </div>
     </div>
   `;
@@ -195,8 +194,11 @@ function toggleNavDropdown(dropdown) {
     dropdown.classList.add("open");
     if (toggle) toggle.setAttribute("aria-expanded", "true");
 
-    if (window.EvaraTheme?.syncThemeControls) {
-      window.EvaraTheme.syncThemeControls(window.EvaraTheme.getStoredTheme());
+    if (window.EvaraTheme?.syncThemeUI) {
+      window.EvaraTheme.syncThemeUI();
+    }
+    if (window.EvaraTheme?.bindThemeControls) {
+      window.EvaraTheme.bindThemeControls();
     }
   } else {
     dropdown.classList.remove("open");
@@ -297,16 +299,6 @@ function bindDashboardSidebar() {
   });
 }
 
-function syncThemeAfterNavRender() {
-  if (window.EvaraTheme?.bindAllThemeControls) {
-    window.EvaraTheme.bindAllThemeControls();
-  }
-
-  if (window.EvaraTheme?.syncThemeControls) {
-    window.EvaraTheme.syncThemeControls(window.EvaraTheme.getStoredTheme());
-  }
-}
-
 function bindLogout() {
   const logoutBtn = document.getElementById("logoutBtn");
   if (!logoutBtn || logoutBtn.dataset.bound === "true") return;
@@ -314,45 +306,26 @@ function bindLogout() {
   logoutBtn.dataset.bound = "true";
   logoutBtn.addEventListener("click", async () => {
     try {
-      await signOut(auth);
-      window.location.href = "/evaraos/login.html";
+      await logoutAndRedirect("/evaraos/login.html");
     } catch (error) {
       console.error("Logout failed:", error);
     }
   });
 }
 
-function getRoleLabel(email = "") {
-  const value = String(email || "").toLowerCase();
-
-  if (value.includes("admin")) return "Admin Access";
-  if (value.includes("manager")) return "Manager Access";
-  if (value.includes("sales")) return "Sales Access";
-  if (value.includes("tech")) return "Technician Access";
-  if (value.includes("customer")) return "Customer Access";
-
-  return "Executive Access";
+function syncUserUiFromState() {
+  const profile = getSavedUserProfile();
+  if (profile) {
+    applyUserToUi(profile);
+  }
 }
 
-function syncAuthUi() {
+function watchAuthUi() {
   onAuthStateChanged(auth, (user) => {
-    const avatar = document.getElementById("dashboardAvatar");
-    const avatarLarge = document.getElementById("dashboardAvatarLarge");
-    const profileName = document.getElementById("dashboardProfileName");
-    const profileRole = document.getElementById("dashboardProfileRole");
-
-    if (!user) return;
-
-    const displayName = user.displayName || user.email || "Owner Account";
-    const initial = displayName.trim().charAt(0).toUpperCase() || "U";
-    const role = getRoleLabel(user.email || "");
-
-    if (avatar) avatar.textContent = initial;
-    if (avatarLarge) avatarLarge.textContent = initial;
-    if (profileName) profileName.textContent = displayName;
-    if (profileRole) profileRole.textContent = role;
-
-    bindLogout();
+    if (user) {
+      syncUserUiFromState();
+      bindLogout();
+    }
   });
 }
 
@@ -362,8 +335,17 @@ function initNav() {
   bindGlobalNavClose();
   bindDashboardSidebar();
   markActiveLinks();
-  syncThemeAfterNavRender();
-  syncAuthUi();
+
+  if (window.EvaraTheme?.bindThemeControls) {
+    window.EvaraTheme.bindThemeControls();
+  }
+
+  if (window.EvaraTheme?.syncThemeUI) {
+    window.EvaraTheme.syncThemeUI();
+  }
+
+  syncUserUiFromState();
+  watchAuthUi();
   bindLogout();
 }
 
