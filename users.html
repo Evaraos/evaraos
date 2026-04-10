@@ -21,6 +21,7 @@
             <input
               type="search"
               class="dashboard-search-input input"
+              id="usersSearch"
               placeholder="Search users..."
               aria-label="Search users"
             />
@@ -32,39 +33,31 @@
           <h2 id="dashboardOverviewTitle">Users Overview</h2>
         </div>
 
-        <nav class="dashboard-sidebar-nav" aria-label="User sections">
+        <nav class="dashboard-sidebar-nav" aria-label="Users sections">
           <a href="#usersOverviewSection" class="dashboard-nav-link active aurora-card">
             <span class="dashboard-nav-icon">◉</span>
             <span>Overview</span>
           </a>
 
-          <a href="#directorySection" class="dashboard-nav-link aurora-card">
+          <a href="#usersListSection" class="dashboard-nav-link aurora-card">
             <span class="dashboard-nav-icon">◎</span>
-            <span>Directory</span>
+            <span>User Directory</span>
           </a>
 
-          <a href="#rolesSection" class="dashboard-nav-link aurora-card">
+          <a href="#usersFeedSection" class="dashboard-nav-link aurora-card">
             <span class="dashboard-nav-icon">◌</span>
-            <span>Roles</span>
-          </a>
-
-          <a href="#permissionsSection" class="dashboard-nav-link aurora-card">
-            <span class="dashboard-nav-icon">◐</span>
-            <span>Permissions</span>
-          </a>
-
-          <a href="#activitySection" class="dashboard-nav-link aurora-card">
-            <span class="dashboard-nav-icon">◈</span>
-            <span>Activity</span>
+            <span>Role Feed</span>
           </a>
         </nav>
 
         <div class="dashboard-sidebar-foot glass-card aurora-card">
           <div class="dashboard-sidebar-foot-copy">
-            <strong>User Center</strong>
-            <span>Track platform members, roles, permissions, and account activity from one place.</span>
+            <strong>Access Control</strong>
+            <span>
+              Review user records, role distribution, and directory changes directly from Firestore.
+            </span>
           </div>
-          <a href="/evaraos/dashboard.html" class="btn btn-theme-primary">Back to Dashboard</a>
+          <button type="button" id="usersRefreshBtnSide" class="btn btn-theme-primary">Refresh Users</button>
         </div>
       </div>
     </aside>
@@ -72,22 +65,22 @@
     <main class="dashboard-main">
       <section class="dashboard-hero glass-card aurora-card" id="usersOverviewSection">
         <div class="dashboard-hero-copy">
-          <p class="dashboard-eyebrow">USER CENTER</p>
-          <h1>Manage every account inside the platform.</h1>
+          <p class="dashboard-eyebrow">USER DIRECTORY</p>
+          <h1>Track roles and account access across the platform.</h1>
           <p class="dashboard-hero-text">
-            Review users, role distribution, access status, and activity across the Evaraos
-            ecosystem with one premium operating view.
+            Watch every user record, role distribution, and access category from one
+            premium Apple-glass directory connected to Firestore.
           </p>
 
           <div class="dashboard-hero-actions">
-            <button type="button" id="refreshUsersBtn" class="btn btn-theme-primary">Refresh Users</button>
-            <a href="/evaraos/profile.html" class="btn btn-theme-secondary">Open Profile</a>
+            <button type="button" id="usersRefreshBtnTop" class="btn btn-theme-primary">Refresh Data</button>
+            <a href="/evaraos/dashboard.html" class="btn btn-theme-secondary">Back to Dashboard</a>
           </div>
         </div>
 
         <div class="dashboard-hero-panel glass-card aurora-card">
           <div class="dashboard-hero-panel-top">
-            <span class="dashboard-mini-badge">Live Accounts</span>
+            <span class="dashboard-mini-badge">User Status</span>
             <span class="dashboard-live-dot"></span>
           </div>
 
@@ -100,8 +93,8 @@
           </div>
 
           <div class="dashboard-hero-panel-copy">
-            <strong id="usersHeroTitle">Evaraos Members</strong>
-            <span id="usersHeroSubline">User access managed from one platform.</span>
+            <strong id="usersHeroTitle">Loading users...</strong>
+            <span id="usersHeroText">Connecting to Firestore user records.</span>
           </div>
         </div>
       </section>
@@ -117,285 +110,323 @@
         <div class="dashboard-stats-grid">
           <article class="dashboard-stat-card glass-card aurora-card">
             <p>Total Users</p>
-            <h3 id="usersCountStat">58</h3>
-            <span>Current active records</span>
+            <h3 id="usersStatTotal">0</h3>
+            <span id="usersStatTotalMeta">Loading directory...</span>
           </article>
 
           <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Admin + Owners</p>
-            <h3 id="usersLeadersStat">13</h3>
-            <span>Leadership accounts</span>
+            <p>Owners + Admins</p>
+            <h3 id="usersStatLeaders">0</h3>
+            <span id="usersStatLeadersMeta">Checking roles...</span>
           </article>
 
           <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Field Team</p>
-            <h3 id="usersFieldStat">45</h3>
-            <span>Sales + technicians + staff</span>
+            <p>Filtered</p>
+            <h3 id="usersStatFiltered">0</h3>
+            <span id="usersStatFilteredMeta">Matches current search</span>
           </article>
 
           <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Active Access</p>
-            <h3 id="usersAccessStat">56</h3>
-            <span>Currently enabled users</span>
-          </article>
-        </div>
-      </section>
-
-      <section class="dashboard-panel glass-card aurora-card" id="directorySection">
-        <div class="dashboard-section-head">
-          <div>
-            <p class="dashboard-section-kicker">Directory</p>
-            <h2>User Directory</h2>
-          </div>
-          <button type="button" id="sortUsersBtn" class="btn btn-theme-secondary">Sort by Role</button>
-        </div>
-
-        <div class="dashboard-list" id="usersList">
-          <article class="dashboard-list-item glass-card aurora-card user-item" data-role-order="1">
-            <div>
-              <strong>Gilbert Ramos</strong>
-              <span>Owner • Executive access • Parent platform visibility</span>
-            </div>
-            <span class="dashboard-status-pill good">Owner</span>
-          </article>
-
-          <article class="dashboard-list-item glass-card aurora-card user-item" data-role-order="2">
-            <div>
-              <strong>Operations Admin</strong>
-              <span>Admin • Company controls • Workflow management</span>
-            </div>
-            <span class="dashboard-status-pill working">Admin</span>
-          </article>
-
-          <article class="dashboard-list-item glass-card aurora-card user-item" data-role-order="3">
-            <div>
-              <strong>Field Manager</strong>
-              <span>Manager • Team assignment • Lead oversight</span>
-            </div>
-            <span class="dashboard-status-pill working">Manager</span>
-          </article>
-
-          <article class="dashboard-list-item glass-card aurora-card user-item" data-role-order="4">
-            <div>
-              <strong>Sales Rep Team</strong>
-              <span>Sales • Territory activity • Lead generation</span>
-            </div>
-            <span class="dashboard-status-pill good">Sales</span>
-          </article>
-
-          <article class="dashboard-list-item glass-card aurora-card user-item" data-role-order="5">
-            <div>
-              <strong>Technician Crew</strong>
-              <span>Technician • Service execution • Route completion</span>
-            </div>
-            <span class="dashboard-status-pill good">Technician</span>
+            <p>Top Role</p>
+            <h3 id="usersStatTopRole">—</h3>
+            <span id="usersStatTopRoleMeta">Calculating distribution...</span>
           </article>
         </div>
       </section>
 
       <section class="dashboard-grid-2">
-        <section class="dashboard-panel glass-card aurora-card" id="rolesSection">
+        <section class="dashboard-panel glass-card aurora-card" id="usersListSection">
           <div class="dashboard-section-head">
             <div>
-              <p class="dashboard-section-kicker">Structure</p>
+              <p class="dashboard-section-kicker">Directory</p>
+              <h2>User List</h2>
+            </div>
+
+            <button type="button" id="usersSortBtn" class="btn btn-theme-secondary">Sort A–Z</button>
+          </div>
+
+          <div class="dashboard-list" id="usersList">
+            <article class="dashboard-list-item glass-card aurora-card">
+              <div>
+                <strong>Loading users...</strong>
+                <span>Please wait while user records are loaded.</span>
+              </div>
+              <span class="dashboard-status-pill working">Loading</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card aurora-card" id="usersFeedSection">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Roles</p>
               <h2>Role Distribution</h2>
             </div>
           </div>
 
-          <div class="dashboard-role-grid">
+          <div class="dashboard-role-grid" id="usersRoleGrid">
             <article class="dashboard-role-card glass-card aurora-card">
-              <strong>Owner</strong>
-              <span>1 executive-level account</span>
-            </article>
-
-            <article class="dashboard-role-card glass-card aurora-card">
-              <strong>Admin</strong>
-              <span>12 operational leadership accounts</span>
-            </article>
-
-            <article class="dashboard-role-card glass-card aurora-card">
-              <strong>Sales</strong>
-              <span>27 field-facing revenue accounts</span>
-            </article>
-
-            <article class="dashboard-role-card glass-card aurora-card">
-              <strong>Technician</strong>
-              <span>18 service execution accounts</span>
-            </article>
-          </div>
-        </section>
-
-        <section class="dashboard-panel glass-card aurora-card" id="permissionsSection">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Control</p>
-              <h2>Permissions</h2>
-            </div>
-          </div>
-
-          <div class="dashboard-feed">
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Owner Access</strong>
-              <span>Full platform visibility, profile controls, dashboard reach, and company control.</span>
-            </article>
-
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Admin Access</strong>
-              <span>Workflow control, user operations, and company-level management tools.</span>
-            </article>
-
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Team Access</strong>
-              <span>Sales and technician roles stay focused on field activity, jobs, and task execution.</span>
+              <strong>Loading roles...</strong>
+              <span>Counting users by role</span>
             </article>
           </div>
         </section>
       </section>
 
-      <section class="dashboard-grid-2">
-        <section class="dashboard-panel glass-card aurora-card">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Health</p>
-              <h2>Access Status</h2>
-            </div>
+      <section class="dashboard-panel glass-card aurora-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Activity</p>
+            <h2>User Feed</h2>
           </div>
+        </div>
 
-          <div class="dashboard-progress-stack">
-            <div class="dashboard-progress-row">
-              <div class="dashboard-progress-copy">
-                <strong>Leadership Accounts</strong>
-                <span>Stable access structure</span>
-              </div>
-              <div class="dashboard-progress-bar"><span style="width: 88%;"></span></div>
-            </div>
-
-            <div class="dashboard-progress-row">
-              <div class="dashboard-progress-copy">
-                <strong>Field Accounts</strong>
-                <span>High operational readiness</span>
-              </div>
-              <div class="dashboard-progress-bar"><span style="width: 74%;"></span></div>
-            </div>
-
-            <div class="dashboard-progress-row">
-              <div class="dashboard-progress-copy">
-                <strong>Role Sync</strong>
-                <span>Permissions aligned to current auth logic</span>
-              </div>
-              <div class="dashboard-progress-bar"><span style="width: 82%;"></span></div>
-            </div>
-          </div>
-        </section>
-
-        <section class="dashboard-panel glass-card aurora-card" id="activitySection">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Recent Updates</p>
-              <h2>User Feed</h2>
-            </div>
-          </div>
-
-          <div class="dashboard-feed" id="usersFeed">
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>User directory loaded</strong>
-              <span>Platform accounts were loaded into the user center.</span>
-            </article>
-
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Roles aligned</strong>
-              <span>Permission structure remains visible by role grouping.</span>
-            </article>
-
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Access state active</strong>
-              <span>Authenticated session continues to control platform visibility.</span>
-            </article>
-          </div>
-        </section>
+        <div class="dashboard-feed" id="usersFeed">
+          <article class="dashboard-feed-item glass-card aurora-card">
+            <strong>Loading user feed...</strong>
+            <span>Recent directory activity will appear here once records are loaded.</span>
+          </article>
+        </div>
       </section>
     </main>
   </div>
 
   <script type="module">
+    import { auth, db } from "/evaraos/assets/js/firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import {
-      auth,
-      protectRoute,
-      onAuthStateChanged,
-      syncUserSession
-    } from "/evaraos/assets/js/firebase.js";
+      collection,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    protectRoute({
-      requireAuth: true,
-      redirectGuestTo: "/evaraos/login.html"
-    });
-
-    const refreshUsersBtn = document.getElementById("refreshUsersBtn");
-    const sortUsersBtn = document.getElementById("sortUsersBtn");
+    const usersSearch = document.getElementById("usersSearch");
     const usersList = document.getElementById("usersList");
+    const usersRoleGrid = document.getElementById("usersRoleGrid");
     const usersFeed = document.getElementById("usersFeed");
 
-    const usersCountStat = document.getElementById("usersCountStat");
-    const usersLeadersStat = document.getElementById("usersLeadersStat");
-    const usersFieldStat = document.getElementById("usersFieldStat");
-    const usersAccessStat = document.getElementById("usersAccessStat");
+    const usersHeroTitle = document.getElementById("usersHeroTitle");
+    const usersHeroText = document.getElementById("usersHeroText");
 
-    function refreshUserStats() {
-      const items = Array.from(document.querySelectorAll(".user-item"));
-      const total = items.length;
-      const leaders = items.filter((item) => Number(item.dataset.roleOrder) <= 2).length;
-      const field = Math.max(total - leaders, 0);
-      const active = Math.max(total - 1, 0);
+    const usersStatTotal = document.getElementById("usersStatTotal");
+    const usersStatLeaders = document.getElementById("usersStatLeaders");
+    const usersStatFiltered = document.getElementById("usersStatFiltered");
+    const usersStatTopRole = document.getElementById("usersStatTopRole");
 
-      if (usersCountStat) usersCountStat.textContent = String(total);
-      if (usersLeadersStat) usersLeadersStat.textContent = String(leaders);
-      if (usersFieldStat) usersFieldStat.textContent = String(field);
-      if (usersAccessStat) usersAccessStat.textContent = String(active);
+    const usersStatTotalMeta = document.getElementById("usersStatTotalMeta");
+    const usersStatLeadersMeta = document.getElementById("usersStatLeadersMeta");
+    const usersStatFilteredMeta = document.getElementById("usersStatFilteredMeta");
+    const usersStatTopRoleMeta = document.getElementById("usersStatTopRoleMeta");
 
-      if (usersFeed) {
+    const usersRefreshBtnTop = document.getElementById("usersRefreshBtnTop");
+    const usersRefreshBtnSide = document.getElementById("usersRefreshBtnSide");
+    const usersSortBtn = document.getElementById("usersSortBtn");
+
+    let userRecords = [];
+    let filteredUsers = [];
+    let sortAscending = true;
+
+    function normalize(value = "") {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function titleFromUser(user) {
+      return user.fullName || user.displayName || user.name || user.email || "Unnamed User";
+    }
+
+    function roleLabel(role = "") {
+      const value = String(role || "").trim().toLowerCase();
+      if (!value) return "Customer";
+      return value.charAt(0).toUpperCase() + value.slice(1);
+    }
+
+    function roleStatusClass(role = "") {
+      const value = normalize(role);
+      if (["owner", "admin", "manager"].includes(value)) return "good";
+      if (["sales", "technician"].includes(value)) return "working";
+      return "alert";
+    }
+
+    function getRoleCounts(users) {
+      const counts = {};
+      users.forEach((user) => {
+        const role = normalize(user.role || "customer");
+        counts[role] = (counts[role] || 0) + 1;
+      });
+      return counts;
+    }
+
+    function renderStats() {
+      const roleCounts = getRoleCounts(userRecords);
+      const leaderCount = (roleCounts.owner || 0) + (roleCounts.admin || 0);
+
+      const topRoleEntry = Object.entries(roleCounts).sort((a, b) => b[1] - a[1])[0];
+      const topRole = topRoleEntry ? roleLabel(topRoleEntry[0]) : "—";
+
+      usersStatTotal.textContent = String(userRecords.length);
+      usersStatLeaders.textContent = String(leaderCount);
+      usersStatFiltered.textContent = String(filteredUsers.length);
+      usersStatTopRole.textContent = topRole;
+
+      usersStatTotalMeta.textContent = "User records loaded";
+      usersStatLeadersMeta.textContent = "Owner and admin accounts";
+      usersStatFilteredMeta.textContent = "Matches current search";
+      usersStatTopRoleMeta.textContent = topRoleEntry ? `${topRoleEntry[1]} user(s)` : "No roles found";
+    }
+
+    function renderUsersList() {
+      if (!filteredUsers.length) {
+        usersList.innerHTML = `
+          <article class="dashboard-list-item glass-card aurora-card">
+            <div>
+              <strong>No users found</strong>
+              <span>Try a different search or add user records to Firestore.</span>
+            </div>
+            <span class="dashboard-status-pill alert">Empty</span>
+          </article>
+        `;
+        return;
+      }
+
+      usersList.innerHTML = filteredUsers.map((user) => `
+        <article class="dashboard-list-item glass-card aurora-card">
+          <div>
+            <strong>${titleFromUser(user)}</strong>
+            <span>${user.email || "No email"} • ${roleLabel(user.role || "customer")}</span>
+          </div>
+          <span class="dashboard-status-pill ${roleStatusClass(user.role)}">${roleLabel(user.role || "customer")}</span>
+        </article>
+      `).join("");
+    }
+
+    function renderRoleGrid() {
+      const roleCounts = getRoleCounts(userRecords);
+      const orderedRoles = ["owner", "admin", "manager", "sales", "technician", "customer"];
+
+      usersRoleGrid.innerHTML = orderedRoles.map((role) => `
+        <article class="dashboard-role-card glass-card aurora-card">
+          <strong>${roleLabel(role)}</strong>
+          <span>${roleCounts[role] || 0} user(s)</span>
+        </article>
+      `).join("");
+    }
+
+    function renderUsersFeed() {
+      if (!userRecords.length) {
         usersFeed.innerHTML = `
           <article class="dashboard-feed-item glass-card aurora-card">
-            <strong>User directory refreshed</strong>
-            <span>${total} user records are visible in the current view.</span>
+            <strong>No user activity</strong>
+            <span>User feed will appear once directory records are available.</span>
           </article>
+        `;
+        return;
+      }
 
-          <article class="dashboard-feed-item glass-card aurora-card">
-            <strong>Leadership accounts tracked</strong>
-            <span>${leaders} leadership-level accounts are currently visible.</span>
+      usersFeed.innerHTML = userRecords.slice(0, 6).map((user) => `
+        <article class="dashboard-feed-item glass-card aurora-card">
+          <strong>${titleFromUser(user)}</strong>
+          <span>${user.email || "No email"} • Role: ${roleLabel(user.role || "customer")}</span>
+        </article>
+      `).join("");
+    }
+
+    function applySearchAndSort() {
+      const query = normalize(usersSearch.value);
+
+      filteredUsers = userRecords.filter((user) => {
+        const haystack = [
+          user.fullName,
+          user.displayName,
+          user.name,
+          user.email,
+          user.role
+        ].map((value) => normalize(value)).join(" ");
+
+        return haystack.includes(query);
+      });
+
+      filteredUsers.sort((a, b) => {
+        const first = titleFromUser(a).toLowerCase();
+        const second = titleFromUser(b).toLowerCase();
+        return sortAscending ? first.localeCompare(second) : second.localeCompare(first);
+      });
+
+      renderStats();
+      renderUsersList();
+    }
+
+    async function loadUsers() {
+      usersHeroTitle.textContent = "Loading users...";
+      usersHeroText.textContent = "Connecting to Firestore user records.";
+
+      try {
+        const snap = await getDocs(collection(db, "users"));
+        userRecords = snap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+
+        filteredUsers = [...userRecords];
+        applySearchAndSort();
+        renderRoleGrid();
+        renderUsersFeed();
+
+        usersHeroTitle.textContent = "Directory connected";
+        usersHeroText.textContent = `${userRecords.length} users loaded from Firestore.`;
+      } catch (error) {
+        console.error("Failed loading users:", error);
+
+        usersHeroTitle.textContent = "Load failed";
+        usersHeroText.textContent = "Check Firestore rules and the users collection.";
+
+        usersList.innerHTML = `
+          <article class="dashboard-list-item glass-card aurora-card">
+            <div>
+              <strong>Unable to load users</strong>
+              <span>${error.message || "Unknown Firestore error."}</span>
+            </div>
+            <span class="dashboard-status-pill alert">Error</span>
           </article>
+        `;
 
+        usersRoleGrid.innerHTML = `
+          <article class="dashboard-role-card glass-card aurora-card">
+            <strong>Role load failed</strong>
+            <span>${error.message || "Unknown Firestore error."}</span>
+          </article>
+        `;
+
+        usersFeed.innerHTML = `
           <article class="dashboard-feed-item glass-card aurora-card">
-            <strong>Field structure active</strong>
-            <span>${field} non-leadership accounts are positioned in the working team flow.</span>
+            <strong>User feed unavailable</strong>
+            <span>${error.message || "Unknown Firestore error."}</span>
           </article>
         `;
       }
     }
 
-    function sortUsersByRole() {
-      if (!usersList) return;
+    usersSearch?.addEventListener("input", applySearchAndSort);
 
-      const items = Array.from(usersList.querySelectorAll(".user-item"));
-      items.sort((a, b) => Number(a.dataset.roleOrder) - Number(b.dataset.roleOrder));
-      items.forEach((item) => usersList.appendChild(item));
-    }
-
-    refreshUsersBtn?.addEventListener("click", () => {
-      refreshUsersBtn.classList.add("active-glow");
-      setTimeout(() => refreshUsersBtn.classList.remove("active-glow"), 260);
-      refreshUserStats();
+    usersSortBtn?.addEventListener("click", () => {
+      sortAscending = !sortAscending;
+      usersSortBtn.textContent = sortAscending ? "Sort A–Z" : "Sort Z–A";
+      applySearchAndSort();
     });
 
-    sortUsersBtn?.addEventListener("click", () => {
-      sortUsersBtn.classList.add("active-glow");
-      setTimeout(() => sortUsersBtn.classList.remove("active-glow"), 260);
-      sortUsersByRole();
-      refreshUserStats();
+    usersRefreshBtnTop?.addEventListener("click", async () => {
+      await loadUsers();
     });
 
-    onAuthStateChanged(auth, (user) => {
-      if (!user) return;
-      syncUserSession(user);
+    usersRefreshBtnSide?.addEventListener("click", async () => {
+      await loadUsers();
+    });
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "/evaraos/login.html";
+        return;
+      }
+
+      await loadUsers();
     });
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -407,8 +438,6 @@
           link.classList.add("active");
         });
       });
-
-      refreshUserStats();
     });
   </script>
 
