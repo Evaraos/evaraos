@@ -1,5 +1,8 @@
-import { auth, logoutAndRedirect, getSavedUserProfile, applyUserToUi } from "./firebase.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { auth } from "./firebase.js";
+import {
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 function getThemeControlMarkup() {
   return `
@@ -71,6 +74,7 @@ function getLandingNavMarkup() {
               <a href="/evaraos/users.html" class="menu-link" data-nav-link>Users</a>
               <a href="/evaraos/leads.html" class="menu-link" data-nav-link>Leads</a>
               <a href="/evaraos/jobs.html" class="menu-link" data-nav-link>Jobs</a>
+              <a href="/evaraos/qa.html" class="menu-link" data-nav-link>QA</a>
 
               <div class="menu-divider"></div>
 
@@ -293,47 +297,6 @@ function bindDashboardSidebar() {
   });
 }
 
-function bindAuraGroups() {
-  document.querySelectorAll(".glass-card, .dashboard-panel, .dashboard-overview, .dashboard-hero, .feature-card").forEach((group) => {
-    if (group.dataset.auraBound === "true") return;
-    group.dataset.auraBound = "true";
-
-    const focusables = group.querySelectorAll(
-      ".btn, .dashboard-nav-link, .dashboard-list-item, .dashboard-role-card, .dashboard-stat-card, .dashboard-portal-card, .dashboard-feed-item, .input-shell, .dashboard-inline-link, .menu-link, .theme-core-toggle, .theme-bubble"
-    );
-
-    focusables.forEach((item) => {
-      item.addEventListener("pointerdown", () => {
-        group.classList.add("active-glow");
-        item.classList.add("active-glow");
-      });
-
-      item.addEventListener("mouseenter", () => {
-        group.classList.add("active-glow");
-      });
-
-      item.addEventListener("mouseleave", () => {
-        group.classList.remove("active-glow");
-        item.classList.remove("active-glow");
-      });
-
-      item.addEventListener("focusin", () => {
-        group.classList.add("active-glow");
-        item.classList.add("active-glow");
-      });
-
-      item.addEventListener("focusout", () => {
-        setTimeout(() => {
-          if (!group.contains(document.activeElement)) {
-            group.classList.remove("active-glow");
-          }
-          item.classList.remove("active-glow");
-        }, 40);
-      });
-    });
-  });
-}
-
 function syncThemeAfterNavRender() {
   if (window.EvaraTheme?.bindAllThemeControls) {
     window.EvaraTheme.bindAllThemeControls();
@@ -351,26 +314,45 @@ function bindLogout() {
   logoutBtn.dataset.bound = "true";
   logoutBtn.addEventListener("click", async () => {
     try {
-      await logoutAndRedirect("/evaraos/login.html");
+      await signOut(auth);
+      window.location.href = "/evaraos/login.html";
     } catch (error) {
       console.error("Logout failed:", error);
     }
   });
 }
 
-function syncUserUiFromState() {
-  const profile = getSavedUserProfile();
-  if (profile) {
-    applyUserToUi(profile);
-  }
+function getRoleLabel(email = "") {
+  const value = String(email || "").toLowerCase();
+
+  if (value.includes("admin")) return "Admin Access";
+  if (value.includes("manager")) return "Manager Access";
+  if (value.includes("sales")) return "Sales Access";
+  if (value.includes("tech")) return "Technician Access";
+  if (value.includes("customer")) return "Customer Access";
+
+  return "Executive Access";
 }
 
-function watchAuthUi() {
+function syncAuthUi() {
   onAuthStateChanged(auth, (user) => {
-    if (user) {
-      syncUserUiFromState();
-      bindLogout();
-    }
+    const avatar = document.getElementById("dashboardAvatar");
+    const avatarLarge = document.getElementById("dashboardAvatarLarge");
+    const profileName = document.getElementById("dashboardProfileName");
+    const profileRole = document.getElementById("dashboardProfileRole");
+
+    if (!user) return;
+
+    const displayName = user.displayName || user.email || "Owner Account";
+    const initial = displayName.trim().charAt(0).toUpperCase() || "U";
+    const role = getRoleLabel(user.email || "");
+
+    if (avatar) avatar.textContent = initial;
+    if (avatarLarge) avatarLarge.textContent = initial;
+    if (profileName) profileName.textContent = displayName;
+    if (profileRole) profileRole.textContent = role;
+
+    bindLogout();
   });
 }
 
@@ -379,11 +361,9 @@ function initNav() {
   bindNavDropdowns();
   bindGlobalNavClose();
   bindDashboardSidebar();
-  bindAuraGroups();
   markActiveLinks();
   syncThemeAfterNavRender();
-  syncUserUiFromState();
-  watchAuthUi();
+  syncAuthUi();
   bindLogout();
 }
 
