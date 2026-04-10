@@ -2,71 +2,143 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Evaraos Inc</title>
+
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
 </head>
+
 <body class="landing-page">
+
+  <!-- Dynamic Background -->
   <div class="page-grid-overlay"></div>
+
+  <!-- Universal Nav -->
   <div id="universalNav"></div>
 
   <main class="landing-shell">
+
+    <!-- HERO -->
     <section class="hero-section">
-      <div class="hero-copy">
-        <div class="eyebrow">SUBSIDIARIES ALLOCATION SAAS</div>
-        <h1>Run companies like a world-class operating system.</h1>
+      <div class="hero-copy glass-card aurora-card">
+        <p class="eyebrow">EVARAOS OS</p>
+
+        <h1>
+          One operating system<br />
+          for multi-company scale.
+        </h1>
+
         <p>
-          Evaraos Inc is built to power multiple subsidiaries, teams, customer portals,
-          leads, jobs, reporting, approvals, and operations from one premium control center.
+          Manage subsidiaries, leads, sales, jobs, and operations
+          from one premium Apple-glass-inspired control platform.
         </p>
 
         <div class="hero-actions">
-          <a href="/evaraos/login.html" class="btn btn-theme-primary">Enter Platform</a>
-          <a href="/evaraos/signup.html" class="btn btn-theme-secondary">Create Account</a>
+          <a href="/evaraos/dashboard.html" class="btn btn-theme-primary">
+            Enter Platform
+          </a>
+
+          <a href="/evaraos/signup.html" class="btn btn-theme-secondary">
+            Create Account
+          </a>
         </div>
       </div>
 
+      <!-- HERO VISUAL -->
       <div class="hero-visual glass-card aurora-card">
-        <div class="hero-visual-inner">
+        <div class="hero-visual-inner aurora-card">
           <img
             src="/evaraos/assets/img/evaraos_logo.png"
-            alt="Evaraos"
             class="hero-logo"
           />
-          <div class="hero-card-title">EVARAOS</div>
-          <div class="hero-card-subtitle">
-            Premium software infrastructure for subsidiaries, operations, control, and scale.
-          </div>
+
+          <div class="hero-card-title">Evaraos</div>
+
+          <p class="hero-card-subtitle">
+            The OS for scaling companies under one ecosystem.
+          </p>
         </div>
       </div>
     </section>
 
+    <!-- FEATURES -->
     <section class="feature-grid">
+
       <article class="feature-card glass-card aurora-card">
-        <h3>Operating System</h3>
+        <h3>Universal Control</h3>
         <p>
-          One platform for roles, approvals, workflows, field activity, and scalable business infrastructure.
+          Manage companies, leads, jobs, and users in one unified system.
         </p>
       </article>
 
       <article class="feature-card glass-card aurora-card">
-        <h3>Multi-Company</h3>
+        <h3>Role-Based Access</h3>
         <p>
-          Launch and manage multiple subsidiaries with a shared structure while keeping each business organized.
+          Owners, admins, sales reps, technicians, and customers —
+          all separated cleanly.
         </p>
       </article>
 
       <article class="feature-card glass-card aurora-card">
-        <h3>Future-Ready Security</h3>
+        <h3>Scalable System</h3>
         <p>
-          Username login, optional number verification, trusted-device behavior, and a modern auth experience.
+          Build once, scale infinitely across brands and LLCs.
         </p>
       </article>
+
     </section>
+
+    <!-- OVERVIEW -->
+    <section class="overview-shell glass-card aurora-card">
+
+      <div class="overview-head">
+        <div>
+          <h2 class="overview-title">Platform Snapshot</h2>
+          <p class="overview-subtitle">
+            Everything flows through one system.
+          </p>
+        </div>
+
+        <a href="/evaraos/login.html" class="btn btn-theme-secondary">
+          Login
+        </a>
+      </div>
+
+      <div class="overview-grid">
+
+        <article class="overview-card glass-card aurora-card">
+          <h3>Companies</h3>
+          <p class="metric">Multi</p>
+          <p class="meta">Unlimited subsidiaries</p>
+        </article>
+
+        <article class="overview-card glass-card aurora-card">
+          <h3>Leads</h3>
+          <p class="metric">Live</p>
+          <p class="meta">Real-time tracking</p>
+        </article>
+
+        <article class="overview-card glass-card aurora-card">
+          <h3>Jobs</h3>
+          <p class="metric">Active</p>
+          <p class="meta">Operations control</p>
+        </article>
+
+        <article class="overview-card glass-card aurora-card">
+          <h3>Access</h3>
+          <p class="metric">Secure</p>
+          <p class="meta">Firebase auth system</p>
+        </article>
+
+      </div>
+    </section>
+
   </main>
 
+  <!-- Scripts -->
   <script type="module" src="/evaraos/assets/js/theme.js"></script>
   <script type="module" src="/evaraos/assets/js/nav.js"></script>
   <script type="module" src="/evaraos/assets/js/firebase.js"></script>
+
 </body>
 </html>
