@@ -19,9 +19,6 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* =========================
-   ROUTES
-========================= */
 const ROUTES = {
   home: "/evaraos/index.html",
   login: "/evaraos/login.html",
@@ -30,9 +27,6 @@ const ROUTES = {
   dashboard: "/evaraos/dashboard.html"
 };
 
-/* =========================
-   DOM
-========================= */
 const els = {
   loginForm: document.getElementById("loginForm"),
   signupForm: document.getElementById("signupForm"),
@@ -59,9 +53,6 @@ const els = {
   signupPasswordConfirmToggle: document.getElementById("signupPasswordConfirmToggle")
 };
 
-/* =========================
-   HELPERS
-========================= */
 function setMessage(element, text = "", isError = false) {
   if (!element) return;
   element.textContent = text;
@@ -200,9 +191,6 @@ async function getUserRoleFromFirestore(uid) {
   }
 }
 
-/* =========================
-   LOGIN
-========================= */
 async function handleLoginSubmit(event) {
   event.preventDefault();
   clearMessages();
@@ -238,9 +226,6 @@ async function handleLoginSubmit(event) {
   }
 }
 
-/* =========================
-   SIGNUP
-========================= */
 async function handleSignupSubmit(event) {
   event.preventDefault();
   clearMessages();
@@ -304,9 +289,6 @@ async function handleSignupSubmit(event) {
   }
 }
 
-/* =========================
-   RESET
-========================= */
 async function handleResetSubmit(event) {
   event.preventDefault();
   clearMessages();
@@ -327,13 +309,10 @@ async function handleResetSubmit(event) {
   }
 }
 
-/* =========================
-   PAGE GUARDS
-========================= */
 function guardCurrentPage() {
   const path = window.location.pathname;
 
-  if (path.endsWith("/login.html") || path.endsWith("/signup.html")) {
+  if (path.endsWith("/login.html") || path.endsWith("/signup.html") || path.endsWith("/reset.html")) {
     protectRoute({
       requireAuth: false,
       redirectAuthedTo: ROUTES.dashboard
@@ -341,18 +320,24 @@ function guardCurrentPage() {
     return;
   }
 
-  if (path.endsWith("/dashboard.html")) {
+  if (
+    path.endsWith("/dashboard.html") ||
+    path.endsWith("/profile.html") ||
+    path.endsWith("/settings.html") ||
+    path.endsWith("/security.html") ||
+    path.endsWith("/companies.html") ||
+    path.endsWith("/users.html") ||
+    path.endsWith("/leads.html") ||
+    path.endsWith("/jobs.html") ||
+    path.endsWith("/qa.html")
+  ) {
     protectRoute({
       requireAuth: true,
       redirectGuestTo: ROUTES.login
     });
-    return;
   }
 }
 
-/* =========================
-   INIT
-========================= */
 function init() {
   wirePasswordToggles();
   guardCurrentPage();
