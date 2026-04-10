@@ -1,15 +1,33 @@
+// assets/js/theme.js
+
 const STORAGE_KEY = "evaraos-theme";
 
 const DEFAULT_THEME = "dark";
-const DEFAULT_MODE = "dark";
-const DEFAULT_GROUP = "neutral";
+const VALID_THEMES = [
+  "dark",
+  "light",
+  "blue-dark",
+  "blue-light",
+  "red-dark",
+  "red-light",
+  "pink-dark",
+  "pink-light",
+  "green-dark",
+  "green-light",
+  "purple-dark",
+  "purple-light",
+  "yellow-dark",
+  "yellow-light"
+];
 
-const VALID_GROUPS = ["neutral", "blue", "red", "pink", "green", "purple", "yellow"];
-const VALID_MODES = ["dark", "light"];
+function normalizeTheme(theme = "") {
+  const value = String(theme || "").trim().toLowerCase();
+  return VALID_THEMES.includes(value) ? value : DEFAULT_THEME;
+}
 
 function getStoredTheme() {
   try {
-    return localStorage.getItem(STORAGE_KEY) || DEFAULT_THEME;
+    return normalizeTheme(localStorage.getItem(STORAGE_KEY) || DEFAULT_THEME);
   } catch {
     return DEFAULT_THEME;
   }
@@ -17,189 +35,136 @@ function getStoredTheme() {
 
 function setStoredTheme(theme) {
   try {
-    localStorage.setItem(STORAGE_KEY, theme);
+    localStorage.setItem(STORAGE_KEY, normalizeTheme(theme));
   } catch {
-    // ignore storage failures
+    // ignore storage errors
   }
-}
-
-function isValidTheme(theme = "") {
-  if (theme === "dark" || theme === "light") return true;
-
-  return VALID_GROUPS.some((group) => {
-    if (group === "neutral") return false;
-    return theme === `${group}-dark` || theme === `${group}-light`;
-  });
-}
-
-function normalizeTheme(theme = "") {
-  const value = String(theme || "").trim().toLowerCase();
-  return isValidTheme(value) ? value : DEFAULT_THEME;
 }
 
 function getThemeParts(theme = DEFAULT_THEME) {
   const safeTheme = normalizeTheme(theme);
 
   if (safeTheme === "dark") {
-    return { theme: safeTheme, mode: "dark", group: "neutral" };
+    return { mode: "dark", family: "neutral", theme: "dark" };
   }
 
   if (safeTheme === "light") {
-    return { theme: safeTheme, mode: "light", group: "neutral" };
+    return { mode: "light", family: "neutral", theme: "light" };
   }
 
-  const [group, mode] = safeTheme.split("-");
+  const [family, mode] = safeTheme.split("-");
   return {
-    theme: safeTheme,
-    mode: VALID_MODES.includes(mode) ? mode : DEFAULT_MODE,
-    group: VALID_GROUPS.includes(group) ? group : DEFAULT_GROUP
+    mode: mode === "light" ? "light" : "dark",
+    family: family || "neutral",
+    theme: safeTheme
   };
 }
 
-function buildTheme(group = DEFAULT_GROUP, mode = DEFAULT_MODE) {
-  const safeGroup = VALID_GROUPS.includes(group) ? group : DEFAULT_GROUP;
-  const safeMode = VALID_MODES.includes(mode) ? mode : DEFAULT_MODE;
+function buildTheme(family = "neutral", mode = "dark") {
+  const safeMode = mode === "light" ? "light" : "dark";
+  const safeFamily = String(family || "neutral").trim().toLowerCase();
 
-  if (safeGroup === "neutral") return safeMode;
-  return `${safeGroup}-${safeMode}`;
+  if (safeFamily === "neutral") {
+    return safeMode;
+  }
+
+  const candidate = `${safeFamily}-${safeMode}`;
+  return VALID_THEMES.includes(candidate) ? candidate : DEFAULT_THEME;
 }
 
-function getModeLabel(mode = "dark") {
-  return mode === "light" ? "Light" : "Dark";
-}
-
-function getGroupLabel(group = "neutral") {
-  if (group === "neutral") return "Neutral";
-  return group.charAt(0).toUpperCase() + group.slice(1);
-}
-
-function getHintLabel(mode = "dark") {
-  return mode === "light" ? "tap" : "tap";
-}
-
-function syncThemeControls(theme = getStoredTheme()) {
-  const { mode, group } = getThemeParts(theme);
-
-  document.querySelectorAll("[data-theme-mode-text]").forEach((el) => {
-    el.textContent = getModeLabel(mode);
-  });
-
-  document.querySelectorAll("[data-theme-group-text]").forEach((el) => {
-    el.textContent = getGroupLabel(group);
-  });
-
-  document.querySelectorAll("[data-theme-hint-text]").forEach((el) => {
-    el.textContent = getHintLabel(mode);
-  });
-
-  document.querySelectorAll("[data-theme-bubble]").forEach((bubble) => {
-    const bubbleGroup = bubble.getAttribute("data-theme-group") || "neutral";
-    const isActive = bubbleGroup === group;
-    bubble.classList.toggle("active", isActive);
-    bubble.setAttribute("aria-pressed", isActive ? "true" : "false");
-  });
-
-  document.querySelectorAll("[data-theme-core-toggle]").forEach((toggle) => {
-    toggle.setAttribute(
-      "aria-label",
-      `Theme mode ${getModeLabel(mode)}. Current color ${getGroupLabel(group)}. Tap to switch light and dark mode.`
-    );
-    toggle.dataset.themeMode = mode;
-    toggle.dataset.themeGroup = group;
-  });
-}
-
-function applyTheme(theme) {
+function setTheme(theme) {
   const safeTheme = normalizeTheme(theme);
   document.documentElement.setAttribute("data-theme", safeTheme);
   setStoredTheme(safeTheme);
-  syncThemeControls(safeTheme);
-  return safeTheme;
+  syncThemeUI();
 }
 
 function toggleMode() {
   const current = getThemeParts(getStoredTheme());
   const nextMode = current.mode === "dark" ? "light" : "dark";
-  const nextTheme = buildTheme(current.group, nextMode);
-  return applyTheme(nextTheme);
+  setTheme(buildTheme(current.family, nextMode));
 }
 
-function setThemeGroup(group) {
+function setThemeFamily(family) {
   const current = getThemeParts(getStoredTheme());
-  const safeGroup = VALID_GROUPS.includes(group) ? group : DEFAULT_GROUP;
-  const nextTheme = buildTheme(safeGroup, current.mode);
-  return applyTheme(nextTheme);
+  setTheme(buildTheme(family, current.mode));
 }
 
-function pulseElement(el) {
-  if (!el) return;
-  el.classList.add("active-glow");
-  setTimeout(() => el.classList.remove("active-glow"), 240);
+function syncThemeUI() {
+  const current = getThemeParts(getStoredTheme());
+
+  document.querySelectorAll("[data-theme-mode-text]").forEach((el) => {
+    el.textContent = current.mode === "dark" ? "Dark" : "Light";
+  });
+
+  document.querySelectorAll("[data-theme-group-text]").forEach((el) => {
+    const label =
+      current.family === "neutral"
+        ? "Neutral"
+        : current.family.charAt(0).toUpperCase() + current.family.slice(1);
+
+    el.textContent = label;
+  });
+
+  document.querySelectorAll("[data-theme-hint-text]").forEach((el) => {
+    el.textContent = "tap";
+  });
+
+  document.querySelectorAll("[data-theme-bubble]").forEach((bubble) => {
+    const family = bubble.getAttribute("data-theme-family") || "neutral";
+    const active = family === current.family;
+    bubble.classList.toggle("active", active);
+    bubble.setAttribute("aria-pressed", active ? "true" : "false");
+  });
 }
 
-function bindThemeControlBlock(block) {
-  if (!block || block.dataset.themeBound === "true") return;
-  block.dataset.themeBound = "true";
+function bindThemeControls() {
+  document.querySelectorAll("[data-theme-pill]").forEach((button) => {
+    if (button.dataset.bound === "true") return;
+    button.dataset.bound = "true";
 
-  const coreToggle = block.querySelector("[data-theme-core-toggle]");
-  const bubbles = block.querySelectorAll("[data-theme-bubble]");
-
-  if (coreToggle) {
-    coreToggle.addEventListener("click", () => {
+    button.addEventListener("click", () => {
       toggleMode();
-      pulseElement(coreToggle);
+      button.classList.add("active-glow");
+      setTimeout(() => button.classList.remove("active-glow"), 220);
     });
-  }
+  });
 
-  bubbles.forEach((bubble) => {
+  document.querySelectorAll("[data-theme-bubble]").forEach((bubble) => {
+    if (bubble.dataset.bound === "true") return;
+    bubble.dataset.bound = "true";
+
     bubble.addEventListener("click", () => {
-      const group = bubble.getAttribute("data-theme-group") || "neutral";
-      setThemeGroup(group);
-      pulseElement(bubble);
+      const family = bubble.getAttribute("data-theme-family") || "neutral";
+      setThemeFamily(family);
+      bubble.classList.add("active-glow");
+      setTimeout(() => bubble.classList.remove("active-glow"), 220);
     });
   });
 }
 
 function bindAllThemeControls() {
-  document.querySelectorAll("[data-theme-control]").forEach((block) => {
-    bindThemeControlBlock(block);
-  });
+  bindThemeControls();
+  syncThemeUI();
 }
 
 function initTheme() {
-  const applied = applyTheme(getStoredTheme());
+  setTheme(getStoredTheme());
   bindAllThemeControls();
-  syncThemeControls(applied);
 }
 
-window.closeAllThemeMenus = function closeAllThemeMenus() {
-  document.querySelectorAll("[data-theme-control]").forEach((block) => {
-    block.classList.remove("open");
-  });
-};
-
 window.EvaraTheme = {
-  applyTheme,
+  initTheme,
+  setTheme,
   toggleMode,
-  setThemeGroup,
+  setThemeFamily,
   getStoredTheme,
   getThemeParts,
   buildTheme,
-  syncThemeControls,
+  bindThemeControls,
   bindAllThemeControls,
-  initTheme
+  syncThemeUI,
+  syncThemeControls: syncThemeUI
 };
 
 document.addEventListener("DOMContentLoaded", initTheme);
-
-document.addEventListener("click", (event) => {
-  const target = event.target;
-  if (!(target instanceof Element)) return;
-
-  if (target.closest("#universalNav")) {
-    setTimeout(() => {
-      bindAllThemeControls();
-      syncThemeControls(getStoredTheme());
-    }, 0);
-  }
-});
