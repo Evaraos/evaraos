@@ -1,191 +1,261 @@
+// assets/js/users.js
+
+import { auth, db } from "./firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
-  bindTopbar,
-  requireAuth,
-  renderSidebar,
-  fetchAllCollection,
-  fetchUsersByCompany,
-  updateDocument
-} from "./app.js";
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-import { canAccess } from "./roles.js";
+const usersSearch = document.getElementById("usersSearch");
+const usersList = document.getElementById("usersList");
+const usersRoleGrid = document.getElementById("usersRoleGrid");
+const usersFeed = document.getElementById("usersFeed");
 
-const state = {
-  user: null,
-  users: [],
-  editingId: null
-};
+const usersHeroTitle = document.getElementById("usersHeroTitle");
+const usersHeroText = document.getElementById("usersHeroText");
 
-function showToast(message, variant = "success") {
-  let container = document.getElementById("usersToastContainer");
-  if (!container) {
-    container = document.createElement("div");
-    container.id = "usersToastContainer";
-    container.style.position = "fixed";
-    container.style.top = "20px";
-    container.style.right = "20px";
-    container.style.zIndex = "9999";
-    container.style.display = "flex";
-    container.style.flexDirection = "column";
-    container.style.gap = "10px";
-    document.body.appendChild(container);
-  }
+const usersStatTotal = document.getElementById("usersStatTotal");
+const usersStatLeaders = document.getElementById("usersStatLeaders");
+const usersStatFiltered = document.getElementById("usersStatFiltered");
+const usersStatTopRole = document.getElementById("usersStatTopRole");
 
-  const toast = document.createElement("div");
-  toast.textContent = message;
-  toast.style.padding = "14px 16px";
-  toast.style.borderRadius = "16px";
-  toast.style.background = variant === "error" ? "rgba(180,40,40,.94)" : "rgba(25,110,55,.94)";
-  toast.style.color = "#fff";
-  toast.style.boxShadow = "0 12px 30px rgba(0,0,0,.28)";
-  container.appendChild(toast);
+const usersStatTotalMeta = document.getElementById("usersStatTotalMeta");
+const usersStatLeadersMeta = document.getElementById("usersStatLeadersMeta");
+const usersStatFilteredMeta = document.getElementById("usersStatFilteredMeta");
+const usersStatTopRoleMeta = document.getElementById("usersStatTopRoleMeta");
 
-  setTimeout(() => toast.remove(), 2600);
+const usersRefreshBtnTop = document.getElementById("usersRefreshBtnTop");
+const usersRefreshBtnSide = document.getElementById("usersRefreshBtnSide");
+const usersSortBtn = document.getElementById("usersSortBtn");
+
+let userRecords = [];
+let filteredUsers = [];
+let sortAscending = true;
+
+function normalize(value = "") {
+  return String(value || "").trim().toLowerCase();
 }
 
-async function loadUsers(user) {
-  state.user = user;
+function titleFromUser(user) {
+  return user.fullName || user.displayName || user.name || user.email || "Unnamed User";
+}
 
-  if (["super_admin", "owner", "admin"].includes(user.role)) {
-    state.users = await fetchAllCollection("users", { max: 500 });
+function roleLabel(role = "") {
+  const value = String(role || "").trim().toLowerCase();
+  if (!value) return "Customer";
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function roleStatusClass(role = "") {
+  const value = normalize(role);
+  if (["owner", "admin", "manager"].includes(value)) return "good";
+  if (["sales", "technician"].includes(value)) return "working";
+  return "alert";
+}
+
+function getRoleCounts(users) {
+  const counts = {};
+  users.forEach((user) => {
+    const role = normalize(user.role || "customer");
+    counts[role] = (counts[role] || 0) + 1;
+  });
+  return counts;
+}
+
+function renderStats() {
+  const roleCounts = getRoleCounts(userRecords);
+  const leaderCount = (roleCounts.owner || 0) + (roleCounts.admin || 0);
+
+  const topRoleEntry = Object.entries(roleCounts).sort((a, b) => b[1] - a[1])[0];
+  const topRole = topRoleEntry ? roleLabel(topRoleEntry[0]) : "—";
+
+  usersStatTotal.textContent = String(userRecords.length);
+  usersStatLeaders.textContent = String(leaderCount);
+  usersStatFiltered.textContent = String(filteredUsers.length);
+  usersStatTopRole.textContent = topRole;
+
+  usersStatTotalMeta.textContent = "User records loaded";
+  usersStatLeadersMeta.textContent = "Owner and admin accounts";
+  usersStatFilteredMeta.textContent = "Matches current search";
+  usersStatTopRoleMeta.textContent = topRoleEntry ? `${topRoleEntry[1]} user(s)` : "No roles found";
+}
+
+function renderUsersList() {
+  if (!filteredUsers.length) {
+    usersList.innerHTML = `
+      <article class="dashboard-list-item glass-card aurora-card">
+        <div>
+          <strong>No users found</strong>
+          <span>Try a different search or add user records to Firestore.</span>
+        </div>
+        <span class="dashboard-status-pill alert">Empty</span>
+      </article>
+    `;
     return;
   }
 
-  state.users = await fetchUsersByCompany(user.companyId);
-}
-
-function openUserModal(user = null) {
-  state.editingId = user?.id || null;
-
-  document.getElementById("userModal")?.classList.add("open");
-  document.getElementById("userModalTitle").textContent = user ? "Edit User" : "Edit User";
-
-  document.getElementById("editUserName").value = user?.name || "";
-  document.getElementById("editUserEmail").value = user?.email || "";
-  document.getElementById("editUserPhone").value = user?.phone || "";
-  document.getElementById("editUserRole").value = user?.role || "customer";
-  document.getElementById("editUserStatus").value = user?.status || "active";
-  document.getElementById("editUserApproval").value = user?.approvalStatus || "approved";
-  document.getElementById("editUserReportsTo").value = user?.reportsTo || "";
-}
-
-function closeUserModal() {
-  document.getElementById("userModal")?.classList.remove("open");
-  state.editingId = null;
-}
-
-function renderUsers() {
-  const root = document.getElementById("usersRoot");
-  if (!root) return;
-
-  root.innerHTML = `
-    <section class="glass-card aurora-card shine-border">
-      <div class="section-title-row">
-        <div>
-          <h2 style="margin:0;">User Directory</h2>
-          <p class="muted" style="margin:8px 0 0;">Edit team members, roles, statuses, approvals, and reporting lines.</p>
-        </div>
-        <div class="muted">${state.users.length} user(s)</div>
+  usersList.innerHTML = filteredUsers.map((user) => `
+    <article class="dashboard-list-item glass-card aurora-card">
+      <div>
+        <strong>${titleFromUser(user)}</strong>
+        <span>${user.email || "No email"} • ${roleLabel(user.role || "customer")}</span>
       </div>
+      <span class="dashboard-status-pill ${roleStatusClass(user.role)}">${roleLabel(user.role || "customer")}</span>
+    </article>
+  `).join("");
+}
 
-      ${
-        !state.users.length
-          ? `<div class="muted" style="padding-top:16px;">No users found.</div>`
-          : `
-            <div class="quick-links-grid" style="margin-top:18px;">
-              ${state.users.map(user => `
-                <div class="quick-link-card aurora-card shine-border" style="display:block; min-height:auto;">
-                  <div>
-                    <strong>${user.name || "Unnamed User"}</strong>
-                    <div class="muted" style="margin-top:8px;">
-                      ${user.email || "No email"}<br>
-                      ${user.phone || "No phone"}<br>
-                      Reports To: ${user.reportsTo || "—"}
-                    </div>
-                  </div>
+function renderRoleGrid() {
+  const roleCounts = getRoleCounts(userRecords);
+  const orderedRoles = ["owner", "admin", "manager", "sales", "technician", "customer"];
 
-                  <div style="margin-top:12px;">
-                    <span class="chip">${user.role || "customer"}</span>
-                    <span class="chip">${user.status || "active"}</span>
-                    <span class="chip">${user.approvalStatus || "approved"}</span>
-                  </div>
+  usersRoleGrid.innerHTML = orderedRoles.map((role) => `
+    <article class="dashboard-role-card glass-card aurora-card">
+      <strong>${roleLabel(role)}</strong>
+      <span>${roleCounts[role] || 0} user(s)</span>
+    </article>
+  `).join("");
+}
 
-                  <div class="top-actions" style="margin-top:14px;">
-                    <button class="btn btn-secondary edit-user-btn" data-id="${user.id}" type="button">Edit</button>
-                  </div>
-                </div>
-              `).join("")}
-            </div>
-          `
-      }
-    </section>
-  `;
+function renderUsersFeed() {
+  if (!userRecords.length) {
+    usersFeed.innerHTML = `
+      <article class="dashboard-feed-item glass-card aurora-card">
+        <strong>No user activity</strong>
+        <span>User feed will appear once directory records are available.</span>
+      </article>
+    `;
+    return;
+  }
 
-  document.querySelectorAll(".edit-user-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const user = state.users.find(item => item.id === btn.dataset.id);
-      openUserModal(user);
+  usersFeed.innerHTML = userRecords.slice(0, 6).map((user) => `
+    <article class="dashboard-feed-item glass-card aurora-card">
+      <strong>${titleFromUser(user)}</strong>
+      <span>${user.email || "No email"} • Role: ${roleLabel(user.role || "customer")}</span>
+    </article>
+  `).join("");
+}
+
+function applySearchAndSort() {
+  const query = normalize(usersSearch?.value || "");
+
+  filteredUsers = userRecords.filter((user) => {
+    const haystack = [
+      user.fullName,
+      user.displayName,
+      user.name,
+      user.email,
+      user.role
+    ].map((value) => normalize(value)).join(" ");
+
+    return haystack.includes(query);
+  });
+
+  filteredUsers.sort((a, b) => {
+    const first = titleFromUser(a).toLowerCase();
+    const second = titleFromUser(b).toLowerCase();
+    return sortAscending ? first.localeCompare(second) : second.localeCompare(first);
+  });
+
+  renderStats();
+  renderUsersList();
+}
+
+async function loadUsers() {
+  usersHeroTitle.textContent = "Loading users...";
+  usersHeroText.textContent = "Connecting to Firestore user records.";
+
+  try {
+    const snap = await getDocs(collection(db, "users"));
+    userRecords = snap.docs.map((docItem) => ({
+      id: docItem.id,
+      ...docItem.data()
+    }));
+
+    filteredUsers = [...userRecords];
+    applySearchAndSort();
+    renderRoleGrid();
+    renderUsersFeed();
+
+    usersHeroTitle.textContent = "Directory connected";
+    usersHeroText.textContent = `${userRecords.length} users loaded from Firestore.`;
+  } catch (error) {
+    console.error("Failed loading users:", error);
+
+    usersHeroTitle.textContent = "Load failed";
+    usersHeroText.textContent = "Check Firestore rules and the users collection.";
+
+    usersList.innerHTML = `
+      <article class="dashboard-list-item glass-card aurora-card">
+        <div>
+          <strong>Unable to load users</strong>
+          <span>${error.message || "Unknown Firestore error."}</span>
+        </div>
+        <span class="dashboard-status-pill alert">Error</span>
+      </article>
+    `;
+
+    usersRoleGrid.innerHTML = `
+      <article class="dashboard-role-card glass-card aurora-card">
+        <strong>Role load failed</strong>
+        <span>${error.message || "Unknown Firestore error."}</span>
+      </article>
+    `;
+
+    usersFeed.innerHTML = `
+      <article class="dashboard-feed-item glass-card aurora-card">
+        <strong>User feed unavailable</strong>
+        <span>${error.message || "Unknown Firestore error."}</span>
+      </article>
+    `;
+  }
+}
+
+function bindSidebarAnchors() {
+  document.querySelectorAll(".dashboard-nav-link").forEach((link) => {
+    link.addEventListener("click", () => {
+      document.querySelectorAll(".dashboard-nav-link").forEach((item) => {
+        item.classList.remove("active");
+      });
+      link.classList.add("active");
     });
   });
 }
 
-async function saveUser(e) {
-  e.preventDefault();
-
-  if (!state.editingId) {
-    showToast("No user selected.", "error");
-    return;
-  }
-
-  const payload = {
-    name: document.getElementById("editUserName").value.trim(),
-    email: document.getElementById("editUserEmail").value.trim().toLowerCase(),
-    phone: document.getElementById("editUserPhone").value.trim(),
-    role: document.getElementById("editUserRole").value,
-    status: document.getElementById("editUserStatus").value,
-    approvalStatus: document.getElementById("editUserApproval").value,
-    reportsTo: document.getElementById("editUserReportsTo").value.trim(),
-    active: document.getElementById("editUserStatus").value !== "inactive"
-  };
-
-  try {
-    await updateDocument("users", state.editingId, payload);
-    closeUserModal();
-    await loadUsers(state.user);
-    renderUsers();
-    showToast("User updated.");
-  } catch (error) {
-    console.error(error);
-    showToast(error.message || "Could not update user.", "error");
-  }
+if (usersSearch) {
+  usersSearch.addEventListener("input", applySearchAndSort);
 }
 
-requireAuth(async (user) => {
-  await bindTopbar(user, "Users");
+if (usersSortBtn) {
+  usersSortBtn.addEventListener("click", () => {
+    sortAscending = !sortAscending;
+    usersSortBtn.textContent = sortAscending ? "Sort A–Z" : "Sort Z–A";
+    applySearchAndSort();
+  });
+}
 
-  const sidebar = document.getElementById("sidebar");
-  if (sidebar) {
-    sidebar.innerHTML = renderSidebar(user.role, "users");
-  }
+if (usersRefreshBtnTop) {
+  usersRefreshBtnTop.addEventListener("click", async () => {
+    await loadUsers();
+  });
+}
 
-  if (!canAccess(user.role, "users")) {
-    document.getElementById("usersRoot").innerHTML =
-      `<section class="glass-card aurora-card shine-border">Access denied.</section>`;
-    return;
-  }
+if (usersRefreshBtnSide) {
+  usersRefreshBtnSide.addEventListener("click", async () => {
+    await loadUsers();
+  });
+}
 
-  document.getElementById("usersRoot").innerHTML =
-    `<section class="glass-card aurora-card shine-border">Loading users...</section>`;
+document.addEventListener("DOMContentLoaded", () => {
+  bindSidebarAnchors();
 
-  try {
-    await loadUsers(user);
-    renderUsers();
-  } catch (error) {
-    console.error(error);
-    document.getElementById("usersRoot").innerHTML =
-      `<section class="glass-card aurora-card shine-border">Users page failed: ${error.message || error}</section>`;
-  }
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = "/evaraos/login.html";
+      return;
+    }
 
-  document.getElementById("userModalCloseBtn")?.addEventListener("click", closeUserModal);
-  document.getElementById("userModalCancelBtn")?.addEventListener("click", closeUserModal);
-  document.getElementById("userForm")?.addEventListener("submit", saveUser);
+    await loadUsers();
+  });
 });
