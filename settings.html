@@ -4,349 +4,64 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Settings • Evaraos Inc</title>
+
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
 </head>
 <body class="dashboard-body">
+
   <div class="page-grid-overlay"></div>
   <div id="universalNav"></div>
 
   <div class="dashboard-shell">
-    <aside class="dashboard-sidebar" id="dashboardSidebar">
-      <div class="dashboard-sidebar-inner glass-shell aurora-card">
-        <div class="dashboard-sidebar-search">
-          <div class="dashboard-search-shell input-shell aurora-card">
-            <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
-              <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
-            </svg>
-            <input
-              type="search"
-              class="dashboard-search-input input"
-              placeholder="Search settings..."
-              aria-label="Search settings"
-            />
-          </div>
-        </div>
-
-        <div class="dashboard-sidebar-head">
-          <p class="dashboard-sidebar-eyebrow">Preferences</p>
-          <h2 id="dashboardOverviewTitle">Settings Overview</h2>
-        </div>
-
-        <nav class="dashboard-sidebar-nav" aria-label="Settings sections">
-          <a href="#appearanceSection" class="dashboard-nav-link active aurora-card">
-            <span class="dashboard-nav-icon">◉</span>
-            <span>Appearance</span>
-          </a>
-
-          <a href="#notificationsSection" class="dashboard-nav-link aurora-card">
-            <span class="dashboard-nav-icon">◎</span>
-            <span>Notifications</span>
-          </a>
-
-          <a href="#workspaceSection" class="dashboard-nav-link aurora-card">
-            <span class="dashboard-nav-icon">◌</span>
-            <span>Workspace</span>
-          </a>
-
-          <a href="#accountSection" class="dashboard-nav-link aurora-card">
-            <span class="dashboard-nav-icon">◐</span>
-            <span>Account</span>
-          </a>
-        </nav>
-
-        <div class="dashboard-sidebar-foot glass-card aurora-card">
-          <div class="dashboard-sidebar-foot-copy">
-            <strong>Preference Center</strong>
-            <span>
-              Tune your appearance, alerts, and workspace defaults without affecting the core system.
-            </span>
-          </div>
-          <a href="/evaraos/profile.html" class="btn btn-theme-primary">Back to Profile</a>
-        </div>
-      </div>
-    </aside>
 
     <main class="dashboard-main">
-      <section class="dashboard-hero glass-card aurora-card" id="appearanceSection">
+
+      <section class="dashboard-hero glass-card aurora-card">
         <div class="dashboard-hero-copy">
-          <p class="dashboard-eyebrow">SETTINGS CENTER</p>
-          <h1>Customize how Evaraos looks and behaves.</h1>
-          <p class="dashboard-hero-text">
-            Adjust account preferences, notifications, theme controls, and workspace defaults
-            while keeping your system polished and consistent across the platform.
-          </p>
-
-          <div class="dashboard-hero-actions">
-            <button type="submit" form="settingsForm" class="btn btn-theme-primary">Save Settings</button>
-            <button type="button" id="settingsResetBtnTop" class="btn btn-theme-secondary">Reset Changes</button>
-          </div>
-        </div>
-
-        <div class="dashboard-hero-panel glass-card aurora-card">
-          <div class="dashboard-hero-panel-top">
-            <span class="dashboard-mini-badge">Settings Status</span>
-            <span class="dashboard-live-dot"></span>
-          </div>
-
-          <div class="dashboard-hero-logo-wrap">
-            <img
-              src="/evaraos/assets/img/evaraos_logo.png"
-              alt="Evaraos"
-              class="dashboard-hero-logo"
-            />
-          </div>
-
-          <div class="dashboard-hero-panel-copy">
-            <strong id="settingsHeroTitle">Preferences syncing...</strong>
-            <span id="settingsHeroText">Loading saved settings for this account.</span>
-          </div>
+          <h1>System Settings</h1>
+          <p>Manage theme, preferences, and system-level configurations.</p>
         </div>
       </section>
 
-      <section class="dashboard-overview glass-card aurora-card">
-        <div class="dashboard-section-head">
-          <div>
-            <p class="dashboard-section-kicker">Snapshot</p>
-            <h2>Settings Overview</h2>
-          </div>
-        </div>
-
-        <div class="dashboard-stats-grid">
-          <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Theme</p>
-            <h3 id="settingsThemeStat">—</h3>
-            <span id="settingsThemeMeta">Loading theme...</span>
-          </article>
-
-          <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Email Alerts</p>
-            <h3 id="settingsEmailStat">—</h3>
-            <span id="settingsEmailMeta">Loading notifications...</span>
-          </article>
-
-          <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Push Alerts</p>
-            <h3 id="settingsPushStat">—</h3>
-            <span id="settingsPushMeta">Loading notifications...</span>
-          </article>
-
-          <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Workspace</p>
-            <h3 id="settingsWorkspaceStat">—</h3>
-            <span id="settingsWorkspaceMeta">Loading preferences...</span>
-          </article>
-        </div>
-      </section>
-
-      <form id="settingsForm" class="dashboard-main" novalidate>
-        <section class="dashboard-grid-2" id="notificationsSection">
-          <section class="dashboard-panel glass-card aurora-card">
-            <div class="dashboard-section-head">
-              <div>
-                <p class="dashboard-section-kicker">Appearance</p>
-                <h2>Theme Preferences</h2>
-              </div>
-            </div>
-
-            <div class="form-grid-2">
-              <div class="form-group">
-                <label class="field-label" for="settingsThemeMode">Theme Mode</label>
-                <div class="input-shell aurora-card">
-                  <select id="settingsThemeMode" class="input" name="themeMode">
-                    <option value="dark">Dark</option>
-                    <option value="light">Light</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label class="field-label" for="settingsThemeFamily">Theme Family</label>
-                <div class="input-shell aurora-card">
-                  <select id="settingsThemeFamily" class="input" name="themeFamily">
-                    <option value="neutral">Neutral</option>
-                    <option value="blue">Blue</option>
-                    <option value="red">Red</option>
-                    <option value="pink">Pink</option>
-                    <option value="green">Green</option>
-                    <option value="purple">Purple</option>
-                    <option value="yellow">Yellow</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div class="security-inline-card glass-card aurora-card" style="margin-top: 18px;">
-              <h2 class="inline-card-title">Quick Theme Controls</h2>
-              <p class="inline-card-copy">
-                You can also change themes instantly from the universal nav theme controls.
-              </p>
-            </div>
-          </section>
-
-          <section class="dashboard-panel glass-card aurora-card">
-            <div class="dashboard-section-head">
-              <div>
-                <p class="dashboard-section-kicker">Alerts</p>
-                <h2>Notification Preferences</h2>
-              </div>
-            </div>
-
-            <div class="form-grid-2">
-              <div class="remember-row aurora-card">
-                <label class="remember-check" for="settingsEmailAlerts">
-                  <input id="settingsEmailAlerts" name="emailAlerts" type="checkbox" />
-                  <span>Email alerts enabled</span>
-                </label>
-              </div>
-
-              <div class="remember-row aurora-card">
-                <label class="remember-check" for="settingsPushAlerts">
-                  <input id="settingsPushAlerts" name="pushAlerts" type="checkbox" />
-                  <span>Push alerts enabled</span>
-                </label>
-              </div>
-            </div>
-
-            <div class="form-grid-2">
-              <div class="remember-row aurora-card">
-                <label class="remember-check" for="settingsLeadDigest">
-                  <input id="settingsLeadDigest" name="leadDigest" type="checkbox" />
-                  <span>Daily lead digest</span>
-                </label>
-              </div>
-
-              <div class="remember-row aurora-card">
-                <label class="remember-check" for="settingsJobUpdates">
-                  <input id="settingsJobUpdates" name="jobUpdates" type="checkbox" />
-                  <span>Job status updates</span>
-                </label>
-              </div>
-            </div>
-          </section>
-        </section>
-
-        <section class="dashboard-grid-2" id="workspaceSection">
-          <section class="dashboard-panel glass-card aurora-card">
-            <div class="dashboard-section-head">
-              <div>
-                <p class="dashboard-section-kicker">Workspace</p>
-                <h2>Default Workspace Settings</h2>
-              </div>
-            </div>
-
-            <div class="form-grid-2">
-              <div class="form-group">
-                <label class="field-label" for="settingsDefaultView">Default Dashboard View</label>
-                <div class="input-shell aurora-card">
-                  <select id="settingsDefaultView" class="input" name="defaultView">
-                    <option value="overview">Overview</option>
-                    <option value="companies">Companies</option>
-                    <option value="users">Users</option>
-                    <option value="leads">Leads</option>
-                    <option value="jobs">Jobs</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label class="field-label" for="settingsTimezone">Timezone Label</label>
-                <div class="input-shell aurora-card">
-                  <input
-                    id="settingsTimezone"
-                    class="input"
-                    type="text"
-                    name="timezone"
-                    placeholder="America/New_York"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label class="field-label" for="settingsWorkspaceNote">Workspace Note</label>
-              <div class="input-shell aurora-card">
-                <textarea
-                  id="settingsWorkspaceNote"
-                  class="input"
-                  name="workspaceNote"
-                  rows="5"
-                  placeholder="Optional note about your preferred workspace setup"
-                  style="resize: vertical; min-height: 140px;"
-                ></textarea>
-              </div>
-            </div>
-          </section>
-
-          <section class="dashboard-panel glass-card aurora-card" id="accountSection">
-            <div class="dashboard-section-head">
-              <div>
-                <p class="dashboard-section-kicker">Account</p>
-                <h2>Profile Settings</h2>
-              </div>
-            </div>
-
-            <div class="form-grid-2">
-              <div class="form-group">
-                <label class="field-label" for="settingsName">Full Name</label>
-                <div class="input-shell aurora-card">
-                  <input
-                    id="settingsName"
-                    name="fullName"
-                    type="text"
-                    class="input"
-                    placeholder="Enter your full name"
-                    autocomplete="name"
-                  />
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label class="field-label" for="settingsEmail">Email</label>
-                <div class="input-shell aurora-card">
-                  <input
-                    id="settingsEmail"
-                    name="email"
-                    type="email"
-                    class="input"
-                    placeholder="Your email"
-                    autocomplete="email"
-                    readonly
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div class="login-actions-row">
-              <button type="submit" class="btn btn-theme-primary">Save Settings</button>
-              <button type="button" id="settingsResetBtn" class="btn btn-theme-secondary">Reset Changes</button>
-            </div>
-
-            <p id="settingsMessage" class="login-message" aria-live="polite"></p>
-          </section>
-        </section>
-      </form>
-
+      <!-- THEME SETTINGS -->
       <section class="dashboard-panel glass-card aurora-card">
-        <div class="dashboard-section-head">
-          <div>
-            <p class="dashboard-section-kicker">Summary</p>
-            <h2>Saved Preferences</h2>
-          </div>
-        </div>
+        <h2>Theme</h2>
 
-        <div class="dashboard-feed" id="settingsSummaryFeed">
-          <article class="dashboard-feed-item glass-card aurora-card">
-            <strong>Loading settings...</strong>
-            <span>Your current saved preferences will appear here.</span>
-          </article>
+        <div class="settings-grid">
+
+          <button class="btn btn-theme-primary" data-theme-select="light">
+            Light Mode
+          </button>
+
+          <button class="btn btn-theme-primary" data-theme-select="dark">
+            Dark Mode
+          </button>
+
+          <button class="btn btn-theme-secondary" data-theme-select="system">
+            System Default
+          </button>
+
         </div>
       </section>
+
+      <!-- ACCOUNT -->
+      <section class="dashboard-panel glass-card aurora-card">
+        <h2>Account</h2>
+
+        <div class="settings-grid">
+          <a href="/evaraos/profile.html" class="btn btn-theme-secondary">Edit Profile</a>
+          <a href="/evaraos/security.html" class="btn btn-theme-secondary">Security</a>
+        </div>
+      </section>
+
     </main>
+
   </div>
 
   <script type="module" src="/evaraos/assets/js/settings.js"></script>
   <script type="module" src="/evaraos/assets/js/theme.js"></script>
   <script type="module" src="/evaraos/assets/js/nav.js"></script>
   <script type="module" src="/evaraos/assets/js/firebase.js"></script>
+
 </body>
 </html>
