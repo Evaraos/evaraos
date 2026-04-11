@@ -75,7 +75,7 @@ function passwordStrongEnough(password = "") {
 }
 
 function normalizeEmail(value = "") {
-  return String(value).trim().toLowerCase();
+  return String(value || "").trim().toLowerCase();
 }
 
 function inferRoleFromEmail(email = "") {
