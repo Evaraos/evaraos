@@ -95,7 +95,6 @@ async function loadCollectionDocs(name, options = {}) {
     return safeArray(snap);
   } catch (error) {
     console.warn(`Failed loading collection "${name}" with query, retrying basic read.`, error);
-
     const snap = await getDocs(ref);
     return safeArray(snap);
   }
@@ -148,9 +147,7 @@ function renderUsers(users) {
 
   users.forEach((user) => {
     const role = normalizedStatus(user.role || "customer");
-    if (roleCounts[role] !== undefined) {
-      roleCounts[role] += 1;
-    }
+    if (roleCounts[role] !== undefined) roleCounts[role] += 1;
   });
 
   const cards = [
@@ -181,9 +178,7 @@ function renderLeadFlow(leads) {
 
   leads.forEach((lead) => {
     const status = normalizedStatus(lead.status || "new");
-    if (statuses[status] !== undefined) {
-      statuses[status] += 1;
-    }
+    if (statuses[status] !== undefined) statuses[status] += 1;
   });
 
   const rows = [
@@ -337,9 +332,7 @@ function renderFilteredDashboard(queryText = "") {
       item.category,
       item.status,
       item.role
-    ]
-      .map((value) => String(value || "").toLowerCase())
-      .join(" ");
+    ].map((value) => String(value || "").toLowerCase()).join(" ");
 
     return haystack.includes(queryValue);
   });
@@ -440,7 +433,6 @@ function bindSidebarAnchors() {
 
 function bindSearch() {
   if (!dashboardSearch) return;
-
   dashboardSearch.addEventListener("input", () => {
     renderFilteredDashboard(dashboardSearch.value);
   });
@@ -455,7 +447,6 @@ function initDashboard() {
       window.location.href = "/evaraos/login.html";
       return;
     }
-
     loadDashboardData();
   });
 }
