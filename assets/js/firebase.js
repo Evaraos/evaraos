@@ -22,7 +22,7 @@ import {
   setDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* CONFIG */
+/* FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyAg12tiBifLswke_km3nY6YQpf8ROyqup4",
   authDomain: "evaraos-web.firebaseapp.com",
@@ -39,7 +39,7 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-/* RE-EXPORT AUTH HELPERS USED THROUGHOUT REPO */
+/* RE-EXPORT AUTH HELPERS USED IN THE REPO */
 export {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -47,13 +47,11 @@ export {
   updateProfile
 };
 
-/* STORAGE KEYS */
 const STORAGE_KEYS = {
   role: "evaraos-role",
   user: "evaraos-user"
 };
 
-/* GLOBAL USER STATE */
 let currentUser = null;
 
 export function getCurrentUser() {
@@ -69,7 +67,7 @@ export function saveUserRole(role = "owner") {
   try {
     localStorage.setItem(STORAGE_KEYS.role, String(role || "owner"));
   } catch {
-    // ignore storage issues
+    // ignore storage errors
   }
 }
 
@@ -93,7 +91,7 @@ export function saveUserProfile(profile = {}) {
   try {
     localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(profile));
   } catch {
-    // ignore storage issues
+    // ignore storage errors
   }
 }
 
@@ -127,7 +125,6 @@ export function roleLabelFromRole(role = "") {
   return "Executive Access";
 }
 
-/* APPLY USER TO UI */
 export function applyUserToUi(userData = {}) {
   const displayName = userData.displayName || userData.fullName || userData.email || "User";
   const email = userData.email || "";
@@ -135,19 +132,15 @@ export function applyUserToUi(userData = {}) {
   const initial = displayName.trim().charAt(0).toUpperCase() || "U";
   const roleText = roleLabelFromRole(role);
 
-  const nameEls = document.querySelectorAll("[data-user-name]");
-  const emailEls = document.querySelectorAll("[data-user-email]");
-  const avatarEls = document.querySelectorAll("[data-user-avatar]");
-
-  nameEls.forEach((el) => {
+  document.querySelectorAll("[data-user-name]").forEach((el) => {
     el.textContent = displayName;
   });
 
-  emailEls.forEach((el) => {
+  document.querySelectorAll("[data-user-email]").forEach((el) => {
     el.textContent = email;
   });
 
-  avatarEls.forEach((el) => {
+  document.querySelectorAll("[data-user-avatar]").forEach((el) => {
     el.textContent = initial;
   });
 
@@ -188,7 +181,10 @@ export async function logoutAndRedirect(path = "/evaraos/login.html") {
   window.location.href = path;
 }
 
-/* Route helper used by auth.js */
+export async function logout() {
+  await logoutAndRedirect("/evaraos/login.html");
+}
+
 export function protectRoute({
   requireAuth = true,
   redirectGuestTo = "/evaraos/login.html",
@@ -219,12 +215,6 @@ export function protectRoute({
   });
 }
 
-/* LOGOUT compatibility helper */
-export async function logout() {
-  await logoutAndRedirect("/evaraos/login.html");
-}
-
-/* AUTH LISTENER GLOBAL */
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     currentUser = null;
@@ -235,12 +225,12 @@ onAuthStateChanged(auth, async (user) => {
   currentUser = user;
 
   try {
-    const ref = doc(db, "users", user.uid);
-    const snap = await getDoc(ref);
+    const userRef = doc(db, "users", user.uid);
+    const snap = await getDoc(userRef);
 
     if (!snap.exists()) {
       await setDoc(
-        ref,
+        userRef,
         {
           uid: user.uid,
           email: user.email || "",
@@ -253,13 +243,14 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     const data = snap.exists() ? snap.data() || {} : {};
+    const role = data.role || getSavedUserRole() || "owner";
 
-    syncUserSession(user, data.role || getSavedUserRole() || "owner");
+    syncUserSession(user, role);
 
     applyUserToUi({
       displayName: data.displayName || data.fullName || user.displayName || user.email || "User",
       email: user.email || "",
-      role: data.role || getSavedUserRole() || "owner"
+      role
     });
   } catch (error) {
     console.error("Global auth sync failed:", error);
