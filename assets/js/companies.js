@@ -14,238 +14,118 @@ const companiesFeed = document.getElementById("companiesFeed");
 const companiesHeroTitle = document.getElementById("companiesHeroTitle");
 const companiesHeroText = document.getElementById("companiesHeroText");
 
-const companiesStatTotal = document.getElementById("companiesStatTotal");
-const companiesStatHealthy = document.getElementById("companiesStatHealthy");
-const companiesStatReview = document.getElementById("companiesStatReview");
-const companiesStatFiltered = document.getElementById("companiesStatFiltered");
+const statTotal = document.getElementById("companiesStatTotal");
+const statHealthy = document.getElementById("companiesStatHealthy");
+const statReview = document.getElementById("companiesStatReview");
+const statFiltered = document.getElementById("companiesStatFiltered");
 
-const companiesStatTotalMeta = document.getElementById("companiesStatTotalMeta");
-const companiesStatHealthyMeta = document.getElementById("companiesStatHealthyMeta");
-const companiesStatReviewMeta = document.getElementById("companiesStatReviewMeta");
-const companiesStatFilteredMeta = document.getElementById("companiesStatFilteredMeta");
+const refreshTop = document.getElementById("companiesRefreshBtnTop");
+const refreshSide = document.getElementById("companiesRefreshBtnSide");
+const sortBtn = document.getElementById("companiesSortBtn");
 
-const companiesRefreshBtnTop = document.getElementById("companiesRefreshBtnTop");
-const companiesRefreshBtnSide = document.getElementById("companiesRefreshBtnSide");
-const companiesSortBtn = document.getElementById("companiesSortBtn");
+let records = [];
+let filtered = [];
+let sortAsc = true;
 
-let companyRecords = [];
-let filteredCompanies = [];
-let sortAscending = true;
-
-function normalize(value = "") {
-  return String(value || "").trim().toLowerCase();
+function normalize(v = "") {
+  return String(v || "").toLowerCase().trim();
 }
 
-function niceStatus(status = "") {
-  const value = String(status || "").trim();
-  return value ? value.charAt(0).toUpperCase() + value.slice(1) : "Active";
+function title(c) {
+  return c.name || c.companyName || "Untitled Company";
+}
+
+function subtitle(c) {
+  return c.description || c.location || "Company record";
 }
 
 function statusClass(status = "") {
-  const value = normalize(status);
-
-  if (["healthy", "active", "approved", "complete", "completed"].includes(value)) {
-    return "good";
-  }
-
-  if (["review", "pending", "new"].includes(value)) {
-    return "alert";
-  }
-
+  const v = normalize(status);
+  if (["active", "healthy", "approved"].includes(v)) return "good";
+  if (["review", "pending"].includes(v)) return "alert";
   return "working";
 }
 
-function companyTitle(company) {
-  return company.name || company.title || company.companyName || "Untitled Company";
-}
-
-function companySubtitle(company) {
-  return company.description || company.location || company.category || "Company record from Firestore";
-}
-
 function renderStats() {
-  const healthyCount = companyRecords.filter((company) =>
-    ["healthy", "active", "approved"].includes(normalize(company.status || company.health || "active"))
-  ).length;
+  const healthy = records.filter(r => ["active", "healthy"].includes(normalize(r.status))).length;
+  const review = records.filter(r => ["review", "pending"].includes(normalize(r.status))).length;
 
-  const reviewCount = companyRecords.filter((company) =>
-    ["review", "pending"].includes(normalize(company.status || company.health || ""))
-  ).length;
-
-  companiesStatTotal.textContent = String(companyRecords.length);
-  companiesStatHealthy.textContent = String(healthyCount);
-  companiesStatReview.textContent = String(reviewCount);
-  companiesStatFiltered.textContent = String(filteredCompanies.length);
-
-  companiesStatTotalMeta.textContent = "Company records loaded";
-  companiesStatHealthyMeta.textContent = "Healthy or active companies";
-  companiesStatReviewMeta.textContent = "Records needing review";
-  companiesStatFilteredMeta.textContent = "Matches current search";
+  statTotal.textContent = records.length;
+  statHealthy.textContent = healthy;
+  statReview.textContent = review;
+  statFiltered.textContent = filtered.length;
 }
 
-function renderCompaniesList() {
-  if (!filteredCompanies.length) {
-    companiesList.innerHTML = `
-      <article class="dashboard-list-item glass-card aurora-card">
-        <div>
-          <strong>No companies found</strong>
-          <span>Try a different search or add company records to Firestore.</span>
-        </div>
-        <span class="dashboard-status-pill alert">Empty</span>
-      </article>
-    `;
+function renderList() {
+  if (!filtered.length) {
+    companiesList.innerHTML = `<p>No companies found</p>`;
     return;
   }
 
-  companiesList.innerHTML = filteredCompanies.map((company) => {
-    const status = niceStatus(company.status || company.health || "active");
-    const pill = statusClass(company.status || company.health || "active");
-
-    return `
-      <article class="dashboard-list-item glass-card aurora-card">
-        <div>
-          <strong>${companyTitle(company)}</strong>
-          <span>${companySubtitle(company)}</span>
-        </div>
-        <span class="dashboard-status-pill ${pill}">${status}</span>
-      </article>
-    `;
-  }).join("");
-}
-
-function renderCompaniesFeed() {
-  if (!companyRecords.length) {
-    companiesFeed.innerHTML = `
-      <article class="dashboard-feed-item glass-card aurora-card">
-        <strong>No portfolio activity</strong>
-        <span>Company activity will appear once records are available.</span>
-      </article>
-    `;
-    return;
-  }
-
-  companiesFeed.innerHTML = companyRecords.slice(0, 6).map((company) => `
-    <article class="dashboard-feed-item glass-card aurora-card">
-      <strong>${companyTitle(company)}</strong>
-      <span>Status: ${niceStatus(company.status || company.health || "active")} • ${companySubtitle(company)}</span>
+  companiesList.innerHTML = filtered.map(c => `
+    <article class="dashboard-list-item glass-card aurora-card">
+      <div>
+        <strong>${title(c)}</strong>
+        <span>${subtitle(c)}</span>
+      </div>
+      <span class="dashboard-status-pill ${statusClass(c.status)}">
+        ${c.status || "active"}
+      </span>
     </article>
   `).join("");
 }
 
-function applySearchAndSort() {
-  const query = normalize(companiesSearch?.value || "");
+function renderFeed() {
+  companiesFeed.innerHTML = records.slice(0, 5).map(c => `
+    <article class="dashboard-feed-item glass-card aurora-card">
+      <strong>${title(c)}</strong>
+      <span>${subtitle(c)}</span>
+    </article>
+  `).join("");
+}
 
-  filteredCompanies = companyRecords.filter((company) => {
-    const haystack = [
-      company.name,
-      company.title,
-      company.companyName,
-      company.description,
-      company.location,
-      company.category,
-      company.status,
-      company.health
-    ].map((value) => normalize(value)).join(" ");
+function applySearch() {
+  const q = normalize(companiesSearch.value);
 
-    return haystack.includes(query);
-  });
+  filtered = records.filter(c =>
+    (title(c) + subtitle(c) + c.status).toLowerCase().includes(q)
+  );
 
-  filteredCompanies.sort((a, b) => {
-    const first = companyTitle(a).toLowerCase();
-    const second = companyTitle(b).toLowerCase();
-    return sortAscending ? first.localeCompare(second) : second.localeCompare(first);
-  });
+  filtered.sort((a, b) =>
+    sortAsc
+      ? title(a).localeCompare(title(b))
+      : title(b).localeCompare(title(a))
+  );
 
   renderStats();
-  renderCompaniesList();
+  renderList();
 }
 
-async function loadCompanies() {
+async function load() {
   companiesHeroTitle.textContent = "Loading companies...";
-  companiesHeroText.textContent = "Connecting to Firestore company records.";
+  const snap = await getDocs(collection(db, "companies"));
 
-  try {
-    const snap = await getDocs(collection(db, "companies"));
-    companyRecords = snap.docs.map((docItem) => ({
-      id: docItem.id,
-      ...docItem.data()
-    }));
+  records = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  filtered = [...records];
 
-    filteredCompanies = [...companyRecords];
-    applySearchAndSort();
-    renderCompaniesFeed();
+  applySearch();
+  renderFeed();
 
-    companiesHeroTitle.textContent = "Portfolio connected";
-    companiesHeroText.textContent = `${companyRecords.length} companies loaded from Firestore.`;
-  } catch (error) {
-    console.error("Failed loading companies:", error);
-
-    companiesHeroTitle.textContent = "Load failed";
-    companiesHeroText.textContent = "Check Firestore rules and the companies collection.";
-
-    companiesList.innerHTML = `
-      <article class="dashboard-list-item glass-card aurora-card">
-        <div>
-          <strong>Unable to load companies</strong>
-          <span>${error.message || "Unknown Firestore error."}</span>
-        </div>
-        <span class="dashboard-status-pill alert">Error</span>
-      </article>
-    `;
-
-    companiesFeed.innerHTML = `
-      <article class="dashboard-feed-item glass-card aurora-card">
-        <strong>Portfolio feed unavailable</strong>
-        <span>${error.message || "Unknown Firestore error."}</span>
-      </article>
-    `;
-  }
+  companiesHeroTitle.textContent = "Companies loaded";
+  companiesHeroText.textContent = `${records.length} records`;
 }
 
-function bindSidebarAnchors() {
-  document.querySelectorAll(".dashboard-nav-link").forEach((link) => {
-    link.addEventListener("click", () => {
-      document.querySelectorAll(".dashboard-nav-link").forEach((item) => {
-        item.classList.remove("active");
-      });
-      link.classList.add("active");
-    });
-  });
-}
+companiesSearch?.addEventListener("input", applySearch);
 
-if (companiesSearch) {
-  companiesSearch.addEventListener("input", applySearchAndSort);
-}
+sortBtn?.addEventListener("click", () => {
+  sortAsc = !sortAsc;
+  applySearch();
+});
 
-if (companiesSortBtn) {
-  companiesSortBtn.addEventListener("click", () => {
-    sortAscending = !sortAscending;
-    companiesSortBtn.textContent = sortAscending ? "Sort A–Z" : "Sort Z–A";
-    applySearchAndSort();
-  });
-}
+refreshTop?.addEventListener("click", load);
+refreshSide?.addEventListener("click", load);
 
-if (companiesRefreshBtnTop) {
-  companiesRefreshBtnTop.addEventListener("click", async () => {
-    await loadCompanies();
-  });
-}
-
-if (companiesRefreshBtnSide) {
-  companiesRefreshBtnSide.addEventListener("click", async () => {
-    await loadCompanies();
-  });
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  bindSidebarAnchors();
-
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      window.location.href = "/evaraos/login.html";
-      return;
-    }
-
-    await loadCompanies();
-  });
+onAuthStateChanged(auth, user => {
+  if (!user) window.location.href = "/evaraos/login.html";
+  else load();
 });
