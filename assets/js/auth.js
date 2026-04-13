@@ -108,9 +108,10 @@ function inferRoleFromEmail(email = "") {
   return "customer";
 }
 
-function getFriendlyAuthError(error, context = "login") {
+function buildVisibleError(error, context = "login") {
   const code = error?.code || "";
-  const detail = String(error?.message || "").toLowerCase();
+  const message = error?.message || "";
+  const lower = message.toLowerCase();
 
   if (context === "username_lookup") {
     return "That username was not found. Try your email instead or check your spelling.";
@@ -120,33 +121,52 @@ function getFriendlyAuthError(error, context = "login") {
     return "That username is already taken. Please choose another one.";
   }
 
-  switch (code) {
-    case "auth/user-not-found":
-      return "No account was found for that email. Try signing up first.";
-    case "auth/wrong-password":
-    case "auth/invalid-login-credentials":
-    case "auth/invalid-credential":
-      return "Incorrect login details. Check your email or username and password, then try again.";
-    case "auth/too-many-requests":
-      return "Too many login attempts. Wait a bit, then try again or reset your password.";
-    case "auth/network-request-failed":
-      return "Network error. Check your internet connection and try again.";
-    case "auth/email-already-in-use":
-      return "That email is already in use. Log in instead or use password reset.";
-    case "auth/invalid-email":
-      return "That email format looks invalid. Please enter a valid email address.";
-    case "auth/weak-password":
-      return "Password is too weak. Use at least 8 characters.";
-    case "auth/missing-password":
-      return "Please enter your password.";
-    case "auth/operation-not-allowed":
-      return "Email/password sign-in is not enabled in Firebase Authentication settings.";
-    default:
-      if (detail.includes("permission")) {
-        return "A Firestore permission issue occurred. Check your Firebase rules.";
-      }
-      return "Something went wrong. Please try again.";
+  if (code === "auth/user-not-found") {
+    return "No account was found for that email. Try signing up first.";
   }
+
+  if (
+    code === "auth/wrong-password" ||
+    code === "auth/invalid-login-credentials" ||
+    code === "auth/invalid-credential"
+  ) {
+    return "Incorrect login details. Check your email or username and password, then try again.";
+  }
+
+  if (code === "auth/too-many-requests") {
+    return "Too many login attempts. Wait a bit, then try again or reset your password.";
+  }
+
+  if (code === "auth/network-request-failed") {
+    return "Network error. Check your internet connection and try again.";
+  }
+
+  if (code === "auth/email-already-in-use") {
+    return "That email is already in use. Log in instead or use password reset.";
+  }
+
+  if (code === "auth/invalid-email") {
+    return "That email format looks invalid. Please enter a valid email address.";
+  }
+
+  if (code === "auth/weak-password") {
+    return "Password is too weak. Use at least 8 characters.";
+  }
+
+  if (code === "auth/missing-password") {
+    return "Please enter your password.";
+  }
+
+  if (code === "auth/operation-not-allowed") {
+    return "Email/password sign-in is not enabled in Firebase Authentication settings.";
+  }
+
+  if (lower.includes("permission")) {
+    return "A Firestore permission issue occurred. Check your Firebase rules.";
+  }
+
+  const detail = [code, message].filter(Boolean).join(" — ");
+  return detail || "Something went wrong. Please try again.";
 }
 
 function updatePasswordToggleVisual(button, isVisible, showLabel = "Show password", hideLabel = "Hide password") {
@@ -252,11 +272,9 @@ async function lookupEmailByUsername(usernameInput) {
 
   if (!normalized) return null;
 
-  // 1) Preferred: usernames/{username}
   try {
     const usernameRef = doc(db, "usernames", normalized);
     const snap = await getDoc(usernameRef);
-
     if (snap.exists()) {
       const data = snap.data() || {};
       if (data.email) return normalizeEmail(data.email);
@@ -265,12 +283,10 @@ async function lookupEmailByUsername(usernameInput) {
     console.warn("Primary usernames lookup failed:", error);
   }
 
-  // 2) Fallback: users.username
   try {
     const usersRef = collection(db, "users");
     const q = query(usersRef, where("username", "==", normalized), limit(1));
     const snap = await getDocs(q);
-
     if (!snap.empty) {
       const data = snap.docs[0].data() || {};
       if (data.email) return normalizeEmail(data.email);
@@ -279,12 +295,10 @@ async function lookupEmailByUsername(usernameInput) {
     console.warn("Fallback users.username lookup failed:", error);
   }
 
-  // 3) Fallback: users.handle
   try {
     const usersRef = collection(db, "users");
     const q = query(usersRef, where("handle", "==", handle), limit(1));
     const snap = await getDocs(q);
-
     if (!snap.empty) {
       const data = snap.docs[0].data() || {};
       if (data.email) return normalizeEmail(data.email);
@@ -293,12 +307,10 @@ async function lookupEmailByUsername(usernameInput) {
     console.warn("Fallback users.handle lookup failed:", error);
   }
 
-  // 4) Fallback: users.displayUsername exact raw or upper/lower variations
   try {
     const usersRef = collection(db, "users");
     const q = query(usersRef, where("displayUsername", "==", usernameInput), limit(1));
     const snap = await getDocs(q);
-
     if (!snap.empty) {
       const data = snap.docs[0].data() || {};
       if (data.email) return normalizeEmail(data.email);
@@ -311,7 +323,6 @@ async function lookupEmailByUsername(usernameInput) {
     const usersRef = collection(db, "users");
     const q = query(usersRef, where("displayUsername", "==", normalized), limit(1));
     const snap = await getDocs(q);
-
     if (!snap.empty) {
       const data = snap.docs[0].data() || {};
       if (data.email) return normalizeEmail(data.email);
@@ -404,7 +415,7 @@ async function handleLoginSubmit(event) {
       resolvedEmail = await lookupEmailByUsername(loginInput);
 
       if (!resolvedEmail) {
-        setMessage(els.loginMessage, getFriendlyAuthError({}, "username_lookup"), true);
+        setMessage(els.loginMessage, buildVisibleError({}, "username_lookup"), true);
         return;
       }
     }
@@ -420,17 +431,7 @@ async function handleLoginSubmit(event) {
     window.location.href = ROUTES.dashboard;
   } catch (error) {
     console.error("Login failed:", error);
-
-    if (resolvedEmail && looksLikeEmail(resolvedEmail)) {
-      setMessage(
-        els.loginMessage,
-        getFriendlyAuthError(error, "login"),
-        true
-      );
-      return;
-    }
-
-    setMessage(els.loginMessage, getFriendlyAuthError(error, "login"), true);
+    setMessage(els.loginMessage, buildVisibleError(error, "login"), true);
   }
 }
 
@@ -475,7 +476,7 @@ async function handleSignupSubmit(event) {
 
     const taken = await usernameExists(username);
     if (taken) {
-      setMessage(els.signupMessage, getFriendlyAuthError({}, "username_taken"), true);
+      setMessage(els.signupMessage, buildVisibleError({}, "username_taken"), true);
       return;
     }
 
@@ -507,7 +508,7 @@ async function handleSignupSubmit(event) {
     window.location.href = ROUTES.dashboard;
   } catch (error) {
     console.error("Signup failed:", error);
-    setMessage(els.signupMessage, getFriendlyAuthError(error, "signup"), true);
+    setMessage(els.signupMessage, buildVisibleError(error, "signup"), true);
   }
 }
 
@@ -527,7 +528,7 @@ async function handleResetSubmit(event) {
     setMessage(els.resetMessage, "Reset email sent. Check your inbox.");
   } catch (error) {
     console.error("Password reset failed:", error);
-    setMessage(els.resetMessage, getFriendlyAuthError(error, "reset"), true);
+    setMessage(els.resetMessage, buildVisibleError(error, "reset"), true);
   }
 }
 
