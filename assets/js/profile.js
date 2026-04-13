@@ -9,12 +9,8 @@ import {
   doc,
   getDoc,
   setDoc,
-  serverTimestamp,
-  collection,
-  getDocs,
-  query,
-  where,
-  limit
+  deleteDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const profileForm = document.getElementById("profileForm");
@@ -79,16 +75,12 @@ async function usernameTakenByAnotherUser(username, uid) {
   const normalized = normalizeUsername(username);
   if (!normalized) return false;
 
-  const q = query(
-    collection(db, "users"),
-    where("username", "==", normalized),
-    limit(1)
-  );
+  const usernameRef = doc(db, "usernames", normalized);
+  const snap = await getDoc(usernameRef);
+  if (!snap.exists()) return false;
 
-  const snap = await getDocs(q);
-  if (snap.empty) return false;
-
-  return snap.docs[0].id !== uid;
+  const data = snap.data() || {};
+  return data.uid !== uid;
 }
 
 function updateHeaderUi(data) {
@@ -211,6 +203,7 @@ async function saveProfile() {
   const bio = profileBio?.value.trim() || "";
   const email = currentUser.email || profileEmail?.value || "";
   const role = originalProfile?.role || guessRole(email);
+  const previousUsername = normalizeUsername(originalProfile?.username || "");
 
   if (!fullName) {
     setMessage("Please enter your full name.", true);
@@ -247,6 +240,23 @@ async function saveProfile() {
       bio,
       updatedAt: serverTimestamp()
     }, { merge: true });
+
+    if (previousUsername && previousUsername !== username) {
+      await deleteDoc(doc(db, "usernames", previousUsername));
+    }
+
+    if (username) {
+      await setDoc(
+        doc(db, "usernames", username),
+        {
+          uid: currentUser.uid,
+          email,
+          username,
+          updatedAt: serverTimestamp()
+        },
+        { merge: true }
+      );
+    }
 
     originalProfile = { fullName, username, email, role, phone, bio };
     fillForm(originalProfile);
