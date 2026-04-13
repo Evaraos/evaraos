@@ -18,12 +18,7 @@ import {
   getDoc,
   setDoc,
   updateDoc,
-  serverTimestamp,
-  collection,
-  getDocs,
-  query,
-  where,
-  limit
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const ROUTES = {
@@ -217,34 +212,27 @@ async function safelyUpdateLastLogin(uid) {
 }
 
 async function usernameExists(username) {
-  const q = query(
-    collection(db, "users"),
-    where("username", "==", username),
-    limit(1)
-  );
-  const snap = await getDocs(q);
-  return !snap.empty;
+  const usernameRef = doc(db, "usernames", normalizeUsername(username));
+  const snap = await getDoc(usernameRef);
+  return snap.exists();
 }
 
 async function lookupEmailByUsername(username) {
   const normalized = normalizeUsername(username);
   if (!normalized) return null;
 
-  const q = query(
-    collection(db, "users"),
-    where("username", "==", normalized),
-    limit(1)
-  );
+  const usernameRef = doc(db, "usernames", normalized);
+  const snap = await getDoc(usernameRef);
 
-  const snap = await getDocs(q);
-  if (snap.empty) return null;
+  if (!snap.exists()) return null;
 
-  const data = snap.docs[0].data() || {};
+  const data = snap.data() || {};
   return data.email || null;
 }
 
 async function createUserDocument({ uid, fullName, username, email, role = "customer" }) {
   const userRef = doc(db, "users", uid);
+  const usernameRef = doc(db, "usernames", normalizeUsername(username));
 
   await setDoc(
     userRef,
@@ -260,6 +248,17 @@ async function createUserDocument({ uid, fullName, username, email, role = "cust
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       lastLogin: serverTimestamp()
+    },
+    { merge: true }
+  );
+
+  await setDoc(
+    usernameRef,
+    {
+      uid,
+      email: normalizeEmail(email),
+      username: normalizeUsername(username),
+      updatedAt: serverTimestamp()
     },
     { merge: true }
   );
