@@ -18,7 +18,12 @@ import {
   getDoc,
   setDoc,
   updateDoc,
-  serverTimestamp
+  serverTimestamp,
+  collection,
+  getDocs,
+  query,
+  where,
+  limit
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const ROUTES = {
@@ -85,6 +90,12 @@ function normalizeUsername(value = "") {
     .toLowerCase()
     .replace(/\s+/g, "")
     .replace(/[^a-z0-9._-]/g, "");
+}
+
+function normalizeHandle(value = "") {
+  const raw = String(value || "").trim().toLowerCase();
+  if (!raw) return "";
+  return raw.startsWith("@") ? raw : `@${raw}`;
 }
 
 function inferRoleFromEmail(email = "") {
@@ -212,35 +223,121 @@ async function safelyUpdateLastLogin(uid) {
 }
 
 async function usernameExists(username) {
-  const usernameRef = doc(db, "usernames", normalizeUsername(username));
-  const snap = await getDoc(usernameRef);
-  return snap.exists();
+  const normalized = normalizeUsername(username);
+  if (!normalized) return false;
+
+  try {
+    const usernameRef = doc(db, "usernames", normalized);
+    const snap = await getDoc(usernameRef);
+    if (snap.exists()) return true;
+  } catch (error) {
+    console.warn("Primary usernameExists lookup failed:", error);
+  }
+
+  try {
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("username", "==", normalized), limit(1));
+    const snap = await getDocs(q);
+    if (!snap.empty) return true;
+  } catch (error) {
+    console.warn("Fallback usernameExists query failed:", error);
+  }
+
+  return false;
 }
 
-async function lookupEmailByUsername(username) {
-  const normalized = normalizeUsername(username);
+async function lookupEmailByUsername(usernameInput) {
+  const normalized = normalizeUsername(usernameInput);
+  const handle = normalizeHandle(usernameInput);
+
   if (!normalized) return null;
 
-  const usernameRef = doc(db, "usernames", normalized);
-  const snap = await getDoc(usernameRef);
+  // 1) Preferred: usernames/{username}
+  try {
+    const usernameRef = doc(db, "usernames", normalized);
+    const snap = await getDoc(usernameRef);
 
-  if (!snap.exists()) return null;
+    if (snap.exists()) {
+      const data = snap.data() || {};
+      if (data.email) return normalizeEmail(data.email);
+    }
+  } catch (error) {
+    console.warn("Primary usernames lookup failed:", error);
+  }
 
-  const data = snap.data() || {};
-  return data.email || null;
+  // 2) Fallback: users.username
+  try {
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("username", "==", normalized), limit(1));
+    const snap = await getDocs(q);
+
+    if (!snap.empty) {
+      const data = snap.docs[0].data() || {};
+      if (data.email) return normalizeEmail(data.email);
+    }
+  } catch (error) {
+    console.warn("Fallback users.username lookup failed:", error);
+  }
+
+  // 3) Fallback: users.handle
+  try {
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("handle", "==", handle), limit(1));
+    const snap = await getDocs(q);
+
+    if (!snap.empty) {
+      const data = snap.docs[0].data() || {};
+      if (data.email) return normalizeEmail(data.email);
+    }
+  } catch (error) {
+    console.warn("Fallback users.handle lookup failed:", error);
+  }
+
+  // 4) Fallback: users.displayUsername exact raw or upper/lower variations
+  try {
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("displayUsername", "==", usernameInput), limit(1));
+    const snap = await getDocs(q);
+
+    if (!snap.empty) {
+      const data = snap.docs[0].data() || {};
+      if (data.email) return normalizeEmail(data.email);
+    }
+  } catch (error) {
+    console.warn("Fallback users.displayUsername raw lookup failed:", error);
+  }
+
+  try {
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("displayUsername", "==", normalized), limit(1));
+    const snap = await getDocs(q);
+
+    if (!snap.empty) {
+      const data = snap.docs[0].data() || {};
+      if (data.email) return normalizeEmail(data.email);
+    }
+  } catch (error) {
+    console.warn("Fallback users.displayUsername normalized lookup failed:", error);
+  }
+
+  return null;
 }
 
 async function createUserDocument({ uid, fullName, username, email, role = "customer" }) {
+  const normalizedUsername = normalizeUsername(username);
   const userRef = doc(db, "users", uid);
-  const usernameRef = doc(db, "usernames", normalizeUsername(username));
+  const usernameRef = doc(db, "usernames", normalizedUsername);
 
   await setDoc(
     userRef,
     {
       uid,
       fullName: fullName.trim(),
+      name: fullName.trim(),
       displayName: fullName.trim(),
-      username: normalizeUsername(username),
+      username: normalizedUsername,
+      displayUsername: normalizedUsername,
+      handle: normalizeHandle(normalizedUsername),
       email: normalizeEmail(email),
       role,
       active: true,
@@ -257,7 +354,9 @@ async function createUserDocument({ uid, fullName, username, email, role = "cust
     {
       uid,
       email: normalizeEmail(email),
-      username: normalizeUsername(username),
+      username: normalizedUsername,
+      displayUsername: normalizedUsername,
+      handle: normalizeHandle(normalizedUsername),
       updatedAt: serverTimestamp()
     },
     { merge: true }
@@ -321,6 +420,16 @@ async function handleLoginSubmit(event) {
     window.location.href = ROUTES.dashboard;
   } catch (error) {
     console.error("Login failed:", error);
+
+    if (resolvedEmail && looksLikeEmail(resolvedEmail)) {
+      setMessage(
+        els.loginMessage,
+        getFriendlyAuthError(error, "login"),
+        true
+      );
+      return;
+    }
+
     setMessage(els.loginMessage, getFriendlyAuthError(error, "login"), true);
   }
 }
@@ -346,8 +455,8 @@ async function handleSignupSubmit(event) {
     return;
   }
 
-  if (username.length < 3) {
-    setMessage(els.signupMessage, "Username must be at least 3 characters long.", true);
+  if (username.length < 1) {
+    setMessage(els.signupMessage, "Username is required.", true);
     return;
   }
 
