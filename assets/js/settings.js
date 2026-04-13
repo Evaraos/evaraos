@@ -47,6 +47,7 @@ const summaryFeed = document.getElementById("settingsSummaryFeed");
 
 let currentUser = null;
 let originalSettings = null;
+let currentRole = "customer";
 
 function setMessage(text = "", isError = false) {
   if (!messageEl) return;
@@ -185,6 +186,8 @@ async function loadSettings(user) {
   let data;
   if (snap.exists()) {
     const saved = snap.data() || {};
+    currentRole = saved.role || "customer";
+
     data = {
       fullName: saved.fullName || saved.displayName || user.displayName || "",
       email: saved.email || user.email || "",
@@ -199,6 +202,8 @@ async function loadSettings(user) {
       workspaceNote: saved.workspaceNote || ""
     };
   } else {
+    currentRole = "customer";
+
     data = {
       fullName: user.displayName || "",
       email: user.email || "",
@@ -218,6 +223,7 @@ async function loadSettings(user) {
       email: user.email || "",
       displayName: user.displayName || "",
       fullName: user.displayName || "",
+      role: currentRole,
       ...data,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
@@ -252,6 +258,7 @@ async function saveSettings() {
       email: currentUser.email || payload.email || "",
       displayName: payload.fullName,
       fullName: payload.fullName,
+      role: currentRole,
       themeMode: payload.themeMode,
       themeFamily: payload.themeFamily,
       emailAlerts: payload.emailAlerts,
@@ -280,7 +287,7 @@ async function saveSettings() {
     applyUserToUi({
       displayName: payload.fullName,
       email: currentUser.email || payload.email || "",
-      role: "owner"
+      role: currentRole
     });
 
     originalSettings = { ...payload };
