@@ -9,7 +9,12 @@ import {
   doc,
   getDoc,
   setDoc,
-  serverTimestamp
+  serverTimestamp,
+  collection,
+  getDocs,
+  query,
+  where,
+  limit
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const profileForm = document.getElementById("profileForm");
@@ -22,6 +27,7 @@ const profileEmail = document.getElementById("profileEmail");
 const profilePhone = document.getElementById("profilePhone");
 const profileRole = document.getElementById("profileRole");
 const profileBio = document.getElementById("profileBio");
+const profileUsername = document.getElementById("profileUsername");
 
 const profileHeroAvatar = document.getElementById("profileHeroAvatar");
 const profileHeroName = document.getElementById("profileHeroName");
@@ -45,6 +51,14 @@ function setMessage(text = "", isError = false) {
   profileMessage.style.color = isError ? "#ff9b8f" : "";
 }
 
+function normalizeUsername(value = "") {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "")
+    .replace(/[^a-z0-9._-]/g, "");
+}
+
 function guessRole(email = "") {
   const value = String(email || "").toLowerCase();
   if (value.includes("admin")) return "admin";
@@ -59,6 +73,22 @@ function niceRole(role = "") {
   const value = String(role || "").trim().toLowerCase();
   if (!value) return "Customer";
   return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+async function usernameTakenByAnotherUser(username, uid) {
+  const normalized = normalizeUsername(username);
+  if (!normalized) return false;
+
+  const q = query(
+    collection(db, "users"),
+    where("username", "==", normalized),
+    limit(1)
+  );
+
+  const snap = await getDocs(q);
+  if (snap.empty) return false;
+
+  return snap.docs[0].id !== uid;
 }
 
 function updateHeaderUi(data) {
@@ -84,6 +114,7 @@ function updateSummaryFeed(data) {
   const role = niceRole(data.role || guessRole(email));
   const phone = data.phone || "No phone added yet";
   const bio = data.bio || "No bio added yet";
+  const username = data.username || "No username saved yet";
 
   if (!profileSummaryFeed) return;
 
@@ -91,6 +122,11 @@ function updateSummaryFeed(data) {
     <article class="dashboard-feed-item glass-card aurora-card">
       <strong>Name</strong>
       <span>${data.fullName || currentUser?.displayName || "Not set"}</span>
+    </article>
+
+    <article class="dashboard-feed-item glass-card aurora-card">
+      <strong>Username</strong>
+      <span>${username}</span>
     </article>
 
     <article class="dashboard-feed-item glass-card aurora-card">
@@ -121,6 +157,7 @@ function fillForm(data) {
   if (profilePhone) profilePhone.value = data.phone || "";
   if (profileRole) profileRole.value = niceRole(data.role || guessRole(currentUser?.email || ""));
   if (profileBio) profileBio.value = data.bio || "";
+  if (profileUsername) profileUsername.value = data.username || "";
 
   updateHeaderUi(data);
   updateSummaryFeed(data);
@@ -138,6 +175,7 @@ async function loadProfile(user) {
   } else {
     data = {
       fullName: user.displayName || "",
+      username: "",
       email: user.email || "",
       role: guessRole(user.email || ""),
       phone: "",
@@ -154,6 +192,7 @@ async function loadProfile(user) {
 
   originalProfile = {
     fullName: data.fullName || user.displayName || "",
+    username: data.username || "",
     email: data.email || user.email || "",
     role: data.role || guessRole(user.email || ""),
     phone: data.phone || "",
@@ -167,6 +206,7 @@ async function saveProfile() {
   if (!currentUser) return;
 
   const fullName = profileFullName?.value.trim() || "";
+  const username = normalizeUsername(profileUsername?.value || "");
   const phone = profilePhone?.value.trim() || "";
   const bio = profileBio?.value.trim() || "";
   const email = currentUser.email || profileEmail?.value || "";
@@ -177,7 +217,20 @@ async function saveProfile() {
     return;
   }
 
+  if (username && username.length < 3) {
+    setMessage("Username must be at least 3 characters long.", true);
+    return;
+  }
+
   try {
+    if (username) {
+      const taken = await usernameTakenByAnotherUser(username, currentUser.uid);
+      if (taken) {
+        setMessage("That username is already taken. Please choose another one.", true);
+        return;
+      }
+    }
+
     await updateProfile(currentUser, {
       displayName: fullName
     });
@@ -186,6 +239,7 @@ async function saveProfile() {
     await setDoc(userRef, {
       uid: currentUser.uid,
       fullName,
+      username,
       displayName: fullName,
       email,
       role,
@@ -194,7 +248,7 @@ async function saveProfile() {
       updatedAt: serverTimestamp()
     }, { merge: true });
 
-    originalProfile = { fullName, email, role, phone, bio };
+    originalProfile = { fullName, username, email, role, phone, bio };
     fillForm(originalProfile);
     setMessage("Profile updated successfully.");
   } catch (error) {
