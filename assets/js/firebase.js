@@ -24,7 +24,7 @@ import {
 
 /* FIREBASE CONFIG */
 const firebaseConfig = {
-  apiKey: "AIzaSyAg12tiBifLswke_km3nY6YQpf8ROyqup4",
+  apiKey: "AIzaSyAg12tiBifLswke_km3nY6Qpf8ROyqup4",
   authDomain: "evaraos-web.firebaseapp.com",
   projectId: "evaraos-web",
   storageBucket: "evaraos-web.firebasestorage.app",
@@ -63,9 +63,9 @@ export async function setAuthPersistence(rememberDevice = true) {
   await setPersistence(auth, persistence);
 }
 
-export function saveUserRole(role = "owner") {
+export function saveUserRole(role = "customer") {
   try {
-    localStorage.setItem(STORAGE_KEYS.role, String(role || "owner"));
+    localStorage.setItem(STORAGE_KEYS.role, String(role || "customer"));
   } catch {
     // ignore storage errors
   }
@@ -73,9 +73,9 @@ export function saveUserRole(role = "owner") {
 
 export function getSavedUserRole() {
   try {
-    return localStorage.getItem(STORAGE_KEYS.role) || "owner";
+    return localStorage.getItem(STORAGE_KEYS.role) || "customer";
   } catch {
-    return "owner";
+    return "customer";
   }
 }
 
@@ -122,13 +122,13 @@ export function roleLabelFromRole(role = "") {
   if (value === "technician") return "Technician Access";
   if (value === "customer") return "Customer Access";
 
-  return "Executive Access";
+  return "Customer Access";
 }
 
 export function applyUserToUi(userData = {}) {
   const displayName = userData.displayName || userData.fullName || userData.email || "User";
   const email = userData.email || "";
-  const role = userData.role || "owner";
+  const role = userData.role || "customer";
   const initial = displayName.trim().charAt(0).toUpperCase() || "U";
   const roleText = roleLabelFromRole(role);
 
@@ -155,14 +155,14 @@ export function applyUserToUi(userData = {}) {
   if (dashboardProfileRole) dashboardProfileRole.textContent = roleText;
 }
 
-export function syncUserSession(user, role = "owner") {
+export function syncUserSession(user, role = "customer") {
   if (!user) return;
 
   const profile = {
     uid: user.uid || "",
     email: user.email || "",
     displayName: user.displayName || "",
-    role: role || "owner"
+    role: role || "customer"
   };
 
   saveUserRole(profile.role);
@@ -236,14 +236,14 @@ onAuthStateChanged(auth, async (user) => {
           email: user.email || "",
           displayName: user.displayName || "",
           fullName: user.displayName || "",
-          role: "owner"
+          role: "customer"
         },
         { merge: true }
       );
     }
 
     const data = snap.exists() ? snap.data() || {} : {};
-    const role = data.role || getSavedUserRole() || "owner";
+    const role = data.role || getSavedUserRole() || "customer";
 
     syncUserSession(user, role);
 
@@ -254,6 +254,6 @@ onAuthStateChanged(auth, async (user) => {
     });
   } catch (error) {
     console.error("Global auth sync failed:", error);
-    syncUserSession(user, getSavedUserRole() || "owner");
+    syncUserSession(user, getSavedUserRole() || "customer");
   }
 });
