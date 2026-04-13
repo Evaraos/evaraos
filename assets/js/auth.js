@@ -18,7 +18,12 @@ import {
   getDoc,
   setDoc,
   updateDoc,
-  serverTimestamp
+  serverTimestamp,
+  collection,
+  getDocs,
+  query,
+  where,
+  limit
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const ROUTES = {
@@ -42,6 +47,7 @@ const els = {
   rememberDevice: document.getElementById("rememberDevice"),
 
   signupName: document.getElementById("signupName"),
+  signupUsername: document.getElementById("signupUsername"),
   signupEmail: document.getElementById("signupEmail"),
   signupPassword: document.getElementById("signupPassword"),
   signupPasswordConfirm: document.getElementById("signupPasswordConfirm"),
@@ -78,6 +84,14 @@ function normalizeEmail(value = "") {
   return String(value || "").trim().toLowerCase();
 }
 
+function normalizeUsername(value = "") {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "")
+    .replace(/[^a-z0-9._-]/g, "");
+}
+
 function inferRoleFromEmail(email = "") {
   const value = normalizeEmail(email);
   if (value.includes("admin")) return "admin";
@@ -85,31 +99,46 @@ function inferRoleFromEmail(email = "") {
   if (value.includes("sales")) return "sales";
   if (value.includes("tech")) return "technician";
   if (value.includes("customer")) return "customer";
-  return "owner";
+  return "customer";
 }
 
-function getFriendlyAuthError(error) {
+function getFriendlyAuthError(error, context = "login") {
   const code = error?.code || "";
+  const detail = String(error?.message || "").toLowerCase();
+
+  if (context === "username_lookup") {
+    return "That username was not found. Try your email instead or check your spelling.";
+  }
+
+  if (context === "username_taken") {
+    return "That username is already taken. Please choose another one.";
+  }
 
   switch (code) {
     case "auth/user-not-found":
+      return "No account was found for that email. Try signing up first.";
     case "auth/wrong-password":
     case "auth/invalid-login-credentials":
     case "auth/invalid-credential":
-      return "Incorrect email or password.";
+      return "Incorrect login details. Check your email or username and password, then try again.";
     case "auth/too-many-requests":
-      return "Too many attempts. Try again in a little bit.";
+      return "Too many login attempts. Wait a bit, then try again or reset your password.";
     case "auth/network-request-failed":
-      return "Network error. Check your connection and try again.";
+      return "Network error. Check your internet connection and try again.";
     case "auth/email-already-in-use":
-      return "That email is already in use.";
+      return "That email is already in use. Log in instead or use password reset.";
     case "auth/invalid-email":
-      return "Please enter a valid email address.";
+      return "That email format looks invalid. Please enter a valid email address.";
     case "auth/weak-password":
       return "Password is too weak. Use at least 8 characters.";
     case "auth/missing-password":
       return "Please enter your password.";
+    case "auth/operation-not-allowed":
+      return "Email/password sign-in is not enabled in Firebase Authentication settings.";
     default:
+      if (detail.includes("permission")) {
+        return "A Firestore permission issue occurred. Check your Firebase rules.";
+      }
       return "Something went wrong. Please try again.";
   }
 }
@@ -187,7 +216,34 @@ async function safelyUpdateLastLogin(uid) {
   }
 }
 
-async function createUserDocument({ uid, fullName, email, role = "owner" }) {
+async function usernameExists(username) {
+  const q = query(
+    collection(db, "users"),
+    where("username", "==", username),
+    limit(1)
+  );
+  const snap = await getDocs(q);
+  return !snap.empty;
+}
+
+async function lookupEmailByUsername(username) {
+  const normalized = normalizeUsername(username);
+  if (!normalized) return null;
+
+  const q = query(
+    collection(db, "users"),
+    where("username", "==", normalized),
+    limit(1)
+  );
+
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+
+  const data = snap.docs[0].data() || {};
+  return data.email || null;
+}
+
+async function createUserDocument({ uid, fullName, username, email, role = "customer" }) {
   const userRef = doc(db, "users", uid);
 
   await setDoc(
@@ -196,6 +252,7 @@ async function createUserDocument({ uid, fullName, email, role = "owner" }) {
       uid,
       fullName: fullName.trim(),
       displayName: fullName.trim(),
+      username: normalizeUsername(username),
       email: normalizeEmail(email),
       role,
       active: true,
@@ -229,26 +286,34 @@ async function handleLoginSubmit(event) {
   event.preventDefault();
   clearMessages();
 
-  const email = normalizeEmail(els.loginEmail?.value || "");
+  const loginInput = String(els.loginEmail?.value || "").trim();
   const password = els.loginPassword?.value || "";
   const rememberDevice = Boolean(els.rememberDevice?.checked);
 
-  if (!email || !password) {
-    setMessage(els.loginMessage, "Please enter your email and password.", true);
+  if (!loginInput || !password) {
+    setMessage(els.loginMessage, "Please enter your email or username and password.", true);
     return;
   }
 
-  if (!looksLikeEmail(email)) {
-    setMessage(els.loginMessage, "Please enter a valid email address.", true);
-    return;
-  }
+  let resolvedEmail = "";
 
   try {
     await setAuthPersistence(rememberDevice);
 
-    const credential = await signInWithEmailAndPassword(auth, email, password);
+    if (looksLikeEmail(loginInput)) {
+      resolvedEmail = normalizeEmail(loginInput);
+    } else {
+      resolvedEmail = await lookupEmailByUsername(loginInput);
+
+      if (!resolvedEmail) {
+        setMessage(els.loginMessage, getFriendlyAuthError({}, "username_lookup"), true);
+        return;
+      }
+    }
+
+    const credential = await signInWithEmailAndPassword(auth, resolvedEmail, password);
     const user = credential.user;
-    const role = await getUserRoleFromFirestore(user.uid, user.email || email);
+    const role = await getUserRoleFromFirestore(user.uid, user.email || resolvedEmail);
 
     saveUserRole(role);
     syncUserSession(user, role);
@@ -257,7 +322,7 @@ async function handleLoginSubmit(event) {
     window.location.href = ROUTES.dashboard;
   } catch (error) {
     console.error("Login failed:", error);
-    setMessage(els.loginMessage, getFriendlyAuthError(error), true);
+    setMessage(els.loginMessage, getFriendlyAuthError(error, "login"), true);
   }
 }
 
@@ -266,18 +331,24 @@ async function handleSignupSubmit(event) {
   clearMessages();
 
   const fullName = String(els.signupName?.value || "").trim();
+  const username = normalizeUsername(els.signupUsername?.value || "");
   const email = normalizeEmail(els.signupEmail?.value || "");
   const password = els.signupPassword?.value || "";
   const confirmPassword = els.signupPasswordConfirm?.value || "";
   const rememberDevice = Boolean(els.signupRememberDevice?.checked);
 
-  if (!fullName || !email || !password || !confirmPassword) {
-    setMessage(els.signupMessage, "Please complete every field.", true);
+  if (!fullName || !username || !email || !password || !confirmPassword) {
+    setMessage(els.signupMessage, "Please complete every field, including a username.", true);
     return;
   }
 
   if (!looksLikeEmail(email)) {
     setMessage(els.signupMessage, "Please enter a valid email address.", true);
+    return;
+  }
+
+  if (username.length < 3) {
+    setMessage(els.signupMessage, "Username must be at least 3 characters long.", true);
     return;
   }
 
@@ -294,6 +365,12 @@ async function handleSignupSubmit(event) {
   try {
     await setAuthPersistence(rememberDevice);
 
+    const taken = await usernameExists(username);
+    if (taken) {
+      setMessage(els.signupMessage, getFriendlyAuthError({}, "username_taken"), true);
+      return;
+    }
+
     const credential = await createUserWithEmailAndPassword(auth, email, password);
     const user = credential.user;
     const role = inferRoleFromEmail(email);
@@ -305,6 +382,7 @@ async function handleSignupSubmit(event) {
     await createUserDocument({
       uid: user.uid,
       fullName,
+      username,
       email,
       role
     });
@@ -321,7 +399,7 @@ async function handleSignupSubmit(event) {
     window.location.href = ROUTES.dashboard;
   } catch (error) {
     console.error("Signup failed:", error);
-    setMessage(els.signupMessage, getFriendlyAuthError(error), true);
+    setMessage(els.signupMessage, getFriendlyAuthError(error, "signup"), true);
   }
 }
 
@@ -341,7 +419,7 @@ async function handleResetSubmit(event) {
     setMessage(els.resetMessage, "Reset email sent. Check your inbox.");
   } catch (error) {
     console.error("Password reset failed:", error);
-    setMessage(els.resetMessage, getFriendlyAuthError(error), true);
+    setMessage(els.resetMessage, getFriendlyAuthError(error, "reset"), true);
   }
 }
 
