@@ -53,7 +53,7 @@
           <div class="dashboard-sidebar-foot-copy">
             <strong>Account Center</strong>
             <span>
-              Update your name, contact details, and role-facing profile information from one place.
+              Update your name, username, contact details, and role-facing profile information from one place.
             </span>
           </div>
           <a href="/evaraos/settings.html" class="btn btn-theme-primary">Open Settings</a>
@@ -67,7 +67,7 @@
           <p class="dashboard-eyebrow">PROFILE CENTER</p>
           <h1>Keep your account identity polished and current.</h1>
           <p class="dashboard-hero-text">
-            Update your display name, contact info, and profile details while keeping your
+            Update your display name, username, contact info, and profile details while keeping your
             Evaraos account aligned across the platform.
           </p>
 
@@ -155,6 +155,22 @@
               </div>
 
               <div class="form-group">
+                <label class="field-label" for="profileUsername">Username</label>
+                <div class="input-shell aurora-card">
+                  <input
+                    id="profileUsername"
+                    name="username"
+                    type="text"
+                    class="input"
+                    placeholder="Choose a username"
+                    autocomplete="username"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
                 <label class="field-label" for="profileEmail">Email</label>
                 <div class="input-shell aurora-card">
                   <input
@@ -168,9 +184,7 @@
                   />
                 </div>
               </div>
-            </div>
 
-            <div class="form-grid-2">
               <div class="form-group">
                 <label class="field-label" for="profilePhone">Phone</label>
                 <div class="input-shell aurora-card">
@@ -184,7 +198,9 @@
                   />
                 </div>
               </div>
+            </div>
 
+            <div class="form-grid-2">
               <div class="form-group">
                 <label class="field-label" for="profileRole">Role</label>
                 <div class="input-shell aurora-card">
@@ -198,19 +214,19 @@
                   />
                 </div>
               </div>
-            </div>
 
-            <div class="form-group">
-              <label class="field-label" for="profileBio">Bio</label>
-              <div class="input-shell aurora-card">
-                <textarea
-                  id="profileBio"
-                  name="bio"
-                  class="input"
-                  placeholder="Add a short bio"
-                  rows="5"
-                  style="resize: vertical; min-height: 140px;"
-                ></textarea>
+              <div class="form-group">
+                <label class="field-label" for="profileBio">Bio</label>
+                <div class="input-shell aurora-card">
+                  <textarea
+                    id="profileBio"
+                    name="bio"
+                    class="input"
+                    placeholder="Add a short bio"
+                    rows="5"
+                    style="resize: vertical; min-height: 140px;"
+                  ></textarea>
+                </div>
               </div>
             </div>
 
