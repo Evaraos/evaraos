@@ -1,7 +1,7 @@
 .universal-nav-shell {
   position: sticky;
   top: 8px;
-  z-index: 2000;
+  z-index: 3000;
   padding:
     max(12px, env(safe-area-inset-top))
     10px
@@ -11,7 +11,7 @@
 
 .landing-header {
   position: relative;
-  z-index: 2000;
+  z-index: 3000;
 }
 
 .landing-header-inner {
@@ -26,7 +26,7 @@
   border-radius: 20px;
   overflow: visible;
   position: relative;
-  z-index: 2001;
+  z-index: 3001;
 }
 
 .brand-link {
@@ -76,7 +76,7 @@ html[data-theme$="-light"] .brand-copy span {
 .nav-dropdown {
   position: relative;
   flex: 0 0 auto;
-  z-index: 2100;
+  z-index: 3100;
 }
 
 .nav-hamburger {
@@ -101,6 +101,7 @@ html[data-theme$="-light"] .brand-copy span {
     filter 0.18s ease;
   position: relative;
   overflow: hidden;
+  z-index: 3102;
 }
 
 .nav-hamburger:hover,
@@ -157,18 +158,43 @@ html[data-theme$="-light"] .hamburger-bar {
   background: linear-gradient(90deg, rgba(18, 37, 31, 0.90), rgba(18, 37, 31, 0.62));
 }
 
+/* BACKDROP */
+.nav-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 7, 16, 0.44);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.18s ease, visibility 0.18s ease;
+  z-index: 3098;
+}
+
+.nav-dropdown.open .nav-menu-backdrop {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* MENU PANEL */
 .nav-dropdown-menu {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 12px);
-  width: min(270px, calc(100vw - 24px));
+  position: fixed;
+  top: calc(max(12px, env(safe-area-inset-top)) + 84px);
+  left: 12px;
+  right: 12px;
+  width: auto;
+  max-width: 360px;
+  margin-left: auto;
   padding: 12px;
-  border-radius: 20px;
+  border-radius: 22px;
   display: grid;
   gap: 10px;
-  z-index: 99999;
+  z-index: 3099;
+
   background:
-    linear-gradient(180deg, rgba(16, 20, 30, 0.98), rgba(12, 16, 26, 0.96));
+    linear-gradient(180deg, rgba(16, 20, 30, 0.985), rgba(12, 16, 26, 0.965));
   border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow:
     0 28px 70px rgba(0, 0, 0, 0.40),
@@ -310,4 +336,16 @@ html[data-theme$="-light"] .menu-divider {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+}
+
+@media (min-width: 900px) {
+  .nav-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    left: auto;
+    max-width: none;
+    width: 280px;
+    margin-left: 0;
+  }
 }
