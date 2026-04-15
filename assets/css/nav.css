@@ -28,12 +28,12 @@
 }
 
 .brand-logo {
-  width: 42px;
-  height: 42px;
+  width: 52px;
+  height: 52px;
   object-fit: contain;
   filter:
-    drop-shadow(0 0 8px rgba(255, 57, 92, 0.22))
-    drop-shadow(0 0 18px rgba(255, 57, 92, 0.12));
+    drop-shadow(0 0 10px rgba(255, 57, 92, 0.24))
+    drop-shadow(0 0 22px rgba(255, 57, 92, 0.12));
 }
 
 .brand-copy {
@@ -76,7 +76,8 @@
 }
 
 .nav-hamburger:hover,
-.nav-hamburger.active-glow {
+.nav-hamburger.active-glow,
+.nav-dropdown.open .nav-hamburger {
   transform: translateY(-1px);
   box-shadow:
     0 0 0 8px rgba(169, 124, 255, 0.08),
@@ -332,8 +333,8 @@ html[data-theme$="-light"] .menu-divider {
   }
 
   .brand-logo {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
   }
 
   .brand-copy strong {
