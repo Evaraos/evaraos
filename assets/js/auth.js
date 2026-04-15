@@ -135,7 +135,6 @@ async function handleLogin(event) {
 
   try {
     setMessage("loginMessage", "Signing in...");
-
     await setSessionPersistence(remember);
 
     const email = await getEmailFromIdentifier(identifier);
@@ -157,8 +156,8 @@ async function handleLogin(event) {
     window.location.href = "/evaraos/dashboard.html";
   } catch (error) {
     console.error("Login failed:", error);
-
     const code = error?.code || "";
+
     if (code.includes("invalid-credential") || code.includes("wrong-password")) {
       setMessage("loginMessage", "Incorrect password or account details.", true);
       return;
@@ -264,8 +263,8 @@ async function handleSignup(event) {
     window.location.href = "/evaraos/dashboard.html";
   } catch (error) {
     console.error("Signup failed:", error);
-
     const code = error?.code || "";
+
     if (code.includes("email-already-in-use")) {
       setMessage("signupMessage", "That email is already in use.", true);
       return;
@@ -304,8 +303,8 @@ async function handleReset(event) {
     setMessage("resetMessage", "Password reset email sent.");
   } catch (error) {
     console.error("Reset failed:", error);
-
     const code = error?.code || "";
+
     if (code.includes("user-not-found")) {
       setMessage("resetMessage", "No account found for that email.", true);
       return;
