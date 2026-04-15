@@ -37,7 +37,7 @@ function setStoredTheme(theme) {
   try {
     localStorage.setItem(STORAGE_KEY, normalizeTheme(theme));
   } catch {
-    // ignore storage errors
+    // ignore
   }
 }
 
@@ -107,7 +107,7 @@ function syncThemeUI() {
   });
 
   document.querySelectorAll("[data-theme-hint-text]").forEach((el) => {
-    el.textContent = "tap";
+    el.textContent = current.mode === "dark" ? "tap" : "tap";
   });
 
   document.querySelectorAll("[data-theme-bubble]").forEach((bubble) => {
@@ -116,6 +116,18 @@ function syncThemeUI() {
     bubble.classList.toggle("active", active);
     bubble.setAttribute("aria-pressed", active ? "true" : "false");
   });
+
+  document.querySelectorAll("[data-theme-pill]").forEach((button) => {
+    button.classList.toggle("theme-is-light", current.mode === "light");
+  });
+}
+
+function pulse(el) {
+  if (!el) return;
+  el.classList.remove("active-glow");
+  void el.offsetWidth;
+  el.classList.add("active-glow");
+  setTimeout(() => el.classList.remove("active-glow"), 260);
 }
 
 function bindThemeControls() {
@@ -125,8 +137,7 @@ function bindThemeControls() {
 
     button.addEventListener("click", () => {
       toggleMode();
-      button.classList.add("active-glow");
-      setTimeout(() => button.classList.remove("active-glow"), 220);
+      pulse(button);
     });
   });
 
@@ -137,8 +148,7 @@ function bindThemeControls() {
     bubble.addEventListener("click", () => {
       const family = bubble.getAttribute("data-theme-family") || "neutral";
       setThemeFamily(family);
-      bubble.classList.add("active-glow");
-      setTimeout(() => bubble.classList.remove("active-glow"), 220);
+      pulse(bubble);
     });
   });
 }
