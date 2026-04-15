@@ -15,9 +15,6 @@
       <div class="dashboard-sidebar-inner glass-shell aurora-card">
         <div class="dashboard-sidebar-search">
           <div class="dashboard-search-shell input-shell aurora-card">
-            <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
-              <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
-            </svg>
             <input
               type="search"
               class="dashboard-search-input input"
@@ -34,53 +31,47 @@
         </div>
 
         <nav class="dashboard-sidebar-nav" aria-label="Users sections">
-          <a href="#usersOverviewSection" class="dashboard-nav-link active aurora-card">
+          <a href="#usersHeroSection" class="dashboard-nav-link active aurora-card">
             <span class="dashboard-nav-icon">◉</span>
             <span>Overview</span>
           </a>
 
-          <a href="#usersListSection" class="dashboard-nav-link aurora-card">
+          <a href="#usersMainSection" class="dashboard-nav-link aurora-card">
             <span class="dashboard-nav-icon">◎</span>
-            <span>User Directory</span>
-          </a>
-
-          <a href="#usersFeedSection" class="dashboard-nav-link aurora-card">
-            <span class="dashboard-nav-icon">◌</span>
-            <span>Role Feed</span>
+            <span>Directory</span>
           </a>
         </nav>
 
         <div class="dashboard-sidebar-foot glass-card aurora-card">
           <div class="dashboard-sidebar-foot-copy">
-            <strong>Access Control</strong>
+            <strong>User Tools</strong>
             <span>
-              Review user records, role distribution, and directory changes directly from Firestore.
+              Search, sort, and review system users and access roles in one place.
             </span>
           </div>
-          <button type="button" id="usersRefreshBtnSide" class="btn btn-theme-primary">Refresh Users</button>
+          <button type="button" id="usersRefreshBtnSide" class="btn btn-theme-primary">Refresh</button>
         </div>
       </div>
     </aside>
 
     <main class="dashboard-main">
-      <section class="dashboard-hero glass-card aurora-card" id="usersOverviewSection">
+      <section class="dashboard-hero glass-card aurora-card" id="usersHeroSection">
         <div class="dashboard-hero-copy">
           <p class="dashboard-eyebrow">USER DIRECTORY</p>
-          <h1>Track roles and account access across the platform.</h1>
-          <p class="dashboard-hero-text">
-            Watch every user record, role distribution, and access category from one
-            premium Apple-glass directory connected to Firestore.
+          <h1 id="usersHeroTitle">Loading users...</h1>
+          <p class="dashboard-hero-text" id="usersHeroText">
+            Connecting to Firestore user records.
           </p>
 
           <div class="dashboard-hero-actions">
-            <button type="button" id="usersRefreshBtnTop" class="btn btn-theme-primary">Refresh Data</button>
-            <a href="/evaraos/dashboard.html" class="btn btn-theme-secondary">Back to Dashboard</a>
+            <button type="button" id="usersRefreshBtnTop" class="btn btn-theme-primary">Refresh</button>
+            <button type="button" id="usersSortBtn" class="btn btn-theme-secondary">Sort A–Z</button>
           </div>
         </div>
 
         <div class="dashboard-hero-panel glass-card aurora-card">
           <div class="dashboard-hero-panel-top">
-            <span class="dashboard-mini-badge">User Status</span>
+            <span class="dashboard-mini-badge">Directory Status</span>
             <span class="dashboard-live-dot"></span>
           </div>
 
@@ -93,8 +84,8 @@
           </div>
 
           <div class="dashboard-hero-panel-copy">
-            <strong id="usersHeroTitle">Loading users...</strong>
-            <span id="usersHeroText">Connecting to Firestore user records.</span>
+            <strong>User Registry</strong>
+            <span>Track user roles, account status, and team structure.</span>
           </div>
         </div>
       </section>
@@ -109,15 +100,21 @@
 
         <div class="dashboard-stats-grid">
           <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Total Users</p>
+            <p>Total</p>
             <h3 id="usersStatTotal">0</h3>
-            <span id="usersStatTotalMeta">Loading directory...</span>
+            <span id="usersStatTotalMeta">User records loaded</span>
           </article>
 
           <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Owners + Admins</p>
-            <h3 id="usersStatLeaders">0</h3>
-            <span id="usersStatLeadersMeta">Checking roles...</span>
+            <p>Owner/Admin</p>
+            <h3 id="usersStatElevated">0</h3>
+            <span id="usersStatElevatedMeta">Higher-access users</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card aurora-card">
+            <p>Customers</p>
+            <h3 id="usersStatCustomers">0</h3>
+            <span id="usersStatCustomersMeta">Customer accounts</span>
           </article>
 
           <article class="dashboard-stat-card glass-card aurora-card">
@@ -125,68 +122,44 @@
             <h3 id="usersStatFiltered">0</h3>
             <span id="usersStatFilteredMeta">Matches current search</span>
           </article>
-
-          <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Top Role</p>
-            <h3 id="usersStatTopRole">—</h3>
-            <span id="usersStatTopRoleMeta">Calculating distribution...</span>
-          </article>
         </div>
       </section>
 
-      <section class="dashboard-grid-2">
-        <section class="dashboard-panel glass-card aurora-card" id="usersListSection">
+      <section class="dashboard-grid-2" id="usersMainSection">
+        <section class="dashboard-panel glass-card aurora-card">
           <div class="dashboard-section-head">
             <div>
               <p class="dashboard-section-kicker">Directory</p>
-              <h2>User List</h2>
+              <h2>Users</h2>
             </div>
-
-            <button type="button" id="usersSortBtn" class="btn btn-theme-secondary">Sort A–Z</button>
           </div>
 
           <div class="dashboard-list" id="usersList">
             <article class="dashboard-list-item glass-card aurora-card">
               <div>
                 <strong>Loading users...</strong>
-                <span>Please wait while user records are loaded.</span>
+                <span>Your user records will appear here.</span>
               </div>
               <span class="dashboard-status-pill working">Loading</span>
             </article>
           </div>
         </section>
 
-        <section class="dashboard-panel glass-card aurora-card" id="usersFeedSection">
+        <section class="dashboard-panel glass-card aurora-card">
           <div class="dashboard-section-head">
             <div>
-              <p class="dashboard-section-kicker">Roles</p>
-              <h2>Role Distribution</h2>
+              <p class="dashboard-section-kicker">Highlights</p>
+              <h2>Team Feed</h2>
             </div>
           </div>
 
-          <div class="dashboard-role-grid" id="usersRoleGrid">
-            <article class="dashboard-role-card glass-card aurora-card">
-              <strong>Loading roles...</strong>
-              <span>Counting users by role</span>
+          <div class="dashboard-feed" id="usersFeed">
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Loading user activity...</strong>
+              <span>User highlights will appear once records are available.</span>
             </article>
           </div>
         </section>
-      </section>
-
-      <section class="dashboard-panel glass-card aurora-card">
-        <div class="dashboard-section-head">
-          <div>
-            <p class="dashboard-section-kicker">Activity</p>
-            <h2>User Feed</h2>
-          </div>
-        </div>
-
-        <div class="dashboard-feed" id="usersFeed">
-          <article class="dashboard-feed-item glass-card aurora-card">
-            <strong>Loading user feed...</strong>
-            <span>Recent directory activity will appear here once records are loaded.</span>
-          </article>
-        </div>
       </section>
     </main>
   </div>
