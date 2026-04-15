@@ -129,7 +129,7 @@ function pulse(el) {
   el.classList.remove("pop-click");
   void el.offsetWidth;
   el.classList.add("pop-click");
-  setTimeout(() => el.classList.remove("pop-click"), 220);
+  setTimeout(() => el.classList.remove("pop-click"), 240);
 }
 
 function bindThemeArrows() {
@@ -143,12 +143,14 @@ function bindThemeArrows() {
       const strip = shell?.querySelector("[data-theme-bubbles-scroll]");
       if (!strip) return;
 
-      strip.scrollBy({
-        left: direction === "left" ? -120 : 120,
-        behavior: "smooth"
-      });
-
       pulse(button);
+
+      setTimeout(() => {
+        strip.scrollBy({
+          left: direction === "left" ? -120 : 120,
+          behavior: "smooth"
+        });
+      }, 80);
     };
   });
 }
@@ -195,7 +197,11 @@ function bindNav() {
 
 function bindPopFeedback() {
   document.querySelectorAll(".btn, .feature-card, .theme-core-toggle, .theme-bubble, .theme-slider-arrow").forEach((el) => {
-    el.addEventListener("click", () => pulse(el));
+    el.addEventListener("click", (event) => {
+      if (event.currentTarget.matches(".btn") || event.currentTarget.matches(".feature-card")) {
+        pulse(event.currentTarget);
+      }
+    });
   });
 }
 
