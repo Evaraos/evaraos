@@ -71,12 +71,59 @@ function isCurrentPage(path) {
   return current === path || current.endsWith(path);
 }
 
+function getRole() {
+  try {
+    const raw =
+      localStorage.getItem("evaraos-user") ||
+      sessionStorage.getItem("evaraos-user");
+    if (!raw) return "guest";
+
+    const parsed = JSON.parse(raw);
+    return String(parsed?.role || "guest").toLowerCase();
+  } catch {
+    return "guest";
+  }
+}
+
+function getVisibleLinks() {
+  const role = getRole();
+
+  const common = [
+    { path: "/evaraos/index.html", label: "Home" }
+  ];
+
+  const guestOnly = [
+    { path: "/evaraos/login.html", label: "Login" },
+    { path: "/evaraos/signup.html", label: "Sign Up" },
+    { path: "/evaraos/reset.html", label: "Reset" }
+  ];
+
+  const ownerOnly = [
+    { path: "/evaraos/dashboard.html", label: "Dashboard" },
+    { path: "/evaraos/companies.html", label: "Companies" },
+    { path: "/evaraos/users.html", label: "Users" },
+    { path: "/evaraos/leads.html", label: "Leads" },
+    { path: "/evaraos/jobs.html", label: "Jobs" },
+    { path: "/evaraos/qa.html", label: "QA" }
+  ];
+
+  if (role === "owner") {
+    return [...common, ...ownerOnly];
+  }
+
+  return [...common, ...guestOnly];
+}
+
 function navLink(path, label) {
   const active = isCurrentPage(path) ? " active" : "";
   return `<a href="${path}" class="menu-link${active}" data-menu-link>${label}</a>`;
 }
 
 function universalNavMarkup() {
+  const links = getVisibleLinks()
+    .map((item) => navLink(item.path, item.label))
+    .join("");
+
   return `
     <header class="landing-header universal-nav-shell">
       <div class="landing-header-inner glass-shell aurora-card">
@@ -105,16 +152,7 @@ function universalNavMarkup() {
 
           <div class="nav-dropdown-menu glass-card aurora-card" id="siteNavMenu">
             <nav class="nav-dropdown-links" aria-label="Main navigation">
-              ${navLink("/evaraos/index.html", "Home")}
-              ${navLink("/evaraos/login.html", "Login")}
-              ${navLink("/evaraos/signup.html", "Sign Up")}
-              ${navLink("/evaraos/reset.html", "Reset")}
-              ${navLink("/evaraos/dashboard.html", "Dashboard")}
-              ${navLink("/evaraos/companies.html", "Companies")}
-              ${navLink("/evaraos/users.html", "Users")}
-              ${navLink("/evaraos/leads.html", "Leads")}
-              ${navLink("/evaraos/jobs.html", "Jobs")}
-              ${navLink("/evaraos/qa.html", "QA")}
+              ${links}
             </nav>
             <div class="menu-divider"></div>
             ${themeMarkup()}
@@ -163,6 +201,17 @@ function pulseAndShine(el) {
   shine(el);
 }
 
+function activateCardGlow(el) {
+  if (!el) return;
+  el.classList.add("active-card-glow");
+  setTimeout(() => el.classList.remove("active-card-glow"), 650);
+}
+
+function pulseShineGlow(el) {
+  pulseAndShine(el);
+  activateCardGlow(el);
+}
+
 function bindThemeArrows() {
   document.querySelectorAll("[data-theme-scroll]").forEach((button) => {
     button.onclick = (event) => {
@@ -174,7 +223,7 @@ function bindThemeArrows() {
       const strip = shell?.querySelector("[data-theme-bubbles-scroll]");
       if (!strip) return;
 
-      pulseAndShine(button);
+      pulseShineGlow(shell);
 
       setTimeout(() => {
         strip.scrollBy({
@@ -189,14 +238,15 @@ function bindThemeArrows() {
 function bindNavLinks() {
   document.querySelectorAll(".menu-link").forEach((link) => {
     link.addEventListener("click", (event) => {
-      pulseAndShine(link);
       const href = link.getAttribute("href");
       if (!href) return;
 
       event.preventDefault();
+      pulseShineGlow(link);
+
       setTimeout(() => {
         window.location.href = href;
-      }, 120);
+      }, 140);
     });
   });
 }
@@ -215,7 +265,10 @@ function bindNav() {
     const opening = !dropdown.classList.contains("open");
     dropdown.classList.toggle("open", opening);
     toggle.setAttribute("aria-expanded", opening ? "true" : "false");
-    pulseAndShine(toggle);
+    pulseShineGlow(toggle);
+    if (opening) {
+      pulseShineGlow(menu);
+    }
 
     if (window.EvaraTheme?.bindThemeControls) {
       window.EvaraTheme.bindThemeControls();
@@ -244,10 +297,10 @@ function bindNav() {
 
 function bindInteractiveShine() {
   document
-    .querySelectorAll(".btn, .feature-card, .theme-core-toggle, .theme-bubble, .theme-slider-arrow, .nav-hamburger, .password-toggle")
+    .querySelectorAll(".btn, .feature-card, .theme-core-toggle, .theme-bubble, .theme-slider-arrow, .nav-hamburger, .password-toggle, .menu-link")
     .forEach((el) => {
       el.addEventListener("click", () => {
-        pulseAndShine(el);
+        pulseShineGlow(el);
       });
     });
 
@@ -257,8 +310,15 @@ function bindInteractiveShine() {
       const input = el.querySelector("input, textarea");
       if (!input) return;
 
-      input.addEventListener("focus", () => shine(el));
-      input.addEventListener("input", () => shine(el));
+      input.addEventListener("focus", () => {
+        shine(el);
+        activateCardGlow(el);
+      });
+
+      input.addEventListener("input", () => {
+        shine(el);
+        activateCardGlow(el);
+      });
     });
 }
 
