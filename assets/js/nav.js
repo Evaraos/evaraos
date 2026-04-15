@@ -62,7 +62,7 @@ function footerMarkup() {
   `;
 }
 
-function publicNavMarkup() {
+function universalNavMarkup() {
   return `
     <header class="landing-header universal-nav-shell">
       <div class="landing-header-inner glass-shell aurora-card">
@@ -91,6 +91,7 @@ function publicNavMarkup() {
             <a href="/evaraos/index.html" class="menu-link">Home</a>
             <a href="/evaraos/login.html" class="menu-link">Login</a>
             <a href="/evaraos/signup.html" class="menu-link">Sign Up</a>
+            <a href="/evaraos/reset.html" class="menu-link">Reset</a>
             <a href="/evaraos/dashboard.html" class="menu-link">Dashboard</a>
             <a href="/evaraos/companies.html" class="menu-link">Companies</a>
             <a href="/evaraos/users.html" class="menu-link">Users</a>
@@ -113,7 +114,7 @@ function footerAlreadyExists() {
 function renderNav() {
   const mount = document.getElementById("universalNav");
   if (!mount) return;
-  mount.innerHTML = publicNavMarkup();
+  mount.innerHTML = universalNavMarkup();
 }
 
 function renderFooter() {
@@ -183,10 +184,13 @@ function bindNav() {
     event.stopPropagation();
   };
 
-  document.onclick = () => {
-    dropdown.classList.remove("open");
-    toggle.setAttribute("aria-expanded", "false");
-  };
+  document.addEventListener("click", (event) => {
+    const clickedInside = dropdown.contains(event.target);
+    if (!clickedInside) {
+      dropdown.classList.remove("open");
+      toggle.setAttribute("aria-expanded", "false");
+    }
+  });
 }
 
 function bindPopFeedback() {
