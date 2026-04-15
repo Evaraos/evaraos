@@ -1,5 +1,3 @@
-// assets/js/theme.js
-
 const STORAGE_KEY = "evaraos-theme";
 
 const DEFAULT_THEME = "dark";
@@ -107,7 +105,7 @@ function syncThemeUI() {
   });
 
   document.querySelectorAll("[data-theme-hint-text]").forEach((el) => {
-    el.textContent = current.mode === "dark" ? "tap" : "tap";
+    el.textContent = "tap";
   });
 
   document.querySelectorAll("[data-theme-bubble]").forEach((bubble) => {
