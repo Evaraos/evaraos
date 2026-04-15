@@ -35,7 +35,7 @@ function setStoredTheme(theme) {
   try {
     localStorage.setItem(STORAGE_KEY, normalizeTheme(theme));
   } catch {
-    // ignore
+    // ignore storage errors
   }
 }
 
@@ -53,9 +53,12 @@ function getThemeParts(theme = DEFAULT_THEME) {
 }
 
 function buildTheme(family = "neutral", mode = "dark") {
-  if (family === "neutral") return mode === "light" ? "light" : "dark";
-  const next = `${family}-${mode === "light" ? "light" : "dark"}`;
-  return VALID_THEMES.includes(next) ? next : DEFAULT_THEME;
+  const safeMode = mode === "light" ? "light" : "dark";
+  if (family === "neutral") {
+    return safeMode === "light" ? "light" : "dark";
+  }
+  const candidate = `${family}-${safeMode}`;
+  return VALID_THEMES.includes(candidate) ? candidate : DEFAULT_THEME;
 }
 
 function applyTheme(theme) {
@@ -67,12 +70,21 @@ function applyTheme(theme) {
 
 function toggleMode() {
   const current = getThemeParts(getStoredTheme());
-  applyTheme(buildTheme(current.family, current.mode === "dark" ? "light" : "dark"));
+  const nextMode = current.mode === "dark" ? "light" : "dark";
+  applyTheme(buildTheme(current.family, nextMode));
 }
 
 function setFamily(family) {
   const current = getThemeParts(getStoredTheme());
   applyTheme(buildTheme(family, current.mode));
+}
+
+function pulse(el) {
+  if (!el) return;
+  el.classList.remove("active-glow");
+  void el.offsetWidth;
+  el.classList.add("active-glow");
+  setTimeout(() => el.classList.remove("active-glow"), 220);
 }
 
 function syncThemeUi() {
@@ -84,30 +96,25 @@ function syncThemeUi() {
   });
 
   document.querySelectorAll("[data-theme-group-text]").forEach((el) => {
-    const label = current.family === "neutral"
-      ? "Neutral"
-      : current.family.charAt(0).toUpperCase() + current.family.slice(1);
+    const label =
+      current.family === "neutral"
+        ? "Neutral"
+        : current.family.charAt(0).toUpperCase() + current.family.slice(1);
     el.textContent = label;
   });
 
   document.querySelectorAll("[data-theme-bubble]").forEach((bubble) => {
     const family = bubble.getAttribute("data-theme-family") || "neutral";
     bubble.classList.toggle("active", family === current.family);
+    bubble.setAttribute("aria-pressed", family === current.family ? "true" : "false");
   });
-}
-
-function pulse(el) {
-  if (!el) return;
-  el.classList.remove("active-glow");
-  void el.offsetWidth;
-  el.classList.add("active-glow");
-  setTimeout(() => el.classList.remove("active-glow"), 220);
 }
 
 function bindThemeControls() {
   document.querySelectorAll("[data-theme-pill]").forEach((button) => {
     if (button.dataset.bound === "true") return;
     button.dataset.bound = "true";
+
     button.addEventListener("click", () => {
       toggleMode();
       pulse(button);
@@ -117,6 +124,7 @@ function bindThemeControls() {
   document.querySelectorAll("[data-theme-bubble]").forEach((bubble) => {
     if (bubble.dataset.bound === "true") return;
     bubble.dataset.bound = "true";
+
     bubble.addEventListener("click", () => {
       const family = bubble.getAttribute("data-theme-family") || "neutral";
       setFamily(family);
@@ -135,7 +143,8 @@ window.EvaraTheme = {
   bindThemeControls,
   syncThemeUi,
   toggleMode,
-  setFamily
+  setFamily,
+  applyTheme
 };
 
 document.addEventListener("DOMContentLoaded", initTheme);
