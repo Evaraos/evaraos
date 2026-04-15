@@ -132,6 +132,19 @@ function pulse(el) {
   setTimeout(() => el.classList.remove("pop-click"), 240);
 }
 
+function shine(el) {
+  if (!el) return;
+  el.classList.remove("shine-flash");
+  void el.offsetWidth;
+  el.classList.add("shine-flash");
+  setTimeout(() => el.classList.remove("shine-flash"), 540);
+}
+
+function pulseAndShine(el) {
+  pulse(el);
+  shine(el);
+}
+
 function bindThemeArrows() {
   document.querySelectorAll("[data-theme-scroll]").forEach((button) => {
     button.onclick = (event) => {
@@ -143,14 +156,14 @@ function bindThemeArrows() {
       const strip = shell?.querySelector("[data-theme-bubbles-scroll]");
       if (!strip) return;
 
-      pulse(button);
+      pulseAndShine(button);
 
       setTimeout(() => {
         strip.scrollBy({
           left: direction === "left" ? -120 : 120,
           behavior: "smooth"
         });
-      }, 80);
+      }, 90);
     };
   });
 }
@@ -169,7 +182,7 @@ function bindNav() {
     const opening = !dropdown.classList.contains("open");
     dropdown.classList.toggle("open", opening);
     toggle.setAttribute("aria-expanded", opening ? "true" : "false");
-    pulse(toggle);
+    pulseAndShine(toggle);
 
     if (window.EvaraTheme?.bindThemeControls) {
       window.EvaraTheme.bindThemeControls();
@@ -195,12 +208,19 @@ function bindNav() {
   });
 }
 
-function bindPopFeedback() {
-  document.querySelectorAll(".btn, .feature-card, .theme-core-toggle, .theme-bubble, .theme-slider-arrow").forEach((el) => {
-    el.addEventListener("click", (event) => {
-      const target = event.currentTarget;
-      pulse(target);
+function bindInteractiveShine() {
+  document.querySelectorAll(".btn, .feature-card, .theme-core-toggle, .theme-bubble, .theme-slider-arrow, .nav-hamburger, .password-toggle").forEach((el) => {
+    el.addEventListener("click", () => {
+      pulseAndShine(el);
     });
+  });
+
+  document.querySelectorAll(".input-shell, .password-wrap, .dashboard-search-shell").forEach((el) => {
+    const input = el.querySelector("input, textarea");
+    if (!input) return;
+
+    input.addEventListener("focus", () => shine(el));
+    input.addEventListener("input", () => shine(el));
   });
 }
 
@@ -218,7 +238,7 @@ function initNav() {
     window.EvaraTheme.syncThemeUi();
   }
 
-  bindPopFeedback();
+  bindInteractiveShine();
 }
 
 document.addEventListener("DOMContentLoaded", initNav);
