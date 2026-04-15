@@ -79,10 +79,10 @@ function setFamily(family) {
 
 function pulse(el) {
   if (!el) return;
-  el.classList.remove("active-glow");
+  el.classList.remove("pop-click");
   void el.offsetWidth;
-  el.classList.add("active-glow");
-  setTimeout(() => el.classList.remove("active-glow"), 220);
+  el.classList.add("pop-click");
+  setTimeout(() => el.classList.remove("pop-click"), 220);
 }
 
 function syncThemeUi() {
@@ -124,6 +124,8 @@ function bindThemeControls() {
       pulse(bubble);
     };
   });
+
+  syncThemeUi();
 }
 
 function initTheme() {
