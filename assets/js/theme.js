@@ -111,24 +111,18 @@ function syncThemeUi() {
 
 function bindThemeControls() {
   document.querySelectorAll("[data-theme-pill]").forEach((button) => {
-    if (button.dataset.bound === "true") return;
-    button.dataset.bound = "true";
-
-    button.addEventListener("click", () => {
+    button.onclick = () => {
       toggleMode();
       pulse(button);
-    });
+    };
   });
 
   document.querySelectorAll("[data-theme-bubble]").forEach((bubble) => {
-    if (bubble.dataset.bound === "true") return;
-    bubble.dataset.bound = "true";
-
-    bubble.addEventListener("click", () => {
+    bubble.onclick = () => {
       const family = bubble.getAttribute("data-theme-family") || "neutral";
       setFamily(family);
       pulse(bubble);
-    });
+    };
   });
 }
 
