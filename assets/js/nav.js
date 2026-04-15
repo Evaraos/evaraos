@@ -138,6 +138,8 @@ function universalNavMarkup() {
             </span>
           </button>
 
+          <div class="nav-menu-backdrop" id="siteNavBackdrop"></div>
+
           <div class="nav-dropdown-menu glass-card aurora-card" id="siteNavMenu">
             <nav class="nav-dropdown-links" aria-label="Main navigation">
               ${links}
@@ -230,7 +232,7 @@ function bindNavLinks() {
       closeMenu();
 
       setTimeout(() => {
-        window.location.href = href;
+        window.location.assign(href);
       }, 120);
     });
   });
@@ -255,8 +257,9 @@ function bindNav() {
   const dropdown = document.getElementById("siteNavDropdown");
   const toggle = document.getElementById("siteNavToggle");
   const menu = document.getElementById("siteNavMenu");
+  const backdrop = document.getElementById("siteNavBackdrop");
 
-  if (!dropdown || !toggle || !menu) return;
+  if (!dropdown || !toggle || !menu || !backdrop) return;
 
   toggle.addEventListener("click", (event) => {
     event.preventDefault();
@@ -270,6 +273,10 @@ function bindNav() {
 
   menu.addEventListener("click", (event) => {
     event.stopPropagation();
+  });
+
+  backdrop.addEventListener("click", () => {
+    closeMenu();
   });
 
   document.addEventListener("click", (event) => {
