@@ -10,7 +10,7 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/fi
 function themeMarkup() {
   return `
     <div class="menu-theme-block">
-      <button type="button" class="theme-core-toggle aurora-card" data-theme-pill>
+      <button type="button" class="theme-core-toggle aurora-card" data-theme-pill aria-label="Toggle light and dark mode">
         <span class="theme-core-dot"></span>
         <span class="theme-core-label" data-theme-mode-text>Dark</span>
         <span class="theme-core-sep">•</span>
@@ -20,19 +20,19 @@ function themeMarkup() {
       </button>
 
       <div class="theme-slider-shell aurora-card">
-        <button type="button" class="theme-slider-arrow" data-theme-scroll="left">‹</button>
+        <button type="button" class="theme-slider-arrow" data-theme-scroll="left" aria-label="Scroll theme colors left">‹</button>
 
         <div class="theme-bubbles-scroll" data-theme-bubbles-scroll>
-          <button type="button" class="theme-bubble light" data-theme-bubble data-theme-family="neutral"></button>
-          <button type="button" class="theme-bubble blue" data-theme-bubble data-theme-family="blue"></button>
-          <button type="button" class="theme-bubble red" data-theme-bubble data-theme-family="red"></button>
-          <button type="button" class="theme-bubble pink" data-theme-bubble data-theme-family="pink"></button>
-          <button type="button" class="theme-bubble green" data-theme-bubble data-theme-family="green"></button>
-          <button type="button" class="theme-bubble purple" data-theme-bubble data-theme-family="purple"></button>
-          <button type="button" class="theme-bubble yellow" data-theme-bubble data-theme-family="yellow"></button>
+          <button type="button" class="theme-bubble light" data-theme-bubble data-theme-family="neutral" aria-label="Neutral theme"></button>
+          <button type="button" class="theme-bubble blue" data-theme-bubble data-theme-family="blue" aria-label="Blue theme"></button>
+          <button type="button" class="theme-bubble red" data-theme-bubble data-theme-family="red" aria-label="Red theme"></button>
+          <button type="button" class="theme-bubble pink" data-theme-bubble data-theme-family="pink" aria-label="Pink theme"></button>
+          <button type="button" class="theme-bubble green" data-theme-bubble data-theme-family="green" aria-label="Green theme"></button>
+          <button type="button" class="theme-bubble purple" data-theme-bubble data-theme-family="purple" aria-label="Purple theme"></button>
+          <button type="button" class="theme-bubble yellow" data-theme-bubble data-theme-family="yellow" aria-label="Yellow theme"></button>
         </div>
 
-        <button type="button" class="theme-slider-arrow" data-theme-scroll="right">›</button>
+        <button type="button" class="theme-slider-arrow" data-theme-scroll="right" aria-label="Scroll theme colors right">›</button>
       </div>
     </div>
   `;
@@ -167,6 +167,28 @@ function closeMenus(except = null) {
   });
 }
 
+function bindThemeArrows() {
+  document.querySelectorAll("[data-theme-scroll]").forEach((button) => {
+    if (button.dataset.bound === "true") return;
+    button.dataset.bound = "true";
+
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const direction = button.getAttribute("data-theme-scroll");
+      const shell = button.closest(".theme-slider-shell");
+      const strip = shell?.querySelector("[data-theme-bubbles-scroll]");
+      if (!strip) return;
+
+      strip.scrollBy({
+        left: direction === "left" ? -120 : 120,
+        behavior: "smooth"
+      });
+
+      pulse(button);
+    });
+  });
+}
+
 function bindMenus() {
   document.querySelectorAll("[data-nav-dropdown]").forEach((dropdown) => {
     if (dropdown.dataset.bound === "true") return;
@@ -179,6 +201,7 @@ function bindMenus() {
 
     toggle.addEventListener("click", (event) => {
       event.stopPropagation();
+
       const opening = !dropdown.classList.contains("open");
       closeMenus(dropdown);
       dropdown.classList.toggle("open", opening);
@@ -188,6 +211,11 @@ function bindMenus() {
       if (window.EvaraTheme?.bindThemeControls) {
         window.EvaraTheme.bindThemeControls();
       }
+
+      if (window.EvaraTheme?.syncThemeUi) {
+        window.EvaraTheme.syncThemeUi();
+      }
+
       bindThemeArrows();
     });
 
@@ -197,26 +225,6 @@ function bindMenus() {
   });
 
   document.addEventListener("click", () => closeMenus());
-}
-
-function bindThemeArrows() {
-  document.querySelectorAll("[data-theme-scroll]").forEach((button) => {
-    if (button.dataset.bound === "true") return;
-    button.dataset.bound = "true";
-
-    button.addEventListener("click", (event) => {
-      event.stopPropagation();
-      const direction = button.getAttribute("data-theme-scroll");
-      const shell = button.closest(".theme-slider-shell");
-      const strip = shell?.querySelector("[data-theme-bubbles-scroll]");
-      if (!strip) return;
-      strip.scrollBy({
-        left: direction === "left" ? -120 : 120,
-        behavior: "smooth"
-      });
-      pulse(button);
-    });
-  });
 }
 
 function bindLogout() {
@@ -264,6 +272,7 @@ function initNav() {
   if (window.EvaraTheme?.bindThemeControls) {
     window.EvaraTheme.bindThemeControls();
   }
+
   if (window.EvaraTheme?.syncThemeUi) {
     window.EvaraTheme.syncThemeUi();
   }
