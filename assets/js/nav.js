@@ -62,6 +62,20 @@ function footerMarkup() {
   `;
 }
 
+function getCurrentPath() {
+  return window.location.pathname.replace(/\/+$/, "");
+}
+
+function isCurrentPage(path) {
+  const current = getCurrentPath();
+  return current === path || current.endsWith(path);
+}
+
+function navLink(path, label) {
+  const active = isCurrentPage(path) ? " active" : "";
+  return `<a href="${path}" class="menu-link${active}" data-menu-link>${label}</a>`;
+}
+
 function universalNavMarkup() {
   return `
     <header class="landing-header universal-nav-shell">
@@ -82,22 +96,26 @@ function universalNavMarkup() {
             aria-expanded="false"
             aria-label="Open menu"
           >
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
+            <span class="hamburger-orb">
+              <span class="hamburger-bar top"></span>
+              <span class="hamburger-bar mid"></span>
+              <span class="hamburger-bar bot"></span>
+            </span>
           </button>
 
           <div class="nav-dropdown-menu glass-card aurora-card" id="siteNavMenu">
-            <a href="/evaraos/index.html" class="menu-link">Home</a>
-            <a href="/evaraos/login.html" class="menu-link">Login</a>
-            <a href="/evaraos/signup.html" class="menu-link">Sign Up</a>
-            <a href="/evaraos/reset.html" class="menu-link">Reset</a>
-            <a href="/evaraos/dashboard.html" class="menu-link">Dashboard</a>
-            <a href="/evaraos/companies.html" class="menu-link">Companies</a>
-            <a href="/evaraos/users.html" class="menu-link">Users</a>
-            <a href="/evaraos/leads.html" class="menu-link">Leads</a>
-            <a href="/evaraos/jobs.html" class="menu-link">Jobs</a>
-            <a href="/evaraos/qa.html" class="menu-link">QA</a>
+            <nav class="nav-dropdown-links" aria-label="Main navigation">
+              ${navLink("/evaraos/index.html", "Home")}
+              ${navLink("/evaraos/login.html", "Login")}
+              ${navLink("/evaraos/signup.html", "Sign Up")}
+              ${navLink("/evaraos/reset.html", "Reset")}
+              ${navLink("/evaraos/dashboard.html", "Dashboard")}
+              ${navLink("/evaraos/companies.html", "Companies")}
+              ${navLink("/evaraos/users.html", "Users")}
+              ${navLink("/evaraos/leads.html", "Leads")}
+              ${navLink("/evaraos/jobs.html", "Jobs")}
+              ${navLink("/evaraos/qa.html", "QA")}
+            </nav>
             <div class="menu-divider"></div>
             ${themeMarkup()}
           </div>
@@ -168,6 +186,21 @@ function bindThemeArrows() {
   });
 }
 
+function bindNavLinks() {
+  document.querySelectorAll(".menu-link").forEach((link) => {
+    link.addEventListener("click", (event) => {
+      pulseAndShine(link);
+      const href = link.getAttribute("href");
+      if (!href) return;
+
+      event.preventDefault();
+      setTimeout(() => {
+        window.location.href = href;
+      }, 120);
+    });
+  });
+}
+
 function bindNav() {
   const dropdown = document.getElementById("siteNavDropdown");
   const toggle = document.getElementById("siteNavToggle");
@@ -193,6 +226,7 @@ function bindNav() {
     }
 
     bindThemeArrows();
+    bindNavLinks();
   };
 
   menu.onclick = (event) => {
@@ -209,19 +243,23 @@ function bindNav() {
 }
 
 function bindInteractiveShine() {
-  document.querySelectorAll(".btn, .feature-card, .theme-core-toggle, .theme-bubble, .theme-slider-arrow, .nav-hamburger, .password-toggle").forEach((el) => {
-    el.addEventListener("click", () => {
-      pulseAndShine(el);
+  document
+    .querySelectorAll(".btn, .feature-card, .theme-core-toggle, .theme-bubble, .theme-slider-arrow, .nav-hamburger, .password-toggle")
+    .forEach((el) => {
+      el.addEventListener("click", () => {
+        pulseAndShine(el);
+      });
     });
-  });
 
-  document.querySelectorAll(".input-shell, .password-wrap, .dashboard-search-shell").forEach((el) => {
-    const input = el.querySelector("input, textarea");
-    if (!input) return;
+  document
+    .querySelectorAll(".input-shell, .password-wrap, .dashboard-search-shell")
+    .forEach((el) => {
+      const input = el.querySelector("input, textarea");
+      if (!input) return;
 
-    input.addEventListener("focus", () => shine(el));
-    input.addEventListener("input", () => shine(el));
-  });
+      input.addEventListener("focus", () => shine(el));
+      input.addEventListener("input", () => shine(el));
+    });
 }
 
 function initNav() {
@@ -229,6 +267,7 @@ function initNav() {
   renderFooter();
   bindNav();
   bindThemeArrows();
+  bindNavLinks();
 
   if (window.EvaraTheme?.bindThemeControls) {
     window.EvaraTheme.bindThemeControls();
