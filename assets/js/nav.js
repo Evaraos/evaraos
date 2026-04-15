@@ -1,52 +1,342 @@
-function renderNav() {
-  const nav = document.getElementById("universalNav");
-  if (!nav) return;
+function themeMarkup() {
+  return `
+    <div class="menu-theme-block">
+      <button
+        type="button"
+        class="theme-core-toggle aurora-card"
+        data-theme-pill
+        aria-label="Toggle light and dark mode"
+      >
+        <span class="theme-core-dot"></span>
+        <span class="theme-core-label" data-theme-mode-text>Dark</span>
+        <span class="theme-core-sep">•</span>
+        <span class="theme-core-group" data-theme-group-text>Neutral</span>
+        <span class="theme-core-sep">•</span>
+        <span class="theme-core-hint">tap</span>
+      </button>
 
-  nav.innerHTML = `
-    <div class="universal-nav">
-      <div class="nav-inner glass">
-        <img src="/assets/img/evaraos_logo.png" class="logo"/>
+      <div class="theme-slider-shell aurora-card">
+        <div class="theme-slider-row">
+          <button
+            type="button"
+            class="theme-slider-arrow"
+            data-theme-scroll="left"
+            aria-label="Scroll theme colors left"
+          >‹</button>
 
-        <div class="hamburger" id="menuBtn">
-          <span></span><span></span><span></span>
-        </div>
+          <div class="theme-bubbles-scroll" data-theme-bubbles-scroll>
+            <button type="button" class="theme-bubble light" data-theme-bubble data-theme-family="neutral" aria-label="Neutral theme"></button>
+            <button type="button" class="theme-bubble blue" data-theme-bubble data-theme-family="blue" aria-label="Blue theme"></button>
+            <button type="button" class="theme-bubble red" data-theme-bubble data-theme-family="red" aria-label="Red theme"></button>
+            <button type="button" class="theme-bubble pink" data-theme-bubble data-theme-family="pink" aria-label="Pink theme"></button>
+            <button type="button" class="theme-bubble green" data-theme-bubble data-theme-family="green" aria-label="Green theme"></button>
+            <button type="button" class="theme-bubble purple" data-theme-bubble data-theme-family="purple" aria-label="Purple theme"></button>
+            <button type="button" class="theme-bubble yellow" data-theme-bubble data-theme-family="yellow" aria-label="Yellow theme"></button>
+          </div>
 
-        <div class="dropdown glass" id="menu">
-          <a href="/index.html">Home</a>
-          <a href="/login.html">Login</a>
-          <a href="/signup.html">Signup</a>
-          <a href="/settings.html">Settings</a>
+          <button
+            type="button"
+            class="theme-slider-arrow"
+            data-theme-scroll="right"
+            aria-label="Scroll theme colors right"
+          >›</button>
         </div>
       </div>
     </div>
   `;
 }
 
-function bindNav() {
-  const btn = document.getElementById("menuBtn");
-  const menu = document.getElementById("menu");
+function footerMarkup() {
+  return `
+    <footer class="site-footer glass-card aurora-card">
+      <div class="site-footer-inner">
+        <div class="site-footer-left">
+          <strong>© <span id="footerYear"></span> Evaraos Inc</strong>
+          <span>All rights reserved.</span>
+        </div>
+        <div class="site-footer-right">
+          <a href="https://instagram.com/evaraos" target="_blank" rel="noopener noreferrer">@evaraos</a>
+          <a href="https://x.com/evaraos" target="_blank" rel="noopener noreferrer">@evaraos</a>
+          <a href="https://tiktok.com/@evaraos" target="_blank" rel="noopener noreferrer">@evaraos</a>
+        </div>
+      </div>
+    </footer>
+  `;
+}
 
-  btn.onclick = () => {
-    menu.classList.toggle("active");
+function getCurrentPath() {
+  return window.location.pathname.replace(/\/+$/, "");
+}
+
+function isCurrentPage(path) {
+  const current = getCurrentPath();
+  return current === path || current.endsWith(path);
+}
+
+function getRole() {
+  try {
+    const raw =
+      localStorage.getItem("evaraos-user") ||
+      sessionStorage.getItem("evaraos-user");
+    if (!raw) return "guest";
+    const parsed = JSON.parse(raw);
+    return String(parsed?.role || "guest").toLowerCase();
+  } catch {
+    return "guest";
+  }
+}
+
+function getVisibleLinks() {
+  const role = getRole();
+
+  const common = [
+    { path: "/evaraos/index.html", label: "Home" },
+    { path: "/evaraos/settings.html", label: "Settings" }
+  ];
+
+  const guestOnly = [
+    { path: "/evaraos/login.html", label: "Login" },
+    { path: "/evaraos/signup.html", label: "Sign Up" },
+    { path: "/evaraos/reset.html", label: "Reset" }
+  ];
+
+  const ownerOnly = [
+    { path: "/evaraos/dashboard.html", label: "Dashboard" },
+    { path: "/evaraos/companies.html", label: "Companies" },
+    { path: "/evaraos/users.html", label: "Users" },
+    { path: "/evaraos/leads.html", label: "Leads" },
+    { path: "/evaraos/jobs.html", label: "Jobs" },
+    { path: "/evaraos/qa.html", label: "QA" }
+  ];
+
+  if (role === "owner") {
+    return [...common, ...ownerOnly];
+  }
+
+  return [...common, ...guestOnly];
+}
+
+function navLink(path, label) {
+  const active = isCurrentPage(path) ? " active" : "";
+  return `<a href="${path}" class="menu-link${active}" data-menu-link>${label}</a>`;
+}
+
+function universalNavMarkup() {
+  const links = getVisibleLinks()
+    .map((item) => navLink(item.path, item.label))
+    .join("");
+
+  return `
+    <header class="landing-header universal-nav-shell">
+      <div class="landing-header-inner glass-shell aurora-card">
+        <a href="/evaraos/index.html" class="brand-link" aria-label="Go home">
+          <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos logo" class="brand-logo" />
+          <div class="brand-copy">
+            <strong>Evaraos Inc</strong>
+            <span>Subsidiaries Allocation SaaS</span>
+          </div>
+        </a>
+
+        <div class="nav-dropdown" id="siteNavDropdown">
+          <button
+            class="nav-hamburger aurora-card"
+            type="button"
+            id="siteNavToggle"
+            aria-expanded="false"
+            aria-label="Open menu"
+          >
+            <span class="hamburger-orb">
+              <span class="hamburger-bar top"></span>
+              <span class="hamburger-bar mid"></span>
+              <span class="hamburger-bar bot"></span>
+            </span>
+          </button>
+
+          <div class="nav-dropdown-menu glass-card aurora-card" id="siteNavMenu">
+            <nav class="nav-dropdown-links" aria-label="Main navigation">
+              ${links}
+            </nav>
+            <div class="menu-divider"></div>
+            ${themeMarkup()}
+          </div>
+        </div>
+      </div>
+    </header>
+  `;
+}
+
+function footerAlreadyExists() {
+  return document.querySelector(".site-footer");
+}
+
+function renderNav() {
+  const mount = document.getElementById("universalNav");
+  if (!mount) return;
+  mount.innerHTML = universalNavMarkup();
+}
+
+function renderFooter() {
+  if (footerAlreadyExists()) return;
+  document.body.insertAdjacentHTML("beforeend", footerMarkup());
+  const year = document.getElementById("footerYear");
+  if (year) year.textContent = String(new Date().getFullYear());
+}
+
+function pulse(el) {
+  if (!el) return;
+  el.classList.remove("pop-click");
+  void el.offsetWidth;
+  el.classList.add("pop-click");
+  setTimeout(() => el.classList.remove("pop-click"), 240);
+}
+
+function shine(el) {
+  if (!el) return;
+  el.classList.remove("shine-flash");
+  void el.offsetWidth;
+  el.classList.add("shine-flash");
+  setTimeout(() => el.classList.remove("shine-flash"), 560);
+}
+
+function activateCardGlow(el) {
+  if (!el) return;
+  el.classList.add("active-card-glow");
+  setTimeout(() => el.classList.remove("active-card-glow"), 650);
+}
+
+function pulseShineGlow(el) {
+  pulse(el);
+  shine(el);
+  activateCardGlow(el);
+}
+
+function bindThemeArrows() {
+  document.querySelectorAll("[data-theme-scroll]").forEach((button) => {
+    button.onclick = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const direction = button.getAttribute("data-theme-scroll");
+      const shell = button.closest(".theme-slider-shell");
+      const strip = shell?.querySelector("[data-theme-bubbles-scroll]");
+      if (!strip) return;
+
+      pulseShineGlow(shell);
+
+      setTimeout(() => {
+        strip.scrollBy({
+          left: direction === "left" ? -120 : 120,
+          behavior: "smooth"
+        });
+      }, 90);
+    };
+  });
+}
+
+function bindNavLinks() {
+  document.querySelectorAll(".menu-link").forEach((link) => {
+    link.addEventListener("click", (event) => {
+      const href = link.getAttribute("href");
+      if (!href) return;
+
+      event.preventDefault();
+      pulseShineGlow(link);
+
+      setTimeout(() => {
+        window.location.href = href;
+      }, 140);
+    });
+  });
+}
+
+function bindNav() {
+  const dropdown = document.getElementById("siteNavDropdown");
+  const toggle = document.getElementById("siteNavToggle");
+  const menu = document.getElementById("siteNavMenu");
+
+  if (!dropdown || !toggle || !menu) return;
+
+  toggle.onclick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const opening = !dropdown.classList.contains("open");
+    dropdown.classList.toggle("open", opening);
+    toggle.setAttribute("aria-expanded", opening ? "true" : "false");
+
+    pulseShineGlow(toggle);
+    if (opening) {
+      pulseShineGlow(menu);
+    }
+
+    if (window.EvaraTheme?.bindThemeControls) {
+      window.EvaraTheme.bindThemeControls();
+    }
+
+    if (window.EvaraTheme?.syncThemeUi) {
+      window.EvaraTheme.syncThemeUi();
+    }
+
+    bindThemeArrows();
+    bindNavLinks();
   };
 
-  document.addEventListener("click", (e) => {
-    if (!btn.contains(e.target) && !menu.contains(e.target)) {
-      menu.classList.remove("active");
+  menu.onclick = (event) => {
+    event.stopPropagation();
+  };
+
+  document.addEventListener("click", (event) => {
+    const clickedInside = dropdown.contains(event.target);
+    if (!clickedInside) {
+      dropdown.classList.remove("open");
+      toggle.setAttribute("aria-expanded", "false");
     }
   });
 }
 
-function renderFooter() {
-  document.body.insertAdjacentHTML("beforeend", `
-    <div class="footer glass">
-      © ${new Date().getFullYear()} Evaraos Inc
-    </div>
-  `);
+function bindInteractiveShine() {
+  document
+    .querySelectorAll(".btn, .feature-card, .theme-core-toggle, .theme-bubble, .theme-slider-arrow, .nav-hamburger, .password-toggle, .menu-link")
+    .forEach((el) => {
+      el.addEventListener("click", () => {
+        pulseShineGlow(el);
+      });
+    });
+
+  document
+    .querySelectorAll(".input-shell, .password-wrap, .dashboard-search-shell")
+    .forEach((el) => {
+      const input = el.querySelector("input, textarea");
+      if (!input) return;
+
+      input.addEventListener("focus", () => {
+        shine(el);
+        activateCardGlow(el);
+      });
+
+      input.addEventListener("input", () => {
+        shine(el);
+        activateCardGlow(el);
+      });
+    });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+function initNav() {
   renderNav();
   renderFooter();
   bindNav();
-});
+  bindThemeArrows();
+  bindNavLinks();
+
+  if (window.EvaraTheme?.bindThemeControls) {
+    window.EvaraTheme.bindThemeControls();
+  }
+
+  if (window.EvaraTheme?.syncThemeUi) {
+    window.EvaraTheme.syncThemeUi();
+  }
+
+  bindInteractiveShine();
+}
+
+document.addEventListener("DOMContentLoaded", initNav);
