@@ -104,6 +104,7 @@ main,
   padding: 34px 30px;
   display: flex;
   align-items: center;
+  transform: translateZ(0);
 }
 
 .hero-content {
@@ -144,13 +145,6 @@ main,
   display: flex;
   flex-direction: column;
   justify-content: center;
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease;
-}
-
-.feature-card:hover {
-  transform: translateY(-2px);
 }
 
 .feature-card h3 {
@@ -184,15 +178,17 @@ main,
     box-shadow 0.18s ease,
     background 0.18s ease,
     color 0.18s ease,
-    border-color 0.18s ease;
+    border-color 0.18s ease,
+    filter 0.18s ease;
 }
 
 .btn:hover {
   transform: translateY(-1px);
 }
 
-.btn:active {
-  transform: scale(0.985);
+.btn:active,
+.btn.pop-click {
+  transform: scale(0.975);
 }
 
 .form-group {
@@ -226,7 +222,8 @@ main,
     transform 0.18s ease,
     box-shadow 0.18s ease,
     border-color 0.18s ease,
-    background 0.18s ease;
+    background 0.18s ease,
+    filter 0.18s ease;
 }
 
 .input {
@@ -264,7 +261,8 @@ main,
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
-    background 0.18s ease;
+    background 0.18s ease,
+    filter 0.18s ease;
 }
 
 .password-toggle:hover {
@@ -333,13 +331,23 @@ main,
   line-height: 1.5;
 }
 
-.active-glow {
-  animation: activeGlowPulse 220ms ease;
+.glow-card,
+.feature-card,
+.hero,
+.input-shell,
+.password-wrap,
+.remember-row,
+.btn {
+  transform: translateZ(0);
 }
 
-@keyframes activeGlowPulse {
+.pop-click {
+  animation: popClick 220ms ease;
+}
+
+@keyframes popClick {
   0% { transform: scale(1); }
-  45% { transform: scale(1.015); }
+  40% { transform: scale(0.972); }
   100% { transform: scale(1); }
 }
 
