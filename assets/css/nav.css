@@ -160,7 +160,7 @@ html[data-theme$="-light"] .hamburger-bar {
   position: absolute;
   right: 0;
   top: calc(100% + 12px);
-  width: min(320px, calc(100vw - 28px));
+  width: min(330px, calc(100vw - 28px));
   max-height: 72vh;
   overflow-y: auto;
   padding: 12px;
@@ -291,7 +291,8 @@ html[data-theme$="-light"] .menu-divider {
   z-index: 2;
 }
 
-.theme-core-toggle {
+.theme-core-toggle,
+.border-fx-toggle {
   min-height: 54px;
   border: 0;
   border-radius: 18px;
@@ -305,9 +306,11 @@ html[data-theme$="-light"] .menu-divider {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
   position: relative;
   overflow: hidden;
+  font-weight: 700;
 }
 
-.theme-core-dot {
+.theme-core-dot,
+.border-fx-dot {
   width: 12px;
   height: 12px;
   border-radius: 50%;
@@ -317,18 +320,21 @@ html[data-theme$="-light"] .menu-divider {
 
 .theme-core-label,
 .theme-core-group,
-.theme-core-hint {
+.theme-core-hint,
+.border-fx-label,
+.border-fx-mode {
   font-weight: 700;
   font-size: 0.96rem;
 }
 
-.theme-core-sep {
+.theme-core-sep,
+.border-fx-sep {
   opacity: 0.45;
 }
 
-.theme-slider-shell {
+.theme-slider-shell,
+.border-fx-shell {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) 34px;
   gap: 8px;
   align-items: center;
   padding: 8px;
@@ -337,6 +343,36 @@ html[data-theme$="-light"] .menu-divider {
   border: 1px solid rgba(255, 255, 255, 0.08);
   position: relative;
   z-index: 2;
+}
+
+.theme-slider-shell {
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+}
+
+.border-fx-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.border-fx-option {
+  min-height: 38px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.border-fx-option.active {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.18),
+    0 0 14px rgba(var(--tint-rgb), 0.10);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.16), rgba(var(--tint-rgb), 0.10));
 }
 
 .theme-slider-arrow {
@@ -442,5 +478,9 @@ html[data-theme$="-light"] .menu-divider {
 
   .theme-slider-shell {
     grid-template-columns: 30px minmax(0, 1fr) 30px;
+  }
+
+  .border-fx-options {
+    grid-template-columns: 1fr;
   }
 }
