@@ -1,5 +1,3 @@
-// assets/js/nav.js
-
 import {
   auth,
   logoutAndRedirect,
@@ -27,14 +25,20 @@ function getThemeControlMarkup() {
         <span class="theme-core-hint" data-theme-hint-text>tap</span>
       </button>
 
-      <div class="theme-bubbles" data-theme-bubbles>
-        <button type="button" class="theme-bubble light aurora-card" data-theme-bubble data-theme-family="neutral" aria-label="Neutral theme"></button>
-        <button type="button" class="theme-bubble blue aurora-card" data-theme-bubble data-theme-family="blue" aria-label="Blue theme"></button>
-        <button type="button" class="theme-bubble red aurora-card" data-theme-bubble data-theme-family="red" aria-label="Red theme"></button>
-        <button type="button" class="theme-bubble pink aurora-card" data-theme-bubble data-theme-family="pink" aria-label="Pink theme"></button>
-        <button type="button" class="theme-bubble green aurora-card" data-theme-bubble data-theme-family="green" aria-label="Green theme"></button>
-        <button type="button" class="theme-bubble purple aurora-card" data-theme-bubble data-theme-family="purple" aria-label="Purple theme"></button>
-        <button type="button" class="theme-bubble yellow aurora-card" data-theme-bubble data-theme-family="yellow" aria-label="Yellow theme"></button>
+      <div class="theme-slider-shell aurora-card">
+        <button type="button" class="theme-slider-arrow" data-theme-scroll="left" aria-label="Scroll theme colors left">‹</button>
+
+        <div class="theme-bubbles theme-bubbles-scroll" data-theme-bubbles-scroll>
+          <button type="button" class="theme-bubble light aurora-card" data-theme-bubble data-theme-family="neutral" aria-label="Neutral theme"></button>
+          <button type="button" class="theme-bubble blue aurora-card" data-theme-bubble data-theme-family="blue" aria-label="Blue theme"></button>
+          <button type="button" class="theme-bubble red aurora-card" data-theme-bubble data-theme-family="red" aria-label="Red theme"></button>
+          <button type="button" class="theme-bubble pink aurora-card" data-theme-bubble data-theme-family="pink" aria-label="Pink theme"></button>
+          <button type="button" class="theme-bubble green aurora-card" data-theme-bubble data-theme-family="green" aria-label="Green theme"></button>
+          <button type="button" class="theme-bubble purple aurora-card" data-theme-bubble data-theme-family="purple" aria-label="Purple theme"></button>
+          <button type="button" class="theme-bubble yellow aurora-card" data-theme-bubble data-theme-family="yellow" aria-label="Yellow theme"></button>
+        </div>
+
+        <button type="button" class="theme-slider-arrow" data-theme-scroll="right" aria-label="Scroll theme colors right">›</button>
       </div>
     </div>
   `;
@@ -248,6 +252,8 @@ function toggleNavDropdown(dropdown) {
     if (window.EvaraTheme?.bindThemeControls) {
       window.EvaraTheme.bindThemeControls();
     }
+
+    bindThemeSliderArrows();
   } else {
     dropdown.classList.remove("open");
     if (toggle) toggle.setAttribute("aria-expanded", "false");
@@ -292,7 +298,9 @@ function bindNavDropdowns() {
 
     menu.querySelectorAll("a, button").forEach((item) => {
       item.addEventListener("click", () => {
-        closeAllNavDropdowns();
+        if (!item.hasAttribute("data-theme-bubble") && !item.hasAttribute("data-theme-pill") && !item.hasAttribute("data-theme-scroll")) {
+          closeAllNavDropdowns();
+        }
       });
     });
   });
@@ -316,6 +324,29 @@ function bindGlobalNavClose() {
       if (sidebar) sidebar.classList.remove("open");
       if (sidebarToggle) sidebarToggle.setAttribute("aria-expanded", "false");
     }
+  });
+}
+
+function bindThemeSliderArrows() {
+  document.querySelectorAll("[data-theme-scroll]").forEach((button) => {
+    if (button.dataset.bound === "true") return;
+    button.dataset.bound = "true";
+
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+
+      const direction = button.getAttribute("data-theme-scroll");
+      const shell = button.closest(".theme-slider-shell");
+      const strip = shell?.querySelector("[data-theme-bubbles-scroll]");
+      if (!strip) return;
+
+      strip.scrollBy({
+        left: direction === "left" ? -120 : 120,
+        behavior: "smooth"
+      });
+
+      pulse(button);
+    });
   });
 }
 
@@ -387,6 +418,7 @@ function initNav() {
   bindNavDropdowns();
   bindGlobalNavClose();
   bindDashboardSidebar();
+  bindThemeSliderArrows();
   markActiveLinks();
 
   if (window.EvaraTheme?.bindThemeControls) {
