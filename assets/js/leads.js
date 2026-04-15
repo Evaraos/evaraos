@@ -1,5 +1,3 @@
-// assets/js/leads.js
-
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
@@ -9,8 +7,8 @@ import {
 
 const leadsSearch = document.getElementById("leadsSearch");
 const leadsList = document.getElementById("leadsList");
-const leadFlowStack = document.getElementById("leadFlowStack");
 const leadsFeed = document.getElementById("leadsFeed");
+const leadFlowStack = document.getElementById("leadFlowStack");
 
 const leadsHeroTitle = document.getElementById("leadsHeroTitle");
 const leadsHeroText = document.getElementById("leadsHeroText");
@@ -20,237 +18,245 @@ const leadsStatOpen = document.getElementById("leadsStatOpen");
 const leadsStatHot = document.getElementById("leadsStatHot");
 const leadsStatFiltered = document.getElementById("leadsStatFiltered");
 
-const leadsStatTotalMeta = document.getElementById("leadsStatTotalMeta");
-const leadsStatOpenMeta = document.getElementById("leadsStatOpenMeta");
-const leadsStatHotMeta = document.getElementById("leadsStatHotMeta");
-const leadsStatFilteredMeta = document.getElementById("leadsStatFilteredMeta");
-
 const leadsRefreshBtnTop = document.getElementById("leadsRefreshBtnTop");
 const leadsRefreshBtnSide = document.getElementById("leadsRefreshBtnSide");
 const leadsSortBtn = document.getElementById("leadsSortBtn");
 
-let leadRecords = [];
-let filteredLeads = [];
-let sortAscending = true;
+let leadsData = [];
+let sortAsc = true;
 
-function normalize(value = "") {
-  return String(value || "").trim().toLowerCase();
+function leadName(lead = {}) {
+  return (
+    lead.name ||
+    lead.fullName ||
+    lead.company ||
+    lead.email ||
+    "Untitled Lead"
+  );
 }
 
-function leadTitle(lead) {
-  return lead.name || lead.title || lead.customerName || lead.email || "Untitled Lead";
+function leadStatus(lead = {}) {
+  return lead.status || "new";
 }
 
-function leadSubtitle(lead) {
-  return lead.description || lead.address || lead.location || lead.phone || "Lead record from Firestore";
+function leadPriority(lead = {}) {
+  return (lead.priority || "normal").toString().toLowerCase();
 }
 
-function niceStatus(status = "") {
-  const value = String(status || "").trim();
-  return value ? value.charAt(0).toUpperCase() + value.slice(1) : "New";
+function leadDescription(lead = {}) {
+  return (
+    lead.description ||
+    lead.notes ||
+    lead.source ||
+    "No lead notes provided."
+  );
 }
 
-function statusClass(status = "") {
-  const value = normalize(status);
-
-  if (["won", "closed", "complete", "completed"].includes(value)) return "good";
-  if (["quoted", "pending", "new", "hot"].includes(value)) return "alert";
+function pillClass(status = "") {
+  const safe = String(status || "").toLowerCase();
+  if (["won", "closed", "active"].includes(safe)) return "success";
+  if (["new", "open", "contacted", "qualified"].includes(safe)) return "working";
+  if (["lost", "cold", "archived"].includes(safe)) return "muted";
   return "working";
 }
 
-function renderStats() {
-  const openCount = leadRecords.filter((lead) =>
-    !["won", "closed", "complete", "completed"].includes(normalize(lead.status))
-  ).length;
+function filteredLeads() {
+  const term = String(leadsSearch?.value || "").trim().toLowerCase();
+  let rows = [...leadsData];
 
-  const hotCount = leadRecords.filter((lead) =>
-    ["hot", "high", "priority"].includes(normalize(lead.priority || lead.status))
-  ).length;
+  if (term) {
+    rows = rows.filter((lead) => {
+      return [
+        leadName(lead),
+        leadStatus(lead),
+        leadPriority(lead),
+        leadDescription(lead)
+      ].some((value) => String(value || "").toLowerCase().includes(term));
+    });
+  }
 
-  leadsStatTotal.textContent = String(leadRecords.length);
-  leadsStatOpen.textContent = String(openCount);
-  leadsStatHot.textContent = String(hotCount);
-  leadsStatFiltered.textContent = String(filteredLeads.length);
+  rows.sort((a, b) => {
+    const left = leadName(a).toLowerCase();
+    const right = leadName(b).toLowerCase();
 
-  leadsStatTotalMeta.textContent = "Lead records loaded";
-  leadsStatOpenMeta.textContent = "Open pipeline opportunities";
-  leadsStatHotMeta.textContent = "High-priority opportunities";
-  leadsStatFilteredMeta.textContent = "Matches current search";
+    if (left < right) return sortAsc ? -1 : 1;
+    if (left > right) return sortAsc ? 1 : -1;
+    return 0;
+  });
+
+  return rows;
 }
 
-function renderLeadList() {
-  if (!filteredLeads.length) {
+function renderStats(rows) {
+  const open = rows.filter((row) =>
+    ["new", "open", "contacted", "qualified"].includes(String(leadStatus(row)).toLowerCase())
+  ).length;
+
+  const hot = rows.filter((row) =>
+    ["hot", "high", "urgent"].includes(leadPriority(row))
+  ).length;
+
+  if (leadsStatTotal) leadsStatTotal.textContent = String(leadsData.length);
+  if (leadsStatOpen) leadsStatOpen.textContent = String(open);
+  if (leadsStatHot) leadsStatHot.textContent = String(hot);
+  if (leadsStatFiltered) leadsStatFiltered.textContent = String(rows.length);
+
+  if (leadsHeroTitle) {
+    leadsHeroTitle.textContent = leadsData.length
+      ? `${leadsData.length} leads connected`
+      : "No leads found yet.";
+  }
+
+  if (leadsHeroText) {
+    leadsHeroText.textContent = leadsData.length
+      ? "Firestore lead records are live and ready for review."
+      : "Create lead records in Firestore to populate this page.";
+  }
+}
+
+function renderList(rows) {
+  if (!leadsList) return;
+
+  if (!rows.length) {
     leadsList.innerHTML = `
       <article class="dashboard-list-item glass-card aurora-card">
         <div>
           <strong>No leads found</strong>
-          <span>Try a different search or add lead records to Firestore.</span>
+          <span>Try another search or add lead records in Firestore.</span>
         </div>
-        <span class="dashboard-status-pill alert">Empty</span>
+        <span class="dashboard-status-pill muted">Empty</span>
       </article>
     `;
     return;
   }
 
-  leadsList.innerHTML = filteredLeads.map((lead) => {
-    const status = niceStatus(lead.status || "new");
-    const pill = statusClass(lead.status || lead.priority || "new");
+  leadsList.innerHTML = rows.map((lead) => {
+    const name = leadName(lead);
+    const status = leadStatus(lead);
+    const description = leadDescription(lead);
 
     return `
       <article class="dashboard-list-item glass-card aurora-card">
         <div>
-          <strong>${leadTitle(lead)}</strong>
-          <span>${leadSubtitle(lead)}</span>
+          <strong>${name}</strong>
+          <span>${description}</span>
         </div>
-        <span class="dashboard-status-pill ${pill}">${status}</span>
+        <span class="dashboard-status-pill ${pillClass(status)}">${status}</span>
       </article>
     `;
   }).join("");
 }
 
-function renderLeadFlow() {
-  const total = leadRecords.length || 1;
+function renderFlow(rows) {
+  if (!leadFlowStack) return;
 
-  const statuses = {
-    new: 0,
-    contacted: 0,
-    quoted: 0,
-    won: 0
-  };
-
-  leadRecords.forEach((lead) => {
-    const status = normalize(lead.status || "new");
-    if (statuses[status] !== undefined) {
-      statuses[status] += 1;
-    }
-  });
-
-  const rows = [
-    ["New Leads", statuses.new],
-    ["Contacted", statuses.contacted],
-    ["Quoted", statuses.quoted],
-    ["Closed Won", statuses.won]
+  const buckets = [
+    { key: "new", label: "New" },
+    { key: "open", label: "Open" },
+    { key: "contacted", label: "Contacted" },
+    { key: "qualified", label: "Qualified" },
+    { key: "won", label: "Won" }
   ];
 
-  leadFlowStack.innerHTML = rows.map(([label, count]) => {
-    const width = Math.max(8, Math.round((count / total) * 100));
+  const total = rows.length || 1;
+
+  leadFlowStack.innerHTML = buckets.map((bucket) => {
+    const count = rows.filter((row) => String(leadStatus(row)).toLowerCase() === bucket.key).length;
+    const width = Math.max(6, Math.round((count / total) * 100));
+
     return `
       <div class="dashboard-progress-row">
         <div class="dashboard-progress-copy">
-          <strong>${label}</strong>
-          <span>${count} record${count === 1 ? "" : "s"}</span>
+          <strong>${bucket.label}</strong>
+          <span>${count} lead(s)</span>
         </div>
-        <div class="dashboard-progress-bar">
-          <span style="width: ${width}%;"></span>
-        </div>
+        <div class="dashboard-progress-bar"><span style="width: ${width}%;"></span></div>
       </div>
     `;
   }).join("");
 }
 
-function renderLeadFeed() {
-  if (!leadRecords.length) {
+function renderFeed(rows) {
+  if (!leadsFeed) return;
+
+  if (!rows.length) {
     leadsFeed.innerHTML = `
       <article class="dashboard-feed-item glass-card aurora-card">
         <strong>No lead activity</strong>
-        <span>Lead feed will appear once records are available.</span>
+        <span>Recent lead activity will appear here once records exist.</span>
       </article>
     `;
     return;
   }
 
-  leadsFeed.innerHTML = leadRecords.slice(0, 6).map((lead) => `
-    <article class="dashboard-feed-item glass-card aurora-card">
-      <strong>${leadTitle(lead)}</strong>
-      <span>Status: ${niceStatus(lead.status || "new")} • ${leadSubtitle(lead)}</span>
-    </article>
-  `).join("");
+  leadsFeed.innerHTML = rows.slice(0, 6).map((lead) => {
+    const name = leadName(lead);
+    const status = leadStatus(lead);
+    const priority = leadPriority(lead);
+
+    return `
+      <article class="dashboard-feed-item glass-card aurora-card">
+        <strong>${name}</strong>
+        <span>Status: ${status} • Priority: ${priority}</span>
+      </article>
+    `;
+  }).join("");
 }
 
-function applySearchAndSort() {
-  const query = normalize(leadsSearch?.value || "");
-
-  filteredLeads = leadRecords.filter((lead) => {
-    const haystack = [
-      lead.name,
-      lead.title,
-      lead.customerName,
-      lead.email,
-      lead.phone,
-      lead.address,
-      lead.location,
-      lead.description,
-      lead.status,
-      lead.priority
-    ].map((value) => normalize(value)).join(" ");
-
-    return haystack.includes(query);
-  });
-
-  filteredLeads.sort((a, b) => {
-    const first = leadTitle(a).toLowerCase();
-    const second = leadTitle(b).toLowerCase();
-    return sortAscending ? first.localeCompare(second) : second.localeCompare(first);
-  });
-
-  renderStats();
-  renderLeadList();
+function renderLeads() {
+  const rows = filteredLeads();
+  renderStats(rows);
+  renderList(rows);
+  renderFlow(rows);
+  renderFeed(rows);
 }
 
 async function loadLeads() {
-  leadsHeroTitle.textContent = "Loading leads...";
-  leadsHeroText.textContent = "Connecting to Firestore lead records.";
-
   try {
     const snap = await getDocs(collection(db, "leads"));
-    leadRecords = snap.docs.map((docItem) => ({
-      id: docItem.id,
-      ...docItem.data()
+    leadsData = snap.docs.map((docSnap) => ({
+      id: docSnap.id,
+      ...docSnap.data()
     }));
-
-    filteredLeads = [...leadRecords];
-    applySearchAndSort();
-    renderLeadFlow();
-    renderLeadFeed();
-
-    leadsHeroTitle.textContent = "Pipeline connected";
-    leadsHeroText.textContent = `${leadRecords.length} leads loaded from Firestore.`;
+    renderLeads();
   } catch (error) {
-    console.error("Failed loading leads:", error);
+    console.error("Failed to load leads:", error);
 
-    leadsHeroTitle.textContent = "Load failed";
-    leadsHeroText.textContent = "Check Firestore rules and the leads collection.";
+    if (leadsList) {
+      leadsList.innerHTML = `
+        <article class="dashboard-list-item glass-card aurora-card">
+          <div>
+            <strong>Unable to load leads</strong>
+            <span>${error.message || "Firestore request failed."}</span>
+          </div>
+          <span class="dashboard-status-pill danger">Error</span>
+        </article>
+      `;
+    }
 
-    leadsList.innerHTML = `
-      <article class="dashboard-list-item glass-card aurora-card">
-        <div>
-          <strong>Unable to load leads</strong>
-          <span>${error.message || "Unknown Firestore error."}</span>
-        </div>
-        <span class="dashboard-status-pill alert">Error</span>
-      </article>
-    `;
-
-    leadFlowStack.innerHTML = `
-      <div class="dashboard-progress-row">
-        <div class="dashboard-progress-copy">
-          <strong>Load error</strong>
-          <span>Leads could not be read</span>
-        </div>
-        <div class="dashboard-progress-bar"><span style="width: 8%;"></span></div>
-      </div>
-    `;
-
-    leadsFeed.innerHTML = `
-      <article class="dashboard-feed-item glass-card aurora-card">
-        <strong>Lead feed unavailable</strong>
-        <span>${error.message || "Unknown Firestore error."}</span>
-      </article>
-    `;
+    if (leadsFeed) {
+      leadsFeed.innerHTML = `
+        <article class="dashboard-feed-item glass-card aurora-card">
+          <strong>Load failed</strong>
+          <span>${error.message || "Firestore request failed."}</span>
+        </article>
+      `;
+    }
   }
 }
 
-function bindSidebarAnchors() {
+function bindEvents() {
+  leadsSearch?.addEventListener("input", renderLeads);
+
+  leadsRefreshBtnTop?.addEventListener("click", loadLeads);
+  leadsRefreshBtnSide?.addEventListener("click", loadLeads);
+
+  leadsSortBtn?.addEventListener("click", () => {
+    sortAsc = !sortAsc;
+    leadsSortBtn.textContent = sortAsc ? "Sort A–Z" : "Sort Z–A";
+    renderLeads();
+  });
+
   document.querySelectorAll(".dashboard-nav-link").forEach((link) => {
     link.addEventListener("click", () => {
       document.querySelectorAll(".dashboard-nav-link").forEach((item) => {
@@ -261,39 +267,13 @@ function bindSidebarAnchors() {
   });
 }
 
-if (leadsSearch) {
-  leadsSearch.addEventListener("input", applySearchAndSort);
-}
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    window.location.href = "/evaraos/login.html";
+    return;
+  }
 
-if (leadsSortBtn) {
-  leadsSortBtn.addEventListener("click", () => {
-    sortAscending = !sortAscending;
-    leadsSortBtn.textContent = sortAscending ? "Sort A–Z" : "Sort Z–A";
-    applySearchAndSort();
-  });
-}
-
-if (leadsRefreshBtnTop) {
-  leadsRefreshBtnTop.addEventListener("click", async () => {
-    await loadLeads();
-  });
-}
-
-if (leadsRefreshBtnSide) {
-  leadsRefreshBtnSide.addEventListener("click", async () => {
-    await loadLeads();
-  });
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  bindSidebarAnchors();
-
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      window.location.href = "/evaraos/login.html";
-      return;
-    }
-
-    await loadLeads();
-  });
+  loadLeads();
 });
+
+document.addEventListener("DOMContentLoaded", bindEvents);
