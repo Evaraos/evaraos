@@ -1,0 +1,45 @@
+.dashboard-shell {
+  padding-top: 18px;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+}
+
+.dashboard-panel,
+.dashboard-overview,
+.dashboard-hero,
+.dashboard-stat-card,
+.dashboard-list-item,
+.dashboard-feed-item {
+  border-radius: 28px;
+}
+
+.dashboard-search-shell {
+  min-height: 68px;
+}
+
+.dashboard-avatar,
+.dashboard-avatar-large {
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+}
+
+.dashboard-avatar {
+  width: 42px;
+  height: 42px;
+}
+
+.dashboard-avatar-large {
+  width: 56px;
+  height: 56px;
+}
+
+.dashboard-profile-card {
+  padding: 8px 4px;
+}
+
+.dashboard-profile-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
