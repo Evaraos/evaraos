@@ -2,7 +2,7 @@
   --radius-sm: 18px;
   --radius-md: 24px;
   --radius-lg: 30px;
-  --radius-xl: 38px;
+  --radius-xl: 40px;
   --radius-pill: 999px;
 
   --max-page: 1240px;
@@ -77,6 +77,7 @@ main,
 .aurora-card {
   position: relative;
   overflow: hidden;
+  border-radius: var(--radius-lg);
 }
 
 .home-shell,
@@ -100,20 +101,21 @@ main,
 }
 
 .hero {
-  min-height: 410px;
+  min-height: 430px;
   padding: 34px 30px;
   display: flex;
   align-items: center;
+  border-radius: 34px;
   transform: translateZ(0);
 }
 
 .hero-content {
-  width: min(100%, 760px);
+  width: min(100%, 780px);
 }
 
 .hero-title {
   margin: 0 0 18px;
-  font-size: clamp(3rem, 9vw, 5.25rem);
+  font-size: clamp(3rem, 9vw, 5.3rem);
   line-height: 0.92;
   letter-spacing: -0.05em;
   font-weight: 900;
@@ -121,7 +123,7 @@ main,
 
 .hero-subtitle {
   margin: 0;
-  font-size: clamp(1.12rem, 1vw + 0.95rem, 1.48rem);
+  font-size: clamp(1.12rem, 1vw + 0.95rem, 1.5rem);
   line-height: 1.62;
   max-width: 860px;
 }
@@ -145,6 +147,7 @@ main,
   display: flex;
   flex-direction: column;
   justify-content: center;
+  border-radius: 28px;
 }
 
 .feature-card h3 {
@@ -186,9 +189,8 @@ main,
   transform: translateY(-1px);
 }
 
-.btn:active,
-.btn.pop-click {
-  transform: scale(0.975);
+.btn:active {
+  transform: scale(0.98);
 }
 
 .form-group {
@@ -331,23 +333,13 @@ main,
   line-height: 1.5;
 }
 
-.glow-card,
-.feature-card,
-.hero,
-.input-shell,
-.password-wrap,
-.remember-row,
-.btn {
-  transform: translateZ(0);
-}
-
 .pop-click {
   animation: popClick 220ms ease;
 }
 
 @keyframes popClick {
   0% { transform: scale(1); }
-  40% { transform: scale(0.972); }
+  40% { transform: scale(0.976); }
   100% { transform: scale(1); }
 }
 
@@ -373,6 +365,7 @@ main,
   .hero {
     min-height: 340px;
     padding: 26px 20px;
+    border-radius: 28px;
   }
 
   .hero-title {
