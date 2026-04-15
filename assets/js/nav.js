@@ -87,16 +87,13 @@ function publicNavMarkup() {
 
 function renderNav() {
   const mount = document.getElementById("universalNav");
-  if (!mount || mount.dataset.rendered === "true") return;
-
+  if (!mount) return;
   mount.innerHTML = publicNavMarkup();
-  mount.dataset.rendered = "true";
 }
 
 function renderFooter() {
   if (document.querySelector(".site-footer")) return;
   document.body.insertAdjacentHTML("beforeend", footerMarkup());
-
   const year = document.getElementById("footerYear");
   if (year) year.textContent = String(new Date().getFullYear());
 }
@@ -120,10 +117,7 @@ function closeMenus(except = null) {
 
 function bindThemeArrows() {
   document.querySelectorAll("[data-theme-scroll]").forEach((button) => {
-    if (button.dataset.bound === "true") return;
-    button.dataset.bound = "true";
-
-    button.addEventListener("click", (event) => {
+    button.onclick = (event) => {
       event.stopPropagation();
       const direction = button.getAttribute("data-theme-scroll");
       const shell = button.closest(".theme-slider-shell");
@@ -136,21 +130,18 @@ function bindThemeArrows() {
       });
 
       pulse(button);
-    });
+    };
   });
 }
 
 function bindMenus() {
   document.querySelectorAll("[data-nav-dropdown]").forEach((dropdown) => {
-    if (dropdown.dataset.bound === "true") return;
-    dropdown.dataset.bound = "true";
-
     const toggle = dropdown.querySelector("[data-nav-toggle]");
     const menu = dropdown.querySelector("[data-nav-menu]");
-
     if (!toggle || !menu) return;
 
-    toggle.addEventListener("click", (event) => {
+    toggle.onclick = (event) => {
+      event.preventDefault();
       event.stopPropagation();
 
       const opening = !dropdown.classList.contains("open");
@@ -168,14 +159,14 @@ function bindMenus() {
       }
 
       bindThemeArrows();
-    });
+    };
 
-    menu.addEventListener("click", (event) => {
+    menu.onclick = (event) => {
       event.stopPropagation();
-    });
+    };
   });
 
-  document.addEventListener("click", () => closeMenus());
+  document.addEventListener("click", () => closeMenus(), { once: false });
 }
 
 function initNav() {
