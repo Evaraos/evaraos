@@ -1,87 +1,39 @@
-// assets/js/auth.js
-
 import {
   auth,
   db,
-  signInWithEmailAndPassword,
+  applyUserToUi
+} from "./firebase.js";
+
+import {
+  browserLocalPersistence,
+  browserSessionPersistence,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
-  updateProfile,
-  setAuthPersistence,
-  syncUserSession,
-  saveUserRole,
-  protectRoute
-} from "./firebase.js";
+  setPersistence,
+  signInWithEmailAndPassword,
+  updateProfile
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 import {
   doc,
   getDoc,
-  setDoc,
-  updateDoc,
-  serverTimestamp,
-  collection,
-  getDocs,
   query,
+  collection,
   where,
-  limit
+  getDocs,
+  serverTimestamp,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const ROUTES = {
-  login: "/evaraos/login.html",
-  signup: "/evaraos/signup.html",
-  reset: "/evaraos/reset.html",
-  dashboard: "/evaraos/dashboard.html"
-};
+const loginForm = document.getElementById("loginForm");
+const signupForm = document.getElementById("signupForm");
+const resetForm = document.getElementById("resetForm");
 
-const els = {
-  loginForm: document.getElementById("loginForm"),
-  signupForm: document.getElementById("signupForm"),
-  resetForm: document.getElementById("resetForm"),
-
-  loginMessage: document.getElementById("loginMessage"),
-  signupMessage: document.getElementById("signupMessage"),
-  resetMessage: document.getElementById("resetMessage"),
-
-  loginEmail: document.getElementById("loginEmail"),
-  loginPassword: document.getElementById("loginPassword"),
-  rememberDevice: document.getElementById("rememberDevice"),
-
-  signupName: document.getElementById("signupName"),
-  signupUsername: document.getElementById("signupUsername"),
-  signupEmail: document.getElementById("signupEmail"),
-  signupPassword: document.getElementById("signupPassword"),
-  signupPasswordConfirm: document.getElementById("signupPasswordConfirm"),
-  signupRememberDevice: document.getElementById("signupRememberDevice"),
-
-  resetEmail: document.getElementById("resetEmail"),
-
-  loginPasswordToggle: document.getElementById("loginPasswordToggle"),
-  signupPasswordToggle: document.getElementById("signupPasswordToggle"),
-  signupPasswordConfirmToggle: document.getElementById("signupPasswordConfirmToggle")
-};
-
-function setMessage(element, text = "", isError = false) {
-  if (!element) return;
-  element.textContent = text;
-  element.style.color = isError ? "#ff9b8f" : "";
-}
-
-function clearMessages() {
-  setMessage(els.loginMessage, "");
-  setMessage(els.signupMessage, "");
-  setMessage(els.resetMessage, "");
-}
-
-function looksLikeEmail(value = "") {
-  return /\S+@\S+\.\S+/.test(String(value).trim());
-}
-
-function passwordStrongEnough(password = "") {
-  return typeof password === "string" && password.length >= 8;
-}
-
-function normalizeEmail(value = "") {
-  return String(value || "").trim().toLowerCase();
+function setMessage(id, message, isError = false) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = message;
+  el.style.color = isError ? "#ff9f93" : "#94f3c4";
 }
 
 function normalizeUsername(value = "") {
@@ -92,494 +44,294 @@ function normalizeUsername(value = "") {
     .replace(/[^a-z0-9._-]/g, "");
 }
 
-function normalizeHandle(value = "") {
-  const raw = String(value || "").trim().toLowerCase();
-  if (!raw) return "";
-  return raw.startsWith("@") ? raw : `@${raw}`;
+function pulse(el) {
+  if (!el) return;
+  el.classList.remove("active-glow");
+  void el.offsetWidth;
+  el.classList.add("active-glow");
+  setTimeout(() => el.classList.remove("active-glow"), 220);
 }
 
-function inferRoleFromEmail(email = "") {
-  const value = normalizeEmail(email);
-  if (value.includes("admin")) return "admin";
-  if (value.includes("manager")) return "manager";
-  if (value.includes("sales")) return "sales";
-  if (value.includes("tech")) return "technician";
-  if (value.includes("customer")) return "customer";
-  return "customer";
+function bindPasswordToggle(toggleId, inputId) {
+  const toggle = document.getElementById(toggleId);
+  const input = document.getElementById(inputId);
+
+  if (!toggle || !input || toggle.dataset.bound === "true") return;
+  toggle.dataset.bound = "true";
+
+  toggle.addEventListener("click", () => {
+    const makeVisible = input.type === "password";
+    input.type = makeVisible ? "text" : "password";
+    toggle.classList.toggle("is-visible", makeVisible);
+    toggle.setAttribute("aria-label", makeVisible ? "Hide password" : "Show password");
+    pulse(toggle);
+  });
 }
 
-function buildVisibleError(error, context = "login") {
-  const code = error?.code || "";
-  const message = error?.message || "";
-  const lower = message.toLowerCase();
-
-  if (context === "username_lookup") {
-    return "That username was not found. Try your email instead or check your spelling.";
-  }
-
-  if (context === "username_taken") {
-    return "That username is already taken. Please choose another one.";
-  }
-
-  if (code === "auth/user-not-found") {
-    return "No account was found for that email. Try signing up first.";
-  }
-
-  if (
-    code === "auth/wrong-password" ||
-    code === "auth/invalid-login-credentials" ||
-    code === "auth/invalid-credential"
-  ) {
-    return "Incorrect login details. Check your email or username and password, then try again.";
-  }
-
-  if (code === "auth/too-many-requests") {
-    return "Too many login attempts. Wait a bit, then try again or reset your password.";
-  }
-
-  if (code === "auth/network-request-failed") {
-    return "Network error. Check your internet connection and try again.";
-  }
-
-  if (code === "auth/email-already-in-use") {
-    return "That email is already in use. Log in instead or use password reset.";
-  }
-
-  if (code === "auth/invalid-email") {
-    return "That email format looks invalid. Please enter a valid email address.";
-  }
-
-  if (code === "auth/weak-password") {
-    return "Password is too weak. Use at least 8 characters.";
-  }
-
-  if (code === "auth/missing-password") {
-    return "Please enter your password.";
-  }
-
-  if (code === "auth/operation-not-allowed") {
-    return "Email/password sign-in is not enabled in Firebase Authentication settings.";
-  }
-
-  if (lower.includes("permission")) {
-    return "A Firestore permission issue occurred. Check your Firebase rules.";
-  }
-
-  const detail = [code, message].filter(Boolean).join(" — ");
-  return detail || "Something went wrong. Please try again.";
+function bindAllPasswordToggles() {
+  bindPasswordToggle("loginPasswordToggle", "loginPassword");
+  bindPasswordToggle("signupPasswordToggle", "signupPassword");
+  bindPasswordToggle("signupPasswordConfirmToggle", "signupPasswordConfirm");
 }
 
-function updatePasswordToggleVisual(button, isVisible, showLabel = "Show password", hideLabel = "Hide password") {
-  if (!button) return;
+async function getEmailFromIdentifier(identifier) {
+  const raw = String(identifier || "").trim();
+  if (!raw) return null;
 
-  button.classList.toggle("is-visible", isVisible);
-  button.setAttribute("aria-label", isVisible ? hideLabel : showLabel);
-
-  const eyeOpen = button.querySelector(".eye-open");
-  const eyeClosed = button.querySelector(".eye-closed");
-
-  if (eyeOpen) eyeOpen.style.opacity = isVisible ? "0" : "1";
-  if (eyeClosed) eyeClosed.style.opacity = isVisible ? "1" : "0";
-}
-
-function togglePasswordVisibility(input, button, showLabel = "Show password", hideLabel = "Hide password") {
-  if (!input || !button) return;
-
-  const reveal = input.type === "password";
-  input.type = reveal ? "text" : "password";
-
-  updatePasswordToggleVisual(button, reveal, showLabel, hideLabel);
-
-  button.classList.add("active-glow");
-  setTimeout(() => button.classList.remove("active-glow"), 220);
-}
-
-function wirePasswordToggles() {
-  if (els.loginPassword && els.loginPasswordToggle) {
-    updatePasswordToggleVisual(els.loginPasswordToggle, false);
-    els.loginPasswordToggle.addEventListener("click", () => {
-      togglePasswordVisibility(els.loginPassword, els.loginPasswordToggle);
-    });
+  if (raw.includes("@")) {
+    return raw.toLowerCase();
   }
 
-  if (els.signupPassword && els.signupPasswordToggle) {
-    updatePasswordToggleVisual(els.signupPasswordToggle, false);
-    els.signupPasswordToggle.addEventListener("click", () => {
-      togglePasswordVisibility(els.signupPassword, els.signupPasswordToggle);
-    });
-  }
+  const username = normalizeUsername(raw);
+  if (!username) return null;
 
-  if (els.signupPasswordConfirm && els.signupPasswordConfirmToggle) {
-    updatePasswordToggleVisual(
-      els.signupPasswordConfirmToggle,
-      false,
-      "Show password confirmation",
-      "Hide password confirmation"
-    );
+  const directRef = doc(db, "usernames", username);
+  const directSnap = await getDoc(directRef);
 
-    els.signupPasswordConfirmToggle.addEventListener("click", () => {
-      togglePasswordVisibility(
-        els.signupPasswordConfirm,
-        els.signupPasswordConfirmToggle,
-        "Show password confirmation",
-        "Hide password confirmation"
-      );
-    });
-  }
-}
-
-async function safelyUpdateLastLogin(uid) {
-  if (!uid) return;
-
-  try {
-    const userRef = doc(db, "users", uid);
-    await updateDoc(userRef, {
-      lastLogin: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    });
-  } catch (error) {
-    console.warn("Could not update lastLogin:", error);
-  }
-}
-
-async function usernameExists(username) {
-  const normalized = normalizeUsername(username);
-  if (!normalized) return false;
-
-  try {
-    const usernameRef = doc(db, "usernames", normalized);
-    const snap = await getDoc(usernameRef);
-    if (snap.exists()) return true;
-  } catch (error) {
-    console.warn("Primary usernameExists lookup failed:", error);
-  }
-
-  try {
-    const usersRef = collection(db, "users");
-    const q = query(usersRef, where("username", "==", normalized), limit(1));
-    const snap = await getDocs(q);
-    if (!snap.empty) return true;
-  } catch (error) {
-    console.warn("Fallback usernameExists query failed:", error);
-  }
-
-  return false;
-}
-
-async function lookupEmailByUsername(usernameInput) {
-  const normalized = normalizeUsername(usernameInput);
-  const handle = normalizeHandle(usernameInput);
-
-  if (!normalized) return null;
-
-  try {
-    const usernameRef = doc(db, "usernames", normalized);
-    const snap = await getDoc(usernameRef);
-    if (snap.exists()) {
-      const data = snap.data() || {};
-      if (data.email) return normalizeEmail(data.email);
+  if (directSnap.exists()) {
+    const data = directSnap.data() || {};
+    if (data.email) return String(data.email).toLowerCase();
+    if (data.uid) {
+      const userRef = doc(db, "users", data.uid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const userData = userSnap.data() || {};
+        if (userData.email) return String(userData.email).toLowerCase();
+      }
     }
-  } catch (error) {
-    console.warn("Primary usernames lookup failed:", error);
   }
 
-  try {
-    const usersRef = collection(db, "users");
-    const q = query(usersRef, where("username", "==", normalized), limit(1));
-    const snap = await getDocs(q);
-    if (!snap.empty) {
-      const data = snap.docs[0].data() || {};
-      if (data.email) return normalizeEmail(data.email);
-    }
-  } catch (error) {
-    console.warn("Fallback users.username lookup failed:", error);
-  }
+  const q = query(collection(db, "users"), where("username", "==", username));
+  const querySnap = await getDocs(q);
 
-  try {
-    const usersRef = collection(db, "users");
-    const q = query(usersRef, where("handle", "==", handle), limit(1));
-    const snap = await getDocs(q);
-    if (!snap.empty) {
-      const data = snap.docs[0].data() || {};
-      if (data.email) return normalizeEmail(data.email);
-    }
-  } catch (error) {
-    console.warn("Fallback users.handle lookup failed:", error);
-  }
-
-  try {
-    const usersRef = collection(db, "users");
-    const q = query(usersRef, where("displayUsername", "==", usernameInput), limit(1));
-    const snap = await getDocs(q);
-    if (!snap.empty) {
-      const data = snap.docs[0].data() || {};
-      if (data.email) return normalizeEmail(data.email);
-    }
-  } catch (error) {
-    console.warn("Fallback users.displayUsername raw lookup failed:", error);
-  }
-
-  try {
-    const usersRef = collection(db, "users");
-    const q = query(usersRef, where("displayUsername", "==", normalized), limit(1));
-    const snap = await getDocs(q);
-    if (!snap.empty) {
-      const data = snap.docs[0].data() || {};
-      if (data.email) return normalizeEmail(data.email);
-    }
-  } catch (error) {
-    console.warn("Fallback users.displayUsername normalized lookup failed:", error);
+  if (!querySnap.empty) {
+    const userData = querySnap.docs[0].data() || {};
+    if (userData.email) return String(userData.email).toLowerCase();
   }
 
   return null;
 }
 
-async function createUserDocument({ uid, fullName, username, email, role = "customer" }) {
-  const normalizedUsername = normalizeUsername(username);
-  const userRef = doc(db, "users", uid);
-  const usernameRef = doc(db, "usernames", normalizedUsername);
-
-  await setDoc(
-    userRef,
-    {
-      uid,
-      fullName: fullName.trim(),
-      name: fullName.trim(),
-      displayName: fullName.trim(),
-      username: normalizedUsername,
-      displayUsername: normalizedUsername,
-      handle: normalizeHandle(normalizedUsername),
-      email: normalizeEmail(email),
-      role,
-      active: true,
-      approvalStatus: "approved",
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      lastLogin: serverTimestamp()
-    },
-    { merge: true }
-  );
-
-  await setDoc(
-    usernameRef,
-    {
-      uid,
-      email: normalizeEmail(email),
-      username: normalizedUsername,
-      displayUsername: normalizedUsername,
-      handle: normalizeHandle(normalizedUsername),
-      updatedAt: serverTimestamp()
-    },
-    { merge: true }
-  );
+async function setSessionPersistence(remember) {
+  await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
 }
 
-async function getUserRoleFromFirestore(uid, email = "") {
-  if (!uid) return inferRoleFromEmail(email);
-
-  try {
-    const userRef = doc(db, "users", uid);
-    const snap = await getDoc(userRef);
-
-    if (!snap.exists()) return inferRoleFromEmail(email);
-
-    const data = snap.data() || {};
-    return data.role || inferRoleFromEmail(email);
-  } catch (error) {
-    console.warn("Could not read user role:", error);
-    return inferRoleFromEmail(email);
-  }
-}
-
-async function handleLoginSubmit(event) {
+async function handleLogin(event) {
   event.preventDefault();
-  clearMessages();
 
-  const loginInput = String(els.loginEmail?.value || "").trim();
-  const password = els.loginPassword?.value || "";
-  const rememberDevice = Boolean(els.rememberDevice?.checked);
+  const identifier = document.getElementById("loginEmail")?.value.trim() || "";
+  const password = document.getElementById("loginPassword")?.value || "";
+  const remember = Boolean(document.getElementById("rememberDevice")?.checked);
 
-  if (!loginInput || !password) {
-    setMessage(els.loginMessage, "Please enter your email or username and password.", true);
+  if (!identifier) {
+    setMessage("loginMessage", "Enter your email or username.", true);
     return;
   }
 
-  let resolvedEmail = "";
+  if (!password) {
+    setMessage("loginMessage", "Enter your password.", true);
+    return;
+  }
 
   try {
-    await setAuthPersistence(rememberDevice);
+    setMessage("loginMessage", "Signing in...");
 
-    if (looksLikeEmail(loginInput)) {
-      resolvedEmail = normalizeEmail(loginInput);
-    } else {
-      resolvedEmail = await lookupEmailByUsername(loginInput);
+    await setSessionPersistence(remember);
 
-      if (!resolvedEmail) {
-        setMessage(els.loginMessage, buildVisibleError({}, "username_lookup"), true);
-        return;
-      }
+    const email = await getEmailFromIdentifier(identifier);
+    if (!email) {
+      setMessage("loginMessage", "We could not find that email or username.", true);
+      return;
     }
 
-    const credential = await signInWithEmailAndPassword(auth, resolvedEmail, password);
-    const user = credential.user;
-    const role = await getUserRoleFromFirestore(user.uid, user.email || resolvedEmail);
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    const user = result.user;
 
-    saveUserRole(role);
-    syncUserSession(user, role);
-    await safelyUpdateLastLogin(user.uid);
+    applyUserToUi({
+      displayName: user.displayName || email.split("@")[0],
+      email: user.email || email,
+      role: "owner"
+    });
 
-    window.location.href = ROUTES.dashboard;
+    setMessage("loginMessage", "Login successful.");
+    window.location.href = "/evaraos/dashboard.html";
   } catch (error) {
     console.error("Login failed:", error);
-    setMessage(els.loginMessage, buildVisibleError(error, "login"), true);
+
+    const code = error?.code || "";
+    if (code.includes("invalid-credential") || code.includes("wrong-password")) {
+      setMessage("loginMessage", "Incorrect password or account details.", true);
+      return;
+    }
+
+    if (code.includes("too-many-requests")) {
+      setMessage("loginMessage", "Too many login attempts. Try again later.", true);
+      return;
+    }
+
+    if (code.includes("api-key-not-valid")) {
+      setMessage("loginMessage", "Firebase API key is invalid in the current config.", true);
+      return;
+    }
+
+    setMessage("loginMessage", error.message || "Unable to login right now.", true);
   }
 }
 
-async function handleSignupSubmit(event) {
+async function handleSignup(event) {
   event.preventDefault();
-  clearMessages();
 
-  const fullName = String(els.signupName?.value || "").trim();
-  const username = normalizeUsername(els.signupUsername?.value || "");
-  const email = normalizeEmail(els.signupEmail?.value || "");
-  const password = els.signupPassword?.value || "";
-  const confirmPassword = els.signupPasswordConfirm?.value || "";
-  const rememberDevice = Boolean(els.signupRememberDevice?.checked);
+  const fullName = document.getElementById("signupName")?.value.trim() || "";
+  const usernameRaw = document.getElementById("signupUsername")?.value.trim() || "";
+  const username = normalizeUsername(usernameRaw);
+  const email = document.getElementById("signupEmail")?.value.trim().toLowerCase() || "";
+  const password = document.getElementById("signupPassword")?.value || "";
+  const confirmPassword = document.getElementById("signupPasswordConfirm")?.value || "";
+  const remember = Boolean(document.getElementById("signupRememberDevice")?.checked);
 
-  if (!fullName || !username || !email || !password || !confirmPassword) {
-    setMessage(els.signupMessage, "Please complete every field, including a username.", true);
+  if (!fullName) {
+    setMessage("signupMessage", "Enter your full name.", true);
     return;
   }
 
-  if (!looksLikeEmail(email)) {
-    setMessage(els.signupMessage, "Please enter a valid email address.", true);
+  if (!username || username.length < 2) {
+    setMessage("signupMessage", "Choose a valid username.", true);
     return;
   }
 
-  if (username.length < 1) {
-    setMessage(els.signupMessage, "Username is required.", true);
+  if (!email) {
+    setMessage("signupMessage", "Enter your email.", true);
     return;
   }
 
-  if (!passwordStrongEnough(password)) {
-    setMessage(els.signupMessage, "Use at least 8 characters for your password.", true);
+  if (password.length < 6) {
+    setMessage("signupMessage", "Password must be at least 6 characters.", true);
     return;
   }
 
   if (password !== confirmPassword) {
-    setMessage(els.signupMessage, "Passwords do not match.", true);
+    setMessage("signupMessage", "Passwords do not match.", true);
     return;
   }
 
   try {
-    await setAuthPersistence(rememberDevice);
+    setMessage("signupMessage", "Creating account...");
 
-    const taken = await usernameExists(username);
-    if (taken) {
-      setMessage(els.signupMessage, buildVisibleError({}, "username_taken"), true);
+    const usernameRef = doc(db, "usernames", username);
+    const existingUsername = await getDoc(usernameRef);
+
+    if (existingUsername.exists()) {
+      setMessage("signupMessage", "That username is already taken.", true);
       return;
     }
 
-    const credential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = credential.user;
-    const role = inferRoleFromEmail(email);
+    await setSessionPersistence(remember);
+
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    const user = result.user;
 
     await updateProfile(user, {
       displayName: fullName
     });
 
-    await createUserDocument({
+    await setDoc(doc(db, "users", user.uid), {
       uid: user.uid,
-      fullName,
-      username,
       email,
-      role
+      fullName,
+      displayName: fullName,
+      username,
+      role: "owner",
+      active: true,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    await setDoc(usernameRef, {
+      uid: user.uid,
+      email,
+      username,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    applyUserToUi({
+      displayName: fullName,
+      email,
+      role: "owner"
     });
 
-    saveUserRole(role);
-    syncUserSession(
-      {
-        ...user,
-        displayName: fullName
-      },
-      role
-    );
-
-    window.location.href = ROUTES.dashboard;
+    setMessage("signupMessage", "Account created successfully.");
+    window.location.href = "/evaraos/dashboard.html";
   } catch (error) {
     console.error("Signup failed:", error);
-    setMessage(els.signupMessage, buildVisibleError(error, "signup"), true);
+
+    const code = error?.code || "";
+    if (code.includes("email-already-in-use")) {
+      setMessage("signupMessage", "That email is already in use.", true);
+      return;
+    }
+
+    if (code.includes("weak-password")) {
+      setMessage("signupMessage", "Use a stronger password.", true);
+      return;
+    }
+
+    if (code.includes("permission-denied")) {
+      setMessage("signupMessage", "Firestore rules are blocking account setup.", true);
+      return;
+    }
+
+    if (code.includes("api-key-not-valid")) {
+      setMessage("signupMessage", "Firebase API key is invalid in the current config.", true);
+      return;
+    }
+
+    setMessage("signupMessage", error.message || "Unable to create account right now.", true);
   }
 }
 
-async function handleResetSubmit(event) {
+async function handleReset(event) {
   event.preventDefault();
-  clearMessages();
 
-  const email = normalizeEmail(els.resetEmail?.value || "");
-
-  if (!looksLikeEmail(email)) {
-    setMessage(els.resetMessage, "Please enter a valid email address.", true);
+  const email = document.getElementById("resetEmail")?.value.trim().toLowerCase() || "";
+  if (!email) {
+    setMessage("resetMessage", "Enter your account email.", true);
     return;
   }
 
   try {
     await sendPasswordResetEmail(auth, email);
-    setMessage(els.resetMessage, "Reset email sent. Check your inbox.");
+    setMessage("resetMessage", "Password reset email sent.");
   } catch (error) {
-    console.error("Password reset failed:", error);
-    setMessage(els.resetMessage, buildVisibleError(error, "reset"), true);
+    console.error("Reset failed:", error);
+
+    const code = error?.code || "";
+    if (code.includes("user-not-found")) {
+      setMessage("resetMessage", "No account found for that email.", true);
+      return;
+    }
+
+    if (code.includes("api-key-not-valid")) {
+      setMessage("resetMessage", "Firebase API key is invalid in the current config.", true);
+      return;
+    }
+
+    setMessage("resetMessage", error.message || "Unable to send reset email.", true);
   }
 }
 
-function guardCurrentPage() {
-  const path = window.location.pathname;
+document.addEventListener("DOMContentLoaded", () => {
+  bindAllPasswordToggles();
 
-  if (
-    path.endsWith("/login.html") ||
-    path.endsWith("/signup.html") ||
-    path.endsWith("/reset.html")
-  ) {
-    protectRoute({
-      requireAuth: false,
-      redirectAuthedTo: ROUTES.dashboard
-    });
-    return;
+  if (loginForm) {
+    loginForm.addEventListener("submit", handleLogin);
   }
 
-  if (
-    path.endsWith("/dashboard.html") ||
-    path.endsWith("/profile.html") ||
-    path.endsWith("/settings.html") ||
-    path.endsWith("/security.html") ||
-    path.endsWith("/companies.html") ||
-    path.endsWith("/users.html") ||
-    path.endsWith("/leads.html") ||
-    path.endsWith("/jobs.html") ||
-    path.endsWith("/qa.html")
-  ) {
-    protectRoute({
-      requireAuth: true,
-      redirectGuestTo: ROUTES.login
-    });
-  }
-}
-
-function init() {
-  wirePasswordToggles();
-  guardCurrentPage();
-
-  if (els.loginForm) {
-    els.loginForm.addEventListener("submit", handleLoginSubmit);
+  if (signupForm) {
+    signupForm.addEventListener("submit", handleSignup);
   }
 
-  if (els.signupForm) {
-    els.signupForm.addEventListener("submit", handleSignupSubmit);
+  if (resetForm) {
+    resetForm.addEventListener("submit", handleReset);
   }
-
-  if (els.resetForm) {
-    els.resetForm.addEventListener("submit", handleResetSubmit);
-  }
-}
-
-window.addEventListener("DOMContentLoaded", init);
+});
