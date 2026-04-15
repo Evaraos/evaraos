@@ -78,6 +78,7 @@ main,
   position: relative;
   overflow: hidden;
   border-radius: var(--radius-lg);
+  isolation: isolate;
 }
 
 .home-shell,
@@ -365,6 +366,30 @@ main,
   0% { transform: scale(1); }
   35% { transform: scale(0.975); }
   100% { transform: scale(1); }
+}
+
+.shine-flash::after {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255,255,255,0.08) 42%,
+    rgba(255,255,255,0.72) 50%,
+    rgba(255,255,255,0.08) 58%,
+    transparent 70%
+  );
+  transform: translateX(-120%) rotate(12deg);
+  animation: shineFlash 520ms ease;
+  pointer-events: none;
+  z-index: 3;
+}
+
+@keyframes shineFlash {
+  0% { transform: translateX(-120%) rotate(12deg); opacity: 0; }
+  18% { opacity: 1; }
+  100% { transform: translateX(120%) rotate(12deg); opacity: 0; }
 }
 
 @media (min-width: 900px) {
