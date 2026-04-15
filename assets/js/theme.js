@@ -35,7 +35,7 @@ function setStoredTheme(theme) {
   try {
     localStorage.setItem(STORAGE_KEY, normalizeTheme(theme));
   } catch {
-    // ignore storage errors
+    // ignore
   }
 }
 
@@ -54,9 +54,7 @@ function getThemeParts(theme = DEFAULT_THEME) {
 
 function buildTheme(family = "neutral", mode = "dark") {
   const safeMode = mode === "light" ? "light" : "dark";
-  if (family === "neutral") {
-    return safeMode === "light" ? "light" : "dark";
-  }
+  if (family === "neutral") return safeMode === "light" ? "light" : "dark";
   const candidate = `${family}-${safeMode}`;
   return VALID_THEMES.includes(candidate) ? candidate : DEFAULT_THEME;
 }
@@ -105,8 +103,9 @@ function syncThemeUi() {
 
   document.querySelectorAll("[data-theme-bubble]").forEach((bubble) => {
     const family = bubble.getAttribute("data-theme-family") || "neutral";
-    bubble.classList.toggle("active", family === current.family);
-    bubble.setAttribute("aria-pressed", family === current.family ? "true" : "false");
+    const active = family === current.family;
+    bubble.classList.toggle("active", active);
+    bubble.setAttribute("aria-pressed", active ? "true" : "false");
   });
 }
 
