@@ -198,9 +198,8 @@ function bindNav() {
 function bindPopFeedback() {
   document.querySelectorAll(".btn, .feature-card, .theme-core-toggle, .theme-bubble, .theme-slider-arrow").forEach((el) => {
     el.addEventListener("click", (event) => {
-      if (event.currentTarget.matches(".btn") || event.currentTarget.matches(".feature-card")) {
-        pulse(event.currentTarget);
-      }
+      const target = event.currentTarget;
+      pulse(target);
     });
   });
 }
