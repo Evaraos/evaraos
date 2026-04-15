@@ -137,6 +137,36 @@ html[data-theme$="-light"] .page-grid-overlay {
   -webkit-backdrop-filter: blur(20px) saturate(140%);
 }
 
+.glass-card::before,
+.glass-shell::before,
+.aurora-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  padding: 1px;
+  background:
+    linear-gradient(
+      115deg,
+      rgba(var(--theme-glow-rgb), 0.08),
+      rgba(var(--theme-soft-rgb), 0.26),
+      rgba(var(--theme-glow-rgb), 0.12)
+    );
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  animation: edgeShine 4.8s linear infinite;
+  opacity: 0.82;
+}
+
+@keyframes edgeShine {
+  0% { filter: hue-rotate(0deg) brightness(1); }
+  50% { filter: hue-rotate(18deg) brightness(1.08); }
+  100% { filter: hue-rotate(0deg) brightness(1); }
+}
+
 html[data-theme="light"] .glass-card,
 html[data-theme="light"] .glass-shell,
 html[data-theme="light"] .aurora-card,
@@ -177,9 +207,9 @@ html[data-theme$="-light"] .site-footer-left span {
   color: var(--muted-light);
 }
 
-.hero:hover .hero-title,
 .feature-card:hover h3,
-.btn:hover {
+.btn:hover,
+.nav-hamburger:hover {
   text-shadow: 0 0 14px rgba(var(--theme-glow-rgb), 0.14);
 }
 
