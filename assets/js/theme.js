@@ -40,83 +40,59 @@ function setStoredTheme(theme) {
 }
 
 function getThemeParts(theme = DEFAULT_THEME) {
-  const safeTheme = normalizeTheme(theme);
+  const safe = normalizeTheme(theme);
 
-  if (safeTheme === "dark") {
-    return { mode: "dark", family: "neutral", theme: "dark" };
-  }
+  if (safe === "dark") return { mode: "dark", family: "neutral" };
+  if (safe === "light") return { mode: "light", family: "neutral" };
 
-  if (safeTheme === "light") {
-    return { mode: "light", family: "neutral", theme: "light" };
-  }
-
-  const [family, mode] = safeTheme.split("-");
+  const [family, mode] = safe.split("-");
   return {
-    mode: mode === "light" ? "light" : "dark",
     family: family || "neutral",
-    theme: safeTheme
+    mode: mode === "light" ? "light" : "dark"
   };
 }
 
 function buildTheme(family = "neutral", mode = "dark") {
-  const safeMode = mode === "light" ? "light" : "dark";
-  const safeFamily = String(family || "neutral").trim().toLowerCase();
-
-  if (safeFamily === "neutral") {
-    return safeMode;
-  }
-
-  const candidate = `${safeFamily}-${safeMode}`;
-  return VALID_THEMES.includes(candidate) ? candidate : DEFAULT_THEME;
+  if (family === "neutral") return mode === "light" ? "light" : "dark";
+  const next = `${family}-${mode === "light" ? "light" : "dark"}`;
+  return VALID_THEMES.includes(next) ? next : DEFAULT_THEME;
 }
 
-function setTheme(theme) {
-  const safeTheme = normalizeTheme(theme);
-  document.documentElement.setAttribute("data-theme", safeTheme);
-  setStoredTheme(safeTheme);
-  syncThemeUI();
+function applyTheme(theme) {
+  const safe = normalizeTheme(theme);
+  document.documentElement.setAttribute("data-theme", safe);
+  setStoredTheme(safe);
+  syncThemeUi();
 }
 
 function toggleMode() {
   const current = getThemeParts(getStoredTheme());
-  const nextMode = current.mode === "dark" ? "light" : "dark";
-  setTheme(buildTheme(current.family, nextMode));
+  applyTheme(buildTheme(current.family, current.mode === "dark" ? "light" : "dark"));
 }
 
-function setThemeFamily(family) {
+function setFamily(family) {
   const current = getThemeParts(getStoredTheme());
-  setTheme(buildTheme(family, current.mode));
+  applyTheme(buildTheme(family, current.mode));
 }
 
-function syncThemeUI() {
-  const current = getThemeParts(getStoredTheme());
+function syncThemeUi() {
+  const currentTheme = getStoredTheme();
+  const current = getThemeParts(currentTheme);
 
   document.querySelectorAll("[data-theme-mode-text]").forEach((el) => {
     el.textContent = current.mode === "dark" ? "Dark" : "Light";
   });
 
   document.querySelectorAll("[data-theme-group-text]").forEach((el) => {
-    const label =
-      current.family === "neutral"
-        ? "Neutral"
-        : current.family.charAt(0).toUpperCase() + current.family.slice(1);
-
+    const label = current.family === "neutral"
+      ? "Neutral"
+      : current.family.charAt(0).toUpperCase() + current.family.slice(1);
     el.textContent = label;
-  });
-
-  document.querySelectorAll("[data-theme-hint-text]").forEach((el) => {
-    el.textContent = "tap";
   });
 
   document.querySelectorAll("[data-theme-bubble]").forEach((bubble) => {
     const family = bubble.getAttribute("data-theme-family") || "neutral";
-    const active = family === current.family;
-    bubble.classList.toggle("active", active);
-    bubble.setAttribute("aria-pressed", active ? "true" : "false");
-  });
-
-  document.querySelectorAll("[data-theme-pill]").forEach((button) => {
-    button.classList.toggle("theme-is-light", current.mode === "light");
+    bubble.classList.toggle("active", family === current.family);
   });
 }
 
@@ -125,14 +101,13 @@ function pulse(el) {
   el.classList.remove("active-glow");
   void el.offsetWidth;
   el.classList.add("active-glow");
-  setTimeout(() => el.classList.remove("active-glow"), 260);
+  setTimeout(() => el.classList.remove("active-glow"), 220);
 }
 
 function bindThemeControls() {
   document.querySelectorAll("[data-theme-pill]").forEach((button) => {
     if (button.dataset.bound === "true") return;
     button.dataset.bound = "true";
-
     button.addEventListener("click", () => {
       toggleMode();
       pulse(button);
@@ -142,37 +117,25 @@ function bindThemeControls() {
   document.querySelectorAll("[data-theme-bubble]").forEach((bubble) => {
     if (bubble.dataset.bound === "true") return;
     bubble.dataset.bound = "true";
-
     bubble.addEventListener("click", () => {
       const family = bubble.getAttribute("data-theme-family") || "neutral";
-      setThemeFamily(family);
+      setFamily(family);
       pulse(bubble);
     });
   });
 }
 
-function bindAllThemeControls() {
-  bindThemeControls();
-  syncThemeUI();
-}
-
 function initTheme() {
-  setTheme(getStoredTheme());
-  bindAllThemeControls();
+  applyTheme(getStoredTheme());
+  bindThemeControls();
 }
 
 window.EvaraTheme = {
   initTheme,
-  setTheme,
-  toggleMode,
-  setThemeFamily,
-  getStoredTheme,
-  getThemeParts,
-  buildTheme,
   bindThemeControls,
-  bindAllThemeControls,
-  syncThemeUI,
-  syncThemeControls: syncThemeUI
+  syncThemeUi,
+  toggleMode,
+  setFamily
 };
 
 document.addEventListener("DOMContentLoaded", initTheme);
