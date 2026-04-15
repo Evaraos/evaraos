@@ -1,7 +1,12 @@
 function themeMarkup() {
   return `
     <div class="menu-theme-block">
-      <button type="button" class="theme-core-toggle aurora-card" data-theme-pill aria-label="Toggle light and dark mode">
+      <button
+        type="button"
+        class="theme-core-toggle aurora-card"
+        data-theme-pill
+        aria-label="Toggle light and dark mode"
+      >
         <span class="theme-core-dot"></span>
         <span class="theme-core-label" data-theme-mode-text>Dark</span>
         <span class="theme-core-sep">•</span>
@@ -11,7 +16,12 @@ function themeMarkup() {
       </button>
 
       <div class="theme-slider-shell aurora-card">
-        <button type="button" class="theme-slider-arrow" data-theme-scroll="left" aria-label="Scroll theme colors left">‹</button>
+        <button
+          type="button"
+          class="theme-slider-arrow"
+          data-theme-scroll="left"
+          aria-label="Scroll theme colors left"
+        >‹</button>
 
         <div class="theme-bubbles-scroll" data-theme-bubbles-scroll>
           <button type="button" class="theme-bubble light" data-theme-bubble data-theme-family="neutral" aria-label="Neutral theme"></button>
@@ -23,7 +33,12 @@ function themeMarkup() {
           <button type="button" class="theme-bubble yellow" data-theme-bubble data-theme-family="yellow" aria-label="Yellow theme"></button>
         </div>
 
-        <button type="button" class="theme-slider-arrow" data-theme-scroll="right" aria-label="Scroll theme colors right">›</button>
+        <button
+          type="button"
+          class="theme-slider-arrow"
+          data-theme-scroll="right"
+          aria-label="Scroll theme colors right"
+        >›</button>
       </div>
     </div>
   `;
@@ -59,23 +74,29 @@ function publicNavMarkup() {
           </div>
         </a>
 
-        <div class="nav-dropdown" data-nav-dropdown>
-          <button class="nav-hamburger aurora-card" type="button" data-nav-toggle aria-expanded="false" aria-label="Open menu">
+        <div class="nav-dropdown" id="siteNavDropdown">
+          <button
+            class="nav-hamburger aurora-card"
+            type="button"
+            id="siteNavToggle"
+            aria-expanded="false"
+            aria-label="Open menu"
+          >
             <span class="hamburger-line"></span>
             <span class="hamburger-line"></span>
             <span class="hamburger-line"></span>
           </button>
 
-          <div class="nav-dropdown-menu glass-card aurora-card" data-nav-menu>
-            <a href="/evaraos/index.html" class="menu-link" data-nav-link>Home</a>
-            <a href="/evaraos/login.html" class="menu-link" data-nav-link>Login</a>
-            <a href="/evaraos/signup.html" class="menu-link" data-nav-link>Sign Up</a>
-            <a href="/evaraos/dashboard.html" class="menu-link" data-nav-link>Dashboard</a>
-            <a href="/evaraos/companies.html" class="menu-link" data-nav-link>Companies</a>
-            <a href="/evaraos/users.html" class="menu-link" data-nav-link>Users</a>
-            <a href="/evaraos/leads.html" class="menu-link" data-nav-link>Leads</a>
-            <a href="/evaraos/jobs.html" class="menu-link" data-nav-link>Jobs</a>
-            <a href="/evaraos/qa.html" class="menu-link" data-nav-link>QA</a>
+          <div class="nav-dropdown-menu glass-card aurora-card" id="siteNavMenu">
+            <a href="/evaraos/index.html" class="menu-link">Home</a>
+            <a href="/evaraos/login.html" class="menu-link">Login</a>
+            <a href="/evaraos/signup.html" class="menu-link">Sign Up</a>
+            <a href="/evaraos/dashboard.html" class="menu-link">Dashboard</a>
+            <a href="/evaraos/companies.html" class="menu-link">Companies</a>
+            <a href="/evaraos/users.html" class="menu-link">Users</a>
+            <a href="/evaraos/leads.html" class="menu-link">Leads</a>
+            <a href="/evaraos/jobs.html" class="menu-link">Jobs</a>
+            <a href="/evaraos/qa.html" class="menu-link">QA</a>
             <div class="menu-divider"></div>
             ${themeMarkup()}
           </div>
@@ -106,19 +127,12 @@ function pulse(el) {
   setTimeout(() => el.classList.remove("active-glow"), 220);
 }
 
-function closeMenus(except = null) {
-  document.querySelectorAll("[data-nav-dropdown]").forEach((dropdown) => {
-    if (except && dropdown === except) return;
-    dropdown.classList.remove("open");
-    const toggle = dropdown.querySelector("[data-nav-toggle]");
-    if (toggle) toggle.setAttribute("aria-expanded", "false");
-  });
-}
-
 function bindThemeArrows() {
   document.querySelectorAll("[data-theme-scroll]").forEach((button) => {
-    button.onclick = (event) => {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
       event.stopPropagation();
+
       const direction = button.getAttribute("data-theme-scroll");
       const shell = button.closest(".theme-slider-shell");
       const strip = shell?.querySelector("[data-theme-bubbles-scroll]");
@@ -130,49 +144,51 @@ function bindThemeArrows() {
       });
 
       pulse(button);
-    };
+    });
   });
 }
 
-function bindMenus() {
-  document.querySelectorAll("[data-nav-dropdown]").forEach((dropdown) => {
-    const toggle = dropdown.querySelector("[data-nav-toggle]");
-    const menu = dropdown.querySelector("[data-nav-menu]");
-    if (!toggle || !menu) return;
+function bindNav() {
+  const dropdown = document.getElementById("siteNavDropdown");
+  const toggle = document.getElementById("siteNavToggle");
+  const menu = document.getElementById("siteNavMenu");
 
-    toggle.onclick = (event) => {
-      event.preventDefault();
-      event.stopPropagation();
+  if (!dropdown || !toggle || !menu) return;
 
-      const opening = !dropdown.classList.contains("open");
-      closeMenus(dropdown);
-      dropdown.classList.toggle("open", opening);
-      toggle.setAttribute("aria-expanded", opening ? "true" : "false");
-      pulse(toggle);
+  toggle.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
 
-      if (window.EvaraTheme?.bindThemeControls) {
-        window.EvaraTheme.bindThemeControls();
-      }
+    const opening = !dropdown.classList.contains("open");
+    dropdown.classList.toggle("open", opening);
+    toggle.setAttribute("aria-expanded", opening ? "true" : "false");
+    pulse(toggle);
 
-      if (window.EvaraTheme?.syncThemeUi) {
-        window.EvaraTheme.syncThemeUi();
-      }
+    if (window.EvaraTheme?.bindThemeControls) {
+      window.EvaraTheme.bindThemeControls();
+    }
 
-      bindThemeArrows();
-    };
+    if (window.EvaraTheme?.syncThemeUi) {
+      window.EvaraTheme.syncThemeUi();
+    }
 
-    menu.onclick = (event) => {
-      event.stopPropagation();
-    };
+    bindThemeArrows();
   });
 
-  document.addEventListener("click", () => closeMenus(), { once: false });
+  menu.addEventListener("click", (event) => {
+    event.stopPropagation();
+  });
+
+  document.addEventListener("click", () => {
+    dropdown.classList.remove("open");
+    toggle.setAttribute("aria-expanded", "false");
+  });
 }
 
 function initNav() {
   renderNav();
   renderFooter();
-  bindMenus();
+  bindNav();
   bindThemeArrows();
 
   if (window.EvaraTheme?.bindThemeControls) {
