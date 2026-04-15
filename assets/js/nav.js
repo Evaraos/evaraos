@@ -40,6 +40,26 @@ function themeMarkup() {
           aria-label="Scroll theme colors right"
         >›</button>
       </div>
+
+      <button
+        type="button"
+        class="border-fx-toggle aurora-card"
+        data-border-fx-summary
+        aria-label="Border effects mode"
+      >
+        <span class="border-fx-dot"></span>
+        <span class="border-fx-label">Border FX</span>
+        <span class="border-fx-sep">•</span>
+        <span class="border-fx-mode" data-border-fx-mode-text>Theme</span>
+      </button>
+
+      <div class="border-fx-shell aurora-card">
+        <div class="border-fx-options">
+          <button type="button" class="border-fx-option" data-border-fx-option="off">Off</button>
+          <button type="button" class="border-fx-option" data-border-fx-option="theme">Theme</button>
+          <button type="button" class="border-fx-option" data-border-fx-option="rainbow">Rainbow</button>
+        </div>
+      </div>
     </div>
   `;
 }
@@ -77,7 +97,6 @@ function getRole() {
       localStorage.getItem("evaraos-user") ||
       sessionStorage.getItem("evaraos-user");
     if (!raw) return "guest";
-
     const parsed = JSON.parse(raw);
     return String(parsed?.role || "guest").toLowerCase();
   } catch {
@@ -89,7 +108,8 @@ function getVisibleLinks() {
   const role = getRole();
 
   const common = [
-    { path: "/evaraos/index.html", label: "Home" }
+    { path: "/evaraos/index.html", label: "Home" },
+    { path: "/evaraos/settings.html", label: "Settings" }
   ];
 
   const guestOnly = [
@@ -117,6 +137,33 @@ function getVisibleLinks() {
 function navLink(path, label) {
   const active = isCurrentPage(path) ? " active" : "";
   return `<a href="${path}" class="menu-link${active}" data-menu-link>${label}</a>`;
+}
+
+function getBorderFx() {
+  const stored = localStorage.getItem("evaraos-border-fx");
+  if (stored === "off" || stored === "theme" || stored === "rainbow") {
+    return stored;
+  }
+  return "theme";
+}
+
+function setBorderFx(mode) {
+  localStorage.setItem("evaraos-border-fx", mode);
+  document.documentElement.setAttribute("data-border-fx", mode);
+  syncBorderFxUi();
+}
+
+function syncBorderFxUi() {
+  const mode = getBorderFx();
+  document.documentElement.setAttribute("data-border-fx", mode);
+
+  document.querySelectorAll("[data-border-fx-option]").forEach((btn) => {
+    btn.classList.toggle("active", btn.getAttribute("data-border-fx-option") === mode);
+  });
+
+  document.querySelectorAll("[data-border-fx-mode-text]").forEach((el) => {
+    el.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+  });
 }
 
 function universalNavMarkup() {
@@ -193,12 +240,7 @@ function shine(el) {
   el.classList.remove("shine-flash");
   void el.offsetWidth;
   el.classList.add("shine-flash");
-  setTimeout(() => el.classList.remove("shine-flash"), 540);
-}
-
-function pulseAndShine(el) {
-  pulse(el);
-  shine(el);
+  setTimeout(() => el.classList.remove("shine-flash"), 560);
 }
 
 function activateCardGlow(el) {
@@ -208,7 +250,8 @@ function activateCardGlow(el) {
 }
 
 function pulseShineGlow(el) {
-  pulseAndShine(el);
+  pulse(el);
+  shine(el);
   activateCardGlow(el);
 }
 
@@ -232,6 +275,21 @@ function bindThemeArrows() {
         });
       }, 90);
     };
+  });
+}
+
+function bindBorderFxControls() {
+  document.querySelectorAll("[data-border-fx-option]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const mode = button.getAttribute("data-border-fx-option");
+      if (!mode) return;
+
+      pulseShineGlow(button);
+      setBorderFx(mode);
+    });
   });
 }
 
@@ -265,6 +323,7 @@ function bindNav() {
     const opening = !dropdown.classList.contains("open");
     dropdown.classList.toggle("open", opening);
     toggle.setAttribute("aria-expanded", opening ? "true" : "false");
+
     pulseShineGlow(toggle);
     if (opening) {
       pulseShineGlow(menu);
@@ -280,6 +339,8 @@ function bindNav() {
 
     bindThemeArrows();
     bindNavLinks();
+    bindBorderFxControls();
+    syncBorderFxUi();
   };
 
   menu.onclick = (event) => {
@@ -297,7 +358,7 @@ function bindNav() {
 
 function bindInteractiveShine() {
   document
-    .querySelectorAll(".btn, .feature-card, .theme-core-toggle, .theme-bubble, .theme-slider-arrow, .nav-hamburger, .password-toggle, .menu-link")
+    .querySelectorAll(".btn, .feature-card, .theme-core-toggle, .theme-bubble, .theme-slider-arrow, .nav-hamburger, .password-toggle, .menu-link, .border-fx-option")
     .forEach((el) => {
       el.addEventListener("click", () => {
         pulseShineGlow(el);
@@ -323,11 +384,14 @@ function bindInteractiveShine() {
 }
 
 function initNav() {
+  document.documentElement.setAttribute("data-border-fx", getBorderFx());
+
   renderNav();
   renderFooter();
   bindNav();
   bindThemeArrows();
   bindNavLinks();
+  bindBorderFxControls();
 
   if (window.EvaraTheme?.bindThemeControls) {
     window.EvaraTheme.bindThemeControls();
@@ -337,6 +401,7 @@ function initNav() {
     window.EvaraTheme.syncThemeUi();
   }
 
+  syncBorderFxUi();
   bindInteractiveShine();
 }
 
