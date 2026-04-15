@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Security • Evaraos Inc</title>
-  <link rel="stylesheet" href="/evaraos/assets/css/styles.css?v=9" />
+  <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
 </head>
 <body class="dashboard-body">
   <div class="page-grid-overlay"></div>
@@ -13,39 +13,20 @@
   <div class="dashboard-shell">
     <aside class="dashboard-sidebar" id="dashboardSidebar">
       <div class="dashboard-sidebar-inner glass-shell aurora-card">
-        <div class="dashboard-sidebar-search">
-          <div class="dashboard-search-shell input-shell aurora-card">
-            <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
-              <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
-            </svg>
-            <input
-              type="search"
-              class="dashboard-search-input input"
-              placeholder="Search security settings..."
-              aria-label="Search security"
-            />
-          </div>
-        </div>
-
         <div class="dashboard-sidebar-head">
           <p class="dashboard-sidebar-eyebrow">Security Navigation</p>
-          <h2 id="dashboardOverviewTitle">Security Overview</h2>
+          <h2 id="dashboardOverviewTitle">Account Security</h2>
         </div>
 
         <nav class="dashboard-sidebar-nav" aria-label="Security sections">
-          <a href="#securitySection" class="dashboard-nav-link active aurora-card">
+          <a href="#securityHeroSection" class="dashboard-nav-link active aurora-card">
             <span class="dashboard-nav-icon">◉</span>
-            <span>Security</span>
+            <span>Overview</span>
           </a>
 
-          <a href="#passwordSection" class="dashboard-nav-link aurora-card">
+          <a href="#securityMainSection" class="dashboard-nav-link aurora-card">
             <span class="dashboard-nav-icon">◎</span>
-            <span>Password</span>
-          </a>
-
-          <a href="#sessionSection" class="dashboard-nav-link aurora-card">
-            <span class="dashboard-nav-icon">◌</span>
-            <span>Session</span>
+            <span>Protection</span>
           </a>
         </nav>
 
@@ -53,27 +34,26 @@
           <div class="dashboard-sidebar-foot-copy">
             <strong>Security Center</strong>
             <span>
-              Review account session details, password reset access, and recent security activity.
+              Review your current login provider, email status, and account protection controls.
             </span>
           </div>
-          <a href="/evaraos/settings.html" class="btn btn-theme-primary">Back to Settings</a>
+          <a href="/evaraos/profile.html" class="btn btn-theme-primary">Open Profile</a>
         </div>
       </div>
     </aside>
 
     <main class="dashboard-main">
-      <section class="dashboard-hero glass-card aurora-card" id="securitySection">
+      <section class="dashboard-hero glass-card aurora-card" id="securityHeroSection">
         <div class="dashboard-hero-copy">
           <p class="dashboard-eyebrow">ACCOUNT SECURITY</p>
-          <h1>Keep your account protected and visible.</h1>
-          <p class="dashboard-hero-text">
-            Monitor your session details, trigger secure password resets, and keep a clear view of
-            the account protecting your Evaraos workspace.
+          <h1 id="securityHeroTitle">Loading security status...</h1>
+          <p class="dashboard-hero-text" id="securityHeroText">
+            Syncing your authentication details and login protections.
           </p>
 
           <div class="dashboard-hero-actions">
-            <button type="button" id="sendResetEmailTopBtn" class="btn btn-theme-primary">Send Password Reset</button>
-            <button type="button" id="refreshSecurityTopBtn" class="btn btn-theme-secondary">Refresh Security Data</button>
+            <button type="button" id="securityRefreshBtnTop" class="btn btn-theme-primary">Refresh Status</button>
+            <button type="button" id="securityResetPasswordBtnTop" class="btn btn-theme-secondary">Send Password Reset</button>
           </div>
         </div>
 
@@ -92,8 +72,8 @@
           </div>
 
           <div class="dashboard-hero-panel-copy">
-            <strong id="securityHeroTitle">Loading security data...</strong>
-            <span id="securityHeroText">Checking account session information.</span>
+            <strong id="securityStatusHeadline">Checking account...</strong>
+            <span id="securityStatusSubline">Authentication details will appear here.</span>
           </div>
         </div>
       </section>
@@ -110,80 +90,75 @@
           <article class="dashboard-stat-card glass-card aurora-card">
             <p>Email</p>
             <h3 id="securityEmailStat">—</h3>
-            <span id="securityEmailMeta">Loading account email...</span>
+            <span id="securityEmailMeta">Loading email...</span>
           </article>
 
           <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Verification</p>
-            <h3 id="securityVerifyStat">—</h3>
-            <span id="securityVerifyMeta">Checking verification status...</span>
+            <p>Verified</p>
+            <h3 id="securityVerifiedStat">—</h3>
+            <span id="securityVerifiedMeta">Checking verification...</span>
           </article>
 
           <article class="dashboard-stat-card glass-card aurora-card">
             <p>Provider</p>
             <h3 id="securityProviderStat">—</h3>
-            <span id="securityProviderMeta">Loading sign-in provider...</span>
+            <span id="securityProviderMeta">Checking provider...</span>
           </article>
 
           <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Session</p>
-            <h3 id="securitySessionStat">Live</h3>
-            <span id="securitySessionMeta">Current account connected</span>
+            <p>Status</p>
+            <h3 id="securityStatusStat">Live</h3>
+            <span id="securityStatusMeta">Security center connected</span>
           </article>
         </div>
       </section>
 
-      <section class="dashboard-grid-2">
-        <section class="dashboard-panel glass-card aurora-card" id="passwordSection">
+      <section class="dashboard-grid-2" id="securityMainSection">
+        <section class="dashboard-panel glass-card aurora-card">
           <div class="dashboard-section-head">
             <div>
-              <p class="dashboard-section-kicker">Password</p>
-              <h2>Reset Access</h2>
-            </div>
-          </div>
-
-          <form id="securityForm" class="login-form" novalidate>
-            <div class="form-group">
-              <label class="field-label" for="securityEmail">Account Email</label>
-              <div class="input-shell aurora-card">
-                <input
-                  id="securityEmail"
-                  type="email"
-                  class="input"
-                  placeholder="Loading account email..."
-                  readonly
-                />
-              </div>
-            </div>
-
-            <div class="remember-row aurora-card">
-              <label class="remember-check" for="securityEmailVerified">
-                <input id="securityEmailVerified" type="checkbox" disabled />
-                <span>Email verified</span>
-              </label>
-            </div>
-
-            <div class="login-actions-row">
-              <button type="submit" class="btn btn-theme-primary">Send Reset Email</button>
-              <button type="button" id="securityRefreshBtn" class="btn btn-theme-secondary">Refresh Security Data</button>
-            </div>
-
-            <p id="securityMessage" class="login-message" aria-live="polite"></p>
-          </form>
-        </section>
-
-        <section class="dashboard-panel glass-card aurora-card" id="sessionSection">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Session</p>
-              <h2>Security Feed</h2>
+              <p class="dashboard-section-kicker">Authentication</p>
+              <h2>Account Details</h2>
             </div>
           </div>
 
           <div class="dashboard-feed" id="securityFeed">
             <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Loading security feed...</strong>
-              <span>Security and session details will appear here.</span>
+              <strong>Loading security data...</strong>
+              <span>Your account security information will appear here.</span>
+            </article>
+          </div>
+
+          <div class="login-actions-row" style="margin-top: 18px;">
+            <button type="button" id="securityRefreshBtnSide" class="btn btn-theme-primary">Refresh</button>
+            <button type="button" id="securityResetPasswordBtnSide" class="btn btn-theme-secondary">Send Reset</button>
+          </div>
+
+          <p id="securityMessage" class="login-message" aria-live="polite"></p>
+        </section>
+
+        <section class="dashboard-panel glass-card aurora-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Guidance</p>
+              <h2>Security Tips</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-feed">
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Use a strong password</strong>
+              <span>Use at least 8 characters and avoid reusing passwords from other sites.</span>
+            </article>
+
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Keep your email current</strong>
+              <span>Your reset and verification options depend on your current email address.</span>
+            </article>
+
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Refresh after changes</strong>
+              <span>If you verify your email or reset your password, refresh this page after completing it.</span>
             </article>
           </div>
         </section>
