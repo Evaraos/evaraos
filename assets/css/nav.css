@@ -1,7 +1,7 @@
 .universal-nav-shell {
   position: sticky;
   top: 8px;
-  z-index: 70;
+  z-index: 2000;
   padding:
     max(12px, env(safe-area-inset-top))
     10px
@@ -11,7 +11,7 @@
 
 .landing-header {
   position: relative;
-  z-index: 70;
+  z-index: 2000;
 }
 
 .landing-header-inner {
@@ -26,7 +26,7 @@
   border-radius: 20px;
   overflow: visible;
   position: relative;
-  z-index: 71;
+  z-index: 2001;
 }
 
 .brand-link {
@@ -76,7 +76,7 @@ html[data-theme$="-light"] .brand-copy span {
 .nav-dropdown {
   position: relative;
   flex: 0 0 auto;
-  z-index: 80;
+  z-index: 2100;
 }
 
 .nav-hamburger {
@@ -112,7 +112,6 @@ html[data-theme$="-light"] .brand-copy span {
     0 0 16px rgba(var(--tint-rgb), 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.36);
   border-color: rgba(255, 255, 255, 0.28);
-  filter: brightness(1.06);
 }
 
 .hamburger-orb {
@@ -133,8 +132,7 @@ html[data-theme$="-light"] .brand-copy span {
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.10);
   transition:
     transform 0.22s ease,
-    opacity 0.22s ease,
-    width 0.22s ease;
+    opacity 0.22s ease;
   position: absolute;
 }
 
@@ -148,7 +146,6 @@ html[data-theme$="-light"] .brand-copy span {
 
 .nav-dropdown.open .hamburger-bar.mid {
   opacity: 0;
-  transform: scaleX(0.4);
 }
 
 .nav-dropdown.open .hamburger-bar.bot {
@@ -167,8 +164,9 @@ html[data-theme$="-light"] .hamburger-bar {
   width: min(270px, calc(100vw - 24px));
   padding: 12px;
   border-radius: 20px;
-  display: none;
-  z-index: 9999;
+  display: grid;
+  gap: 10px;
+  z-index: 99999;
   background:
     linear-gradient(180deg, rgba(16, 20, 30, 0.98), rgba(12, 16, 26, 0.96));
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -179,6 +177,15 @@ html[data-theme$="-light"] .hamburger-bar {
   backdrop-filter: blur(32px) saturate(175%);
   -webkit-backdrop-filter: blur(32px) saturate(175%);
   isolation: isolate;
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-8px) scale(0.985);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    visibility 0.18s ease;
 }
 
 html[data-theme="light"] .nav-dropdown-menu,
@@ -193,20 +200,10 @@ html[data-theme$="-light"] .nav-dropdown-menu {
 }
 
 .nav-dropdown.open .nav-dropdown-menu {
-  display: grid;
-  gap: 10px;
-  animation: navFadeIn 180ms ease;
-}
-
-@keyframes navFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
 }
 
 .nav-dropdown-links {
@@ -313,10 +310,4 @@ html[data-theme$="-light"] .menu-divider {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-}
-
-@media (max-width: 760px) {
-  .nav-dropdown-menu {
-    width: min(260px, calc(100vw - 22px));
-  }
 }
