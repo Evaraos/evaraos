@@ -21,14 +21,6 @@
 
   --theme-glow-rgb: 214, 31, 66;
   --theme-soft-rgb: 239, 182, 168;
-
-  --shadow-dark:
-    0 26px 60px rgba(0, 0, 0, 0.34),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-
-  --shadow-light:
-    0 22px 50px rgba(92, 114, 124, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.84);
 }
 
 html[data-theme="dark"],
@@ -135,11 +127,11 @@ html[data-theme$="-light"] .page-grid-overlay {
 .aurora-card {
   background:
     linear-gradient(180deg, var(--panel-dark), var(--panel-dark-2));
-  border: 1px solid rgba(var(--theme-glow-rgb), 0.16);
+  border: 1px solid rgba(var(--theme-glow-rgb), 0.18);
   box-shadow:
     0 26px 60px rgba(0, 0, 0, 0.34),
     0 0 0 1px rgba(var(--theme-glow-rgb), 0.05),
-    0 0 28px rgba(var(--theme-glow-rgb), 0.10),
+    0 0 26px rgba(var(--theme-glow-rgb), 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(20px) saturate(140%);
   -webkit-backdrop-filter: blur(20px) saturate(140%);
@@ -157,7 +149,7 @@ html[data-theme$="-light"] .aurora-card {
   box-shadow:
     0 22px 50px rgba(92, 114, 124, 0.14),
     0 0 0 1px rgba(var(--theme-glow-rgb), 0.03),
-    0 0 22px rgba(var(--theme-glow-rgb), 0.08),
+    0 0 18px rgba(var(--theme-glow-rgb), 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.84);
 }
 
@@ -185,9 +177,10 @@ html[data-theme$="-light"] .site-footer-left span {
   color: var(--muted-light);
 }
 
+.hero:hover .hero-title,
 .feature-card:hover h3,
-.hero:hover .hero-title {
-  text-shadow: 0 0 14px rgba(var(--theme-glow-rgb), 0.18);
+.btn:hover {
+  text-shadow: 0 0 14px rgba(var(--theme-glow-rgb), 0.14);
 }
 
 .input-shell,
@@ -200,7 +193,7 @@ html[data-theme$="-light"] .site-footer-left span {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
     0 10px 22px rgba(0, 0, 0, 0.14),
-    0 0 18px rgba(var(--theme-glow-rgb), 0.06);
+    0 0 14px rgba(var(--theme-glow-rgb), 0.06);
 }
 
 html[data-theme="light"] .input-shell,
@@ -216,7 +209,7 @@ html[data-theme$="-light"] .dashboard-search-shell {
   border: 1px solid rgba(var(--theme-glow-rgb), 0.12);
   box-shadow:
     0 10px 22px rgba(88, 112, 102, 0.08),
-    0 0 14px rgba(var(--theme-glow-rgb), 0.06),
+    0 0 12px rgba(var(--theme-glow-rgb), 0.05),
     inset 0 1px 0 rgba(255, 255, 255, 0.82);
 }
 
@@ -226,7 +219,7 @@ html[data-theme$="-light"] .dashboard-search-shell {
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.08),
     0 8px 18px rgba(0,0,0,0.12),
-    0 0 12px rgba(var(--theme-glow-rgb), 0.08);
+    0 0 10px rgba(var(--theme-glow-rgb), 0.08);
 }
 
 html[data-theme="light"] .password-toggle,
@@ -244,7 +237,7 @@ html[data-theme$="-light"] .password-toggle {
   color: #fff;
   box-shadow:
     0 18px 38px rgba(var(--theme-glow-rgb), 0.24),
-    0 0 22px rgba(var(--theme-glow-rgb), 0.16),
+    0 0 18px rgba(var(--theme-glow-rgb), 0.16),
     inset 0 1px 0 rgba(255,255,255,0.22);
 }
 
@@ -254,7 +247,7 @@ html[data-theme$="-light"] .password-toggle {
   border: 1px solid rgba(var(--theme-glow-rgb), 0.12);
   box-shadow:
     0 10px 24px rgba(0,0,0,0.12),
-    0 0 14px rgba(var(--theme-glow-rgb), 0.06),
+    0 0 10px rgba(var(--theme-glow-rgb), 0.06),
     inset 0 1px 0 rgba(255,255,255,0.08);
 }
 
@@ -265,13 +258,6 @@ html[data-theme$="-light"] .btn-theme-secondary {
   border: 1px solid rgba(var(--theme-glow-rgb), 0.10);
 }
 
-.btn:hover,
-.feature-card:hover,
-.hero:hover,
-.password-toggle:hover {
-  filter: saturate(1.06);
-}
-
 .input-shell:focus-within,
 .password-wrap:focus-within,
 .dashboard-search-shell:focus-within {
@@ -280,7 +266,7 @@ html[data-theme$="-light"] .btn-theme-secondary {
   box-shadow:
     0 0 0 8px rgba(var(--theme-glow-rgb), 0.08),
     0 14px 28px rgba(0,0,0,0.16),
-    0 0 26px rgba(var(--theme-glow-rgb), 0.12),
+    0 0 22px rgba(var(--theme-glow-rgb), 0.12),
     inset 0 1px 0 rgba(255,255,255,0.10);
 }
 
@@ -293,6 +279,6 @@ html[data-theme$="-light"] .dashboard-search-shell:focus-within {
   box-shadow:
     0 0 0 8px rgba(var(--theme-glow-rgb), 0.06),
     0 12px 24px rgba(88,112,102,0.10),
-    0 0 18px rgba(var(--theme-glow-rgb), 0.10),
+    0 0 16px rgba(var(--theme-glow-rgb), 0.10),
     inset 0 1px 0 rgba(255,255,255,0.82);
 }
