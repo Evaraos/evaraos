@@ -106,6 +106,10 @@ function publicNavMarkup() {
   `;
 }
 
+function footerAlreadyExists() {
+  return document.querySelector(".site-footer");
+}
+
 function renderNav() {
   const mount = document.getElementById("universalNav");
   if (!mount) return;
@@ -113,7 +117,7 @@ function renderNav() {
 }
 
 function renderFooter() {
-  if (document.querySelector(".site-footer")) return;
+  if (footerAlreadyExists()) return;
   document.body.insertAdjacentHTML("beforeend", footerMarkup());
   const year = document.getElementById("footerYear");
   if (year) year.textContent = String(new Date().getFullYear());
@@ -121,15 +125,15 @@ function renderFooter() {
 
 function pulse(el) {
   if (!el) return;
-  el.classList.remove("active-glow");
+  el.classList.remove("pop-click");
   void el.offsetWidth;
-  el.classList.add("active-glow");
-  setTimeout(() => el.classList.remove("active-glow"), 220);
+  el.classList.add("pop-click");
+  setTimeout(() => el.classList.remove("pop-click"), 220);
 }
 
 function bindThemeArrows() {
   document.querySelectorAll("[data-theme-scroll]").forEach((button) => {
-    button.addEventListener("click", (event) => {
+    button.onclick = (event) => {
       event.preventDefault();
       event.stopPropagation();
 
@@ -144,7 +148,7 @@ function bindThemeArrows() {
       });
 
       pulse(button);
-    });
+    };
   });
 }
 
@@ -155,7 +159,7 @@ function bindNav() {
 
   if (!dropdown || !toggle || !menu) return;
 
-  toggle.addEventListener("click", (event) => {
+  toggle.onclick = (event) => {
     event.preventDefault();
     event.stopPropagation();
 
@@ -173,15 +177,21 @@ function bindNav() {
     }
 
     bindThemeArrows();
-  });
+  };
 
-  menu.addEventListener("click", (event) => {
+  menu.onclick = (event) => {
     event.stopPropagation();
-  });
+  };
 
-  document.addEventListener("click", () => {
+  document.onclick = () => {
     dropdown.classList.remove("open");
     toggle.setAttribute("aria-expanded", "false");
+  };
+}
+
+function bindPopFeedback() {
+  document.querySelectorAll(".btn, .feature-card, .theme-core-toggle, .theme-bubble, .theme-slider-arrow").forEach((el) => {
+    el.addEventListener("click", () => pulse(el));
   });
 }
 
@@ -198,6 +208,8 @@ function initNav() {
   if (window.EvaraTheme?.syncThemeUi) {
     window.EvaraTheme.syncThemeUi();
   }
+
+  bindPopFeedback();
 }
 
 document.addEventListener("DOMContentLoaded", initNav);
