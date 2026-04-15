@@ -100,24 +100,48 @@ main,
   padding-bottom: max(24px, env(safe-area-inset-bottom));
 }
 
-.hero {
+.hero-home {
   min-height: 430px;
-  padding: 34px 30px;
+  padding: 22px 12px 10px;
   display: flex;
   align-items: center;
   border-radius: 34px;
-  transform: translateZ(0);
+  position: relative;
+  overflow: visible;
+}
+
+.hero-home::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 34px;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 14% 18%, rgba(var(--theme-glow-rgb), 0.08), transparent 24%),
+    radial-gradient(circle at 82% 16%, rgba(var(--theme-glow-rgb), 0.10), transparent 22%),
+    radial-gradient(circle at 18% 84%, rgba(var(--theme-glow-rgb), 0.06), transparent 22%);
+  filter: blur(10px);
 }
 
 .hero-content {
-  width: min(100%, 780px);
+  width: min(100%, 860px);
+  position: relative;
+  z-index: 1;
+}
+
+.hero-kicker {
+  margin: 0 0 18px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.82;
+  font-size: 0.96rem;
 }
 
 .hero-title {
-  margin: 0 0 18px;
-  font-size: clamp(3rem, 9vw, 5.3rem);
+  margin: 0 0 20px;
+  font-size: clamp(3rem, 9vw, 5.35rem);
   line-height: 0.92;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.055em;
   font-weight: 900;
 }
 
@@ -125,14 +149,14 @@ main,
   margin: 0;
   font-size: clamp(1.12rem, 1vw + 0.95rem, 1.5rem);
   line-height: 1.62;
-  max-width: 860px;
+  max-width: 920px;
 }
 
 .hero-actions {
   display: flex;
   gap: 14px;
   flex-wrap: wrap;
-  margin-top: 28px;
+  margin-top: 30px;
 }
 
 .features-grid {
@@ -334,12 +358,12 @@ main,
 }
 
 .pop-click {
-  animation: popClick 220ms ease;
+  animation: popClick 240ms ease;
 }
 
 @keyframes popClick {
   0% { transform: scale(1); }
-  40% { transform: scale(0.976); }
+  35% { transform: scale(0.975); }
   100% { transform: scale(1); }
 }
 
@@ -362,14 +386,14 @@ main,
     padding-top: 14px;
   }
 
-  .hero {
+  .hero-home {
     min-height: 340px;
-    padding: 26px 20px;
+    padding: 18px 6px 8px;
     border-radius: 28px;
   }
 
   .hero-title {
-    font-size: clamp(2.7rem, 12vw, 4.4rem);
+    font-size: clamp(2.7rem, 12vw, 4.45rem);
   }
 
   .features-grid {
