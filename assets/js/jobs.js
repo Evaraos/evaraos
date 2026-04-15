@@ -1,5 +1,3 @@
-// assets/js/jobs.js
-
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
@@ -20,238 +18,239 @@ const jobsStatActive = document.getElementById("jobsStatActive");
 const jobsStatCompleted = document.getElementById("jobsStatCompleted");
 const jobsStatFiltered = document.getElementById("jobsStatFiltered");
 
-const jobsStatTotalMeta = document.getElementById("jobsStatTotalMeta");
-const jobsStatActiveMeta = document.getElementById("jobsStatActiveMeta");
-const jobsStatCompletedMeta = document.getElementById("jobsStatCompletedMeta");
-const jobsStatFilteredMeta = document.getElementById("jobsStatFilteredMeta");
-
 const jobsRefreshBtnTop = document.getElementById("jobsRefreshBtnTop");
 const jobsRefreshBtnSide = document.getElementById("jobsRefreshBtnSide");
 const jobsSortBtn = document.getElementById("jobsSortBtn");
 
-let jobRecords = [];
-let filteredJobs = [];
-let sortAscending = true;
+let jobsData = [];
+let sortAsc = true;
 
-function normalize(value = "") {
-  return String(value || "").trim().toLowerCase();
+function jobName(job = {}) {
+  return (
+    job.title ||
+    job.name ||
+    job.jobName ||
+    job.customerName ||
+    "Untitled Job"
+  );
 }
 
-function jobTitle(job) {
-  return job.name || job.title || job.jobName || job.customerName || "Untitled Job";
+function jobStatus(job = {}) {
+  return job.status || "scheduled";
 }
 
-function jobSubtitle(job) {
-  return job.description || job.address || job.location || job.serviceType || "Job record from Firestore";
+function jobDescription(job = {}) {
+  return (
+    job.description ||
+    job.notes ||
+    job.service ||
+    "No job summary provided."
+  );
 }
 
-function niceStatus(status = "") {
-  const value = String(status || "").trim();
-  return value ? value.charAt(0).toUpperCase() + value.slice(1) : "Pending";
-}
-
-function statusClass(status = "") {
-  const value = normalize(status);
-
-  if (["complete", "completed", "done", "closed"].includes(value)) return "good";
-  if (["pending", "review", "queued"].includes(value)) return "alert";
+function pillClass(status = "") {
+  const safe = String(status || "").toLowerCase();
+  if (["completed", "done", "closed"].includes(safe)) return "success";
+  if (["scheduled", "in progress", "active", "working"].includes(safe)) return "working";
+  if (["cancelled", "archived", "paused"].includes(safe)) return "muted";
   return "working";
 }
 
-function renderStats() {
-  const activeCount = jobRecords.filter((job) =>
-    ["in progress", "active", "working", "pending"].includes(normalize(job.status || ""))
-  ).length;
+function filteredJobs() {
+  const term = String(jobsSearch?.value || "").trim().toLowerCase();
+  let rows = [...jobsData];
 
-  const completedCount = jobRecords.filter((job) =>
-    ["complete", "completed", "done", "closed"].includes(normalize(job.status || ""))
-  ).length;
+  if (term) {
+    rows = rows.filter((job) => {
+      return [
+        jobName(job),
+        jobStatus(job),
+        jobDescription(job)
+      ].some((value) => String(value || "").toLowerCase().includes(term));
+    });
+  }
 
-  jobsStatTotal.textContent = String(jobRecords.length);
-  jobsStatActive.textContent = String(activeCount);
-  jobsStatCompleted.textContent = String(completedCount);
-  jobsStatFiltered.textContent = String(filteredJobs.length);
+  rows.sort((a, b) => {
+    const left = jobName(a).toLowerCase();
+    const right = jobName(b).toLowerCase();
 
-  jobsStatTotalMeta.textContent = "Job records loaded";
-  jobsStatActiveMeta.textContent = "Currently active or pending jobs";
-  jobsStatCompletedMeta.textContent = "Completed execution records";
-  jobsStatFilteredMeta.textContent = "Matches current search";
+    if (left < right) return sortAsc ? -1 : 1;
+    if (left > right) return sortAsc ? 1 : -1;
+    return 0;
+  });
+
+  return rows;
 }
 
-function renderJobList() {
-  if (!filteredJobs.length) {
+function renderStats(rows) {
+  const active = rows.filter((row) =>
+    ["scheduled", "in progress", "active", "working"].includes(String(jobStatus(row)).toLowerCase())
+  ).length;
+
+  const completed = rows.filter((row) =>
+    ["completed", "done", "closed"].includes(String(jobStatus(row)).toLowerCase())
+  ).length;
+
+  if (jobsStatTotal) jobsStatTotal.textContent = String(jobsData.length);
+  if (jobsStatActive) jobsStatActive.textContent = String(active);
+  if (jobsStatCompleted) jobsStatCompleted.textContent = String(completed);
+  if (jobsStatFiltered) jobsStatFiltered.textContent = String(rows.length);
+
+  if (jobsHeroTitle) {
+    jobsHeroTitle.textContent = jobsData.length
+      ? `${jobsData.length} jobs connected`
+      : "No jobs found yet.";
+  }
+
+  if (jobsHeroText) {
+    jobsHeroText.textContent = jobsData.length
+      ? "Firestore job records are live and ready for review."
+      : "Create job records in Firestore to populate this page.";
+  }
+}
+
+function renderList(rows) {
+  if (!jobsList) return;
+
+  if (!rows.length) {
     jobsList.innerHTML = `
       <article class="dashboard-list-item glass-card aurora-card">
         <div>
           <strong>No jobs found</strong>
-          <span>Try a different search or add job records to Firestore.</span>
+          <span>Try another search or add job records in Firestore.</span>
         </div>
-        <span class="dashboard-status-pill alert">Empty</span>
+        <span class="dashboard-status-pill muted">Empty</span>
       </article>
     `;
     return;
   }
 
-  jobsList.innerHTML = filteredJobs.map((job) => {
-    const status = niceStatus(job.status || "pending");
-    const pill = statusClass(job.status || "pending");
+  jobsList.innerHTML = rows.map((job) => {
+    const name = jobName(job);
+    const status = jobStatus(job);
+    const description = jobDescription(job);
 
     return `
       <article class="dashboard-list-item glass-card aurora-card">
         <div>
-          <strong>${jobTitle(job)}</strong>
-          <span>${jobSubtitle(job)}</span>
+          <strong>${name}</strong>
+          <span>${description}</span>
         </div>
-        <span class="dashboard-status-pill ${pill}">${status}</span>
+        <span class="dashboard-status-pill ${pillClass(status)}">${status}</span>
       </article>
     `;
   }).join("");
 }
 
-function renderJobFeed() {
-  if (!jobRecords.length) {
-    jobsFeed.innerHTML = `
-      <article class="dashboard-feed-item glass-card aurora-card">
-        <strong>No execution activity</strong>
-        <span>Job feed will appear once records are available.</span>
-      </article>
-    `;
-    return;
-  }
+function renderProgress(rows) {
+  if (!jobsProgressStack) return;
 
-  jobsFeed.innerHTML = jobRecords.slice(0, 6).map((job) => `
-    <article class="dashboard-feed-item glass-card aurora-card">
-      <strong>${jobTitle(job)}</strong>
-      <span>Status: ${niceStatus(job.status || "pending")} • ${jobSubtitle(job)}</span>
-    </article>
-  `).join("");
-}
-
-function renderJobBreakdown() {
-  const total = jobRecords.length || 1;
-
-  const statuses = {
-    pending: 0,
-    inProgress: 0,
-    complete: 0,
-    review: 0
-  };
-
-  jobRecords.forEach((job) => {
-    const value = normalize(job.status || "pending");
-
-    if (["pending", "queued"].includes(value)) statuses.pending += 1;
-    else if (["in progress", "active", "working"].includes(value)) statuses.inProgress += 1;
-    else if (["complete", "completed", "done", "closed"].includes(value)) statuses.complete += 1;
-    else statuses.review += 1;
-  });
-
-  const rows = [
-    ["Pending", statuses.pending],
-    ["In Progress", statuses.inProgress],
-    ["Completed", statuses.complete],
-    ["Review / Other", statuses.review]
+  const buckets = [
+    { key: "scheduled", label: "Scheduled" },
+    { key: "in progress", label: "In Progress" },
+    { key: "active", label: "Active" },
+    { key: "completed", label: "Completed" },
+    { key: "cancelled", label: "Cancelled" }
   ];
 
-  jobsProgressStack.innerHTML = rows.map(([label, count]) => {
-    const width = Math.max(8, Math.round((count / total) * 100));
+  const total = rows.length || 1;
+
+  jobsProgressStack.innerHTML = buckets.map((bucket) => {
+    const count = rows.filter((row) => String(jobStatus(row)).toLowerCase() === bucket.key).length;
+    const width = Math.max(6, Math.round((count / total) * 100));
+
     return `
       <div class="dashboard-progress-row">
         <div class="dashboard-progress-copy">
-          <strong>${label}</strong>
-          <span>${count} record${count === 1 ? "" : "s"}</span>
+          <strong>${bucket.label}</strong>
+          <span>${count} job(s)</span>
         </div>
-        <div class="dashboard-progress-bar">
-          <span style="width: ${width}%;"></span>
-        </div>
+        <div class="dashboard-progress-bar"><span style="width: ${width}%;"></span></div>
       </div>
     `;
   }).join("");
 }
 
-function applySearchAndSort() {
-  const query = normalize(jobsSearch?.value || "");
+function renderFeed(rows) {
+  if (!jobsFeed) return;
 
-  filteredJobs = jobRecords.filter((job) => {
-    const haystack = [
-      job.name,
-      job.title,
-      job.jobName,
-      job.customerName,
-      job.address,
-      job.location,
-      job.serviceType,
-      job.description,
-      job.status
-    ].map((value) => normalize(value)).join(" ");
+  if (!rows.length) {
+    jobsFeed.innerHTML = `
+      <article class="dashboard-feed-item glass-card aurora-card">
+        <strong>No job activity</strong>
+        <span>Recent execution activity will appear here once records exist.</span>
+      </article>
+    `;
+    return;
+  }
 
-    return haystack.includes(query);
-  });
+  jobsFeed.innerHTML = rows.slice(0, 6).map((job) => {
+    const name = jobName(job);
+    const status = jobStatus(job);
 
-  filteredJobs.sort((a, b) => {
-    const first = jobTitle(a).toLowerCase();
-    const second = jobTitle(b).toLowerCase();
-    return sortAscending ? first.localeCompare(second) : second.localeCompare(first);
-  });
+    return `
+      <article class="dashboard-feed-item glass-card aurora-card">
+        <strong>${name}</strong>
+        <span>Status: ${status}</span>
+      </article>
+    `;
+  }).join("");
+}
 
-  renderStats();
-  renderJobList();
+function renderJobs() {
+  const rows = filteredJobs();
+  renderStats(rows);
+  renderList(rows);
+  renderProgress(rows);
+  renderFeed(rows);
 }
 
 async function loadJobs() {
-  jobsHeroTitle.textContent = "Loading jobs...";
-  jobsHeroText.textContent = "Connecting to Firestore job records.";
-
   try {
     const snap = await getDocs(collection(db, "jobs"));
-    jobRecords = snap.docs.map((docItem) => ({
-      id: docItem.id,
-      ...docItem.data()
+    jobsData = snap.docs.map((docSnap) => ({
+      id: docSnap.id,
+      ...docSnap.data()
     }));
-
-    filteredJobs = [...jobRecords];
-    applySearchAndSort();
-    renderJobFeed();
-    renderJobBreakdown();
-
-    jobsHeroTitle.textContent = "Execution connected";
-    jobsHeroText.textContent = `${jobRecords.length} jobs loaded from Firestore.`;
+    renderJobs();
   } catch (error) {
-    console.error("Failed loading jobs:", error);
+    console.error("Failed to load jobs:", error);
 
-    jobsHeroTitle.textContent = "Load failed";
-    jobsHeroText.textContent = "Check Firestore rules and the jobs collection.";
+    if (jobsList) {
+      jobsList.innerHTML = `
+        <article class="dashboard-list-item glass-card aurora-card">
+          <div>
+            <strong>Unable to load jobs</strong>
+            <span>${error.message || "Firestore request failed."}</span>
+          </div>
+          <span class="dashboard-status-pill danger">Error</span>
+        </article>
+      `;
+    }
 
-    jobsList.innerHTML = `
-      <article class="dashboard-list-item glass-card aurora-card">
-        <div>
-          <strong>Unable to load jobs</strong>
-          <span>${error.message || "Unknown Firestore error."}</span>
-        </div>
-        <span class="dashboard-status-pill alert">Error</span>
-      </article>
-    `;
-
-    jobsFeed.innerHTML = `
-      <article class="dashboard-feed-item glass-card aurora-card">
-        <strong>Job feed unavailable</strong>
-        <span>${error.message || "Unknown Firestore error."}</span>
-      </article>
-    `;
-
-    jobsProgressStack.innerHTML = `
-      <div class="dashboard-progress-row">
-        <div class="dashboard-progress-copy">
-          <strong>Load error</strong>
-          <span>Jobs could not be read</span>
-        </div>
-        <div class="dashboard-progress-bar"><span style="width: 8%;"></span></div>
-      </div>
-    `;
+    if (jobsFeed) {
+      jobsFeed.innerHTML = `
+        <article class="dashboard-feed-item glass-card aurora-card">
+          <strong>Load failed</strong>
+          <span>${error.message || "Firestore request failed."}</span>
+        </article>
+      `;
+    }
   }
 }
 
-function bindSidebarAnchors() {
+function bindEvents() {
+  jobsSearch?.addEventListener("input", renderJobs);
+
+  jobsRefreshBtnTop?.addEventListener("click", loadJobs);
+  jobsRefreshBtnSide?.addEventListener("click", loadJobs);
+
+  jobsSortBtn?.addEventListener("click", () => {
+    sortAsc = !sortAsc;
+    jobsSortBtn.textContent = sortAsc ? "Sort A–Z" : "Sort Z–A";
+    renderJobs();
+  });
+
   document.querySelectorAll(".dashboard-nav-link").forEach((link) => {
     link.addEventListener("click", () => {
       document.querySelectorAll(".dashboard-nav-link").forEach((item) => {
@@ -262,39 +261,13 @@ function bindSidebarAnchors() {
   });
 }
 
-if (jobsSearch) {
-  jobsSearch.addEventListener("input", applySearchAndSort);
-}
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    window.location.href = "/evaraos/login.html";
+    return;
+  }
 
-if (jobsSortBtn) {
-  jobsSortBtn.addEventListener("click", () => {
-    sortAscending = !sortAscending;
-    jobsSortBtn.textContent = sortAscending ? "Sort A–Z" : "Sort Z–A";
-    applySearchAndSort();
-  });
-}
-
-if (jobsRefreshBtnTop) {
-  jobsRefreshBtnTop.addEventListener("click", async () => {
-    await loadJobs();
-  });
-}
-
-if (jobsRefreshBtnSide) {
-  jobsRefreshBtnSide.addEventListener("click", async () => {
-    await loadJobs();
-  });
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  bindSidebarAnchors();
-
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      window.location.href = "/evaraos/login.html";
-      return;
-    }
-
-    await loadJobs();
-  });
+  loadJobs();
 });
+
+document.addEventListener("DOMContentLoaded", bindEvents);
