@@ -10,12 +10,13 @@
 .dashboard-topbar-inner {
   width: min(100%, var(--max-page));
   margin: 0 auto;
-  min-height: 92px;
-  padding: 14px 18px;
+  min-height: 88px;
+  padding: 12px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
+  border-radius: 24px;
 }
 
 .brand-link {
@@ -41,14 +42,14 @@
 
 .brand-copy strong {
   display: block;
-  font-size: 1.1rem;
+  font-size: 1.08rem;
   letter-spacing: -0.02em;
 }
 
 .brand-copy span {
   display: block;
   margin-top: 4px;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
 }
 
 .nav-dropdown {
@@ -56,9 +57,9 @@
 }
 
 .nav-hamburger {
-  width: 62px;
-  height: 62px;
-  border-radius: 22px;
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
   border: 1px solid rgba(255,255,255,0.08);
   background:
     linear-gradient(180deg, rgba(255,255,255,0.11), rgba(255,255,255,0.05));
@@ -66,7 +67,7 @@
   place-items: center;
   cursor: pointer;
   box-shadow:
-    0 12px 26px rgba(0,0,0,0.18),
+    0 10px 24px rgba(0,0,0,0.18),
     inset 0 1px 0 rgba(255,255,255,0.08);
   transition:
     transform 0.18s ease,
@@ -85,9 +86,9 @@
 }
 
 .hamburger-line {
-  width: 24px;
-  height: 2.6px;
-  margin: 3.6px 0;
+  width: 22px;
+  height: 2.4px;
+  margin: 3.4px 0;
   border-radius: 999px;
   background: rgba(255,255,255,0.92);
 }
@@ -101,11 +102,11 @@ html[data-theme$="-light"] .hamburger-line {
   position: absolute;
   right: 0;
   top: calc(100% + 12px);
-  width: min(320px, calc(100vw - 28px));
-  max-height: 74vh;
+  width: min(308px, calc(100vw - 28px));
+  max-height: 70vh;
   overflow-y: auto;
-  padding: 14px;
-  border-radius: 24px;
+  padding: 12px;
+  border-radius: 22px;
   display: none;
   z-index: 1200;
   background:
@@ -135,9 +136,9 @@ html[data-theme$="-light"] .nav-dropdown-menu {
 
 .menu-link,
 .dashboard-menu-button {
-  min-height: 48px;
+  min-height: 46px;
   padding: 0 14px;
-  border-radius: 16px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   text-decoration: none;
@@ -187,9 +188,9 @@ html[data-theme$="-light"] .menu-divider {
 }
 
 .theme-core-toggle {
-  min-height: 56px;
+  min-height: 54px;
   border: 0;
-  border-radius: 20px;
+  border-radius: 18px;
   padding: 0 16px;
   display: inline-flex;
   align-items: center;
@@ -210,6 +211,7 @@ html[data-theme$="-light"] .menu-divider {
 .theme-core-group,
 .theme-core-hint {
   font-weight: 700;
+  font-size: 0.96rem;
 }
 
 .theme-core-sep {
@@ -218,18 +220,18 @@ html[data-theme$="-light"] .menu-divider {
 
 .theme-slider-shell {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) 36px;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
   gap: 8px;
   align-items: center;
   padding: 8px;
-  border-radius: 20px;
+  border-radius: 18px;
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.05);
 }
 
 .theme-slider-arrow {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border: 0;
   border-radius: 50%;
   display: grid;
@@ -253,8 +255,8 @@ html[data-theme$="-light"] .menu-divider {
 }
 
 .theme-bubble {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border: 0;
   border-radius: 50%;
   flex: 0 0 auto;
@@ -324,9 +326,9 @@ html[data-theme$="-light"] .menu-divider {
 
   .landing-header-inner,
   .dashboard-topbar-inner {
-    min-height: 84px;
-    padding: 12px 14px;
-    border-radius: 22px;
+    min-height: 80px;
+    padding: 10px 12px;
+    border-radius: 20px;
   }
 
   .brand-logo {
@@ -335,28 +337,28 @@ html[data-theme$="-light"] .menu-divider {
   }
 
   .brand-copy strong {
-    font-size: 0.98rem;
+    font-size: 0.96rem;
   }
 
   .brand-copy span {
-    font-size: 0.82rem;
+    font-size: 0.8rem;
   }
 
   .nav-hamburger {
-    width: 56px;
-    height: 56px;
-    border-radius: 18px;
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
   }
 
   .hamburger-line {
-    width: 22px;
+    width: 20px;
   }
 
   .nav-dropdown-menu {
-    width: min(300px, calc(100vw - 24px));
+    width: min(292px, calc(100vw - 24px));
   }
 
   .theme-slider-shell {
-    grid-template-columns: 32px minmax(0, 1fr) 32px;
+    grid-template-columns: 30px minmax(0, 1fr) 30px;
   }
 }
