@@ -15,9 +15,6 @@
       <div class="dashboard-sidebar-inner glass-shell aurora-card">
         <div class="dashboard-sidebar-search">
           <div class="dashboard-search-shell input-shell aurora-card">
-            <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
-              <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
-            </svg>
             <input
               type="search"
               class="dashboard-search-input input"
@@ -34,45 +31,41 @@
         </div>
 
         <nav class="dashboard-sidebar-nav" aria-label="Companies sections">
-          <a href="#companiesOverviewSection" class="dashboard-nav-link active aurora-card">
+          <a href="#companiesHeroSection" class="dashboard-nav-link active aurora-card">
             <span class="dashboard-nav-icon">◉</span>
             <span>Overview</span>
           </a>
-          <a href="#companiesListSection" class="dashboard-nav-link aurora-card">
+
+          <a href="#companiesMainSection" class="dashboard-nav-link aurora-card">
             <span class="dashboard-nav-icon">◎</span>
-            <span>Company List</span>
-          </a>
-          <a href="#companiesFeedSection" class="dashboard-nav-link aurora-card">
-            <span class="dashboard-nav-icon">◌</span>
-            <span>Portfolio Feed</span>
+            <span>Portfolio</span>
           </a>
         </nav>
 
         <div class="dashboard-sidebar-foot glass-card aurora-card">
           <div class="dashboard-sidebar-foot-copy">
-            <strong>Portfolio Control</strong>
+            <strong>Portfolio Tools</strong>
             <span>
-              Monitor every company record, health label, and portfolio-level change from one place.
+              Search, review, and refresh company records across your Evaraos ecosystem.
             </span>
           </div>
-          <button type="button" id="companiesRefreshBtnSide" class="btn btn-theme-primary">Refresh Companies</button>
+          <button type="button" id="companiesRefreshBtnSide" class="btn btn-theme-primary">Refresh</button>
         </div>
       </div>
     </aside>
 
     <main class="dashboard-main">
-      <section class="dashboard-hero glass-card aurora-card" id="companiesOverviewSection">
+      <section class="dashboard-hero glass-card aurora-card" id="companiesHeroSection">
         <div class="dashboard-hero-copy">
           <p class="dashboard-eyebrow">COMPANY PORTFOLIO</p>
-          <h1>See the health of every company in your ecosystem.</h1>
-          <p class="dashboard-hero-text">
-            Track your company records, statuses, and portfolio activity in one premium
-            control center connected directly to Firestore.
+          <h1 id="companiesHeroTitle">Loading companies...</h1>
+          <p class="dashboard-hero-text" id="companiesHeroText">
+            Connecting to Firestore company records.
           </p>
 
           <div class="dashboard-hero-actions">
-            <button type="button" id="companiesRefreshBtnTop" class="btn btn-theme-primary">Refresh Data</button>
-            <a href="/evaraos/dashboard.html" class="btn btn-theme-secondary">Back to Dashboard</a>
+            <button type="button" id="companiesRefreshBtnTop" class="btn btn-theme-primary">Refresh</button>
+            <button type="button" id="companiesSortBtn" class="btn btn-theme-secondary">Sort A–Z</button>
           </div>
         </div>
 
@@ -91,8 +84,8 @@
           </div>
 
           <div class="dashboard-hero-panel-copy">
-            <strong id="companiesHeroTitle">Loading companies...</strong>
-            <span id="companiesHeroText">Connecting to Firestore company records.</span>
+            <strong>Company Registry</strong>
+            <span>Track portfolio health and company record visibility.</span>
           </div>
         </div>
       </section>
@@ -101,27 +94,27 @@
         <div class="dashboard-section-head">
           <div>
             <p class="dashboard-section-kicker">Snapshot</p>
-            <h2>Company Overview</h2>
+            <h2>Portfolio Overview</h2>
           </div>
         </div>
 
         <div class="dashboard-stats-grid">
           <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Total Companies</p>
+            <p>Total</p>
             <h3 id="companiesStatTotal">0</h3>
-            <span id="companiesStatTotalMeta">Loading portfolio...</span>
+            <span id="companiesStatTotalMeta">Company records loaded</span>
           </article>
 
           <article class="dashboard-stat-card glass-card aurora-card">
             <p>Healthy</p>
             <h3 id="companiesStatHealthy">0</h3>
-            <span id="companiesStatHealthyMeta">Checking statuses...</span>
+            <span id="companiesStatHealthyMeta">Healthy or active companies</span>
           </article>
 
           <article class="dashboard-stat-card glass-card aurora-card">
             <p>Review</p>
             <h3 id="companiesStatReview">0</h3>
-            <span id="companiesStatReviewMeta">Checking statuses...</span>
+            <span id="companiesStatReviewMeta">Records needing review</span>
           </article>
 
           <article class="dashboard-stat-card glass-card aurora-card">
@@ -132,41 +125,41 @@
         </div>
       </section>
 
-      <section class="dashboard-panel glass-card aurora-card" id="companiesListSection">
-        <div class="dashboard-section-head">
-          <div>
-            <p class="dashboard-section-kicker">Directory</p>
-            <h2>Company List</h2>
-          </div>
-
-          <button type="button" id="companiesSortBtn" class="btn btn-theme-secondary">Sort A–Z</button>
-        </div>
-
-        <div class="dashboard-list" id="companiesList">
-          <article class="dashboard-list-item glass-card aurora-card">
+      <section class="dashboard-grid-2" id="companiesMainSection">
+        <section class="dashboard-panel glass-card aurora-card">
+          <div class="dashboard-section-head">
             <div>
-              <strong>Loading companies...</strong>
-              <span>Please wait while portfolio records are loaded.</span>
+              <p class="dashboard-section-kicker">Registry</p>
+              <h2>Companies</h2>
             </div>
-            <span class="dashboard-status-pill working">Loading</span>
-          </article>
-        </div>
-      </section>
-
-      <section class="dashboard-panel glass-card aurora-card" id="companiesFeedSection">
-        <div class="dashboard-section-head">
-          <div>
-            <p class="dashboard-section-kicker">Activity</p>
-            <h2>Portfolio Feed</h2>
           </div>
-        </div>
 
-        <div class="dashboard-feed" id="companiesFeed">
-          <article class="dashboard-feed-item glass-card aurora-card">
-            <strong>Loading portfolio feed...</strong>
-            <span>Recent company activity will appear here once records are loaded.</span>
-          </article>
-        </div>
+          <div class="dashboard-list" id="companiesList">
+            <article class="dashboard-list-item glass-card aurora-card">
+              <div>
+                <strong>Loading companies...</strong>
+                <span>Your company records will appear here.</span>
+              </div>
+              <span class="dashboard-status-pill working">Loading</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card aurora-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Activity</p>
+              <h2>Portfolio Feed</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-feed" id="companiesFeed">
+            <article class="dashboard-feed-item glass-card aurora-card">
+              <strong>Loading portfolio activity...</strong>
+              <span>Company activity will appear once records are available.</span>
+            </article>
+          </div>
+        </section>
       </section>
     </main>
   </div>
