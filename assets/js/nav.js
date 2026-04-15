@@ -1,12 +1,3 @@
-import {
-  auth,
-  logoutAndRedirect,
-  getSavedUserProfile,
-  applyUserToUi
-} from "./firebase.js";
-
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
 function themeMarkup() {
   return `
     <div class="menu-theme-block">
@@ -94,58 +85,18 @@ function publicNavMarkup() {
   `;
 }
 
-function dashboardNavMarkup() {
-  return `
-    <header class="dashboard-topbar universal-nav-shell">
-      <div class="dashboard-topbar-inner glass-shell aurora-card">
-        <a href="/evaraos/index.html" class="brand-link" aria-label="Go home">
-          <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos logo" class="brand-logo" />
-          <div class="brand-copy">
-            <strong>Evaraos Inc</strong>
-            <span>Executive Control Center</span>
-          </div>
-        </a>
-
-        <div class="nav-dropdown" data-nav-dropdown>
-          <button class="nav-hamburger aurora-card" type="button" data-nav-toggle aria-expanded="false" aria-label="Open menu">
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-          </button>
-
-          <div class="nav-dropdown-menu glass-card aurora-card" data-nav-menu>
-            <div class="menu-link" style="pointer-events:none; opacity:0.92;">
-              <strong id="dashboardProfileName">Owner Account</strong>
-            </div>
-            <div class="menu-link" style="pointer-events:none; opacity:0.72;">
-              <span id="dashboardProfileRole">Executive Access</span>
-            </div>
-            <div class="menu-divider"></div>
-            <a href="/evaraos/profile.html" class="menu-link" data-nav-link>Edit Profile</a>
-            <a href="/evaraos/settings.html" class="menu-link" data-nav-link>Settings</a>
-            <a href="/evaraos/security.html" class="menu-link" data-nav-link>Account Security</a>
-            <button type="button" id="logoutBtn" class="dashboard-menu-button">Logout</button>
-            <div class="menu-divider"></div>
-            ${themeMarkup()}
-          </div>
-        </div>
-      </div>
-    </header>
-  `;
-}
-
 function renderNav() {
   const mount = document.getElementById("universalNav");
   if (!mount || mount.dataset.rendered === "true") return;
 
-  const isDashboard = document.body.classList.contains("dashboard-body");
-  mount.innerHTML = isDashboard ? dashboardNavMarkup() : publicNavMarkup();
+  mount.innerHTML = publicNavMarkup();
   mount.dataset.rendered = "true";
 }
 
 function renderFooter() {
   if (document.querySelector(".site-footer")) return;
   document.body.insertAdjacentHTML("beforeend", footerMarkup());
+
   const year = document.getElementById("footerYear");
   if (year) year.textContent = String(new Date().getFullYear());
 }
@@ -227,47 +178,11 @@ function bindMenus() {
   document.addEventListener("click", () => closeMenus());
 }
 
-function bindLogout() {
-  const logoutBtn = document.getElementById("logoutBtn");
-  if (!logoutBtn || logoutBtn.dataset.bound === "true") return;
-  logoutBtn.dataset.bound = "true";
-
-  logoutBtn.addEventListener("click", async () => {
-    try {
-      await logoutAndRedirect("/evaraos/login.html");
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
-  });
-}
-
-function hydrateProfile() {
-  const profile = getSavedUserProfile();
-  if (profile) applyUserToUi(profile);
-}
-
-let watchingAuth = false;
-
-function watchAuth() {
-  if (watchingAuth) return;
-  watchingAuth = true;
-
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      hydrateProfile();
-      bindLogout();
-    }
-  });
-}
-
 function initNav() {
   renderNav();
   renderFooter();
   bindMenus();
   bindThemeArrows();
-  bindLogout();
-  hydrateProfile();
-  watchAuth();
 
   if (window.EvaraTheme?.bindThemeControls) {
     window.EvaraTheme.bindThemeControls();
