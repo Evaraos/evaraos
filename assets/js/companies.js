@@ -14,190 +14,240 @@ const companiesFeed = document.getElementById("companiesFeed");
 const companiesHeroTitle = document.getElementById("companiesHeroTitle");
 const companiesHeroText = document.getElementById("companiesHeroText");
 
-const statTotal = document.getElementById("companiesStatTotal");
-const statHealthy = document.getElementById("companiesStatHealthy");
-const statReview = document.getElementById("companiesStatReview");
-const statFiltered = document.getElementById("companiesStatFiltered");
+const companiesStatTotal = document.getElementById("companiesStatTotal");
+const companiesStatHealthy = document.getElementById("companiesStatHealthy");
+const companiesStatReview = document.getElementById("companiesStatReview");
+const companiesStatFiltered = document.getElementById("companiesStatFiltered");
 
-const statTotalMeta = document.getElementById("companiesStatTotalMeta");
-const statHealthyMeta = document.getElementById("companiesStatHealthyMeta");
-const statReviewMeta = document.getElementById("companiesStatReviewMeta");
-const statFilteredMeta = document.getElementById("companiesStatFilteredMeta");
+const companiesRefreshBtnTop = document.getElementById("companiesRefreshBtnTop");
+const companiesRefreshBtnSide = document.getElementById("companiesRefreshBtnSide");
+const companiesSortBtn = document.getElementById("companiesSortBtn");
 
-const refreshTop = document.getElementById("companiesRefreshBtnTop");
-const refreshSide = document.getElementById("companiesRefreshBtnSide");
-const sortBtn = document.getElementById("companiesSortBtn");
-
-let records = [];
-let filtered = [];
+let companiesData = [];
 let sortAsc = true;
 
-function normalize(v = "") {
-  return String(v || "").toLowerCase().trim();
+function normalizeStatus(value = "") {
+  return String(value || "").trim().toLowerCase();
 }
 
-function title(c) {
-  return c.name || c.companyName || "Untitled Company";
+function companyName(company = {}) {
+  return (
+    company.name ||
+    company.companyName ||
+    company.title ||
+    company.brand ||
+    "Untitled Company"
+  );
 }
 
-function subtitle(c) {
-  return c.description || c.location || c.category || "Company record from Firestore";
+function companyStatus(company = {}) {
+  return (
+    company.status ||
+    company.health ||
+    company.state ||
+    "active"
+  );
 }
 
-function prettyStatus(status = "") {
-  const value = String(status || "").trim();
-  return value ? value.charAt(0).toUpperCase() + value.slice(1) : "Active";
+function companyDescription(company = {}) {
+  return (
+    company.description ||
+    company.summary ||
+    company.notes ||
+    "No company summary provided."
+  );
 }
 
-function statusClass(status = "") {
-  const v = normalize(status);
-  if (["active", "healthy", "approved"].includes(v)) return "good";
-  if (["review", "pending"].includes(v)) return "alert";
+function companyPillClass(status = "") {
+  const value = normalizeStatus(status);
+  if (["active", "healthy", "live", "approved"].includes(value)) return "success";
+  if (["review", "pending", "draft"].includes(value)) return "working";
+  if (["inactive", "paused", "archived"].includes(value)) return "muted";
   return "working";
 }
 
-function renderStats() {
-  const healthy = records.filter((r) =>
-    ["active", "healthy", "approved"].includes(normalize(r.status || r.health || "active"))
-  ).length;
+function filteredCompanies() {
+  const term = String(companiesSearch?.value || "").trim().toLowerCase();
+  let rows = [...companiesData];
 
-  const review = records.filter((r) =>
-    ["review", "pending"].includes(normalize(r.status || r.health || ""))
-  ).length;
+  if (term) {
+    rows = rows.filter((company) => {
+      return [
+        companyName(company),
+        companyDescription(company),
+        companyStatus(company)
+      ].some((value) => String(value || "").toLowerCase().includes(term));
+    });
+  }
 
-  statTotal.textContent = String(records.length);
-  statHealthy.textContent = String(healthy);
-  statReview.textContent = String(review);
-  statFiltered.textContent = String(filtered.length);
+  rows.sort((a, b) => {
+    const left = companyName(a).toLowerCase();
+    const right = companyName(b).toLowerCase();
 
-  if (statTotalMeta) statTotalMeta.textContent = "Company records loaded";
-  if (statHealthyMeta) statHealthyMeta.textContent = "Healthy or active companies";
-  if (statReviewMeta) statReviewMeta.textContent = "Records needing review";
-  if (statFilteredMeta) statFilteredMeta.textContent = "Matches current search";
+    if (left < right) return sortAsc ? -1 : 1;
+    if (left > right) return sortAsc ? 1 : -1;
+    return 0;
+  });
+
+  return rows;
 }
 
-function renderList() {
-  if (!filtered.length) {
+function renderStats(rows) {
+  const healthy = rows.filter((row) =>
+    ["active", "healthy", "live", "approved"].includes(normalizeStatus(companyStatus(row)))
+  ).length;
+
+  const review = rows.filter((row) =>
+    ["review", "pending", "draft"].includes(normalizeStatus(companyStatus(row)))
+  ).length;
+
+  if (companiesStatTotal) companiesStatTotal.textContent = String(companiesData.length);
+  if (companiesStatHealthy) companiesStatHealthy.textContent = String(healthy);
+  if (companiesStatReview) companiesStatReview.textContent = String(review);
+  if (companiesStatFiltered) companiesStatFiltered.textContent = String(rows.length);
+
+  if (companiesHeroTitle) {
+    companiesHeroTitle.textContent = companiesData.length
+      ? `${companiesData.length} companies connected`
+      : "No companies found yet.";
+  }
+
+  if (companiesHeroText) {
+    companiesHeroText.textContent = companiesData.length
+      ? "Firestore company records are live and ready for review."
+      : "Create company records in Firestore to populate this page.";
+  }
+}
+
+function renderList(rows) {
+  if (!companiesList) return;
+
+  if (!rows.length) {
     companiesList.innerHTML = `
       <article class="dashboard-list-item glass-card aurora-card">
         <div>
           <strong>No companies found</strong>
-          <span>Try a different search or add company records to Firestore.</span>
+          <span>Try another search or add company records in Firestore.</span>
         </div>
-        <span class="dashboard-status-pill alert">Empty</span>
+        <span class="dashboard-status-pill muted">Empty</span>
       </article>
     `;
     return;
   }
 
-  companiesList.innerHTML = filtered.map((c) => `
-    <article class="dashboard-list-item glass-card aurora-card">
-      <div>
-        <strong>${title(c)}</strong>
-        <span>${subtitle(c)}</span>
-      </div>
-      <span class="dashboard-status-pill ${statusClass(c.status || c.health)}">
-        ${prettyStatus(c.status || c.health || "active")}
-      </span>
-    </article>
-  `).join("");
+  companiesList.innerHTML = rows.map((company) => {
+    const name = companyName(company);
+    const status = companyStatus(company);
+    const description = companyDescription(company);
+
+    return `
+      <article class="dashboard-list-item glass-card aurora-card">
+        <div>
+          <strong>${name}</strong>
+          <span>${description}</span>
+        </div>
+        <span class="dashboard-status-pill ${companyPillClass(status)}">${status}</span>
+      </article>
+    `;
+  }).join("");
 }
 
-function renderFeed() {
-  if (!records.length) {
+function renderFeed(rows) {
+  if (!companiesFeed) return;
+
+  if (!rows.length) {
     companiesFeed.innerHTML = `
       <article class="dashboard-feed-item glass-card aurora-card">
         <strong>No portfolio activity</strong>
-        <span>Company activity will appear once records are available.</span>
+        <span>Company activity will appear here once records exist.</span>
       </article>
     `;
     return;
   }
 
-  companiesFeed.innerHTML = records.slice(0, 5).map((c) => `
-    <article class="dashboard-feed-item glass-card aurora-card">
-      <strong>${title(c)}</strong>
-      <span>Status: ${prettyStatus(c.status || c.health || "active")} • ${subtitle(c)}</span>
-    </article>
-  `).join("");
+  companiesFeed.innerHTML = rows.slice(0, 6).map((company) => {
+    const name = companyName(company);
+    const status = companyStatus(company);
+
+    return `
+      <article class="dashboard-feed-item glass-card aurora-card">
+        <strong>${name}</strong>
+        <span>Status: ${status}</span>
+      </article>
+    `;
+  }).join("");
 }
 
-function applySearch() {
-  const q = normalize(companiesSearch?.value || "");
-
-  filtered = records.filter((c) =>
-    [title(c), subtitle(c), c.status, c.health, c.category]
-      .map((value) => normalize(value))
-      .join(" ")
-      .includes(q)
-  );
-
-  filtered.sort((a, b) =>
-    sortAsc
-      ? title(a).localeCompare(title(b))
-      : title(b).localeCompare(title(a))
-  );
-
-  renderStats();
-  renderList();
+function renderCompanies() {
+  const rows = filteredCompanies();
+  renderStats(rows);
+  renderList(rows);
+  renderFeed(rows);
 }
 
-async function load() {
-  companiesHeroTitle.textContent = "Loading companies...";
-  companiesHeroText.textContent = "Connecting to Firestore company records.";
-
+async function loadCompanies() {
   try {
     const snap = await getDocs(collection(db, "companies"));
-
-    records = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    filtered = [...records];
-
-    applySearch();
-    renderFeed();
-
-    companiesHeroTitle.textContent = "Portfolio connected";
-    companiesHeroText.textContent = `${records.length} companies loaded from Firestore.`;
+    companiesData = snap.docs.map((docSnap) => ({
+      id: docSnap.id,
+      ...docSnap.data()
+    }));
+    renderCompanies();
   } catch (error) {
-    console.error("Failed loading companies:", error);
+    console.error("Failed to load companies:", error);
 
-    companiesHeroTitle.textContent = "Load failed";
-    companiesHeroText.textContent = "Check Firestore rules and the companies collection.";
+    if (companiesList) {
+      companiesList.innerHTML = `
+        <article class="dashboard-list-item glass-card aurora-card">
+          <div>
+            <strong>Unable to load companies</strong>
+            <span>${error.message || "Firestore request failed."}</span>
+          </div>
+          <span class="dashboard-status-pill danger">Error</span>
+        </article>
+      `;
+    }
 
-    companiesList.innerHTML = `
-      <article class="dashboard-list-item glass-card aurora-card">
-        <div>
-          <strong>Unable to load companies</strong>
-          <span>${error.message || "Unknown Firestore error."}</span>
-        </div>
-        <span class="dashboard-status-pill alert">Error</span>
-      </article>
-    `;
-
-    companiesFeed.innerHTML = `
-      <article class="dashboard-feed-item glass-card aurora-card">
-        <strong>Portfolio feed unavailable</strong>
-        <span>${error.message || "Unknown Firestore error."}</span>
-      </article>
-    `;
+    if (companiesFeed) {
+      companiesFeed.innerHTML = `
+        <article class="dashboard-feed-item glass-card aurora-card">
+          <strong>Load failed</strong>
+          <span>${error.message || "Firestore request failed."}</span>
+        </article>
+      `;
+    }
   }
 }
 
-companiesSearch?.addEventListener("input", applySearch);
+function bindEvents() {
+  companiesSearch?.addEventListener("input", renderCompanies);
 
-sortBtn?.addEventListener("click", () => {
-  sortAsc = !sortAsc;
-  sortBtn.textContent = sortAsc ? "Sort A–Z" : "Sort Z–A";
-  applySearch();
-});
+  companiesRefreshBtnTop?.addEventListener("click", loadCompanies);
+  companiesRefreshBtnSide?.addEventListener("click", loadCompanies);
 
-refreshTop?.addEventListener("click", load);
-refreshSide?.addEventListener("click", load);
+  companiesSortBtn?.addEventListener("click", () => {
+    sortAsc = !sortAsc;
+    companiesSortBtn.textContent = sortAsc ? "Sort A–Z" : "Sort Z–A";
+    renderCompanies();
+  });
 
-onAuthStateChanged(auth, async (user) => {
+  document.querySelectorAll(".dashboard-nav-link").forEach((link) => {
+    link.addEventListener("click", () => {
+      document.querySelectorAll(".dashboard-nav-link").forEach((item) => {
+        item.classList.remove("active");
+      });
+      link.classList.add("active");
+    });
+  });
+}
+
+onAuthStateChanged(auth, (user) => {
   if (!user) {
     window.location.href = "/evaraos/login.html";
     return;
   }
 
-  await load();
+  loadCompanies();
 });
+
+document.addEventListener("DOMContentLoaded", bindEvents);
