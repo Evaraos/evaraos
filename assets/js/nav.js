@@ -40,6 +40,25 @@ function getThemeControlMarkup() {
   `;
 }
 
+function getFooterMarkup() {
+  return `
+    <footer class="site-footer glass-card aurora-card">
+      <div class="site-footer-inner">
+        <div class="site-footer-left">
+          <strong>© <span id="footerYear"></span> Evaraos Inc</strong>
+          <span>All rights reserved.</span>
+        </div>
+
+        <div class="site-footer-right">
+          <a href="https://instagram.com/evaraos" target="_blank" rel="noopener noreferrer">@evaraos</a>
+          <a href="https://x.com/evaraos" target="_blank" rel="noopener noreferrer">@evaraos</a>
+          <a href="https://tiktok.com/@evaraos" target="_blank" rel="noopener noreferrer">@evaraos</a>
+        </div>
+      </div>
+    </footer>
+  `;
+}
+
 function getLandingNavMarkup() {
   return `
     <header class="landing-header universal-nav-shell">
@@ -70,7 +89,7 @@ function getLandingNavMarkup() {
               <span class="hamburger-line"></span>
             </button>
 
-            <div class="nav-dropdown-menu glass-popover aurora-card" data-nav-menu>
+            <div class="nav-dropdown-menu glass-card aurora-card" data-nav-menu>
               <a href="/evaraos/index.html" class="menu-link" data-nav-link>Home</a>
               <a href="/evaraos/login.html" class="menu-link" data-nav-link>Login</a>
               <a href="/evaraos/signup.html" class="menu-link" data-nav-link>Sign Up</a>
@@ -135,7 +154,7 @@ function getDashboardNavMarkup() {
               <span class="dashboard-avatar" id="dashboardAvatar">G</span>
             </button>
 
-            <div class="nav-dropdown-menu glass-popover aurora-card dashboard-profile-dropdown" data-nav-menu>
+            <div class="nav-dropdown-menu glass-card aurora-card dashboard-profile-dropdown" data-nav-menu>
               <div class="dashboard-profile-card">
                 <div class="dashboard-profile-main">
                   <span class="dashboard-avatar dashboard-avatar-large" id="dashboardAvatarLarge">G</span>
@@ -178,6 +197,17 @@ function injectUniversalNavbar() {
   return true;
 }
 
+function injectFooter() {
+  if (document.querySelector(".site-footer")) return;
+
+  const footerWrap = document.createElement("div");
+  footerWrap.innerHTML = getFooterMarkup();
+  document.body.appendChild(footerWrap.firstElementChild);
+
+  const year = document.getElementById("footerYear");
+  if (year) year.textContent = String(new Date().getFullYear());
+}
+
 function closeAllNavDropdowns(except = null) {
   document.querySelectorAll("[data-nav-dropdown]").forEach((dropdown) => {
     if (except && dropdown === except) return;
@@ -186,6 +216,14 @@ function closeAllNavDropdowns(except = null) {
     const toggle = dropdown.querySelector("[data-nav-toggle]");
     if (toggle) toggle.setAttribute("aria-expanded", "false");
   });
+}
+
+function pulse(el) {
+  if (!el) return;
+  el.classList.remove("active-glow");
+  void el.offsetWidth;
+  el.classList.add("active-glow");
+  setTimeout(() => el.classList.remove("active-glow"), 260);
 }
 
 function toggleNavDropdown(dropdown) {
@@ -198,7 +236,10 @@ function toggleNavDropdown(dropdown) {
 
   if (!isOpen) {
     dropdown.classList.add("open");
-    if (toggle) toggle.setAttribute("aria-expanded", "true");
+    if (toggle) {
+      toggle.setAttribute("aria-expanded", "true");
+      pulse(toggle);
+    }
 
     if (window.EvaraTheme?.syncThemeUI) {
       window.EvaraTheme.syncThemeUI();
@@ -249,7 +290,7 @@ function bindNavDropdowns() {
       event.stopPropagation();
     });
 
-    menu.querySelectorAll("a").forEach((item) => {
+    menu.querySelectorAll("a, button").forEach((item) => {
       item.addEventListener("click", () => {
         closeAllNavDropdowns();
       });
@@ -291,8 +332,7 @@ function bindDashboardSidebar() {
 
     const isOpen = sidebar.classList.toggle("open");
     sidebarToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
-    sidebarToggle.classList.add("active-glow");
-    setTimeout(() => sidebarToggle.classList.remove("active-glow"), 220);
+    pulse(sidebarToggle);
   });
 
   document.addEventListener("click", (event) => {
@@ -327,7 +367,12 @@ function syncUserUiFromState() {
   }
 }
 
+let authWatchBound = false;
+
 function watchAuthUi() {
+  if (authWatchBound) return;
+  authWatchBound = true;
+
   onAuthStateChanged(auth, (user) => {
     if (user) {
       syncUserUiFromState();
@@ -338,6 +383,7 @@ function watchAuthUi() {
 
 function initNav() {
   injectUniversalNavbar();
+  injectFooter();
   bindNavDropdowns();
   bindGlobalNavClose();
   bindDashboardSidebar();
