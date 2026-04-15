@@ -77,22 +77,17 @@ function getVisibleLinks() {
     { page: "qa.html", label: "QA" }
   ];
 
-  if (role === "owner") {
-    return [...common, ...ownerOnly];
-  }
-
-  return [...common, ...guestOnly];
+  return role === "owner" ? [...common, ...ownerOnly] : [...common, ...guestOnly];
 }
 
 function navLink(page, label) {
   const href = buildHref(page);
   const active = isCurrentPage(page) ? " active" : "";
-  return `<a href="${href}" class="menu-link${active}" data-menu-link>${label}</a>`;
+  return `<a href="${href}" class="menu-link${active}" data-menu-link="${href}">${label}</a>`;
 }
 
 function getTheme() {
-  const stored = localStorage.getItem("evaraos-theme");
-  return stored || "dark";
+  return localStorage.getItem("evaraos-theme") || "dark";
 }
 
 function setTheme(theme) {
@@ -104,16 +99,13 @@ function setTheme(theme) {
 function syncQuickUi() {
   const theme = getTheme();
   const isLight = theme.includes("light");
-
   document.querySelectorAll("[data-theme-quick-label]").forEach((el) => {
     el.textContent = isLight ? "Light mode" : "Dark mode";
   });
 }
 
 function universalNavMarkup() {
-  const links = getVisibleLinks()
-    .map((item) => navLink(item.page, item.label))
-    .join("");
+  const links = getVisibleLinks().map((item) => navLink(item.page, item.label)).join("");
 
   return `
     <header class="landing-header universal-nav-shell">
@@ -161,7 +153,7 @@ function universalNavMarkup() {
                 </span>
               </button>
 
-              <a href="${buildHref("settings.html")}" class="menu-link" data-menu-link>
+              <a href="${buildHref("settings.html")}" class="menu-link" data-menu-link="${buildHref("settings.html")}">
                 Advanced settings
               </a>
             </div>
@@ -217,18 +209,28 @@ function pulseShineGlow(el) {
   activateCardGlow(el);
 }
 
+function closeMenu() {
+  const dropdown = document.getElementById("siteNavDropdown");
+  const toggle = document.getElementById("siteNavToggle");
+  if (!dropdown || !toggle) return;
+  dropdown.classList.remove("open");
+  toggle.setAttribute("aria-expanded", "false");
+}
+
 function bindNavLinks() {
   document.querySelectorAll("[data-menu-link]").forEach((link) => {
     link.addEventListener("click", (event) => {
-      const href = link.getAttribute("href");
-      if (!href) return;
-
       event.preventDefault();
       event.stopPropagation();
+
+      const href = link.getAttribute("data-menu-link");
+      if (!href) return;
+
       pulseShineGlow(link);
+      closeMenu();
 
       setTimeout(() => {
-        window.location.assign(href);
+        window.location.href = href;
       }, 120);
     });
   });
@@ -236,23 +238,25 @@ function bindNavLinks() {
 
 function bindQuickControls() {
   const quickThemeToggle = document.getElementById("quickThemeToggle");
-  if (quickThemeToggle) {
-    quickThemeToggle.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const current = getTheme();
-      const next = current.includes("light") ? "dark" : "light";
-      setTheme(next);
-      pulseShineGlow(quickThemeToggle);
-    });
-  }
+  if (!quickThemeToggle) return;
+
+  quickThemeToggle.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const current = getTheme();
+    const next = current.includes("light") ? "dark" : "light";
+    setTheme(next);
+    pulseShineGlow(quickThemeToggle);
+  });
 }
 
 function bindNav() {
   const dropdown = document.getElementById("siteNavDropdown");
   const toggle = document.getElementById("siteNavToggle");
+  const menu = document.getElementById("siteNavMenu");
 
-  if (!dropdown || !toggle) return;
+  if (!dropdown || !toggle || !menu) return;
 
   toggle.addEventListener("click", (event) => {
     event.preventDefault();
@@ -264,27 +268,27 @@ function bindNav() {
     pulseShineGlow(toggle);
   });
 
+  menu.addEventListener("click", (event) => {
+    event.stopPropagation();
+  });
+
   document.addEventListener("click", (event) => {
     if (!dropdown.contains(event.target)) {
-      dropdown.classList.remove("open");
-      toggle.setAttribute("aria-expanded", "false");
+      closeMenu();
     }
   });
 }
 
 function bindInteractiveShine() {
-  document
-    .querySelectorAll(".btn, .feature-card, .nav-hamburger, .menu-link, .quick-chip")
-    .forEach((el) => {
-      el.addEventListener("click", () => {
-        pulseShineGlow(el);
-      });
+  document.querySelectorAll(".btn, .feature-card, .nav-hamburger, .menu-link, .quick-chip").forEach((el) => {
+    el.addEventListener("click", () => {
+      pulseShineGlow(el);
     });
+  });
 }
 
 function initNav() {
   document.documentElement.setAttribute("data-theme", getTheme());
-
   renderNav();
   renderFooter();
   bindNav();
