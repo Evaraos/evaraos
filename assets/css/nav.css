@@ -28,11 +28,11 @@
 }
 
 .brand-logo {
-  width: 54px;
-  height: 54px;
+  width: 58px;
+  height: 58px;
   object-fit: contain;
   filter:
-    drop-shadow(0 0 10px rgba(var(--theme-glow-rgb), 0.24))
+    drop-shadow(0 0 12px rgba(var(--theme-glow-rgb), 0.24))
     drop-shadow(0 0 22px rgba(var(--theme-glow-rgb), 0.12));
 }
 
@@ -57,9 +57,9 @@
 }
 
 .nav-hamburger {
-  width: 60px;
-  height: 60px;
-  border-radius: 18px;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
   border: 1px solid rgba(var(--theme-glow-rgb), 0.16);
   background:
     linear-gradient(180deg, rgba(255,255,255,0.11), rgba(255,255,255,0.05));
@@ -67,8 +67,8 @@
   place-items: center;
   cursor: pointer;
   box-shadow:
-    0 10px 24px rgba(0,0,0,0.18),
-    0 0 16px rgba(var(--theme-glow-rgb), 0.08),
+    0 8px 20px rgba(0,0,0,0.18),
+    0 0 14px rgba(var(--theme-glow-rgb), 0.08),
     inset 0 1px 0 rgba(255,255,255,0.08);
   transition:
     transform 0.18s ease,
@@ -83,19 +83,19 @@
   transform: translateY(-1px) scale(1.02);
   box-shadow:
     0 0 0 8px rgba(var(--theme-glow-rgb), 0.08),
-    0 14px 30px rgba(0,0,0,0.22),
-    0 0 22px rgba(var(--theme-glow-rgb), 0.16),
+    0 12px 24px rgba(0,0,0,0.22),
+    0 0 18px rgba(var(--theme-glow-rgb), 0.16),
     inset 0 1px 0 rgba(255,255,255,0.08);
   border-color: rgba(var(--theme-glow-rgb), 0.24);
 }
 
 .hamburger-line {
-  width: 22px;
-  height: 2.6px;
-  margin: 3.4px 0;
+  width: 18px;
+  height: 2.4px;
+  margin: 2.8px 0;
   border-radius: 999px;
   background: linear-gradient(90deg, rgba(255,255,255,0.95), rgba(var(--theme-soft-rgb), 0.95));
-  box-shadow: 0 0 12px rgba(var(--theme-glow-rgb), 0.14);
+  box-shadow: 0 0 10px rgba(var(--theme-glow-rgb), 0.14);
 }
 
 html[data-theme="light"] .hamburger-line,
@@ -360,8 +360,8 @@ html[data-theme$="-light"] .menu-divider {
   }
 
   .brand-logo {
-    width: 46px;
-    height: 46px;
+    width: 48px;
+    height: 48px;
   }
 
   .brand-copy strong {
@@ -373,13 +373,13 @@ html[data-theme$="-light"] .menu-divider {
   }
 
   .nav-hamburger {
-    width: 54px;
-    height: 54px;
-    border-radius: 16px;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
   }
 
   .hamburger-line {
-    width: 20px;
+    width: 17px;
   }
 
   .nav-dropdown-menu {
