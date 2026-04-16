@@ -96,12 +96,62 @@ function setTheme(theme) {
   syncQuickUi();
 }
 
+function getBorderFx() {
+  return localStorage.getItem("evaraos-border-fx") || "theme";
+}
+
+function setBorderFx(mode) {
+  localStorage.setItem("evaraos-border-fx", mode);
+  document.documentElement.setAttribute("data-border-fx", mode);
+  syncQuickUi();
+}
+
 function syncQuickUi() {
   const theme = getTheme();
   const isLight = theme.includes("light");
+
   document.querySelectorAll("[data-theme-quick-label]").forEach((el) => {
     el.textContent = isLight ? "Light mode" : "Dark mode";
   });
+
+  document.querySelectorAll("[data-fx-quick-label]").forEach((el) => {
+    const fx = getBorderFx();
+    el.textContent = fx.charAt(0).toUpperCase() + fx.slice(1);
+  });
+
+  document.querySelectorAll("[data-fx-pill]").forEach((el) => {
+    el.classList.toggle("active", el.getAttribute("data-fx-pill") === getBorderFx());
+  });
+}
+
+function themePaletteMarkup() {
+  return `
+    <div class="theme-palette-row">
+      <div class="theme-row-title">Theme color</div>
+      <div class="theme-bubbles-scroll">
+        <button class="theme-bubble light" data-theme-bubble="dark" aria-label="Neutral dark"></button>
+        <button class="theme-bubble blue" data-theme-bubble="blue-dark" aria-label="Blue dark"></button>
+        <button class="theme-bubble red" data-theme-bubble="red-dark" aria-label="Red dark"></button>
+        <button class="theme-bubble pink" data-theme-bubble="pink-dark" aria-label="Pink dark"></button>
+        <button class="theme-bubble green" data-theme-bubble="green-dark" aria-label="Green dark"></button>
+        <button class="theme-bubble purple" data-theme-bubble="purple-dark" aria-label="Purple dark"></button>
+        <button class="theme-bubble yellow" data-theme-bubble="yellow-dark" aria-label="Yellow dark"></button>
+      </div>
+    </div>
+  `;
+}
+
+function borderFxMarkup() {
+  return `
+    <div class="border-fx-row">
+      <div class="fx-row-title">Border beam</div>
+      <div class="fx-pills">
+        <button class="fx-pill" data-fx-pill="off">Off</button>
+        <button class="fx-pill" data-fx-pill="theme">Theme</button>
+        <button class="fx-pill" data-fx-pill="rainbow">Rainbow</button>
+      </div>
+    </div>
+  `;
 }
 
 function universalNavMarkup() {
@@ -154,6 +204,16 @@ function universalNavMarkup() {
                   <span data-theme-quick-label>Dark mode</span>
                 </span>
               </button>
+
+              <button type="button" class="quick-chip aurora-card" id="quickFxToggle">
+                <span class="quick-chip-text">
+                  <span class="quick-chip-dot"></span>
+                  <span data-fx-quick-label>Theme</span>
+                </span>
+              </button>
+
+              ${themePaletteMarkup()}
+              ${borderFxMarkup()}
 
               <a href="${buildHref("settings.html")}" class="menu-link" data-menu-link="${buildHref("settings.html")}">
                 Advanced settings
@@ -238,18 +298,70 @@ function bindNavLinks() {
   });
 }
 
-function bindQuickControls() {
+function bindThemeControls() {
   const quickThemeToggle = document.getElementById("quickThemeToggle");
-  if (!quickThemeToggle) return;
+  if (quickThemeToggle) {
+    quickThemeToggle.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
 
-  quickThemeToggle.addEventListener("click", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
+      const current = getTheme();
+      const next = current.includes("light")
+        ? current.replace("light", "dark")
+        : current.replace("dark", "light");
 
-    const current = getTheme();
-    const next = current.includes("light") ? "dark" : "light";
-    setTheme(next);
-    pulseShineGlow(quickThemeToggle);
+      setTheme(next);
+      pulseShineGlow(quickThemeToggle);
+    });
+  }
+
+  document.querySelectorAll("[data-theme-bubble]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const target = button.getAttribute("data-theme-bubble");
+      if (!target) return;
+
+      const current = getTheme();
+      const next = current.includes("light")
+        ? target.replace("-dark", "-light")
+        : target;
+
+      setTheme(next);
+
+      document.querySelectorAll("[data-theme-bubble]").forEach((b) => b.classList.remove("active"));
+      button.classList.add("active");
+      pulseShineGlow(button);
+    });
+  });
+}
+
+function bindBorderFxControls() {
+  const quickFxToggle = document.getElementById("quickFxToggle");
+  if (quickFxToggle) {
+    quickFxToggle.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const current = getBorderFx();
+      const next = current === "off" ? "theme" : current === "theme" ? "rainbow" : "off";
+      setBorderFx(next);
+      pulseShineGlow(quickFxToggle);
+    });
+  }
+
+  document.querySelectorAll("[data-fx-pill]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const fx = button.getAttribute("data-fx-pill");
+      if (!fx) return;
+
+      setBorderFx(fx);
+      pulseShineGlow(button);
+    });
   });
 }
 
@@ -287,7 +399,7 @@ function bindNav() {
 }
 
 function bindInteractiveShine() {
-  document.querySelectorAll(".btn, .feature-card, .nav-hamburger, .menu-link, .quick-chip").forEach((el) => {
+  document.querySelectorAll(".btn, .feature-card, .nav-hamburger, .menu-link, .quick-chip, .fx-pill, .theme-bubble").forEach((el) => {
     el.addEventListener("click", () => {
       pulseShineGlow(el);
     });
@@ -296,13 +408,15 @@ function bindInteractiveShine() {
 
 function initNav() {
   document.documentElement.setAttribute("data-theme", getTheme());
+  document.documentElement.setAttribute("data-border-fx", getBorderFx());
+
   renderNav();
   renderFooter();
   bindNav();
   bindNavLinks();
-  bindQuickControls();
+  bindThemeControls();
+  bindBorderFxControls();
   bindInteractiveShine();
   syncQuickUi();
 }
-
 document.addEventListener("DOMContentLoaded", initNav);
