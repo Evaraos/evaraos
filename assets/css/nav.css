@@ -34,7 +34,7 @@ body.nav-menu-open #universalNavRoot {
 }
 
 .eva-nav-shell.compact {
-  width: 154px;
+  width: 118px;
   left: auto;
   right: 12px;
   transform: none;
@@ -52,13 +52,12 @@ body.nav-menu-open #universalNavRoot {
   transition:
     min-height 0.26s ease,
     padding 0.26s ease,
-    border-radius 0.26s ease,
     width 0.26s ease;
 }
 
 .eva-nav-shell.compact .eva-nav-pill {
-  min-height: 42px;
-  padding: 5px 8px;
+  min-height: 38px;
+  padding: 4px 8px;
   justify-content: center;
 }
 
@@ -74,7 +73,7 @@ body.nav-menu-open #universalNavRoot {
 .eva-nav-shell.compact .eva-brand {
   justify-content: center;
   gap: 0;
-  padding-right: 24px;
+  padding-right: 20px;
 }
 
 .eva-logo {
@@ -86,8 +85,8 @@ body.nav-menu-open #universalNavRoot {
 }
 
 .eva-nav-shell.compact .eva-logo {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 .eva-brand-copy {
@@ -127,7 +126,7 @@ html[data-theme="light"] .eva-brand-copy span {
 
 .eva-nav-shell.compact .eva-menu-zone {
   position: absolute;
-  right: 7px;
+  right: 6px;
 }
 
 .eva-menu-btn {
@@ -148,8 +147,8 @@ html[data-theme="light"] .eva-brand-copy span {
 }
 
 .eva-nav-shell.compact .eva-menu-btn {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
 }
 
 html[data-theme="light"] .eva-menu-btn {
