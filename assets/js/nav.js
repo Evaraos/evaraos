@@ -78,95 +78,97 @@
   function navLink(page, label) {
     const href = buildHref(page);
     const active = isCurrentPage(page) ? " active" : "";
-    return `<a href="${href}" class="menu-link${active}" data-menu-link="${href}" data-label="${label.toLowerCase()}">${label}</a>`;
+    return `<a href="${href}" class="eva-link${active}" data-menu-link="${href}" data-label="${label.toLowerCase()}">${label}</a>`;
   }
 
   function renderNav() {
-    const mount = document.getElementById("universalNav");
+    const mount = document.getElementById("universalNavRoot");
     if (!mount) return;
 
     const links = getVisibleLinks().map((item) => navLink(item.page, item.label)).join("");
 
     mount.innerHTML = `
-      <header class="landing-header universal-nav-shell" id="floatingNavShell">
-        <div class="landing-header-inner glass-shell">
-          <a href="${buildHref("index.html")}" class="brand-link" aria-label="Go home">
-            <img
-              src="${getBasePath()}/assets/img/evaraos_logo.png"
-              alt="Evaraos logo"
-              class="brand-logo"
-              onerror="this.onerror=null;this.src='${getBasePath()}/assets/logo.png';"
-            />
-            <div class="brand-copy">
-              <strong>Evaraos Inc</strong>
-              <span>Subsidiaries Allocation SaaS</span>
-            </div>
-          </a>
+      <div class="eva-nav-layer">
+        <header class="eva-nav-shell" id="evaNavShell">
+          <div class="eva-nav-pill glass-shell">
+            <a href="${buildHref("index.html")}" class="eva-brand" aria-label="Go home">
+              <img
+                src="${getBasePath()}/assets/img/evaraos_logo.png"
+                alt="Evaraos logo"
+                class="eva-logo"
+                onerror="this.onerror=null;this.src='${getBasePath()}/assets/logo.png';"
+              />
+              <div class="eva-brand-copy">
+                <strong>Evaraos Inc</strong>
+                <span>Subsidiaries Allocation SaaS</span>
+              </div>
+            </a>
 
-          <div class="nav-dropdown" id="siteNavDropdown">
-            <button
-              class="nav-hamburger"
-              type="button"
-              id="siteNavToggle"
-              aria-expanded="false"
-              aria-label="Open menu"
-            >
-              <span class="hamburger-orb">
-                <span class="hamburger-bar top"></span>
-                <span class="hamburger-bar mid"></span>
-                <span class="hamburger-bar bot"></span>
-              </span>
-            </button>
+            <div class="eva-menu-zone" id="evaMenuZone">
+              <button
+                class="eva-menu-btn"
+                type="button"
+                id="evaMenuBtn"
+                aria-expanded="false"
+                aria-label="Open menu"
+              >
+                <span class="eva-burger">
+                  <span class="eva-burger-line top"></span>
+                  <span class="eva-burger-line mid"></span>
+                  <span class="eva-burger-line bot"></span>
+                </span>
+              </button>
 
-            <div class="nav-menu-backdrop" id="siteNavBackdrop"></div>
+              <div class="eva-backdrop" id="evaBackdrop"></div>
 
-            <div class="nav-dropdown-menu" id="siteNavMenu">
-              <label class="menu-search">
-                <span>⌕</span>
-                <input type="text" id="navSearchInput" placeholder="Search pages" />
-              </label>
+              <div class="eva-menu" id="evaMenu">
+                <label class="eva-search">
+                  <span>⌕</span>
+                  <input type="text" id="evaSearchInput" placeholder="Search pages" />
+                </label>
 
-              <nav class="nav-dropdown-links" id="navLinksList" aria-label="Main navigation">
-                ${links}
-              </nav>
+                <nav class="eva-links" id="evaLinks" aria-label="Main navigation">
+                  ${links}
+                </nav>
 
-              <div class="menu-divider"></div>
+                <div class="eva-divider"></div>
 
-              <div class="menu-quick-row">
-                <button type="button" class="quick-chip" id="quickThemeToggle">
-                  <span class="quick-chip-text">
-                    <span class="quick-chip-dot"></span>
-                    <span data-theme-label>Dark mode</span>
-                  </span>
-                </button>
+                <div class="eva-quick">
+                  <button type="button" class="eva-chip" id="evaThemeToggle">
+                    <span class="eva-chip-row">
+                      <span class="eva-chip-dot"></span>
+                      <span data-theme-label>Dark mode</span>
+                    </span>
+                  </button>
 
-                <a href="${buildHref("settings.html")}" class="menu-link" data-menu-link="${buildHref("settings.html")}" data-label="advanced settings">
-                  Advanced settings
-                </a>
+                  <a href="${buildHref("settings.html")}" class="eva-link" data-menu-link="${buildHref("settings.html")}" data-label="advanced settings">
+                    Advanced settings
+                  </a>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
+      </div>
     `;
   }
 
   function openMenu() {
-    const dropdown = document.getElementById("siteNavDropdown");
-    const toggle = document.getElementById("siteNavToggle");
+    const zone = document.getElementById("evaMenuZone");
+    const btn = document.getElementById("evaMenuBtn");
     document.body.classList.add("nav-menu-open");
-    if (!dropdown || !toggle) return;
-    dropdown.classList.add("open");
-    toggle.setAttribute("aria-expanded", "true");
+    if (!zone || !btn) return;
+    zone.classList.add("open");
+    btn.setAttribute("aria-expanded", "true");
   }
 
   function closeMenu() {
-    const dropdown = document.getElementById("siteNavDropdown");
-    const toggle = document.getElementById("siteNavToggle");
+    const zone = document.getElementById("evaMenuZone");
+    const btn = document.getElementById("evaMenuBtn");
     document.body.classList.remove("nav-menu-open");
-    if (!dropdown || !toggle) return;
-    dropdown.classList.remove("open");
-    toggle.setAttribute("aria-expanded", "false");
+    if (!zone || !btn) return;
+    zone.classList.remove("open");
+    btn.setAttribute("aria-expanded", "false");
   }
 
   function bindLinks() {
@@ -183,7 +185,7 @@
   }
 
   function bindThemeToggle() {
-    const toggle = document.getElementById("quickThemeToggle");
+    const toggle = document.getElementById("evaThemeToggle");
     if (!toggle) return;
 
     toggle.addEventListener("click", (event) => {
@@ -194,8 +196,8 @@
   }
 
   function bindSearch() {
-    const input = document.getElementById("navSearchInput");
-    const links = Array.from(document.querySelectorAll("#navLinksList .menu-link"));
+    const input = document.getElementById("evaSearchInput");
+    const links = Array.from(document.querySelectorAll("#evaLinks .eva-link"));
     if (!input) return;
 
     input.addEventListener("input", () => {
@@ -208,20 +210,20 @@
   }
 
   function bindMenu() {
-    const shell = document.getElementById("floatingNavShell");
-    const dropdown = document.getElementById("siteNavDropdown");
-    const toggle = document.getElementById("siteNavToggle");
-    const menu = document.getElementById("siteNavMenu");
-    const backdrop = document.getElementById("siteNavBackdrop");
+    const shell = document.getElementById("evaNavShell");
+    const zone = document.getElementById("evaMenuZone");
+    const btn = document.getElementById("evaMenuBtn");
+    const menu = document.getElementById("evaMenu");
+    const backdrop = document.getElementById("evaBackdrop");
 
-    if (!shell || !dropdown || !toggle || !menu || !backdrop) return;
+    if (!shell || !zone || !btn || !menu || !backdrop) return;
 
-    toggle.addEventListener("click", (event) => {
+    btn.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      shell.classList.remove("nav-compact");
+      shell.classList.remove("compact");
 
-      if (dropdown.classList.contains("open")) {
+      if (zone.classList.contains("open")) {
         closeMenu();
       } else {
         openMenu();
@@ -237,18 +239,18 @@
     });
 
     shell.addEventListener("click", () => {
-      shell.classList.remove("nav-compact");
+      shell.classList.remove("compact");
     });
 
     document.addEventListener("click", (event) => {
-      if (!dropdown.contains(event.target)) {
+      if (!zone.contains(event.target)) {
         closeMenu();
       }
     });
   }
 
   function bindScrollCompact() {
-    const shell = document.getElementById("floatingNavShell");
+    const shell = document.getElementById("evaNavShell");
     if (!shell) return;
 
     let lastY = window.scrollY;
@@ -256,29 +258,25 @@
 
     function update() {
       const y = window.scrollY;
-      const goingDown = y > lastY + 2;
-      const goingUp = y < lastY - 2;
+      const goingDown = y > lastY;
+      const goingUp = y < lastY;
 
-      if (goingDown && y > 80) {
-        shell.classList.add("nav-compact");
-      } else if (goingUp || y < 36) {
-        shell.classList.remove("nav-compact");
+      if (goingDown && y > 70) {
+        shell.classList.add("compact");
+      } else if (goingUp || y < 24) {
+        shell.classList.remove("compact");
       }
 
       lastY = y;
       ticking = false;
     }
 
-    window.addEventListener(
-      "scroll",
-      () => {
-        if (!ticking) {
-          window.requestAnimationFrame(update);
-          ticking = true;
-        }
-      },
-      { passive: true }
-    );
+    window.addEventListener("scroll", () => {
+      if (!ticking) {
+        window.requestAnimationFrame(update);
+        ticking = true;
+      }
+    }, { passive: true });
   }
 
   function init() {
