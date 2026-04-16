@@ -233,14 +233,7 @@ html[data-theme="light"] .hero-subtitle {
   transform: scale(0.985);
 }
 
-/* neutral Apple glass default */
-.btn-apple,
-.btn-apple-primary,
-.btn-apple-secondary,
-.btn-theme-primary,
-.btn-theme-secondary,
-.btn-glass,
-.premium-red-btn {
+.btn-apple {
   background:
     linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08));
   color: #fff;
@@ -249,14 +242,8 @@ html[data-theme="light"] .hero-subtitle {
     inset 0 1px 0 rgba(255,255,255,0.18);
 }
 
-html[data-theme="light"] .btn-apple,
-html[data-theme="light"] .btn-apple-primary,
-html[data-theme="light"] .btn-apple-secondary,
-html[data-theme="light"] .btn-theme-primary,
-html[data-theme="light"] .btn-theme-secondary,
-html[data-theme="light"] .btn-glass,
-html[data-theme="light"] .premium-red-btn,
-html[data-theme="light"] .btn {
+html[data-theme="light"] .btn,
+html[data-theme="light"] .btn-apple {
   background:
     linear-gradient(180deg, rgba(255,255,255,0.97), rgba(255,255,255,0.82));
   color: #14251f;
