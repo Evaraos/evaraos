@@ -83,7 +83,7 @@ function getVisibleLinks() {
 function navLink(page, label) {
   const href = buildHref(page);
   const active = isCurrentPage(page) ? " active" : "";
-  return `<a href="${href}" class="menu-link${active}" data-menu-link="${href}">${label}</a>`;
+  return `<a href="${href}" class="menu-link${active}" data-menu-link="${href}" data-menu-label="${label.toLowerCase()}">${label}</a>`;
 }
 
 function getTheme() {
@@ -96,8 +96,18 @@ function setTheme(theme) {
   syncQuickUi();
 }
 
+function getThemeProfile() {
+  return localStorage.getItem("evaraos-theme-profile") || "1";
+}
+
+function setThemeProfile(profile) {
+  localStorage.setItem("evaraos-theme-profile", profile);
+  document.documentElement.setAttribute("data-theme-profile", profile);
+  syncQuickUi();
+}
+
 function getBorderFx() {
-  return localStorage.getItem("evaraos-border-fx") || "theme";
+  return localStorage.getItem("evaraos-border-fx") || "custom";
 }
 
 function setBorderFx(mode) {
@@ -112,6 +122,11 @@ function syncQuickUi() {
 
   document.querySelectorAll("[data-theme-quick-label]").forEach((el) => {
     el.textContent = isLight ? "Light mode" : "Dark mode";
+  });
+
+  const profile = getThemeProfile();
+  document.querySelectorAll("[data-theme-bubble]").forEach((el) => {
+    el.classList.toggle("active", el.getAttribute("data-theme-bubble") === profile);
   });
 
   const fx = getBorderFx();
@@ -129,13 +144,10 @@ function themePaletteMarkup() {
     <div class="theme-palette-row">
       <div class="theme-row-title">Theme color</div>
       <div class="theme-bubbles-scroll">
-        <button class="theme-bubble light" data-theme-bubble="dark" aria-label="Neutral dark"></button>
-        <button class="theme-bubble blue" data-theme-bubble="blue-dark" aria-label="Blue dark"></button>
-        <button class="theme-bubble red" data-theme-bubble="red-dark" aria-label="Red dark"></button>
-        <button class="theme-bubble pink" data-theme-bubble="pink-dark" aria-label="Pink dark"></button>
-        <button class="theme-bubble green" data-theme-bubble="green-dark" aria-label="Green dark"></button>
-        <button class="theme-bubble purple" data-theme-bubble="purple-dark" aria-label="Purple dark"></button>
-        <button class="theme-bubble yellow" data-theme-bubble="yellow-dark" aria-label="Yellow dark"></button>
+        <button class="theme-bubble light" data-theme-bubble="1" aria-label="Theme 1"></button>
+        <button class="theme-bubble blue" data-theme-bubble="2" aria-label="Theme 2"></button>
+        <button class="theme-bubble red" data-theme-bubble="3" aria-label="Theme 3"></button>
+        <button class="theme-bubble green" data-theme-bubble="4" aria-label="Theme 4"></button>
       </div>
     </div>
   `;
@@ -147,8 +159,8 @@ function borderFxMarkup() {
       <div class="fx-row-title">Border beam</div>
       <div class="fx-pills">
         <button class="fx-pill" data-fx-pill="off">Off</button>
-        <button class="fx-pill" data-fx-pill="theme">Theme</button>
         <button class="fx-pill" data-fx-pill="rainbow">Rainbow</button>
+        <button class="fx-pill" data-fx-pill="custom">Custom</button>
       </div>
     </div>
   `;
@@ -158,8 +170,8 @@ function universalNavMarkup() {
   const links = getVisibleLinks().map((item) => navLink(item.page, item.label)).join("");
 
   return `
-    <header class="landing-header universal-nav-shell">
-      <div class="landing-header-inner glass-shell">
+    <header class="landing-header universal-nav-shell" id="universalNavShell">
+      <div class="landing-header-inner glass-shell" id="universalNavInner">
         <a href="${buildHref("index.html")}" class="brand-link" aria-label="Go home">
           <img
             src="${getBasePath()}/assets/img/evaraos_logo.png"
@@ -191,7 +203,14 @@ function universalNavMarkup() {
           <div class="nav-menu-backdrop" id="siteNavBackdrop"></div>
 
           <div class="nav-dropdown-menu" id="siteNavMenu">
-            <nav class="nav-dropdown-links" aria-label="Main navigation">
+            <label class="menu-search">
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="currentColor" d="M10 4a6 6 0 1 0 3.874 10.582l4.272 4.272 1.414-1.414-4.272-4.272A6 6 0 0 0 10 4m0 2a4 4 0 1 1 0 8a4 4 0 0 1 0-8"/>
+              </svg>
+              <input type="search" id="menuSearchInput" placeholder="Search pages" />
+            </label>
+
+            <nav class="nav-dropdown-links" id="menuLinksWrap" aria-label="Main navigation">
               ${links}
             </nav>
 
@@ -208,14 +227,14 @@ function universalNavMarkup() {
               <button type="button" class="quick-chip" id="quickFxToggle">
                 <span class="quick-chip-text">
                   <span class="quick-chip-dot"></span>
-                  <span data-fx-quick-label>Theme</span>
+                  <span data-fx-quick-label>Custom</span>
                 </span>
               </button>
 
               ${themePaletteMarkup()}
               ${borderFxMarkup()}
 
-              <a href="${buildHref("settings.html")}" class="menu-link" data-menu-link="${buildHref("settings.html")}">
+              <a href="${buildHref("settings.html")}" class="menu-link" data-menu-link="${buildHref("settings.html")}" data-menu-label="advanced settings">
                 Advanced settings
               </a>
             </div>
@@ -274,10 +293,7 @@ function bindThemeControls() {
       event.stopPropagation();
 
       const current = getTheme();
-      const next = current.includes("light")
-        ? current.replace("light", "dark")
-        : current.replace("dark", "light");
-
+      const next = current.includes("light") ? "dark" : "light";
       setTheme(next);
     });
   }
@@ -287,18 +303,9 @@ function bindThemeControls() {
       event.preventDefault();
       event.stopPropagation();
 
-      const target = button.getAttribute("data-theme-bubble");
-      if (!target) return;
-
-      const current = getTheme();
-      const next = current.includes("light")
-        ? target.replace("-dark", "-light")
-        : target;
-
-      setTheme(next);
-
-      document.querySelectorAll("[data-theme-bubble]").forEach((b) => b.classList.remove("active"));
-      button.classList.add("active");
+      const profile = button.getAttribute("data-theme-bubble");
+      if (!profile) return;
+      setThemeProfile(profile);
     });
   });
 }
@@ -311,7 +318,7 @@ function bindBorderFxControls() {
       event.stopPropagation();
 
       const current = getBorderFx();
-      const next = current === "off" ? "theme" : current === "theme" ? "rainbow" : "off";
+      const next = current === "off" ? "rainbow" : current === "rainbow" ? "custom" : "off";
       setBorderFx(next);
     });
   }
@@ -323,8 +330,20 @@ function bindBorderFxControls() {
 
       const fx = button.getAttribute("data-fx-pill");
       if (!fx) return;
-
       setBorderFx(fx);
+    });
+  });
+}
+
+function bindSearch() {
+  const input = document.getElementById("menuSearchInput");
+  if (!input) return;
+
+  input.addEventListener("input", () => {
+    const q = input.value.trim().toLowerCase();
+    document.querySelectorAll("[data-menu-label]").forEach((item) => {
+      const label = item.getAttribute("data-menu-label") || "";
+      item.style.display = !q || label.includes(q) ? "" : "none";
     });
   });
 }
@@ -361,8 +380,42 @@ function bindNav() {
   });
 }
 
+function bindNavShrink() {
+  const shell = document.getElementById("universalNavShell");
+  if (!shell) return;
+
+  let lastY = window.scrollY;
+  let ticking = false;
+
+  const update = () => {
+    const y = window.scrollY;
+    const goingDown = y > lastY;
+    const compact = y > 36 && goingDown;
+
+    shell.classList.toggle("nav-compact", compact);
+    lastY = y;
+    ticking = false;
+  };
+
+  window.addEventListener("scroll", () => {
+    if (!ticking) {
+      window.requestAnimationFrame(update);
+      ticking = true;
+    }
+  }, { passive: true });
+
+  window.addEventListener("touchend", () => {
+    shell.classList.remove("nav-compact");
+  });
+
+  shell.addEventListener("click", () => {
+    shell.classList.remove("nav-compact");
+  });
+}
+
 function initNav() {
   document.documentElement.setAttribute("data-theme", getTheme());
+  document.documentElement.setAttribute("data-theme-profile", getThemeProfile());
   document.documentElement.setAttribute("data-border-fx", getBorderFx());
 
   renderNav();
@@ -371,6 +424,8 @@ function initNav() {
   bindNavLinks();
   bindThemeControls();
   bindBorderFxControls();
+  bindSearch();
+  bindNavShrink();
   syncQuickUi();
 }
 
