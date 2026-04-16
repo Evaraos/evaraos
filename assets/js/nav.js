@@ -1,21 +1,3 @@
-function footerMarkup() {
-  return `
-    <footer class="site-footer">
-      <div class="site-footer-inner glass-card">
-        <div class="site-footer-left">
-          <strong>© <span id="footerYear"></span> Evaraos Inc</strong>
-          <span>All rights reserved.</span>
-        </div>
-        <div class="site-footer-right">
-          <a href="https://instagram.com/evaraos" target="_blank" rel="noopener noreferrer">@evaraos</a>
-          <a href="https://x.com/evaraos" target="_blank" rel="noopener noreferrer">@evaraos</a>
-          <a href="https://tiktok.com/@evaraos" target="_blank" rel="noopener noreferrer">@evaraos</a>
-        </div>
-      </div>
-    </footer>
-  `;
-}
-
 function getCurrentPath() {
   return window.location.pathname.replace(/\/+$/, "");
 }
@@ -54,6 +36,22 @@ function getRole() {
   }
 }
 
+function getTheme() {
+  return localStorage.getItem("evaraos-theme") || "dark";
+}
+
+function setTheme(theme) {
+  localStorage.setItem("evaraos-theme", theme);
+  document.documentElement.setAttribute("data-theme", theme);
+  syncThemeLabel();
+}
+
+function syncThemeLabel() {
+  const label = document.querySelector("[data-theme-label]");
+  if (!label) return;
+  label.textContent = getTheme() === "light" ? "Light mode" : "Dark mode";
+}
+
 function getVisibleLinks() {
   const role = getRole();
 
@@ -86,84 +84,6 @@ function navLink(page, label) {
   return `<a href="${href}" class="menu-link${active}" data-menu-link="${href}" data-label="${label.toLowerCase()}">${label}</a>`;
 }
 
-function getTheme() {
-  return localStorage.getItem("evaraos-theme") || "dark";
-}
-
-function setTheme(theme) {
-  localStorage.setItem("evaraos-theme", theme);
-  document.documentElement.setAttribute("data-theme", theme);
-  syncQuickUi();
-}
-
-function getThemeProfile() {
-  return localStorage.getItem("evaraos-theme-profile") || "1";
-}
-
-function setThemeProfile(profile) {
-  localStorage.setItem("evaraos-theme-profile", profile);
-  document.documentElement.setAttribute("data-theme-profile", profile);
-  syncQuickUi();
-}
-
-function getBorderFx() {
-  return localStorage.getItem("evaraos-border-fx") || "custom";
-}
-
-function setBorderFx(mode) {
-  localStorage.setItem("evaraos-border-fx", mode);
-  document.documentElement.setAttribute("data-border-fx", mode);
-  syncQuickUi();
-}
-
-function syncQuickUi() {
-  const theme = getTheme();
-  document.querySelectorAll("[data-theme-quick-label]").forEach((el) => {
-    el.textContent = theme === "light" ? "Light mode" : "Dark mode";
-  });
-
-  const profile = getThemeProfile();
-  document.querySelectorAll("[data-theme-bubble]").forEach((el) => {
-    el.classList.toggle("active", el.getAttribute("data-theme-bubble") === profile);
-  });
-
-  const fx = getBorderFx();
-  document.querySelectorAll("[data-fx-quick-label]").forEach((el) => {
-    el.textContent = fx.charAt(0).toUpperCase() + fx.slice(1);
-  });
-
-  document.querySelectorAll("[data-fx-pill]").forEach((el) => {
-    el.classList.toggle("active", el.getAttribute("data-fx-pill") === fx);
-  });
-}
-
-function themePaletteMarkup() {
-  return `
-    <div class="theme-palette-row">
-      <div class="theme-row-title">Theme profile</div>
-      <div class="theme-bubbles-scroll">
-        <button class="theme-bubble light" data-theme-bubble="1" aria-label="Theme 1"></button>
-        <button class="theme-bubble blue" data-theme-bubble="2" aria-label="Theme 2"></button>
-        <button class="theme-bubble red" data-theme-bubble="3" aria-label="Theme 3"></button>
-        <button class="theme-bubble green" data-theme-bubble="1" aria-label="Theme 1 repeat"></button>
-      </div>
-    </div>
-  `;
-}
-
-function borderFxMarkup() {
-  return `
-    <div class="border-fx-row">
-      <div class="fx-row-title">Border beam</div>
-      <div class="fx-pills">
-        <button class="fx-pill" data-fx-pill="off">None</button>
-        <button class="fx-pill" data-fx-pill="rainbow">Rainbow</button>
-        <button class="fx-pill" data-fx-pill="custom">Custom</button>
-      </div>
-    </div>
-  `;
-}
-
 function searchMarkup() {
   return `
     <label class="menu-search">
@@ -178,8 +98,8 @@ function universalNavMarkup() {
 
   return `
     <header class="landing-header universal-nav-shell" id="floatingNavShell">
-      <div class="landing-header-inner glass-shell" id="floatingNavInner">
-        <a href="${buildHref("index.html")}" class="brand-link" id="navBrandLink" aria-label="Go home">
+      <div class="landing-header-inner glass-shell">
+        <a href="${buildHref("index.html")}" class="brand-link" aria-label="Go home">
           <img
             src="${getBasePath()}/assets/img/evaraos_logo.png"
             alt="Evaraos logo"
@@ -222,19 +142,9 @@ function universalNavMarkup() {
               <button type="button" class="quick-chip" id="quickThemeToggle">
                 <span class="quick-chip-text">
                   <span class="quick-chip-dot"></span>
-                  <span data-theme-quick-label>Dark mode</span>
+                  <span data-theme-label>Dark mode</span>
                 </span>
               </button>
-
-              <button type="button" class="quick-chip" id="quickFxToggle">
-                <span class="quick-chip-text">
-                  <span class="quick-chip-dot"></span>
-                  <span data-fx-quick-label>Custom</span>
-                </span>
-              </button>
-
-              ${themePaletteMarkup()}
-              ${borderFxMarkup()}
 
               <a href="${buildHref("settings.html")}" class="menu-link" data-menu-link="${buildHref("settings.html")}" data-label="advanced settings">
                 Advanced settings
@@ -247,26 +157,16 @@ function universalNavMarkup() {
   `;
 }
 
-function footerAlreadyExists() {
-  return document.querySelector(".site-footer");
-}
-
 function renderNav() {
   const mount = document.getElementById("universalNav");
   if (!mount) return;
   mount.innerHTML = universalNavMarkup();
 }
 
-function renderFooter() {
-  if (footerAlreadyExists()) return;
-  document.body.insertAdjacentHTML("beforeend", footerMarkup());
-  const year = document.getElementById("footerYear");
-  if (year) year.textContent = String(new Date().getFullYear());
-}
-
 function closeMenu() {
   const dropdown = document.getElementById("siteNavDropdown");
   const toggle = document.getElementById("siteNavToggle");
+  document.body.classList.remove("nav-menu-open");
   if (!dropdown || !toggle) return;
   dropdown.classList.remove("open");
   toggle.setAttribute("aria-expanded", "false");
@@ -275,6 +175,7 @@ function closeMenu() {
 function openMenu() {
   const dropdown = document.getElementById("siteNavDropdown");
   const toggle = document.getElementById("siteNavToggle");
+  document.body.classList.add("nav-menu-open");
   if (!dropdown || !toggle) return;
   dropdown.classList.add("open");
   toggle.setAttribute("aria-expanded", "true");
@@ -285,55 +186,24 @@ function bindNavLinks() {
     link.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
+
       const href = link.getAttribute("data-menu-link");
       if (!href) return;
+
       closeMenu();
       window.location.assign(href);
     });
   });
 }
 
-function bindThemeControls() {
-  const quickThemeToggle = document.getElementById("quickThemeToggle");
-  if (quickThemeToggle) {
-    quickThemeToggle.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      setTheme(getTheme() === "light" ? "dark" : "light");
-    });
-  }
+function bindThemeToggle() {
+  const toggle = document.getElementById("quickThemeToggle");
+  if (!toggle) return;
 
-  document.querySelectorAll("[data-theme-bubble]").forEach((button) => {
-    button.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const profile = button.getAttribute("data-theme-bubble");
-      if (!profile) return;
-      setThemeProfile(profile);
-    });
-  });
-}
-
-function bindBorderFxControls() {
-  const quickFxToggle = document.getElementById("quickFxToggle");
-  if (quickFxToggle) {
-    quickFxToggle.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const current = getBorderFx();
-      const next = current === "off" ? "rainbow" : current === "rainbow" ? "custom" : "off";
-      setBorderFx(next);
-    });
-  }
-
-  document.querySelectorAll("[data-fx-pill]").forEach((button) => {
-    button.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const fx = button.getAttribute("data-fx-pill");
-      if (!fx) return;
-      setBorderFx(fx);
-    });
+  toggle.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setTheme(getTheme() === "light" ? "dark" : "light");
   });
 }
 
@@ -343,10 +213,10 @@ function bindSearchFilter() {
   if (!input) return;
 
   input.addEventListener("input", () => {
-    const q = input.value.trim().toLowerCase();
+    const value = input.value.trim().toLowerCase();
     links.forEach((link) => {
       const label = (link.getAttribute("data-label") || "").toLowerCase();
-      link.style.display = !q || label.includes(q) ? "" : "none";
+      link.style.display = !value || label.includes(value) ? "" : "none";
     });
   });
 }
@@ -356,12 +226,15 @@ function bindNavMenu() {
   const toggle = document.getElementById("siteNavToggle");
   const menu = document.getElementById("siteNavMenu");
   const backdrop = document.getElementById("siteNavBackdrop");
+  const shell = document.getElementById("floatingNavShell");
 
-  if (!dropdown || !toggle || !menu || !backdrop) return;
+  if (!dropdown || !toggle || !menu || !backdrop || !shell) return;
 
   toggle.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
+    shell.classList.remove("nav-compact");
+
     if (dropdown.classList.contains("open")) {
       closeMenu();
     } else {
@@ -377,6 +250,10 @@ function bindNavMenu() {
     closeMenu();
   });
 
+  shell.addEventListener("click", () => {
+    shell.classList.remove("nav-compact");
+  });
+
   document.addEventListener("click", (event) => {
     if (!dropdown.contains(event.target)) {
       closeMenu();
@@ -384,22 +261,21 @@ function bindNavMenu() {
   });
 }
 
-function bindScrollPill() {
+function bindScrollNav() {
   const shell = document.getElementById("floatingNavShell");
-  const toggle = document.getElementById("siteNavToggle");
-  if (!shell || !toggle) return;
+  if (!shell) return;
 
   let lastY = window.scrollY;
   let ticking = false;
 
   function update() {
     const y = window.scrollY;
-    const scrollingDown = y > lastY + 2;
-    const scrollingUp = y < lastY - 2;
+    const goingDown = y > lastY + 2;
+    const goingUp = y < lastY - 2;
 
-    if (scrollingDown && y > 90) {
+    if (goingDown && y > 90) {
       shell.classList.add("nav-compact");
-    } else if (scrollingUp || y < 50) {
+    } else if (goingUp || y < 36) {
       shell.classList.remove("nav-compact");
     }
 
@@ -407,36 +283,27 @@ function bindScrollPill() {
     ticking = false;
   }
 
-  window.addEventListener("scroll", () => {
-    if (!ticking) {
-      window.requestAnimationFrame(update);
-      ticking = true;
-    }
-  }, { passive: true });
-
-  toggle.addEventListener("click", () => {
-    shell.classList.remove("nav-compact");
-  });
-
-  shell.addEventListener("click", () => {
-    shell.classList.remove("nav-compact");
-  });
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (!ticking) {
+        window.requestAnimationFrame(update);
+        ticking = true;
+      }
+    },
+    { passive: true }
+  );
 }
 
 function initNav() {
   document.documentElement.setAttribute("data-theme", getTheme());
-  document.documentElement.setAttribute("data-theme-profile", getThemeProfile());
-  document.documentElement.setAttribute("data-border-fx", getBorderFx());
-
   renderNav();
-  renderFooter();
   bindNavMenu();
   bindNavLinks();
-  bindThemeControls();
-  bindBorderFxControls();
+  bindThemeToggle();
   bindSearchFilter();
-  bindScrollPill();
-  syncQuickUi();
+  bindScrollNav();
+  syncThemeLabel();
 }
 
 document.addEventListener("DOMContentLoaded", initNav);
