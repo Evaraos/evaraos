@@ -1,6 +1,6 @@
 function footerMarkup() {
   return `
-    <footer class="site-footer glass-card aurora-card">
+    <footer class="site-footer">
       <div class="site-footer-inner">
         <div class="site-footer-left">
           <strong>© <span id="footerYear"></span> Evaraos Inc</strong>
@@ -114,13 +114,13 @@ function syncQuickUi() {
     el.textContent = isLight ? "Light mode" : "Dark mode";
   });
 
+  const fx = getBorderFx();
   document.querySelectorAll("[data-fx-quick-label]").forEach((el) => {
-    const fx = getBorderFx();
     el.textContent = fx.charAt(0).toUpperCase() + fx.slice(1);
   });
 
   document.querySelectorAll("[data-fx-pill]").forEach((el) => {
-    el.classList.toggle("active", el.getAttribute("data-fx-pill") === getBorderFx());
+    el.classList.toggle("active", el.getAttribute("data-fx-pill") === fx);
   });
 }
 
@@ -159,7 +159,7 @@ function universalNavMarkup() {
 
   return `
     <header class="landing-header universal-nav-shell">
-      <div class="landing-header-inner glass-shell aurora-card">
+      <div class="landing-header-inner glass-shell">
         <a href="${buildHref("index.html")}" class="brand-link" aria-label="Go home">
           <img
             src="${getBasePath()}/assets/img/evaraos_logo.png"
@@ -175,7 +175,7 @@ function universalNavMarkup() {
 
         <div class="nav-dropdown" id="siteNavDropdown">
           <button
-            class="nav-hamburger aurora-card"
+            class="nav-hamburger"
             type="button"
             id="siteNavToggle"
             aria-expanded="false"
@@ -190,7 +190,7 @@ function universalNavMarkup() {
 
           <div class="nav-menu-backdrop" id="siteNavBackdrop"></div>
 
-          <div class="nav-dropdown-menu glass-card aurora-card" id="siteNavMenu">
+          <div class="nav-dropdown-menu" id="siteNavMenu">
             <nav class="nav-dropdown-links" aria-label="Main navigation">
               ${links}
             </nav>
@@ -198,14 +198,14 @@ function universalNavMarkup() {
             <div class="menu-divider"></div>
 
             <div class="menu-quick-row">
-              <button type="button" class="quick-chip aurora-card" id="quickThemeToggle">
+              <button type="button" class="quick-chip" id="quickThemeToggle">
                 <span class="quick-chip-text">
                   <span class="quick-chip-dot"></span>
                   <span data-theme-quick-label>Dark mode</span>
                 </span>
               </button>
 
-              <button type="button" class="quick-chip aurora-card" id="quickFxToggle">
+              <button type="button" class="quick-chip" id="quickFxToggle">
                 <span class="quick-chip-text">
                   <span class="quick-chip-dot"></span>
                   <span data-fx-quick-label>Theme</span>
@@ -243,34 +243,6 @@ function renderFooter() {
   if (year) year.textContent = String(new Date().getFullYear());
 }
 
-function pulse(el) {
-  if (!el) return;
-  el.classList.remove("pop-click");
-  void el.offsetWidth;
-  el.classList.add("pop-click");
-  setTimeout(() => el.classList.remove("pop-click"), 240);
-}
-
-function shine(el) {
-  if (!el) return;
-  el.classList.remove("shine-flash");
-  void el.offsetWidth;
-  el.classList.add("shine-flash");
-  setTimeout(() => el.classList.remove("shine-flash"), 560);
-}
-
-function activateCardGlow(el) {
-  if (!el) return;
-  el.classList.add("active-card-glow");
-  setTimeout(() => el.classList.remove("active-card-glow"), 650);
-}
-
-function pulseShineGlow(el) {
-  pulse(el);
-  shine(el);
-  activateCardGlow(el);
-}
-
 function closeMenu() {
   const dropdown = document.getElementById("siteNavDropdown");
   const toggle = document.getElementById("siteNavToggle");
@@ -288,12 +260,8 @@ function bindNavLinks() {
       const href = link.getAttribute("data-menu-link");
       if (!href) return;
 
-      pulseShineGlow(link);
       closeMenu();
-
-      setTimeout(() => {
-        window.location.assign(href);
-      }, 120);
+      window.location.assign(href);
     });
   });
 }
@@ -311,7 +279,6 @@ function bindThemeControls() {
         : current.replace("dark", "light");
 
       setTheme(next);
-      pulseShineGlow(quickThemeToggle);
     });
   }
 
@@ -332,7 +299,6 @@ function bindThemeControls() {
 
       document.querySelectorAll("[data-theme-bubble]").forEach((b) => b.classList.remove("active"));
       button.classList.add("active");
-      pulseShineGlow(button);
     });
   });
 }
@@ -347,7 +313,6 @@ function bindBorderFxControls() {
       const current = getBorderFx();
       const next = current === "off" ? "theme" : current === "theme" ? "rainbow" : "off";
       setBorderFx(next);
-      pulseShineGlow(quickFxToggle);
     });
   }
 
@@ -360,7 +325,6 @@ function bindBorderFxControls() {
       if (!fx) return;
 
       setBorderFx(fx);
-      pulseShineGlow(button);
     });
   });
 }
@@ -380,7 +344,6 @@ function bindNav() {
     const opening = !dropdown.classList.contains("open");
     dropdown.classList.toggle("open", opening);
     toggle.setAttribute("aria-expanded", opening ? "true" : "false");
-    pulseShineGlow(toggle);
   });
 
   menu.addEventListener("click", (event) => {
@@ -398,14 +361,6 @@ function bindNav() {
   });
 }
 
-function bindInteractiveShine() {
-  document.querySelectorAll(".btn, .feature-card, .nav-hamburger, .menu-link, .quick-chip, .fx-pill, .theme-bubble").forEach((el) => {
-    el.addEventListener("click", () => {
-      pulseShineGlow(el);
-    });
-  });
-}
-
 function initNav() {
   document.documentElement.setAttribute("data-theme", getTheme());
   document.documentElement.setAttribute("data-border-fx", getBorderFx());
@@ -416,7 +371,7 @@ function initNav() {
   bindNavLinks();
   bindThemeControls();
   bindBorderFxControls();
-  bindInteractiveShine();
   syncQuickUi();
 }
+
 document.addEventListener("DOMContentLoaded", initNav);
