@@ -156,8 +156,8 @@
   function openMenu() {
     const zone = document.getElementById("evaMenuZone");
     const btn = document.getElementById("evaMenuBtn");
-    document.body.classList.add("nav-menu-open");
     if (!zone || !btn) return;
+    document.body.classList.add("nav-menu-open");
     zone.classList.add("open");
     btn.setAttribute("aria-expanded", "true");
   }
@@ -165,8 +165,8 @@
   function closeMenu() {
     const zone = document.getElementById("evaMenuZone");
     const btn = document.getElementById("evaMenuBtn");
-    document.body.classList.remove("nav-menu-open");
     if (!zone || !btn) return;
+    document.body.classList.remove("nav-menu-open");
     zone.classList.remove("open");
     btn.setAttribute("aria-expanded", "false");
   }
@@ -263,9 +263,9 @@
 
       if (y < 24) {
         targetCompact = false;
-      } else if (delta > 1) {
+      } else if (delta > 0.75) {
         targetCompact = true;
-      } else if (delta < -1) {
+      } else if (delta < -0.75) {
         targetCompact = false;
       }
 
