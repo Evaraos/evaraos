@@ -1,23 +1,23 @@
-body.nav-menu-open #universalNav,
-body.nav-menu-open .universal-nav-shell,
-body.nav-menu-open .landing-header,
-body.nav-menu-open .landing-header-inner,
-body.nav-menu-open .nav-dropdown,
-body.nav-menu-open .nav-dropdown-menu,
-body.nav-menu-open .nav-menu-backdrop {
-  z-index: 2147483647 !important;
-}
-
-#universalNav {
+#universalNavRoot {
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0 auto auto 0;
   width: 100%;
+  height: 0;
   z-index: 2147483640;
   pointer-events: none;
 }
 
-.universal-nav-shell {
+body.nav-menu-open #universalNavRoot {
+  z-index: 2147483647;
+}
+
+.eva-nav-layer {
+  position: relative;
+  width: 100%;
+  pointer-events: none;
+}
+
+.eva-nav-shell {
   position: fixed;
   top: max(10px, env(safe-area-inset-top));
   left: 50%;
@@ -27,25 +27,20 @@ body.nav-menu-open .nav-menu-backdrop {
   pointer-events: none;
   transition:
     width 0.26s ease,
-    transform 0.26s ease,
-    top 0.26s ease,
+    left 0.26s ease,
     right 0.26s ease,
-    left 0.26s ease;
+    transform 0.26s ease,
+    top 0.26s ease;
 }
 
-.universal-nav-shell.nav-compact {
-  width: 188px;
+.eva-nav-shell.compact {
+  width: 154px;
   left: auto;
   right: 12px;
   transform: none;
 }
 
-.landing-header {
-  position: relative;
-  z-index: 2147483640;
-}
-
-.landing-header-inner {
+.eva-nav-pill {
   min-height: 68px;
   padding: 10px 12px;
   display: flex;
@@ -57,16 +52,17 @@ body.nav-menu-open .nav-menu-backdrop {
   transition:
     min-height 0.26s ease,
     padding 0.26s ease,
-    border-radius 0.26s ease;
+    border-radius 0.26s ease,
+    width 0.26s ease;
 }
 
-.universal-nav-shell.nav-compact .landing-header-inner {
-  min-height: 46px;
-  padding: 6px 10px;
+.eva-nav-shell.compact .eva-nav-pill {
+  min-height: 42px;
+  padding: 5px 8px;
   justify-content: center;
 }
 
-.brand-link {
+.eva-brand {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -75,13 +71,13 @@ body.nav-menu-open .nav-menu-backdrop {
   text-decoration: none;
 }
 
-.universal-nav-shell.nav-compact .brand-link {
+.eva-nav-shell.compact .eva-brand {
   justify-content: center;
-  gap: 8px;
-  padding-right: 26px;
+  gap: 0;
+  padding-right: 24px;
 }
 
-.brand-logo {
+.eva-logo {
   width: 44px;
   height: 44px;
   object-fit: contain;
@@ -89,22 +85,22 @@ body.nav-menu-open .nav-menu-backdrop {
   transition: width 0.26s ease, height 0.26s ease;
 }
 
-.universal-nav-shell.nav-compact .brand-logo {
-  width: 22px;
-  height: 22px;
+.eva-nav-shell.compact .eva-logo {
+  width: 20px;
+  height: 20px;
 }
 
-.brand-copy {
+.eva-brand-copy {
   min-width: 0;
   display: grid;
   gap: 2px;
 }
 
-.universal-nav-shell.nav-compact .brand-copy {
+.eva-nav-shell.compact .eva-brand-copy {
   display: none;
 }
 
-.brand-copy strong {
+.eva-brand-copy strong {
   display: block;
   font-size: 1rem;
   font-weight: 800;
@@ -112,29 +108,29 @@ body.nav-menu-open .nav-menu-backdrop {
   letter-spacing: -0.02em;
 }
 
-.brand-copy span {
+.eva-brand-copy span {
   display: block;
   font-size: 0.8rem;
   line-height: 1.1;
   color: rgba(230, 236, 255, 0.72);
 }
 
-html[data-theme="light"] .brand-copy span {
+html[data-theme="light"] .eva-brand-copy span {
   color: rgba(26, 47, 39, 0.64);
 }
 
-.nav-dropdown {
+.eva-menu-zone {
   position: relative;
   flex: 0 0 auto;
   z-index: 2147483641;
 }
 
-.universal-nav-shell.nav-compact .nav-dropdown {
+.eva-nav-shell.compact .eva-menu-zone {
   position: absolute;
-  right: 8px;
+  right: 7px;
 }
 
-.nav-hamburger {
+.eva-menu-btn {
   width: 40px;
   height: 40px;
   border-radius: 999px;
@@ -151,23 +147,23 @@ html[data-theme="light"] .brand-copy span {
   transition: width 0.26s ease, height 0.26s ease;
 }
 
-.universal-nav-shell.nav-compact .nav-hamburger {
-  width: 28px;
-  height: 28px;
+.eva-nav-shell.compact .eva-menu-btn {
+  width: 26px;
+  height: 26px;
 }
 
-html[data-theme="light"] .nav-hamburger {
+html[data-theme="light"] .eva-menu-btn {
   background: rgba(255,255,255,0.84);
   border: 1px solid rgba(255,255,255,0.92);
 }
 
-.hamburger-orb {
+.eva-burger {
   width: 16px;
   height: 16px;
   position: relative;
 }
 
-.hamburger-bar {
+.eva-burger-line {
   position: absolute;
   left: 1px;
   display: block;
@@ -178,29 +174,29 @@ html[data-theme="light"] .nav-hamburger {
   transition: transform 0.22s ease, opacity 0.22s ease;
 }
 
-html[data-theme="light"] .hamburger-bar {
+html[data-theme="light"] .eva-burger-line {
   background: linear-gradient(90deg, rgba(18,37,31,0.90), rgba(18,37,31,0.62));
 }
 
-.hamburger-bar.top { top: 2px; }
-.hamburger-bar.mid { top: 7px; }
-.hamburger-bar.bot { top: 12px; }
+.eva-burger-line.top { top: 2px; }
+.eva-burger-line.mid { top: 7px; }
+.eva-burger-line.bot { top: 12px; }
 
-.nav-dropdown.open .hamburger-bar.top {
+.eva-menu-zone.open .eva-burger-line.top {
   top: 7px;
   transform: rotate(45deg);
 }
 
-.nav-dropdown.open .hamburger-bar.mid {
+.eva-menu-zone.open .eva-burger-line.mid {
   opacity: 0;
 }
 
-.nav-dropdown.open .hamburger-bar.bot {
+.eva-menu-zone.open .eva-burger-line.bot {
   top: 7px;
   transform: rotate(-45deg);
 }
 
-.nav-menu-backdrop {
+.eva-backdrop {
   position: fixed;
   inset: 0;
   z-index: 2147483645;
@@ -213,13 +209,13 @@ html[data-theme="light"] .hamburger-bar {
   transition: opacity 0.18s ease, visibility 0.18s ease;
 }
 
-.nav-dropdown.open .nav-menu-backdrop {
+.eva-menu-zone.open .eva-backdrop {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
 }
 
-.nav-dropdown-menu {
+.eva-menu {
   position: fixed;
   z-index: 2147483646;
   top: calc(max(10px, env(safe-area-inset-top)) + 72px);
@@ -247,7 +243,7 @@ html[data-theme="light"] .hamburger-bar {
     visibility 0.18s ease;
 }
 
-html[data-theme="light"] .nav-dropdown-menu {
+html[data-theme="light"] .eva-menu {
   background: rgba(247,248,248,0.998);
   border: 1px solid rgba(255,255,255,0.96);
   box-shadow:
@@ -255,14 +251,14 @@ html[data-theme="light"] .nav-dropdown-menu {
     inset 0 1px 0 rgba(255,255,255,1);
 }
 
-.nav-dropdown.open .nav-dropdown-menu {
+.eva-menu-zone.open .eva-menu {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
   transform: translateY(0);
 }
 
-.menu-search {
+.eva-search {
   min-height: 46px;
   padding: 0 14px;
   border-radius: 16px;
@@ -273,12 +269,12 @@ html[data-theme="light"] .nav-dropdown-menu {
   border: 1px solid rgba(255,255,255,0.08);
 }
 
-html[data-theme="light"] .menu-search {
+html[data-theme="light"] .eva-search {
   background: rgba(255,255,255,0.88);
   border: 1px solid rgba(255,255,255,0.92);
 }
 
-.menu-search input {
+.eva-search input {
   width: 100%;
   border: 0;
   outline: 0;
@@ -287,18 +283,18 @@ html[data-theme="light"] .menu-search {
   font-size: 0.98rem;
 }
 
-.menu-search input::placeholder {
+.eva-search input::placeholder {
   opacity: 0.56;
 }
 
-.nav-dropdown-links,
-.menu-quick-row {
+.eva-links,
+.eva-quick {
   display: grid;
   gap: 8px;
 }
 
-.menu-link,
-.quick-chip {
+.eva-link,
+.eva-chip {
   min-height: 46px;
   padding: 0 14px;
   border-radius: 16px;
@@ -314,42 +310,42 @@ html[data-theme="light"] .menu-search {
   cursor: pointer;
 }
 
-html[data-theme="light"] .menu-link,
-html[data-theme="light"] .quick-chip {
+html[data-theme="light"] .eva-link,
+html[data-theme="light"] .eva-chip {
   color: #14251f;
   background: rgba(255,255,255,0.88);
   border: 1px solid rgba(255,255,255,0.92);
 }
 
-.menu-divider {
+.eva-divider {
   height: 1px;
   background: rgba(255,255,255,0.08);
   margin: 2px 0;
 }
 
-html[data-theme="light"] .menu-divider {
+html[data-theme="light"] .eva-divider {
   background: rgba(24,45,39,0.08);
 }
 
-.quick-chip-text {
+.eva-chip-row {
   display: inline-flex;
   align-items: center;
   gap: 8px;
 }
 
-.quick-chip-dot {
+.eva-chip-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
   background: #ffffff;
 }
 
-html[data-theme="light"] .quick-chip-dot {
+html[data-theme="light"] .eva-chip-dot {
   background: #14251f;
 }
 
 @media (min-width: 900px) {
-  .nav-dropdown-menu {
+  .eva-menu {
     position: absolute;
     top: calc(100% + 12px);
     right: 0;
@@ -359,7 +355,7 @@ html[data-theme="light"] .quick-chip-dot {
     margin-left: 0;
   }
 
-  .nav-menu-backdrop {
+  .eva-backdrop {
     display: none;
   }
 }
