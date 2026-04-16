@@ -254,18 +254,22 @@
     if (!shell) return;
 
     let lastY = window.scrollY;
+    let targetCompact = false;
     let ticking = false;
 
     function update() {
       const y = window.scrollY;
-      const goingDown = y > lastY;
-      const goingUp = y < lastY;
+      const delta = y - lastY;
 
-      if (goingDown && y > 70) {
-        shell.classList.add("compact");
-      } else if (goingUp || y < 24) {
-        shell.classList.remove("compact");
+      if (y < 24) {
+        targetCompact = false;
+      } else if (delta > 1) {
+        targetCompact = true;
+      } else if (delta < -1) {
+        targetCompact = false;
       }
+
+      shell.classList.toggle("compact", targetCompact);
 
       lastY = y;
       ticking = false;
