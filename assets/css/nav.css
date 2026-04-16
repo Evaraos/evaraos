@@ -1,7 +1,7 @@
 .universal-nav-shell {
   position: sticky;
   top: 8px;
-  z-index: 3000;
+  z-index: 5000;
   padding:
     max(12px, env(safe-area-inset-top))
     10px
@@ -11,22 +11,22 @@
 
 .landing-header {
   position: relative;
-  z-index: 3000;
+  z-index: 5000;
 }
 
 .landing-header-inner {
   width: min(100%, 1240px);
   margin: 0 auto;
-  min-height: 80px;
+  min-height: 82px;
   padding: 10px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  border-radius: 20px;
+  gap: 12px;
+  border-radius: 22px;
   overflow: visible;
   position: relative;
-  z-index: 3001;
+  z-index: 5001;
 }
 
 .brand-link {
@@ -34,38 +34,41 @@
   align-items: center;
   gap: 8px;
   min-width: 0;
+  flex: 1 1 auto;
   text-decoration: none;
-  flex: 1;
-  position: relative;
-  z-index: 2;
 }
 
 .brand-logo {
-  width: 60px;
-  height: 60px;
+  width: 64px;
+  height: 64px;
   object-fit: contain;
   flex: 0 0 auto;
   filter:
-    drop-shadow(0 10px 20px rgba(255, 255, 255, 0.12))
-    drop-shadow(0 0 18px rgba(255, 255, 255, 0.08));
+    drop-shadow(0 8px 20px rgba(255, 255, 255, 0.10))
+    drop-shadow(0 0 14px rgba(255, 255, 255, 0.06));
 }
 
 .brand-copy {
   min-width: 0;
+  display: grid;
+  gap: 2px;
+  margin-left: -2px;
 }
 
 .brand-copy strong {
   display: block;
-  font-size: 0.98rem;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.05;
   letter-spacing: -0.02em;
   color: inherit;
 }
 
 .brand-copy span {
   display: block;
-  margin-top: 3px;
-  font-size: 0.8rem;
-  color: rgba(230, 236, 255, 0.72);
+  font-size: 0.82rem;
+  line-height: 1.15;
+  color: rgba(230, 236, 255, 0.74);
 }
 
 html[data-theme="light"] .brand-copy span,
@@ -76,73 +79,67 @@ html[data-theme$="-light"] .brand-copy span {
 .nav-dropdown {
   position: relative;
   flex: 0 0 auto;
-  z-index: 3100;
+  z-index: 5100;
 }
 
 .nav-hamburger {
-  width: 40px;
-  height: 40px;
-  border-radius: 13px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
   display: grid;
   place-items: center;
   cursor: pointer;
   box-shadow:
-    0 8px 22px rgba(0, 0, 0, 0.20),
-    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 10px 24px rgba(0, 0, 0, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.30);
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
     border-color 0.18s ease,
-    background 0.18s ease,
     filter 0.18s ease;
   position: relative;
   overflow: hidden;
-  z-index: 3102;
 }
 
 .nav-hamburger:hover,
 .nav-dropdown.open .nav-hamburger {
   transform: translateY(-1px) scale(1.03);
-  box-shadow:
-    0 0 0 8px rgba(255, 255, 255, 0.05),
-    0 12px 24px rgba(0, 0, 0, 0.22),
-    0 0 16px rgba(var(--tint-rgb), 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.36);
   border-color: rgba(255, 255, 255, 0.28);
+  box-shadow:
+    0 0 0 8px rgba(255, 255, 255, 0.04),
+    0 12px 26px rgba(0, 0, 0, 0.22),
+    0 0 14px rgba(var(--tint-rgb), 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.36);
 }
 
 .hamburger-orb {
   width: 16px;
   height: 16px;
-  display: grid;
-  align-items: center;
-  justify-items: center;
   position: relative;
 }
 
 .hamburger-bar {
+  position: absolute;
+  left: 1px;
   display: block;
-  width: 13px;
+  width: 14px;
   height: 2.2px;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.76));
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.10);
-  transition:
-    transform 0.22s ease,
-    opacity 0.22s ease;
-  position: absolute;
+  background: linear-gradient(90deg, rgba(255,255,255,0.96), rgba(255,255,255,0.76));
+  box-shadow: 0 0 8px rgba(255,255,255,0.08);
+  transition: transform 0.22s ease, opacity 0.22s ease;
 }
 
-.hamburger-bar.top { transform: translateY(-5px); }
-.hamburger-bar.mid { transform: translateY(0); }
-.hamburger-bar.bot { transform: translateY(5px); }
+.hamburger-bar.top { top: 2px; }
+.hamburger-bar.mid { top: 7px; }
+.hamburger-bar.bot { top: 12px; }
 
 .nav-dropdown.open .hamburger-bar.top {
-  transform: translateY(0) rotate(45deg);
+  top: 7px;
+  transform: rotate(45deg);
 }
 
 .nav-dropdown.open .hamburger-bar.mid {
@@ -150,26 +147,26 @@ html[data-theme$="-light"] .brand-copy span {
 }
 
 .nav-dropdown.open .hamburger-bar.bot {
-  transform: translateY(0) rotate(-45deg);
+  top: 7px;
+  transform: rotate(-45deg);
 }
 
 html[data-theme="light"] .hamburger-bar,
 html[data-theme$="-light"] .hamburger-bar {
-  background: linear-gradient(90deg, rgba(18, 37, 31, 0.90), rgba(18, 37, 31, 0.62));
+  background: linear-gradient(90deg, rgba(18,37,31,0.90), rgba(18,37,31,0.62));
 }
 
-/* BACKDROP */
 .nav-menu-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(3, 7, 16, 0.44);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  z-index: 5098;
+  background: rgba(3, 7, 16, 0.54);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
   transition: opacity 0.18s ease, visibility 0.18s ease;
-  z-index: 3098;
 }
 
 .nav-dropdown.open .nav-menu-backdrop {
@@ -178,7 +175,6 @@ html[data-theme$="-light"] .hamburger-bar {
   pointer-events: auto;
 }
 
-/* MENU PANEL */
 .nav-dropdown-menu {
   position: fixed;
   top: calc(max(12px, env(safe-area-inset-top)) + 84px);
@@ -187,27 +183,27 @@ html[data-theme$="-light"] .hamburger-bar {
   width: auto;
   max-width: 360px;
   margin-left: auto;
-  padding: 12px;
-  border-radius: 22px;
+  padding: 14px;
+  border-radius: 24px;
   display: grid;
   gap: 10px;
-  z-index: 3099;
+  z-index: 5099;
 
   background:
-    linear-gradient(180deg, rgba(16, 20, 30, 0.985), rgba(12, 16, 26, 0.965));
-  border: 1px solid rgba(255, 255, 255, 0.16);
+    linear-gradient(180deg, rgba(12, 16, 24, 0.985), rgba(10, 14, 22, 0.975));
+  border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow:
-    0 28px 70px rgba(0, 0, 0, 0.40),
+    0 28px 70px rgba(0, 0, 0, 0.42),
     0 0 0 1px rgba(255, 255, 255, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22);
-  backdrop-filter: blur(32px) saturate(175%);
-  -webkit-backdrop-filter: blur(32px) saturate(175%);
+    inset 0 1px 0 rgba(255, 255, 255, 0.20);
+  backdrop-filter: blur(34px) saturate(180%);
+  -webkit-backdrop-filter: blur(34px) saturate(180%);
   isolation: isolate;
 
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transform: translateY(-8px) scale(0.985);
+  transform: translateY(-8px) scale(0.988);
   transition:
     opacity 0.18s ease,
     transform 0.18s ease,
@@ -217,11 +213,11 @@ html[data-theme$="-light"] .hamburger-bar {
 html[data-theme="light"] .nav-dropdown-menu,
 html[data-theme$="-light"] .nav-dropdown-menu {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.995), rgba(252, 252, 251, 0.992));
-  border: 1px solid rgba(255, 255, 255, 0.95);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.995), rgba(251, 252, 251, 0.992));
+  border: 1px solid rgba(255, 255, 255, 0.94);
   box-shadow:
     0 24px 54px rgba(85, 110, 99, 0.14),
-    0 0 0 1px rgba(255, 255, 255, 0.56),
+    0 0 0 1px rgba(255, 255, 255, 0.52),
     inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 
@@ -235,48 +231,45 @@ html[data-theme$="-light"] .nav-dropdown-menu {
 .nav-dropdown-links {
   display: grid;
   gap: 8px;
-  position: relative;
-  z-index: 2;
 }
 
 .menu-link {
   min-height: 48px;
   padding: 0 14px;
-  border-radius: 14px;
+  border-radius: 15px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   text-decoration: none;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 0.98rem;
-  background: transparent;
-  border: 0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
   color: #f5f7ff;
   cursor: pointer;
   transition:
     background 0.16s ease,
     color 0.16s ease,
-    text-shadow 0.16s ease,
     box-shadow 0.16s ease,
     transform 0.16s ease;
   position: relative;
   overflow: hidden;
-  z-index: 2;
 }
 
 html[data-theme="light"] .menu-link,
 html[data-theme$="-light"] .menu-link {
   color: #12251f;
+  background: rgba(255,255,255,0.58);
+  border: 1px solid rgba(255,255,255,0.70);
 }
 
 .menu-link:hover,
 .menu-link.active {
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.14), rgba(var(--tint-rgb), 0.08));
-  text-shadow: 0 0 14px rgba(255, 255, 255, 0.20);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
-    0 0 14px rgba(var(--tint-rgb), 0.08);
   transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.10),
+    0 0 16px rgba(var(--tint-rgb), 0.08),
+    inset 0 1px 0 rgba(255,255,255,0.14);
 }
 
 .menu-link.active::after {
@@ -290,15 +283,13 @@ html[data-theme$="-light"] .menu-link {
 
 .menu-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.08);
-  margin: 4px 0;
-  position: relative;
-  z-index: 2;
+  margin: 2px 0;
+  background: rgba(255,255,255,0.08);
 }
 
 html[data-theme="light"] .menu-divider,
 html[data-theme$="-light"] .menu-divider {
-  background: rgba(24, 45, 39, 0.08);
+  background: rgba(24,45,39,0.08);
 }
 
 .menu-quick-row {
@@ -307,29 +298,25 @@ html[data-theme$="-light"] .menu-divider {
 }
 
 .quick-chip {
-  min-height: 42px;
-  border: 0;
-  border-radius: 14px;
+  min-height: 44px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 15px;
   padding: 0 14px;
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255,255,255,0.04);
   color: inherit;
   cursor: pointer;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
   position: relative;
   overflow: hidden;
-  font-weight: 700;
+  font-weight: 800;
 }
 
-.quick-chip-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(var(--tint-rgb), 0.95), rgba(255, 255, 255, 0.56));
-  box-shadow: 0 0 12px rgba(var(--tint-rgb), 0.18);
-  flex: 0 0 auto;
+html[data-theme="light"] .quick-chip,
+html[data-theme$="-light"] .quick-chip {
+  background: rgba(255,255,255,0.58);
+  border: 1px solid rgba(255,255,255,0.70);
 }
 
 .quick-chip-text {
@@ -338,14 +325,111 @@ html[data-theme$="-light"] .menu-divider {
   gap: 8px;
 }
 
+.quick-chip-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(var(--tint-rgb), 0.95), rgba(255,255,255,0.56));
+  box-shadow: 0 0 12px rgba(var(--tint-rgb), 0.18);
+}
+
+.theme-palette-row,
+.border-fx-row {
+  display: grid;
+  gap: 8px;
+}
+
+.theme-row-title,
+.fx-row-title {
+  font-size: 0.84rem;
+  font-weight: 800;
+  opacity: 0.82;
+  letter-spacing: 0.01em;
+}
+
+.theme-bubbles-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 2px;
+}
+
+.theme-bubbles-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.theme-bubble {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 999px;
+  flex: 0 0 auto;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 0 10px rgba(0,0,0,0.10);
+}
+
+.theme-bubble.active::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 999px;
+  border: 2px solid rgba(255,255,255,0.42);
+  box-shadow: 0 0 12px rgba(var(--tint-rgb), 0.16);
+}
+
+.theme-bubble.light { background: #f1ece8; }
+.theme-bubble.blue { background: #c7d8ff; }
+.theme-bubble.red { background: #ff6c86; }
+.theme-bubble.pink { background: #f2c5df; }
+.theme-bubble.green { background: #c7e6cf; }
+.theme-bubble.purple { background: #ddd0fb; }
+.theme-bubble.yellow { background: #f0da7b; }
+
+.fx-pills {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.fx-pill {
+  min-height: 38px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  color: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.fx-pill.active {
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.12),
+    0 0 14px rgba(var(--tint-rgb), 0.08);
+}
+
+html[data-theme="light"] .fx-pill,
+html[data-theme$="-light"] .fx-pill {
+  background: rgba(255,255,255,0.58);
+  border: 1px solid rgba(255,255,255,0.70);
+}
+
 @media (min-width: 900px) {
   .nav-dropdown-menu {
     position: absolute;
     top: calc(100% + 12px);
     right: 0;
     left: auto;
+    width: 300px;
     max-width: none;
-    width: 280px;
     margin-left: 0;
+  }
+
+  .nav-menu-backdrop {
+    display: none;
   }
 }
