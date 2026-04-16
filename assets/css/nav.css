@@ -1,12 +1,13 @@
 .universal-nav-shell {
   position: sticky;
-  top: 8px;
+  top: 0;
   z-index: 99999;
   padding:
-    max(12px, env(safe-area-inset-top))
-    10px
+    max(10px, env(safe-area-inset-top))
+    12px
     0
-    10px;
+    12px;
+  pointer-events: none;
 }
 
 .landing-header {
@@ -17,39 +18,63 @@
 .landing-header-inner {
   width: min(100%, 1240px);
   margin: 0 auto;
-  min-height: 82px;
-  padding: 10px 12px;
+  min-height: 72px;
+  padding: 10px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  border-radius: 22px;
+  border-radius: 999px;
   overflow: visible;
   position: relative;
   z-index: 100000;
+  pointer-events: auto;
+  transition:
+    min-height 0.22s ease,
+    padding 0.22s ease,
+    transform 0.22s ease,
+    border-radius 0.22s ease,
+    backdrop-filter 0.22s ease,
+    -webkit-backdrop-filter 0.22s ease,
+    background 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.universal-nav-shell.nav-compact .landing-header-inner {
+  min-height: 54px;
+  padding: 7px 12px;
+  width: min(100%, 520px);
+  border-radius: 999px;
+  justify-content: center;
 }
 
 .brand-link {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   min-width: 0;
   flex: 1 1 auto;
   text-decoration: none;
 }
 
 .brand-logo {
-  width: 64px;
-  height: 64px;
+  width: 54px;
+  height: 54px;
   object-fit: contain;
   flex: 0 0 auto;
+  transition: width 0.22s ease, height 0.22s ease, opacity 0.22s ease;
+}
+
+.universal-nav-shell.nav-compact .brand-logo {
+  width: 28px;
+  height: 28px;
 }
 
 .brand-copy {
   min-width: 0;
   display: grid;
   gap: 2px;
-  margin-left: -2px;
+  transition: opacity 0.22s ease, transform 0.22s ease;
 }
 
 .brand-copy strong {
@@ -73,6 +98,13 @@ html[data-theme$="-light"] .brand-copy span {
   color: rgba(26, 47, 39, 0.66);
 }
 
+.universal-nav-shell.nav-compact .brand-copy {
+  opacity: 0;
+  transform: scale(0.96);
+  width: 0;
+  overflow: hidden;
+}
+
 .nav-dropdown {
   position: relative;
   flex: 0 0 auto;
@@ -82,7 +114,7 @@ html[data-theme$="-light"] .brand-copy span {
 .nav-hamburger {
   width: 42px;
   height: 42px;
-  border-radius: 14px;
+  border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.20);
   background: rgba(255,255,255,0.08);
   display: grid;
@@ -93,12 +125,22 @@ html[data-theme$="-light"] .brand-copy span {
   box-shadow:
     0 10px 24px rgba(0,0,0,0.18),
     inset 0 1px 0 rgba(255,255,255,0.30);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
 }
 
 html[data-theme="light"] .nav-hamburger,
 html[data-theme$="-light"] .nav-hamburger {
   background: rgba(255,255,255,0.82);
   border: 1px solid rgba(255,255,255,0.90);
+}
+
+.universal-nav-shell.nav-compact .nav-hamburger {
+  width: 34px;
+  height: 34px;
 }
 
 .hamburger-orb {
@@ -145,7 +187,7 @@ html[data-theme$="-light"] .hamburger-bar {
   position: fixed;
   inset: 0;
   z-index: 100002;
-  background: rgba(0,0,0,0.48);
+  background: rgba(0,0,0,0.36);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   opacity: 0;
@@ -163,18 +205,18 @@ html[data-theme$="-light"] .hamburger-bar {
 .nav-dropdown-menu {
   position: fixed;
   z-index: 100003;
-  top: calc(max(12px, env(safe-area-inset-top)) + 88px);
+  top: calc(max(10px, env(safe-area-inset-top)) + 74px);
   left: 12px;
   right: 12px;
-  max-width: 360px;
+  max-width: 380px;
   margin-left: auto;
   width: auto;
   padding: 14px;
-  border-radius: 24px;
+  border-radius: 28px;
   display: grid;
   gap: 10px;
 
-  background: rgba(10, 14, 22, 0.995);
+  background: rgba(10, 14, 22, 0.985);
   border: 1px solid rgba(255,255,255,0.18);
   box-shadow:
     0 28px 70px rgba(0,0,0,0.48),
@@ -204,6 +246,31 @@ html[data-theme$="-light"] .nav-dropdown-menu {
   visibility: visible;
   pointer-events: auto;
   transform: translateY(0);
+}
+
+.menu-search {
+  min-height: 48px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+html[data-theme="light"] .menu-search,
+html[data-theme$="-light"] .menu-search {
+  background: rgba(255,255,255,0.82);
+  border: 1px solid rgba(255,255,255,0.88);
+}
+
+.menu-search input {
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
 }
 
 .nav-dropdown-links,
@@ -269,6 +336,10 @@ html[data-theme$="-light"] .menu-divider {
   background: #ffffff;
 }
 
+html[data-theme="light"] .quick-chip-dot {
+  background: #14251f;
+}
+
 .theme-row-title,
 .fx-row-title {
   font-size: 0.84rem;
@@ -309,10 +380,7 @@ html[data-theme$="-light"] .menu-divider {
 .theme-bubble.light { background: #f1ece8; }
 .theme-bubble.blue { background: #c7d8ff; }
 .theme-bubble.red { background: #ff6c86; }
-.theme-bubble.pink { background: #f2c5df; }
-.theme-bubble.green { background: #c7e6cf; }
-.theme-bubble.purple { background: #ddd0fb; }
-.theme-bubble.yellow { background: #f0da7b; }
+.theme-bubble.green { background: #bde7c9; }
 
 .fx-pills {
   display: grid;
@@ -333,7 +401,7 @@ html[data-theme$="-light"] .menu-divider {
 .site-footer-inner {
   min-height: 76px;
   padding: 16px 18px;
-  border-radius: 24px;
+  border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -355,7 +423,7 @@ html[data-theme$="-light"] .site-footer-inner {
     top: calc(100% + 12px);
     right: 0;
     left: auto;
-    width: 300px;
+    width: 320px;
     max-width: none;
     margin-left: 0;
   }
