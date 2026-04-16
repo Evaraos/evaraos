@@ -160,9 +160,9 @@ html[data-theme$="-light"] .hamburger-bar {
   position: fixed;
   inset: 0;
   z-index: 5098;
-  background: rgba(3, 7, 16, 0.54);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(3, 7, 16, 0.62);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -189,15 +189,14 @@ html[data-theme$="-light"] .hamburger-bar {
   gap: 10px;
   z-index: 5099;
 
-  background:
-    linear-gradient(180deg, rgba(12, 16, 24, 0.985), rgba(10, 14, 22, 0.975));
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(10, 14, 22, 0.985);
+  border: 1px solid rgba(255, 255, 255, 0.20);
   box-shadow:
-    0 28px 70px rgba(0, 0, 0, 0.42),
+    0 28px 70px rgba(0, 0, 0, 0.48),
     0 0 0 1px rgba(255, 255, 255, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.20);
-  backdrop-filter: blur(34px) saturate(180%);
-  -webkit-backdrop-filter: blur(34px) saturate(180%);
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(30px) saturate(170%);
+  -webkit-backdrop-filter: blur(30px) saturate(170%);
   isolation: isolate;
 
   opacity: 0;
@@ -212,11 +211,10 @@ html[data-theme$="-light"] .hamburger-bar {
 
 html[data-theme="light"] .nav-dropdown-menu,
 html[data-theme$="-light"] .nav-dropdown-menu {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.995), rgba(251, 252, 251, 0.992));
-  border: 1px solid rgba(255, 255, 255, 0.94);
+  background: rgba(250, 251, 250, 0.985);
+  border: 1px solid rgba(255, 255, 255, 0.96);
   box-shadow:
-    0 24px 54px rgba(85, 110, 99, 0.14),
+    0 24px 54px rgba(85, 110, 99, 0.16),
     0 0 0 1px rgba(255, 255, 255, 0.52),
     inset 0 1px 0 rgba(255, 255, 255, 1);
 }
@@ -243,8 +241,8 @@ html[data-theme$="-light"] .nav-dropdown-menu {
   text-decoration: none;
   font-weight: 800;
   font-size: 0.98rem;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.10);
   color: #f5f7ff;
   cursor: pointer;
   transition:
@@ -259,15 +257,15 @@ html[data-theme$="-light"] .nav-dropdown-menu {
 html[data-theme="light"] .menu-link,
 html[data-theme$="-light"] .menu-link {
   color: #12251f;
-  background: rgba(255,255,255,0.58);
-  border: 1px solid rgba(255,255,255,0.70);
+  background: rgba(255,255,255,0.78);
+  border: 1px solid rgba(255,255,255,0.82);
 }
 
 .menu-link:hover,
 .menu-link.active {
   transform: translateY(-1px);
   box-shadow:
-    0 0 0 1px rgba(255,255,255,0.10),
+    0 0 0 1px rgba(255,255,255,0.12),
     0 0 16px rgba(var(--tint-rgb), 0.08),
     inset 0 1px 0 rgba(255,255,255,0.14);
 }
@@ -299,13 +297,13 @@ html[data-theme$="-light"] .menu-divider {
 
 .quick-chip {
   min-height: 44px;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.10);
   border-radius: 15px;
   padding: 0 14px;
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(255,255,255,0.04);
+  background: rgba(255,255,255,0.08);
   color: inherit;
   cursor: pointer;
   position: relative;
@@ -315,8 +313,8 @@ html[data-theme$="-light"] .menu-divider {
 
 html[data-theme="light"] .quick-chip,
 html[data-theme$="-light"] .quick-chip {
-  background: rgba(255,255,255,0.58);
-  border: 1px solid rgba(255,255,255,0.70);
+  background: rgba(255,255,255,0.78);
+  border: 1px solid rgba(255,255,255,0.82);
 }
 
 .quick-chip-text {
@@ -396,9 +394,9 @@ html[data-theme$="-light"] .quick-chip {
 
 .fx-pill {
   min-height: 38px;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.10);
   border-radius: 12px;
-  background: rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.08);
   color: inherit;
   font-weight: 800;
   cursor: pointer;
@@ -414,8 +412,8 @@ html[data-theme$="-light"] .quick-chip {
 
 html[data-theme="light"] .fx-pill,
 html[data-theme$="-light"] .fx-pill {
-  background: rgba(255,255,255,0.58);
-  border: 1px solid rgba(255,255,255,0.70);
+  background: rgba(255,255,255,0.78);
+  border: 1px solid rgba(255,255,255,0.82);
 }
 
 @media (min-width: 900px) {
