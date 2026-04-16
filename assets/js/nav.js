@@ -236,6 +236,10 @@
       closeMenu();
     });
 
+    shell.addEventListener("click", () => {
+      shell.classList.remove("nav-compact");
+    });
+
     document.addEventListener("click", (event) => {
       if (!dropdown.contains(event.target)) {
         closeMenu();
@@ -265,12 +269,16 @@
       ticking = false;
     }
 
-    window.addEventListener("scroll", () => {
-      if (!ticking) {
-        window.requestAnimationFrame(update);
-        ticking = true;
-      }
-    }, { passive: true });
+    window.addEventListener(
+      "scroll",
+      () => {
+        if (!ticking) {
+          window.requestAnimationFrame(update);
+          ticking = true;
+        }
+      },
+      { passive: true }
+    );
   }
 
   function init() {
