@@ -6,6 +6,7 @@
   let lastY = window.scrollY;
   let compactTimer = null;
   let rafId = null;
+  let navPinnedOpen = false;
 
   function getBasePath() {
     const path = window.location.pathname;
@@ -220,13 +221,16 @@
     targetProgress = Math.max(0, Math.min(1, value));
   }
 
-  function expandNav() {
+  function expandNav(pin = false) {
     clearCompactTimer();
+    if (pin) navPinnedOpen = true;
     setTarget(1);
   }
 
-  function compactNav() {
-    if (atTopOfPage()) {
+  function compactNav(unpin = false) {
+    if (unpin) navPinnedOpen = false;
+
+    if (atTopOfPage() && !document.body.classList.contains("nav-menu-open")) {
       setTarget(1);
       return;
     }
@@ -237,9 +241,14 @@
     clearCompactTimer();
     if (document.body.classList.contains("nav-menu-open")) return;
     if (atTopOfPage()) return;
+    if (navPinnedOpen) return;
 
     compactTimer = setTimeout(() => {
-      if (!document.body.classList.contains("nav-menu-open") && !atTopOfPage()) {
+      if (
+        !document.body.classList.contains("nav-menu-open") &&
+        !atTopOfPage() &&
+        !navPinnedOpen
+      ) {
         compactNav();
       }
     }, delay);
@@ -252,7 +261,7 @@
     document.body.classList.add("nav-menu-open");
     zone.classList.add("open");
     btn.setAttribute("aria-expanded", "true");
-    expandNav();
+    expandNav(true);
   }
 
   function closeMenu(shouldCompact = true) {
@@ -264,10 +273,11 @@
     btn.setAttribute("aria-expanded", "false");
 
     if (shouldCompact) {
+      navPinnedOpen = false;
       if (atTopOfPage()) {
-        expandNav();
+        setTarget(1);
       } else {
-        scheduleCompact(120);
+        setTarget(0);
       }
     }
   }
@@ -280,8 +290,7 @@
       if (progress <= 0.08) {
         event.preventDefault();
         event.stopPropagation();
-        expandNav();
-        if (!atTopOfPage()) scheduleCompact(700);
+        expandNav(true);
       }
     });
   }
@@ -371,10 +380,18 @@
     });
 
     pill.addEventListener("click", (event) => {
-      if (progress <= 0.08 && !event.target.closest("#evaMenuBtn")) {
+      if (event.target.closest("#evaMenuBtn")) return;
+
+      if (progress <= 0.08) {
         event.preventDefault();
-        expandNav();
-        if (!atTopOfPage()) scheduleCompact(700);
+        expandNav(true);
+        return;
+      }
+
+      if (!document.body.classList.contains("nav-menu-open") && !atTopOfPage()) {
+        event.preventDefault();
+        navPinnedOpen = false;
+        compactNav(true);
       }
     });
 
@@ -390,8 +407,6 @@
       if (!zone.contains(event.target) && !panel.contains(event.target)) {
         if (document.body.classList.contains("nav-menu-open")) {
           closeMenu(true);
-        } else if (progress > 0.08 && !atTopOfPage()) {
-          scheduleCompact(200);
         }
       }
     });
@@ -406,17 +421,20 @@
 
         if (!document.body.classList.contains("nav-menu-open")) {
           if (atTopOfPage()) {
+            navPinnedOpen = false;
             setTarget(1);
             clearCompactTimer();
           } else if (dy < -0.4) {
             const boost = Math.min(0.22, Math.abs(dy) / 140);
+            navPinnedOpen = false;
             setTarget(Math.min(1, targetProgress + boost));
             scheduleCompact(650);
           } else if (dy > 0.4) {
             const drop = Math.min(0.22, Math.abs(dy) / 140);
+            navPinnedOpen = false;
             setTarget(Math.max(0, targetProgress - drop));
-            scheduleCompact(180);
-          } else {
+            scheduleCompact(120);
+          } else if (!navPinnedOpen) {
             scheduleCompact(240);
           }
         }
@@ -431,8 +449,9 @@
       () => {
         if (!document.body.classList.contains("nav-menu-open")) {
           if (atTopOfPage()) {
+            navPinnedOpen = false;
             setTarget(1);
-          } else {
+          } else if (!navPinnedOpen) {
             scheduleCompact(240);
           }
         }
