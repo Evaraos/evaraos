@@ -3,7 +3,6 @@
   let tripleTapTimer = null;
   let progress = 0;
   let lastY = window.scrollY;
-  let lastTs = 0;
   let compactTimer = null;
 
   function getBasePath() {
@@ -54,14 +53,6 @@
     const label = document.querySelector("[data-theme-label]");
     if (!label) return;
     label.textContent = getTheme() === "light" ? "Light mode" : "Dark mode";
-  }
-
-  function navHaptic(ms = 8) {
-    try {
-      if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
-        navigator.vibrate(ms);
-      }
-    } catch (_) {}
   }
 
   function getVisibleLinks() {
@@ -212,16 +203,12 @@
   }
 
   function expandNav() {
-    const wasCompact = progress <= 0.08;
     applyProgress(1);
-    if (wasCompact) navHaptic(8);
     clearCompactTimer();
   }
 
   function compactNav() {
-    const wasExpanded = progress > 0.08;
     applyProgress(0);
-    if (wasExpanded) navHaptic(6);
   }
 
   function clearCompactTimer() {
@@ -231,14 +218,14 @@
     }
   }
 
-  function scheduleCompact() {
+  function scheduleCompact(delay = 500) {
     clearCompactTimer();
     if (document.body.classList.contains("nav-menu-open")) return;
     compactTimer = setTimeout(() => {
       if (!document.body.classList.contains("nav-menu-open")) {
         compactNav();
       }
-    }, 700);
+    }, delay);
   }
 
   function openMenu() {
@@ -258,8 +245,7 @@
     document.body.classList.remove("nav-menu-open");
     zone.classList.remove("open");
     btn.setAttribute("aria-expanded", "false");
-    navHaptic(6);
-    scheduleCompact();
+    scheduleCompact(250);
   }
 
   function bindBrandLink() {
@@ -271,6 +257,7 @@
         event.preventDefault();
         event.stopPropagation();
         expandNav();
+        scheduleCompact(900);
       }
     });
   }
@@ -363,6 +350,7 @@
       if (progress <= 0.08 && !event.target.closest("#evaMenuBtn")) {
         event.preventDefault();
         expandNav();
+        scheduleCompact(900);
       }
     });
 
@@ -378,46 +366,48 @@
       if (!zone.contains(event.target) && !panel.contains(event.target)) {
         if (document.body.classList.contains("nav-menu-open")) {
           closeMenu();
+        } else if (progress > 0.08) {
+          scheduleCompact(350);
         }
       }
     });
   }
 
-  function bindScrollInterpolation() {
-    lastTs = performance.now();
+  function bindScrollBehavior() {
+    window.addEventListener(
+      "scroll",
+      () => {
+        if (document.body.classList.contains("nav-menu-open")) return;
 
-    function step(now) {
-      const y = window.scrollY;
-      const dy = y - lastY;
-      const dt = Math.max(16, now - lastTs);
+        const y = window.scrollY;
+        const delta = y - lastY;
 
-      if (!document.body.classList.contains("nav-menu-open")) {
-        const velocity = dy / dt;
-
-        if (velocity > 0.015) {
-          progress -= Math.min(0.09, velocity * 3.4);
-          clearCompactTimer();
-        } else if (velocity < -0.015) {
-          progress += Math.min(0.09, Math.abs(velocity) * 3.4);
-          clearCompactTimer();
-        } else {
-          scheduleCompact();
+        if (delta > 0.8) {
+          compactNav();
+        } else if (delta < -0.8) {
+          expandNav();
+          scheduleCompact(750);
         }
 
         if (y < 24) {
-          progress = 1;
-          clearCompactTimer();
+          expandNav();
+          scheduleCompact(900);
         }
 
-        applyProgress(progress);
-      }
+        lastY = y;
+      },
+      { passive: true }
+    );
 
-      lastY = y;
-      lastTs = now;
-      rafId = requestAnimationFrame(step);
-    }
-
-    rafId = requestAnimationFrame(step);
+    window.addEventListener(
+      "touchend",
+      () => {
+        if (!document.body.classList.contains("nav-menu-open")) {
+          scheduleCompact(450);
+        }
+      },
+      { passive: true }
+    );
   }
 
   function init() {
@@ -429,10 +419,10 @@
     bindThemeToggle();
     bindSearch();
     bindTripleTap();
-    applyProgress(0);
-    bindScrollInterpolation();
+    compactNav();
+    bindScrollBehavior();
     syncThemeLabel();
-    scheduleCompact();
+    scheduleCompact(300);
   }
 
   document.addEventListener("DOMContentLoaded", init);
