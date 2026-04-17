@@ -1,6 +1,9 @@
 (function () {
   let tripleTapCount = 0;
   let tripleTapTimer = null;
+  let progress = 0;
+  let lastY = window.scrollY;
+  let rafId = null;
 
   function getBasePath() {
     const path = window.location.pathname;
@@ -99,9 +102,9 @@
 
     mount.innerHTML = `
       <div class="eva-nav-layer">
-        <header class="eva-nav-shell compact" id="evaNavShell">
-          <div class="eva-nav-pill glass-shell">
-            <a href="${buildHref("index.html")}" class="eva-brand" aria-label="Go home">
+        <header class="eva-nav-shell" id="evaNavShell">
+          <div class="eva-nav-pill glass-shell" id="evaNavPill">
+            <a href="${buildHref("index.html")}" class="eva-brand" id="evaBrandLink" aria-label="Go home">
               <img
                 src="${getBasePath()}/assets/img/evaraos_logo.png"
                 alt="Evaraos logo"
@@ -180,6 +183,31 @@
     return document.getElementById("evaNavShell");
   }
 
+  function getBrandLink() {
+    return document.getElementById("evaBrandLink");
+  }
+
+  function applyProgress(value) {
+    const shell = getNavShell();
+    if (!shell) return;
+    progress = Math.max(0, Math.min(1, value));
+    shell.style.setProperty("--nav-progress", progress.toFixed(4));
+
+    if (progress <= 0.08) {
+      shell.classList.add("compact");
+    } else {
+      shell.classList.remove("compact");
+    }
+  }
+
+  function expandNav() {
+    applyProgress(1);
+  }
+
+  function compactNav() {
+    applyProgress(0);
+  }
+
   function openMenu() {
     const zone = getMenuZone();
     const btn = getMenuBtn();
@@ -187,6 +215,7 @@
     document.body.classList.add("nav-menu-open");
     zone.classList.add("open");
     btn.setAttribute("aria-expanded", "true");
+    expandNav();
   }
 
   function closeMenu() {
@@ -198,10 +227,17 @@
     btn.setAttribute("aria-expanded", "false");
   }
 
-  function setCompactState(compact) {
-    const shell = getNavShell();
-    if (!shell) return;
-    shell.classList.toggle("compact", compact);
+  function bindBrandLink() {
+    const brand = getBrandLink();
+    if (!brand) return;
+
+    brand.addEventListener("click", (event) => {
+      if (progress <= 0.08) {
+        event.preventDefault();
+        event.stopPropagation();
+        expandNav();
+      }
+    });
   }
 
   function bindLinks() {
@@ -273,21 +309,26 @@
     const btn = getMenuBtn();
     const panel = getMenuPanel();
     const backdrop = document.getElementById("evaBackdrop");
+    const pill = document.getElementById("evaNavPill");
 
-    if (!zone || !btn || !panel || !backdrop) return;
+    if (!zone || !btn || !panel || !backdrop || !pill) return;
 
     btn.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      setCompactState(false);
 
-      requestAnimationFrame(() => {
-        if (document.body.classList.contains("nav-menu-open")) {
-          closeMenu();
-        } else {
-          openMenu();
-        }
-      });
+      if (document.body.classList.contains("nav-menu-open")) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    });
+
+    pill.addEventListener("click", (event) => {
+      if (progress <= 0.08 && !event.target.closest("#evaMenuBtn")) {
+        event.preventDefault();
+        expandNav();
+      }
     });
 
     panel.addEventListener("click", (event) => {
@@ -296,7 +337,7 @@
 
     backdrop.addEventListener("click", () => {
       closeMenu();
-      setCompactState(true);
+      compactNav();
     });
 
     document.addEventListener("click", (event) => {
@@ -306,52 +347,47 @@
     });
   }
 
-  function bindScrollCompact() {
-    let lastY = window.scrollY;
-    let ticking = false;
+  function bindScrollInterpolation() {
+    let lastTs = performance.now();
 
-    function update() {
+    function step(now) {
       const y = window.scrollY;
-      const delta = y - lastY;
+      const dy = y - lastY;
+      const dt = Math.max(16, now - lastTs);
 
-      if (document.body.classList.contains("nav-menu-open")) {
-        setCompactState(false);
-        lastY = y;
-        ticking = false;
-        return;
-      }
+      if (!document.body.classList.contains("nav-menu-open")) {
+        const velocity = dy / dt;
 
-      if (delta > 0.8) {
-        setCompactState(true);
-      } else if (delta < -0.8) {
-        setCompactState(false);
-      }
+        if (y < 24) {
+          progress += 0.07;
+        } else if (velocity > 0) {
+          progress -= Math.min(0.07, velocity * 3);
+        } else if (velocity < 0) {
+          progress += Math.min(0.07, Math.abs(velocity) * 3);
+        }
 
-      if (y < 24) {
-        setCompactState(false);
+        applyProgress(progress);
       }
 
       lastY = y;
-      ticking = false;
+      lastTs = now;
+      rafId = requestAnimationFrame(step);
     }
 
-    window.addEventListener("scroll", () => {
-      if (!ticking) {
-        window.requestAnimationFrame(update);
-        ticking = true;
-      }
-    }, { passive: true });
+    rafId = requestAnimationFrame(step);
   }
 
   function init() {
     document.documentElement.setAttribute("data-theme", getTheme());
     renderNav();
+    bindBrandLink();
     bindMenu();
     bindLinks();
     bindThemeToggle();
     bindSearch();
     bindTripleTap();
-    bindScrollCompact();
+    applyProgress(0);
+    bindScrollInterpolation();
     syncThemeLabel();
   }
 
