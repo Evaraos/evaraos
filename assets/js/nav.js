@@ -441,6 +441,7 @@
 
     pill.addEventListener("click", (event) => {
       if (event.target.closest("#evaMenuBtn")) return;
+      if (document.body.classList.contains("nav-menu-open")) return;
 
       if (progress <= 0.08) {
         event.preventDefault();
@@ -449,7 +450,7 @@
         return;
       }
 
-      if (!document.body.classList.contains("nav-menu-open") && !atTopOfPage()) {
+      if (!atTopOfPage()) {
         event.preventDefault();
         navPinnedOpen = false;
         compactNav(true, "tap");
