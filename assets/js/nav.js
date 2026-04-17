@@ -286,7 +286,7 @@
         return;
       }
 
-      scheduleCompact(7000);
+      setTarget(0, "scroll");
     }, 120);
   }
 
@@ -468,9 +468,9 @@
             navPinnedOpen = false;
             setTarget(1, "scroll");
           } else {
-            const delta = dy / 220;
-            const next = Math.max(0, Math.min(1, targetProgress - delta));
-            navPinnedOpen = false;
+            const sensitivity = 0.018; // tiny iPhone-like feel
+            const next = Math.max(0, Math.min(1, targetProgress - dy * sensitivity));
+            navPinnedOpen = dy < 0;
             setTarget(next, "scroll");
           }
 
@@ -495,8 +495,8 @@
 
   function animate() {
     const diff = targetProgress - progress;
-    const factor = motionMode === "tap" ? 0.065 : 0.052;
-    const next = Math.abs(diff) < 0.001 ? targetProgress : progress + diff * factor;
+    const factor = motionMode === "tap" ? 0.075 : 0.072;
+    const next = Math.abs(diff) < 0.0008 ? targetProgress : progress + diff * factor;
     applyProgress(next);
     rafId = requestAnimationFrame(animate);
   }
