@@ -2,6 +2,7 @@
   let tripleTapCount = 0;
   let tripleTapTimer = null;
   let progress = 0;
+  let targetProgress = 0;
   let lastY = window.scrollY;
   let compactTimer = null;
   let rafId = null;
@@ -54,14 +55,6 @@
     const label = document.querySelector("[data-theme-label]");
     if (!label) return;
     label.textContent = getTheme() === "light" ? "Light mode" : "Dark mode";
-  }
-
-  function navHaptic(ms = 8) {
-    try {
-      if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
-        navigator.vibrate(ms);
-      }
-    } catch (_) {}
   }
 
   function getVisibleLinks() {
@@ -203,9 +196,14 @@
     }
   }
 
+  function atTopOfPage() {
+    return window.scrollY <= 4;
+  }
+
   function applyProgress(value) {
     const shell = getNavShell();
     if (!shell) return;
+
     progress = Math.max(0, Math.min(1, value));
     shell.style.setProperty("--nav-progress", progress.toFixed(4));
 
@@ -218,21 +216,21 @@
     }
   }
 
+  function setTarget(value) {
+    targetProgress = Math.max(0, Math.min(1, value));
+  }
+
   function expandNav() {
-    const wasCompact = progress <= 0.08;
     clearCompactTimer();
-    applyProgress(1);
-    if (wasCompact) navHaptic(8);
+    setTarget(1);
   }
 
   function compactNav() {
-    const wasExpanded = progress > 0.08;
-    applyProgress(0);
-    if (wasExpanded) navHaptic(6);
-  }
-
-  function atTopOfPage() {
-    return window.scrollY <= 4;
+    if (atTopOfPage()) {
+      setTarget(1);
+      return;
+    }
+    setTarget(0);
   }
 
   function scheduleCompact(delay = 420) {
@@ -400,35 +398,40 @@
   }
 
   function bindScrollBehavior() {
-    function loop() {
-      const y = window.scrollY;
-      const dy = y - lastY;
+    window.addEventListener(
+      "scroll",
+      () => {
+        const y = window.scrollY;
+        const dy = y - lastY;
 
-      if (!document.body.classList.contains("nav-menu-open")) {
-        if (atTopOfPage()) {
-          expandNav();
-        } else if (dy < -0.8) {
-          expandNav();
-          scheduleCompact(650);
-        } else if (dy > 0.8) {
-          compactNav();
-        } else {
-          scheduleCompact(240);
+        if (!document.body.classList.contains("nav-menu-open")) {
+          if (atTopOfPage()) {
+            setTarget(1);
+            clearCompactTimer();
+          } else if (dy < -0.4) {
+            const boost = Math.min(0.22, Math.abs(dy) / 140);
+            setTarget(Math.min(1, targetProgress + boost));
+            scheduleCompact(650);
+          } else if (dy > 0.4) {
+            const drop = Math.min(0.22, Math.abs(dy) / 140);
+            setTarget(Math.max(0, targetProgress - drop));
+            scheduleCompact(180);
+          } else {
+            scheduleCompact(240);
+          }
         }
-      }
 
-      lastY = y;
-      rafId = requestAnimationFrame(loop);
-    }
-
-    rafId = requestAnimationFrame(loop);
+        lastY = y;
+      },
+      { passive: true }
+    );
 
     window.addEventListener(
       "touchend",
       () => {
         if (!document.body.classList.contains("nav-menu-open")) {
           if (atTopOfPage()) {
-            expandNav();
+            setTarget(1);
           } else {
             scheduleCompact(240);
           }
@@ -436,6 +439,13 @@
       },
       { passive: true }
     );
+  }
+
+  function animate() {
+    const diff = targetProgress - progress;
+    const next = Math.abs(diff) < 0.002 ? targetProgress : progress + diff * 0.16;
+    applyProgress(next);
+    rafId = requestAnimationFrame(animate);
   }
 
   function init() {
@@ -447,16 +457,11 @@
     bindThemeToggle();
     bindSearch();
     bindTripleTap();
-
-    if (atTopOfPage()) {
-      applyProgress(1);
-    } else {
-      applyProgress(0);
-      scheduleCompact(240);
-    }
-
+    targetProgress = atTopOfPage() ? 1 : 0;
+    applyProgress(targetProgress);
     bindScrollBehavior();
     syncThemeLabel();
+    animate();
   }
 
   document.addEventListener("DOMContentLoaded", init);
