@@ -346,25 +346,35 @@
     }
   }
 
+  function togglePill(event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    if (document.body.classList.contains("nav-menu-open")) return;
+
+    if (isCompact()) {
+      expandNav(true, "tap");
+      scheduleCompact(4000);
+      return;
+    }
+
+    if (!atTopOfPage()) {
+      navPinnedOpen = false;
+      compactNav(true, "tap");
+    }
+  }
+
   function bindBrandLink() {
     const brand = getBrandLink();
     if (!brand) return;
 
     brand.addEventListener("click", (event) => {
-      if (isCompact()) {
-        event.preventDefault();
-        event.stopPropagation();
-        expandNav(true, "tap");
-        scheduleCompact(4000);
-        return;
-      }
+      togglePill(event);
+    });
 
-      if (!atTopOfPage()) {
-        event.preventDefault();
-        event.stopPropagation();
-        navPinnedOpen = false;
-        compactNav(true, "tap");
-      }
+    brand.addEventListener("pointerup", (event) => {
+      togglePill(event);
     });
   }
 
@@ -458,22 +468,13 @@
     pill.addEventListener("click", (event) => {
       if (event.target.closest("#evaMenuBtn")) return;
       if (event.target.closest("#evaBrandLink")) return;
-      if (document.body.classList.contains("nav-menu-open")) return;
+      togglePill(event);
+    });
 
-      if (isCompact()) {
-        event.preventDefault();
-        event.stopPropagation();
-        expandNav(true, "tap");
-        scheduleCompact(4000);
-        return;
-      }
-
-      if (!atTopOfPage()) {
-        event.preventDefault();
-        event.stopPropagation();
-        navPinnedOpen = false;
-        compactNav(true, "tap");
-      }
+    pill.addEventListener("pointerup", (event) => {
+      if (event.target.closest("#evaMenuBtn")) return;
+      if (event.target.closest("#evaBrandLink")) return;
+      togglePill(event);
     });
 
     panel.addEventListener("click", (event) => {
