@@ -4,6 +4,7 @@
   let progress = 0;
   let lastY = window.scrollY;
   let compactTimer = null;
+  let rafId = null;
 
   function getBasePath() {
     const path = window.location.pathname;
@@ -53,6 +54,14 @@
     const label = document.querySelector("[data-theme-label]");
     if (!label) return;
     label.textContent = getTheme() === "light" ? "Light mode" : "Dark mode";
+  }
+
+  function navHaptic(ms = 8) {
+    try {
+      if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+        navigator.vibrate(ms);
+      }
+    } catch (_) {}
   }
 
   function getVisibleLinks() {
@@ -187,6 +196,13 @@
     return document.getElementById("evaBrandLink");
   }
 
+  function clearCompactTimer() {
+    if (compactTimer) {
+      clearTimeout(compactTimer);
+      compactTimer = null;
+    }
+  }
+
   function applyProgress(value) {
     const shell = getNavShell();
     if (!shell) return;
@@ -203,24 +219,22 @@
   }
 
   function expandNav() {
-    applyProgress(1);
+    const wasCompact = progress <= 0.08;
     clearCompactTimer();
+    applyProgress(1);
+    if (wasCompact) navHaptic(8);
   }
 
   function compactNav() {
+    const wasExpanded = progress > 0.08;
     applyProgress(0);
+    if (wasExpanded) navHaptic(6);
   }
 
-  function clearCompactTimer() {
-    if (compactTimer) {
-      clearTimeout(compactTimer);
-      compactTimer = null;
-    }
-  }
-
-  function scheduleCompact(delay = 500) {
+  function scheduleCompact(delay = 420) {
     clearCompactTimer();
     if (document.body.classList.contains("nav-menu-open")) return;
+
     compactTimer = setTimeout(() => {
       if (!document.body.classList.contains("nav-menu-open")) {
         compactNav();
@@ -238,14 +252,14 @@
     expandNav();
   }
 
-  function closeMenu() {
+  function closeMenu(shouldCompact = true) {
     const zone = getMenuZone();
     const btn = getMenuBtn();
     if (!zone || !btn) return;
     document.body.classList.remove("nav-menu-open");
     zone.classList.remove("open");
     btn.setAttribute("aria-expanded", "false");
-    scheduleCompact(250);
+    if (shouldCompact) scheduleCompact(120);
   }
 
   function bindBrandLink() {
@@ -257,7 +271,7 @@
         event.preventDefault();
         event.stopPropagation();
         expandNav();
-        scheduleCompact(900);
+        scheduleCompact(700);
       }
     });
   }
@@ -269,7 +283,7 @@
         event.stopPropagation();
         const href = link.getAttribute("data-menu-link");
         if (!href) return;
-        closeMenu();
+        closeMenu(false);
         window.location.assign(href);
       });
     });
@@ -340,7 +354,7 @@
       event.stopPropagation();
 
       if (document.body.classList.contains("nav-menu-open")) {
-        closeMenu();
+        closeMenu(true);
       } else {
         openMenu();
       }
@@ -350,7 +364,7 @@
       if (progress <= 0.08 && !event.target.closest("#evaMenuBtn")) {
         event.preventDefault();
         expandNav();
-        scheduleCompact(900);
+        scheduleCompact(700);
       }
     });
 
@@ -359,51 +373,47 @@
     });
 
     backdrop.addEventListener("click", () => {
-      closeMenu();
+      closeMenu(true);
     });
 
     document.addEventListener("click", (event) => {
       if (!zone.contains(event.target) && !panel.contains(event.target)) {
         if (document.body.classList.contains("nav-menu-open")) {
-          closeMenu();
+          closeMenu(true);
         } else if (progress > 0.08) {
-          scheduleCompact(350);
+          scheduleCompact(200);
         }
       }
     });
   }
 
   function bindScrollBehavior() {
-    window.addEventListener(
-      "scroll",
-      () => {
-        if (document.body.classList.contains("nav-menu-open")) return;
+    function loop() {
+      const y = window.scrollY;
+      const dy = y - lastY;
 
-        const y = window.scrollY;
-        const delta = y - lastY;
-
-        if (delta > 0.8) {
+      if (!document.body.classList.contains("nav-menu-open")) {
+        if (dy < -0.8) {
+          expandNav();
+          scheduleCompact(650);
+        } else if (dy > 0.8) {
           compactNav();
-        } else if (delta < -0.8) {
-          expandNav();
-          scheduleCompact(750);
+        } else {
+          scheduleCompact(240);
         }
+      }
 
-        if (y < 24) {
-          expandNav();
-          scheduleCompact(900);
-        }
+      lastY = y;
+      rafId = requestAnimationFrame(loop);
+    }
 
-        lastY = y;
-      },
-      { passive: true }
-    );
+    rafId = requestAnimationFrame(loop);
 
     window.addEventListener(
       "touchend",
       () => {
         if (!document.body.classList.contains("nav-menu-open")) {
-          scheduleCompact(450);
+          scheduleCompact(240);
         }
       },
       { passive: true }
@@ -419,10 +429,10 @@
     bindThemeToggle();
     bindSearch();
     bindTripleTap();
-    compactNav();
+    applyProgress(0);
     bindScrollBehavior();
     syncThemeLabel();
-    scheduleCompact(300);
+    scheduleCompact(240);
   }
 
   document.addEventListener("DOMContentLoaded", init);
