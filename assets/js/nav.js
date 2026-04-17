@@ -4,6 +4,7 @@
   let progress = 0;
   let lastY = window.scrollY;
   let lastTs = 0;
+  let compactTimer = null;
 
   function getBasePath() {
     const path = window.location.pathname;
@@ -214,12 +215,30 @@
     const wasCompact = progress <= 0.08;
     applyProgress(1);
     if (wasCompact) navHaptic(8);
+    clearCompactTimer();
   }
 
   function compactNav() {
     const wasExpanded = progress > 0.08;
     applyProgress(0);
     if (wasExpanded) navHaptic(6);
+  }
+
+  function clearCompactTimer() {
+    if (compactTimer) {
+      clearTimeout(compactTimer);
+      compactTimer = null;
+    }
+  }
+
+  function scheduleCompact() {
+    clearCompactTimer();
+    if (document.body.classList.contains("nav-menu-open")) return;
+    compactTimer = setTimeout(() => {
+      if (!document.body.classList.contains("nav-menu-open")) {
+        compactNav();
+      }
+    }, 700);
   }
 
   function openMenu() {
@@ -240,6 +259,7 @@
     zone.classList.remove("open");
     btn.setAttribute("aria-expanded", "false");
     navHaptic(6);
+    scheduleCompact();
   }
 
   function bindBrandLink() {
@@ -281,4 +301,139 @@
 
   function bindSearch() {
     const input = document.getElementById("evaSearchInput");
-    const
+    const links = Array.from(document.querySelectorAll("#evaLinks .eva-link"));
+    if (!input) return;
+
+    input.addEventListener("input", () => {
+      const value = input.value.trim().toLowerCase();
+      links.forEach((link) => {
+        const label = (link.getAttribute("data-label") || "").toLowerCase();
+        link.style.display = !value || label.includes(value) ? "" : "none";
+      });
+    });
+  }
+
+  function toggleQuickMode() {
+    const panel = getMenuPanel();
+    if (!panel) return;
+    panel.classList.toggle("quick-mode");
+  }
+
+  function bindTripleTap() {
+    const btn = getMenuBtn();
+    if (!btn) return;
+
+    btn.addEventListener("click", () => {
+      tripleTapCount += 1;
+      clearTimeout(tripleTapTimer);
+
+      tripleTapTimer = setTimeout(() => {
+        tripleTapCount = 0;
+      }, 350);
+
+      if (tripleTapCount === 3) {
+        toggleQuickMode();
+        tripleTapCount = 0;
+        clearTimeout(tripleTapTimer);
+      }
+    });
+  }
+
+  function bindMenu() {
+    const zone = getMenuZone();
+    const btn = getMenuBtn();
+    const panel = getMenuPanel();
+    const backdrop = document.getElementById("evaBackdrop");
+    const pill = document.getElementById("evaNavPill");
+
+    if (!zone || !btn || !panel || !backdrop || !pill) return;
+
+    btn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (document.body.classList.contains("nav-menu-open")) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    });
+
+    pill.addEventListener("click", (event) => {
+      if (progress <= 0.08 && !event.target.closest("#evaMenuBtn")) {
+        event.preventDefault();
+        expandNav();
+      }
+    });
+
+    panel.addEventListener("click", (event) => {
+      event.stopPropagation();
+    });
+
+    backdrop.addEventListener("click", () => {
+      closeMenu();
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!zone.contains(event.target) && !panel.contains(event.target)) {
+        if (document.body.classList.contains("nav-menu-open")) {
+          closeMenu();
+        }
+      }
+    });
+  }
+
+  function bindScrollInterpolation() {
+    lastTs = performance.now();
+
+    function step(now) {
+      const y = window.scrollY;
+      const dy = y - lastY;
+      const dt = Math.max(16, now - lastTs);
+
+      if (!document.body.classList.contains("nav-menu-open")) {
+        const velocity = dy / dt;
+
+        if (velocity > 0.015) {
+          progress -= Math.min(0.09, velocity * 3.4);
+          clearCompactTimer();
+        } else if (velocity < -0.015) {
+          progress += Math.min(0.09, Math.abs(velocity) * 3.4);
+          clearCompactTimer();
+        } else {
+          scheduleCompact();
+        }
+
+        if (y < 24) {
+          progress = 1;
+          clearCompactTimer();
+        }
+
+        applyProgress(progress);
+      }
+
+      lastY = y;
+      lastTs = now;
+      rafId = requestAnimationFrame(step);
+    }
+
+    rafId = requestAnimationFrame(step);
+  }
+
+  function init() {
+    document.documentElement.setAttribute("data-theme", getTheme());
+    renderNav();
+    bindBrandLink();
+    bindMenu();
+    bindLinks();
+    bindThemeToggle();
+    bindSearch();
+    bindTripleTap();
+    applyProgress(0);
+    bindScrollInterpolation();
+    syncThemeLabel();
+    scheduleCompact();
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();
