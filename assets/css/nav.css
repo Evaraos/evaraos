@@ -17,7 +17,7 @@
   --pill-height: calc(28px + 40px * var(--nav-progress));
   --pill-pad-x: calc(5px + 7px * var(--nav-progress));
   --pill-pad-y: calc(2px + 8px * var(--nav-progress));
-  --brand-gap: calc(0px + 10px * var(--nav-progress));
+  --brand-gap: calc(0px + 8px * var(--nav-progress));
   --compact-logo: 32px;
   --full-logo: 44px;
   --logo-size: calc(var(--compact-logo) + (var(--full-logo) - var(--compact-logo)) * var(--nav-progress));
@@ -59,26 +59,14 @@
   gap: var(--brand-gap);
   text-decoration: none;
   min-width: 0;
-  max-width: calc(100% - var(--menu-size) - 18px);
+  max-width: calc(100% - var(--menu-size) - 22px);
   pointer-events: auto;
-}
-
-.eva-nav-shell.compact .eva-brand {
-  pointer-events: none;
-  cursor: default;
-}
-
-.eva-logo {
-  width: var(--logo-size);
-  height: var(--logo-size);
-  object-fit: contain;
-  flex: 0 0 auto;
 }
 
 .eva-brand-copy {
   min-width: 0;
   display: grid;
-  gap: 2px;
+  gap: 1px;
   opacity: var(--copy-opacity);
   pointer-events: none;
   overflow: hidden;
@@ -87,23 +75,30 @@
 
 .eva-brand-copy strong {
   display: block;
-  font-size: 1rem;
+  font-size: 0.98rem;
   font-weight: 800;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
+  line-height: 1.04;
+  letter-spacing: -0.025em;
   white-space: nowrap;
 }
 
 .eva-brand-copy span {
   display: block;
-  font-size: 0.8rem;
-  line-height: 1.1;
-  color: rgba(230, 236, 255, 0.72);
+  font-size: 0.74rem;
+  line-height: 1.05;
+  color: rgba(230, 236, 255, 0.74);
   white-space: nowrap;
 }
 
 html[data-theme="light"] .eva-brand-copy span {
   color: rgba(26, 47, 39, 0.64);
+}
+
+.eva-logo {
+  width: var(--logo-size);
+  height: var(--logo-size);
+  object-fit: contain;
+  flex: 0 0 auto;
 }
 
 .eva-menu-zone {
@@ -214,7 +209,7 @@ body.nav-menu-open .eva-backdrop {
   position: fixed;
   z-index: 2147483647;
   left: 50%;
-  top: calc(max(10px, env(safe-area-inset-top)) + 78px);
+  top: calc(max(10px, env(safe-area-inset-top)) + 94px);
   width: min(356px, calc(100vw - 28px));
   padding: 14px;
   border-radius: 28px;
