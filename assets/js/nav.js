@@ -55,6 +55,14 @@
     label.textContent = getTheme() === "light" ? "Light mode" : "Dark mode";
   }
 
+  function navHaptic(ms = 8) {
+    try {
+      if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+        navigator.vibrate(ms);
+      }
+    } catch (_) {}
+  }
+
   function getVisibleLinks() {
     const role = getRole();
 
@@ -201,11 +209,15 @@
   }
 
   function expandNav() {
+    const wasCompact = progress <= 0.08;
     applyProgress(1);
+    if (wasCompact) navHaptic(8);
   }
 
   function compactNav() {
+    const wasExpanded = progress > 0.08;
     applyProgress(0);
+    if (wasExpanded) navHaptic(6);
   }
 
   function openMenu() {
@@ -225,6 +237,7 @@
     document.body.classList.remove("nav-menu-open");
     zone.classList.remove("open");
     btn.setAttribute("aria-expanded", "false");
+    navHaptic(6);
   }
 
   function bindBrandLink() {
