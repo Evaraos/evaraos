@@ -5,9 +5,11 @@
   let targetProgress = 0;
   let lastY = window.scrollY;
   let compactTimer = null;
+  let scrollSettleTimer = null;
   let rafId = null;
   let navPinnedOpen = false;
   let motionMode = "scroll";
+  let isActivelyScrolling = false;
 
   function getBasePath() {
     const path = window.location.pathname;
@@ -206,6 +208,13 @@
     }
   }
 
+  function clearScrollSettleTimer() {
+    if (scrollSettleTimer) {
+      clearTimeout(scrollSettleTimer);
+      scrollSettleTimer = null;
+    }
+  }
+
   function atTopOfPage() {
     return window.scrollY <= 4;
   }
@@ -264,6 +273,28 @@
         compactNav(false, "tap");
       }
     }, delay);
+  }
+
+  function settleAfterScroll() {
+    clearScrollSettleTimer();
+    scrollSettleTimer = setTimeout(() => {
+      isActivelyScrolling = false;
+
+      if (document.body.classList.contains("nav-menu-open")) return;
+
+      if (atTopOfPage()) {
+        navPinnedOpen = false;
+        setTarget(1, "scroll");
+        return;
+      }
+
+      if (navPinnedOpen) {
+        scheduleCompact(10000);
+        return;
+      }
+
+      setTarget(0, "scroll");
+    }, 120);
   }
 
   function openMenu() {
@@ -438,23 +469,20 @@
         const dy = y - lastY;
 
         if (!document.body.classList.contains("nav-menu-open")) {
+          isActivelyScrolling = true;
+          clearCompactTimer();
+
           if (atTopOfPage()) {
             navPinnedOpen = false;
             setTarget(1, "scroll");
-            clearCompactTimer();
-          } else if (dy < -0.2) {
-            const boost = Math.min(0.1, Math.abs(dy) / 320);
+          } else {
+            const delta = dy / 220;
+            const next = Math.max(0, Math.min(1, targetProgress - delta));
             navPinnedOpen = false;
-            setTarget(Math.min(1, targetProgress + boost), "scroll");
-            scheduleCompact(3000);
-          } else if (dy > 0.2) {
-            const drop = Math.min(0.08, Math.abs(dy) / 320);
-            navPinnedOpen = false;
-            setTarget(Math.max(0, targetProgress - drop), "scroll");
-            scheduleCompact(300);
-          } else if (!navPinnedOpen) {
-            scheduleCompact(3000);
+            setTarget(next, "scroll");
           }
+
+          settleAfterScroll();
         }
 
         lastY = y;
@@ -466,12 +494,7 @@
       "touchend",
       () => {
         if (!document.body.classList.contains("nav-menu-open")) {
-          if (atTopOfPage()) {
-            navPinnedOpen = false;
-            setTarget(1, "scroll");
-          } else if (!navPinnedOpen) {
-            scheduleCompact(3000);
-          }
+          settleAfterScroll();
         }
       },
       { passive: true }
@@ -480,7 +503,7 @@
 
   function animate() {
     const diff = targetProgress - progress;
-    const factor = motionMode === "tap" ? 0.072 : 0.048;
+    const factor = motionMode === "tap" ? 0.070 : 0.060;
     const next = Math.abs(diff) < 0.001 ? targetProgress : progress + diff * factor;
     applyProgress(next);
     rafId = requestAnimationFrame(animate);
