@@ -201,6 +201,10 @@
     return document.getElementById("evaBrandLink");
   }
 
+  function getNavPill() {
+    return document.getElementById("evaNavPill");
+  }
+
   function clearCompactTimer() {
     if (compactTimer) {
       clearTimeout(compactTimer);
@@ -226,6 +230,10 @@
       document.documentElement.scrollHeight
     );
     return scrollBottom >= docHeight - 4;
+  }
+
+  function isCompact() {
+    return progress <= 0.08;
   }
 
   function applyProgress(value) {
@@ -343,11 +351,19 @@
     if (!brand) return;
 
     brand.addEventListener("click", (event) => {
-      if (progress <= 0.08) {
+      if (isCompact()) {
         event.preventDefault();
         event.stopPropagation();
         expandNav(true, "tap");
         scheduleCompact(4000);
+        return;
+      }
+
+      if (!atTopOfPage()) {
+        event.preventDefault();
+        event.stopPropagation();
+        navPinnedOpen = false;
+        compactNav(true, "tap");
       }
     });
   }
@@ -423,7 +439,7 @@
     const btn = getMenuBtn();
     const panel = getMenuPanel();
     const backdrop = document.getElementById("evaBackdrop");
-    const pill = document.getElementById("evaNavPill");
+    const pill = getNavPill();
 
     if (!zone || !btn || !panel || !backdrop || !pill) return;
 
@@ -441,10 +457,12 @@
 
     pill.addEventListener("click", (event) => {
       if (event.target.closest("#evaMenuBtn")) return;
+      if (event.target.closest("#evaBrandLink")) return;
       if (document.body.classList.contains("nav-menu-open")) return;
 
-      if (progress <= 0.08) {
+      if (isCompact()) {
         event.preventDefault();
+        event.stopPropagation();
         expandNav(true, "tap");
         scheduleCompact(4000);
         return;
@@ -452,6 +470,7 @@
 
       if (!atTopOfPage()) {
         event.preventDefault();
+        event.stopPropagation();
         navPinnedOpen = false;
         compactNav(true, "tap");
       }
