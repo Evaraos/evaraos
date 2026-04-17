@@ -9,7 +9,6 @@
   let rafId = null;
   let navPinnedOpen = false;
   let motionMode = "scroll";
-  let isActivelyScrolling = false;
 
   function getBasePath() {
     const path = window.location.pathname;
@@ -258,18 +257,14 @@
     navHaptic(8);
   }
 
-  function scheduleCompact(delay = 10000) {
+  function scheduleCompact(delay = 7000) {
     clearCompactTimer();
     if (document.body.classList.contains("nav-menu-open")) return;
     if (atTopOfPage()) return;
-    if (navPinnedOpen) return;
 
     compactTimer = setTimeout(() => {
-      if (
-        !document.body.classList.contains("nav-menu-open") &&
-        !atTopOfPage() &&
-        !navPinnedOpen
-      ) {
+      if (!document.body.classList.contains("nav-menu-open") && !atTopOfPage()) {
+        navPinnedOpen = false;
         compactNav(false, "tap");
       }
     }, delay);
@@ -278,8 +273,6 @@
   function settleAfterScroll() {
     clearScrollSettleTimer();
     scrollSettleTimer = setTimeout(() => {
-      isActivelyScrolling = false;
-
       if (document.body.classList.contains("nav-menu-open")) return;
 
       if (atTopOfPage()) {
@@ -289,11 +282,11 @@
       }
 
       if (navPinnedOpen) {
-        scheduleCompact(10000);
+        scheduleCompact(7000);
         return;
       }
 
-      setTarget(0, "scroll");
+      scheduleCompact(7000);
     }, 120);
   }
 
@@ -335,7 +328,7 @@
         event.preventDefault();
         event.stopPropagation();
         expandNav(true, "tap");
-        scheduleCompact(10000);
+        scheduleCompact(7000);
       }
     });
   }
@@ -433,7 +426,7 @@
       if (progress <= 0.08) {
         event.preventDefault();
         expandNav(true, "tap");
-        scheduleCompact(10000);
+        scheduleCompact(7000);
         return;
       }
 
@@ -469,7 +462,6 @@
         const dy = y - lastY;
 
         if (!document.body.classList.contains("nav-menu-open")) {
-          isActivelyScrolling = true;
           clearCompactTimer();
 
           if (atTopOfPage()) {
@@ -503,7 +495,7 @@
 
   function animate() {
     const diff = targetProgress - progress;
-    const factor = motionMode === "tap" ? 0.070 : 0.060;
+    const factor = motionMode === "tap" ? 0.065 : 0.052;
     const next = Math.abs(diff) < 0.001 ? targetProgress : progress + diff * factor;
     applyProgress(next);
     rafId = requestAnimationFrame(animate);
