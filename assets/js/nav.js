@@ -3,7 +3,7 @@
   let tripleTapTimer = null;
   let progress = 0;
   let lastY = window.scrollY;
-  let rafId = null;
+  let lastTs = 0;
 
   function getBasePath() {
     const path = window.location.pathname;
@@ -110,7 +110,7 @@
 
     mount.innerHTML = `
       <div class="eva-nav-layer">
-        <header class="eva-nav-shell" id="evaNavShell">
+        <header class="eva-nav-shell compact" id="evaNavShell">
           <div class="eva-nav-pill glass-shell" id="evaNavPill">
             <a href="${buildHref("index.html")}" class="eva-brand" id="evaBrandLink" aria-label="Go home">
               <img
@@ -203,8 +203,10 @@
 
     if (progress <= 0.08) {
       shell.classList.add("compact");
+      shell.classList.remove("expanded");
     } else {
       shell.classList.remove("compact");
+      shell.classList.add("expanded");
     }
   }
 
@@ -279,130 +281,4 @@
 
   function bindSearch() {
     const input = document.getElementById("evaSearchInput");
-    const links = Array.from(document.querySelectorAll("#evaLinks .eva-link"));
-    if (!input) return;
-
-    input.addEventListener("input", () => {
-      const value = input.value.trim().toLowerCase();
-      links.forEach((link) => {
-        const label = (link.getAttribute("data-label") || "").toLowerCase();
-        link.style.display = !value || label.includes(value) ? "" : "none";
-      });
-    });
-  }
-
-  function toggleQuickMode() {
-    const panel = getMenuPanel();
-    if (!panel) return;
-    panel.classList.toggle("quick-mode");
-  }
-
-  function bindTripleTap() {
-    const btn = getMenuBtn();
-    if (!btn) return;
-
-    btn.addEventListener("click", () => {
-      tripleTapCount += 1;
-      clearTimeout(tripleTapTimer);
-
-      tripleTapTimer = setTimeout(() => {
-        tripleTapCount = 0;
-      }, 350);
-
-      if (tripleTapCount === 3) {
-        toggleQuickMode();
-        tripleTapCount = 0;
-        clearTimeout(tripleTapTimer);
-      }
-    });
-  }
-
-  function bindMenu() {
-    const zone = getMenuZone();
-    const btn = getMenuBtn();
-    const panel = getMenuPanel();
-    const backdrop = document.getElementById("evaBackdrop");
-    const pill = document.getElementById("evaNavPill");
-
-    if (!zone || !btn || !panel || !backdrop || !pill) return;
-
-    btn.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-
-      if (document.body.classList.contains("nav-menu-open")) {
-        closeMenu();
-      } else {
-        openMenu();
-      }
-    });
-
-    pill.addEventListener("click", (event) => {
-      if (progress <= 0.08 && !event.target.closest("#evaMenuBtn")) {
-        event.preventDefault();
-        expandNav();
-      }
-    });
-
-    panel.addEventListener("click", (event) => {
-      event.stopPropagation();
-    });
-
-    backdrop.addEventListener("click", () => {
-      closeMenu();
-      compactNav();
-    });
-
-    document.addEventListener("click", (event) => {
-      if (!zone.contains(event.target) && !panel.contains(event.target)) {
-        closeMenu();
-      }
-    });
-  }
-
-  function bindScrollInterpolation() {
-    let lastTs = performance.now();
-
-    function step(now) {
-      const y = window.scrollY;
-      const dy = y - lastY;
-      const dt = Math.max(16, now - lastTs);
-
-      if (!document.body.classList.contains("nav-menu-open")) {
-        const velocity = dy / dt;
-
-        if (y < 24) {
-          progress += 0.07;
-        } else if (velocity > 0) {
-          progress -= Math.min(0.07, velocity * 3);
-        } else if (velocity < 0) {
-          progress += Math.min(0.07, Math.abs(velocity) * 3);
-        }
-
-        applyProgress(progress);
-      }
-
-      lastY = y;
-      lastTs = now;
-      rafId = requestAnimationFrame(step);
-    }
-
-    rafId = requestAnimationFrame(step);
-  }
-
-  function init() {
-    document.documentElement.setAttribute("data-theme", getTheme());
-    renderNav();
-    bindBrandLink();
-    bindMenu();
-    bindLinks();
-    bindThemeToggle();
-    bindSearch();
-    bindTripleTap();
-    applyProgress(0);
-    bindScrollInterpolation();
-    syncThemeLabel();
-  }
-
-  document.addEventListener("DOMContentLoaded", init);
-})();
+    const
