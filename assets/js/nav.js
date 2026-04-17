@@ -11,6 +11,11 @@
   let navPinnedOpen = false;
   let motionMode = "scroll";
 
+  let tapStartX = 0;
+  let tapStartY = 0;
+  let tapMoved = false;
+  let tapHandled = false;
+
   function getBasePath() {
     const path = window.location.pathname;
     const marker = "/evaraos/";
@@ -362,6 +367,7 @@
       event.preventDefault();
       event.stopPropagation();
     }
+
     if (document.body.classList.contains("nav-menu-open")) return;
 
     if (isCompact()) {
@@ -376,11 +382,62 @@
     }
   }
 
-  function bindBrandBlock() {
+  function bindTapToggle() {
+    const pill = getNavPill();
     const brand = getBrandBlock();
-    if (!brand) return;
+    const menuBtn = getMenuBtn();
+    if (!pill || !brand || !menuBtn) return;
 
-    brand.addEventListener("click", togglePill);
+    function onTouchStart(event) {
+      if (event.target.closest("#evaMenuBtn")) return;
+      const touch = event.touches ? event.touches[0] : event;
+      tapStartX = touch.clientX;
+      tapStartY = touch.clientY;
+      tapMoved = false;
+      tapHandled = false;
+    }
+
+    function onTouchMove(event) {
+      if (event.target.closest("#evaMenuBtn")) return;
+      const touch = event.touches ? event.touches[0] : event;
+      const dx = Math.abs(touch.clientX - tapStartX);
+      const dy = Math.abs(touch.clientY - tapStartY);
+      if (dx > 10 || dy > 10) {
+        tapMoved = true;
+      }
+    }
+
+    function onTouchEnd(event) {
+      if (event.target.closest("#evaMenuBtn")) return;
+      if (tapMoved || tapHandled) return;
+      tapHandled = true;
+      togglePill(event);
+    }
+
+    pill.addEventListener("touchstart", onTouchStart, { passive: true });
+    pill.addEventListener("touchmove", onTouchMove, { passive: true });
+    pill.addEventListener("touchend", onTouchEnd);
+
+    brand.addEventListener("touchstart", onTouchStart, { passive: true });
+    brand.addEventListener("touchmove", onTouchMove, { passive: true });
+    brand.addEventListener("touchend", onTouchEnd);
+
+    pill.addEventListener("click", (event) => {
+      if (event.target.closest("#evaMenuBtn")) return;
+      if (tapHandled) {
+        tapHandled = false;
+        return;
+      }
+      togglePill(event);
+    });
+
+    brand.addEventListener("click", (event) => {
+      if (tapHandled) {
+        tapHandled = false;
+        return;
+      }
+      togglePill(event);
+    });
 
     brand.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
@@ -460,9 +517,8 @@
     const btn = getMenuBtn();
     const panel = getMenuPanel();
     const backdrop = document.getElementById("evaBackdrop");
-    const pill = getNavPill();
 
-    if (!zone || !btn || !panel || !backdrop || !pill) return;
+    if (!zone || !btn || !panel || !backdrop) return;
 
     btn.addEventListener("click", (event) => {
       event.preventDefault();
@@ -474,12 +530,6 @@
       } else {
         openMenu();
       }
-    });
-
-    pill.addEventListener("click", (event) => {
-      if (event.target.closest("#evaMenuBtn")) return;
-      if (event.target.closest("#evaBrandBlock")) return;
-      togglePill(event);
     });
 
     panel.addEventListener("click", (event) => {
@@ -555,7 +605,7 @@
   function init() {
     document.documentElement.setAttribute("data-theme", getTheme());
     renderNav();
-    bindBrandBlock();
+    bindTapToggle();
     bindMenu();
     bindLinks();
     bindThemeToggle();
