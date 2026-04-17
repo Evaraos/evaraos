@@ -77,7 +77,7 @@
       { page: "settings.html", label: "Settings", icon: "⚙︎" }
     ];
 
-    const guestOnly = [
+    const authLinks = [
       { page: "login.html", label: "Login", icon: "⇥" },
       { page: "signup.html", label: "Sign Up", icon: "✚" },
       { page: "reset.html", label: "Reset", icon: "↺" }
@@ -92,7 +92,12 @@
       { page: "qa.html", label: "QA", icon: "◎" }
     ];
 
-    return role === "owner" ? [...common, ...ownerOnly] : [...common, ...guestOnly];
+    return {
+      common,
+      authLinks,
+      ownerOnly,
+      main: role === "owner" ? [...common, ...ownerOnly] : common
+    };
   }
 
   function navLink(page, label, icon) {
@@ -110,15 +115,15 @@
     const mount = document.getElementById("universalNavRoot");
     if (!mount) return;
 
-    const links = getVisibleLinks()
-      .map((item) => navLink(item.page, item.label, item.icon))
-      .join("");
+    const groups = getVisibleLinks();
+    const mainLinks = groups.main.map((item) => navLink(item.page, item.label, item.icon)).join("");
+    const authLinks = groups.authLinks.map((item) => navLink(item.page, item.label, item.icon)).join("");
 
     mount.innerHTML = `
       <div class="eva-nav-layer">
         <header class="eva-nav-shell compact" id="evaNavShell">
           <div class="eva-nav-pill glass-shell" id="evaNavPill">
-            <a href="${buildHref("index.html")}" class="eva-brand" id="evaBrandLink" aria-label="Go home">
+            <div class="eva-brand" id="evaBrandBlock" role="button" tabindex="0" aria-label="Toggle navigation pill">
               <img
                 src="${getBasePath()}/assets/img/evaraos_logo.png"
                 alt="Evaraos logo"
@@ -129,7 +134,7 @@
                 <strong>Evaraos Inc</strong>
                 <span>Subsidiaries Allocation SaaS</span>
               </div>
-            </a>
+            </div>
 
             <div class="eva-menu-zone" id="evaMenuZone">
               <button
@@ -158,8 +163,14 @@
           </label>
 
           <nav class="eva-links" id="evaLinks" aria-label="Main navigation">
-            ${links}
+            ${mainLinks}
           </nav>
+
+          <div class="eva-divider"></div>
+
+          <div class="eva-quick" id="evaAuthLinks">
+            ${authLinks}
+          </div>
 
           <div class="eva-divider"></div>
 
@@ -197,8 +208,8 @@
     return document.getElementById("evaNavShell");
   }
 
-  function getBrandLink() {
-    return document.getElementById("evaBrandLink");
+  function getBrandBlock() {
+    return document.getElementById("evaBrandBlock");
   }
 
   function getNavPill() {
@@ -365,16 +376,17 @@
     }
   }
 
-  function bindBrandLink() {
-    const brand = getBrandLink();
+  function bindBrandBlock() {
+    const brand = getBrandBlock();
     if (!brand) return;
 
-    brand.addEventListener("click", (event) => {
-      togglePill(event);
-    });
+    brand.addEventListener("click", togglePill);
+    brand.addEventListener("pointerup", togglePill);
 
-    brand.addEventListener("pointerup", (event) => {
-      togglePill(event);
+    brand.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        togglePill(event);
+      }
     });
   }
 
@@ -405,7 +417,7 @@
 
   function bindSearch() {
     const input = document.getElementById("evaSearchInput");
-    const links = Array.from(document.querySelectorAll("#evaLinks .eva-link"));
+    const links = Array.from(document.querySelectorAll("#evaLinks .eva-link, #evaAuthLinks .eva-link"));
     if (!input) return;
 
     input.addEventListener("input", () => {
@@ -467,13 +479,13 @@
 
     pill.addEventListener("click", (event) => {
       if (event.target.closest("#evaMenuBtn")) return;
-      if (event.target.closest("#evaBrandLink")) return;
+      if (event.target.closest("#evaBrandBlock")) return;
       togglePill(event);
     });
 
     pill.addEventListener("pointerup", (event) => {
       if (event.target.closest("#evaMenuBtn")) return;
-      if (event.target.closest("#evaBrandLink")) return;
+      if (event.target.closest("#evaBrandBlock")) return;
       togglePill(event);
     });
 
@@ -550,7 +562,7 @@
   function init() {
     document.documentElement.setAttribute("data-theme", getTheme());
     renderNav();
-    bindBrandLink();
+    bindBrandBlock();
     bindMenu();
     bindLinks();
     bindThemeToggle();
