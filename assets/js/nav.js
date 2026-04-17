@@ -50,12 +50,21 @@
     localStorage.setItem("evaraos-theme", theme);
     document.documentElement.setAttribute("data-theme", theme);
     syncThemeLabel();
+    navHaptic(8);
   }
 
   function syncThemeLabel() {
     const label = document.querySelector("[data-theme-label]");
     if (!label) return;
     label.textContent = getTheme() === "light" ? "Light mode" : "Dark mode";
+  }
+
+  function navHaptic(ms = 10) {
+    try {
+      if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+        navigator.vibrate(ms);
+      }
+    } catch (_) {}
   }
 
   function getVisibleLinks() {
@@ -205,6 +214,7 @@
     const shell = getNavShell();
     if (!shell) return;
 
+    const prev = progress;
     progress = Math.max(0, Math.min(1, value));
     shell.style.setProperty("--nav-progress", progress.toFixed(4));
 
@@ -215,6 +225,9 @@
       shell.classList.remove("compact");
       shell.classList.add("expanded");
     }
+
+    if (prev <= 0.08 && progress > 0.08) navHaptic(10);
+    if (prev > 0.08 && progress <= 0.08) navHaptic(8);
   }
 
   function setTarget(value) {
@@ -225,6 +238,7 @@
     clearCompactTimer();
     if (pin) navPinnedOpen = true;
     setTarget(1);
+    navHaptic(10);
   }
 
   function compactNav(unpin = false) {
@@ -235,9 +249,10 @@
       return;
     }
     setTarget(0);
+    navHaptic(8);
   }
 
-  function scheduleCompact(delay = 3000) {
+  function scheduleCompact(delay = 10000) {
     clearCompactTimer();
     if (document.body.classList.contains("nav-menu-open")) return;
     if (atTopOfPage()) return;
@@ -271,6 +286,7 @@
     document.body.classList.remove("nav-menu-open");
     zone.classList.remove("open");
     btn.setAttribute("aria-expanded", "false");
+    navHaptic(8);
 
     if (shouldCompact) {
       navPinnedOpen = false;
@@ -291,6 +307,9 @@
         event.preventDefault();
         event.stopPropagation();
         expandNav(true);
+        scheduleCompact(10000);
+      } else {
+        navHaptic(8);
       }
     });
   }
@@ -300,6 +319,7 @@
       link.addEventListener("click", (event) => {
         event.preventDefault();
         event.stopPropagation();
+        navHaptic(8);
         const href = link.getAttribute("data-menu-link");
         if (!href) return;
         closeMenu(false);
@@ -337,6 +357,7 @@
     const panel = getMenuPanel();
     if (!panel) return;
     panel.classList.toggle("quick-mode");
+    navHaptic(10);
   }
 
   function bindTripleTap() {
@@ -371,6 +392,7 @@
     btn.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
+      navHaptic(10);
 
       if (document.body.classList.contains("nav-menu-open")) {
         closeMenu(true);
@@ -385,6 +407,7 @@
       if (progress <= 0.08) {
         event.preventDefault();
         expandNav(true);
+        scheduleCompact(10000);
         return;
       }
 
@@ -424,16 +447,16 @@
             navPinnedOpen = false;
             setTarget(1);
             clearCompactTimer();
-          } else if (dy < -0.25) {
-            const boost = Math.min(0.16, Math.abs(dy) / 220);
+          } else if (dy < -0.2) {
+            const boost = Math.min(0.1, Math.abs(dy) / 320);
             navPinnedOpen = false;
             setTarget(Math.min(1, targetProgress + boost));
             scheduleCompact(3000);
-          } else if (dy > 0.25) {
-            const drop = Math.min(0.14, Math.abs(dy) / 220);
+          } else if (dy > 0.2) {
+            const drop = Math.min(0.08, Math.abs(dy) / 320);
             navPinnedOpen = false;
             setTarget(Math.max(0, targetProgress - drop));
-            scheduleCompact(180);
+            scheduleCompact(300);
           } else if (!navPinnedOpen) {
             scheduleCompact(3000);
           }
@@ -462,7 +485,7 @@
 
   function animate() {
     const diff = targetProgress - progress;
-    const next = Math.abs(diff) < 0.0015 ? targetProgress : progress + diff * 0.09;
+    const next = Math.abs(diff) < 0.001 ? targetProgress : progress + diff * 0.028;
     applyProgress(next);
     rafId = requestAnimationFrame(animate);
   }
