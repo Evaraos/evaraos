@@ -381,7 +381,6 @@
     if (!brand) return;
 
     brand.addEventListener("click", togglePill);
-    brand.addEventListener("pointerup", togglePill);
 
     brand.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
@@ -478,12 +477,6 @@
     });
 
     pill.addEventListener("click", (event) => {
-      if (event.target.closest("#evaMenuBtn")) return;
-      if (event.target.closest("#evaBrandBlock")) return;
-      togglePill(event);
-    });
-
-    pill.addEventListener("pointerup", (event) => {
       if (event.target.closest("#evaMenuBtn")) return;
       if (event.target.closest("#evaBrandBlock")) return;
       togglePill(event);
