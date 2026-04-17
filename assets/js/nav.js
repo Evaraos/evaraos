@@ -1,7 +1,6 @@
 (function () {
   let tripleTapCount = 0;
   let tripleTapTimer = null;
-  let upScrollTimer = null;
 
   function getBasePath() {
     const path = window.location.pathname;
@@ -185,7 +184,6 @@
     const zone = getMenuZone();
     const btn = getMenuBtn();
     if (!zone || !btn) return;
-
     document.body.classList.add("nav-menu-open");
     zone.classList.add("open");
     btn.setAttribute("aria-expanded", "true");
@@ -195,7 +193,6 @@
     const zone = getMenuZone();
     const btn = getMenuBtn();
     if (!zone || !btn) return;
-
     document.body.classList.remove("nav-menu-open");
     zone.classList.remove("open");
     btn.setAttribute("aria-expanded", "false");
@@ -272,13 +269,12 @@
   }
 
   function bindMenu() {
-    const shell = getNavShell();
     const zone = getMenuZone();
     const btn = getMenuBtn();
     const panel = getMenuPanel();
     const backdrop = document.getElementById("evaBackdrop");
 
-    if (!shell || !zone || !btn || !panel || !backdrop) return;
+    if (!zone || !btn || !panel || !backdrop) return;
 
     btn.addEventListener("click", (event) => {
       event.preventDefault();
@@ -303,10 +299,6 @@
       setCompactState(true);
     });
 
-    shell.addEventListener("click", () => {
-      setCompactState(false);
-    });
-
     document.addEventListener("click", (event) => {
       if (!zone.contains(event.target) && !panel.contains(event.target)) {
         closeMenu();
@@ -317,13 +309,6 @@
   function bindScrollCompact() {
     let lastY = window.scrollY;
     let ticking = false;
-
-    function clearUpTimer() {
-      if (upScrollTimer) {
-        clearTimeout(upScrollTimer);
-        upScrollTimer = null;
-      }
-    }
 
     function update() {
       const y = window.scrollY;
@@ -336,19 +321,14 @@
         return;
       }
 
+      if (delta > 0.8) {
+        setCompactState(true);
+      } else if (delta < -0.8) {
+        setCompactState(false);
+      }
+
       if (y < 24) {
-        setCompactState(true);
-        clearUpTimer();
-      } else if (delta > 1) {
-        setCompactState(true);
-        clearUpTimer();
-      } else if (delta < -1.5) {
-        clearUpTimer();
-        upScrollTimer = setTimeout(() => {
-          if (!document.body.classList.contains("nav-menu-open")) {
-            setCompactState(false);
-          }
-        }, 950);
+        setCompactState(false);
       }
 
       lastY = y;
