@@ -231,12 +231,17 @@
     if (wasExpanded) navHaptic(6);
   }
 
+  function atTopOfPage() {
+    return window.scrollY <= 4;
+  }
+
   function scheduleCompact(delay = 420) {
     clearCompactTimer();
     if (document.body.classList.contains("nav-menu-open")) return;
+    if (atTopOfPage()) return;
 
     compactTimer = setTimeout(() => {
-      if (!document.body.classList.contains("nav-menu-open")) {
+      if (!document.body.classList.contains("nav-menu-open") && !atTopOfPage()) {
         compactNav();
       }
     }, delay);
@@ -259,7 +264,14 @@
     document.body.classList.remove("nav-menu-open");
     zone.classList.remove("open");
     btn.setAttribute("aria-expanded", "false");
-    if (shouldCompact) scheduleCompact(120);
+
+    if (shouldCompact) {
+      if (atTopOfPage()) {
+        expandNav();
+      } else {
+        scheduleCompact(120);
+      }
+    }
   }
 
   function bindBrandLink() {
@@ -271,7 +283,7 @@
         event.preventDefault();
         event.stopPropagation();
         expandNav();
-        scheduleCompact(700);
+        if (!atTopOfPage()) scheduleCompact(700);
       }
     });
   }
@@ -364,7 +376,7 @@
       if (progress <= 0.08 && !event.target.closest("#evaMenuBtn")) {
         event.preventDefault();
         expandNav();
-        scheduleCompact(700);
+        if (!atTopOfPage()) scheduleCompact(700);
       }
     });
 
@@ -380,7 +392,7 @@
       if (!zone.contains(event.target) && !panel.contains(event.target)) {
         if (document.body.classList.contains("nav-menu-open")) {
           closeMenu(true);
-        } else if (progress > 0.08) {
+        } else if (progress > 0.08 && !atTopOfPage()) {
           scheduleCompact(200);
         }
       }
@@ -393,7 +405,9 @@
       const dy = y - lastY;
 
       if (!document.body.classList.contains("nav-menu-open")) {
-        if (dy < -0.8) {
+        if (atTopOfPage()) {
+          expandNav();
+        } else if (dy < -0.8) {
           expandNav();
           scheduleCompact(650);
         } else if (dy > 0.8) {
@@ -413,7 +427,11 @@
       "touchend",
       () => {
         if (!document.body.classList.contains("nav-menu-open")) {
-          scheduleCompact(240);
+          if (atTopOfPage()) {
+            expandNav();
+          } else {
+            scheduleCompact(240);
+          }
         }
       },
       { passive: true }
@@ -429,10 +447,16 @@
     bindThemeToggle();
     bindSearch();
     bindTripleTap();
-    applyProgress(0);
+
+    if (atTopOfPage()) {
+      applyProgress(1);
+    } else {
+      applyProgress(0);
+      scheduleCompact(240);
+    }
+
     bindScrollBehavior();
     syncThemeLabel();
-    scheduleCompact(240);
   }
 
   document.addEventListener("DOMContentLoaded", init);
