@@ -4,6 +4,7 @@
   let progress = 0;
   let targetProgress = 0;
   let lastY = window.scrollY;
+  let lastScrollDirection = 0; // -1 up, 1 down
   let compactTimer = null;
   let scrollSettleTimer = null;
   let rafId = null;
@@ -218,6 +219,15 @@
     return window.scrollY <= 4;
   }
 
+  function atBottomOfPage() {
+    const scrollBottom = window.scrollY + window.innerHeight;
+    const docHeight = Math.max(
+      document.body.scrollHeight,
+      document.documentElement.scrollHeight
+    );
+    return scrollBottom >= docHeight - 4;
+  }
+
   function applyProgress(value) {
     const shell = getNavShell();
     if (!shell) return;
@@ -257,7 +267,7 @@
     navHaptic(8);
   }
 
-  function scheduleCompact(delay = 7000) {
+  function scheduleCompact(delay = 4000) {
     clearCompactTimer();
     if (document.body.classList.contains("nav-menu-open")) return;
     if (atTopOfPage()) return;
@@ -281,13 +291,22 @@
         return;
       }
 
-      if (navPinnedOpen) {
-        scheduleCompact(7000);
+      if (atBottomOfPage()) {
+        navPinnedOpen = false;
+        setTarget(0, "scroll");
         return;
       }
 
+      if (lastScrollDirection < 0) {
+        navPinnedOpen = true;
+        setTarget(1, "scroll");
+        scheduleCompact(4000);
+        return;
+      }
+
+      navPinnedOpen = false;
       setTarget(0, "scroll");
-    }, 120);
+    }, 110);
   }
 
   function openMenu() {
@@ -328,7 +347,7 @@
         event.preventDefault();
         event.stopPropagation();
         expandNav(true, "tap");
-        scheduleCompact(7000);
+        scheduleCompact(4000);
       }
     });
   }
@@ -426,7 +445,7 @@
       if (progress <= 0.08) {
         event.preventDefault();
         expandNav(true, "tap");
-        scheduleCompact(7000);
+        scheduleCompact(4000);
         return;
       }
 
@@ -464,13 +483,19 @@
         if (!document.body.classList.contains("nav-menu-open")) {
           clearCompactTimer();
 
+          if (Math.abs(dy) > 0.05) {
+            lastScrollDirection = dy < 0 ? -1 : 1;
+          }
+
           if (atTopOfPage()) {
             navPinnedOpen = false;
             setTarget(1, "scroll");
+          } else if (atBottomOfPage()) {
+            navPinnedOpen = false;
+            setTarget(0, "scroll");
           } else {
-            const sensitivity = 0.018; // tiny iPhone-like feel
+            const sensitivity = 0.024;
             const next = Math.max(0, Math.min(1, targetProgress - dy * sensitivity));
-            navPinnedOpen = dy < 0;
             setTarget(next, "scroll");
           }
 
@@ -495,8 +520,8 @@
 
   function animate() {
     const diff = targetProgress - progress;
-    const factor = motionMode === "tap" ? 0.075 : 0.072;
-    const next = Math.abs(diff) < 0.0008 ? targetProgress : progress + diff * factor;
+    const factor = motionMode === "tap" ? 0.085 : 0.082;
+    const next = Math.abs(diff) < 0.0006 ? targetProgress : progress + diff * factor;
     applyProgress(next);
     rafId = requestAnimationFrame(animate);
   }
