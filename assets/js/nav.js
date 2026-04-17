@@ -1,4 +1,8 @@
 (function () {
+  let tripleTapCount = 0;
+  let tripleTapTimer = null;
+  let upScrollTimer = null;
+
   function getBasePath() {
     const path = window.location.pathname;
     const marker = "/evaraos/";
@@ -53,43 +57,50 @@
     const role = getRole();
 
     const common = [
-      { page: "index.html", label: "Home" },
-      { page: "settings.html", label: "Settings" }
+      { page: "index.html", label: "Home", icon: "⌂" },
+      { page: "settings.html", label: "Settings", icon: "⚙︎" }
     ];
 
     const guestOnly = [
-      { page: "login.html", label: "Login" },
-      { page: "signup.html", label: "Sign Up" },
-      { page: "reset.html", label: "Reset" }
+      { page: "login.html", label: "Login", icon: "⇥" },
+      { page: "signup.html", label: "Sign Up", icon: "✚" },
+      { page: "reset.html", label: "Reset", icon: "↺" }
     ];
 
     const ownerOnly = [
-      { page: "dashboard.html", label: "Dashboard" },
-      { page: "companies.html", label: "Companies" },
-      { page: "users.html", label: "Users" },
-      { page: "leads.html", label: "Leads" },
-      { page: "jobs.html", label: "Jobs" },
-      { page: "qa.html", label: "QA" }
+      { page: "dashboard.html", label: "Dashboard", icon: "◫" },
+      { page: "companies.html", label: "Companies", icon: "▣" },
+      { page: "users.html", label: "Users", icon: "◉" },
+      { page: "leads.html", label: "Leads", icon: "⌁" },
+      { page: "jobs.html", label: "Jobs", icon: "✓" },
+      { page: "qa.html", label: "QA", icon: "◎" }
     ];
 
     return role === "owner" ? [...common, ...ownerOnly] : [...common, ...guestOnly];
   }
 
-  function navLink(page, label) {
+  function navLink(page, label, icon) {
     const href = buildHref(page);
     const active = isCurrentPage(page) ? " active" : "";
-    return `<a href="${href}" class="eva-link${active}" data-menu-link="${href}" data-label="${label.toLowerCase()}">${label}</a>`;
+    return `
+      <a href="${href}" class="eva-link${active}" data-menu-link="${href}" data-label="${label.toLowerCase()}">
+        <span class="eva-link-icon">${icon}</span>
+        <span class="eva-link-label">${label}</span>
+      </a>
+    `;
   }
 
   function renderNav() {
     const mount = document.getElementById("universalNavRoot");
     if (!mount) return;
 
-    const links = getVisibleLinks().map((item) => navLink(item.page, item.label)).join("");
+    const links = getVisibleLinks()
+      .map((item) => navLink(item.page, item.label, item.icon))
+      .join("");
 
     mount.innerHTML = `
       <div class="eva-nav-layer">
-        <header class="eva-nav-shell" id="evaNavShell">
+        <header class="eva-nav-shell compact" id="evaNavShell">
           <div class="eva-nav-pill glass-shell">
             <a href="${buildHref("index.html")}" class="eva-brand" aria-label="Go home">
               <img
@@ -118,57 +129,82 @@
                   <span class="eva-burger-line bot"></span>
                 </span>
               </button>
-
-              <div class="eva-backdrop" id="evaBackdrop"></div>
-
-              <div class="eva-menu" id="evaMenu">
-                <label class="eva-search">
-                  <span>⌕</span>
-                  <input type="text" id="evaSearchInput" placeholder="Search pages" />
-                </label>
-
-                <nav class="eva-links" id="evaLinks" aria-label="Main navigation">
-                  ${links}
-                </nav>
-
-                <div class="eva-divider"></div>
-
-                <div class="eva-quick">
-                  <button type="button" class="eva-chip" id="evaThemeToggle">
-                    <span class="eva-chip-row">
-                      <span class="eva-chip-dot"></span>
-                      <span data-theme-label>Dark mode</span>
-                    </span>
-                  </button>
-
-                  <a href="${buildHref("settings.html")}" class="eva-link" data-menu-link="${buildHref("settings.html")}" data-label="advanced settings">
-                    Advanced settings
-                  </a>
-                </div>
-              </div>
             </div>
           </div>
         </header>
+
+        <div class="eva-backdrop" id="evaBackdrop"></div>
+
+        <div class="eva-menu-panel" id="evaMenuPanel">
+          <label class="eva-search">
+            <span>⌕</span>
+            <input type="text" id="evaSearchInput" placeholder="Search pages" />
+          </label>
+
+          <nav class="eva-links" id="evaLinks" aria-label="Main navigation">
+            ${links}
+          </nav>
+
+          <div class="eva-divider"></div>
+
+          <div class="eva-quick">
+            <button type="button" class="eva-chip" id="evaThemeToggle">
+              <span class="eva-chip-row">
+                <span class="eva-chip-dot"></span>
+                <span data-theme-label>Dark mode</span>
+              </span>
+            </button>
+
+            <a href="${buildHref("settings.html")}" class="eva-link" data-menu-link="${buildHref("settings.html")}" data-label="advanced settings">
+              <span class="eva-link-icon">⚙︎</span>
+              <span class="eva-link-label">Advanced settings</span>
+            </a>
+          </div>
+        </div>
       </div>
     `;
   }
 
+  function getMenuZone() {
+    return document.getElementById("evaMenuZone");
+  }
+
+  function getMenuBtn() {
+    return document.getElementById("evaMenuBtn");
+  }
+
+  function getMenuPanel() {
+    return document.getElementById("evaMenuPanel");
+  }
+
+  function getNavShell() {
+    return document.getElementById("evaNavShell");
+  }
+
   function openMenu() {
-    const zone = document.getElementById("evaMenuZone");
-    const btn = document.getElementById("evaMenuBtn");
+    const zone = getMenuZone();
+    const btn = getMenuBtn();
     if (!zone || !btn) return;
+
     document.body.classList.add("nav-menu-open");
     zone.classList.add("open");
     btn.setAttribute("aria-expanded", "true");
   }
 
   function closeMenu() {
-    const zone = document.getElementById("evaMenuZone");
-    const btn = document.getElementById("evaMenuBtn");
+    const zone = getMenuZone();
+    const btn = getMenuBtn();
     if (!zone || !btn) return;
+
     document.body.classList.remove("nav-menu-open");
     zone.classList.remove("open");
     btn.setAttribute("aria-expanded", "false");
+  }
+
+  function setCompactState(compact) {
+    const shell = getNavShell();
+    if (!shell) return;
+    shell.classList.toggle("compact", compact);
   }
 
   function bindLinks() {
@@ -209,67 +245,111 @@
     });
   }
 
+  function toggleQuickMode() {
+    const panel = getMenuPanel();
+    if (!panel) return;
+    panel.classList.toggle("quick-mode");
+  }
+
+  function bindTripleTap() {
+    const btn = getMenuBtn();
+    if (!btn) return;
+
+    btn.addEventListener("click", () => {
+      tripleTapCount += 1;
+      clearTimeout(tripleTapTimer);
+
+      tripleTapTimer = setTimeout(() => {
+        tripleTapCount = 0;
+      }, 350);
+
+      if (tripleTapCount === 3) {
+        toggleQuickMode();
+        tripleTapCount = 0;
+        clearTimeout(tripleTapTimer);
+      }
+    });
+  }
+
   function bindMenu() {
-    const shell = document.getElementById("evaNavShell");
-    const zone = document.getElementById("evaMenuZone");
-    const btn = document.getElementById("evaMenuBtn");
-    const menu = document.getElementById("evaMenu");
+    const shell = getNavShell();
+    const zone = getMenuZone();
+    const btn = getMenuBtn();
+    const panel = getMenuPanel();
     const backdrop = document.getElementById("evaBackdrop");
 
-    if (!shell || !zone || !btn || !menu || !backdrop) return;
+    if (!shell || !zone || !btn || !panel || !backdrop) return;
 
     btn.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      shell.classList.remove("compact");
+      setCompactState(false);
 
-      if (zone.classList.contains("open")) {
-        closeMenu();
-      } else {
-        openMenu();
-      }
+      requestAnimationFrame(() => {
+        if (document.body.classList.contains("nav-menu-open")) {
+          closeMenu();
+        } else {
+          openMenu();
+        }
+      });
     });
 
-    menu.addEventListener("click", (event) => {
+    panel.addEventListener("click", (event) => {
       event.stopPropagation();
     });
 
     backdrop.addEventListener("click", () => {
       closeMenu();
+      setCompactState(true);
     });
 
     shell.addEventListener("click", () => {
-      shell.classList.remove("compact");
+      setCompactState(false);
     });
 
     document.addEventListener("click", (event) => {
-      if (!zone.contains(event.target)) {
+      if (!zone.contains(event.target) && !panel.contains(event.target)) {
         closeMenu();
       }
     });
   }
 
   function bindScrollCompact() {
-    const shell = document.getElementById("evaNavShell");
-    if (!shell) return;
-
     let lastY = window.scrollY;
-    let targetCompact = false;
     let ticking = false;
+
+    function clearUpTimer() {
+      if (upScrollTimer) {
+        clearTimeout(upScrollTimer);
+        upScrollTimer = null;
+      }
+    }
 
     function update() {
       const y = window.scrollY;
       const delta = y - lastY;
 
-      if (y < 24) {
-        targetCompact = false;
-      } else if (delta > 0.75) {
-        targetCompact = true;
-      } else if (delta < -0.75) {
-        targetCompact = false;
+      if (document.body.classList.contains("nav-menu-open")) {
+        setCompactState(false);
+        lastY = y;
+        ticking = false;
+        return;
       }
 
-      shell.classList.toggle("compact", targetCompact);
+      if (y < 24) {
+        setCompactState(true);
+        clearUpTimer();
+      } else if (delta > 1) {
+        setCompactState(true);
+        clearUpTimer();
+      } else if (delta < -1.5) {
+        clearUpTimer();
+        upScrollTimer = setTimeout(() => {
+          if (!document.body.classList.contains("nav-menu-open")) {
+            setCompactState(false);
+          }
+        }, 950);
+      }
 
       lastY = y;
       ticking = false;
@@ -290,6 +370,7 @@
     bindLinks();
     bindThemeToggle();
     bindSearch();
+    bindTripleTap();
     bindScrollCompact();
     syncThemeLabel();
   }
