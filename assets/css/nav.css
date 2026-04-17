@@ -13,20 +13,20 @@
 
 .eva-nav-shell {
   --nav-progress: 0;
-  --pill-min-width: 72px;
+  --pill-min-width: 76px;
   --pill-max-width: min(calc(100vw - 24px), 1240px);
   --pill-width: calc(var(--pill-min-width) + (var(--pill-max-width) - var(--pill-min-width)) * var(--nav-progress));
-  --pill-height: calc(32px + 36px * var(--nav-progress));
-  --pill-pad-x: calc(6px + 8px * var(--nav-progress));
-  --pill-pad-y: calc(2px + 8px * var(--nav-progress));
-  --brand-gap: calc(0px + 4px * var(--nav-progress));
-  --compact-logo: 28px;
-  --full-logo: 52px;
+  --pill-height: calc(34px + 34px * var(--nav-progress));
+  --pill-pad-x: calc(7px + 8px * var(--nav-progress));
+  --pill-pad-y: calc(3px + 7px * var(--nav-progress));
+  --brand-gap: calc(0px + 1px * var(--nav-progress));
+  --compact-logo: 64px;
+  --full-logo: 56px;
   --logo-size: calc(var(--compact-logo) + (var(--full-logo) - var(--compact-logo)) * var(--nav-progress));
   --menu-size: calc(0px + 36px * var(--nav-progress));
   --burger-scale: calc(0 + 1 * var(--nav-progress));
   --copy-opacity: var(--nav-progress);
-  --brand-max-width: calc(44px + 250px * var(--nav-progress));
+  --brand-max-width: calc(48px + 250px * var(--nav-progress));
 
   position: fixed;
   top: max(10px, env(safe-area-inset-top));
@@ -58,15 +58,15 @@
   position: relative;
   overflow: hidden;
   transition:
-    min-height 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-    padding 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-    border-radius 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.24s ease;
+    min-height 1.1s cubic-bezier(0.22, 1, 0.36, 1),
+    padding 1.1s cubic-bezier(0.22, 1, 0.36, 1),
+    border-radius 1.1s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s ease;
 }
 
 .eva-brand {
   position: absolute;
-  left: calc(50% - 76px * var(--nav-progress));
+  left: calc(50% - 108px * var(--nav-progress));
   top: 50%;
   transform: translate(-50%, -50%);
   display: flex;
@@ -78,13 +78,13 @@
   max-width: min(var(--brand-max-width), calc(100% - var(--menu-size) - 64px));
   pointer-events: auto;
   transition:
-    left 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-    gap 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+    left 1.1s cubic-bezier(0.22, 1, 0.36, 1),
+    gap 1.1s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .eva-nav-shell.compact .eva-brand {
   left: 50%;
-  max-width: 44px;
+  max-width: 52px;
 }
 
 .eva-brand-copy {
@@ -96,8 +96,8 @@
   overflow: hidden;
   max-width: calc(220px * var(--nav-progress));
   transition:
-    opacity 0.28s ease,
-    max-width 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 0.5s ease,
+    max-width 1.1s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .eva-brand-copy strong {
@@ -142,8 +142,8 @@ html[data-theme="light"] .eva-brand-copy span {
   pointer-events: auto;
   opacity: var(--nav-progress);
   transition:
-    opacity 0.24s ease,
-    right 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 0.32s ease,
+    right 1.1s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .eva-nav-shell.compact .eva-menu-zone {
