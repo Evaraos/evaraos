@@ -13,13 +13,13 @@
 
 .eva-nav-shell {
   --nav-progress: 0;
-  --pill-min-width: 68px;
+  --pill-min-width: 72px;
   --pill-max-width: min(calc(100vw - 24px), 1240px);
   --pill-width: calc(var(--pill-min-width) + (var(--pill-max-width) - var(--pill-min-width)) * var(--nav-progress));
   --pill-height: calc(32px + 36px * var(--nav-progress));
   --pill-pad-x: calc(6px + 8px * var(--nav-progress));
   --pill-pad-y: calc(2px + 8px * var(--nav-progress));
-  --brand-gap: calc(0px + 6px * var(--nav-progress));
+  --brand-gap: calc(0px + 4px * var(--nav-progress));
   --compact-logo: 28px;
   --full-logo: 52px;
   --logo-size: calc(var(--compact-logo) + (var(--full-logo) - var(--compact-logo)) * var(--nav-progress));
@@ -58,15 +58,15 @@
   position: relative;
   overflow: hidden;
   transition:
-    min-height 0.28s ease,
-    padding 0.28s ease,
-    border-radius 0.28s ease,
+    min-height 0.22s linear,
+    padding 0.22s linear,
+    border-radius 0.22s linear,
     box-shadow 0.2s ease;
 }
 
 .eva-brand {
   position: absolute;
-  left: calc(50% - 52px * var(--nav-progress));
+  left: calc(50% - 76px * var(--nav-progress));
   top: 50%;
   transform: translate(-50%, -50%);
   display: flex;
@@ -77,7 +77,7 @@
   min-width: 0;
   max-width: min(var(--brand-max-width), calc(100% - var(--menu-size) - 64px));
   pointer-events: auto;
-  transition: left 0.28s ease;
+  transition: left 0.22s linear, gap 0.22s linear;
 }
 
 .eva-nav-shell.compact .eva-brand {
@@ -93,14 +93,16 @@
   pointer-events: none;
   overflow: hidden;
   max-width: calc(220px * var(--nav-progress));
-  transition: opacity 0.2s ease, max-width 0.28s ease;
+  transition:
+    opacity 0.18s linear,
+    max-width 0.22s linear;
 }
 
 .eva-brand-copy strong {
   display: block;
   font-size: 0.98rem;
   font-weight: 800;
-  line-height: 1.01;
+  line-height: 1.0;
   letter-spacing: -0.025em;
   white-space: nowrap;
 }
@@ -108,7 +110,7 @@
 .eva-brand-copy span {
   display: block;
   font-size: 0.74rem;
-  line-height: 1.01;
+  line-height: 1.0;
   color: rgba(230, 236, 255, 0.74);
   white-space: nowrap;
   margin-top: 0;
@@ -138,8 +140,8 @@ html[data-theme="light"] .eva-brand-copy span {
   pointer-events: auto;
   opacity: var(--nav-progress);
   transition:
-    opacity 0.16s ease,
-    right 0.28s ease;
+    opacity 0.16s linear,
+    right 0.22s linear;
 }
 
 .eva-nav-shell.compact .eva-menu-zone {
