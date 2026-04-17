@@ -12,98 +12,77 @@
 }
 
 .eva-nav-shell {
+  --nav-progress: 0;
+  --pill-width: calc(82px + (min(100vw - 24px, 1240px) - 82px) * var(--nav-progress));
+  --pill-height: calc(28px + 40px * var(--nav-progress));
+  --pill-pad-x: calc(5px + 7px * var(--nav-progress));
+  --pill-pad-y: calc(2px + 8px * var(--nav-progress));
+  --brand-gap: calc(0px + 10px * var(--nav-progress));
+  --compact-logo: 32px;
+  --full-logo: 44px;
+  --logo-size: calc(var(--compact-logo) + (var(--full-logo) - var(--compact-logo)) * var(--nav-progress));
+  --menu-size: calc(18px + 22px * var(--nav-progress));
+  --burger-scale: calc(0.54 + 0.46 * var(--nav-progress));
+  --copy-opacity: var(--nav-progress);
+
   position: fixed;
   top: max(10px, env(safe-area-inset-top));
   left: 50%;
   transform: translateX(-50%);
-  width: min(calc(100% - 24px), 1240px);
+  width: var(--pill-width);
   z-index: 2147483647;
   pointer-events: none;
-  transition:
-    width 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-    top 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: width, top, transform;
-}
-
-.eva-nav-shell.compact {
-  width: 84px;
-  top: calc(max(8px, env(safe-area-inset-top)) + 1px);
-  left: 50%;
-  transform: translateX(-50%);
+  will-change: width, transform;
 }
 
 .eva-nav-pill {
-  min-height: 68px;
-  padding: 10px 12px;
+  min-height: var(--pill-height);
+  padding: var(--pill-pad-y) var(--pill-pad-x);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: center;
+  gap: 0;
   border-radius: 999px;
   pointer-events: auto;
   position: relative;
-  transition:
-    min-height 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-    padding 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-    gap 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-    border-radius 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.2s ease;
-}
-
-.eva-nav-shell.compact .eva-nav-pill {
-  min-height: 30px;
-  padding: 2px 5px;
-  gap: 0;
-  justify-content: center;
+  overflow: visible;
 }
 
 .eva-brand {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-width: 0;
-  flex: 1 1 auto;
+  justify-content: center;
+  gap: var(--brand-gap);
   text-decoration: none;
+  min-width: 0;
+  max-width: calc(100% - var(--menu-size) - 18px);
+  pointer-events: auto;
 }
 
 .eva-nav-shell.compact .eva-brand {
-  flex: 0 0 auto;
-  justify-content: center;
-  gap: 0;
-  padding-right: 12px;
+  pointer-events: none;
+  cursor: default;
 }
 
 .eva-logo {
-  width: 44px;
-  height: 44px;
+  width: var(--logo-size);
+  height: var(--logo-size);
   object-fit: contain;
   flex: 0 0 auto;
-  transition:
-    width 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-    height 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.eva-nav-shell.compact .eva-logo {
-  width: 32px;
-  height: 32px;
-  transform: scale(1.02);
 }
 
 .eva-brand-copy {
   min-width: 0;
   display: grid;
   gap: 2px;
-  transition: opacity 0.18s ease;
-}
-
-.eva-nav-shell.compact .eva-brand-copy {
-  opacity: 0;
+  opacity: var(--copy-opacity);
   pointer-events: none;
-  position: absolute;
-  width: 0;
   overflow: hidden;
+  max-width: calc(220px * var(--nav-progress));
 }
 
 .eva-brand-copy strong {
@@ -112,6 +91,7 @@
   font-weight: 800;
   line-height: 1.05;
   letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
 .eva-brand-copy span {
@@ -119,6 +99,7 @@
   font-size: 0.8rem;
   line-height: 1.1;
   color: rgba(230, 236, 255, 0.72);
+  white-space: nowrap;
 }
 
 html[data-theme="light"] .eva-brand-copy span {
@@ -126,21 +107,21 @@ html[data-theme="light"] .eva-brand-copy span {
 }
 
 .eva-menu-zone {
-  position: relative;
-  flex: 0 0 auto;
-  z-index: 2147483647;
-}
-
-.eva-nav-shell.compact .eva-menu-zone {
   position: absolute;
   right: 4px;
   top: 50%;
   transform: translateY(-50%);
+  width: var(--menu-size);
+  height: var(--menu-size);
+  display: grid;
+  place-items: center;
+  z-index: 2147483647;
+  pointer-events: auto;
 }
 
 .eva-menu-btn {
-  width: 40px;
-  height: 40px;
+  width: var(--menu-size);
+  height: var(--menu-size);
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,0.18);
   background: rgba(255,255,255,0.08);
@@ -152,19 +133,11 @@ html[data-theme="light"] .eva-brand-copy span {
   box-shadow:
     0 10px 24px rgba(0,0,0,0.18),
     inset 0 1px 0 rgba(255,255,255,0.30);
-  transition:
-    width 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-    height 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.18s ease;
+  padding: 0;
 }
 
 .eva-menu-btn:active {
   transform: scale(0.96);
-}
-
-.eva-nav-shell.compact .eva-menu-btn {
-  width: 16px;
-  height: 16px;
 }
 
 html[data-theme="light"] .eva-menu-btn {
@@ -177,13 +150,8 @@ html[data-theme="light"] .eva-menu-btn {
   height: 16px;
   position: relative;
   display: block;
-  transition: transform 0.18s ease;
-}
-
-.eva-nav-shell.compact .eva-burger {
-  width: 8px;
-  height: 8px;
-  transform: scale(0.5);
+  transform: scale(var(--burger-scale));
+  transform-origin: center;
 }
 
 .eva-burger-line {
@@ -246,8 +214,8 @@ body.nav-menu-open .eva-backdrop {
   position: fixed;
   z-index: 2147483647;
   left: 50%;
-  top: calc(max(8px, env(safe-area-inset-top)) + 58px);
-  width: min(352px, calc(100vw - 28px));
+  top: calc(max(10px, env(safe-area-inset-top)) + 78px);
+  width: min(356px, calc(100vw - 28px));
   padding: 14px;
   border-radius: 28px;
   display: grid;
@@ -260,7 +228,7 @@ body.nav-menu-open .eva-backdrop {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transform: translateX(-50%) translateY(-10px) scale(0.97);
+  transform: translateX(-50%) translateY(-8px) scale(0.98);
   transform-origin: top center;
   transition:
     opacity 0.24s cubic-bezier(0.22, 1, 0.36, 1),
