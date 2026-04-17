@@ -11,9 +11,6 @@
   pointer-events: none;
 }
 
-/* =========================
-   NAV SHELL
-========================= */
 .eva-nav-shell {
   position: fixed;
   top: max(10px, env(safe-area-inset-top));
@@ -23,23 +20,19 @@
   z-index: 2147483647;
   pointer-events: none;
   transition:
-    width 0.62s cubic-bezier(0.16, 1, 0.3, 1),
-    top 0.62s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.62s cubic-bezier(0.16, 1, 0.3, 1),
-    opacity 0.24s ease;
+    width 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    top 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: width, top, transform;
 }
 
 .eva-nav-shell.compact {
-  width: 92px;
+  width: 84px;
   top: calc(max(8px, env(safe-area-inset-top)) + 1px);
   left: 50%;
   transform: translateX(-50%);
 }
 
-/* =========================
-   NAV PILL
-========================= */
 .eva-nav-pill {
   min-height: 68px;
   padding: 10px 12px;
@@ -51,23 +44,20 @@
   pointer-events: auto;
   position: relative;
   transition:
-    min-height 0.62s cubic-bezier(0.16, 1, 0.3, 1),
-    padding 0.62s cubic-bezier(0.16, 1, 0.3, 1),
-    gap 0.62s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.25s ease,
-    border-radius 0.62s cubic-bezier(0.16, 1, 0.3, 1);
+    min-height 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    padding 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    gap 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    border-radius 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.2s ease;
 }
 
 .eva-nav-shell.compact .eva-nav-pill {
-  min-height: 32px;
-  padding: 2px 6px;
+  min-height: 30px;
+  padding: 2px 5px;
   gap: 0;
   justify-content: center;
 }
 
-/* =========================
-   BRAND
-========================= */
 .eva-brand {
   display: flex;
   align-items: center;
@@ -81,7 +71,7 @@
   flex: 0 0 auto;
   justify-content: center;
   gap: 0;
-  padding-right: 14px;
+  padding-right: 12px;
 }
 
 .eva-logo {
@@ -90,23 +80,22 @@
   object-fit: contain;
   flex: 0 0 auto;
   transition:
-    width 0.62s cubic-bezier(0.16, 1, 0.3, 1),
-    height 0.62s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.62s cubic-bezier(0.16, 1, 0.3, 1),
-    filter 0.3s ease;
+    width 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .eva-nav-shell.compact .eva-logo {
-  width: 30px;
-  height: 30px;
-  transform: scale(1.03);
+  width: 32px;
+  height: 32px;
+  transform: scale(1.02);
 }
 
 .eva-brand-copy {
   min-width: 0;
   display: grid;
   gap: 2px;
-  transition: opacity 0.22s ease;
+  transition: opacity 0.18s ease;
 }
 
 .eva-nav-shell.compact .eva-brand-copy {
@@ -136,9 +125,6 @@ html[data-theme="light"] .eva-brand-copy span {
   color: rgba(26, 47, 39, 0.64);
 }
 
-/* =========================
-   MENU BUTTON
-========================= */
 .eva-menu-zone {
   position: relative;
   flex: 0 0 auto;
@@ -167,8 +153,8 @@ html[data-theme="light"] .eva-brand-copy span {
     0 10px 24px rgba(0,0,0,0.18),
     inset 0 1px 0 rgba(255,255,255,0.30);
   transition:
-    width 0.62s cubic-bezier(0.16, 1, 0.3, 1),
-    height 0.62s cubic-bezier(0.16, 1, 0.3, 1),
+    width 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.42s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.18s ease;
 }
 
@@ -177,8 +163,8 @@ html[data-theme="light"] .eva-brand-copy span {
 }
 
 .eva-nav-shell.compact .eva-menu-btn {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 
 html[data-theme="light"] .eva-menu-btn {
@@ -191,13 +177,13 @@ html[data-theme="light"] .eva-menu-btn {
   height: 16px;
   position: relative;
   display: block;
-  transition: transform 0.22s ease;
+  transition: transform 0.18s ease;
 }
 
 .eva-nav-shell.compact .eva-burger {
   width: 8px;
   height: 8px;
-  transform: scale(0.58);
+  transform: scale(0.5);
 }
 
 .eva-burger-line {
@@ -237,9 +223,6 @@ html[data-theme="light"] .eva-burger-line {
   transform: translateX(-50%) rotate(-45deg);
 }
 
-/* =========================
-   BACKDROP
-========================= */
 .eva-backdrop {
   position: fixed;
   inset: 0;
@@ -250,7 +233,7 @@ html[data-theme="light"] .eva-burger-line {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.24s ease, visibility 0.24s ease;
+  transition: opacity 0.22s ease, visibility 0.22s ease;
 }
 
 body.nav-menu-open .eva-backdrop {
@@ -259,15 +242,12 @@ body.nav-menu-open .eva-backdrop {
   pointer-events: auto;
 }
 
-/* =========================
-   TRUE OUTSIDE MENU PANEL
-========================= */
 .eva-menu-panel {
   position: fixed;
   z-index: 2147483647;
   left: 50%;
-  top: calc(max(8px, env(safe-area-inset-top)) + 44px);
-  width: min(360px, calc(100vw - 24px));
+  top: calc(max(8px, env(safe-area-inset-top)) + 58px);
+  width: min(352px, calc(100vw - 28px));
   padding: 14px;
   border-radius: 28px;
   display: grid;
@@ -280,12 +260,12 @@ body.nav-menu-open .eva-backdrop {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transform: translateX(-50%) translateY(-14px) scale(0.95);
+  transform: translateX(-50%) translateY(-10px) scale(0.97);
   transform-origin: top center;
   transition:
-    opacity 0.26s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.26s cubic-bezier(0.22, 1, 0.36, 1),
-    visibility 0.26s ease;
+    opacity 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0.24s ease;
 }
 
 html[data-theme="light"] .eva-menu-panel {
@@ -327,9 +307,6 @@ body.nav-menu-open .eva-menu-panel {
   display: none;
 }
 
-/* =========================
-   INPUTS / LINKS
-========================= */
 .eva-search {
   min-height: 46px;
   padding: 0 14px;
