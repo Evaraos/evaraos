@@ -7,6 +7,7 @@
   let compactTimer = null;
   let rafId = null;
   let navPinnedOpen = false;
+  let motionMode = "scroll"; // "tap" | "scroll"
 
   function getBasePath() {
     const path = window.location.pathname;
@@ -50,7 +51,6 @@
     localStorage.setItem("evaraos-theme", theme);
     document.documentElement.setAttribute("data-theme", theme);
     syncThemeLabel();
-    navHaptic(8);
   }
 
   function syncThemeLabel() {
@@ -214,7 +214,6 @@
     const shell = getNavShell();
     if (!shell) return;
 
-    const prev = progress;
     progress = Math.max(0, Math.min(1, value));
     shell.style.setProperty("--nav-progress", progress.toFixed(4));
 
@@ -225,30 +224,28 @@
       shell.classList.remove("compact");
       shell.classList.add("expanded");
     }
-
-    if (prev <= 0.08 && progress > 0.08) navHaptic(10);
-    if (prev > 0.08 && progress <= 0.08) navHaptic(8);
   }
 
-  function setTarget(value) {
+  function setTarget(value, mode = "scroll") {
     targetProgress = Math.max(0, Math.min(1, value));
+    motionMode = mode;
   }
 
-  function expandNav(pin = false) {
+  function expandNav(pin = false, mode = "tap") {
     clearCompactTimer();
     if (pin) navPinnedOpen = true;
-    setTarget(1);
+    setTarget(1, mode);
     navHaptic(10);
   }
 
-  function compactNav(unpin = false) {
+  function compactNav(unpin = false, mode = "scroll") {
     if (unpin) navPinnedOpen = false;
 
     if (atTopOfPage() && !document.body.classList.contains("nav-menu-open")) {
-      setTarget(1);
+      setTarget(1, mode);
       return;
     }
-    setTarget(0);
+    setTarget(0, mode);
     navHaptic(8);
   }
 
@@ -264,7 +261,7 @@
         !atTopOfPage() &&
         !navPinnedOpen
       ) {
-        compactNav();
+        compactNav(false, "tap");
       }
     }, delay);
   }
@@ -276,7 +273,7 @@
     document.body.classList.add("nav-menu-open");
     zone.classList.add("open");
     btn.setAttribute("aria-expanded", "true");
-    expandNav(true);
+    expandNav(true, "tap");
   }
 
   function closeMenu(shouldCompact = true) {
@@ -291,9 +288,9 @@
     if (shouldCompact) {
       navPinnedOpen = false;
       if (atTopOfPage()) {
-        setTarget(1);
+        setTarget(1, "tap");
       } else {
-        setTarget(0);
+        setTarget(0, "tap");
       }
     }
   }
@@ -306,10 +303,8 @@
       if (progress <= 0.08) {
         event.preventDefault();
         event.stopPropagation();
-        expandNav(true);
+        expandNav(true, "tap");
         scheduleCompact(10000);
-      } else {
-        navHaptic(8);
       }
     });
   }
@@ -406,7 +401,7 @@
 
       if (progress <= 0.08) {
         event.preventDefault();
-        expandNav(true);
+        expandNav(true, "tap");
         scheduleCompact(10000);
         return;
       }
@@ -414,7 +409,7 @@
       if (!document.body.classList.contains("nav-menu-open") && !atTopOfPage()) {
         event.preventDefault();
         navPinnedOpen = false;
-        compactNav(true);
+        compactNav(true, "tap");
       }
     });
 
@@ -445,17 +440,17 @@
         if (!document.body.classList.contains("nav-menu-open")) {
           if (atTopOfPage()) {
             navPinnedOpen = false;
-            setTarget(1);
+            setTarget(1, "scroll");
             clearCompactTimer();
           } else if (dy < -0.2) {
             const boost = Math.min(0.1, Math.abs(dy) / 320);
             navPinnedOpen = false;
-            setTarget(Math.min(1, targetProgress + boost));
+            setTarget(Math.min(1, targetProgress + boost), "scroll");
             scheduleCompact(3000);
           } else if (dy > 0.2) {
             const drop = Math.min(0.08, Math.abs(dy) / 320);
             navPinnedOpen = false;
-            setTarget(Math.max(0, targetProgress - drop));
+            setTarget(Math.max(0, targetProgress - drop), "scroll");
             scheduleCompact(300);
           } else if (!navPinnedOpen) {
             scheduleCompact(3000);
@@ -473,7 +468,7 @@
         if (!document.body.classList.contains("nav-menu-open")) {
           if (atTopOfPage()) {
             navPinnedOpen = false;
-            setTarget(1);
+            setTarget(1, "scroll");
           } else if (!navPinnedOpen) {
             scheduleCompact(3000);
           }
@@ -485,7 +480,8 @@
 
   function animate() {
     const diff = targetProgress - progress;
-    const next = Math.abs(diff) < 0.001 ? targetProgress : progress + diff * 0.028;
+    const factor = motionMode === "tap" ? 0.055 : 0.036;
+    const next = Math.abs(diff) < 0.001 ? targetProgress : progress + diff * factor;
     applyProgress(next);
     rafId = requestAnimationFrame(animate);
   }
