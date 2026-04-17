@@ -13,17 +13,20 @@
 
 .eva-nav-shell {
   --nav-progress: 0;
-  --pill-width: calc(82px + (min(100vw - 24px, 1240px) - 82px) * var(--nav-progress));
-  --pill-height: calc(28px + 40px * var(--nav-progress));
-  --pill-pad-x: calc(5px + 7px * var(--nav-progress));
+  --pill-min-width: 58px;
+  --pill-max-width: min(calc(100vw - 24px), 1240px);
+  --pill-width: calc(var(--pill-min-width) + (var(--pill-max-width) - var(--pill-min-width)) * var(--nav-progress));
+  --pill-height: calc(30px + 38px * var(--nav-progress));
+  --pill-pad-x: calc(4px + 8px * var(--nav-progress));
   --pill-pad-y: calc(2px + 8px * var(--nav-progress));
-  --brand-gap: calc(0px + 8px * var(--nav-progress));
-  --compact-logo: 32px;
-  --full-logo: 44px;
+  --brand-gap: calc(0px + 10px * var(--nav-progress));
+  --compact-logo: 28px;
+  --full-logo: 38px;
   --logo-size: calc(var(--compact-logo) + (var(--full-logo) - var(--compact-logo)) * var(--nav-progress));
-  --menu-size: calc(18px + 22px * var(--nav-progress));
-  --burger-scale: calc(0.54 + 0.46 * var(--nav-progress));
+  --menu-size: calc(0px + 36px * var(--nav-progress));
+  --burger-scale: calc(0 + 1 * var(--nav-progress));
   --copy-opacity: var(--nav-progress);
+  --brand-max-width: calc(46px + 260px * var(--nav-progress));
 
   position: fixed;
   top: max(10px, env(safe-area-inset-top));
@@ -33,6 +36,14 @@
   z-index: 2147483647;
   pointer-events: none;
   will-change: width, transform;
+}
+
+.eva-nav-shell.compact {
+  --nav-progress: 0;
+}
+
+.eva-nav-shell.expanded {
+  --nav-progress: 1;
 }
 
 .eva-nav-pill {
@@ -50,7 +61,7 @@
 
 .eva-brand {
   position: absolute;
-  left: 50%;
+  left: calc(50% - 12px * var(--nav-progress));
   top: 50%;
   transform: translate(-50%, -50%);
   display: flex;
@@ -59,8 +70,14 @@
   gap: var(--brand-gap);
   text-decoration: none;
   min-width: 0;
-  max-width: calc(100% - var(--menu-size) - 22px);
+  max-width: min(var(--brand-max-width), calc(100% - var(--menu-size) - 24px));
   pointer-events: auto;
+  transition: left 0.28s ease;
+}
+
+.eva-nav-shell.compact .eva-brand {
+  left: 50%;
+  max-width: 46px;
 }
 
 .eva-brand-copy {
@@ -103,7 +120,7 @@ html[data-theme="light"] .eva-brand-copy span {
 
 .eva-menu-zone {
   position: absolute;
-  right: 4px;
+  right: calc(4px + 3px * var(--nav-progress));
   top: 50%;
   transform: translateY(-50%);
   width: var(--menu-size);
@@ -112,6 +129,12 @@ html[data-theme="light"] .eva-brand-copy span {
   place-items: center;
   z-index: 2147483647;
   pointer-events: auto;
+  opacity: var(--nav-progress);
+  transition: opacity 0.16s ease;
+}
+
+.eva-nav-shell.compact .eva-menu-zone {
+  pointer-events: none;
 }
 
 .eva-menu-btn {
@@ -209,7 +232,7 @@ body.nav-menu-open .eva-backdrop {
   position: fixed;
   z-index: 2147483647;
   left: 50%;
-  top: calc(max(10px, env(safe-area-inset-top)) + 94px);
+  top: calc(max(10px, env(safe-area-inset-top)) + 96px);
   width: min(356px, calc(100vw - 28px));
   padding: 14px;
   border-radius: 28px;
