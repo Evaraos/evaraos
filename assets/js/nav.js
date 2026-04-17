@@ -237,7 +237,7 @@
     setTarget(0);
   }
 
-  function scheduleCompact(delay = 420) {
+  function scheduleCompact(delay = 3000) {
     clearCompactTimer();
     if (document.body.classList.contains("nav-menu-open")) return;
     if (atTopOfPage()) return;
@@ -424,18 +424,18 @@
             navPinnedOpen = false;
             setTarget(1);
             clearCompactTimer();
-          } else if (dy < -0.4) {
-            const boost = Math.min(0.22, Math.abs(dy) / 140);
+          } else if (dy < -0.25) {
+            const boost = Math.min(0.16, Math.abs(dy) / 220);
             navPinnedOpen = false;
             setTarget(Math.min(1, targetProgress + boost));
-            scheduleCompact(650);
-          } else if (dy > 0.4) {
-            const drop = Math.min(0.22, Math.abs(dy) / 140);
+            scheduleCompact(3000);
+          } else if (dy > 0.25) {
+            const drop = Math.min(0.14, Math.abs(dy) / 220);
             navPinnedOpen = false;
             setTarget(Math.max(0, targetProgress - drop));
-            scheduleCompact(120);
+            scheduleCompact(180);
           } else if (!navPinnedOpen) {
-            scheduleCompact(240);
+            scheduleCompact(3000);
           }
         }
 
@@ -452,7 +452,7 @@
             navPinnedOpen = false;
             setTarget(1);
           } else if (!navPinnedOpen) {
-            scheduleCompact(240);
+            scheduleCompact(3000);
           }
         }
       },
@@ -462,7 +462,7 @@
 
   function animate() {
     const diff = targetProgress - progress;
-    const next = Math.abs(diff) < 0.002 ? targetProgress : progress + diff * 0.16;
+    const next = Math.abs(diff) < 0.0015 ? targetProgress : progress + diff * 0.09;
     applyProgress(next);
     rafId = requestAnimationFrame(animate);
   }
