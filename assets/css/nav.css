@@ -21,12 +21,12 @@
   --pill-pad-y: calc(2px + 8px * var(--nav-progress));
   --brand-gap: calc(0px + 10px * var(--nav-progress));
   --compact-logo: 28px;
-  --full-logo: 38px;
+  --full-logo: 76px;
   --logo-size: calc(var(--compact-logo) + (var(--full-logo) - var(--compact-logo)) * var(--nav-progress));
   --menu-size: calc(0px + 34px * var(--nav-progress));
   --burger-scale: calc(0 + 1 * var(--nav-progress));
   --copy-opacity: var(--nav-progress);
-  --brand-max-width: calc(44px + 260px * var(--nav-progress));
+  --brand-max-width: calc(44px + 280px * var(--nav-progress));
 
   position: fixed;
   top: max(10px, env(safe-area-inset-top));
@@ -66,7 +66,7 @@
 
 .eva-brand {
   position: absolute;
-  left: calc(50% - 36px * var(--nav-progress));
+  left: calc(50% - 126px * var(--nav-progress));
   top: 50%;
   transform: translate(-50%, -50%);
   display: flex;
@@ -75,7 +75,7 @@
   gap: var(--brand-gap);
   text-decoration: none;
   min-width: 0;
-  max-width: min(var(--brand-max-width), calc(100% - var(--menu-size) - 52px));
+  max-width: min(var(--brand-max-width), calc(100% - var(--menu-size) - 58px));
   pointer-events: auto;
   transition: left 0.28s ease;
 }
