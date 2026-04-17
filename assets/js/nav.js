@@ -7,7 +7,7 @@
   let compactTimer = null;
   let rafId = null;
   let navPinnedOpen = false;
-  let motionMode = "scroll"; // "tap" | "scroll"
+  let motionMode = "scroll";
 
   function getBasePath() {
     const path = window.location.pathname;
@@ -480,7 +480,7 @@
 
   function animate() {
     const diff = targetProgress - progress;
-    const factor = motionMode === "tap" ? 0.055 : 0.036;
+    const factor = motionMode === "tap" ? 0.072 : 0.048;
     const next = Math.abs(diff) < 0.001 ? targetProgress : progress + diff * factor;
     applyProgress(next);
     rafId = requestAnimationFrame(animate);
