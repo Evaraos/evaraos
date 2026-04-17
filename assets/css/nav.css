@@ -19,7 +19,7 @@
   --pill-height: calc(34px + 34px * var(--nav-progress));
   --pill-pad-x: calc(7px + 8px * var(--nav-progress));
   --pill-pad-y: calc(3px + 7px * var(--nav-progress));
-  --brand-gap: calc(0px + 1px * var(--nav-progress));
+  --brand-gap: calc(0px + 0.5px * var(--nav-progress));
   --compact-logo: 64px;
   --full-logo: 56px;
   --logo-size: calc(var(--compact-logo) + (var(--full-logo) - var(--compact-logo)) * var(--nav-progress));
@@ -58,15 +58,15 @@
   position: relative;
   overflow: hidden;
   transition:
-    min-height 0.34s cubic-bezier(0.22, 1, 0.36, 1),
-    padding 0.34s cubic-bezier(0.22, 1, 0.36, 1),
-    border-radius 0.34s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.20s ease;
+    min-height 0.30s cubic-bezier(0.22, 1, 0.36, 1),
+    padding 0.30s cubic-bezier(0.22, 1, 0.36, 1),
+    border-radius 0.30s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.18s ease;
 }
 
 .eva-brand {
   position: absolute;
-  left: calc(50% - 72px * var(--nav-progress));
+  left: calc(50% - 82px * var(--nav-progress));
   top: 50%;
   transform: translate(-50%, -50%);
   display: flex;
@@ -78,8 +78,8 @@
   max-width: min(var(--brand-max-width), calc(100% - var(--menu-size) - 64px));
   pointer-events: auto;
   transition:
-    left 0.34s cubic-bezier(0.22, 1, 0.36, 1),
-    gap 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+    left 0.30s cubic-bezier(0.22, 1, 0.36, 1),
+    gap 0.30s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .eva-nav-shell.compact .eva-brand {
@@ -96,8 +96,8 @@
   overflow: hidden;
   max-width: calc(220px * var(--nav-progress));
   transition:
-    opacity 0.18s ease,
-    max-width 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 0.16s ease,
+    max-width 0.30s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .eva-brand-copy strong {
@@ -142,8 +142,8 @@ html[data-theme="light"] .eva-brand-copy span {
   pointer-events: auto;
   opacity: var(--nav-progress);
   transition:
-    opacity 0.16s ease,
-    right 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 0.14s ease,
+    right 0.30s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .eva-nav-shell.compact .eva-menu-zone {
