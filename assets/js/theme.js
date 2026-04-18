@@ -23,11 +23,11 @@ const DEFAULT_APPEARANCE = {
   mode: "dark",
   family: "neutral",
   beamMode: "on",
-  navColor: "#ff3b30",
-  cardColor: "#8b5cf6",
-  buttonColor: "#2563eb",
-  backgroundColor: "#0f172a",
-  beamColor: "#7c3aed"
+  navColor: "#FF3B30",
+  cardColor: "#8B5CF6",
+  buttonColor: "#2563EB",
+  backgroundColor: "#0F172A",
+  beamColor: "#7C3AED"
 };
 
 function normalizeTheme(theme = "") {
@@ -36,8 +36,8 @@ function normalizeTheme(theme = "") {
 }
 
 function normalizeHex(value, fallback) {
-  const safe = String(value || "").trim();
-  return /^#[0-9a-fA-F]{6}$/.test(safe) ? safe.toUpperCase() : fallback.toUpperCase();
+  const safe = String(value || "").trim().toUpperCase();
+  return /^#[0-9A-F]{6}$/.test(safe) ? safe : fallback.toUpperCase();
 }
 
 function normalizeBeamMode(value = "") {
@@ -92,9 +92,7 @@ function getStoredTheme() {
 function setStoredTheme(theme) {
   try {
     localStorage.setItem(STORAGE_KEY, normalizeTheme(theme));
-  } catch {
-    // ignore
-  }
+  } catch {}
 }
 
 function getStoredAppearance() {
@@ -110,9 +108,7 @@ function getStoredAppearance() {
 function setStoredAppearance(appearance) {
   try {
     localStorage.setItem(APPEARANCE_KEY, JSON.stringify(normalizeAppearance(appearance)));
-  } catch {
-    // ignore
-  }
+  } catch {}
 }
 
 function ensureAppearanceStyle() {
@@ -140,8 +136,13 @@ function ensureAppearanceStyle() {
     .glass-card,
     .glass-shell,
     .aurora-card,
-    .input-shell {
-      border-color: color-mix(in srgb, var(--user-card-tint) 26%, rgba(255,255,255,0.12));
+    .input-shell,
+    .feature-card,
+    .hero,
+    .inline-card,
+    .dashboard-feed-item,
+    .dashboard-stat-card {
+      border-color: color-mix(in srgb, var(--user-card-tint) 26%, rgba(255,255,255,0.12)) !important;
     }
 
     .btn-theme-primary,
@@ -160,7 +161,9 @@ function ensureAppearanceStyle() {
 
     .eva-nav-pill,
     #evaNavPill,
-    .settings-preview-nav {
+    .settings-preview-nav,
+    .nav-hamburger,
+    .nav-dropdown-menu {
       border-color: color-mix(in srgb, var(--user-nav-tint) 28%, rgba(255,255,255,0.12)) !important;
       box-shadow:
         0 16px 34px rgba(0,0,0,0.16),
@@ -168,19 +171,11 @@ function ensureAppearanceStyle() {
         0 0 0 1px color-mix(in srgb, var(--user-nav-tint) 14%, transparent) !important;
     }
 
-    .settings-preview-card,
-    .dashboard-stat-card,
-    .feature-card,
-    .hero,
-    .inline-card,
-    .dashboard-feed-item {
-      border-color: color-mix(in srgb, var(--user-card-tint) 26%, rgba(255,255,255,0.10)) !important;
-    }
-
     html[data-beam-mode="off"] .active-glow,
     html[data-beam-mode="off"] .dashboard-nav-link.active,
     html[data-beam-mode="off"] .eva-link.active,
-    html[data-beam-mode="off"] .input-shell:focus-within {
+    html[data-beam-mode="off"] .input-shell:focus-within,
+    html[data-beam-mode="off"] .btn:focus-visible {
       box-shadow: none !important;
     }
 
@@ -188,10 +183,12 @@ function ensureAppearanceStyle() {
     html[data-beam-mode="on"] .dashboard-nav-link.active,
     html[data-beam-mode="on"] .eva-link.active,
     html[data-beam-mode="on"] .input-shell:focus-within,
+    html[data-beam-mode="on"] .btn:focus-visible,
     html[data-beam-mode="custom"] .active-glow,
     html[data-beam-mode="custom"] .dashboard-nav-link.active,
     html[data-beam-mode="custom"] .eva-link.active,
-    html[data-beam-mode="custom"] .input-shell:focus-within {
+    html[data-beam-mode="custom"] .input-shell:focus-within,
+    html[data-beam-mode="custom"] .btn:focus-visible {
       box-shadow:
         0 0 0 1px color-mix(in srgb, var(--user-beam-color) 52%, transparent),
         0 0 18px color-mix(in srgb, var(--user-beam-color) 22%, transparent),
@@ -201,7 +198,8 @@ function ensureAppearanceStyle() {
     html[data-beam-mode="rainbow"] .active-glow,
     html[data-beam-mode="rainbow"] .dashboard-nav-link.active,
     html[data-beam-mode="rainbow"] .eva-link.active,
-    html[data-beam-mode="rainbow"] .input-shell:focus-within {
+    html[data-beam-mode="rainbow"] .input-shell:focus-within,
+    html[data-beam-mode="rainbow"] .btn:focus-visible {
       animation: evaraRainbowBeam 4s linear infinite;
       box-shadow:
         0 0 0 1px rgba(255,255,255,0.18),
@@ -229,13 +227,6 @@ function syncThemeUi() {
     el.textContent = current.family === "neutral"
       ? "Neutral"
       : current.family.charAt(0).toUpperCase() + current.family.slice(1);
-  });
-
-  document.querySelectorAll("[data-theme-bubble]").forEach((bubble) => {
-    const family = bubble.getAttribute("data-theme-family") || "neutral";
-    const isActive = family === current.family;
-    bubble.classList.toggle("active", isActive);
-    bubble.setAttribute("aria-pressed", isActive ? "true" : "false");
   });
 }
 
