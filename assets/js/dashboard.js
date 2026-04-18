@@ -61,6 +61,16 @@ function titleFromRecord(record, fallback = "Untitled") {
   );
 }
 
+function textFromRecord(record, fields = []) {
+  for (const field of fields) {
+    const value = record?.[field];
+    if (value !== undefined && value !== null && String(value).trim()) {
+      return String(value).trim();
+    }
+  }
+  return "";
+}
+
 function statusPillClass(status = "") {
   const value = normalizedStatus(status);
 
@@ -68,11 +78,11 @@ function statusPillClass(status = "") {
     return "success";
   }
 
-  if (["review", "pending", "new", "quoted"].includes(value)) {
+  if (["review", "pending", "new", "quoted", "contacted", "scheduled"].includes(value)) {
     return "warning";
   }
 
-  if (["error", "failed", "blocked"].includes(value)) {
+  if (["error", "failed", "blocked", "cancelled", "canceled"].includes(value)) {
     return "error";
   }
 
@@ -85,12 +95,21 @@ function niceStatus(status = "") {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+function escapeHtml(value = "") {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 async function loadCollectionDocs(name, options = {}) {
   const ref = collection(db, name);
 
   try {
     if (options.orderField) {
-      const q = query(ref, orderBy(options.orderField, "desc"), limit(options.limitCount || 3));
+      const q = query(ref, orderBy(options.orderField, "desc"), limit(options.limitCount || 6));
       const snap = await getDocs(q);
       return safeArray(snap);
     }
@@ -107,8 +126,8 @@ async function loadCollectionDocs(name, options = {}) {
 function createStateCard(type, title, message) {
   return `
     <article class="dashboard-state-card ${type}">
-      <strong>${title}</strong>
-      <span>${message}</span>
+      <strong>${escapeHtml(title)}</strong>
+      <span>${escapeHtml(message)}</span>
     </article>
   `;
 }
@@ -155,22 +174,20 @@ function renderCompanies(companies) {
     return;
   }
 
-  companiesList.innerHTML = companies.slice(0, 3).map((company) => {
+  companiesList.innerHTML = companies.slice(0, 4).map((company) => {
     const status = niceStatus(company.status || company.health || "active");
     const pill = statusPillClass(company.status || company.health || "active");
     const subtitle =
-      company.description ||
-      company.location ||
-      company.category ||
+      textFromRecord(company, ["description", "location", "category", "industry"]) ||
       "Company record from Firestore";
 
     return `
-      <article class="dashboard-list-item glass-card aurora-card active-glow">
+      <article class="dashboard-list-item glass-card aurora-card active-glow beam-target">
         <div>
-          <strong>${titleFromRecord(company, "Company")}</strong>
-          <span>${subtitle}</span>
+          <strong>${escapeHtml(titleFromRecord(company, "Company"))}</strong>
+          <span>${escapeHtml(subtitle)}</span>
         </div>
-        <span class="dashboard-status-pill ${pill}">${status}</span>
+        <span class="dashboard-status-pill ${pill}">${escapeHtml(status)}</span>
       </article>
     `;
   }).join("");
@@ -210,9 +227,9 @@ function renderUsers(users) {
   ];
 
   usersRoleGrid.innerHTML = cards.map(([label, count]) => `
-    <article class="dashboard-role-card glass-card aurora-card active-glow">
+    <article class="dashboard-role-card glass-card aurora-card active-glow beam-target">
       <div>
-        <strong>${label}</strong>
+        <strong>${escapeHtml(label)}</strong>
         <span>${count} user${count === 1 ? "" : "s"}</span>
       </div>
       <span class="dashboard-status-pill ${count > 0 ? "success" : "empty"}">${count}</span>
@@ -251,11 +268,11 @@ function renderLeadFlow(leads) {
   ];
 
   leadFlowStack.innerHTML = rows.map(([label, count]) => {
-    const width = Math.max(8, Math.round((count / total) * 100));
+    const width = Math.max(count === 0 ? 6 : 10, Math.round((count / total) * 100));
     return `
-      <div class="dashboard-progress-row glass-card aurora-card active-glow">
+      <div class="dashboard-progress-row glass-card aurora-card active-glow beam-target">
         <div class="dashboard-progress-copy">
-          <strong>${label}</strong>
+          <strong>${escapeHtml(label)}</strong>
           <span>${count} record${count === 1 ? "" : "s"}</span>
         </div>
         <div class="dashboard-progress-bar">
@@ -276,29 +293,27 @@ function renderJobs(jobs) {
     return;
   }
 
-  jobsList.innerHTML = jobs.slice(0, 3).map((job) => {
+  jobsList.innerHTML = jobs.slice(0, 4).map((job) => {
     const status = niceStatus(job.status || "active");
     const pill = statusPillClass(job.status || "active");
     const subtitle =
-      job.description ||
-      job.address ||
-      job.location ||
+      textFromRecord(job, ["description", "address", "location", "serviceType"]) ||
       "Job record from Firestore";
 
     return `
-      <article class="dashboard-list-item glass-card aurora-card active-glow">
+      <article class="dashboard-list-item glass-card aurora-card active-glow beam-target">
         <div>
-          <strong>${titleFromRecord(job, "Job")}</strong>
-          <span>${subtitle}</span>
+          <strong>${escapeHtml(titleFromRecord(job, "Job"))}</strong>
+          <span>${escapeHtml(subtitle)}</span>
         </div>
-        <span class="dashboard-status-pill ${pill}">${status}</span>
+        <span class="dashboard-status-pill ${pill}">${escapeHtml(status)}</span>
       </article>
     `;
   }).join("");
 }
 
-function renderActivity(companies, users, leads, jobs) {
-  const merged = [
+function buildActivityItems(companies, users, leads, jobs) {
+  return [
     ...companies.slice(0, 2).map((item) => ({
       kind: "Company",
       title: titleFromRecord(item, "Company"),
@@ -319,7 +334,11 @@ function renderActivity(companies, users, leads, jobs) {
       title: titleFromRecord(item, "Job"),
       detail: item.status || "updated"
     }))
-  ].slice(0, 6);
+  ].slice(0, 8);
+}
+
+function renderActivity(companies, users, leads, jobs) {
+  const merged = buildActivityItems(companies, users, leads, jobs);
 
   if (!merged.length) {
     activityFeed.innerHTML = createStateCard(
@@ -331,12 +350,12 @@ function renderActivity(companies, users, leads, jobs) {
   }
 
   activityFeed.innerHTML = merged.map((item) => `
-    <article class="dashboard-feed-item glass-card aurora-card active-glow">
+    <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
       <div>
-        <strong>${item.kind}: ${item.title}</strong>
-        <span>Status: ${niceStatus(item.detail)}</span>
+        <strong>${escapeHtml(item.kind)}: ${escapeHtml(item.title)}</strong>
+        <span>Status: ${escapeHtml(niceStatus(item.detail))}</span>
       </div>
-      <span class="dashboard-status-pill working">${item.kind}</span>
+      <span class="dashboard-status-pill working">${escapeHtml(item.kind)}</span>
     </article>
   `).join("");
 }
@@ -356,7 +375,7 @@ function updateStats(companies, users, leads, jobs) {
   ).length;
 
   const inProgressJobs = jobs.filter((item) =>
-    ["in progress", "active", "pending", "working"].includes(normalizedStatus(item.status))
+    ["in progress", "active", "pending", "working", "scheduled"].includes(normalizedStatus(item.status))
   ).length;
 
   statCompaniesMeta.textContent = `${activeCompanies} active`;
@@ -391,7 +410,10 @@ function renderFilteredDashboard(queryText = "") {
       item.address,
       item.category,
       item.status,
-      item.role
+      item.role,
+      item.health,
+      item.serviceType,
+      item.industry
     ].map((value) => String(value || "").toLowerCase()).join(" ");
 
     return haystack.includes(queryValue);
@@ -461,18 +483,19 @@ async function loadDashboardData() {
 
   try {
     const [companies, users, leads, jobs] = await Promise.all([
-      loadCollectionDocs("companies", { orderField: "updatedAt", limitCount: 6 }),
+      loadCollectionDocs("companies", { orderField: "updatedAt", limitCount: 8 }),
       loadCollectionDocs("users"),
       loadCollectionDocs("leads"),
-      loadCollectionDocs("jobs", { orderField: "updatedAt", limitCount: 6 })
+      loadCollectionDocs("jobs", { orderField: "updatedAt", limitCount: 8 })
     ]);
 
     dashboardCache = { companies, users, leads, jobs };
 
     renderFilteredDashboard(dashboardSearch?.value || "");
 
+    const totalRecords = companies.length + users.length + leads.length + jobs.length;
     heroStatusTitle.textContent = "Live system connected";
-    heroStatusText.textContent = `Loaded ${companies.length} companies, ${users.length} users, ${leads.length} leads, and ${jobs.length} jobs.`;
+    heroStatusText.textContent = `Loaded ${totalRecords} total records across ${companies.length} companies, ${users.length} users, ${leads.length} leads, and ${jobs.length} jobs.`;
   } catch (error) {
     console.error("Dashboard data load failed:", error);
 
