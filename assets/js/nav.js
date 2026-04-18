@@ -1,622 +1,292 @@
-(function () {
-  let tripleTapCount = 0;
-  let tripleTapTimer = null;
-  let progress = 0;
-  let targetProgress = 0;
-  let lastY = window.scrollY;
-  let lastScrollDirection = 0; // -1 up, 1 down
-  let compactTimer = null;
-  let scrollSettleTimer = null;
-  let rafId = null;
-  let navPinnedOpen = false;
-  let motionMode = "scroll";
+// assets/js/nav.js
 
-  let tapStartX = 0;
-  let tapStartY = 0;
-  let tapMoved = false;
-  let tapHandled = false;
+import { auth, logout } from "./firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-  function getBasePath() {
-    const path = window.location.pathname;
-    const marker = "/evaraos/";
-    const index = path.indexOf(marker);
-    return index >= 0 ? path.slice(0, index + marker.length - 1) : "/evaraos";
-  }
+const NAV_LOGIN_LINKS = `
+  <a href="/evaraos/login.html" class="nav-dropdown-link">
+    <span class="nav-dropdown-icon">→</span>
+    <span>Login</span>
+  </a>
+  <a href="/evaraos/signup.html" class="nav-dropdown-link">
+    <span class="nav-dropdown-icon">+</span>
+    <span>Sign Up</span>
+  </a>
+`;
 
-  function buildHref(page) {
-    return `${getBasePath()}/${page}`;
-  }
+const NAV_APP_LINKS = `
+  <a href="/evaraos/dashboard.html" class="nav-dropdown-link">
+    <span class="nav-dropdown-icon">⌂</span>
+    <span>Dashboard</span>
+  </a>
+  <a href="/evaraos/profile.html" class="nav-dropdown-link">
+    <span class="nav-dropdown-icon">◉</span>
+    <span>Profile</span>
+  </a>
+  <a href="/evaraos/settings.html" class="nav-dropdown-link">
+    <span class="nav-dropdown-icon">⚙</span>
+    <span>Settings</span>
+  </a>
+`;
 
-  function normalizePage(path) {
-    return path.split("/").pop() || "index.html";
-  }
+function renderUniversalNav() {
+  const host = document.getElementById("universalNav") || document.getElementById("universalNavRoot");
+  if (!host) return;
 
-  function isCurrentPage(path) {
-    const current = normalizePage(window.location.pathname.replace(/\/+$/, ""));
-    const target = normalizePage(path);
-    return current === target || (current === "" && target === "index.html");
-  }
+  host.innerHTML = `
+    <div class="nav-pill-shell" id="navPillShell">
+      <div class="nav-pill nav-pill-compact" id="navPill">
+        <button class="nav-brand-button" id="navBrandButton" type="button" aria-label="Open navigation">
+          <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos" class="nav-logo" />
+          <span class="nav-brand-text">Evaraos Inc</span>
+        </button>
 
-  function getRole() {
-    try {
-      const raw =
-        localStorage.getItem("evaraos-user") ||
-        sessionStorage.getItem("evaraos-user");
-      if (!raw) return "guest";
-      const parsed = JSON.parse(raw);
-      return String(parsed?.role || "guest").toLowerCase();
-    } catch {
-      return "guest";
-    }
-  }
+        <button class="nav-menu-button" id="navMenuButton" type="button" aria-label="Toggle menu">
+          <span class="nav-menu-dot"></span>
+          <span class="nav-menu-dot"></span>
+          <span class="nav-menu-dot"></span>
+        </button>
+      </div>
 
-  function getTheme() {
-    return localStorage.getItem("evaraos-theme") || "dark";
-  }
+      <div class="nav-dropdown glass-card aurora-card" id="navDropdown" hidden>
+        <div class="nav-dropdown-group">
+          <p class="nav-dropdown-label">Navigate</p>
+          <div class="nav-dropdown-links" id="navPrimaryLinks"></div>
+        </div>
 
-  function setTheme(theme) {
-    localStorage.setItem("evaraos-theme", theme);
-    document.documentElement.setAttribute("data-theme", theme);
-    syncThemeLabel();
-  }
+        <div class="nav-dropdown-group">
+          <p class="nav-dropdown-label">Access</p>
+          <div class="nav-dropdown-links" id="navAccessLinks"></div>
+        </div>
 
-  function syncThemeLabel() {
-    const label = document.querySelector("[data-theme-label]");
-    if (!label) return;
-    label.textContent = getTheme() === "light" ? "Light mode" : "Dark mode";
-  }
-
-  function navHaptic(ms = 10) {
-    try {
-      if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
-        navigator.vibrate(ms);
-      }
-    } catch (_) {}
-  }
-
-  function getVisibleLinks() {
-    const role = getRole();
-
-    const common = [
-      { page: "index.html", label: "Home", icon: "⌂" },
-      { page: "settings.html", label: "Settings", icon: "⚙︎" }
-    ];
-
-    const authLinks = [
-      { page: "login.html", label: "Login", icon: "⇥" },
-      { page: "signup.html", label: "Sign Up", icon: "✚" },
-      { page: "reset.html", label: "Reset", icon: "↺" }
-    ];
-
-    const ownerOnly = [
-      { page: "dashboard.html", label: "Dashboard", icon: "◫" },
-      { page: "companies.html", label: "Companies", icon: "▣" },
-      { page: "users.html", label: "Users", icon: "◉" },
-      { page: "leads.html", label: "Leads", icon: "⌁" },
-      { page: "jobs.html", label: "Jobs", icon: "✓" },
-      { page: "qa.html", label: "QA", icon: "◎" }
-    ];
-
-    return {
-      common,
-      authLinks,
-      ownerOnly,
-      main: role === "owner" ? [...common, ...ownerOnly] : common
-    };
-  }
-
-  function navLink(page, label, icon) {
-    const href = buildHref(page);
-    const active = isCurrentPage(page) ? " active" : "";
-    return `
-      <a href="${href}" class="eva-link${active}" data-menu-link="${href}" data-label="${label.toLowerCase()}">
-        <span class="eva-link-icon">${icon}</span>
-        <span class="eva-link-label">${label}</span>
-      </a>
-    `;
-  }
-
-  function renderNav() {
-    const mount = document.getElementById("universalNavRoot");
-    if (!mount) return;
-
-    const groups = getVisibleLinks();
-    const mainLinks = groups.main.map((item) => navLink(item.page, item.label, item.icon)).join("");
-    const authLinks = groups.authLinks.map((item) => navLink(item.page, item.label, item.icon)).join("");
-
-    mount.innerHTML = `
-      <div class="eva-nav-layer">
-        <header class="eva-nav-shell compact" id="evaNavShell">
-          <div class="eva-nav-pill glass-shell" id="evaNavPill">
-            <div class="eva-brand" id="evaBrandBlock" role="button" tabindex="0" aria-label="Toggle navigation pill">
-              <img
-                src="${getBasePath()}/assets/img/evaraos_logo.png"
-                alt="Evaraos logo"
-                class="eva-logo"
-                onerror="this.onerror=null;this.src='${getBasePath()}/assets/logo.png';"
-              />
-              <div class="eva-brand-copy">
-                <strong>Evaraos Inc</strong>
-                <span>Subsidiaries Allocation SaaS</span>
-              </div>
-            </div>
-
-            <div class="eva-menu-zone" id="evaMenuZone">
-              <button
-                class="eva-menu-btn"
-                type="button"
-                id="evaMenuBtn"
-                aria-expanded="false"
-                aria-label="Open menu"
-              >
-                <span class="eva-burger">
-                  <span class="eva-burger-line top"></span>
-                  <span class="eva-burger-line mid"></span>
-                  <span class="eva-burger-line bot"></span>
-                </span>
-              </button>
-            </div>
-          </div>
-        </header>
-
-        <div class="eva-backdrop" id="evaBackdrop"></div>
-
-        <div class="eva-menu-panel" id="evaMenuPanel">
-          <label class="eva-search">
-            <span>⌕</span>
-            <input type="text" id="evaSearchInput" placeholder="Search pages" />
-          </label>
-
-          <nav class="eva-links" id="evaLinks" aria-label="Main navigation">
-            ${mainLinks}
-          </nav>
-
-          <div class="eva-divider"></div>
-
-          <div class="eva-quick" id="evaAuthLinks">
-            ${authLinks}
-          </div>
-
-          <div class="eva-divider"></div>
-
-          <div class="eva-quick">
-            <button type="button" class="eva-chip" id="evaThemeToggle">
-              <span class="eva-chip-row">
-                <span class="eva-chip-dot"></span>
-                <span data-theme-label>Dark mode</span>
-              </span>
+        <div class="nav-dropdown-group">
+          <p class="nav-dropdown-label">Appearance</p>
+          <div class="nav-dropdown-links">
+            <button class="nav-dropdown-link nav-theme-btn" data-theme-target="dark" type="button">
+              <span class="nav-dropdown-icon">◐</span>
+              <span>Dark Mode</span>
             </button>
+            <button class="nav-dropdown-link nav-theme-btn" data-theme-target="light" type="button">
+              <span class="nav-dropdown-icon">◑</span>
+              <span>Light Mode</span>
+            </button>
+          </div>
+        </div>
 
-            <a href="${buildHref("settings.html")}" class="eva-link" data-menu-link="${buildHref("settings.html")}" data-label="advanced settings">
-              <span class="eva-link-icon">⚙︎</span>
-              <span class="eva-link-label">Advanced settings</span>
-            </a>
+        <div class="nav-dropdown-group" id="navLogoutGroup" hidden>
+          <p class="nav-dropdown-label">Session</p>
+          <div class="nav-dropdown-links">
+            <button class="nav-dropdown-link nav-logout-btn" id="navLogoutBtn" type="button">
+              <span class="nav-dropdown-icon">⎋</span>
+              <span>Logout</span>
+            </button>
           </div>
         </div>
       </div>
-    `;
-  }
+    </div>
+  `;
 
-  function getMenuZone() {
-    return document.getElementById("evaMenuZone");
-  }
+  setupUniversalNav();
+}
 
-  function getMenuBtn() {
-    return document.getElementById("evaMenuBtn");
-  }
+function setupUniversalNav() {
+  const pill = document.getElementById("navPill");
+  const dropdown = document.getElementById("navDropdown");
+  const brandButton = document.getElementById("navBrandButton");
+  const menuButton = document.getElementById("navMenuButton");
+  const primaryLinks = document.getElementById("navPrimaryLinks");
+  const accessLinks = document.getElementById("navAccessLinks");
+  const logoutGroup = document.getElementById("navLogoutGroup");
 
-  function getMenuPanel() {
-    return document.getElementById("evaMenuPanel");
-  }
+  if (!pill || !dropdown || !brandButton || !menuButton || !primaryLinks || !accessLinks || !logoutGroup) return;
 
-  function getNavShell() {
-    return document.getElementById("evaNavShell");
-  }
+  const currentPath = window.location.pathname;
+  const isAuthPage =
+    currentPath.endsWith("/login.html") ||
+    currentPath.endsWith("/signup.html") ||
+    currentPath.endsWith("/reset.html");
 
-  function getBrandBlock() {
-    return document.getElementById("evaBrandBlock");
-  }
+  let isOpen = false;
+  let closeTimer = null;
 
-  function getNavPill() {
-    return document.getElementById("evaNavPill");
-  }
+  primaryLinks.innerHTML = `
+    <a href="/evaraos/index.html" class="nav-dropdown-link">
+      <span class="nav-dropdown-icon">⌂</span>
+      <span>Home</span>
+    </a>
+    <a href="/evaraos/dashboard.html" class="nav-dropdown-link">
+      <span class="nav-dropdown-icon">◈</span>
+      <span>Dashboard</span>
+    </a>
+    <a href="/evaraos/companies.html" class="nav-dropdown-link">
+      <span class="nav-dropdown-icon">◎</span>
+      <span>Companies</span>
+    </a>
+    <a href="/evaraos/users.html" class="nav-dropdown-link">
+      <span class="nav-dropdown-icon">◌</span>
+      <span>Users</span>
+    </a>
+    <a href="/evaraos/leads.html" class="nav-dropdown-link">
+      <span class="nav-dropdown-icon">◍</span>
+      <span>Leads</span>
+    </a>
+    <a href="/evaraos/jobs.html" class="nav-dropdown-link">
+      <span class="nav-dropdown-icon">◒</span>
+      <span>Jobs</span>
+    </a>
+  `;
 
-  function clearCompactTimer() {
-    if (compactTimer) {
-      clearTimeout(compactTimer);
-      compactTimer = null;
+  function clearCloseTimer() {
+    if (closeTimer) {
+      window.clearTimeout(closeTimer);
+      closeTimer = null;
     }
   }
 
-  function clearScrollSettleTimer() {
-    if (scrollSettleTimer) {
-      clearTimeout(scrollSettleTimer);
-      scrollSettleTimer = null;
+  function scheduleClose() {
+    clearCloseTimer();
+    closeTimer = window.setTimeout(() => {
+      closeDropdown();
+    }, 7000);
+  }
+
+  function openDropdown() {
+    isOpen = true;
+    pill.classList.add("is-open");
+    dropdown.hidden = false;
+    dropdown.classList.add("is-open");
+    scheduleClose();
+
+    if (navigator.vibrate) {
+      navigator.vibrate(8);
     }
   }
 
-  function atTopOfPage() {
-    return window.scrollY <= 4;
+  function closeDropdown() {
+    isOpen = false;
+    pill.classList.remove("is-open");
+    dropdown.classList.remove("is-open");
+    clearCloseTimer();
+
+    window.setTimeout(() => {
+      if (!isOpen) {
+        dropdown.hidden = true;
+      }
+    }, 180);
+
+    if (navigator.vibrate) {
+      navigator.vibrate(6);
+    }
   }
 
-  function atBottomOfPage() {
-    const scrollBottom = window.scrollY + window.innerHeight;
-    const docHeight = Math.max(
-      document.body.scrollHeight,
-      document.documentElement.scrollHeight
-    );
-    return scrollBottom >= docHeight - 4;
-  }
-
-  function isCompact() {
-    return progress <= 0.08;
-  }
-
-  function applyProgress(value) {
-    const shell = getNavShell();
-    if (!shell) return;
-
-    progress = Math.max(0, Math.min(1, value));
-    shell.style.setProperty("--nav-progress", progress.toFixed(4));
-
-    if (progress <= 0.08) {
-      shell.classList.add("compact");
-      shell.classList.remove("expanded");
+  function toggleDropdown() {
+    if (isOpen) {
+      closeDropdown();
     } else {
-      shell.classList.remove("compact");
-      shell.classList.add("expanded");
+      openDropdown();
     }
   }
 
-  function setTarget(value, mode = "scroll") {
-    targetProgress = Math.max(0, Math.min(1, value));
-    motionMode = mode;
-  }
+  brandButton.addEventListener("click", (event) => {
+    event.preventDefault();
 
-  function expandNav(pin = false, mode = "tap") {
-    clearCompactTimer();
-    if (pin) navPinnedOpen = true;
-    setTarget(1, mode);
-    navHaptic(10);
-  }
-
-  function compactNav(unpin = false, mode = "scroll") {
-    if (unpin) navPinnedOpen = false;
-
-    if (atTopOfPage() && !document.body.classList.contains("nav-menu-open")) {
-      setTarget(1, mode);
-      return;
-    }
-    setTarget(0, mode);
-    navHaptic(8);
-  }
-
-  function scheduleCompact(delay = 4000) {
-    clearCompactTimer();
-    if (document.body.classList.contains("nav-menu-open")) return;
-    if (atTopOfPage()) return;
-
-    compactTimer = setTimeout(() => {
-      if (!document.body.classList.contains("nav-menu-open") && !atTopOfPage()) {
-        navPinnedOpen = false;
-        compactNav(false, "tap");
-      }
-    }, delay);
-  }
-
-  function settleAfterScroll() {
-    clearScrollSettleTimer();
-    scrollSettleTimer = setTimeout(() => {
-      if (document.body.classList.contains("nav-menu-open")) return;
-
-      if (atTopOfPage()) {
-        navPinnedOpen = false;
-        setTarget(1, "scroll");
-        return;
-      }
-
-      if (atBottomOfPage()) {
-        navPinnedOpen = false;
-        setTarget(0, "scroll");
-        return;
-      }
-
-      if (lastScrollDirection < 0) {
-        navPinnedOpen = true;
-        setTarget(1, "scroll");
-        scheduleCompact(4000);
-        return;
-      }
-
-      navPinnedOpen = false;
-      setTarget(0, "scroll");
-    }, 110);
-  }
-
-  function openMenu() {
-    const zone = getMenuZone();
-    const btn = getMenuBtn();
-    if (!zone || !btn) return;
-    document.body.classList.add("nav-menu-open");
-    zone.classList.add("open");
-    btn.setAttribute("aria-expanded", "true");
-    expandNav(true, "tap");
-  }
-
-  function closeMenu(shouldCompact = true) {
-    const zone = getMenuZone();
-    const btn = getMenuBtn();
-    if (!zone || !btn) return;
-    document.body.classList.remove("nav-menu-open");
-    zone.classList.remove("open");
-    btn.setAttribute("aria-expanded", "false");
-    navHaptic(8);
-
-    if (shouldCompact) {
-      navPinnedOpen = false;
-      if (atTopOfPage()) {
-        setTarget(1, "tap");
-      } else {
-        setTarget(0, "tap");
-      }
-    }
-  }
-
-  function togglePill(event) {
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-
-    if (document.body.classList.contains("nav-menu-open")) return;
-
-    if (isCompact()) {
-      expandNav(true, "tap");
-      scheduleCompact(4000);
+    if (window.location.pathname.endsWith("/index.html") || window.location.pathname === "/evaraos/" || window.location.pathname === "/evaraos") {
+      toggleDropdown();
       return;
     }
 
-    if (!atTopOfPage()) {
-      navPinnedOpen = false;
-      compactNav(true, "tap");
+    window.location.href = "/evaraos/index.html";
+  });
+
+  menuButton.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleDropdown();
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!dropdown.contains(event.target) && !pill.contains(event.target)) {
+      closeDropdown();
     }
-  }
+  });
 
-  function bindTapToggle() {
-    const pill = getNavPill();
-    const brand = getBrandBlock();
-    const menuBtn = getMenuBtn();
-    if (!pill || !brand || !menuBtn) return;
+  dropdown.addEventListener("mouseenter", () => {
+    clearCloseTimer();
+  });
 
-    function onTouchStart(event) {
-      if (event.target.closest("#evaMenuBtn")) return;
-      const touch = event.touches ? event.touches[0] : event;
-      tapStartX = touch.clientX;
-      tapStartY = touch.clientY;
-      tapMoved = false;
-      tapHandled = false;
-    }
+  dropdown.addEventListener("mouseleave", () => {
+    if (isOpen) scheduleClose();
+  });
 
-    function onTouchMove(event) {
-      if (event.target.closest("#evaMenuBtn")) return;
-      const touch = event.touches ? event.touches[0] : event;
-      const dx = Math.abs(touch.clientX - tapStartX);
-      const dy = Math.abs(touch.clientY - tapStartY);
-      if (dx > 10 || dy > 10) {
-        tapMoved = true;
-      }
-    }
-
-    function onTouchEnd(event) {
-      if (event.target.closest("#evaMenuBtn")) return;
-      if (tapMoved || tapHandled) return;
-      tapHandled = true;
-      togglePill(event);
-    }
-
-    pill.addEventListener("touchstart", onTouchStart, { passive: true });
-    pill.addEventListener("touchmove", onTouchMove, { passive: true });
-    pill.addEventListener("touchend", onTouchEnd);
-
-    brand.addEventListener("touchstart", onTouchStart, { passive: true });
-    brand.addEventListener("touchmove", onTouchMove, { passive: true });
-    brand.addEventListener("touchend", onTouchEnd);
-
-    pill.addEventListener("click", (event) => {
-      if (event.target.closest("#evaMenuBtn")) return;
-      if (tapHandled) {
-        tapHandled = false;
-        return;
-      }
-      togglePill(event);
-    });
-
-    brand.addEventListener("click", (event) => {
-      if (tapHandled) {
-        tapHandled = false;
-        return;
-      }
-      togglePill(event);
-    });
-
-    brand.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        togglePill(event);
-      }
-    });
-  }
-
-  function bindLinks() {
-    document.querySelectorAll("[data-menu-link]").forEach((link) => {
-      link.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        navHaptic(8);
-        const href = link.getAttribute("data-menu-link");
-        if (!href) return;
-        closeMenu(false);
-        window.location.assign(href);
-      });
-    });
-  }
-
-  function bindThemeToggle() {
-    const toggle = document.getElementById("evaThemeToggle");
-    if (!toggle) return;
-
-    toggle.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      setTheme(getTheme() === "light" ? "dark" : "light");
-    });
-  }
-
-  function bindSearch() {
-    const input = document.getElementById("evaSearchInput");
-    const links = Array.from(document.querySelectorAll("#evaLinks .eva-link, #evaAuthLinks .eva-link"));
-    if (!input) return;
-
-    input.addEventListener("input", () => {
-      const value = input.value.trim().toLowerCase();
-      links.forEach((link) => {
-        const label = (link.getAttribute("data-label") || "").toLowerCase();
-        link.style.display = !value || label.includes(value) ? "" : "none";
-      });
-    });
-  }
-
-  function toggleQuickMode() {
-    const panel = getMenuPanel();
-    if (!panel) return;
-    panel.classList.toggle("quick-mode");
-    navHaptic(10);
-  }
-
-  function bindTripleTap() {
-    const btn = getMenuBtn();
-    if (!btn) return;
-
+  document.querySelectorAll(".nav-theme-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      tripleTapCount += 1;
-      clearTimeout(tripleTapTimer);
-
-      tripleTapTimer = setTimeout(() => {
-        tripleTapCount = 0;
-      }, 350);
-
-      if (tripleTapCount === 3) {
-        toggleQuickMode();
-        tripleTapCount = 0;
-        clearTimeout(tripleTapTimer);
-      }
+      const target = btn.dataset.themeTarget || "dark";
+      document.documentElement.setAttribute("data-theme", target);
+      localStorage.setItem("evaraos-theme", target);
+      scheduleClose();
     });
+  });
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      accessLinks.innerHTML = NAV_APP_LINKS;
+      logoutGroup.hidden = false;
+    } else {
+      accessLinks.innerHTML = isAuthPage ? "" : NAV_LOGIN_LINKS;
+      logoutGroup.hidden = true;
+    }
+
+    const logoutBtn = document.getElementById("navLogoutBtn");
+    if (logoutBtn) {
+      logoutBtn.onclick = async () => {
+        await logout();
+      };
+    }
+  });
+
+  let lastScrollY = window.scrollY;
+  let scrollTimeout = null;
+
+  function applyCompact() {
+    pill.classList.remove("is-expanded-by-scroll");
   }
 
-  function bindMenu() {
-    const zone = getMenuZone();
-    const btn = getMenuBtn();
-    const panel = getMenuPanel();
-    const backdrop = document.getElementById("evaBackdrop");
-
-    if (!zone || !btn || !panel || !backdrop) return;
-
-    btn.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      navHaptic(10);
-
-      if (document.body.classList.contains("nav-menu-open")) {
-        closeMenu(true);
-      } else {
-        openMenu();
-      }
-    });
-
-    panel.addEventListener("click", (event) => {
-      event.stopPropagation();
-    });
-
-    backdrop.addEventListener("click", () => {
-      closeMenu(true);
-    });
-
-    document.addEventListener("click", (event) => {
-      if (!zone.contains(event.target) && !panel.contains(event.target)) {
-        if (document.body.classList.contains("nav-menu-open")) {
-          closeMenu(true);
-        }
-      }
-    });
+  function applyExpanded() {
+    pill.classList.add("is-expanded-by-scroll");
+    clearCloseTimer();
+    window.clearTimeout(scrollTimeout);
+    scrollTimeout = window.setTimeout(() => {
+      if (!isOpen) applyCompact();
+    }, 4000);
   }
 
-  function bindScrollBehavior() {
-    window.addEventListener(
-      "scroll",
-      () => {
-        const y = window.scrollY;
-        const dy = y - lastY;
+  window.addEventListener("scroll", () => {
+    const currentY = window.scrollY;
 
-        if (!document.body.classList.contains("nav-menu-open")) {
-          clearCompactTimer();
+    if (currentY <= 6) {
+      pill.classList.add("is-at-top");
+      applyExpanded();
+      lastScrollY = currentY;
+      return;
+    } else {
+      pill.classList.remove("is-at-top");
+    }
 
-          if (Math.abs(dy) > 0.05) {
-            lastScrollDirection = dy < 0 ? -1 : 1;
-          }
+    if (currentY > lastScrollY) {
+      applyCompact();
+    } else if (currentY < lastScrollY) {
+      applyExpanded();
+    }
 
-          if (atTopOfPage()) {
-            navPinnedOpen = false;
-            setTarget(1, "scroll");
-          } else if (atBottomOfPage()) {
-            navPinnedOpen = false;
-            setTarget(0, "scroll");
-          } else {
-            const sensitivity = 0.024;
-            const next = Math.max(0, Math.min(1, targetProgress - dy * sensitivity));
-            setTarget(next, "scroll");
-          }
+    lastScrollY = currentY;
+  });
 
-          settleAfterScroll();
-        }
-
-        lastY = y;
-      },
-      { passive: true }
-    );
-
-    window.addEventListener(
-      "touchend",
-      () => {
-        if (!document.body.classList.contains("nav-menu-open")) {
-          settleAfterScroll();
-        }
-      },
-      { passive: true }
-    );
+  if (window.scrollY <= 6) {
+    pill.classList.add("is-at-top");
+    applyExpanded();
+  } else {
+    applyCompact();
   }
+}
 
-  function animate() {
-    const diff = targetProgress - progress;
-    const factor = motionMode === "tap" ? 0.085 : 0.082;
-    const next = Math.abs(diff) < 0.0006 ? targetProgress : progress + diff * factor;
-    applyProgress(next);
-    rafId = requestAnimationFrame(animate);
-  }
-
-  function init() {
-    document.documentElement.setAttribute("data-theme", getTheme());
-    renderNav();
-    bindTapToggle();
-    bindMenu();
-    bindLinks();
-    bindThemeToggle();
-    bindSearch();
-    bindTripleTap();
-    targetProgress = atTopOfPage() ? 1 : 0;
-    applyProgress(targetProgress);
-    bindScrollBehavior();
-    syncThemeLabel();
-    animate();
-  }
-
-  document.addEventListener("DOMContentLoaded", init);
-})();
+document.addEventListener("DOMContentLoaded", renderUniversalNav);
