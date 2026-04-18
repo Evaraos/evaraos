@@ -23,15 +23,6 @@
       pointer-events: none;
     }
   </style>
-
-  <script type="module">
-    import { protectRoute } from "/evaraos/assets/js/firebase.js";
-    protectRoute({
-      requireAuth: true,
-      redirectGuestTo: "/evaraos/login.html",
-      redirectAuthedTo: "/evaraos/dashboard.html"
-    });
-  </script>
 </head>
 <body class="dashboard-body auth-pending" data-route-guard="private">
   <div class="page-grid-overlay"></div>
