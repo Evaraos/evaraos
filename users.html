@@ -4,13 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
-  <!-- Security / cache control -->
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
   <title>Users • Evaraos Inc</title>
-  <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
+
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=23" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=23" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=23" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=23" />
 
   <script>
     document.documentElement.classList.add("auth-pending");
@@ -30,9 +33,9 @@
 
   <div class="dashboard-shell">
     <aside class="dashboard-sidebar" id="dashboardSidebar">
-      <div class="dashboard-sidebar-inner glass-shell aurora-card">
+      <div class="dashboard-sidebar-inner glass-shell aurora-card active-glow">
         <div class="dashboard-sidebar-search">
-          <div class="dashboard-search-shell input-shell aurora-card">
+          <div class="dashboard-search-shell input-shell aurora-card active-glow">
             <input
               type="search"
               class="dashboard-search-input input"
@@ -60,7 +63,7 @@
           </a>
         </nav>
 
-        <div class="dashboard-sidebar-foot glass-card aurora-card">
+        <div class="dashboard-sidebar-foot glass-card aurora-card active-glow">
           <div class="dashboard-sidebar-foot-copy">
             <strong>User Tools</strong>
             <span>
@@ -73,7 +76,7 @@
     </aside>
 
     <main class="dashboard-main">
-      <section class="dashboard-hero glass-card aurora-card" id="usersHeroSection">
+      <section class="dashboard-hero glass-card aurora-card active-glow" id="usersHeroSection">
         <div class="dashboard-hero-copy">
           <p class="dashboard-eyebrow">USER DIRECTORY</p>
           <h1 id="usersHeroTitle">Loading users...</h1>
@@ -87,7 +90,7 @@
           </div>
         </div>
 
-        <div class="dashboard-hero-panel glass-card aurora-card">
+        <div class="dashboard-hero-panel glass-card aurora-card active-glow">
           <div class="dashboard-hero-panel-top">
             <span class="dashboard-mini-badge">Directory Status</span>
             <span class="dashboard-live-dot"></span>
@@ -108,7 +111,7 @@
         </div>
       </section>
 
-      <section class="dashboard-overview glass-card aurora-card">
+      <section class="dashboard-overview glass-card aurora-card active-glow">
         <div class="dashboard-section-head">
           <div>
             <p class="dashboard-section-kicker">Snapshot</p>
@@ -117,25 +120,25 @@
         </div>
 
         <div class="dashboard-stats-grid">
-          <article class="dashboard-stat-card glass-card aurora-card">
+          <article class="dashboard-stat-card glass-card aurora-card active-glow">
             <p>Total</p>
             <h3 id="usersStatTotal">0</h3>
             <span id="usersStatTotalMeta">User records loaded</span>
           </article>
 
-          <article class="dashboard-stat-card glass-card aurora-card">
+          <article class="dashboard-stat-card glass-card aurora-card active-glow">
             <p>Owner/Admin</p>
             <h3 id="usersStatElevated">0</h3>
             <span id="usersStatElevatedMeta">Higher-access users</span>
           </article>
 
-          <article class="dashboard-stat-card glass-card aurora-card">
+          <article class="dashboard-stat-card glass-card aurora-card active-glow">
             <p>Customers</p>
             <h3 id="usersStatCustomers">0</h3>
             <span id="usersStatCustomersMeta">Customer accounts</span>
           </article>
 
-          <article class="dashboard-stat-card glass-card aurora-card">
+          <article class="dashboard-stat-card glass-card aurora-card active-glow">
             <p>Filtered</p>
             <h3 id="usersStatFiltered">0</h3>
             <span id="usersStatFilteredMeta">Matches current search</span>
@@ -144,7 +147,7 @@
       </section>
 
       <section class="dashboard-grid-2" id="usersMainSection">
-        <section class="dashboard-panel glass-card aurora-card">
+        <section class="dashboard-panel glass-card aurora-card active-glow">
           <div class="dashboard-section-head">
             <div>
               <p class="dashboard-section-kicker">Directory</p>
@@ -152,18 +155,10 @@
             </div>
           </div>
 
-          <div class="dashboard-list" id="usersList">
-            <article class="dashboard-list-item glass-card aurora-card">
-              <div>
-                <strong>Loading users...</strong>
-                <span>Your user records will appear here.</span>
-              </div>
-              <span class="dashboard-status-pill working">Loading</span>
-            </article>
-          </div>
+          <div class="dashboard-list" id="usersList"></div>
         </section>
 
-        <section class="dashboard-panel glass-card aurora-card">
+        <section class="dashboard-panel glass-card aurora-card active-glow">
           <div class="dashboard-section-head">
             <div>
               <p class="dashboard-section-kicker">Highlights</p>
@@ -171,21 +166,16 @@
             </div>
           </div>
 
-          <div class="dashboard-feed" id="usersFeed">
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Loading user activity...</strong>
-              <span>User highlights will appear once records are available.</span>
-            </article>
-          </div>
+          <div class="dashboard-feed" id="usersFeed"></div>
         </section>
       </section>
     </main>
   </div>
 
-  <script type="module" src="/evaraos/assets/js/theme.js"></script>
-  <script type="module" src="/evaraos/assets/js/firebase.js"></script>
-  <script type="module" src="/evaraos/assets/js/users.js"></script>
-  <script type="module" src="/evaraos/assets/js/route-guard.js"></script>
-  <script type="module" src="/evaraos/assets/js/nav.js"></script>
+  <script src="/evaraos/assets/js/theme.js?v=23"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js?v=23"></script>
+  <script type="module" src="/evaraos/assets/js/users.js?v=23"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js?v=23"></script>
+  <script src="/evaraos/assets/js/nav.js?v=23"></script>
 </body>
 </html>
