@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Sign Up • Evaraos Inc</title>
 
   <link rel="stylesheet" href="/evaraos/assets/css/base.css" />
@@ -11,19 +14,23 @@
   <link rel="stylesheet" href="/evaraos/assets/css/auth.css" />
   <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css" />
 </head>
-<body class="signup-page">
+<body class="signup-page auth-pending" data-route-guard="auth">
   <div class="page-grid-overlay"></div>
-  <div id="universalNav"></div>
+  <div id="universalNavRoot"></div>
 
   <main class="login-shell">
     <section class="login-panel glass-card aurora-card auth-panel auth-panel-signup">
       <div class="login-badge-wrap">
-        <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos logo" class="login-badge auth-badge auth-badge-large" />
+        <img
+          src="/evaraos/assets/img/evaraos_logo.png"
+          alt="Evaraos logo"
+          class="login-badge auth-badge auth-badge-large"
+        />
       </div>
 
       <h1 class="login-title">Create Account</h1>
       <p class="login-subtitle">
-        Create your secure Evaraos account and choose a username for login access.
+        Create your secure Evaraos account and choose a username for platform access.
       </p>
 
       <form id="signupForm" class="login-form" novalidate>
@@ -31,14 +38,30 @@
           <div class="form-group">
             <label class="field-label" for="signupName">Full Name</label>
             <div class="input-shell aurora-card">
-              <input id="signupName" name="name" type="text" class="input" placeholder="Enter your full name" autocomplete="name" required />
+              <input
+                id="signupName"
+                name="name"
+                type="text"
+                class="input"
+                placeholder="Enter your full name"
+                autocomplete="name"
+                required
+              />
             </div>
           </div>
 
           <div class="form-group">
             <label class="field-label" for="signupUsername">Username</label>
             <div class="input-shell aurora-card">
-              <input id="signupUsername" name="username" type="text" class="input" placeholder="Choose a username" autocomplete="username" required />
+              <input
+                id="signupUsername"
+                name="username"
+                type="text"
+                class="input"
+                placeholder="Choose a username"
+                autocomplete="username"
+                required
+              />
             </div>
           </div>
         </div>
@@ -47,15 +70,36 @@
           <div class="form-group">
             <label class="field-label" for="signupEmail">Email</label>
             <div class="input-shell aurora-card">
-              <input id="signupEmail" name="email" type="email" class="input" placeholder="Enter your email" autocomplete="email" required />
+              <input
+                id="signupEmail"
+                name="email"
+                type="email"
+                class="input"
+                placeholder="Enter your email"
+                autocomplete="email"
+                required
+              />
             </div>
           </div>
 
           <div class="form-group">
             <label class="field-label" for="signupPassword">Create Password</label>
             <div class="password-wrap aurora-card">
-              <input id="signupPassword" name="password" type="password" class="input" placeholder="Create your password" autocomplete="new-password" required />
-              <button type="button" class="password-toggle" id="signupPasswordToggle" aria-label="Show password">
+              <input
+                id="signupPassword"
+                name="password"
+                type="password"
+                class="input"
+                placeholder="Create your password"
+                autocomplete="new-password"
+                required
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                id="signupPasswordToggle"
+                aria-label="Show password"
+              >
                 <svg viewBox="0 0 24 24" class="password-eye-icon eye-open" aria-hidden="true">
                   <path d="M12 5c5.5 0 9.5 5.1 10.7 6.9.2.3.2.8 0 1.1C21.5 14.9 17.5 20 12 20S2.5 14.9 1.3 13.1a1 1 0 0 1 0-1.1C2.5 10.1 6.5 5 12 5Zm0 2C8 7 4.8 10.3 3.4 12 4.8 13.7 8 17 12 17s7.2-3.3 8.6-5C19.2 10.3 16 7 12 7Zm0 1.8A3.2 3.2 0 1 1 8.8 12 3.2 3.2 0 0 1 12 8.8Zm0 2A1.2 1.2 0 1 0 13.2 12 1.2 1.2 0 0 0 12 10.8Z"></path>
                 </svg>
@@ -71,8 +115,21 @@
           <div class="form-group">
             <label class="field-label" for="signupPasswordConfirm">Confirm Password</label>
             <div class="password-wrap aurora-card">
-              <input id="signupPasswordConfirm" name="passwordConfirm" type="password" class="input" placeholder="Confirm your password" autocomplete="new-password" required />
-              <button type="button" class="password-toggle" id="signupPasswordConfirmToggle" aria-label="Show password confirmation">
+              <input
+                id="signupPasswordConfirm"
+                name="passwordConfirm"
+                type="password"
+                class="input"
+                placeholder="Confirm your password"
+                autocomplete="new-password"
+                required
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                id="signupPasswordConfirmToggle"
+                aria-label="Show password confirmation"
+              >
                 <svg viewBox="0 0 24 24" class="password-eye-icon eye-open" aria-hidden="true">
                   <path d="M12 5c5.5 0 9.5 5.1 10.7 6.9.2.3.2.8 0 1.1C21.5 14.9 17.5 20 12 20S2.5 14.9 1.3 13.1a1 1 0 0 1 0-1.1C2.5 10.1 6.5 5 12 5Zm0 2C8 7 4.8 10.3 3.4 12 4.8 13.7 8 17 12 17s7.2-3.3 8.6-5C19.2 10.3 16 7 12 7Zm0 1.8A3.2 3.2 0 1 1 8.8 12 3.2 3.2 0 0 1 12 8.8Zm0 2A1.2 1.2 0 1 0 13.2 12 1.2 1.2 0 0 0 12 10.8Z"></path>
                 </svg>
@@ -101,12 +158,18 @@
 
         <p id="signupMessage" class="login-message" aria-live="polite"></p>
       </form>
+
+      <div class="auth-footer-links">
+        <span>Already registered?</span>
+        <a href="/evaraos/login.html">Sign in</a>
+      </div>
     </section>
   </main>
 
   <script type="module" src="/evaraos/assets/js/theme.js"></script>
-  <script type="module" src="/evaraos/assets/js/nav.js"></script>
   <script type="module" src="/evaraos/assets/js/firebase.js"></script>
   <script type="module" src="/evaraos/assets/js/auth.js"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js"></script>
+  <script type="module" src="/evaraos/assets/js/nav.js"></script>
 </body>
 </html>
