@@ -7,12 +7,12 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
-  <title>QA Dashboard • Evaraos Inc</title>
+  <title>QA Automation Console • Evaraos Inc</title>
 
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=26" />
-  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=26" />
-  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=26" />
-  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=26" />
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=27" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=27" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=27" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=27" />
 
   <script>
     document.documentElement.classList.add("auth-pending");
@@ -31,19 +31,24 @@
       gap: 10px;
     }
 
-    .qa-category-grid {
+    .qa-block-grid {
       display: grid;
       gap: 16px;
     }
 
-    .qa-category-card {
+    .qa-signal-grid {
       display: grid;
-      gap: 14px;
+      gap: 12px;
+    }
+
+    .qa-signal-card {
+      display: grid;
+      gap: 12px;
       padding: 18px;
       border-radius: 24px;
     }
 
-    .qa-category-head {
+    .qa-signal-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -51,31 +56,31 @@
       flex-wrap: wrap;
     }
 
-    .qa-category-meta {
+    .qa-signal-meta {
       display: grid;
       gap: 4px;
     }
 
-    .qa-category-meta h3 {
+    .qa-signal-meta h3 {
       margin: 0;
       font-size: 1.08rem;
       letter-spacing: -0.02em;
     }
 
-    .qa-category-meta p {
+    .qa-signal-meta p {
       margin: 0;
       opacity: 0.75;
       line-height: 1.55;
       font-size: 0.94rem;
     }
 
-    .qa-chip-row {
+    .qa-pill-row {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
     }
 
-    .qa-chip {
+    .qa-pill {
       min-height: 34px;
       padding: 0 12px;
       border-radius: 999px;
@@ -89,82 +94,47 @@
       opacity: 0.92;
     }
 
-    .qa-checklist {
+    .qa-findings {
       display: grid;
       gap: 10px;
     }
 
-    .qa-check-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 10px 0;
-    }
-
-    .qa-check-row input {
-      margin-top: 4px;
-      transform: scale(1.08);
-    }
-
-    .qa-check-row span {
+    .qa-finding {
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
       line-height: 1.55;
-    }
-
-    .qa-inline-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .qa-inline-btn {
-      min-height: 38px;
-      padding: 0 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.06);
-      color: inherit;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .qa-callout {
-      padding: 16px 18px;
-      border-radius: 20px;
-      display: grid;
-      gap: 6px;
-    }
-
-    .qa-callout strong {
-      font-size: 0.98rem;
-    }
-
-    .qa-callout span {
-      line-height: 1.55;
-      opacity: 0.82;
+      font-size: 0.94rem;
     }
 
     .qa-status-good {
-      border: 1px solid rgba(52, 199, 89, 0.20);
+      border: 1px solid rgba(52, 199, 89, 0.22);
     }
 
     .qa-status-watch {
-      border: 1px solid rgba(255, 214, 10, 0.20);
+      border: 1px solid rgba(255, 214, 10, 0.22);
     }
 
     .qa-status-bad {
-      border: 1px solid rgba(255, 59, 48, 0.20);
+      border: 1px solid rgba(255, 59, 48, 0.22);
+    }
+
+    .qa-status-neutral {
+      border: 1px solid rgba(255,255,255,0.12);
     }
   </style>
 </head>
 <body class="dashboard-body auth-pending" data-route-guard="private">
+  <div class="page-aurora"></div>
   <div class="page-grid-overlay"></div>
   <div id="universalNav"></div>
 
   <div class="dashboard-shell">
     <aside class="dashboard-sidebar" id="dashboardSidebar">
-      <div class="dashboard-sidebar-inner glass-shell aurora-card active-glow">
+      <div class="dashboard-sidebar-inner glass-shell aurora-card active-glow beam-target">
         <div class="dashboard-sidebar-search">
-          <div class="dashboard-search-shell input-shell aurora-card active-glow">
+          <div class="dashboard-search-shell input-shell aurora-card active-glow beam-target">
             <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
               <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
             </svg>
@@ -172,68 +142,68 @@
               id="qaSearch"
               type="search"
               class="dashboard-search-input input"
-              placeholder="Search QA categories, items, or audit..."
+              placeholder="Search audit files, categories, findings..."
               aria-label="Search QA items"
             />
           </div>
         </div>
 
         <div class="dashboard-sidebar-head">
-          <p class="dashboard-sidebar-eyebrow">Quality Assurance</p>
-          <h2 id="dashboardOverviewTitle">QA Command Center</h2>
+          <p class="dashboard-sidebar-eyebrow">Automation</p>
+          <h2 id="dashboardOverviewTitle">QA Console</h2>
         </div>
 
         <nav class="dashboard-sidebar-nav" aria-label="QA sections">
-          <a href="#qaOverviewSection" class="dashboard-nav-link active aurora-card">
+          <a href="#qaOverviewSection" class="dashboard-nav-link active aurora-card beam-target">
             <span class="dashboard-nav-icon">◉</span>
             <span>Overview</span>
           </a>
-          <a href="#qaManualSection" class="dashboard-nav-link aurora-card">
+          <a href="#qaHealthSection" class="dashboard-nav-link aurora-card beam-target">
             <span class="dashboard-nav-icon">◎</span>
-            <span>Manual QA</span>
+            <span>System Health</span>
           </a>
-          <a href="#qaAutomationSection" class="dashboard-nav-link aurora-card">
+          <a href="#qaAutomationSection" class="dashboard-nav-link aurora-card beam-target">
             <span class="dashboard-nav-icon">◌</span>
             <span>Auto Find / Fix</span>
           </a>
-          <a href="#qaAuditSection" class="dashboard-nav-link aurora-card">
+          <a href="#qaAuditSection" class="dashboard-nav-link aurora-card beam-target">
             <span class="dashboard-nav-icon">◐</span>
             <span>Repo Audit</span>
           </a>
-          <a href="#qaArchitectureSection" class="dashboard-nav-link aurora-card">
+          <a href="#qaArchitectureSection" class="dashboard-nav-link aurora-card beam-target">
             <span class="dashboard-nav-icon">◍</span>
             <span>Future Architecture</span>
           </a>
         </nav>
 
-        <div class="dashboard-sidebar-foot glass-card aurora-card active-glow">
+        <div class="dashboard-sidebar-foot glass-card aurora-card active-glow beam-target">
           <div class="dashboard-sidebar-foot-copy">
-            <strong>Live QA Hub</strong>
-            <span>Track migration, version sweep, theme polish, auth, and future architecture in one place.</span>
+            <strong>Automated QA Hub</strong>
+            <span>Repo audit, version sweep, UI system health, and architecture signals from one page.</span>
           </div>
-          <button type="button" id="resetQaBtn" class="btn btn-theme-primary">Reset QA State</button>
+          <button type="button" id="resetAutomationBtn" class="btn btn-theme-primary beam-target">Reset Automation State</button>
         </div>
       </div>
     </aside>
 
     <main class="dashboard-main">
-      <section class="dashboard-hero glass-card aurora-card active-glow" id="qaOverviewSection">
+      <section class="dashboard-hero glass-card aurora-card active-glow beam-target" id="qaOverviewSection">
         <div class="dashboard-hero-copy">
-          <p class="dashboard-eyebrow">QA COMMAND CENTER</p>
-          <h1>Run migration QA, repo audit, and future planning from one page.</h1>
+          <p class="dashboard-eyebrow">QA AUTOMATION CONSOLE</p>
+          <h1>Automate detection, surface issues, and centralize product health.</h1>
           <p class="dashboard-hero-text">
-            This page now combines categorized manual QA, repo-audit JSON, version-sweep status,
-            and future architecture decisions so you can ship faster without losing track.
+            This page is now an automated audit surface for repo health, version consistency, UI-system readiness,
+            and future architecture planning. No manual checklist flow.
           </p>
 
           <div class="dashboard-hero-actions qa-toolbar">
-            <button type="button" id="autoFindBtn" class="btn btn-theme-primary">Auto Find</button>
-            <button type="button" id="autoFixSmallBtn" class="btn btn-theme-secondary">Auto Fix Small Issues</button>
-            <button type="button" id="refreshAuditBtn" class="btn btn-theme-secondary">Refresh Audit</button>
+            <button type="button" id="autoFindBtn" class="btn btn-theme-primary beam-target">Auto Find</button>
+            <button type="button" id="autoFixSmallBtn" class="btn btn-theme-secondary beam-target">Auto Fix Small Issues</button>
+            <button type="button" id="refreshAuditBtn" class="btn btn-theme-secondary beam-target">Refresh Audit</button>
           </div>
         </div>
 
-        <div class="dashboard-hero-panel glass-card aurora-card active-glow">
+        <div class="dashboard-hero-panel glass-card aurora-card active-glow beam-target">
           <div class="dashboard-hero-panel-top">
             <span class="dashboard-mini-badge">Live QA</span>
             <span class="dashboard-live-dot"></span>
@@ -248,62 +218,62 @@
           </div>
 
           <div class="dashboard-hero-panel-copy">
-            <strong>Audit + Manual + Planning</strong>
-            <span>One centralized QA hub while the product is still evolving.</span>
+            <strong id="qaHeroTitle">Automated health online</strong>
+            <span id="qaHeroText">Ready to scan audit JSON, version health, and UI-system consistency.</span>
           </div>
         </div>
       </section>
 
-      <section class="dashboard-overview glass-card aurora-card active-glow">
+      <section class="dashboard-overview glass-card aurora-card active-glow beam-target">
         <div class="dashboard-section-head">
           <div>
             <p class="dashboard-section-kicker">Snapshot</p>
-            <h2>QA Progress</h2>
+            <h2>Automation Summary</h2>
           </div>
         </div>
 
         <div class="dashboard-stats-grid">
-          <article class="dashboard-stat-card glass-card aurora-card active-glow">
-            <p>Total Checks</p>
-            <h3 id="qaTotalChecks">0</h3>
-            <span>Total categorized QA items</span>
+          <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
+            <p>Audit Score</p>
+            <h3 id="auditScoreStat">--</h3>
+            <span id="auditGeneratedAtStat">Waiting for report</span>
           </article>
 
-          <article class="dashboard-stat-card glass-card aurora-card active-glow">
-            <p>Completed</p>
-            <h3 id="qaCompletedChecks">0</h3>
-            <span>Checks completed manually</span>
+          <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
+            <p>Files Passing</p>
+            <h3 id="auditPassingFilesStat">--</h3>
+            <span>Files with full score</span>
           </article>
 
-          <article class="dashboard-stat-card glass-card aurora-card active-glow">
-            <p>Remaining</p>
-            <h3 id="qaRemainingChecks">0</h3>
-            <span>Still needs verification</span>
+          <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
+            <p>Files With Issues</p>
+            <h3 id="auditFailingFilesStat">--</h3>
+            <span>Need fixes</span>
           </article>
 
-          <article class="dashboard-stat-card glass-card aurora-card active-glow">
-            <p>Completion</p>
-            <h3 id="qaPercent">0%</h3>
-            <span>QA checklist completion</span>
+          <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
+            <p>Version Target</p>
+            <h3 id="versionTargetStat">v27</h3>
+            <span id="versionTargetMeta">Current expected asset version</span>
           </article>
         </div>
       </section>
 
-      <section class="dashboard-panel glass-card aurora-card active-glow" id="qaManualSection">
+      <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="qaHealthSection">
         <div class="dashboard-section-head">
           <div>
-            <p class="dashboard-section-kicker">Categorized Manual QA</p>
-            <h2>Checklist Categories</h2>
+            <p class="dashboard-section-kicker">Automated System Health</p>
+            <h2>Signals</h2>
           </div>
         </div>
 
-        <div id="qaChecklistRoot" class="qa-category-grid"></div>
+        <div id="qaSignalRoot" class="qa-block-grid"></div>
       </section>
 
-      <section class="dashboard-panel glass-card aurora-card active-glow" id="qaAutomationSection">
+      <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="qaAutomationSection">
         <div class="dashboard-section-head">
           <div>
-            <p class="dashboard-section-kicker">Small Helpers</p>
+            <p class="dashboard-section-kicker">Automation Rules</p>
             <h2>Auto Find / Auto Fix</h2>
           </div>
         </div>
@@ -312,70 +282,28 @@
           <article class="dashboard-feed-item glass-card aurora-card active-glow qa-status-good">
             <strong>Auto Find</strong>
             <span>
-              Refreshes repo audit data, surfaces likely stale version issues, and highlights categories
-              that still need attention.
+              Refreshes repo audit JSON, computes category health, surfaces stale version patterns,
+              and re-renders all automated signals.
             </span>
           </article>
 
           <article class="dashboard-feed-item glass-card aurora-card active-glow qa-status-watch">
             <strong>Auto Fix Small Issues</strong>
             <span>
-              Helps with local/browser-side QA housekeeping only. It does not rewrite your GitHub repo
-              from the browser.
+              Resets automation state, refreshes cached results, reapplies automation rules, and normalizes the QA console state.
             </span>
           </article>
 
           <article class="dashboard-feed-item glass-card aurora-card active-glow qa-status-bad">
-            <strong>Not included</strong>
+            <strong>Repo truth</strong>
             <span>
-              No fake “auto-fix” for repo code rewriting. Real code changes should still happen in your repo.
+              This console does not rewrite GitHub files from the browser. Repo code still changes in the repo itself.
             </span>
           </article>
         </div>
-
-        <div class="qa-inline-actions" style="margin-top:14px;">
-          <button type="button" id="markAllDoneBtn" class="qa-inline-btn">Mark Visible Done</button>
-          <button type="button" id="clearVisibleBtn" class="qa-inline-btn">Clear Visible</button>
-          <button type="button" id="openFirstIssueBtn" class="qa-inline-btn">Open First Category With Issues</button>
-        </div>
       </section>
 
-      <section class="dashboard-overview glass-card aurora-card active-glow">
-        <div class="dashboard-section-head">
-          <div>
-            <p class="dashboard-section-kicker">Repo Audit</p>
-            <h2>JSON Report Summary</h2>
-          </div>
-        </div>
-
-        <div class="dashboard-stats-grid">
-          <article class="dashboard-stat-card glass-card aurora-card active-glow">
-            <p>Audit Score</p>
-            <h3 id="auditScoreStat">--</h3>
-            <span id="auditGeneratedAtStat">Waiting for report</span>
-          </article>
-
-          <article class="dashboard-stat-card glass-card aurora-card active-glow">
-            <p>Files Passing</p>
-            <h3 id="auditPassingFilesStat">--</h3>
-            <span>Files with full score</span>
-          </article>
-
-          <article class="dashboard-stat-card glass-card aurora-card active-glow">
-            <p>Files With Issues</p>
-            <h3 id="auditFailingFilesStat">--</h3>
-            <span>Need fixes</span>
-          </article>
-
-          <article class="dashboard-stat-card glass-card aurora-card active-glow">
-            <p>Report Status</p>
-            <h3 id="auditStatusStat">--</h3>
-            <span id="auditStatusDetail">Not loaded yet</span>
-          </article>
-        </div>
-      </section>
-
-      <section class="dashboard-panel glass-card aurora-card active-glow" id="qaAuditSection">
+      <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="qaAuditSection">
         <div class="dashboard-section-head">
           <div>
             <p class="dashboard-section-kicker">Browser-Readable JSON</p>
@@ -385,18 +313,18 @@
             href="/evaraos/tools/reports/repo-audit-ui.json"
             target="_blank"
             rel="noopener noreferrer"
-            class="btn btn-theme-secondary"
+            class="btn btn-theme-secondary beam-target"
           >
             Open Raw JSON
           </a>
         </div>
 
         <div class="dashboard-feed">
-          <article class="dashboard-feed-item glass-card aurora-card active-glow">
+          <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
             <strong>Audit source</strong>
             <span id="auditSourceText">/evaraos/tools/reports/repo-audit-ui.json</span>
           </article>
-          <article class="dashboard-feed-item glass-card aurora-card active-glow">
+          <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
             <strong>Latest audit message</strong>
             <span id="auditMessageText">Waiting for audit report...</span>
           </article>
@@ -405,57 +333,33 @@
         <div id="auditFilesRoot" class="dashboard-feed" style="margin-top:16px;"></div>
       </section>
 
-      <section class="dashboard-panel glass-card aurora-card active-glow" id="qaArchitectureSection">
+      <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="qaArchitectureSection">
         <div class="dashboard-section-head">
           <div>
             <p class="dashboard-section-kicker">Future Architecture</p>
-            <h2>Later Split Plan</h2>
+            <h2>Centralized Now, Split Later</h2>
           </div>
         </div>
 
         <div class="dashboard-feed">
-          <article class="dashboard-feed-item glass-card aurora-card active-glow">
+          <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
             <strong>settings.html</strong>
-            <span>Keep now as the central account/general/settings hub.</span>
+            <span>Keep it as the central settings hub for now while appearance/security/notifications are still evolving.</span>
           </article>
 
-          <article class="dashboard-feed-item glass-card aurora-card active-glow">
+          <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
             <strong>appearance.html</strong>
-            <span>Later split for theme, beam, nav, and color system when visual controls grow deeper.</span>
+            <span>Later split when visual controls become deep enough to justify a dedicated page.</span>
           </article>
 
-          <article class="dashboard-feed-item glass-card aurora-card active-glow">
+          <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
             <strong>security.html</strong>
-            <span>Later split for auth, sessions, roles, and devices.</span>
+            <span>Later split for auth, sessions, devices, permissions, and security workflows.</span>
           </article>
 
-          <article class="dashboard-feed-item glass-card aurora-card active-glow">
+          <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
             <strong>notifications.html</strong>
-            <span>Later split for alerts, reminders, and communication preferences.</span>
-          </article>
-        </div>
-      </section>
-
-      <section class="dashboard-panel glass-card aurora-card active-glow" id="qaNotesSection">
-        <div class="dashboard-section-head">
-          <div>
-            <p class="dashboard-section-kicker">Notes</p>
-            <h2>Current Recommendation</h2>
-          </div>
-        </div>
-
-        <div class="dashboard-feed">
-          <article class="dashboard-feed-item glass-card aurora-card active-glow">
-            <strong>QA now</strong>
-            <span>Keep one categorized QA page while the app is still evolving fast.</span>
-          </article>
-          <article class="dashboard-feed-item glass-card aurora-card active-glow">
-            <strong>Settings now</strong>
-            <span>Keep one categorized settings hub for now rather than splitting too early.</span>
-          </article>
-          <article class="dashboard-feed-item glass-card aurora-card active-glow">
-            <strong>Split later</strong>
-            <span>Split only when those sections become deep enough to deserve their own pages.</span>
+            <span>Later split for alerts, reminders, digest settings, and communications preferences.</span>
           </article>
         </div>
       </section>
@@ -463,258 +367,43 @@
   </div>
 
   <script type="module">
-    const STORAGE_KEY = "evaraos-qa-checks-v2";
+    const QA_STATE_KEY = "evaraos-qa-automation-v3";
     const AUDIT_JSON_URL = "/evaraos/tools/reports/repo-audit-ui.json";
-    const TARGET_VERSION = "26";
+    const TARGET_VERSION = "27";
 
-    const qaCategories = {
-      "Migration": {
-        description: "Structural migration from old monolith styling into the split CSS/JS system.",
-        items: [
-          "No active page imports styles.css",
-          "Split CSS system is active on all major pages",
-          "Dashboard migrated off styles.css",
-          "QA page uses split CSS stack",
-          "Footer stays integrated without separate footer JS/CSS"
-        ]
-      },
-      "Navigation": {
-        description: "Universal nav, Safari usability, dropdown reachability, and menu polish.",
-        items: [
-          "Universal nav injects correctly on all pages",
-          "Safari dropdown opens high enough to reach lower controls",
-          "Dropdown menu scroll works on mobile",
-          "Nav pill animations remain synced",
-          "Theme controls inside nav stay synced"
-        ]
-      },
-      "Theme + Beam": {
-        description: "Appearance mode, beam behavior, color wheels, and persistence.",
-        items: [
-          "Dark mode works",
-          "Light mode works",
-          "Custom mode works",
-          "Contextual beam works",
-          "Rainbow beam works",
-          "Custom beam opens color picker",
-          "Theme changes persist after refresh"
-        ]
-      },
-      "Auth": {
-        description: "Login, signup, reset, route guards, and centralized auth flow.",
-        items: [
-          "Login page wired to auth.js",
-          "Signup page wired to auth.js",
-          "Reset page wired to auth.js",
-          "Route guard works correctly",
-          "Password toggles work",
-          "Remember device UI works visually"
-        ]
-      },
-      "Dashboard + Data": {
-        description: "Dashboard states and all data pages aligned to the same UI system.",
-        items: [
-          "Dashboard loading states render",
-          "Dashboard empty states render",
-          "Companies page search/sort/refresh works",
-          "Users page search/sort/refresh works",
-          "Leads page search/sort/refresh works",
-          "Jobs page search/sort/refresh works"
-        ]
-      },
-      "Version Sweep": {
-        description: "Cache-busting consistency across assets and major pages.",
-        items: [
-          "All major pages use v=26 assets",
-          "No major page still uses v=19 assets",
-          "No major page still uses v=23 assets",
-          "No major page still uses v=25 assets",
-          "No major page still uses unversioned major imports"
-        ]
-      },
-      "Future Architecture": {
-        description: "Keep centralized for now, split later when depth justifies it.",
-        items: [
-          "QA remains categorized in one page for now",
-          "Settings remains categorized in one page for now",
-          "Later split plan captured for settings/appearance/security/notifications"
-        ]
-      }
-    };
-
-    const root = document.getElementById("qaChecklistRoot");
+    const signalRoot = document.getElementById("qaSignalRoot");
     const searchInput = document.getElementById("qaSearch");
-
-    const totalEl = document.getElementById("qaTotalChecks");
-    const completedEl = document.getElementById("qaCompletedChecks");
-    const remainingEl = document.getElementById("qaRemainingChecks");
-    const percentEl = document.getElementById("qaPercent");
 
     const auditFilesRoot = document.getElementById("auditFilesRoot");
     const auditScoreStat = document.getElementById("auditScoreStat");
     const auditGeneratedAtStat = document.getElementById("auditGeneratedAtStat");
     const auditPassingFilesStat = document.getElementById("auditPassingFilesStat");
     const auditFailingFilesStat = document.getElementById("auditFailingFilesStat");
-    const auditStatusStat = document.getElementById("auditStatusStat");
-    const auditStatusDetail = document.getElementById("auditStatusDetail");
+    const versionTargetStat = document.getElementById("versionTargetStat");
+    const versionTargetMeta = document.getElementById("versionTargetMeta");
     const auditSourceText = document.getElementById("auditSourceText");
     const auditMessageText = document.getElementById("auditMessageText");
+    const qaHeroTitle = document.getElementById("qaHeroTitle");
+    const qaHeroText = document.getElementById("qaHeroText");
 
-    const markAllDoneBtn = document.getElementById("markAllDoneBtn");
-    const clearVisibleBtn = document.getElementById("clearVisibleBtn");
-    const resetQaBtn = document.getElementById("resetQaBtn");
-    const refreshAuditBtn = document.getElementById("refreshAuditBtn");
     const autoFindBtn = document.getElementById("autoFindBtn");
     const autoFixSmallBtn = document.getElementById("autoFixSmallBtn");
-    const openFirstIssueBtn = document.getElementById("openFirstIssueBtn");
+    const refreshAuditBtn = document.getElementById("refreshAuditBtn");
+    const resetAutomationBtn = document.getElementById("resetAutomationBtn");
 
     let auditSummary = null;
-    let state = loadState();
+    let automationState = loadAutomationState();
 
-    function loadState() {
+    function loadAutomationState() {
       try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+        return JSON.parse(localStorage.getItem(QA_STATE_KEY) || "{}");
       } catch {
         return {};
       }
     }
 
-    function saveState(nextState) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
-    }
-
-    function keyFor(category, item) {
-      return `${category}::${item}`;
-    }
-
-    function isChecked(category, item) {
-      return Boolean(state[keyFor(category, item)]);
-    }
-
-    function setChecked(category, item, checked) {
-      state[keyFor(category, item)] = checked;
-      saveState(state);
-    }
-
-    function getVisibleCards() {
-      return Array.from(root.querySelectorAll("[data-qa-category-card]"))
-        .filter((card) => !card.classList.contains("hidden"));
-    }
-
-    function getAllChecks() {
-      const allChecks = [];
-      Object.entries(qaCategories).forEach(([category, group]) => {
-        group.items.forEach((item) => allChecks.push({ category, item }));
-      });
-      return allChecks;
-    }
-
-    function updateManualStats() {
-      const allChecks = getAllChecks();
-      const total = allChecks.length;
-      const completed = allChecks.filter(({ category, item }) => isChecked(category, item)).length;
-      const remaining = total - completed;
-      const percent = total ? Math.round((completed / total) * 100) : 0;
-
-      totalEl.textContent = String(total);
-      completedEl.textContent = String(completed);
-      remainingEl.textContent = String(remaining);
-      percentEl.textContent = `${percent}%`;
-    }
-
-    function renderChecklist() {
-      const query = (searchInput.value || "").trim().toLowerCase();
-      root.innerHTML = "";
-
-      Object.entries(qaCategories).forEach(([category, group]) => {
-        const matchesCategory = category.toLowerCase().includes(query) || group.description.toLowerCase().includes(query);
-        const matchingItems = group.items.filter((item) => item.toLowerCase().includes(query));
-
-        if (query && !matchesCategory && !matchingItems.length) return;
-
-        const article = document.createElement("article");
-        article.className = "qa-category-card glass-card aurora-card active-glow";
-        article.setAttribute("data-qa-category-card", category);
-
-        const checkedCount = group.items.filter((item) => isChecked(category, item)).length;
-
-        const head = document.createElement("div");
-        head.className = "qa-category-head";
-
-        const meta = document.createElement("div");
-        meta.className = "qa-category-meta";
-        meta.innerHTML = `
-          <h3>${category}</h3>
-          <p>${group.description}</p>
-        `;
-
-        const chips = document.createElement("div");
-        chips.className = "qa-chip-row";
-        chips.innerHTML = `
-          <span class="qa-chip">${checkedCount}/${group.items.length} done</span>
-        `;
-
-        head.appendChild(meta);
-        head.appendChild(chips);
-
-        const inlineActions = document.createElement("div");
-        inlineActions.className = "qa-inline-actions";
-        inlineActions.innerHTML = `
-          <button type="button" class="qa-inline-btn" data-category-mark="${category}">Mark Category Done</button>
-          <button type="button" class="qa-inline-btn" data-category-clear="${category}">Clear Category</button>
-        `;
-
-        const listWrap = document.createElement("div");
-        listWrap.className = "qa-checklist";
-
-        group.items.forEach((item) => {
-          if (query && !matchesCategory && !item.toLowerCase().includes(query)) return;
-
-          const row = document.createElement("label");
-          row.className = "qa-check-row";
-
-          const input = document.createElement("input");
-          input.type = "checkbox";
-          input.checked = isChecked(category, item);
-
-          input.addEventListener("change", () => {
-            setChecked(category, item, input.checked);
-            renderChecklist();
-          });
-
-          const text = document.createElement("span");
-          text.textContent = item;
-
-          row.appendChild(input);
-          row.appendChild(text);
-          listWrap.appendChild(row);
-        });
-
-        article.appendChild(head);
-        article.appendChild(inlineActions);
-        article.appendChild(listWrap);
-        root.appendChild(article);
-      });
-
-      root.querySelectorAll("[data-category-mark]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const category = btn.getAttribute("data-category-mark");
-          if (!category || !qaCategories[category]) return;
-          qaCategories[category].items.forEach((item) => setChecked(category, item, true));
-          renderChecklist();
-        });
-      });
-
-      root.querySelectorAll("[data-category-clear]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const category = btn.getAttribute("data-category-clear");
-          if (!category || !qaCategories[category]) return;
-          qaCategories[category].items.forEach((item) => setChecked(category, item, false));
-          renderChecklist();
-        });
-      });
-
-      updateManualStats();
+    function saveAutomationState(nextState) {
+      localStorage.setItem(QA_STATE_KEY, JSON.stringify(nextState));
     }
 
     function formatTimestamp(value) {
@@ -724,9 +413,137 @@
       return date.toLocaleString();
     }
 
-    function setAuditStatus(label, detail) {
-      auditStatusStat.textContent = label;
-      auditStatusDetail.textContent = detail;
+    function summarizeSignals(summary) {
+      const files = Array.isArray(summary?.files) ? summary.files : [];
+      const failing = files.filter((file) => file.status !== "pass");
+      const outdated = [];
+
+      files.forEach((file) => {
+        const issues = Array.isArray(file.issues) ? file.issues : [];
+        issues.forEach((issue) => {
+          const issueText = String(issue || "");
+          if (
+            issueText.includes("v=19") ||
+            issueText.includes("v=23") ||
+            issueText.includes("v=25") ||
+            issueText.includes("unversioned")
+          ) {
+            outdated.push({ file: file.file || "Unknown file", issue: issueText });
+          }
+        });
+      });
+
+      return {
+        failingCount: failing.length,
+        outdatedCount: outdated.length,
+        failingFiles: failing,
+        outdatedFiles: outdated
+      };
+    }
+
+    function buildSignalCards() {
+      const summary = summarizeSignals(auditSummary || {});
+      const generatedAt = auditSummary?.generatedAt ? formatTimestamp(auditSummary.generatedAt) : "Unknown";
+
+      const signalCards = [
+        {
+          title: "Repo Audit Health",
+          description: "Automated reading of repo-audit JSON and file issue status.",
+          statusClass: summary.failingCount === 0 ? "qa-status-good" : "qa-status-watch",
+          pills: [
+            `${summary.failingCount} file${summary.failingCount === 1 ? "" : "s"} with issues`,
+            `Generated ${generatedAt}`
+          ],
+          findings: summary.failingCount === 0
+            ? ["No failing files reported in the current audit JSON."]
+            : summary.failingFiles.slice(0, 6).map((file) => `${file.file || "Unknown file"} — ${file.scoreText || file.status || "Issue detected"}`)
+        },
+        {
+          title: "Version Sweep Health",
+          description: "Automated surfacing of stale asset versions and unversioned imports from audit findings.",
+          statusClass: summary.outdatedCount === 0 ? "qa-status-good" : "qa-status-bad",
+          pills: [
+            `Target ${TARGET_VERSION}`,
+            `${summary.outdatedCount} stale finding${summary.outdatedCount === 1 ? "" : "s"}`
+          ],
+          findings: summary.outdatedCount === 0
+            ? [`No stale version findings detected against target v${TARGET_VERSION}.`]
+            : summary.outdatedFiles.slice(0, 8).map((item) => `${item.file}: ${item.issue}`)
+        },
+        {
+          title: "UI System Alignment",
+          description: "Tracks the current strategic direction: centralized settings, centralized QA, split later.",
+          statusClass: "qa-status-good",
+          pills: ["Centralized now", "Split later"],
+          findings: [
+            "QA remains one automated console for now.",
+            "Settings remains one categorized hub for now.",
+            "Appearance, security, and notifications can split later when depth justifies it."
+          ]
+        },
+        {
+          title: "Automation Integrity",
+          description: "Clarifies what the browser-side QA system can and cannot do honestly.",
+          statusClass: "qa-status-neutral",
+          pills: ["Auto Find enabled", "Browser-safe fixes only"],
+          findings: [
+            "Auto Find can refresh audit JSON and recompute automated health.",
+            "Auto Fix Small Issues only resets/normalizes browser-side QA state.",
+            "Repo code rewrites do not happen from this page."
+          ]
+        }
+      ];
+
+      return signalCards;
+    }
+
+    function renderSignals() {
+      const query = (searchInput.value || "").trim().toLowerCase();
+      const signalCards = buildSignalCards();
+
+      signalRoot.innerHTML = "";
+
+      signalCards.forEach((card) => {
+        const haystack = [
+          card.title,
+          card.description,
+          ...card.pills,
+          ...card.findings
+        ].join(" ").toLowerCase();
+
+        if (query && !haystack.includes(query)) return;
+
+        const article = document.createElement("article");
+        article.className = `qa-signal-card glass-card aurora-card active-glow beam-target ${card.statusClass}`;
+
+        article.innerHTML = `
+          <div class="qa-signal-head">
+            <div class="qa-signal-meta">
+              <h3>${card.title}</h3>
+              <p>${card.description}</p>
+            </div>
+            <div class="qa-pill-row">
+              ${card.pills.map((pill) => `<span class="qa-pill">${pill}</span>`).join("")}
+            </div>
+          </div>
+          <div class="qa-findings">
+            ${card.findings.map((finding) => `<div class="qa-finding">${finding}</div>`).join("")}
+          </div>
+        `;
+
+        signalRoot.appendChild(article);
+      });
+
+      if (!signalRoot.children.length) {
+        signalRoot.innerHTML = `
+          <article class="qa-signal-card glass-card aurora-card active-glow beam-target qa-status-neutral">
+            <div class="qa-signal-meta">
+              <h3>No matching automated signals</h3>
+              <p>Try a different search term or refresh the audit report.</p>
+            </div>
+          </article>
+        `;
+      }
     }
 
     function renderAuditSummary(summary) {
@@ -741,7 +558,18 @@
       auditGeneratedAtStat.textContent = `Generated ${formatTimestamp(summary?.generatedAt)}`;
       auditPassingFilesStat.textContent = String(passing);
       auditFailingFilesStat.textContent = String(failing + missing);
-      setAuditStatus("Loaded", "UI audit JSON loaded successfully.");
+      versionTargetStat.textContent = `v${TARGET_VERSION}`;
+      versionTargetMeta.textContent = "Current expected asset version";
+
+      const signalSummary = summarizeSignals(summary);
+      if (signalSummary.failingCount === 0) {
+        qaHeroTitle.textContent = "Automated health looking strong";
+        qaHeroText.textContent = `Audit JSON loaded. No failing files detected and target asset version is v${TARGET_VERSION}.`;
+      } else {
+        qaHeroTitle.textContent = "Automated issues detected";
+        qaHeroText.textContent = `Audit JSON loaded. ${signalSummary.failingCount} file${signalSummary.failingCount === 1 ? "" : "s"} still need attention.`;
+      }
+
       auditMessageText.textContent = `Loaded ${files.length} file entries from the UI audit report.`;
 
       const query = (searchInput.value || "").trim().toLowerCase();
@@ -759,66 +587,58 @@
         if (query && !fileMatches && !issueMatches) return;
 
         const article = document.createElement("article");
-        article.className = "dashboard-feed-item glass-card aurora-card active-glow";
+        article.className = "dashboard-feed-item glass-card aurora-card active-glow beam-target";
 
-        const title = document.createElement("strong");
-        title.textContent = `${fileName} — ${scoreText}`;
-
-        const detail = document.createElement("span");
-        detail.style.display = "block";
-        detail.style.marginTop = "8px";
-
-        if (status === "pass") {
-          detail.textContent = "All audit checks passed for this file.";
-        } else if (status === "missing") {
-          detail.textContent = "This file is missing from the repo audit target.";
-        } else {
-          detail.textContent = `This file has ${issues.length} outstanding audit issue(s).`;
-        }
-
-        article.appendChild(title);
-        article.appendChild(detail);
+        article.innerHTML = `
+          <strong>${fileName} — ${scoreText}</strong>
+          <span style="display:block;margin-top:8px;">
+            ${
+              status === "pass"
+                ? "All audit checks passed for this file."
+                : status === "missing"
+                ? "This file is missing from the repo audit target."
+                : `This file has ${issues.length} outstanding audit issue(s).`
+            }
+          </span>
+        `;
 
         if (issues.length) {
-          const issuesWrap = document.createElement("div");
-          issuesWrap.style.marginTop = "14px";
-          issuesWrap.style.display = "grid";
-          issuesWrap.style.gap = "10px";
+          const wrap = document.createElement("div");
+          wrap.style.marginTop = "14px";
+          wrap.style.display = "grid";
+          wrap.style.gap = "10px";
 
           issues.forEach((issue) => {
             if (query && !fileMatches && !String(issue).toLowerCase().includes(query)) return;
 
             const issueRow = document.createElement("div");
-            issueRow.className = "remember-row aurora-card";
-            issueRow.style.padding = "12px 14px";
-            issueRow.innerHTML = `<span style="display:block;color:inherit;font-size:14px;line-height:1.5;">[ ] ${issue}</span>`;
-            issuesWrap.appendChild(issueRow);
+            issueRow.className = "qa-finding";
+            issueRow.textContent = issue;
+            wrap.appendChild(issueRow);
           });
 
-          if (issuesWrap.children.length) {
-            article.appendChild(issuesWrap);
-          }
+          if (wrap.children.length) article.appendChild(wrap);
         }
 
         auditFilesRoot.appendChild(article);
       });
 
       if (!auditFilesRoot.children.length) {
-        const empty = document.createElement("article");
-        empty.className = "dashboard-feed-item glass-card aurora-card active-glow";
-        empty.innerHTML = `
-          <strong>No matching audit results</strong>
-          <span>Try a different search term or refresh the audit report.</span>
+        auditFilesRoot.innerHTML = `
+          <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
+            <strong>No matching audit results</strong>
+            <span>Try a different search term or refresh the audit report.</span>
+          </article>
         `;
-        auditFilesRoot.appendChild(empty);
       }
+
+      renderSignals();
     }
 
     async function loadAuditReport() {
       auditSourceText.textContent = AUDIT_JSON_URL;
 
       try {
-        setAuditStatus("Loading", "Trying to fetch repo audit JSON...");
         auditMessageText.textContent = "Fetching audit report...";
 
         const response = await fetch(`${AUDIT_JSON_URL}?ts=${Date.now()}`, {
@@ -830,11 +650,16 @@
         }
 
         const summary = await response.json();
+        automationState.lastAuditLoadedAt = Date.now();
+        saveAutomationState(automationState);
         renderAuditSummary(summary);
       } catch (error) {
         console.error("Audit report load failed:", error);
+        qaHeroTitle.textContent = "Audit report missing";
+        qaHeroText.textContent = "Could not read repo audit JSON. Run the audit generator and reload this page.";
+
         auditFilesRoot.innerHTML = `
-          <article class="dashboard-feed-item glass-card aurora-card active-glow">
+          <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
             <strong>Audit report not loaded</strong>
             <span>
               Could not read <code>/evaraos/tools/reports/repo-audit-ui.json</code>.
@@ -846,117 +671,48 @@
         auditGeneratedAtStat.textContent = "No report found";
         auditPassingFilesStat.textContent = "--";
         auditFailingFilesStat.textContent = "--";
-        setAuditStatus("Missing", "Audit JSON could not be fetched.");
         auditMessageText.textContent = "Run node tools/repo-audit.js and commit the report.";
-      }
-    }
-
-    function rerenderAll() {
-      renderChecklist();
-      if (auditSummary) {
-        renderAuditSummary(auditSummary);
+        renderSignals();
       }
     }
 
     function autoFind() {
-      const knownGoodCategories = ["Migration", "Navigation", "Auth", "Dashboard + Data", "Future Architecture"];
-      knownGoodCategories.forEach((category) => {
-        if (!qaCategories[category]) return;
-        qaCategories[category].items.forEach((item) => {
-          if (!isChecked(category, item)) {
-            if (
-              item.includes("styles.css") ||
-              item.includes("Split CSS") ||
-              item.includes("Dashboard migrated") ||
-              item.includes("QA remains categorized") ||
-              item.includes("Settings remains categorized") ||
-              item.includes("Later split plan") ||
-              item.includes("Login page wired") ||
-              item.includes("Signup page wired") ||
-              item.includes("Reset page wired")
-            ) {
-              setChecked(category, item, true);
-            }
-          }
-        });
-      });
-
+      automationState.lastAutoFindAt = Date.now();
+      saveAutomationState(automationState);
       refreshAuditBtn.classList.add("active-glow");
       setTimeout(() => refreshAuditBtn.classList.remove("active-glow"), 240);
       loadAuditReport();
-      renderChecklist();
     }
 
     function autoFixSmallIssues() {
-      try {
-        if (!localStorage.getItem(STORAGE_KEY)) {
-          saveState({});
-        }
-
-        const versionCategory = "Version Sweep";
-        if (qaCategories[versionCategory]) {
-          qaCategories[versionCategory].items.forEach((item) => {
-            if (item.includes(`v=${TARGET_VERSION}`)) {
-              setChecked(versionCategory, item, true);
-            }
-          });
-        }
-
-        renderChecklist();
-        setAuditStatus("Small Fixes Applied", "Local QA state and lightweight audit helpers were refreshed.");
-        auditMessageText.textContent = "Auto Fix Small Issues completed browser-side helpers.";
-      } catch (error) {
-        console.error("Auto fix small issues failed:", error);
-      }
-    }
-
-    function openFirstCategoryWithIssues() {
-      const cards = Array.from(document.querySelectorAll("[data-qa-category-card]"));
-      for (const card of cards) {
-        const category = card.getAttribute("data-qa-category-card");
-        if (!category || !qaCategories[category]) continue;
-
-        const total = qaCategories[category].items.length;
-        const done = qaCategories[category].items.filter((item) => isChecked(category, item)).length;
-
-        if (done < total) {
-          card.scrollIntoView({ behavior: "smooth", block: "start" });
-          return;
-        }
-      }
+      automationState = {
+        lastAutoFixAt: Date.now(),
+        normalized: true
+      };
+      saveAutomationState(automationState);
+      qaHeroTitle.textContent = "Automation state refreshed";
+      qaHeroText.textContent = "Browser-side QA state normalized and ready for a fresh audit read.";
+      renderSignals();
     }
 
     searchInput.addEventListener("input", () => {
-      rerenderAll();
+      if (auditSummary) {
+        renderAuditSummary(auditSummary);
+      } else {
+        renderSignals();
+      }
     });
 
     autoFindBtn.addEventListener("click", autoFind);
     autoFixSmallBtn.addEventListener("click", autoFixSmallIssues);
-    openFirstIssueBtn.addEventListener("click", openFirstCategoryWithIssues);
+    refreshAuditBtn.addEventListener("click", loadAuditReport);
 
-    markAllDoneBtn.addEventListener("click", () => {
-      getVisibleCards().forEach((card) => {
-        const category = card.getAttribute("data-qa-category-card");
-        if (!category || !qaCategories[category]) return;
-        qaCategories[category].items.forEach((item) => setChecked(category, item, true));
-      });
-      renderChecklist();
-    });
-
-    clearVisibleBtn.addEventListener("click", () => {
-      getVisibleCards().forEach((card) => {
-        const category = card.getAttribute("data-qa-category-card");
-        if (!category || !qaCategories[category]) return;
-        qaCategories[category].items.forEach((item) => setChecked(category, item, false));
-      });
-      renderChecklist();
-    });
-
-    resetQaBtn.addEventListener("click", () => {
-      state = {};
-      saveState(state);
-      renderChecklist();
-      setAuditStatus("Reset", "QA local state reset successfully.");
+    resetAutomationBtn.addEventListener("click", () => {
+      automationState = {};
+      saveAutomationState(automationState);
+      qaHeroTitle.textContent = "Automation state reset";
+      qaHeroText.textContent = "QA automation state was cleared. Reloading audit report now.";
+      loadAuditReport();
     });
 
     document.addEventListener("DOMContentLoaded", async () => {
@@ -969,14 +725,14 @@
         });
       });
 
-      renderChecklist();
+      renderSignals();
       await loadAuditReport();
     });
   </script>
 
-  <script src="/evaraos/assets/js/theme.js?v=26"></script>
-  <script type="module" src="/evaraos/assets/js/firebase.js?v=26"></script>
-  <script type="module" src="/evaraos/assets/js/route-guard.js?v=26"></script>
-  <script src="/evaraos/assets/js/nav.js?v=26"></script>
+  <script src="/evaraos/assets/js/theme.js?v=27"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js?v=27"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js?v=27"></script>
+  <script src="/evaraos/assets/js/nav.js?v=27"></script>
 </body>
 </html>
