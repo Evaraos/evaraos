@@ -3,9 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Settings • Evaraos Inc</title>
+
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
+
   <style>
+    html.auth-pending body,
+    body.auth-pending {
+      opacity: 0;
+      pointer-events: none;
+    }
+
     .settings-main {
       width: min(100%, var(--max-page));
       margin: 0 auto;
@@ -307,7 +318,7 @@
     }
   </style>
 </head>
-<body>
+<body class="auth-pending" data-route-guard="private">
   <div class="page-grid-overlay"></div>
   <div id="universalNavRoot"></div>
 
@@ -718,7 +729,9 @@
   </main>
 
   <script type="module" src="/evaraos/assets/js/theme.js"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js"></script>
   <script type="module" src="/evaraos/assets/js/settings.js"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js"></script>
   <script type="module" src="/evaraos/assets/js/nav.js"></script>
 </body>
 </html>
