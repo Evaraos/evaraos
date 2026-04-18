@@ -1,5 +1,6 @@
 :root {
   --radius-card: 30px;
+  --radius-panel: 34px;
   --radius-pill: 999px;
   --page-max: 1240px;
 
@@ -45,7 +46,8 @@ body {
   overflow-x: hidden;
 }
 
-html[data-theme="light"] body {
+html[data-theme="light"] body,
+html[data-theme$="-light"] body {
   color: var(--text-light);
   background:
     radial-gradient(circle at 16% 22%, rgba(255,255,255,0.58), transparent 24%),
@@ -63,7 +65,8 @@ a {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -79,7 +82,8 @@ input {
   background-size: 52px 52px;
 }
 
-html[data-theme="light"] .page-grid-overlay {
+html[data-theme="light"] .page-grid-overlay,
+html[data-theme$="-light"] .page-grid-overlay {
   opacity: 0.05;
   background:
     linear-gradient(rgba(21,36,30,0.02) 1px, transparent 1px),
@@ -107,7 +111,9 @@ footer {
 }
 
 html[data-theme="light"] .glass-card,
-html[data-theme="light"] .glass-shell {
+html[data-theme="light"] .glass-shell,
+html[data-theme$="-light"] .glass-card,
+html[data-theme$="-light"] .glass-shell {
   border-color: var(--line-light);
   background:
     linear-gradient(180deg, var(--glass-light), var(--glass-light-2));
@@ -147,14 +153,10 @@ html[data-theme="light"] .glass-shell {
 .home-shell {
   width: min(100%, var(--page-max));
   margin: 0 auto;
-  padding: 122px 16px 28px;
+  padding: 122px 16px 32px;
 }
 
 .hero-home {
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-  padding: 4px 0 0;
   min-height: 320px;
 }
 
@@ -186,20 +188,20 @@ html[data-theme="light"] .glass-shell {
   color: var(--muted-dark);
 }
 
-html[data-theme="light"] .hero-subtitle {
+html[data-theme="light"] .hero-subtitle,
+html[data-theme$="-light"] .hero-subtitle {
   color: var(--muted-light);
 }
 
 .hero-actions {
   display: flex;
   gap: 12px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   margin-top: 26px;
 }
 
 .hero-actions .btn {
   flex: 0 0 auto;
-  width: min(235px, calc(50% - 6px));
 }
 
 .btn {
@@ -242,7 +244,9 @@ html[data-theme="light"] .hero-subtitle {
 }
 
 html[data-theme="light"] .btn,
-html[data-theme="light"] .btn-apple {
+html[data-theme="light"] .btn-apple,
+html[data-theme$="-light"] .btn,
+html[data-theme$="-light"] .btn-apple {
   background:
     linear-gradient(180deg, rgba(255,255,255,0.97), rgba(255,255,255,0.82));
   color: #14251f;
@@ -252,34 +256,50 @@ html[data-theme="light"] .btn-apple {
     inset 0 1px 0 rgba(255,255,255,0.99);
 }
 
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-  margin-top: 26px;
+.section-panel {
+  margin-top: 0;
 }
 
-.feature-card {
-  min-height: 172px;
-  padding: 26px 24px;
+.section-head {
+  margin-bottom: 0;
 }
 
-.feature-card h3 {
-  margin: 0 0 12px;
-  font-size: clamp(1.9rem, 4vw, 2.9rem);
-  line-height: 1;
-  letter-spacing: -0.04em;
+.section-head h2,
+.cta-panel h2 {
+  text-wrap: balance;
 }
 
-.feature-card p {
-  margin: 0;
-  font-size: 1.12rem;
-  line-height: 1.56;
-  color: var(--muted-dark);
+.section-head p,
+.cta-panel p,
+.info-card p,
+.service-card p,
+.category-card p,
+.feature-card p,
+.stats-card p {
+  text-wrap: pretty;
 }
 
-html[data-theme="light"] .feature-card p {
-  color: var(--muted-light);
+.feature-card,
+.service-card,
+.category-card,
+.info-card,
+.stats-card,
+.cta-panel,
+.site-footer-inner {
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+}
+
+.feature-card h3,
+.service-card h3,
+.category-card h3,
+.info-card h3 {
+  letter-spacing: -0.03em;
+}
+
+.card-tag,
+.service-meta {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
 }
 
 .site-footer {
@@ -328,16 +348,7 @@ html[data-theme="light"] .feature-card p {
     gap: 10px;
   }
 
-  .hero-actions .btn {
-    width: calc(50% - 5px);
-  }
-
-  .features-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .feature-card {
-    min-height: 150px;
-    padding: 22px 18px;
+  .site-footer {
+    padding: 0 12px;
   }
 }
