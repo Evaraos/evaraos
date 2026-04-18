@@ -9,11 +9,11 @@
 
   <title>Advanced Settings • Evaraos Inc</title>
 
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=21" />
-  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=21" />
-  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=21" />
-  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=21" />
-  <link rel="stylesheet" href="/evaraos/assets/css/auth.css?v=21" />
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=22" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=22" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=22" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=22" />
+  <link rel="stylesheet" href="/evaraos/assets/css/auth.css?v=22" />
 
   <style>
     .settings-shell {
@@ -25,11 +25,12 @@
       z-index: 1;
     }
 
-    .settings-hero {
-      padding: 24px;
-      border-radius: 32px;
+    .settings-hero,
+    .settings-block {
+      padding: 22px;
+      border-radius: 30px;
       display: grid;
-      gap: 12px;
+      gap: 18px;
     }
 
     .settings-hero h1 {
@@ -39,19 +40,13 @@
       letter-spacing: -0.05em;
     }
 
-    .settings-hero p {
+    .settings-hero p,
+    .settings-head p {
       margin: 0;
       max-width: 74ch;
       line-height: 1.7;
       opacity: 0.8;
       font-size: 1rem;
-    }
-
-    .settings-block {
-      padding: 22px;
-      border-radius: 30px;
-      display: grid;
-      gap: 18px;
     }
 
     .settings-head {
@@ -63,13 +58,6 @@
       margin: 0;
       font-size: 1.42rem;
       letter-spacing: -0.03em;
-    }
-
-    .settings-head p {
-      margin: 0;
-      opacity: 0.74;
-      max-width: 68ch;
-      line-height: 1.6;
     }
 
     .settings-status-line {
@@ -177,6 +165,18 @@
       width: 100%;
       background: rgba(255,255,255,0.08);
       color: inherit;
+      transition:
+        transform 0.16s ease,
+        box-shadow 0.16s ease,
+        border-color 0.16s ease;
+    }
+
+    .settings-preview-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .settings-preview-btn:active {
+      transform: scale(0.985);
     }
 
     .settings-chip-row {
@@ -207,6 +207,20 @@
       gap: 8px;
       cursor: pointer;
       touch-action: manipulation;
+      transition:
+        transform 0.16s ease,
+        box-shadow 0.16s ease,
+        background 0.16s ease,
+        border-color 0.16s ease;
+    }
+
+    .settings-chip:hover {
+      transform: translateY(-1px);
+      background: rgba(255,255,255,0.09);
+    }
+
+    .settings-chip:active {
+      transform: scale(0.985);
     }
 
     .settings-grid-2 {
@@ -216,7 +230,7 @@
     }
 
     .settings-color-tool {
-      min-height: 210px;
+      min-height: 220px;
       border-radius: 28px;
       padding: 20px;
       display: grid;
@@ -251,6 +265,14 @@
       border: 0;
       background: transparent;
       cursor: pointer;
+    }
+
+    .settings-color-value {
+      font-size: 0.86rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      opacity: 0.76;
+      text-transform: uppercase;
     }
 
     .settings-footer-actions {
@@ -372,6 +394,7 @@
           <p>Controls nav tint and menu surface accents.</p>
           <div class="settings-color-preview" data-nav-color-preview></div>
           <input class="settings-color-input" type="color" data-appearance-nav />
+          <div class="settings-color-value" data-nav-color-value>#FF3B30</div>
         </article>
 
         <article class="settings-color-tool glass-card aurora-card active-glow">
@@ -379,6 +402,7 @@
           <p>Controls card borders and panel accent tint.</p>
           <div class="settings-color-preview" data-card-color-preview></div>
           <input class="settings-color-input" type="color" data-appearance-card />
+          <div class="settings-color-value" data-card-color-value>#8B5CF6</div>
         </article>
 
         <article class="settings-color-tool glass-card aurora-card active-glow">
@@ -386,6 +410,7 @@
           <p>Controls primary button color and glow.</p>
           <div class="settings-color-preview" data-button-color-preview></div>
           <input class="settings-color-input" type="color" data-appearance-button />
+          <div class="settings-color-value" data-button-color-value>#2563EB</div>
         </article>
 
         <article class="settings-color-tool glass-card aurora-card active-glow">
@@ -393,6 +418,7 @@
           <p>Controls the page aura and ambient background color energy.</p>
           <div class="settings-color-preview" data-background-color-preview></div>
           <input class="settings-color-input" type="color" data-appearance-background />
+          <div class="settings-color-value" data-background-color-value>#0F172A</div>
         </article>
 
         <article class="settings-color-tool glass-card aurora-card active-glow">
@@ -400,6 +426,7 @@
           <p>Controls the beam/focus outline color in custom or standard beam mode.</p>
           <div class="settings-color-preview" data-beam-color-preview></div>
           <input class="settings-color-input" type="color" data-appearance-beam />
+          <div class="settings-color-value" data-beam-color-value>#7C3AED</div>
         </article>
       </div>
 
@@ -410,9 +437,9 @@
     </section>
   </main>
 
-  <script src="/evaraos/assets/js/theme.js?v=21"></script>
-  <script type="module" src="/evaraos/assets/js/firebase.js?v=21"></script>
-  <script type="module" src="/evaraos/assets/js/route-guard.js?v=21"></script>
-  <script src="/evaraos/assets/js/nav.js?v=21"></script>
+  <script src="/evaraos/assets/js/theme.js?v=22"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js?v=22"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js?v=22"></script>
+  <script src="/evaraos/assets/js/nav.js?v=22"></script>
 </body>
 </html>
