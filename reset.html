@@ -3,35 +3,39 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Reset Password • Evaraos Inc</title>
-  <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
+
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css" />
+  <link rel="stylesheet" href="/evaraos/assets/css/auth.css" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css" />
 </head>
-<body class="reset-page">
+<body class="reset-page auth-pending" data-route-guard="auth">
   <div class="page-grid-overlay"></div>
-  <div id="universalNav"></div>
+  <div id="universalNavRoot"></div>
 
   <main class="login-shell">
-    <section class="reset-panel glass-card aurora-card auth-panel">
-      <div class="login-badge-wrap auth-badge-wrap">
+    <section class="login-panel glass-card aurora-card auth-panel auth-panel-reset">
+      <div class="login-badge-wrap">
         <img
           src="/evaraos/assets/img/evaraos_logo.png"
           alt="Evaraos logo"
-          class="login-badge auth-badge"
+          class="login-badge auth-badge auth-badge-large"
         />
       </div>
 
       <h1 class="login-title">Reset Password</h1>
       <p class="login-subtitle">
-        Enter the email tied to your account and we’ll send you a password reset link.
+        Enter your account email and we’ll send you a secure password reset link.
       </p>
-
-      <div class="reset-top-action">
-        <a href="/evaraos/login.html" class="btn btn-theme-secondary">Back to Login</a>
-      </div>
 
       <form id="resetForm" class="login-form" novalidate>
         <div class="form-group">
-          <label class="field-label" for="resetEmail">Email</label>
+          <label class="field-label" for="resetEmail">Account Email</label>
           <div class="input-shell aurora-card">
             <input
               id="resetEmail"
@@ -47,25 +51,23 @@
 
         <div class="login-actions-row">
           <button type="submit" class="btn btn-theme-primary premium-red-btn">Send Reset Link</button>
-          <a href="/evaraos/signup.html" class="btn btn-theme-secondary">Create Account</a>
+          <a href="/evaraos/login.html" class="btn btn-theme-secondary">Back to Login</a>
         </div>
 
         <p id="resetMessage" class="login-message" aria-live="polite"></p>
       </form>
 
-      <div class="security-inline-card glass-card aurora-card">
-        <h2 class="inline-card-title">Security Note</h2>
-        <p class="inline-card-copy">
-          For your protection, password reset links expire. If you do not see the email,
-          check spam or promotions first, then request a new one.
-        </p>
+      <div class="auth-footer-links">
+        <span>Remembered your password?</span>
+        <a href="/evaraos/login.html">Return to login</a>
       </div>
     </section>
   </main>
 
   <script type="module" src="/evaraos/assets/js/theme.js"></script>
-  <script type="module" src="/evaraos/assets/js/nav.js"></script>
   <script type="module" src="/evaraos/assets/js/firebase.js"></script>
   <script type="module" src="/evaraos/assets/js/auth.js"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js"></script>
+  <script type="module" src="/evaraos/assets/js/nav.js"></script>
 </body>
 </html>
