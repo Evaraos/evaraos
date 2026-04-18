@@ -3,10 +3,37 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+  <!-- Security / cache control -->
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
   <title>Jobs • Evaraos Inc</title>
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
+
+  <script>
+    document.documentElement.classList.add("auth-pending");
+  </script>
+
+  <style>
+    html.auth-pending body,
+    body.auth-pending {
+      opacity: 0;
+      pointer-events: none;
+    }
+  </style>
+
+  <script type="module">
+    import { protectRoute } from "/evaraos/assets/js/firebase.js";
+    protectRoute({
+      requireAuth: true,
+      redirectGuestTo: "/evaraos/login.html",
+      redirectAuthedTo: "/evaraos/dashboard.html"
+    });
+  </script>
 </head>
-<body class="dashboard-body">
+<body class="dashboard-body auth-pending" data-route-guard="private">
   <div class="page-grid-overlay"></div>
   <div id="universalNav"></div>
 
@@ -194,9 +221,10 @@
     </main>
   </div>
 
-  <script type="module" src="/evaraos/assets/js/jobs.js"></script>
   <script type="module" src="/evaraos/assets/js/theme.js"></script>
-  <script type="module" src="/evaraos/assets/js/nav.js"></script>
   <script type="module" src="/evaraos/assets/js/firebase.js"></script>
+  <script type="module" src="/evaraos/assets/js/jobs.js"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js"></script>
+  <script type="module" src="/evaraos/assets/js/nav.js"></script>
 </body>
 </html>
