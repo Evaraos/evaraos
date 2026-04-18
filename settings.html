@@ -6,91 +6,59 @@
   <title>Settings • Evaraos Inc</title>
   <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
   <style>
-    .settings-stack {
+    .settings-main {
+      width: min(100%, var(--max-page));
+      margin: 0 auto;
+      padding: 18px 16px 40px;
       display: grid;
+      gap: 18px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .settings-hero-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
       gap: 18px;
     }
 
-    .settings-control-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
-    }
-
-    .settings-color-grid {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 14px;
-    }
-
-    .settings-color-card {
-      display: grid;
-      gap: 10px;
-      padding: 14px;
-      border-radius: 20px;
-    }
-
-    .settings-color-card strong {
-      font-size: 0.92rem;
-    }
-
-    .settings-color-card span {
-      font-size: 0.8rem;
-      opacity: 0.7;
-    }
-
-    .settings-color-input {
-      width: 100%;
-      height: 48px;
-      border: 0;
-      background: transparent;
-      cursor: pointer;
-      padding: 0;
-    }
-
-    .settings-preview-grid {
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 16px;
-    }
-
     .settings-preview-board {
-      min-height: 220px;
+      min-height: 240px;
       padding: 18px;
-      border-radius: 24px;
-      position: relative;
-      overflow: hidden;
+      border-radius: var(--radius-lg);
       display: grid;
       gap: 14px;
+      overflow: hidden;
       background:
-        radial-gradient(circle at top left, color-mix(in srgb, var(--user-background-tint, rgba(255,255,255,0.08)) 40%, transparent), transparent 55%),
-        radial-gradient(circle at bottom right, color-mix(in srgb, var(--user-nav-tint, rgba(255,255,255,0.10)) 35%, transparent), transparent 60%);
+        radial-gradient(circle at top left, color-mix(in srgb, var(--user-background-tint, rgba(255,255,255,0.08)) 28%, transparent), transparent 48%),
+        radial-gradient(circle at bottom right, color-mix(in srgb, var(--user-nav-tint, rgba(255,255,255,0.12)) 22%, transparent), transparent 50%);
     }
 
     .settings-preview-nav {
-      min-height: 62px;
-      border-radius: 999px;
+      min-height: 58px;
+      border-radius: var(--radius-pill);
+      padding: 0 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 18px;
-      background: color-mix(in srgb, var(--user-nav-tint, rgba(255,255,255,0.10)) 30%, rgba(255,255,255,0.05));
-      border: 1px solid color-mix(in srgb, var(--user-nav-tint, rgba(255,255,255,0.10)) 45%, rgba(255,255,255,0.12));
-      box-shadow: 0 12px 24px rgba(0,0,0,0.16);
+      background: color-mix(in srgb, var(--user-nav-tint, rgba(255,255,255,0.12)) 28%, rgba(255,255,255,0.04));
+      border: 1px solid color-mix(in srgb, var(--user-nav-tint, rgba(255,255,255,0.12)) 42%, rgba(255,255,255,0.12));
     }
 
     .settings-preview-nav strong {
       font-size: 0.95rem;
+      letter-spacing: -0.02em;
     }
 
-    .settings-preview-chip {
+    .settings-preview-menu {
       width: 38px;
       height: 38px;
       border-radius: 50%;
       display: grid;
       place-items: center;
-      background: color-mix(in srgb, var(--user-button-tint, rgba(255,255,255,0.14)) 24%, rgba(255,255,255,0.08));
+      background: color-mix(in srgb, var(--user-button-tint, rgba(255,255,255,0.16)) 28%, rgba(255,255,255,0.06));
       border: 1px solid rgba(255,255,255,0.14);
+      font-weight: 800;
     }
 
     .settings-preview-cards {
@@ -101,30 +69,96 @@
 
     .settings-preview-card {
       min-height: 118px;
-      border-radius: 22px;
       padding: 16px;
+      border-radius: 22px;
       display: grid;
+      gap: 10px;
       align-content: space-between;
       background: color-mix(in srgb, var(--user-card-tint, rgba(255,255,255,0.10)) 24%, rgba(255,255,255,0.04));
-      border: 1px solid color-mix(in srgb, var(--user-card-tint, rgba(255,255,255,0.10)) 48%, rgba(255,255,255,0.10));
-      box-shadow: 0 16px 34px rgba(0,0,0,0.12);
+      border: 1px solid color-mix(in srgb, var(--user-card-tint, rgba(255,255,255,0.10)) 44%, rgba(255,255,255,0.10));
     }
 
     .settings-preview-card small {
-      opacity: 0.72;
+      color: var(--muted-dark);
     }
 
-    .settings-preview-action {
+    html[data-theme="light"] .settings-preview-card small,
+    html[data-theme$="-light"] .settings-preview-card small {
+      color: var(--muted-light);
+    }
+
+    .settings-preview-btn {
+      min-height: 44px;
+      border-radius: 16px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-height: 48px;
-      padding: 0 18px;
-      border-radius: 16px;
+      padding: 0 16px;
       font-weight: 800;
-      background: color-mix(in srgb, var(--user-button-tint, rgba(255,255,255,0.14)) 42%, rgba(255,255,255,0.08));
-      border: 1px solid color-mix(in srgb, var(--user-button-tint, rgba(255,255,255,0.14)) 64%, rgba(255,255,255,0.10));
-      box-shadow: 0 12px 26px rgba(0,0,0,0.15);
+      background: color-mix(in srgb, var(--user-button-tint, rgba(255,255,255,0.16)) 42%, rgba(255,255,255,0.06));
+      border: 1px solid color-mix(in srgb, var(--user-button-tint, rgba(255,255,255,0.16)) 58%, rgba(255,255,255,0.12));
+    }
+
+    .settings-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .settings-panel {
+      padding: 22px 20px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .settings-section-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .settings-section-head p {
+      margin: 0 0 6px;
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      opacity: 0.66;
+    }
+
+    .settings-section-head h2 {
+      margin: 0;
+      font-size: 1.35rem;
+      letter-spacing: -0.03em;
+    }
+
+    .settings-note {
+      margin: 0;
+      font-size: 0.84rem;
+      color: var(--muted-dark);
+      line-height: 1.6;
+    }
+
+    html[data-theme="light"] .settings-note,
+    html[data-theme$="-light"] .settings-note {
+      color: var(--muted-light);
+    }
+
+    .settings-form {
+      display: grid;
+      gap: 18px;
+    }
+
+    .settings-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .settings-subgrid {
+      display: grid;
+      gap: 14px;
     }
 
     .settings-pill-row {
@@ -133,311 +167,451 @@
       gap: 10px;
     }
 
-    .settings-mode-pill {
+    .settings-pill {
       min-height: 44px;
       padding: 0 14px;
-      border-radius: 999px;
+      border-radius: var(--radius-pill);
       border: 1px solid rgba(255,255,255,0.12);
       background: rgba(255,255,255,0.06);
+      color: inherit;
       font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+    }
+
+    .settings-pill:hover {
+      transform: translateY(-1px);
+    }
+
+    .settings-pill.active {
+      background: rgba(255,255,255,0.14);
+      border-color: rgba(255,255,255,0.24);
+    }
+
+    html[data-theme="light"] .settings-pill,
+    html[data-theme$="-light"] .settings-pill {
+      background: rgba(255,255,255,0.82);
+      border-color: rgba(28, 45, 38, 0.08);
+    }
+
+    html[data-theme="light"] .settings-pill.active,
+    html[data-theme$="-light"] .settings-pill.active {
+      background: rgba(24, 45, 39, 0.08);
+      border-color: rgba(24, 45, 39, 0.16);
+    }
+
+    .settings-color-groups {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .settings-color-card {
+      padding: 16px;
+      border-radius: 22px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .settings-color-card strong {
+      font-size: 0.98rem;
+      letter-spacing: -0.02em;
+    }
+
+    .settings-color-card span {
+      font-size: 0.84rem;
+      color: var(--muted-dark);
+    }
+
+    html[data-theme="light"] .settings-color-card span,
+    html[data-theme$="-light"] .settings-color-card span {
+      color: var(--muted-light);
+    }
+
+    .settings-color-row {
+      display: grid;
+      grid-template-columns: 52px 1fr 112px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .settings-swatch {
+      width: 52px;
+      height: 42px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+    }
+
+    .settings-color-input {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      padding: 0;
+      background: transparent;
       cursor: pointer;
     }
 
-    .settings-mode-pill.active {
-      background: rgba(255,255,255,0.14);
-      border-color: rgba(255,255,255,0.26);
+    .settings-color-input::-webkit-color-swatch-wrapper {
+      padding: 0;
     }
 
-    .settings-note {
-      font-size: 0.84rem;
-      opacity: 0.7;
-      margin-top: 6px;
+    .settings-color-input::-webkit-color-swatch {
+      border: 0;
+      border-radius: 12px;
     }
 
-    .settings-section-subgrid {
+    .settings-hex {
+      min-height: 42px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: inherit;
+      padding: 0 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    html[data-theme="light"] .settings-hex,
+    html[data-theme$="-light"] .settings-hex {
+      background: rgba(255,255,255,0.88);
+      border-color: rgba(24, 45, 39, 0.08);
+    }
+
+    .settings-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .settings-actions .btn {
+      flex: 1 1 220px;
+    }
+
+    .settings-message {
+      min-height: 24px;
+      font-size: 0.96rem;
+      line-height: 1.5;
+    }
+
+    .settings-feed {
       display: grid;
-      gap: 16px;
+      gap: 12px;
+    }
+
+    .settings-feed-item {
+      padding: 16px;
+      display: grid;
+      gap: 6px;
     }
 
     @media (max-width: 980px) {
-      .settings-preview-grid,
-      .settings-control-grid,
-      .settings-color-grid {
+      .settings-hero-grid,
+      .settings-summary-grid,
+      .settings-grid-2,
+      .settings-color-groups {
         grid-template-columns: 1fr;
+      }
+
+      .settings-preview-cards {
+        grid-template-columns: 1fr;
+      }
+
+      .settings-color-row {
+        grid-template-columns: 52px 1fr;
+      }
+
+      .settings-hex {
+        grid-column: 1 / -1;
       }
     }
   </style>
 </head>
-<body class="dashboard-body">
+<body>
   <div class="page-grid-overlay"></div>
   <div id="universalNavRoot"></div>
 
-  <div class="dashboard-shell">
-    <aside class="dashboard-sidebar" id="dashboardSidebar">
-      <div class="dashboard-sidebar-inner glass-shell aurora-card">
-        <div class="dashboard-sidebar-head">
-          <p class="dashboard-sidebar-eyebrow">Preferences Navigation</p>
-          <h2 id="dashboardOverviewTitle">Settings Overview</h2>
-        </div>
+  <main class="settings-main">
+    <section class="glass-card aurora-card settings-panel settings-hero-grid">
+      <div>
+        <p class="dashboard-eyebrow">SETTINGS ENGINE</p>
+        <h1 id="settingsHeroTitle">Loading settings...</h1>
+        <p class="settings-note" id="settingsHeroText">
+          Syncing theme, beam, alerts, and workspace preferences.
+        </p>
 
-        <nav class="dashboard-sidebar-nav" aria-label="Settings sections">
-          <a href="#settingsHeroSection" class="dashboard-nav-link active aurora-card">
-            <span class="dashboard-nav-icon">◉</span>
-            <span>Overview</span>
-          </a>
-
-          <a href="#settingsAppearanceSection" class="dashboard-nav-link aurora-card">
-            <span class="dashboard-nav-icon">◎</span>
-            <span>Appearance</span>
-          </a>
-
-          <a href="#settingsAlertsSection" class="dashboard-nav-link aurora-card">
-            <span class="dashboard-nav-icon">◌</span>
-            <span>Alerts</span>
-          </a>
-
-          <a href="#settingsWorkspaceSection" class="dashboard-nav-link aurora-card">
-            <span class="dashboard-nav-icon">◍</span>
-            <span>Workspace</span>
-          </a>
-        </nav>
-
-        <div class="dashboard-sidebar-foot glass-card aurora-card">
-          <div class="dashboard-sidebar-foot-copy">
-            <strong>System Controls</strong>
-            <span>
-              Build your theme, border beam, alerts, and workspace layout from one place.
-            </span>
-          </div>
-          <a href="/evaraos/profile.html" class="btn btn-theme-primary">Open Profile</a>
+        <div class="hero-actions" style="margin-top: 24px;">
+          <button type="button" id="saveSettingsTopBtn" class="btn btn-theme-primary">Save Settings</button>
+          <button type="button" id="settingsResetBtnTop" class="btn btn-theme-secondary">Reset</button>
         </div>
       </div>
-    </aside>
 
-    <main class="dashboard-main">
-      <section class="dashboard-hero glass-card aurora-card" id="settingsHeroSection">
-        <div class="dashboard-hero-copy">
-          <p class="dashboard-eyebrow">SETTINGS ENGINE</p>
-          <h1 id="settingsHeroTitle">Loading settings...</h1>
-          <p class="dashboard-hero-text" id="settingsHeroText">
-            Syncing your appearance, alerts, and workspace preferences.
-          </p>
-
-          <div class="dashboard-hero-actions">
-            <button type="button" id="saveSettingsTopBtn" class="btn btn-theme-primary">Save Settings</button>
-            <button type="button" id="settingsResetBtnTop" class="btn btn-theme-secondary">Reset Changes</button>
-          </div>
+      <div class="settings-preview-board glass-card aurora-card">
+        <div class="settings-preview-nav">
+          <strong>Live Navigation Preview</strong>
+          <span class="settings-preview-menu">☰</span>
         </div>
 
-        <div class="dashboard-hero-panel glass-card aurora-card">
-          <div class="dashboard-hero-panel-top">
-            <span class="dashboard-mini-badge">Theme Status</span>
-            <span class="dashboard-live-dot"></span>
-          </div>
-
-          <div class="dashboard-hero-logo-wrap">
-            <img
-              src="/evaraos/assets/img/evaraos_logo.png"
-              alt="Evaraos"
-              class="dashboard-hero-logo"
-            />
-          </div>
-
-          <div class="dashboard-hero-panel-copy">
-            <strong>Design Control Center</strong>
-            <span>Full theme, beam, and workspace customization.</span>
-          </div>
-        </div>
-      </section>
-
-      <section class="dashboard-overview glass-card aurora-card">
-        <div class="dashboard-section-head">
-          <div>
-            <p class="dashboard-section-kicker">Snapshot</p>
-            <h2>Preferences Overview</h2>
-          </div>
-        </div>
-
-        <div class="dashboard-stats-grid">
-          <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Theme</p>
-            <h3 id="settingsThemeStat">—</h3>
-            <span id="settingsThemeMeta">Loading theme...</span>
-          </article>
-
-          <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Beam</p>
-            <h3 id="settingsBeamStat">—</h3>
-            <span id="settingsBeamMeta">Loading beam mode...</span>
-          </article>
-
-          <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Alerts</p>
-            <h3 id="settingsAlertsStat">—</h3>
-            <span id="settingsAlertsMeta">Loading alerts...</span>
-          </article>
-
-          <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Workspace</p>
-            <h3 id="settingsWorkspaceStat">—</h3>
-            <span id="settingsWorkspaceMeta">Loading workspace...</span>
-          </article>
-        </div>
-      </section>
-
-      <section class="dashboard-panel glass-card aurora-card" id="settingsAppearanceSection">
-        <div class="dashboard-section-head">
-          <div>
-            <p class="dashboard-section-kicker">Appearance Engine</p>
-            <h2>Theme + Beam Builder</h2>
-          </div>
-        </div>
-
-        <form id="settingsForm" class="settings-stack" novalidate>
-          <div class="settings-control-grid">
-            <div class="settings-section-subgrid">
-              <div class="form-group">
-                <label class="field-label" for="settingsName">Full Name</label>
-                <div class="input-shell aurora-card">
-                  <input id="settingsName" name="fullName" type="text" class="input" placeholder="Enter your full name" autocomplete="name" />
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label class="field-label" for="settingsEmail">Email</label>
-                <div class="input-shell aurora-card">
-                  <input id="settingsEmail" name="email" type="email" class="input" placeholder="Your email" autocomplete="email" readonly />
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label class="field-label" for="settingsThemeMode">Theme Mode</label>
-                <div class="input-shell aurora-card">
-                  <select id="settingsThemeMode" class="input">
-                    <option value="dark">Dark</option>
-                    <option value="light">Light</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label class="field-label" for="settingsThemeFamily">Theme Family</label>
-                <div class="input-shell aurora-card">
-                  <select id="settingsThemeFamily" class="input">
-                    <option value="neutral">Neutral</option>
-                    <option value="blue">Blue</option>
-                    <option value="red">Red</option>
-                    <option value="pink">Pink</option>
-                    <option value="green">Green</option>
-                    <option value="purple">Purple</option>
-                    <option value="yellow">Yellow</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label class="field-label" for="settingsBeamMode">Border Beam Mode</label>
-                <div class="input-shell aurora-card">
-                  <select id="settingsBeamMode" class="input">
-                    <option value="off">Off</option>
-                    <option value="on">On</option>
-                    <option value="rainbow">Rainbow</option>
-                    <option value="custom">Custom</option>
-                  </select>
-                </div>
-                <p class="settings-note">Controls the animated outline glow for active areas, current tabs, and focused inputs.</p>
-              </div>
-            </div>
-
-            <div class="settings-preview-grid">
-              <div class="settings-preview-board glass-card aurora-card">
-                <div class="settings-preview-nav">
-                  <strong>Live Navigation Preview</strong>
-                  <span class="settings-preview-chip">☰</span>
-                </div>
-
-                <div class="settings-preview-cards">
-                  <article class="settings-preview-card">
-                    <div>
-                      <strong>Card Surface</strong>
-                      <small>Glass panel preview</small>
-                    </div>
-                    <span class="settings-preview-action">Primary Button</span>
-                  </article>
-
-                  <article class="settings-preview-card">
-                    <div>
-                      <strong>Beam Engine</strong>
-                      <small id="settingsBeamPreviewLabel">Beam mode preview</small>
-                    </div>
-                    <span class="settings-preview-action">Accent Action</span>
-                  </article>
-                </div>
-              </div>
-
-              <div class="settings-section-subgrid">
-                <div class="settings-color-grid">
-                  <article class="settings-color-card glass-card aurora-card">
-                    <strong>Navigation</strong>
-                    <span>Navbar tint</span>
-                    <input id="settingsNavColor" class="settings-color-input" type="color" value="#ff3b30" />
-                  </article>
-
-                  <article class="settings-color-card glass-card aurora-card">
-                    <strong>Cards</strong>
-                    <span>Glass card tint</span>
-                    <input id="settingsCardColor" class="settings-color-input" type="color" value="#8b5cf6" />
-                  </article>
-
-                  <article class="settings-color-card glass-card aurora-card">
-                    <strong>Buttons</strong>
-                    <span>Primary action tint</span>
-                    <input id="settingsButtonColor" class="settings-color-input" type="color" value="#2563eb" />
-                  </article>
-
-                  <article class="settings-color-card glass-card aurora-card">
-                    <strong>Background</strong>
-                    <span>Ambient page tint</span>
-                    <input id="settingsBackgroundColor" class="settings-color-input" type="color" value="#0f172a" />
-                  </article>
-
-                  <article class="settings-color-card glass-card aurora-card">
-                    <strong>Beam</strong>
-                    <span>Outline glow color</span>
-                    <input id="settingsBeamColor" class="settings-color-input" type="color" value="#7c3aed" />
-                  </article>
-                </div>
-
-                <div class="settings-pill-row">
-                  <button type="button" class="settings-mode-pill active" data-theme-preset="clean">Clean</button>
-                  <button type="button" class="settings-mode-pill" data-theme-preset="lava">Lava</button>
-                  <button type="button" class="settings-mode-pill" data-theme-preset="ocean">Ocean</button>
-                  <button type="button" class="settings-mode-pill" data-theme-preset="aurora">Aurora</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="login-actions-row">
-            <button type="submit" class="btn btn-theme-primary">Save Preferences</button>
-            <button type="button" id="settingsResetBtn" class="btn btn-theme-secondary">Reset</button>
-          </div>
-
-          <p id="settingsMessage" class="login-message" aria-live="polite"></p>
-        </form>
-      </section>
-
-      <section class="dashboard-grid-2">
-        <section class="dashboard-panel glass-card aurora-card" id="settingsAlertsSection">
-          <div class="dashboard-section-head">
+        <div class="settings-preview-cards">
+          <article class="settings-preview-card">
             <div>
-              <p class="dashboard-section-kicker">Notifications</p>
+              <strong>Card Surface</strong>
+              <small>Glass panel preview</small>
+            </div>
+            <span class="settings-preview-btn">Primary Button</span>
+          </article>
+
+          <article class="settings-preview-card">
+            <div>
+              <strong>Beam Engine</strong>
+              <small id="settingsBeamPreviewLabel">Beam mode preview</small>
+            </div>
+            <span class="settings-preview-btn">Accent Action</span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="settings-summary-grid">
+      <article class="glass-card aurora-card settings-panel">
+        <p>Theme</p>
+        <h3 id="settingsThemeStat">—</h3>
+        <span id="settingsThemeMeta" class="settings-note">Loading theme...</span>
+      </article>
+
+      <article class="glass-card aurora-card settings-panel">
+        <p>Beam</p>
+        <h3 id="settingsBeamStat">—</h3>
+        <span id="settingsBeamMeta" class="settings-note">Loading beam mode...</span>
+      </article>
+
+      <article class="glass-card aurora-card settings-panel">
+        <p>Alerts</p>
+        <h3 id="settingsAlertsStat">—</h3>
+        <span id="settingsAlertsMeta" class="settings-note">Loading alerts...</span>
+      </article>
+
+      <article class="glass-card aurora-card settings-panel">
+        <p>Workspace</p>
+        <h3 id="settingsWorkspaceStat">—</h3>
+        <span id="settingsWorkspaceMeta" class="settings-note">Loading workspace...</span>
+      </article>
+    </section>
+
+    <form id="settingsForm" class="settings-form" novalidate>
+      <section class="glass-card aurora-card settings-panel">
+        <div class="settings-section-head">
+          <div>
+            <p>Theme System</p>
+            <h2>Mode + Family</h2>
+          </div>
+        </div>
+
+        <div class="settings-grid-2">
+          <div class="settings-subgrid">
+            <div class="form-group">
+              <label class="field-label" for="settingsName">Full Name</label>
+              <div class="input-shell aurora-card">
+                <input id="settingsName" type="text" class="input" placeholder="Enter your full name" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="field-label" for="settingsEmail">Email</label>
+              <div class="input-shell aurora-card">
+                <input id="settingsEmail" type="email" class="input" placeholder="Your email" readonly />
+              </div>
+            </div>
+
+            <div class="settings-subgrid">
+              <div>
+                <label class="field-label">Theme Mode</label>
+                <div class="settings-pill-row" style="margin-top: 10px;">
+                  <button type="button" class="settings-pill" data-mode-pill="dark">Dark</button>
+                  <button type="button" class="settings-pill" data-mode-pill="light">Light</button>
+                </div>
+              </div>
+
+              <div>
+                <label class="field-label">Theme Family</label>
+                <div class="settings-pill-row" style="margin-top: 10px;">
+                  <button type="button" class="settings-pill" data-family-pill="neutral">Neutral</button>
+                  <button type="button" class="settings-pill" data-family-pill="blue">Blue</button>
+                  <button type="button" class="settings-pill" data-family-pill="red">Red</button>
+                  <button type="button" class="settings-pill" data-family-pill="pink">Pink</button>
+                  <button type="button" class="settings-pill" data-family-pill="green">Green</button>
+                  <button type="button" class="settings-pill" data-family-pill="purple">Purple</button>
+                  <button type="button" class="settings-pill" data-family-pill="yellow">Yellow</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="input-shell aurora-card" style="display:none;">
+              <select id="settingsThemeMode" class="input">
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+              </select>
+            </div>
+
+            <div class="input-shell aurora-card" style="display:none;">
+              <select id="settingsThemeFamily" class="input">
+                <option value="neutral">Neutral</option>
+                <option value="blue">Blue</option>
+                <option value="red">Red</option>
+                <option value="pink">Pink</option>
+                <option value="green">Green</option>
+                <option value="purple">Purple</option>
+                <option value="yellow">Yellow</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="settings-subgrid">
+            <div class="settings-section-head">
+              <div>
+                <p>Quick Presets</p>
+                <h2>One-Tap Color Sets</h2>
+              </div>
+            </div>
+
+            <div class="settings-pill-row">
+              <button type="button" class="settings-pill active" data-theme-preset="clean">Clean</button>
+              <button type="button" class="settings-pill" data-theme-preset="lava">Lava</button>
+              <button type="button" class="settings-pill" data-theme-preset="ocean">Ocean</button>
+              <button type="button" class="settings-pill" data-theme-preset="aurora">Aurora</button>
+            </div>
+
+            <p class="settings-note">
+              Presets apply grouped colors to navigation, cards, buttons, background, and beam so the whole app stays visually consistent.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="glass-card aurora-card settings-panel">
+        <div class="settings-section-head">
+          <div>
+            <p>Surface Colors</p>
+            <h2>Navigation, Cards, Buttons, Background</h2>
+          </div>
+          <p class="settings-note">Compact enough to keep the menu premium, but flexible enough for full system-wide color control.</p>
+        </div>
+
+        <div class="settings-color-groups">
+          <article class="glass-card aurora-card settings-color-card">
+            <strong>Navigation</strong>
+            <span>Controls the nav pill tint across the app.</span>
+            <div class="settings-color-row">
+              <div class="settings-swatch">
+                <input id="settingsNavColor" class="settings-color-input" type="color" value="#ff3b30" />
+              </div>
+              <div class="input-shell aurora-card">
+                <input id="settingsNavHex" class="input settings-hex" type="text" value="#FF3B30" maxlength="7" />
+              </div>
+            </div>
+          </article>
+
+          <article class="glass-card aurora-card settings-color-card">
+            <strong>Cards</strong>
+            <span>Sets the glass panel/card accent tint.</span>
+            <div class="settings-color-row">
+              <div class="settings-swatch">
+                <input id="settingsCardColor" class="settings-color-input" type="color" value="#8b5cf6" />
+              </div>
+              <div class="input-shell aurora-card">
+                <input id="settingsCardHex" class="input settings-hex" type="text" value="#8B5CF6" maxlength="7" />
+              </div>
+            </div>
+          </article>
+
+          <article class="glass-card aurora-card settings-color-card">
+            <strong>Buttons</strong>
+            <span>Sets the action button accent tint.</span>
+            <div class="settings-color-row">
+              <div class="settings-swatch">
+                <input id="settingsButtonColor" class="settings-color-input" type="color" value="#2563eb" />
+              </div>
+              <div class="input-shell aurora-card">
+                <input id="settingsButtonHex" class="input settings-hex" type="text" value="#2563EB" maxlength="7" />
+              </div>
+            </div>
+          </article>
+
+          <article class="glass-card aurora-card settings-color-card">
+            <strong>Background</strong>
+            <span>Ambient page tint behind all surfaces.</span>
+            <div class="settings-color-row">
+              <div class="settings-swatch">
+                <input id="settingsBackgroundColor" class="settings-color-input" type="color" value="#0f172a" />
+              </div>
+              <div class="input-shell aurora-card">
+                <input id="settingsBackgroundHex" class="input settings-hex" type="text" value="#0F172A" maxlength="7" />
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="glass-card aurora-card settings-panel">
+        <div class="settings-section-head">
+          <div>
+            <p>Border Beam</p>
+            <h2>Animated Outline Glow</h2>
+          </div>
+          <p class="settings-note">Controls the Apple Intelligence-style moving edge beam for active cards, buttons, focused inputs, and current tabs.</p>
+        </div>
+
+        <div class="settings-grid-2">
+          <div class="settings-subgrid">
+            <div>
+              <label class="field-label">Beam Mode</label>
+              <div class="settings-pill-row" style="margin-top: 10px;">
+                <button type="button" class="settings-pill" data-beam-pill="off">Off</button>
+                <button type="button" class="settings-pill" data-beam-pill="on">On</button>
+                <button type="button" class="settings-pill" data-beam-pill="rainbow">Rainbow</button>
+                <button type="button" class="settings-pill" data-beam-pill="custom">Custom</button>
+              </div>
+            </div>
+
+            <div class="input-shell aurora-card" style="display:none;">
+              <select id="settingsBeamMode" class="input">
+                <option value="off">Off</option>
+                <option value="on">On</option>
+                <option value="rainbow">Rainbow</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+          </div>
+
+          <article class="glass-card aurora-card settings-color-card">
+            <strong>Beam Color</strong>
+            <span>Used when beam mode is set to custom.</span>
+            <div class="settings-color-row">
+              <div class="settings-swatch">
+                <input id="settingsBeamColor" class="settings-color-input" type="color" value="#7c3aed" />
+              </div>
+              <div class="input-shell aurora-card">
+                <input id="settingsBeamHex" class="input settings-hex" type="text" value="#7C3AED" maxlength="7" />
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="settings-grid-2">
+        <section class="glass-card aurora-card settings-panel">
+          <div class="settings-section-head">
+            <div>
+              <p>Notifications</p>
               <h2>Alerts</h2>
             </div>
           </div>
 
-          <div class="dashboard-feed">
-            <article class="dashboard-feed-item glass-card aurora-card">
+          <div class="settings-feed">
+            <article class="glass-card aurora-card settings-feed-item">
               <strong>Email Alerts</strong>
               <label class="remember-check" for="settingsEmailAlerts">
                 <input id="settingsEmailAlerts" type="checkbox" />
@@ -445,7 +619,7 @@
               </label>
             </article>
 
-            <article class="dashboard-feed-item glass-card aurora-card">
+            <article class="glass-card aurora-card settings-feed-item">
               <strong>Push Alerts</strong>
               <label class="remember-check" for="settingsPushAlerts">
                 <input id="settingsPushAlerts" type="checkbox" />
@@ -453,7 +627,7 @@
               </label>
             </article>
 
-            <article class="dashboard-feed-item glass-card aurora-card">
+            <article class="glass-card aurora-card settings-feed-item">
               <strong>Lead Digest</strong>
               <label class="remember-check" for="settingsLeadDigest">
                 <input id="settingsLeadDigest" type="checkbox" />
@@ -461,7 +635,7 @@
               </label>
             </article>
 
-            <article class="dashboard-feed-item glass-card aurora-card">
+            <article class="glass-card aurora-card settings-feed-item">
               <strong>Job Updates</strong>
               <label class="remember-check" for="settingsJobUpdates">
                 <input id="settingsJobUpdates" type="checkbox" />
@@ -471,15 +645,15 @@
           </div>
         </section>
 
-        <section class="dashboard-panel glass-card aurora-card" id="settingsWorkspaceSection">
-          <div class="dashboard-section-head">
+        <section class="glass-card aurora-card settings-panel">
+          <div class="settings-section-head">
             <div>
-              <p class="dashboard-section-kicker">Workspace</p>
+              <p>Workspace</p>
               <h2>Workspace Preferences</h2>
             </div>
           </div>
 
-          <div class="form-grid-2">
+          <div class="settings-subgrid">
             <div class="form-group">
               <label class="field-label" for="settingsDefaultView">Default View</label>
               <div class="input-shell aurora-card">
@@ -499,44 +673,59 @@
                 <input id="settingsTimezone" type="text" class="input" placeholder="America/New_York" />
               </div>
             </div>
-          </div>
 
-          <div class="form-group">
-            <label class="field-label" for="settingsWorkspaceNote">Workspace Note</label>
-            <div class="input-shell aurora-card">
-              <textarea
-                id="settingsWorkspaceNote"
-                class="input"
-                placeholder="Add a workspace note"
-                rows="5"
-                style="resize: vertical; min-height: 140px;"
-              ></textarea>
+            <div class="form-group">
+              <label class="field-label" for="settingsWorkspaceNote">Workspace Note</label>
+              <div class="input-shell aurora-card">
+                <textarea
+                  id="settingsWorkspaceNote"
+                  class="input"
+                  placeholder="Add a workspace note"
+                  rows="5"
+                  style="resize: vertical; min-height: 140px;"
+                ></textarea>
+              </div>
             </div>
           </div>
         </section>
       </section>
 
-      <section class="dashboard-panel glass-card aurora-card">
-        <div class="dashboard-section-head">
+      <section class="glass-card aurora-card settings-panel">
+        <div class="settings-section-head">
           <div>
-            <p class="dashboard-section-kicker">Summary</p>
-            <h2>Settings Feed</h2>
+            <p>Save</p>
+            <h2>Commit Preferences</h2>
           </div>
         </div>
 
-        <div class="dashboard-feed" id="settingsSummaryFeed">
-          <article class="dashboard-feed-item glass-card aurora-card">
-            <strong>Loading settings...</strong>
-            <span>Your settings summary will appear here once preferences are loaded.</span>
-          </article>
+        <div class="settings-actions">
+          <button type="submit" class="btn btn-theme-primary">Save Preferences</button>
+          <button type="button" id="settingsResetBtn" class="btn btn-theme-secondary">Reset</button>
         </div>
+
+        <p id="settingsMessage" class="settings-message" aria-live="polite"></p>
       </section>
-    </main>
-  </div>
+    </form>
+
+    <section class="glass-card aurora-card settings-panel">
+      <div class="settings-section-head">
+        <div>
+          <p>Summary</p>
+          <h2>Live Settings Feed</h2>
+        </div>
+      </div>
+
+      <div class="settings-feed" id="settingsSummaryFeed">
+        <article class="glass-card aurora-card settings-feed-item">
+          <strong>Loading settings...</strong>
+          <span class="settings-note">Your summary will appear once preferences load.</span>
+        </article>
+      </div>
+    </section>
+  </main>
 
   <script type="module" src="/evaraos/assets/js/theme.js"></script>
   <script type="module" src="/evaraos/assets/js/settings.js"></script>
   <script type="module" src="/evaraos/assets/js/nav.js"></script>
-  <script type="module" src="/evaraos/assets/js/firebase.js"></script>
 </body>
 </html>
