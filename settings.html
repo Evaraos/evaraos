@@ -9,11 +9,11 @@
 
   <title>Settings • Evaraos Inc</title>
 
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css" />
-  <link rel="stylesheet" href="/evaraos/assets/css/theme.css" />
-  <link rel="stylesheet" href="/evaraos/assets/css/nav.css" />
-  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css" />
-  <link rel="stylesheet" href="/evaraos/assets/css/auth.css" />
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=20" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=20" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=20" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=20" />
+  <link rel="stylesheet" href="/evaraos/assets/css/auth.css?v=20" />
 
   <style>
     .settings-shell {
@@ -21,24 +21,43 @@
       margin: 110px auto 80px;
       display: grid;
       gap: 18px;
+      position: relative;
+      z-index: 1;
     }
 
-    .settings-top-preview {
-      padding: 18px;
-      border-radius: 32px;
+    .settings-block {
+      padding: 22px;
+      border-radius: 30px;
       display: grid;
       gap: 18px;
     }
 
+    .settings-head h2 {
+      margin: 0;
+      font-size: 1.42rem;
+      letter-spacing: -0.03em;
+    }
+
+    .settings-head p {
+      margin: 8px 0 0;
+      opacity: 0.74;
+      max-width: 68ch;
+      line-height: 1.6;
+    }
+
+    .settings-preview {
+      display: grid;
+      gap: 16px;
+    }
+
     .settings-preview-nav {
-      min-height: 78px;
+      min-height: 82px;
       border-radius: 999px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 16px 0 18px;
-      position: relative;
-      overflow: hidden;
+      padding: 0 18px;
+      gap: 16px;
     }
 
     .settings-preview-brand {
@@ -49,8 +68,8 @@
     }
 
     .settings-preview-brand img {
-      width: 42px;
-      height: 42px;
+      width: 44px;
+      height: 44px;
       object-fit: contain;
       flex: 0 0 auto;
     }
@@ -66,8 +85,8 @@
     }
 
     .settings-preview-brand-copy span {
-      font-size: 0.82rem;
-      opacity: 0.7;
+      font-size: 0.84rem;
+      opacity: 0.72;
       white-space: nowrap;
     }
 
@@ -80,6 +99,7 @@
       border: 1px solid rgba(255,255,255,0.16);
       background: rgba(255,255,255,0.06);
       font-size: 1.3rem;
+      flex: 0 0 auto;
     }
 
     .settings-preview-grid {
@@ -89,17 +109,17 @@
     }
 
     .settings-preview-card {
-      min-height: 168px;
+      min-height: 190px;
       border-radius: 28px;
-      padding: 18px;
+      padding: 20px;
       display: grid;
       align-content: space-between;
       gap: 16px;
     }
 
     .settings-preview-card h3 {
-      font-size: 1.1rem;
       margin: 0;
+      font-size: 1.14rem;
     }
 
     .settings-preview-card p {
@@ -108,8 +128,8 @@
     }
 
     .settings-preview-btn {
-      min-height: 56px;
-      border-radius: 20px;
+      min-height: 58px;
+      border-radius: 999px;
       border: 1px solid rgba(255,255,255,0.12);
       padding: 0 18px;
       display: inline-flex;
@@ -118,31 +138,6 @@
       font-weight: 800;
       font-size: 1rem;
       width: 100%;
-    }
-
-    .settings-section {
-      padding: 20px;
-      border-radius: 30px;
-      display: grid;
-      gap: 18px;
-    }
-
-    .settings-section-head {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .settings-section-head h2 {
-      margin: 0;
-      font-size: 1.25rem;
-    }
-
-    .settings-section-head p {
-      margin: 6px 0 0;
-      opacity: 0.72;
     }
 
     .settings-chip-row {
@@ -160,13 +155,13 @@
 
     .settings-chip {
       flex: 0 0 auto;
-      min-height: 44px;
-      padding: 0 16px;
+      min-height: 46px;
+      padding: 0 18px;
       border-radius: 999px;
       border: 1px solid rgba(255,255,255,0.12);
       background: rgba(255,255,255,0.06);
       color: inherit;
-      font-weight: 700;
+      font-weight: 800;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -174,43 +169,54 @@
       cursor: pointer;
     }
 
-    .settings-grid-2 {
+    .settings-status-line {
+      font-size: 1rem;
+      line-height: 1.55;
+      opacity: 0.92;
+    }
+
+    .settings-status-line strong {
+      font-weight: 900;
+    }
+
+    .settings-colors-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 16px;
     }
 
-    .settings-color-card {
-      min-height: 168px;
-      border-radius: 26px;
-      padding: 18px;
+    .settings-color-tool {
+      min-height: 198px;
+      border-radius: 28px;
+      padding: 20px;
       display: grid;
       gap: 14px;
       align-content: start;
     }
 
-    .settings-color-card h3 {
+    .settings-color-tool h3 {
       margin: 0;
-      font-size: 1rem;
+      font-size: 1.04rem;
+      letter-spacing: -0.02em;
     }
 
-    .settings-color-card p {
+    .settings-color-tool p {
       margin: 0;
-      opacity: 0.72;
-      font-size: 0.92rem;
+      opacity: 0.74;
+      line-height: 1.5;
+      font-size: 0.94rem;
     }
 
     .settings-color-preview {
-      width: 100%;
-      height: 58px;
+      height: 56px;
       border-radius: 999px;
       border: 1px solid rgba(255,255,255,0.12);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.14);
     }
 
     .settings-color-input {
       width: 100%;
-      height: 44px;
+      height: 58px;
       padding: 0;
       border: 0;
       background: transparent;
@@ -225,7 +231,7 @@
 
     @media (max-width: 840px) {
       .settings-preview-grid,
-      .settings-grid-2 {
+      .settings-colors-grid {
         grid-template-columns: 1fr;
       }
 
@@ -240,50 +246,52 @@
   <div id="universalNav"></div>
 
   <main class="settings-shell">
-    <section class="settings-top-preview glass-card aurora-card">
-      <div class="settings-preview-nav glass-card aurora-card active-glow">
-        <div class="settings-preview-brand">
-          <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos logo">
-          <div class="settings-preview-brand-copy">
-            <strong>Live Navigation Preview</strong>
-            <span>Navbar tint and beam mode preview</span>
-          </div>
-        </div>
-        <div class="settings-preview-menu">☰</div>
+    <section class="settings-block glass-card aurora-card active-glow">
+      <div class="settings-head">
+        <h2>Live Design Preview</h2>
+        <p>Everything below reacts to your current nav tint, card tint, button tint, background aura, and beam mode.</p>
       </div>
 
-      <div class="settings-preview-grid">
-        <article class="settings-preview-card glass-card aurora-card active-glow">
-          <div>
-            <h3>Card Surface</h3>
-            <p>Glass panel preview</p>
+      <div class="settings-preview">
+        <div class="settings-preview-nav glass-card aurora-card active-glow">
+          <div class="settings-preview-brand">
+            <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos logo">
+            <div class="settings-preview-brand-copy">
+              <strong>Live Navigation Preview</strong>
+              <span>Navbar tint and beam mode preview</span>
+            </div>
           </div>
-          <button class="settings-preview-btn">Primary Button</button>
-        </article>
+          <div class="settings-preview-menu">☰</div>
+        </div>
 
-        <article class="settings-preview-card glass-card aurora-card active-glow">
-          <div>
-            <h3>Beam Engine</h3>
-            <p>Beam mode preview</p>
-          </div>
-          <button class="settings-preview-btn">Accent Action</button>
-        </article>
+        <div class="settings-preview-grid">
+          <article class="settings-preview-card glass-card aurora-card active-glow">
+            <div>
+              <h3>Card Surface</h3>
+              <p>Glass panel preview</p>
+            </div>
+            <button class="settings-preview-btn">Primary Button</button>
+          </article>
+
+          <article class="settings-preview-card glass-card aurora-card active-glow">
+            <div>
+              <h3>Beam Engine</h3>
+              <p>Beam mode preview</p>
+            </div>
+            <button class="settings-preview-btn">Accent Action</button>
+          </article>
+        </div>
       </div>
     </section>
 
-    <section class="settings-section glass-card aurora-card">
-      <div class="settings-section-head">
-        <div>
-          <h2>Appearance Mode</h2>
-          <p>
-            Current mode:
-            <strong data-theme-mode-text>Dark</strong>
-            · Family:
-            <strong data-theme-group-text>Neutral</strong>
-            · Beam:
-            <strong data-beam-mode-text>On</strong>
-          </p>
-        </div>
+    <section class="settings-block glass-card aurora-card active-glow">
+      <div class="settings-head">
+        <h2>Appearance Mode</h2>
+        <p class="settings-status-line">
+          Current mode: <strong data-theme-mode-text>Dark</strong>
+          · Family: <strong data-theme-group-text>Neutral</strong>
+          · Beam: <strong data-beam-mode-text>On</strong>
+        </p>
       </div>
 
       <div class="settings-chip-row">
@@ -299,12 +307,10 @@
       </div>
     </section>
 
-    <section class="settings-section glass-card aurora-card">
-      <div class="settings-section-head">
-        <div>
-          <h2>Beam Settings</h2>
-          <p>Choose how the outline beam behaves across nav, cards, inputs, and active states.</p>
-        </div>
+    <section class="settings-block glass-card aurora-card active-glow">
+      <div class="settings-head">
+        <h2>Beam Settings</h2>
+        <p>Choose how the outline beam behaves across nav, cards, inputs, and active surfaces.</p>
       </div>
 
       <div class="settings-chip-row">
@@ -315,46 +321,44 @@
       </div>
     </section>
 
-    <section class="settings-section glass-card aurora-card">
-      <div class="settings-section-head">
-        <div>
-          <h2>Color Controls</h2>
-          <p>Fine tune nav, cards, buttons, background, and beam colors with live previews.</p>
-        </div>
+    <section class="settings-block glass-card aurora-card active-glow">
+      <div class="settings-head">
+        <h2>Color Wheel Controls</h2>
+        <p>Use a real designer-style color picker for every major surface in the system.</p>
       </div>
 
-      <div class="settings-grid-2">
-        <article class="settings-color-card glass-card aurora-card">
-          <h3>Navigation</h3>
+      <div class="settings-colors-grid">
+        <article class="settings-color-tool glass-card aurora-card active-glow">
+          <h3>Navigation Color</h3>
           <p>Controls nav tint and menu surface accents.</p>
           <div class="settings-color-preview" data-nav-color-preview></div>
           <input class="settings-color-input" type="color" data-appearance-nav />
         </article>
 
-        <article class="settings-color-card glass-card aurora-card">
-          <h3>Cards</h3>
+        <article class="settings-color-tool glass-card aurora-card active-glow">
+          <h3>Card Color</h3>
           <p>Controls card borders and panel accent tint.</p>
           <div class="settings-color-preview" data-card-color-preview></div>
           <input class="settings-color-input" type="color" data-appearance-card />
         </article>
 
-        <article class="settings-color-card glass-card aurora-card">
-          <h3>Buttons</h3>
-          <p>Controls primary action button gradient and glow.</p>
+        <article class="settings-color-tool glass-card aurora-card active-glow">
+          <h3>Button Color</h3>
+          <p>Controls primary button color and glow.</p>
           <div class="settings-color-preview" data-button-color-preview></div>
           <input class="settings-color-input" type="color" data-appearance-button />
         </article>
 
-        <article class="settings-color-card glass-card aurora-card">
-          <h3>Background</h3>
-          <p>Controls ambient glow and page aura tint.</p>
+        <article class="settings-color-tool glass-card aurora-card active-glow">
+          <h3>Background Aura</h3>
+          <p>Controls the page aura and ambient background color energy.</p>
           <div class="settings-color-preview" data-background-color-preview></div>
           <input class="settings-color-input" type="color" data-appearance-background />
         </article>
 
-        <article class="settings-color-card glass-card aurora-card">
-          <h3>Beam</h3>
-          <p>Controls active beam/focus glow color when custom or on.</p>
+        <article class="settings-color-tool glass-card aurora-card active-glow">
+          <h3>Beam Color</h3>
+          <p>Controls the beam/focus outline color in custom or standard beam mode.</p>
           <div class="settings-color-preview" data-beam-color-preview></div>
           <input class="settings-color-input" type="color" data-appearance-beam />
         </article>
@@ -367,9 +371,9 @@
     </section>
   </main>
 
-  <script src="/evaraos/assets/js/theme.js"></script>
-  <script type="module" src="/evaraos/assets/js/firebase.js"></script>
-  <script type="module" src="/evaraos/assets/js/route-guard.js"></script>
-  <script src="/evaraos/assets/js/nav.js"></script>
+  <script src="/evaraos/assets/js/theme.js?v=20"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js?v=20"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js?v=20"></script>
+  <script src="/evaraos/assets/js/nav.js?v=20"></script>
 </body>
 </html>
