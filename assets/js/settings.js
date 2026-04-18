@@ -42,6 +42,14 @@ const saveTopBtn = document.getElementById("saveSettingsTopBtn");
 const resetBtn = document.getElementById("settingsResetBtn");
 const resetBtnTop = document.getElementById("settingsResetBtnTop");
 
+const openAdvancedColorsBtn = document.getElementById("openAdvancedColorsBtn");
+const closeAdvancedColorsBtn = document.getElementById("closeAdvancedColorsBtn");
+const advancedColorInputs = document.getElementById("advancedColorInputs");
+
+const openBeamInputBtn = document.getElementById("openBeamInputBtn");
+const closeBeamInputBtn = document.getElementById("closeBeamInputBtn");
+const beamAdvancedInput = document.getElementById("beamAdvancedInput");
+
 const heroTitle = document.getElementById("settingsHeroTitle");
 const heroText = document.getElementById("settingsHeroText");
 
@@ -61,6 +69,14 @@ const modePills = Array.from(document.querySelectorAll("[data-mode-pill]"));
 const familyPills = Array.from(document.querySelectorAll("[data-family-pill]"));
 const beamPills = Array.from(document.querySelectorAll("[data-beam-pill]"));
 const presetButtons = Array.from(document.querySelectorAll("[data-theme-preset]"));
+
+const rails = {
+  nav: document.getElementById("navPaletteRail"),
+  card: document.getElementById("cardPaletteRail"),
+  button: document.getElementById("buttonPaletteRail"),
+  background: document.getElementById("backgroundPaletteRail"),
+  beam: document.getElementById("beamPaletteRail")
+};
 
 let currentUser = null;
 let currentRole = "customer";
@@ -84,6 +100,54 @@ const DEFAULT_SETTINGS = {
   defaultView: "overview",
   timezone: "America/New_York",
   workspaceNote: ""
+};
+
+const PALETTES = {
+  nav: [
+    ["Fire Red", "#FF3B30"],
+    ["Royal Blue", "#2563EB"],
+    ["Magenta", "#EC4899"],
+    ["Violet", "#8B5CF6"],
+    ["Emerald", "#22C55E"],
+    ["Amber", "#F59E0B"],
+    ["Graphite", "#334155"]
+  ],
+  card: [
+    ["Violet", "#8B5CF6"],
+    ["Blue", "#2563EB"],
+    ["Rose", "#F43F5E"],
+    ["Mint", "#10B981"],
+    ["Indigo", "#6366F1"],
+    ["Gold", "#EAB308"],
+    ["Glass Grey", "#64748B"]
+  ],
+  button: [
+    ["Blue", "#2563EB"],
+    ["Red", "#EF4444"],
+    ["Pink", "#EC4899"],
+    ["Green", "#22C55E"],
+    ["Purple", "#8B5CF6"],
+    ["Amber", "#F59E0B"],
+    ["Cyan", "#06B6D4"]
+  ],
+  background: [
+    ["Midnight", "#0F172A"],
+    ["Deep Space", "#020617"],
+    ["Ocean", "#071520"],
+    ["Plum", "#0F1020"],
+    ["Lava", "#1A0D0A"],
+    ["Forest", "#071A12"],
+    ["Slate", "#111827"]
+  ],
+  beam: [
+    ["Purple", "#7C3AED"],
+    ["Red", "#EF4444"],
+    ["Blue", "#2563EB"],
+    ["Pink", "#EC4899"],
+    ["Green", "#22C55E"],
+    ["Amber", "#F59E0B"],
+    ["Cyan", "#06B6D4"]
+  ]
 };
 
 function normalizeHex(value, fallback) {
@@ -137,12 +201,6 @@ function syncFamilyPills(value) {
 
 function syncBeamPills(value) {
   syncPillGroup(beamPills, value, "data-beam-pill");
-}
-
-function syncHexPair(colorInput, hexInput, fallback) {
-  const safe = normalizeHex(colorInput.value, fallback);
-  colorInput.value = safe;
-  hexInput.value = safe;
 }
 
 function readForm() {
@@ -200,6 +258,69 @@ function syncPresetButtons(data) {
   });
 }
 
+function renderRail(rail, type, selectedValue) {
+  if (!rail) return;
+  rail.innerHTML = "";
+
+  PALETTES[type].forEach(([label, color]) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "settings-palette-chip";
+    chip.dataset.paletteType = type;
+    chip.dataset.paletteColor = color;
+    chip.classList.toggle("active", color === selectedValue);
+
+    chip.innerHTML = `
+      <span class="settings-palette-swatch" style="background:${color}"></span>
+      <span class="settings-palette-label">${label}</span>
+      <span class="settings-palette-meta">${color}</span>
+    `;
+
+    chip.addEventListener("click", () => {
+      setColorByType(type, color);
+      const data = readForm();
+      applyAppearance(data);
+      renderSummary(data);
+      renderAllRails(data);
+    });
+
+    rail.appendChild(chip);
+  });
+}
+
+function renderAllRails(data) {
+  renderRail(rails.nav, "nav", data.navColor);
+  renderRail(rails.card, "card", data.cardColor);
+  renderRail(rails.button, "button", data.buttonColor);
+  renderRail(rails.background, "background", data.backgroundColor);
+  renderRail(rails.beam, "beam", data.beamColor);
+}
+
+function setColorByType(type, color) {
+  const safe = normalizeHex(color, "#FFFFFF");
+
+  if (type === "nav") {
+    navColorInput.value = safe;
+    navHexInput.value = safe;
+  }
+  if (type === "card") {
+    cardColorInput.value = safe;
+    cardHexInput.value = safe;
+  }
+  if (type === "button") {
+    buttonColorInput.value = safe;
+    buttonHexInput.value = safe;
+  }
+  if (type === "background") {
+    backgroundColorInput.value = safe;
+    backgroundHexInput.value = safe;
+  }
+  if (type === "beam") {
+    beamColorInput.value = safe;
+    beamHexInput.value = safe;
+  }
+}
+
 function applyAppearance(data) {
   if (window.EvaraTheme?.applyAppearanceConfig) {
     window.EvaraTheme.applyAppearanceConfig({
@@ -234,9 +355,7 @@ function renderSummary(data) {
   if (workspaceStat) workspaceStat.textContent = capitalize(data.defaultView);
   if (workspaceMeta) workspaceMeta.textContent = data.timezone;
 
-  if (beamPreviewLabel) {
-    beamPreviewLabel.textContent = `${capitalize(data.beamMode)} beam preview`;
-  }
+  if (beamPreviewLabel) beamPreviewLabel.textContent = `${capitalize(data.beamMode)} beam preview`;
 
   if (summaryFeed) {
     summaryFeed.innerHTML = `
@@ -285,33 +404,34 @@ function populateForm(data) {
   if (nameInput) nameInput.value = data.fullName || "";
   if (emailInput) emailInput.value = data.email || "";
 
-  if (themeModeInput) themeModeInput.value = data.themeMode || "dark";
-  if (themeFamilyInput) themeFamilyInput.value = data.themeFamily || "neutral";
-  if (beamModeInput) beamModeInput.value = data.beamMode || "on";
+  themeModeInput.value = data.themeMode || "dark";
+  themeFamilyInput.value = data.themeFamily || "neutral";
+  beamModeInput.value = data.beamMode || "on";
 
-  if (navColorInput) navColorInput.value = data.navColor || DEFAULT_SETTINGS.navColor;
-  if (cardColorInput) cardColorInput.value = data.cardColor || DEFAULT_SETTINGS.cardColor;
-  if (buttonColorInput) buttonColorInput.value = data.buttonColor || DEFAULT_SETTINGS.buttonColor;
-  if (backgroundColorInput) backgroundColorInput.value = data.backgroundColor || DEFAULT_SETTINGS.backgroundColor;
-  if (beamColorInput) beamColorInput.value = data.beamColor || DEFAULT_SETTINGS.beamColor;
+  navColorInput.value = data.navColor || DEFAULT_SETTINGS.navColor;
+  cardColorInput.value = data.cardColor || DEFAULT_SETTINGS.cardColor;
+  buttonColorInput.value = data.buttonColor || DEFAULT_SETTINGS.buttonColor;
+  backgroundColorInput.value = data.backgroundColor || DEFAULT_SETTINGS.backgroundColor;
+  beamColorInput.value = data.beamColor || DEFAULT_SETTINGS.beamColor;
 
-  if (navHexInput) navHexInput.value = data.navColor || DEFAULT_SETTINGS.navColor;
-  if (cardHexInput) cardHexInput.value = data.cardColor || DEFAULT_SETTINGS.cardColor;
-  if (buttonHexInput) buttonHexInput.value = data.buttonColor || DEFAULT_SETTINGS.buttonColor;
-  if (backgroundHexInput) backgroundHexInput.value = data.backgroundColor || DEFAULT_SETTINGS.backgroundColor;
-  if (beamHexInput) beamHexInput.value = data.beamColor || DEFAULT_SETTINGS.beamColor;
+  navHexInput.value = data.navColor || DEFAULT_SETTINGS.navColor;
+  cardHexInput.value = data.cardColor || DEFAULT_SETTINGS.cardColor;
+  buttonHexInput.value = data.buttonColor || DEFAULT_SETTINGS.buttonColor;
+  backgroundHexInput.value = data.backgroundColor || DEFAULT_SETTINGS.backgroundColor;
+  beamHexInput.value = data.beamColor || DEFAULT_SETTINGS.beamColor;
 
-  if (emailAlertsInput) emailAlertsInput.checked = Boolean(data.emailAlerts);
-  if (pushAlertsInput) pushAlertsInput.checked = Boolean(data.pushAlerts);
-  if (leadDigestInput) leadDigestInput.checked = Boolean(data.leadDigest);
-  if (jobUpdatesInput) jobUpdatesInput.checked = Boolean(data.jobUpdates);
+  emailAlertsInput.checked = Boolean(data.emailAlerts);
+  pushAlertsInput.checked = Boolean(data.pushAlerts);
+  leadDigestInput.checked = Boolean(data.leadDigest);
+  jobUpdatesInput.checked = Boolean(data.jobUpdates);
 
-  if (defaultViewInput) defaultViewInput.value = data.defaultView || "overview";
-  if (timezoneInput) timezoneInput.value = data.timezone || "America/New_York";
-  if (workspaceNoteInput) workspaceNoteInput.value = data.workspaceNote || "";
+  defaultViewInput.value = data.defaultView || "overview";
+  timezoneInput.value = data.timezone || "America/New_York";
+  workspaceNoteInput.value = data.workspaceNote || "";
 
   applyAppearance(data);
   renderSummary(data);
+  renderAllRails(data);
 }
 
 function getPreset(name) {
@@ -351,22 +471,16 @@ function getPreset(name) {
 
 function applyPreset(name) {
   const preset = getPreset(name);
-
-  navColorInput.value = preset.navColor;
-  cardColorInput.value = preset.cardColor;
-  buttonColorInput.value = preset.buttonColor;
-  backgroundColorInput.value = preset.backgroundColor;
-  beamColorInput.value = preset.beamColor;
-
-  navHexInput.value = preset.navColor;
-  cardHexInput.value = preset.cardColor;
-  buttonHexInput.value = preset.buttonColor;
-  backgroundHexInput.value = preset.backgroundColor;
-  beamHexInput.value = preset.beamColor;
+  setColorByType("nav", preset.navColor);
+  setColorByType("card", preset.cardColor);
+  setColorByType("button", preset.buttonColor);
+  setColorByType("background", preset.backgroundColor);
+  setColorByType("beam", preset.beamColor);
 
   const data = readForm();
   applyAppearance(data);
   renderSummary(data);
+  renderAllRails(data);
 }
 
 async function loadSettings(user) {
@@ -425,9 +539,7 @@ async function saveSettings() {
 
   try {
     if (currentUser.displayName !== data.fullName) {
-      await updateProfile(currentUser, {
-        displayName: data.fullName
-      });
+      await updateProfile(currentUser, { displayName: data.fullName });
     }
 
     await setDoc(doc(db, "users", currentUser.uid), {
@@ -465,7 +577,6 @@ async function saveSettings() {
     }, { merge: true });
 
     applyAppearance(data);
-
     applyUserToUi({
       displayName: data.fullName,
       email: currentUser.email || data.email,
@@ -474,6 +585,7 @@ async function saveSettings() {
 
     originalSettings = { ...data };
     renderSummary(data);
+    renderAllRails(data);
     setMessage("Settings saved successfully.");
   } catch (error) {
     console.error(error);
@@ -487,30 +599,10 @@ function resetSettings() {
   setMessage("Changes reset.");
 }
 
-function syncColorInputPair(colorInput, hexInput, fallback) {
-  colorInput.addEventListener("input", () => {
-    const safe = normalizeHex(colorInput.value, fallback);
-    hexInput.value = safe;
-    const data = readForm();
-    applyAppearance(data);
-    renderSummary(data);
-  });
-
-  hexInput.addEventListener("input", () => {
-    const safe = normalizeHex(hexInput.value, fallback);
-    colorInput.value = safe;
-    hexInput.value = safe;
-    const data = readForm();
-    applyAppearance(data);
-    renderSummary(data);
-  });
-}
-
 function bindPills() {
   modePills.forEach((button) => {
     button.addEventListener("click", () => {
-      const value = button.getAttribute("data-mode-pill");
-      themeModeInput.value = value;
+      themeModeInput.value = button.getAttribute("data-mode-pill");
       const data = readForm();
       applyAppearance(data);
       renderSummary(data);
@@ -519,8 +611,7 @@ function bindPills() {
 
   familyPills.forEach((button) => {
     button.addEventListener("click", () => {
-      const value = button.getAttribute("data-family-pill");
-      themeFamilyInput.value = value;
+      themeFamilyInput.value = button.getAttribute("data-family-pill");
       const data = readForm();
       applyAppearance(data);
       renderSummary(data);
@@ -529,8 +620,7 @@ function bindPills() {
 
   beamPills.forEach((button) => {
     button.addEventListener("click", () => {
-      const value = button.getAttribute("data-beam-pill");
-      beamModeInput.value = value;
+      beamModeInput.value = button.getAttribute("data-beam-pill");
       const data = readForm();
       applyAppearance(data);
       renderSummary(data);
@@ -544,11 +634,53 @@ function bindPills() {
   });
 }
 
+function bindHexInputs() {
+  [
+    [navHexInput, "nav", DEFAULT_SETTINGS.navColor],
+    [cardHexInput, "card", DEFAULT_SETTINGS.cardColor],
+    [buttonHexInput, "button", DEFAULT_SETTINGS.buttonColor],
+    [backgroundHexInput, "background", DEFAULT_SETTINGS.backgroundColor],
+    [beamHexInput, "beam", DEFAULT_SETTINGS.beamColor]
+  ].forEach(([input, type, fallback]) => {
+    input.addEventListener("input", () => {
+      const safe = normalizeHex(input.value, fallback);
+      setColorByType(type, safe);
+      const data = readForm();
+      applyAppearance(data);
+      renderSummary(data);
+      renderAllRails(data);
+    });
+  });
+}
+
+function bindToggles() {
+  openAdvancedColorsBtn?.addEventListener("click", () => {
+    advancedColorInputs.style.display = "grid";
+    openAdvancedColorsBtn.style.display = "none";
+    closeAdvancedColorsBtn.style.display = "inline-flex";
+  });
+
+  closeAdvancedColorsBtn?.addEventListener("click", () => {
+    advancedColorInputs.style.display = "none";
+    openAdvancedColorsBtn.style.display = "inline-flex";
+    closeAdvancedColorsBtn.style.display = "none";
+  });
+
+  openBeamInputBtn?.addEventListener("click", () => {
+    beamAdvancedInput.style.display = "block";
+    openBeamInputBtn.style.display = "none";
+    closeBeamInputBtn.style.display = "inline-flex";
+  });
+
+  closeBeamInputBtn?.addEventListener("click", () => {
+    beamAdvancedInput.style.display = "none";
+    openBeamInputBtn.style.display = "inline-flex";
+    closeBeamInputBtn.style.display = "none";
+  });
+}
+
 function bindLivePreview() {
   [
-    themeModeInput,
-    themeFamilyInput,
-    beamModeInput,
     emailAlertsInput,
     pushAlertsInput,
     leadDigestInput,
@@ -560,36 +692,28 @@ function bindLivePreview() {
     if (!input) return;
     input.addEventListener("input", () => {
       const data = readForm();
-      applyAppearance(data);
       renderSummary(data);
     });
     input.addEventListener("change", () => {
       const data = readForm();
-      applyAppearance(data);
       renderSummary(data);
     });
   });
-
-  syncColorInputPair(navColorInput, navHexInput, DEFAULT_SETTINGS.navColor);
-  syncColorInputPair(cardColorInput, cardHexInput, DEFAULT_SETTINGS.cardColor);
-  syncColorInputPair(buttonColorInput, buttonHexInput, DEFAULT_SETTINGS.buttonColor);
-  syncColorInputPair(backgroundColorInput, backgroundHexInput, DEFAULT_SETTINGS.backgroundColor);
-  syncColorInputPair(beamColorInput, beamHexInput, DEFAULT_SETTINGS.beamColor);
 }
 
 function bindEvents() {
-  if (form) {
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      await saveSettings();
-    });
-  }
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await saveSettings();
+  });
 
-  if (saveTopBtn) saveTopBtn.addEventListener("click", saveSettings);
-  if (resetBtn) resetBtn.addEventListener("click", resetSettings);
-  if (resetBtnTop) resetBtnTop.addEventListener("click", resetSettings);
+  saveTopBtn?.addEventListener("click", saveSettings);
+  resetBtn?.addEventListener("click", resetSettings);
+  resetBtnTop?.addEventListener("click", resetSettings);
 
   bindPills();
+  bindHexInputs();
+  bindToggles();
   bindLivePreview();
 }
 
