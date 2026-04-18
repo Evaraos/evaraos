@@ -24,7 +24,7 @@ import {
 
 /* FIREBASE CONFIG */
 const firebaseConfig = {
-  apiKey: "AIzaSyAg12tiBifLswke_km3nY6Qpf8ROyqup4",
+  apiKey: "AIzaSyAg12tiBifLswke_km3nY6YQpf8ROyqup4",
   authDomain: "evaraos-web.firebaseapp.com",
   projectId: "evaraos-web",
   storageBucket: "evaraos-web.firebasestorage.app",
