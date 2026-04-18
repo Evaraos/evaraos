@@ -1,5 +1,3 @@
-// assets/js/auth.js
-
 import {
   auth,
   db,
@@ -38,11 +36,15 @@ function bindPasswordToggle(buttonId, inputId) {
   if (!button || !input) return;
 
   button.addEventListener("click", () => {
-    const isPassword = input.type === "password";
-    input.type = isPassword ? "text" : "password";
-    button.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
-    button.classList.toggle("is-visible", isPassword);
+    const show = input.type === "password";
+    input.type = show ? "text" : "password";
+    button.classList.toggle("is-visible", show);
+    button.setAttribute("aria-label", show ? "Hide password" : "Show password");
   });
+}
+
+function normalizeUsername(value) {
+  return String(value || "").trim().toLowerCase();
 }
 
 async function findEmailFromLogin(loginValue) {
@@ -53,22 +55,29 @@ async function findEmailFromLogin(loginValue) {
     return raw;
   }
 
+  const normalized = normalizeUsername(raw);
   const usersRef = collection(db, "users");
-  const usernameQuery = query(usersRef, where("username", "==", raw), limit(1));
-  const usernameSnap = await getDocs(usernameQuery);
 
-  if (!usernameSnap.empty) {
-    const userData = usernameSnap.docs[0].data() || {};
-    return userData.email || null;
+  const q1 = query(usersRef, where("username", "==", raw), limit(1));
+  const s1 = await getDocs(q1);
+  if (!s1.empty) {
+    const data = s1.docs[0].data() || {};
+    if (data.email) return data.email;
   }
 
-  return raw;
+  const q2 = query(usersRef, where("usernameLower", "==", normalized), limit(1));
+  const s2 = await getDocs(q2);
+  if (!s2.empty) {
+    const data = s2.docs[0].data() || {};
+    if (data.email) return data.email;
+  }
+
+  return null;
 }
 
 async function handleLoginSubmit(event) {
   event.preventDefault();
 
-  const form = event.currentTarget;
   const emailInput = byId("loginEmail");
   const passwordInput = byId("loginPassword");
   const rememberInput = byId("rememberDevice");
@@ -87,7 +96,15 @@ async function handleLoginSubmit(event) {
     setMessage(messageEl, "Signing you in...", "info");
     await setAuthPersistence(rememberDevice);
 
-    const resolvedEmail = await findEmailFromLogin(loginValue);
+    let resolvedEmail = loginValue;
+    if (!loginValue.includes("@")) {
+      resolvedEmail = await findEmailFromLogin(loginValue);
+      if (!resolvedEmail) {
+        setMessage(messageEl, "Username not found.", "error");
+        return;
+      }
+    }
+
     const result = await signInWithEmailAndPassword(auth, resolvedEmail, passwordValue);
     const user = result.user;
 
@@ -97,9 +114,9 @@ async function handleLoginSubmit(event) {
       const snap = await getDoc(userRef);
       if (snap.exists()) {
         const data = snap.data() || {};
-        role = data.role || "customer";
+        role = String(data.role || "customer").toLowerCase();
       }
-    } catch {}
+    } catch (_) {}
 
     syncUserSession(user, role);
     setMessage(messageEl, "Login successful. Redirecting...", "success");
@@ -123,6 +140,7 @@ async function handleSignupSubmit(event) {
 
   const fullName = nameInput?.value?.trim() || "";
   const username = usernameInput?.value?.trim() || "";
+  const usernameLower = normalizeUsername(username);
   const email = emailInput?.value?.trim() || "";
   const password = passwordInput?.value || "";
   const confirmPassword = confirmInput?.value || "";
@@ -149,7 +167,7 @@ async function handleSignupSubmit(event) {
 
     const existingUsernameQuery = query(
       collection(db, "users"),
-      where("username", "==", username),
+      where("usernameLower", "==", usernameLower),
       limit(1)
     );
     const existingUsernameSnap = await getDocs(existingUsernameQuery);
@@ -170,9 +188,10 @@ async function handleSignupSubmit(event) {
       uid: user.uid,
       email,
       username,
+      usernameLower,
       displayName: fullName,
       fullName,
-      role: "customer",
+      role: "owner",
       phone: "",
       bio: "",
       createdAt: new Date().toISOString()
@@ -180,7 +199,7 @@ async function handleSignupSubmit(event) {
 
     await setDoc(doc(db, "users", user.uid), userDoc, { merge: true });
 
-    syncUserSession(user, "customer");
+    syncUserSession(user, "owner");
     setMessage(messageEl, "Account created successfully. Redirecting...", "success");
     window.location.replace("/evaraos/dashboard.html");
   } catch (error) {
