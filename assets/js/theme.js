@@ -37,12 +37,48 @@ function normalizeTheme(theme = "") {
 
 function normalizeHex(value, fallback) {
   const safe = String(value || "").trim();
-  return /^#[0-9a-fA-F]{6}$/.test(safe) ? safe : fallback;
+  return /^#[0-9a-fA-F]{6}$/.test(safe) ? safe.toUpperCase() : fallback.toUpperCase();
 }
 
 function normalizeBeamMode(value = "") {
   const safe = String(value || "").trim().toLowerCase();
   return ["off", "on", "rainbow", "custom"].includes(safe) ? safe : "on";
+}
+
+function buildTheme(family = "neutral", mode = "dark") {
+  const safeMode = mode === "light" ? "light" : "dark";
+  if (family === "neutral") return safeMode;
+  const candidate = `${family}-${safeMode}`;
+  return VALID_THEMES.includes(candidate) ? candidate : DEFAULT_THEME;
+}
+
+function getThemeParts(theme = DEFAULT_THEME) {
+  const safe = normalizeTheme(theme);
+  if (safe === "dark") return { family: "neutral", mode: "dark" };
+  if (safe === "light") return { family: "neutral", mode: "light" };
+  const [family, mode] = safe.split("-");
+  return {
+    family: family || "neutral",
+    mode: mode === "light" ? "light" : "dark"
+  };
+}
+
+function normalizeAppearance(appearance = {}) {
+  const theme = getThemeParts(buildTheme(
+    appearance.family || DEFAULT_APPEARANCE.family,
+    appearance.mode || DEFAULT_APPEARANCE.mode
+  ));
+
+  return {
+    mode: theme.mode,
+    family: theme.family,
+    beamMode: normalizeBeamMode(appearance.beamMode || DEFAULT_APPEARANCE.beamMode),
+    navColor: normalizeHex(appearance.navColor, DEFAULT_APPEARANCE.navColor),
+    cardColor: normalizeHex(appearance.cardColor, DEFAULT_APPEARANCE.cardColor),
+    buttonColor: normalizeHex(appearance.buttonColor, DEFAULT_APPEARANCE.buttonColor),
+    backgroundColor: normalizeHex(appearance.backgroundColor, DEFAULT_APPEARANCE.backgroundColor),
+    beamColor: normalizeHex(appearance.beamColor, DEFAULT_APPEARANCE.beamColor)
+  };
 }
 
 function getStoredTheme() {
@@ -61,30 +97,11 @@ function setStoredTheme(theme) {
   }
 }
 
-function getThemeParts(theme = DEFAULT_THEME) {
-  const safe = normalizeTheme(theme);
-
-  if (safe === "dark") return { mode: "dark", family: "neutral" };
-  if (safe === "light") return { mode: "light", family: "neutral" };
-
-  const [family, mode] = safe.split("-");
-  return {
-    family: family || "neutral",
-    mode: mode === "light" ? "light" : "dark"
-  };
-}
-
-function buildTheme(family = "neutral", mode = "dark") {
-  const safeMode = mode === "light" ? "light" : "dark";
-  if (family === "neutral") return safeMode;
-  const candidate = `${family}-${safeMode}`;
-  return VALID_THEMES.includes(candidate) ? candidate : DEFAULT_THEME;
-}
-
 function getStoredAppearance() {
   try {
-    const parsed = JSON.parse(localStorage.getItem(APPEARANCE_KEY) || "{}");
-    return normalizeAppearance(parsed);
+    const raw = localStorage.getItem(APPEARANCE_KEY);
+    if (!raw) return { ...DEFAULT_APPEARANCE };
+    return normalizeAppearance(JSON.parse(raw));
   } catch {
     return { ...DEFAULT_APPEARANCE };
   }
@@ -96,20 +113,6 @@ function setStoredAppearance(appearance) {
   } catch {
     // ignore
   }
-}
-
-function normalizeAppearance(appearance = {}) {
-  const theme = getThemeParts(buildTheme(appearance.family || DEFAULT_APPEARANCE.family, appearance.mode || DEFAULT_APPEARANCE.mode));
-  return {
-    mode: theme.mode,
-    family: theme.family,
-    beamMode: normalizeBeamMode(appearance.beamMode || DEFAULT_APPEARANCE.beamMode),
-    navColor: normalizeHex(appearance.navColor, DEFAULT_APPEARANCE.navColor),
-    cardColor: normalizeHex(appearance.cardColor, DEFAULT_APPEARANCE.cardColor),
-    buttonColor: normalizeHex(appearance.buttonColor, DEFAULT_APPEARANCE.buttonColor),
-    backgroundColor: normalizeHex(appearance.backgroundColor, DEFAULT_APPEARANCE.backgroundColor),
-    beamColor: normalizeHex(appearance.beamColor, DEFAULT_APPEARANCE.beamColor)
-  };
 }
 
 function ensureAppearanceStyle() {
@@ -129,85 +132,85 @@ function ensureAppearanceStyle() {
 
     body {
       background-image:
-        radial-gradient(circle at top left, color-mix(in srgb, var(--user-background-tint) 22%, transparent), transparent 42%),
-        radial-gradient(circle at bottom right, color-mix(in srgb, var(--user-nav-tint) 16%, transparent), transparent 44%);
+        radial-gradient(circle at 18% 16%, color-mix(in srgb, var(--user-background-tint) 16%, transparent), transparent 26%),
+        radial-gradient(circle at 82% 14%, color-mix(in srgb, var(--user-nav-tint) 14%, transparent), transparent 24%),
+        radial-gradient(circle at 16% 82%, color-mix(in srgb, var(--user-card-tint) 10%, transparent), transparent 24%);
     }
 
     .glass-card,
     .glass-shell,
     .aurora-card,
     .input-shell {
-      border-color: color-mix(in srgb, var(--user-card-tint) 28%, rgba(255,255,255,0.10));
-      box-shadow:
-        0 18px 40px rgba(0,0,0,0.14),
-        inset 0 1px 0 rgba(255,255,255,0.12);
+      border-color: color-mix(in srgb, var(--user-card-tint) 26%, rgba(255,255,255,0.12));
     }
 
     .btn-theme-primary,
-    .settings-preview-action {
-      background: color-mix(in srgb, var(--user-button-tint) 42%, rgba(255,255,255,0.10));
-      border-color: color-mix(in srgb, var(--user-button-tint) 65%, rgba(255,255,255,0.12));
-      box-shadow: 0 14px 28px color-mix(in srgb, var(--user-button-tint) 20%, transparent);
-    }
-
-    #evaNavPill,
-    .eva-nav-pill {
-      border-color: color-mix(in srgb, var(--user-nav-tint) 30%, rgba(255,255,255,0.12));
+    .settings-preview-btn {
+      background:
+        linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--user-button-tint) 86%, white 14%) 0%,
+          color-mix(in srgb, var(--user-button-tint) 68%, white 32%) 100%
+        ) !important;
+      border-color: color-mix(in srgb, var(--user-button-tint) 50%, rgba(255,255,255,0.10)) !important;
       box-shadow:
-        0 14px 30px rgba(0,0,0,0.16),
-        inset 0 1px 0 rgba(255,255,255,0.16),
-        0 0 0 1px color-mix(in srgb, var(--user-nav-tint) 18%, transparent);
+        0 18px 34px color-mix(in srgb, var(--user-button-tint) 24%, transparent),
+        inset 0 1px 0 rgba(255,255,255,0.18) !important;
     }
 
-    .dashboard-nav-link.active,
-    .eva-link.active,
-    .input-shell:focus-within,
-    .settings-preview-card,
+    .eva-nav-pill,
+    #evaNavPill,
     .settings-preview-nav {
-      position: relative;
-      overflow: hidden;
+      border-color: color-mix(in srgb, var(--user-nav-tint) 28%, rgba(255,255,255,0.12)) !important;
+      box-shadow:
+        0 16px 34px rgba(0,0,0,0.16),
+        inset 0 1px 0 rgba(255,255,255,0.12),
+        0 0 0 1px color-mix(in srgb, var(--user-nav-tint) 14%, transparent) !important;
     }
 
+    .settings-preview-card,
+    .dashboard-stat-card,
+    .feature-card,
+    .hero,
+    .inline-card,
+    .dashboard-feed-item {
+      border-color: color-mix(in srgb, var(--user-card-tint) 26%, rgba(255,255,255,0.10)) !important;
+    }
+
+    html[data-beam-mode="off"] .active-glow,
     html[data-beam-mode="off"] .dashboard-nav-link.active,
     html[data-beam-mode="off"] .eva-link.active,
-    html[data-beam-mode="off"] .input-shell:focus-within,
-    html[data-beam-mode="off"] .settings-preview-card,
-    html[data-beam-mode="off"] .settings-preview-nav {
-      box-shadow:
-        0 14px 30px rgba(0,0,0,0.14),
-        inset 0 1px 0 rgba(255,255,255,0.10);
+    html[data-beam-mode="off"] .input-shell:focus-within {
+      box-shadow: none !important;
     }
 
+    html[data-beam-mode="on"] .active-glow,
     html[data-beam-mode="on"] .dashboard-nav-link.active,
     html[data-beam-mode="on"] .eva-link.active,
     html[data-beam-mode="on"] .input-shell:focus-within,
+    html[data-beam-mode="custom"] .active-glow,
     html[data-beam-mode="custom"] .dashboard-nav-link.active,
     html[data-beam-mode="custom"] .eva-link.active,
-    html[data-beam-mode="custom"] .input-shell:focus-within,
-    html[data-beam-mode="on"] .settings-preview-card,
-    html[data-beam-mode="custom"] .settings-preview-card,
-    html[data-beam-mode="on"] .settings-preview-nav,
-    html[data-beam-mode="custom"] .settings-preview-nav {
+    html[data-beam-mode="custom"] .input-shell:focus-within {
       box-shadow:
-        0 0 0 1px color-mix(in srgb, var(--user-beam-color) 55%, transparent),
-        0 0 22px color-mix(in srgb, var(--user-beam-color) 28%, transparent),
-        inset 0 1px 0 rgba(255,255,255,0.18);
+        0 0 0 1px color-mix(in srgb, var(--user-beam-color) 52%, transparent),
+        0 0 18px color-mix(in srgb, var(--user-beam-color) 22%, transparent),
+        inset 0 1px 0 rgba(255,255,255,0.12) !important;
     }
 
+    html[data-beam-mode="rainbow"] .active-glow,
     html[data-beam-mode="rainbow"] .dashboard-nav-link.active,
     html[data-beam-mode="rainbow"] .eva-link.active,
-    html[data-beam-mode="rainbow"] .input-shell:focus-within,
-    html[data-beam-mode="rainbow"] .settings-preview-card,
-    html[data-beam-mode="rainbow"] .settings-preview-nav {
-      animation: evaraRainbowBeam 5s linear infinite;
+    html[data-beam-mode="rainbow"] .input-shell:focus-within {
+      animation: evaraRainbowBeam 4s linear infinite;
       box-shadow:
-        0 0 0 1px rgba(255,255,255,0.16),
-        0 0 22px rgba(255,255,255,0.16),
-        inset 0 1px 0 rgba(255,255,255,0.18);
+        0 0 0 1px rgba(255,255,255,0.18),
+        0 0 20px rgba(255,255,255,0.18),
+        inset 0 1px 0 rgba(255,255,255,0.12) !important;
     }
 
     @keyframes evaraRainbowBeam {
-      0%   { filter: hue-rotate(0deg); }
+      0% { filter: hue-rotate(0deg); }
       100% { filter: hue-rotate(360deg); }
     }
   `;
@@ -216,26 +219,23 @@ function ensureAppearanceStyle() {
 }
 
 function syncThemeUi() {
-  const currentTheme = getStoredTheme();
-  const current = getThemeParts(currentTheme);
+  const current = getThemeParts(getStoredTheme());
 
   document.querySelectorAll("[data-theme-mode-text]").forEach((el) => {
-    el.textContent = current.mode === "dark" ? "Dark" : "Light";
+    el.textContent = current.mode === "light" ? "Light" : "Dark";
   });
 
   document.querySelectorAll("[data-theme-group-text]").forEach((el) => {
-    const label =
-      current.family === "neutral"
-        ? "Neutral"
-        : current.family.charAt(0).toUpperCase() + current.family.slice(1);
-    el.textContent = label;
+    el.textContent = current.family === "neutral"
+      ? "Neutral"
+      : current.family.charAt(0).toUpperCase() + current.family.slice(1);
   });
 
   document.querySelectorAll("[data-theme-bubble]").forEach((bubble) => {
     const family = bubble.getAttribute("data-theme-family") || "neutral";
-    const active = family === current.family;
-    bubble.classList.toggle("active", active);
-    bubble.setAttribute("aria-pressed", active ? "true" : "false");
+    const isActive = family === current.family;
+    bubble.classList.toggle("active", isActive);
+    bubble.setAttribute("aria-pressed", isActive ? "true" : "false");
   });
 }
 
@@ -247,10 +247,11 @@ function applyTheme(theme) {
 }
 
 function applyAppearanceConfig(appearance = {}) {
-  const safe = normalizeAppearance(appearance);
   ensureAppearanceStyle();
 
+  const safe = normalizeAppearance(appearance);
   const theme = buildTheme(safe.family, safe.mode);
+
   applyTheme(theme);
   setStoredAppearance(safe);
 
@@ -263,24 +264,6 @@ function applyAppearanceConfig(appearance = {}) {
   root.setAttribute("data-beam-mode", safe.beamMode);
 }
 
-function toggleMode() {
-  const current = getThemeParts(getStoredTheme());
-  const nextMode = current.mode === "dark" ? "light" : "dark";
-  const appearance = getStoredAppearance();
-  applyAppearanceConfig({
-    ...appearance,
-    mode: nextMode
-  });
-}
-
-function setFamily(family) {
-  const appearance = getStoredAppearance();
-  applyAppearanceConfig({
-    ...appearance,
-    family
-  });
-}
-
 function initTheme() {
   ensureAppearanceStyle();
   applyAppearanceConfig(getStoredAppearance());
@@ -288,13 +271,11 @@ function initTheme() {
 
 window.EvaraTheme = {
   initTheme,
-  syncThemeUi,
-  toggleMode,
-  setFamily,
   applyTheme,
   applyAppearanceConfig,
   getStoredAppearance,
-  setStoredAppearance
+  setStoredAppearance,
+  normalizeAppearance
 };
 
 document.addEventListener("DOMContentLoaded", initTheme);
