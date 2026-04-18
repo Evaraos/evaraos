@@ -3,18 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
   <title>QA Dashboard • Evaraos Inc</title>
-  <link rel="stylesheet" href="/evaraos/assets/css/styles.css" />
+
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=23" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=23" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=23" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=23" />
+
+  <script>
+    document.documentElement.classList.add("auth-pending");
+  </script>
+
+  <style>
+    html.auth-pending body,
+    body.auth-pending {
+      opacity: 0;
+      pointer-events: none;
+    }
+  </style>
 </head>
-<body class="dashboard-body">
+<body class="dashboard-body auth-pending" data-route-guard="private">
   <div class="page-grid-overlay"></div>
   <div id="universalNav"></div>
 
   <div class="dashboard-shell">
     <aside class="dashboard-sidebar" id="dashboardSidebar">
-      <div class="dashboard-sidebar-inner glass-shell aurora-card">
+      <div class="dashboard-sidebar-inner glass-shell aurora-card active-glow">
         <div class="dashboard-sidebar-search">
-          <div class="dashboard-search-shell input-shell aurora-card">
+          <div class="dashboard-search-shell input-shell aurora-card active-glow">
             <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
               <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
             </svg>
@@ -52,7 +72,7 @@
           </a>
         </nav>
 
-        <div class="dashboard-sidebar-foot glass-card aurora-card">
+        <div class="dashboard-sidebar-foot glass-card aurora-card active-glow">
           <div class="dashboard-sidebar-foot-copy">
             <strong>QA Command Center</strong>
             <span>Track page migration, repo structure, and ship-readiness in one place.</span>
@@ -63,7 +83,7 @@
     </aside>
 
     <main class="dashboard-main">
-      <section class="dashboard-hero glass-card aurora-card" id="qaOverviewSection">
+      <section class="dashboard-hero glass-card aurora-card active-glow" id="qaOverviewSection">
         <div class="dashboard-hero-copy">
           <p class="dashboard-eyebrow">QA DASHBOARD</p>
           <h1>Track manual QA and repo audit together.</h1>
@@ -79,7 +99,7 @@
           </div>
         </div>
 
-        <div class="dashboard-hero-panel glass-card aurora-card">
+        <div class="dashboard-hero-panel glass-card aurora-card active-glow">
           <div class="dashboard-hero-panel-top">
             <span class="dashboard-mini-badge">Live QA</span>
             <span class="dashboard-live-dot"></span>
@@ -100,7 +120,7 @@
         </div>
       </section>
 
-      <section class="dashboard-overview glass-card aurora-card">
+      <section class="dashboard-overview glass-card aurora-card active-glow">
         <div class="dashboard-section-head">
           <div>
             <p class="dashboard-section-kicker">Snapshot</p>
@@ -109,25 +129,25 @@
         </div>
 
         <div class="dashboard-stats-grid">
-          <article class="dashboard-stat-card glass-card aurora-card">
+          <article class="dashboard-stat-card glass-card aurora-card active-glow">
             <p>Manual Checks</p>
             <h3 id="qaTotalChecks">0</h3>
             <span>Total checklist items</span>
           </article>
 
-          <article class="dashboard-stat-card glass-card aurora-card">
+          <article class="dashboard-stat-card glass-card aurora-card active-glow">
             <p>Manual Done</p>
             <h3 id="qaCompletedChecks">0</h3>
             <span>Completed manually</span>
           </article>
 
-          <article class="dashboard-stat-card glass-card aurora-card">
+          <article class="dashboard-stat-card glass-card aurora-card active-glow">
             <p>Manual Left</p>
             <h3 id="qaRemainingChecks">0</h3>
             <span>Still unchecked</span>
           </article>
 
-          <article class="dashboard-stat-card glass-card aurora-card">
+          <article class="dashboard-stat-card glass-card aurora-card active-glow">
             <p>Manual Progress</p>
             <h3 id="qaPercent">0%</h3>
             <span>Checklist completion</span>
@@ -135,7 +155,7 @@
         </div>
       </section>
 
-      <section class="dashboard-overview glass-card aurora-card">
+      <section class="dashboard-overview glass-card aurora-card active-glow">
         <div class="dashboard-section-head">
           <div>
             <p class="dashboard-section-kicker">Repo Audit</p>
@@ -144,25 +164,25 @@
         </div>
 
         <div class="dashboard-stats-grid">
-          <article class="dashboard-stat-card glass-card aurora-card">
+          <article class="dashboard-stat-card glass-card aurora-card active-glow">
             <p>Audit Score</p>
             <h3 id="auditScoreStat">--</h3>
             <span id="auditGeneratedAtStat">Waiting for report</span>
           </article>
 
-          <article class="dashboard-stat-card glass-card aurora-card">
+          <article class="dashboard-stat-card glass-card aurora-card active-glow">
             <p>Files Passing</p>
             <h3 id="auditPassingFilesStat">--</h3>
             <span>Files with full score</span>
           </article>
 
-          <article class="dashboard-stat-card glass-card aurora-card">
+          <article class="dashboard-stat-card glass-card aurora-card active-glow">
             <p>Files With Issues</p>
             <h3 id="auditFailingFilesStat">--</h3>
             <span>Need fixes</span>
           </article>
 
-          <article class="dashboard-stat-card glass-card aurora-card">
+          <article class="dashboard-stat-card glass-card aurora-card active-glow">
             <p>Report Status</p>
             <h3 id="auditStatusStat">--</h3>
             <span id="auditStatusDetail">Not loaded yet</span>
@@ -170,7 +190,7 @@
         </div>
       </section>
 
-      <section class="dashboard-panel glass-card aurora-card" id="qaChecklistSection">
+      <section class="dashboard-panel glass-card aurora-card active-glow" id="qaChecklistSection">
         <div class="dashboard-section-head">
           <div>
             <p class="dashboard-section-kicker">Manual QA</p>
@@ -181,7 +201,7 @@
         <div id="qaChecklistRoot" class="dashboard-feed"></div>
       </section>
 
-      <section class="dashboard-panel glass-card aurora-card" id="qaAuditSection">
+      <section class="dashboard-panel glass-card aurora-card active-glow" id="qaAuditSection">
         <div class="dashboard-section-head">
           <div>
             <p class="dashboard-section-kicker">Browser-Readable JSON</p>
@@ -198,11 +218,11 @@
         </div>
 
         <div class="dashboard-feed">
-          <article class="dashboard-feed-item glass-card aurora-card">
+          <article class="dashboard-feed-item glass-card aurora-card active-glow">
             <strong>Audit source</strong>
             <span id="auditSourceText">/evaraos/tools/reports/repo-audit-ui.json</span>
           </article>
-          <article class="dashboard-feed-item glass-card aurora-card">
+          <article class="dashboard-feed-item glass-card aurora-card active-glow">
             <strong>Latest audit message</strong>
             <span id="auditMessageText">Waiting for audit report...</span>
           </article>
@@ -211,7 +231,7 @@
         <div id="auditFilesRoot" class="dashboard-feed" style="margin-top:16px;"></div>
       </section>
 
-      <section class="dashboard-panel glass-card aurora-card" id="qaNotesSection">
+      <section class="dashboard-panel glass-card aurora-card active-glow" id="qaNotesSection">
         <div class="dashboard-section-head">
           <div>
             <p class="dashboard-section-kicker">Notes</p>
@@ -220,15 +240,15 @@
         </div>
 
         <div class="dashboard-feed">
-          <article class="dashboard-feed-item glass-card aurora-card">
+          <article class="dashboard-feed-item glass-card aurora-card active-glow">
             <strong>Manual QA</strong>
             <span>Check items as you visually confirm them. These save in your browser.</span>
           </article>
-          <article class="dashboard-feed-item glass-card aurora-card">
+          <article class="dashboard-feed-item glass-card aurora-card active-glow">
             <strong>Repo audit</strong>
             <span>Run the Node audit script, commit the JSON report, then reload this page.</span>
           </article>
-          <article class="dashboard-feed-item glass-card aurora-card">
+          <article class="dashboard-feed-item glass-card aurora-card active-glow">
             <strong>Best workflow</strong>
             <span>Use the JSON viewer for structure and the manual checklist for visual polish and interaction testing.</span>
           </article>
@@ -345,10 +365,9 @@
         "Password toggle animation works"
       ],
       "styles.css": [
-        "Rounded cards everywhere",
-        "Glass effect visible in light mode",
-        "Aura visible in dark and light",
-        "No sharp-edged panels"
+        "Legacy file no longer imported anywhere",
+        "Split CSS system is active on all migrated pages",
+        "No page depends on monolithic stylesheet anymore"
       ]
     };
 
@@ -436,7 +455,7 @@
         if (query && !matchesFile && !matchingItems.length) return;
 
         const article = document.createElement("article");
-        article.className = "dashboard-feed-item glass-card aurora-card";
+        article.className = "dashboard-feed-item glass-card aurora-card active-glow";
         article.setAttribute("data-qa-card", file);
 
         const title = document.createElement("strong");
@@ -524,7 +543,7 @@
         if (query && !fileMatches && !issueMatches) return;
 
         const article = document.createElement("article");
-        article.className = "dashboard-feed-item glass-card aurora-card";
+        article.className = "dashboard-feed-item glass-card aurora-card active-glow";
 
         const title = document.createElement("strong");
         title.textContent = `${fileName} — ${scoreText}`;
@@ -570,7 +589,7 @@
 
       if (!auditFilesRoot.children.length) {
         const empty = document.createElement("article");
-        empty.className = "dashboard-feed-item glass-card aurora-card";
+        empty.className = "dashboard-feed-item glass-card aurora-card active-glow";
         empty.innerHTML = `
           <strong>No matching audit results</strong>
           <span>Try a different search term or refresh the audit report.</span>
@@ -599,7 +618,7 @@
       } catch (error) {
         console.error("Audit report load failed:", error);
         auditFilesRoot.innerHTML = `
-          <article class="dashboard-feed-item glass-card aurora-card">
+          <article class="dashboard-feed-item glass-card aurora-card active-glow">
             <strong>Audit report not loaded</strong>
             <span>
               Could not read <code>/evaraos/tools/reports/repo-audit-ui.json</code>.
@@ -670,8 +689,9 @@
     });
   </script>
 
-  <script type="module" src="/evaraos/assets/js/theme.js"></script>
-  <script type="module" src="/evaraos/assets/js/nav.js"></script>
-  <script type="module" src="/evaraos/assets/js/firebase.js"></script>
+  <script src="/evaraos/assets/js/theme.js?v=23"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js?v=23"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js?v=23"></script>
+  <script src="/evaraos/assets/js/nav.js?v=23"></script>
 </body>
 </html>
