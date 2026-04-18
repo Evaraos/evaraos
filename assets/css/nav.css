@@ -1,4 +1,5 @@
-#universalNavRoot {
+#universalNavRoot,
+#universalNav {
   position: fixed;
   inset: 0;
   z-index: 2147483647;
@@ -77,10 +78,8 @@
   min-width: 0;
   max-width: min(var(--brand-max-width), calc(100% - var(--menu-size) - 64px));
   pointer-events: auto;
-  transition:
-    left 0.18s linear,
-    gap 0.18s linear;
-  will-change: left, gap, transform;
+  transition: none;
+  will-change: left, gap, transform, max-width;
 }
 
 .eva-nav-shell.compact .eva-brand {
@@ -96,9 +95,7 @@
   pointer-events: none;
   overflow: hidden;
   max-width: calc(220px * var(--nav-progress));
-  transition:
-    opacity 0.12s linear,
-    max-width 0.18s linear;
+  transition: none;
   will-change: opacity, max-width;
 }
 
@@ -144,9 +141,7 @@ html[data-theme="light"] .eva-brand-copy span {
   z-index: 2147483647;
   pointer-events: auto;
   opacity: var(--nav-progress);
-  transition:
-    opacity 0.1s linear,
-    right 0.18s linear;
+  transition: none;
 }
 
 .eva-nav-shell.compact .eva-menu-zone {
