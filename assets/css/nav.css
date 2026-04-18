@@ -253,6 +253,7 @@ body.nav-menu-open .eva-backdrop {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   padding: 14px;
   border-radius: 28px;
   display: grid;
@@ -271,7 +272,6 @@ body.nav-menu-open .eva-backdrop {
     opacity 0.24s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
     visibility 0.24s ease;
-  overscroll-behavior: contain;
 }
 
 .eva-menu-panel::-webkit-scrollbar {
