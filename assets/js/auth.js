@@ -47,6 +47,60 @@ function normalizeUsername(value) {
   return String(value || "").trim().toLowerCase();
 }
 
+async function backfillLegacyUserDoc(user) {
+  if (!user?.uid) return { role: "owner", username: "" };
+
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
+
+  if (!snap.exists()) {
+    const fallbackName = user.displayName || user.email || "User";
+    const userDoc = {
+      uid: user.uid,
+      email: user.email || "",
+      username: "",
+      usernameLower: "",
+      displayName: fallbackName,
+      fullName: fallbackName,
+      role: "owner",
+      phone: "",
+      bio: "",
+      createdAt: new Date().toISOString()
+    };
+    await setDoc(userRef, userDoc, { merge: true });
+    return userDoc;
+  }
+
+  const data = snap.data() || {};
+  const username = String(data.username || "").trim();
+  const patch = {};
+
+  if (!data.displayName && data.fullName) {
+    patch.displayName = data.fullName;
+  }
+
+  if (!data.fullName && data.displayName) {
+    patch.fullName = data.displayName;
+  }
+
+  if (username && !data.usernameLower) {
+    patch.usernameLower = normalizeUsername(username);
+  }
+
+  if (!data.role) {
+    patch.role = "owner";
+  }
+
+  if (Object.keys(patch).length) {
+    await setDoc(userRef, patch, { merge: true });
+  }
+
+  return {
+    ...data,
+    ...patch
+  };
+}
+
 async function findEmailFromLogin(loginValue) {
   const raw = String(loginValue || "").trim();
   if (!raw) return null;
@@ -108,17 +162,15 @@ async function handleLoginSubmit(event) {
     const result = await signInWithEmailAndPassword(auth, resolvedEmail, passwordValue);
     const user = result.user;
 
-    let role = "customer";
-    try {
-      const userRef = doc(db, "users", user.uid);
-      const snap = await getDoc(userRef);
-      if (snap.exists()) {
-        const data = snap.data() || {};
-        role = String(data.role || "customer").toLowerCase();
-      }
-    } catch (_) {}
+    const userData = await backfillLegacyUserDoc(user);
+    const role = String(userData.role || "owner").toLowerCase();
 
-    syncUserSession(user, role);
+    syncUserSession(user, role, {
+      displayName: userData.displayName || userData.fullName || user.displayName || user.email || "User",
+      fullName: userData.fullName || userData.displayName || user.displayName || "",
+      username: userData.username || ""
+    });
+
     setMessage(messageEl, "Login successful. Redirecting...", "success");
     window.location.replace("/evaraos/dashboard.html");
   } catch (error) {
@@ -199,7 +251,12 @@ async function handleSignupSubmit(event) {
 
     await setDoc(doc(db, "users", user.uid), userDoc, { merge: true });
 
-    syncUserSession(user, "owner");
+    syncUserSession(user, "owner", {
+      displayName: fullName,
+      fullName,
+      username
+    });
+
     setMessage(messageEl, "Account created successfully. Redirecting...", "success");
     window.location.replace("/evaraos/dashboard.html");
   } catch (error) {
