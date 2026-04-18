@@ -88,6 +88,8 @@ function ensureAppearanceStyle() {
       --user-button-tint: ${DEFAULT_APPEARANCE.buttonColor};
       --user-background-tint: ${DEFAULT_APPEARANCE.backgroundColor};
       --user-beam-color: ${DEFAULT_APPEARANCE.beamColor};
+      --user-bg-color: ${DEFAULT_APPEARANCE.backgroundColor};
+      --user-bg-color-2: ${DEFAULT_APPEARANCE.navColor};
     }
 
     body {
@@ -111,7 +113,15 @@ function ensureAppearanceStyle() {
     .dashboard-panel,
     .dashboard-hero,
     .dashboard-overview,
-    .dashboard-sidebar-inner {
+    .dashboard-sidebar-inner,
+    .settings-preview-card,
+    .settings-color-tool,
+    .settings-mini-card,
+    .stats-card,
+    .hero-home,
+    .section-panel,
+    .cta-panel,
+    .site-footer-inner {
       border-color: color-mix(in srgb, var(--user-card-tint) 26%, rgba(255,255,255,0.12)) !important;
       box-shadow:
         0 18px 34px rgba(0,0,0,0.14),
@@ -124,7 +134,10 @@ function ensureAppearanceStyle() {
     .premium-red-btn,
     .login-actions-row .btn:first-child,
     .hero-actions .btn:first-child,
-    .dashboard-hero-actions .btn:first-child {
+    .dashboard-hero-actions .btn:first-child,
+    .btn-apple,
+    .btn.btn-apple,
+    .btn.btn-theme-primary {
       background:
         linear-gradient(
           135deg,
@@ -248,13 +261,18 @@ function syncThemeUi() {
   const appearance = getStoredAppearance();
 
   document.querySelectorAll("[data-theme-mode-text]").forEach((el) => {
-    el.textContent = currentTheme === "light" ? "Light" : "Dark";
+    if (appearance.mode === "custom") {
+      el.textContent = "Custom";
+    } else {
+      el.textContent = currentTheme === "light" ? "Light" : "Dark";
+    }
   });
 
   document.querySelectorAll("[data-beam-mode-text]").forEach((el) => {
-    const label = appearance.beamMode === "contextual"
-      ? "Contextual"
-      : appearance.beamMode.charAt(0).toUpperCase() + appearance.beamMode.slice(1);
+    const label =
+      appearance.beamMode === "contextual"
+        ? "Contextual"
+        : appearance.beamMode.charAt(0).toUpperCase() + appearance.beamMode.slice(1);
     el.textContent = label;
   });
 
@@ -285,6 +303,16 @@ function syncThemeUi() {
       el.textContent = value;
     });
   });
+
+  document.querySelectorAll("[data-set-mode]").forEach((btn) => {
+    const mode = btn.getAttribute("data-set-mode");
+    btn.classList.toggle("is-active", mode === appearance.mode);
+  });
+
+  document.querySelectorAll("[data-set-beam]").forEach((btn) => {
+    const mode = btn.getAttribute("data-set-beam");
+    btn.classList.toggle("is-active", mode === appearance.beamMode);
+  });
 }
 
 function applyTheme(theme) {
@@ -309,6 +337,8 @@ function applyAppearanceConfig(appearance = {}) {
   root.style.setProperty("--user-button-tint", safe.buttonColor);
   root.style.setProperty("--user-background-tint", safe.backgroundColor);
   root.style.setProperty("--user-beam-color", safe.beamColor);
+  root.style.setProperty("--user-bg-color", safe.backgroundColor);
+  root.style.setProperty("--user-bg-color-2", safe.navColor);
   root.setAttribute("data-beam-mode", safe.beamMode);
 
   syncThemeUi();
@@ -318,11 +348,44 @@ function resetAppearanceConfig() {
   applyAppearanceConfig({ ...DEFAULT_APPEARANCE });
 }
 
+function openColorInput(input) {
+  if (!input) return;
+  input.focus({ preventScroll: true });
+  input.click();
+}
+
+function bindColorWheelOpeners() {
+  const openers = [
+    ["[data-appearance-nav]", ".settings-color-open[data-open-target='nav']"],
+    ["[data-appearance-card]", ".settings-color-open[data-open-target='card']"],
+    ["[data-appearance-button]", ".settings-color-open[data-open-target='button']"],
+    ["[data-appearance-background]", ".settings-color-open[data-open-target='background']"],
+    ["[data-appearance-beam]", ".settings-color-open[data-open-target='beam']"]
+  ];
+
+  openers.forEach(([inputSelector, openerSelector]) => {
+    const inputs = Array.from(document.querySelectorAll(inputSelector));
+    const openButtons = Array.from(document.querySelectorAll(openerSelector));
+
+    openButtons.forEach((btn, index) => {
+      const targetInput = inputs[index] || inputs[0];
+      if (!targetInput) return;
+
+      btn.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        openColorInput(targetInput);
+      });
+    });
+  });
+}
+
 function bindThemeControls() {
   document.querySelectorAll("[data-set-mode]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const mode = btn.getAttribute("data-set-mode") || "dark";
       const current = getStoredAppearance();
+
       applyAppearanceConfig({
         ...current,
         mode
@@ -341,6 +404,7 @@ function bindThemeControls() {
     btn.addEventListener("click", () => {
       const beamMode = btn.getAttribute("data-set-beam") || "contextual";
       const current = getStoredAppearance();
+
       applyAppearanceConfig({
         ...current,
         beamMode
@@ -348,75 +412,85 @@ function bindThemeControls() {
 
       if (beamMode === "custom") {
         const beamInput = document.querySelector("[data-appearance-beam]");
-        if (beamInput) beamInput.click();
+        openColorInput(beamInput);
       }
     });
   });
 
-  const navColor = document.querySelector("[data-appearance-nav]");
-  const cardColor = document.querySelector("[data-appearance-card]");
-  const buttonColor = document.querySelector("[data-appearance-button]");
-  const backgroundColor = document.querySelector("[data-appearance-background]");
-  const beamColor = document.querySelector("[data-appearance-beam]");
-  const resetBtn = document.querySelector("[data-appearance-reset]");
+  const bindColorInputs = (selector, updater) => {
+    document.querySelectorAll(selector).forEach((input) => {
+      input.addEventListener("input", () => {
+        const current = getStoredAppearance();
+        applyAppearanceConfig(updater(current, input.value));
+      });
 
-  if (navColor) {
-    navColor.addEventListener("input", () => {
-      const current = getStoredAppearance();
-      applyAppearanceConfig({ ...current, mode: "custom", navColor: navColor.value });
+      input.addEventListener("change", () => {
+        const current = getStoredAppearance();
+        applyAppearanceConfig(updater(current, input.value));
+      });
     });
-  }
+  };
 
-  if (cardColor) {
-    cardColor.addEventListener("input", () => {
-      const current = getStoredAppearance();
-      applyAppearanceConfig({ ...current, mode: "custom", cardColor: cardColor.value });
-    });
-  }
+  bindColorInputs("[data-appearance-nav]", (current, value) => ({
+    ...current,
+    mode: "custom",
+    navColor: value
+  }));
 
-  if (buttonColor) {
-    buttonColor.addEventListener("input", () => {
-      const current = getStoredAppearance();
-      applyAppearanceConfig({ ...current, mode: "custom", buttonColor: buttonColor.value });
-    });
-  }
+  bindColorInputs("[data-appearance-card]", (current, value) => ({
+    ...current,
+    mode: "custom",
+    cardColor: value
+  }));
 
-  if (backgroundColor) {
-    backgroundColor.addEventListener("input", () => {
-      const current = getStoredAppearance();
-      applyAppearanceConfig({ ...current, mode: "custom", backgroundColor: backgroundColor.value });
-    });
-  }
+  bindColorInputs("[data-appearance-button]", (current, value) => ({
+    ...current,
+    mode: "custom",
+    buttonColor: value
+  }));
 
-  if (beamColor) {
-    beamColor.addEventListener("input", () => {
-      const current = getStoredAppearance();
-      applyAppearanceConfig({ ...current, beamColor: beamColor.value });
-    });
-  }
+  bindColorInputs("[data-appearance-background]", (current, value) => ({
+    ...current,
+    mode: "custom",
+    backgroundColor: value
+  }));
 
-  if (resetBtn) {
+  bindColorInputs("[data-appearance-beam]", (current, value) => ({
+    ...current,
+    beamMode: "custom",
+    beamColor: value
+  }));
+
+  document.querySelectorAll("[data-appearance-reset]").forEach((resetBtn) => {
     resetBtn.addEventListener("click", () => {
       resetAppearanceConfig();
       hydrateThemeInputs();
     });
-  }
+  });
 }
 
 function hydrateThemeInputs() {
   const appearance = getStoredAppearance();
 
-  const navColor = document.querySelector("[data-appearance-nav]");
-  const cardColor = document.querySelector("[data-appearance-card]");
-  const buttonColor = document.querySelector("[data-appearance-button]");
-  const backgroundColor = document.querySelector("[data-appearance-background]");
-  const beamColor = document.querySelector("[data-appearance-beam]");
+  document.querySelectorAll("[data-appearance-nav]").forEach((input) => {
+    input.value = appearance.navColor;
+  });
 
-  if (navColor) navColor.value = appearance.navColor;
-  if (cardColor) cardColor.value = appearance.cardColor;
-  if (buttonColor) buttonColor.value = appearance.buttonColor;
-  if (backgroundColor) backgroundColor.value = appearance.backgroundColor;
-  if (beamColor) beamColor.value = appearance.beamColor;
+  document.querySelectorAll("[data-appearance-card]").forEach((input) => {
+    input.value = appearance.cardColor;
+  });
+
+  document.querySelectorAll("[data-appearance-button]").forEach((input) => {
+    input.value = appearance.buttonColor;
+  });
+
+  document.querySelectorAll("[data-appearance-background]").forEach((input) => {
+    input.value = appearance.backgroundColor;
+  });
+
+  document.querySelectorAll("[data-appearance-beam]").forEach((input) => {
+    input.value = appearance.beamColor;
+  });
 
   syncThemeUi();
 }
@@ -442,6 +516,7 @@ function initTheme() {
   ensureAppearanceStyle();
   applyAppearanceConfig(getStoredAppearance());
   bindThemeControls();
+  bindColorWheelOpeners();
   hydrateThemeInputs();
   markBeamTargets();
 }
