@@ -8,15 +8,32 @@
   />
   <title>Evaraos Inc</title>
 
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=17" />
-  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=17" />
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=18" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=18" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=18" />
+
+  <style>
+    .hero-home,
+    .feature-card,
+    .site-footer-inner,
+    .btn-apple {
+      position: relative;
+    }
+
+    .hero-home.active-glow,
+    .feature-card.active-glow,
+    .site-footer-inner.active-glow,
+    .btn-apple.active-glow {
+      isolation: isolate;
+    }
+  </style>
 </head>
 <body class="home-page">
   <div class="page-grid-overlay"></div>
   <div id="universalNavRoot"></div>
 
   <main class="home-shell">
-    <section class="hero-home">
+    <section class="hero-home glass-card active-glow">
       <div class="hero-content">
         <p class="hero-kicker">Subsidiaries Allocation SaaS</p>
 
@@ -28,29 +45,29 @@
         </p>
 
         <div class="hero-actions">
-          <a href="/evaraos/login.html" class="btn btn-apple">Enter Platform</a>
-          <a href="/evaraos/signup.html" class="btn btn-apple">Create Account</a>
+          <a href="/evaraos/login.html" class="btn btn-apple active-glow">Enter Platform</a>
+          <a href="/evaraos/signup.html" class="btn btn-apple active-glow">Create Account</a>
         </div>
       </div>
     </section>
 
     <section class="features-grid">
-      <article class="feature-card glass-card">
+      <article class="feature-card glass-card active-glow">
         <h3>Companies</h3>
         <p>Manage all brands, subsidiaries, and operating structures in one ecosystem.</p>
       </article>
 
-      <article class="feature-card glass-card">
+      <article class="feature-card glass-card active-glow">
         <h3>Users</h3>
         <p>Control roles, access, executive visibility, and internal permissions.</p>
       </article>
 
-      <article class="feature-card glass-card">
+      <article class="feature-card glass-card active-glow">
         <h3>Leads</h3>
         <p>Track pipeline, conversions, assignments, and performance from one place.</p>
       </article>
 
-      <article class="feature-card glass-card">
+      <article class="feature-card glass-card active-glow">
         <h3>Jobs</h3>
         <p>Monitor field execution, service flow, completion, and accountability live.</p>
       </article>
@@ -58,7 +75,7 @@
   </main>
 
   <footer class="site-footer">
-    <div class="site-footer-inner glass-card">
+    <div class="site-footer-inner glass-card active-glow">
       <div class="site-footer-left">
         <strong>© 2026 Evaraos Inc</strong>
         <span>All rights reserved.</span>
@@ -72,6 +89,7 @@
     </div>
   </footer>
 
-  <script src="/evaraos/assets/js/nav.js?v=17"></script>
+  <script src="/evaraos/assets/js/theme.js?v=18"></script>
+  <script src="/evaraos/assets/js/nav.js?v=18"></script>
 </body>
 </html>
