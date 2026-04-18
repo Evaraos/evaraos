@@ -110,6 +110,7 @@ html[data-theme$="-light"] .page-grid-overlay {
 }
 
 #universalNav,
+#universalNavRoot,
 main,
 .site-footer {
   position: relative;
@@ -247,11 +248,45 @@ html[data-theme$="-light"] .glass {
   100% { transform: scale(1); }
 }
 
-.active-card-glow {
+.active-card-glow,
+.active-glow {
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.18),
     0 0 16px rgba(var(--tint-rgb), 0.12),
     0 0 28px rgba(var(--tint-rgb), 0.10),
     0 14px 30px rgba(0, 0, 0, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.24) !important;
+}
+
+.hero-home.active-glow,
+.section-panel.active-glow,
+.feature-card.active-glow,
+.service-card.active-glow,
+.category-card.active-glow,
+.info-card.active-glow,
+.stats-card.active-glow,
+.cta-panel.active-glow,
+.site-footer-inner.active-glow {
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+}
+
+.hero-home.active-glow:hover,
+.section-panel.active-glow:hover,
+.feature-card.active-glow:hover,
+.service-card.active-glow:hover,
+.category-card.active-glow:hover,
+.info-card.active-glow:hover,
+.stats-card.active-glow:hover,
+.cta-panel.active-glow:hover,
+.site-footer-inner.active-glow:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.16),
+    0 0 18px rgba(var(--tint-rgb), 0.16),
+    0 0 34px rgba(var(--tint-rgb), 0.12),
+    0 22px 46px rgba(0,0,0,0.22),
+    inset 0 1px 0 rgba(255,255,255,0.20) !important;
 }
