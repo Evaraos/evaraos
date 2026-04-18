@@ -18,12 +18,52 @@
 
     .settings-hero-grid {
       display: grid;
-      grid-template-columns: 1.15fr 0.85fr;
+      grid-template-columns: 1.1fr 0.9fr;
       gap: 18px;
     }
 
+    .settings-panel {
+      padding: 22px 20px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .settings-section-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .settings-section-head p {
+      margin: 0 0 6px;
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      opacity: 0.66;
+    }
+
+    .settings-section-head h2 {
+      margin: 0;
+      font-size: 1.35rem;
+      letter-spacing: -0.03em;
+    }
+
+    .settings-note {
+      margin: 0;
+      font-size: 0.84rem;
+      color: var(--muted-dark);
+      line-height: 1.6;
+    }
+
+    html[data-theme="light"] .settings-note,
+    html[data-theme$="-light"] .settings-note {
+      color: var(--muted-light);
+    }
+
     .settings-preview-board {
-      min-height: 240px;
+      min-height: 236px;
       padding: 18px;
       border-radius: var(--radius-lg);
       display: grid;
@@ -105,46 +145,6 @@
       gap: 14px;
     }
 
-    .settings-panel {
-      padding: 22px 20px;
-      display: grid;
-      gap: 16px;
-    }
-
-    .settings-section-head {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .settings-section-head p {
-      margin: 0 0 6px;
-      font-size: 0.78rem;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      opacity: 0.66;
-    }
-
-    .settings-section-head h2 {
-      margin: 0;
-      font-size: 1.35rem;
-      letter-spacing: -0.03em;
-    }
-
-    .settings-note {
-      margin: 0;
-      font-size: 0.84rem;
-      color: var(--muted-dark);
-      line-height: 1.6;
-    }
-
-    html[data-theme="light"] .settings-note,
-    html[data-theme$="-light"] .settings-note {
-      color: var(--muted-light);
-    }
-
     .settings-form {
       display: grid;
       gap: 18px;
@@ -179,106 +179,95 @@
       transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
     }
 
-    .settings-pill:hover {
-      transform: translateY(-1px);
-    }
-
     .settings-pill.active {
       background: rgba(255,255,255,0.14);
       border-color: rgba(255,255,255,0.24);
     }
 
-    html[data-theme="light"] .settings-pill,
-    html[data-theme$="-light"] .settings-pill {
-      background: rgba(255,255,255,0.82);
-      border-color: rgba(28, 45, 38, 0.08);
+    .settings-pill:hover {
+      transform: translateY(-1px);
     }
 
-    html[data-theme="light"] .settings-pill.active,
-    html[data-theme$="-light"] .settings-pill.active {
-      background: rgba(24, 45, 39, 0.08);
-      border-color: rgba(24, 45, 39, 0.16);
-    }
-
-    .settings-color-groups {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-    }
-
-    .settings-color-card {
-      padding: 16px;
-      border-radius: 22px;
+    .settings-palette-rail-wrap {
+      position: relative;
       display: grid;
       gap: 10px;
     }
 
-    .settings-color-card strong {
-      font-size: 0.98rem;
+    .settings-palette-rail {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      padding: 2px 2px 4px;
+      scroll-snap-type: x proximity;
+    }
+
+    .settings-palette-rail::-webkit-scrollbar {
+      display: none;
+    }
+
+    .settings-palette-chip {
+      min-width: 120px;
+      scroll-snap-align: start;
+      border-radius: 20px;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.05);
+      cursor: pointer;
+      transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+    }
+
+    .settings-palette-chip.active {
+      border-color: rgba(255,255,255,0.24);
+      background: rgba(255,255,255,0.10);
+    }
+
+    .settings-palette-chip:hover {
+      transform: translateY(-1px);
+    }
+
+    .settings-palette-swatch {
+      width: 100%;
+      height: 44px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.10);
+    }
+
+    .settings-palette-label {
+      font-size: 0.84rem;
+      font-weight: 800;
       letter-spacing: -0.02em;
     }
 
-    .settings-color-card span {
-      font-size: 0.84rem;
+    .settings-palette-meta {
+      font-size: 0.76rem;
       color: var(--muted-dark);
     }
 
-    html[data-theme="light"] .settings-color-card span,
-    html[data-theme$="-light"] .settings-color-card span {
+    html[data-theme="light"] .settings-palette-meta,
+    html[data-theme$="-light"] .settings-palette-meta {
       color: var(--muted-light);
     }
 
-    .settings-color-row {
-      display: grid;
-      grid-template-columns: 52px 1fr 112px;
+    .settings-inline-actions {
+      display: flex;
       gap: 10px;
-      align-items: center;
+      flex-wrap: wrap;
     }
 
-    .settings-swatch {
-      width: 52px;
-      height: 42px;
-      border-radius: 14px;
-      overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
-    }
-
-    .settings-color-input {
-      appearance: none;
-      -webkit-appearance: none;
-      width: 100%;
-      height: 100%;
-      border: 0;
-      padding: 0;
-      background: transparent;
-      cursor: pointer;
-    }
-
-    .settings-color-input::-webkit-color-swatch-wrapper {
-      padding: 0;
-    }
-
-    .settings-color-input::-webkit-color-swatch {
-      border: 0;
-      border-radius: 12px;
-    }
-
-    .settings-hex {
-      min-height: 42px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
-      color: inherit;
+    .settings-inline-btn {
+      min-height: 38px;
       padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.05);
+      color: inherit;
       font-weight: 700;
-      text-transform: uppercase;
-    }
-
-    html[data-theme="light"] .settings-hex,
-    html[data-theme$="-light"] .settings-hex {
-      background: rgba(255,255,255,0.88);
-      border-color: rgba(24, 45, 39, 0.08);
+      cursor: pointer;
     }
 
     .settings-actions {
@@ -312,20 +301,8 @@
       .settings-hero-grid,
       .settings-summary-grid,
       .settings-grid-2,
-      .settings-color-groups {
-        grid-template-columns: 1fr;
-      }
-
       .settings-preview-cards {
         grid-template-columns: 1fr;
-      }
-
-      .settings-color-row {
-        grid-template-columns: 52px 1fr;
-      }
-
-      .settings-hex {
-        grid-column: 1 / -1;
       }
     }
   </style>
@@ -408,6 +385,7 @@
             <p>Theme System</p>
             <h2>Mode + Family</h2>
           </div>
+          <p class="settings-note">Global visual foundation for all current and future HTML pages.</p>
         </div>
 
         <div class="settings-grid-2">
@@ -426,26 +404,24 @@
               </div>
             </div>
 
-            <div class="settings-subgrid">
-              <div>
-                <label class="field-label">Theme Mode</label>
-                <div class="settings-pill-row" style="margin-top: 10px;">
-                  <button type="button" class="settings-pill" data-mode-pill="dark">Dark</button>
-                  <button type="button" class="settings-pill" data-mode-pill="light">Light</button>
-                </div>
+            <div>
+              <label class="field-label">Theme Mode</label>
+              <div class="settings-pill-row" style="margin-top:10px;">
+                <button type="button" class="settings-pill" data-mode-pill="dark">Dark</button>
+                <button type="button" class="settings-pill" data-mode-pill="light">Light</button>
               </div>
+            </div>
 
-              <div>
-                <label class="field-label">Theme Family</label>
-                <div class="settings-pill-row" style="margin-top: 10px;">
-                  <button type="button" class="settings-pill" data-family-pill="neutral">Neutral</button>
-                  <button type="button" class="settings-pill" data-family-pill="blue">Blue</button>
-                  <button type="button" class="settings-pill" data-family-pill="red">Red</button>
-                  <button type="button" class="settings-pill" data-family-pill="pink">Pink</button>
-                  <button type="button" class="settings-pill" data-family-pill="green">Green</button>
-                  <button type="button" class="settings-pill" data-family-pill="purple">Purple</button>
-                  <button type="button" class="settings-pill" data-family-pill="yellow">Yellow</button>
-                </div>
+            <div>
+              <label class="field-label">Theme Family</label>
+              <div class="settings-pill-row" style="margin-top:10px;">
+                <button type="button" class="settings-pill" data-family-pill="neutral">Neutral</button>
+                <button type="button" class="settings-pill" data-family-pill="blue">Blue</button>
+                <button type="button" class="settings-pill" data-family-pill="red">Red</button>
+                <button type="button" class="settings-pill" data-family-pill="pink">Pink</button>
+                <button type="button" class="settings-pill" data-family-pill="green">Green</button>
+                <button type="button" class="settings-pill" data-family-pill="purple">Purple</button>
+                <button type="button" class="settings-pill" data-family-pill="yellow">Yellow</button>
               </div>
             </div>
 
@@ -473,7 +449,7 @@
             <div class="settings-section-head">
               <div>
                 <p>Quick Presets</p>
-                <h2>One-Tap Color Sets</h2>
+                <h2>One-Tap Systems</h2>
               </div>
             </div>
 
@@ -485,7 +461,7 @@
             </div>
 
             <p class="settings-note">
-              Presets apply grouped colors to navigation, cards, buttons, background, and beam so the whole app stays visually consistent.
+              Presets keep the entire UI coherent for mass rollout without manually retuning every screen.
             </p>
           </div>
         </div>
@@ -494,65 +470,81 @@
       <section class="glass-card aurora-card settings-panel">
         <div class="settings-section-head">
           <div>
-            <p>Surface Colors</p>
-            <h2>Navigation, Cards, Buttons, Background</h2>
+            <p>Surface Tints</p>
+            <h2>Swipeable Color Rails</h2>
           </div>
-          <p class="settings-note">Compact enough to keep the menu premium, but flexible enough for full system-wide color control.</p>
+          <p class="settings-note">Tap a chip to instantly apply it. Use swipe left/right to browse palettes fast.</p>
         </div>
 
-        <div class="settings-color-groups">
-          <article class="glass-card aurora-card settings-color-card">
-            <strong>Navigation</strong>
-            <span>Controls the nav pill tint across the app.</span>
-            <div class="settings-color-row">
-              <div class="settings-swatch">
-                <input id="settingsNavColor" class="settings-color-input" type="color" value="#ff3b30" />
-              </div>
-              <div class="input-shell aurora-card">
-                <input id="settingsNavHex" class="input settings-hex" type="text" value="#FF3B30" maxlength="7" />
-              </div>
+        <div class="settings-grid-2">
+          <div class="settings-subgrid">
+            <label class="field-label">Navigation</label>
+            <div class="settings-palette-rail-wrap">
+              <div class="settings-palette-rail" id="navPaletteRail"></div>
             </div>
-          </article>
 
-          <article class="glass-card aurora-card settings-color-card">
-            <strong>Cards</strong>
-            <span>Sets the glass panel/card accent tint.</span>
-            <div class="settings-color-row">
-              <div class="settings-swatch">
-                <input id="settingsCardColor" class="settings-color-input" type="color" value="#8b5cf6" />
-              </div>
-              <div class="input-shell aurora-card">
-                <input id="settingsCardHex" class="input settings-hex" type="text" value="#8B5CF6" maxlength="7" />
-              </div>
+            <label class="field-label">Cards</label>
+            <div class="settings-palette-rail-wrap">
+              <div class="settings-palette-rail" id="cardPaletteRail"></div>
             </div>
-          </article>
+          </div>
 
-          <article class="glass-card aurora-card settings-color-card">
-            <strong>Buttons</strong>
-            <span>Sets the action button accent tint.</span>
-            <div class="settings-color-row">
-              <div class="settings-swatch">
-                <input id="settingsButtonColor" class="settings-color-input" type="color" value="#2563eb" />
-              </div>
-              <div class="input-shell aurora-card">
-                <input id="settingsButtonHex" class="input settings-hex" type="text" value="#2563EB" maxlength="7" />
-              </div>
+          <div class="settings-subgrid">
+            <label class="field-label">Buttons</label>
+            <div class="settings-palette-rail-wrap">
+              <div class="settings-palette-rail" id="buttonPaletteRail"></div>
             </div>
-          </article>
 
-          <article class="glass-card aurora-card settings-color-card">
-            <strong>Background</strong>
-            <span>Ambient page tint behind all surfaces.</span>
-            <div class="settings-color-row">
-              <div class="settings-swatch">
-                <input id="settingsBackgroundColor" class="settings-color-input" type="color" value="#0f172a" />
-              </div>
-              <div class="input-shell aurora-card">
-                <input id="settingsBackgroundHex" class="input settings-hex" type="text" value="#0F172A" maxlength="7" />
-              </div>
+            <label class="field-label">Background</label>
+            <div class="settings-palette-rail-wrap">
+              <div class="settings-palette-rail" id="backgroundPaletteRail"></div>
             </div>
-          </article>
+          </div>
         </div>
+
+        <div class="settings-inline-actions">
+          <button type="button" class="settings-inline-btn" id="openAdvancedColorsBtn">Open Advanced Color Inputs</button>
+          <button type="button" class="settings-inline-btn" id="closeAdvancedColorsBtn" style="display:none;">Hide Advanced Inputs</button>
+        </div>
+
+        <div id="advancedColorInputs" class="settings-grid-2" style="display:none;">
+          <div class="settings-subgrid">
+            <div class="form-group">
+              <label class="field-label" for="settingsNavColor">Navigation Color</label>
+              <div class="input-shell aurora-card">
+                <input id="settingsNavHex" class="input" type="text" value="#FF3B30" maxlength="7" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="field-label" for="settingsCardColor">Card Color</label>
+              <div class="input-shell aurora-card">
+                <input id="settingsCardHex" class="input" type="text" value="#8B5CF6" maxlength="7" />
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-subgrid">
+            <div class="form-group">
+              <label class="field-label" for="settingsButtonColor">Button Color</label>
+              <div class="input-shell aurora-card">
+                <input id="settingsButtonHex" class="input" type="text" value="#2563EB" maxlength="7" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="field-label" for="settingsBackgroundColor">Background Color</label>
+              <div class="input-shell aurora-card">
+                <input id="settingsBackgroundHex" class="input" type="text" value="#0F172A" maxlength="7" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <input id="settingsNavColor" type="hidden" value="#FF3B30" />
+        <input id="settingsCardColor" type="hidden" value="#8B5CF6" />
+        <input id="settingsButtonColor" type="hidden" value="#2563EB" />
+        <input id="settingsBackgroundColor" type="hidden" value="#0F172A" />
       </section>
 
       <section class="glass-card aurora-card settings-panel">
@@ -561,14 +553,14 @@
             <p>Border Beam</p>
             <h2>Animated Outline Glow</h2>
           </div>
-          <p class="settings-note">Controls the Apple Intelligence-style moving edge beam for active cards, buttons, focused inputs, and current tabs.</p>
+          <p class="settings-note">Controls the current-tab, active-card, focused-input beam system.</p>
         </div>
 
         <div class="settings-grid-2">
           <div class="settings-subgrid">
             <div>
               <label class="field-label">Beam Mode</label>
-              <div class="settings-pill-row" style="margin-top: 10px;">
+              <div class="settings-pill-row" style="margin-top:10px;">
                 <button type="button" class="settings-pill" data-beam-pill="off">Off</button>
                 <button type="button" class="settings-pill" data-beam-pill="on">On</button>
                 <button type="button" class="settings-pill" data-beam-pill="rainbow">Rainbow</button>
@@ -586,18 +578,25 @@
             </div>
           </div>
 
-          <article class="glass-card aurora-card settings-color-card">
-            <strong>Beam Color</strong>
-            <span>Used when beam mode is set to custom.</span>
-            <div class="settings-color-row">
-              <div class="settings-swatch">
-                <input id="settingsBeamColor" class="settings-color-input" type="color" value="#7c3aed" />
-              </div>
+          <div class="settings-subgrid">
+            <label class="field-label">Beam Color</label>
+            <div class="settings-palette-rail-wrap">
+              <div class="settings-palette-rail" id="beamPaletteRail"></div>
+            </div>
+
+            <div class="settings-inline-actions">
+              <button type="button" class="settings-inline-btn" id="openBeamInputBtn">Open Beam Hex</button>
+              <button type="button" class="settings-inline-btn" id="closeBeamInputBtn" style="display:none;">Hide Beam Hex</button>
+            </div>
+
+            <div id="beamAdvancedInput" style="display:none;">
               <div class="input-shell aurora-card">
-                <input id="settingsBeamHex" class="input settings-hex" type="text" value="#7C3AED" maxlength="7" />
+                <input id="settingsBeamHex" class="input" type="text" value="#7C3AED" maxlength="7" />
               </div>
             </div>
-          </article>
+
+            <input id="settingsBeamColor" type="hidden" value="#7C3AED" />
+          </div>
         </div>
       </section>
 
@@ -677,13 +676,7 @@
             <div class="form-group">
               <label class="field-label" for="settingsWorkspaceNote">Workspace Note</label>
               <div class="input-shell aurora-card">
-                <textarea
-                  id="settingsWorkspaceNote"
-                  class="input"
-                  placeholder="Add a workspace note"
-                  rows="5"
-                  style="resize: vertical; min-height: 140px;"
-                ></textarea>
+                <textarea id="settingsWorkspaceNote" class="input" rows="5" style="resize:vertical; min-height:140px;" placeholder="Add a workspace note"></textarea>
               </div>
             </div>
           </div>
