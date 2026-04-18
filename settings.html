@@ -124,6 +124,13 @@
       transform: scale(0.985);
     }
 
+    .settings-chip.is-active {
+      box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--user-beam-color, #7C3AED) 42%, transparent),
+        0 0 16px color-mix(in srgb, var(--user-beam-color, #7C3AED) 14%, transparent),
+        inset 0 1px 0 rgba(255,255,255,0.16);
+    }
+
     .settings-section-nav {
       display: flex;
       gap: 10px;
@@ -581,7 +588,7 @@
             <div class="settings-color-swatch" data-nav-color-preview></div>
             <div class="settings-color-meta">
               <div class="settings-color-value" data-nav-color-value>#FF3B30</div>
-              <button class="settings-color-open beam-target" type="button" onclick="document.querySelector('[data-appearance-nav]').click()">Open Wheel</button>
+              <button class="settings-color-open beam-target" data-open-target="nav" type="button">Open Wheel</button>
             </div>
           </div>
           <input class="settings-color-input" type="color" data-appearance-nav />
@@ -596,7 +603,7 @@
             <div class="settings-color-swatch" data-card-color-preview></div>
             <div class="settings-color-meta">
               <div class="settings-color-value" data-card-color-value>#8B5CF6</div>
-              <button class="settings-color-open beam-target" type="button" onclick="document.querySelector('[data-appearance-card]').click()">Open Wheel</button>
+              <button class="settings-color-open beam-target" data-open-target="card" type="button">Open Wheel</button>
             </div>
           </div>
           <input class="settings-color-input" type="color" data-appearance-card />
@@ -611,7 +618,7 @@
             <div class="settings-color-swatch" data-button-color-preview></div>
             <div class="settings-color-meta">
               <div class="settings-color-value" data-button-color-value>#2563EB</div>
-              <button class="settings-color-open beam-target" type="button" onclick="document.querySelector('[data-appearance-button]').click()">Open Wheel</button>
+              <button class="settings-color-open beam-target" data-open-target="button" type="button">Open Wheel</button>
             </div>
           </div>
           <input class="settings-color-input" type="color" data-appearance-button />
@@ -626,7 +633,7 @@
             <div class="settings-color-swatch" data-background-color-preview></div>
             <div class="settings-color-meta">
               <div class="settings-color-value" data-background-color-value>#0F172A</div>
-              <button class="settings-color-open beam-target" type="button" onclick="document.querySelector('[data-appearance-background]').click()">Open Wheel</button>
+              <button class="settings-color-open beam-target" data-open-target="background" type="button">Open Wheel</button>
             </div>
           </div>
           <input class="settings-color-input" type="color" data-appearance-background />
@@ -641,7 +648,7 @@
             <div class="settings-color-swatch" data-beam-color-preview></div>
             <div class="settings-color-meta">
               <div class="settings-color-value" data-beam-color-value>#7C3AED</div>
-              <button class="settings-color-open beam-target" type="button" onclick="document.querySelector('[data-appearance-beam]').click()">Open Wheel</button>
+              <button class="settings-color-open beam-target" data-open-target="beam" type="button">Open Wheel</button>
             </div>
           </div>
           <input class="settings-color-input" type="color" data-appearance-beam />
