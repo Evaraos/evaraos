@@ -8,23 +8,373 @@
   />
   <title>Evaraos Inc</title>
 
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=18" />
-  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=18" />
-  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=18" />
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=19" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=19" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=19" />
 
   <style>
     .hero-home,
     .feature-card,
+    .service-card,
+    .category-card,
+    .info-card,
+    .stats-card,
+    .cta-panel,
     .site-footer-inner,
     .btn-apple {
       position: relative;
+      overflow: hidden;
     }
 
     .hero-home.active-glow,
     .feature-card.active-glow,
+    .service-card.active-glow,
+    .category-card.active-glow,
+    .info-card.active-glow,
+    .stats-card.active-glow,
+    .cta-panel.active-glow,
     .site-footer-inner.active-glow,
     .btn-apple.active-glow {
       isolation: isolate;
+    }
+
+    .home-shell {
+      width: min(1240px, calc(100% - 24px));
+      margin: 108px auto 72px;
+      display: grid;
+      gap: 22px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-home {
+      padding: 34px;
+      border-radius: 34px;
+      display: grid;
+      gap: 26px;
+      min-height: 540px;
+      align-items: center;
+    }
+
+    .hero-home::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 82% 18%, rgba(255,255,255,0.08), transparent 22%),
+        radial-gradient(circle at 12% 86%, rgba(255,255,255,0.06), transparent 22%);
+      pointer-events: none;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .hero-content {
+      display: grid;
+      gap: 20px;
+      align-content: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-kicker {
+      margin: 0;
+      font-size: 0.92rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      opacity: 0.72;
+    }
+
+    .hero-title {
+      margin: 0;
+      font-size: clamp(3rem, 7vw, 6.4rem);
+      line-height: 0.95;
+      letter-spacing: -0.05em;
+      max-width: 12ch;
+    }
+
+    .hero-subtitle {
+      margin: 0;
+      font-size: clamp(1.05rem, 2vw, 1.34rem);
+      line-height: 1.7;
+      max-width: 66ch;
+      opacity: 0.92;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .btn-apple {
+      min-height: 58px;
+      padding: 0 22px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 1rem;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: inherit;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .hero-side {
+      display: grid;
+      gap: 14px;
+      align-content: stretch;
+      position: relative;
+      z-index: 1;
+    }
+
+    .stats-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .stats-card {
+      padding: 18px;
+      border-radius: 28px;
+      min-height: 122px;
+      display: grid;
+      align-content: space-between;
+      gap: 12px;
+    }
+
+    .stats-card p {
+      margin: 0;
+      opacity: 0.72;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .stats-card h3 {
+      margin: 0;
+      font-size: clamp(1.7rem, 3vw, 2.4rem);
+      line-height: 1;
+    }
+
+    .section-panel {
+      padding: 24px;
+      border-radius: 32px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      line-height: 1;
+      letter-spacing: -0.03em;
+    }
+
+    .section-head p {
+      margin: 8px 0 0;
+      opacity: 0.76;
+      max-width: 70ch;
+    }
+
+    .features-grid,
+    .services-grid,
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .services-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .feature-card,
+    .service-card,
+    .category-card,
+    .info-card {
+      min-height: 190px;
+      padding: 20px;
+      border-radius: 28px;
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+
+    .feature-card h3,
+    .service-card h3,
+    .category-card h3,
+    .info-card h3 {
+      margin: 0;
+      font-size: 1.12rem;
+      line-height: 1.1;
+    }
+
+    .feature-card p,
+    .service-card p,
+    .category-card p,
+    .info-card p {
+      margin: 0;
+      opacity: 0.76;
+      line-height: 1.6;
+    }
+
+    .service-meta,
+    .card-tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.10);
+      width: fit-content;
+    }
+
+    .category-split {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .cta-panel {
+      padding: 24px;
+      border-radius: 32px;
+      display: grid;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .cta-panel h2 {
+      margin: 0;
+      font-size: clamp(1.8rem, 3vw, 2.8rem);
+      line-height: 1;
+    }
+
+    .cta-panel p {
+      margin: 0;
+      opacity: 0.78;
+      max-width: 70ch;
+      line-height: 1.7;
+    }
+
+    .cta-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .site-footer {
+      width: min(1240px, calc(100% - 24px));
+      margin: 0 auto 38px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .site-footer-inner {
+      min-height: 84px;
+      padding: 18px 22px;
+      border-radius: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .site-footer-left,
+    .site-footer-right {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .site-footer-left span {
+      opacity: 0.68;
+    }
+
+    .site-footer-right a {
+      text-decoration: none;
+      color: inherit;
+      opacity: 0.9;
+      font-weight: 700;
+    }
+
+    @media (max-width: 1080px) {
+      .hero-grid,
+      .category-split {
+        grid-template-columns: 1fr;
+      }
+
+      .features-grid,
+      .services-grid,
+      .services-grid-3,
+      .info-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 680px) {
+      .home-shell {
+        width: min(calc(100% - 16px), 100%);
+        margin-top: 98px;
+      }
+
+      .hero-home,
+      .section-panel,
+      .cta-panel {
+        padding: 18px;
+        border-radius: 26px;
+      }
+
+      .features-grid,
+      .services-grid,
+      .services-grid-3,
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-title {
+        max-width: 100%;
+      }
+
+      .hero-actions,
+      .cta-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .site-footer {
+        width: min(calc(100% - 16px), 100%);
+      }
+
+      .site-footer-inner {
+        border-radius: 24px;
+        align-items: flex-start;
+      }
     }
   </style>
 </head>
@@ -34,43 +384,200 @@
 
   <main class="home-shell">
     <section class="hero-home glass-card active-glow">
-      <div class="hero-content">
-        <p class="hero-kicker">Subsidiaries Allocation SaaS</p>
+      <div class="hero-grid">
+        <div class="hero-content">
+          <p class="hero-kicker">Subsidiaries Allocation SaaS</p>
 
-        <h1 class="hero-title">Run companies like a world-class operating system.</h1>
+          <h1 class="hero-title">Run companies like a world-class operating system.</h1>
 
-        <p class="hero-subtitle">
-          Evaraos Inc is built to power multiple subsidiaries, teams, customer portals,
-          leads, jobs, reporting, approvals, and operations from one premium control center.
-        </p>
+          <p class="hero-subtitle">
+            Evaraos Inc is built to power multiple subsidiaries, teams, customer portals,
+            leads, jobs, reporting, approvals, and operations from one premium control center.
+            One platform. Multiple categories. Scalable infrastructure.
+          </p>
 
-        <div class="hero-actions">
-          <a href="/evaraos/login.html" class="btn btn-apple active-glow">Enter Platform</a>
-          <a href="/evaraos/signup.html" class="btn btn-apple active-glow">Create Account</a>
+          <div class="hero-actions">
+            <a href="/evaraos/login.html" class="btn btn-apple active-glow">Enter Platform</a>
+            <a href="/evaraos/signup.html" class="btn btn-apple active-glow">Create Account</a>
+            <a href="/evaraos/settings.html" class="btn btn-apple active-glow">Customize Theme</a>
+          </div>
+        </div>
+
+        <div class="hero-side">
+          <div class="stats-stack">
+            <article class="stats-card glass-card active-glow">
+              <p>Core Mission</p>
+              <h3>Operate multiple brands from one premium system.</h3>
+            </article>
+
+            <article class="stats-card glass-card active-glow">
+              <p>Live Categories</p>
+              <h3>Exterior cleaning, interior cleaning, leads, jobs, and user management.</h3>
+            </article>
+
+            <article class="stats-card glass-card active-glow">
+              <p>Built For</p>
+              <h3>Owners, management, reps, technicians, and customers.</h3>
+            </article>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="features-grid">
-      <article class="feature-card glass-card active-glow">
-        <h3>Companies</h3>
-        <p>Manage all brands, subsidiaries, and operating structures in one ecosystem.</p>
-      </article>
+    <section class="section-panel glass-card active-glow">
+      <div class="section-head">
+        <div>
+          <h2>What Evaraos Powers</h2>
+          <p>
+            The platform is designed to organize subsidiaries, vendors, service categories,
+            users, field activity, and customer flow in a single connected ecosystem.
+          </p>
+        </div>
+      </div>
 
-      <article class="feature-card glass-card active-glow">
-        <h3>Users</h3>
-        <p>Control roles, access, executive visibility, and internal permissions.</p>
-      </article>
+      <div class="features-grid">
+        <article class="feature-card glass-card active-glow">
+          <span class="card-tag">Companies</span>
+          <h3>Subsidiary Management</h3>
+          <p>Manage all brands, categories, and operating structures under one parent system.</p>
+        </article>
 
-      <article class="feature-card glass-card active-glow">
-        <h3>Leads</h3>
-        <p>Track pipeline, conversions, assignments, and performance from one place.</p>
-      </article>
+        <article class="feature-card glass-card active-glow">
+          <span class="card-tag">Users</span>
+          <h3>Role-Based Access</h3>
+          <p>Control owner, admin, sales, technician, management, and customer visibility.</p>
+        </article>
 
-      <article class="feature-card glass-card active-glow">
-        <h3>Jobs</h3>
-        <p>Monitor field execution, service flow, completion, and accountability live.</p>
-      </article>
+        <article class="feature-card glass-card active-glow">
+          <span class="card-tag">Leads</span>
+          <h3>Pipeline Visibility</h3>
+          <p>Track lead flow, conversion stages, rep assignments, and opportunity health.</p>
+        </article>
+
+        <article class="feature-card glass-card active-glow">
+          <span class="card-tag">Jobs</span>
+          <h3>Execution Control</h3>
+          <p>Monitor active jobs, completion status, dispatch logic, and service accountability.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-panel glass-card active-glow">
+      <div class="section-head">
+        <div>
+          <h2>Supreme True Clean</h2>
+          <p>
+            Supreme True Clean is the exterior cleaning category within the Evaraos ecosystem,
+            focused on practical recurring service and scalable field operations.
+          </p>
+        </div>
+      </div>
+
+      <div class="services-grid-3">
+        <article class="service-card glass-card active-glow">
+          <span class="service-meta">Exterior Cleaning</span>
+          <h3>Trash Bin Cleaning</h3>
+          <p>
+            Residential bin sanitizing designed for recurring subscription service, route density,
+            and customer retention.
+          </p>
+        </article>
+
+        <article class="service-card glass-card active-glow">
+          <span class="service-meta">Surface Washing</span>
+          <h3>Driveways & Sidewalks</h3>
+          <p>
+            Pressure washing for curb appeal, maintenance, and property presentation with scalable pricing models.
+          </p>
+        </article>
+
+        <article class="service-card glass-card active-glow">
+          <span class="service-meta">Home Exterior</span>
+          <h3>House Washing</h3>
+          <p>
+            Exterior wall and surface cleaning focused on visual restoration and long-term service relationships.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-panel glass-card active-glow">
+      <div class="section-head">
+        <div>
+          <h2>OneofOne Cleaning</h2>
+          <p>
+            OneofOne Cleaning represents the interior cleaning side of the ecosystem, built for category expansion,
+            vendor coordination, and future marketplace-style assignment flow.
+          </p>
+        </div>
+      </div>
+
+      <div class="category-split">
+        <article class="category-card glass-card active-glow">
+          <span class="card-tag">Interior Cleaning</span>
+          <h3>Residential & Recurring Service</h3>
+          <p>
+            Structured for repeat service, clean vendor coordination, customer-facing trust,
+            and long-term category expansion inside the platform.
+          </p>
+        </article>
+
+        <article class="category-card glass-card active-glow">
+          <span class="card-tag">Marketplace Ready</span>
+          <h3>Lead Vendor + Service Vendor Model</h3>
+          <p>
+            Designed to support lead generation partners, service vendors, dispatch logic,
+            payouts, and assignment visibility as the ecosystem scales.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-panel glass-card active-glow">
+      <div class="section-head">
+        <div>
+          <h2>Why This Home Page Matters</h2>
+          <p>
+            This page is not just a placeholder. It is the front door to the system, the explanation
+            of what Evaraos is, and the bridge into the platform experience.
+          </p>
+        </div>
+      </div>
+
+      <div class="info-grid">
+        <article class="info-card glass-card active-glow">
+          <h3>Useful for New Visitors</h3>
+          <p>Explains the platform, the categories, and what lives inside the operating system.</p>
+        </article>
+
+        <article class="info-card glass-card active-glow">
+          <h3>Useful for Investors</h3>
+          <p>Shows how one system can support multiple brands, services, and scalable operations.</p>
+        </article>
+
+        <article class="info-card glass-card active-glow">
+          <h3>Useful for Team Members</h3>
+          <p>Gives context before login so staff, reps, and vendors understand the ecosystem quickly.</p>
+        </article>
+
+        <article class="info-card glass-card active-glow">
+          <h3>Useful for Design Customization</h3>
+          <p>Provides enough premium surfaces for theme colors and beam effects to actually show off.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="cta-panel glass-card active-glow">
+      <h2>Start inside the ecosystem.</h2>
+      <p>
+        Access the platform, create your account, or open appearance settings to fully customize your
+        navigation tint, card tint, button tint, background aura, and beam system.
+      </p>
+      <div class="cta-actions">
+        <a href="/evaraos/login.html" class="btn btn-apple active-glow">Login</a>
+        <a href="/evaraos/signup.html" class="btn btn-apple active-glow">Sign Up</a>
+        <a href="/evaraos/settings.html" class="btn btn-apple active-glow">Open Settings</a>
+      </div>
     </section>
   </main>
 
@@ -78,7 +585,7 @@
     <div class="site-footer-inner glass-card active-glow">
       <div class="site-footer-left">
         <strong>© 2026 Evaraos Inc</strong>
-        <span>All rights reserved.</span>
+        <span>Built to power multi-company operations from one system.</span>
       </div>
 
       <div class="site-footer-right">
@@ -89,7 +596,7 @@
     </div>
   </footer>
 
-  <script src="/evaraos/assets/js/theme.js?v=18"></script>
-  <script src="/evaraos/assets/js/nav.js?v=18"></script>
+  <script src="/evaraos/assets/js/theme.js?v=19"></script>
+  <script src="/evaraos/assets/js/nav.js?v=19"></script>
 </body>
 </html>
