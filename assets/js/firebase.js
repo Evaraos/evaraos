@@ -1,5 +1,3 @@
-// assets/js/firebase.js
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 
 import {
@@ -50,6 +48,7 @@ const STORAGE_KEYS = {
 };
 
 let currentUser = null;
+let useSessionStorageForProfile = false;
 
 export function getCurrentUser() {
   return currentUser;
@@ -57,38 +56,56 @@ export function getCurrentUser() {
 
 export async function setAuthPersistence(rememberDevice = true) {
   const persistence = rememberDevice ? browserLocalPersistence : browserSessionPersistence;
+  useSessionStorageForProfile = !rememberDevice;
   await setPersistence(auth, persistence);
 }
 
-export function saveUserRole(role = "customer") {
+function writeStorage(key, value) {
   try {
-    localStorage.setItem(STORAGE_KEYS.role, String(role || "customer"));
+    if (useSessionStorageForProfile) {
+      sessionStorage.setItem(key, value);
+      localStorage.removeItem(key);
+    } else {
+      localStorage.setItem(key, value);
+      sessionStorage.removeItem(key);
+    }
   } catch {}
 }
 
-export function getSavedUserRole() {
+function readStorage(key) {
   try {
-    return localStorage.getItem(STORAGE_KEYS.role) || "customer";
+    return localStorage.getItem(key) || sessionStorage.getItem(key);
   } catch {
-    return "customer";
+    return null;
   }
 }
 
-export function clearSavedUserRole() {
+function removeStorage(key) {
   try {
-    localStorage.removeItem(STORAGE_KEYS.role);
+    localStorage.removeItem(key);
+    sessionStorage.removeItem(key);
   } catch {}
 }
 
+export function saveUserRole(role = "customer") {
+  writeStorage(STORAGE_KEYS.role, String(role || "customer"));
+}
+
+export function getSavedUserRole() {
+  return readStorage(STORAGE_KEYS.role) || "customer";
+}
+
+export function clearSavedUserRole() {
+  removeStorage(STORAGE_KEYS.role);
+}
+
 export function saveUserProfile(profile = {}) {
-  try {
-    localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(profile));
-  } catch {}
+  writeStorage(STORAGE_KEYS.user, JSON.stringify(profile));
 }
 
 export function getSavedUserProfile() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.user);
+    const raw = readStorage(STORAGE_KEYS.user);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -96,9 +113,7 @@ export function getSavedUserProfile() {
 }
 
 export function clearSavedUserProfile() {
-  try {
-    localStorage.removeItem(STORAGE_KEYS.user);
-  } catch {}
+  removeStorage(STORAGE_KEYS.user);
 }
 
 export function roleLabelFromRole(role = "") {
@@ -115,7 +130,7 @@ export function roleLabelFromRole(role = "") {
 }
 
 export function applyUserToUi(userData = {}) {
-  const displayName = userData.displayName || userData.fullName || userData.email || "User";
+  const displayName = userData.displayName || userData.fullName || userData.username || userData.email || "User";
   const email = userData.email || "";
   const role = userData.role || "customer";
   const initial = displayName.trim().charAt(0).toUpperCase() || "U";
@@ -144,13 +159,15 @@ export function applyUserToUi(userData = {}) {
   if (dashboardProfileRole) dashboardProfileRole.textContent = roleText;
 }
 
-export function syncUserSession(user, role = "customer") {
+export function syncUserSession(user, role = "customer", extras = {}) {
   if (!user) return;
 
   const profile = {
     uid: user.uid || "",
     email: user.email || "",
-    displayName: user.displayName || "",
+    displayName: extras.displayName || user.displayName || "",
+    fullName: extras.fullName || extras.displayName || user.displayName || "",
+    username: extras.username || "",
     role: role || "customer"
   };
 
@@ -275,24 +292,37 @@ onAuthStateChanged(auth, async (user) => {
           email: user.email || "",
           displayName: user.displayName || "",
           fullName: user.displayName || "",
+          username: "",
+          usernameLower: "",
           role: "customer"
         },
         { merge: true }
       );
     }
 
-    const data = snap.exists() ? snap.data() || {} : {};
+    const freshSnap = await getDoc(userRef);
+    const data = freshSnap.exists() ? freshSnap.data() || {} : {};
     const role = data.role || getSavedUserRole() || "customer";
 
-    syncUserSession(user, role);
+    syncUserSession(user, role, {
+      displayName: data.displayName || data.fullName || user.displayName || user.email || "User",
+      fullName: data.fullName || data.displayName || user.displayName || "",
+      username: data.username || ""
+    });
 
     applyUserToUi({
       displayName: data.displayName || data.fullName || user.displayName || user.email || "User",
+      fullName: data.fullName || data.displayName || user.displayName || "",
+      username: data.username || "",
       email: user.email || "",
       role
     });
   } catch (error) {
     console.error("Global auth sync failed:", error);
-    syncUserSession(user, getSavedUserRole() || "customer");
+    syncUserSession(user, getSavedUserRole() || "customer", {
+      displayName: user.displayName || user.email || "User",
+      fullName: user.displayName || "",
+      username: ""
+    });
   }
 });
