@@ -8,9 +8,9 @@
   />
   <title>Evaraos Inc</title>
 
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=26" />
-  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=26" />
-  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=26" />
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=27" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=27" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=27" />
 
   <style>
     .hero-home,
@@ -39,7 +39,7 @@
     }
 
     .home-shell {
-      width: min(1240px, calc(100% - 24px));
+      width: min(1280px, calc(100% - 24px));
       margin: 108px auto 72px;
       display: grid;
       gap: 22px;
@@ -52,7 +52,7 @@
       border-radius: 34px;
       display: grid;
       gap: 26px;
-      min-height: 540px;
+      min-height: 560px;
       align-items: center;
     }
 
@@ -68,7 +68,7 @@
 
     .hero-grid {
       display: grid;
-      grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+      grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
       gap: 22px;
       align-items: stretch;
     }
@@ -162,6 +162,7 @@
       margin: 0;
       font-size: clamp(1.7rem, 3vw, 2.4rem);
       line-height: 1;
+      letter-spacing: -0.03em;
     }
 
     .section-panel {
@@ -190,6 +191,7 @@
       margin: 8px 0 0;
       opacity: 0.76;
       max-width: 70ch;
+      line-height: 1.7;
     }
 
     .features-grid,
@@ -225,6 +227,7 @@
       margin: 0;
       font-size: 1.12rem;
       line-height: 1.1;
+      letter-spacing: -0.02em;
     }
 
     .feature-card p,
@@ -271,6 +274,7 @@
       margin: 0;
       font-size: clamp(1.8rem, 3vw, 2.8rem);
       line-height: 1;
+      letter-spacing: -0.03em;
     }
 
     .cta-panel p {
@@ -287,7 +291,7 @@
     }
 
     .site-footer {
-      width: min(1240px, calc(100% - 24px));
+      width: min(1280px, calc(100% - 24px));
       margin: 0 auto 38px;
       position: relative;
       z-index: 1;
@@ -379,11 +383,12 @@
   </style>
 </head>
 <body class="home-page">
+  <div class="page-aurora"></div>
   <div class="page-grid-overlay"></div>
   <div id="universalNavRoot"></div>
 
   <main class="home-shell">
-    <section class="hero-home glass-card active-glow">
+    <section class="hero-home glass-card active-glow beam-target">
       <div class="hero-grid">
         <div class="hero-content">
           <p class="hero-kicker">Subsidiaries Allocation SaaS</p>
@@ -397,25 +402,25 @@
           </p>
 
           <div class="hero-actions">
-            <a href="/evaraos/login.html" class="btn btn-apple active-glow">Enter Platform</a>
-            <a href="/evaraos/signup.html" class="btn btn-apple active-glow">Create Account</a>
-            <a href="/evaraos/settings.html" class="btn btn-apple active-glow">Customize Theme</a>
+            <a href="/evaraos/login.html" class="btn btn-apple active-glow beam-target">Enter Platform</a>
+            <a href="/evaraos/signup.html" class="btn btn-apple active-glow beam-target">Create Account</a>
+            <a href="/evaraos/settings.html" class="btn btn-apple active-glow beam-target">Customize Theme</a>
           </div>
         </div>
 
         <div class="hero-side">
           <div class="stats-stack">
-            <article class="stats-card glass-card active-glow">
+            <article class="stats-card glass-card active-glow beam-target">
               <p>Core Mission</p>
               <h3>Operate multiple brands from one premium system.</h3>
             </article>
 
-            <article class="stats-card glass-card active-glow">
+            <article class="stats-card glass-card active-glow beam-target">
               <p>Live Categories</p>
               <h3>Exterior cleaning, interior cleaning, leads, jobs, and user management.</h3>
             </article>
 
-            <article class="stats-card glass-card active-glow">
+            <article class="stats-card glass-card active-glow beam-target">
               <p>Built For</p>
               <h3>Owners, management, reps, technicians, and customers.</h3>
             </article>
@@ -424,7 +429,7 @@
       </div>
     </section>
 
-    <section class="section-panel glass-card active-glow">
+    <section class="section-panel glass-card active-glow beam-target">
       <div class="section-head">
         <div>
           <h2>What Evaraos Powers</h2>
@@ -436,25 +441,25 @@
       </div>
 
       <div class="features-grid">
-        <article class="feature-card glass-card active-glow">
+        <article class="feature-card glass-card active-glow beam-target">
           <span class="card-tag">Companies</span>
           <h3>Subsidiary Management</h3>
           <p>Manage all brands, categories, and operating structures under one parent system.</p>
         </article>
 
-        <article class="feature-card glass-card active-glow">
+        <article class="feature-card glass-card active-glow beam-target">
           <span class="card-tag">Users</span>
           <h3>Role-Based Access</h3>
           <p>Control owner, admin, sales, technician, management, and customer visibility.</p>
         </article>
 
-        <article class="feature-card glass-card active-glow">
+        <article class="feature-card glass-card active-glow beam-target">
           <span class="card-tag">Leads</span>
           <h3>Pipeline Visibility</h3>
           <p>Track lead flow, conversion stages, rep assignments, and opportunity health.</p>
         </article>
 
-        <article class="feature-card glass-card active-glow">
+        <article class="feature-card glass-card active-glow beam-target">
           <span class="card-tag">Jobs</span>
           <h3>Execution Control</h3>
           <p>Monitor active jobs, completion status, dispatch logic, and service accountability.</p>
@@ -462,7 +467,7 @@
       </div>
     </section>
 
-    <section class="section-panel glass-card active-glow">
+    <section class="section-panel glass-card active-glow beam-target">
       <div class="section-head">
         <div>
           <h2>Supreme True Clean</h2>
@@ -474,7 +479,7 @@
       </div>
 
       <div class="services-grid-3">
-        <article class="service-card glass-card active-glow">
+        <article class="service-card glass-card active-glow beam-target">
           <span class="service-meta">Exterior Cleaning</span>
           <h3>Trash Bin Cleaning</h3>
           <p>
@@ -483,7 +488,7 @@
           </p>
         </article>
 
-        <article class="service-card glass-card active-glow">
+        <article class="service-card glass-card active-glow beam-target">
           <span class="service-meta">Surface Washing</span>
           <h3>Driveways & Sidewalks</h3>
           <p>
@@ -491,7 +496,7 @@
           </p>
         </article>
 
-        <article class="service-card glass-card active-glow">
+        <article class="service-card glass-card active-glow beam-target">
           <span class="service-meta">Home Exterior</span>
           <h3>House Washing</h3>
           <p>
@@ -501,7 +506,7 @@
       </div>
     </section>
 
-    <section class="section-panel glass-card active-glow">
+    <section class="section-panel glass-card active-glow beam-target">
       <div class="section-head">
         <div>
           <h2>OneofOne Cleaning</h2>
@@ -513,7 +518,7 @@
       </div>
 
       <div class="category-split">
-        <article class="category-card glass-card active-glow">
+        <article class="category-card glass-card active-glow beam-target">
           <span class="card-tag">Interior Cleaning</span>
           <h3>Residential & Recurring Service</h3>
           <p>
@@ -522,7 +527,7 @@
           </p>
         </article>
 
-        <article class="category-card glass-card active-glow">
+        <article class="category-card glass-card active-glow beam-target">
           <span class="card-tag">Marketplace Ready</span>
           <h3>Lead Vendor + Service Vendor Model</h3>
           <p>
@@ -533,7 +538,7 @@
       </div>
     </section>
 
-    <section class="section-panel glass-card active-glow">
+    <section class="section-panel glass-card active-glow beam-target">
       <div class="section-head">
         <div>
           <h2>Why This Home Page Matters</h2>
@@ -545,44 +550,44 @@
       </div>
 
       <div class="info-grid">
-        <article class="info-card glass-card active-glow">
+        <article class="info-card glass-card active-glow beam-target">
           <h3>Useful for New Visitors</h3>
           <p>Explains the platform, the categories, and what lives inside the operating system.</p>
         </article>
 
-        <article class="info-card glass-card active-glow">
+        <article class="info-card glass-card active-glow beam-target">
           <h3>Useful for Investors</h3>
           <p>Shows how one system can support multiple brands, services, and scalable operations.</p>
         </article>
 
-        <article class="info-card glass-card active-glow">
+        <article class="info-card glass-card active-glow beam-target">
           <h3>Useful for Team Members</h3>
           <p>Gives context before login so staff, reps, and vendors understand the ecosystem quickly.</p>
         </article>
 
-        <article class="info-card glass-card active-glow">
+        <article class="info-card glass-card active-glow beam-target">
           <h3>Useful for Design Customization</h3>
           <p>Provides enough premium surfaces for theme colors and beam effects to actually show off.</p>
         </article>
       </div>
     </section>
 
-    <section class="cta-panel glass-card active-glow">
+    <section class="cta-panel glass-card active-glow beam-target">
       <h2>Start inside the ecosystem.</h2>
       <p>
         Access the platform, create your account, or open appearance settings to fully customize your
         navigation tint, card tint, button tint, background aura, and beam system.
       </p>
       <div class="cta-actions">
-        <a href="/evaraos/login.html" class="btn btn-apple active-glow">Login</a>
-        <a href="/evaraos/signup.html" class="btn btn-apple active-glow">Sign Up</a>
-        <a href="/evaraos/settings.html" class="btn btn-apple active-glow">Open Settings</a>
+        <a href="/evaraos/login.html" class="btn btn-apple active-glow beam-target">Login</a>
+        <a href="/evaraos/signup.html" class="btn btn-apple active-glow beam-target">Sign Up</a>
+        <a href="/evaraos/settings.html" class="btn btn-apple active-glow beam-target">Open Settings</a>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <div class="site-footer-inner glass-card active-glow">
+    <div class="site-footer-inner glass-card active-glow beam-target">
       <div class="site-footer-left">
         <strong>© 2026 Evaraos Inc</strong>
         <span>Built to power multi-company operations from one system.</span>
@@ -596,7 +601,7 @@
     </div>
   </footer>
 
-  <script src="/evaraos/assets/js/theme.js?v=26"></script>
-  <script src="/evaraos/assets/js/nav.js?v=26"></script>
+  <script src="/evaraos/assets/js/theme.js?v=27"></script>
+  <script src="/evaraos/assets/js/nav.js?v=27"></script>
 </body>
 </html>
