@@ -22,7 +22,6 @@ import {
   setDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyAg12tiBifLswke_km3nY6YQpf8ROyqup4",
   authDomain: "evaraos-web.firebaseapp.com",
@@ -33,13 +32,11 @@ const firebaseConfig = {
   measurementId: "G-296N94CKPR"
 };
 
-/* INIT */
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-/* RE-EXPORT AUTH HELPERS USED IN THE REPO */
 export {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -66,9 +63,7 @@ export async function setAuthPersistence(rememberDevice = true) {
 export function saveUserRole(role = "customer") {
   try {
     localStorage.setItem(STORAGE_KEYS.role, String(role || "customer"));
-  } catch {
-    // ignore storage errors
-  }
+  } catch {}
 }
 
 export function getSavedUserRole() {
@@ -82,17 +77,13 @@ export function getSavedUserRole() {
 export function clearSavedUserRole() {
   try {
     localStorage.removeItem(STORAGE_KEYS.role);
-  } catch {
-    // ignore
-  }
+  } catch {}
 }
 
 export function saveUserProfile(profile = {}) {
   try {
     localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(profile));
-  } catch {
-    // ignore storage errors
-  }
+  } catch {}
 }
 
 export function getSavedUserProfile() {
@@ -107,9 +98,7 @@ export function getSavedUserProfile() {
 export function clearSavedUserProfile() {
   try {
     localStorage.removeItem(STORAGE_KEYS.user);
-  } catch {
-    // ignore
-  }
+  } catch {}
 }
 
 export function roleLabelFromRole(role = "") {
@@ -178,11 +167,30 @@ export function clearUserSession() {
 export async function logoutAndRedirect(path = "/evaraos/login.html") {
   await signOut(auth);
   clearUserSession();
-  window.location.href = path;
+
+  try {
+    sessionStorage.clear();
+  } catch {}
+
+  try {
+    localStorage.removeItem("evaraos-last-private-page");
+  } catch {}
+
+  window.location.replace(path);
 }
 
 export async function logout() {
   await logoutAndRedirect("/evaraos/login.html");
+}
+
+export function markProtectedPagePending() {
+  document.documentElement.classList.add("auth-pending");
+  document.body?.classList.add("auth-pending");
+}
+
+export function resolveProtectedPage() {
+  document.documentElement.classList.remove("auth-pending");
+  document.body?.classList.remove("auth-pending");
 }
 
 export function protectRoute({
@@ -190,27 +198,58 @@ export function protectRoute({
   redirectGuestTo = "/evaraos/login.html",
   redirectAuthedTo = "/evaraos/dashboard.html"
 } = {}) {
-  onAuthStateChanged(auth, (user) => {
-    const path = window.location.pathname;
-    const isAuthPage =
-      path.endsWith("/login.html") ||
-      path.endsWith("/signup.html") ||
-      path.endsWith("/reset.html");
+  markProtectedPagePending();
 
+  const path = window.location.pathname;
+  const isAuthPage =
+    path.endsWith("/login.html") ||
+    path.endsWith("/signup.html") ||
+    path.endsWith("/reset.html");
+
+  onAuthStateChanged(auth, (user) => {
     if (user) {
+      currentUser = user;
+
       const savedProfile = getSavedUserProfile();
       if (savedProfile) {
         applyUserToUi(savedProfile);
       }
 
       if (!requireAuth && isAuthPage) {
-        window.location.href = redirectAuthedTo;
+        window.location.replace(redirectAuthedTo);
+        return;
       }
+
+      resolveProtectedPage();
       return;
     }
 
+    currentUser = null;
+    clearUserSession();
+
     if (requireAuth) {
-      window.location.href = redirectGuestTo;
+      window.location.replace(redirectGuestTo);
+      return;
+    }
+
+    resolveProtectedPage();
+  });
+
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) {
+      const activeUser = auth.currentUser;
+
+      if (requireAuth && !activeUser) {
+        window.location.replace(redirectGuestTo);
+        return;
+      }
+
+      if (!requireAuth && activeUser && isAuthPage) {
+        window.location.replace(redirectAuthedTo);
+        return;
+      }
+
+      resolveProtectedPage();
     }
   });
 }
