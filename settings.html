@@ -7,13 +7,13 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
-  <title>Settings • Evaraos Inc</title>
+  <title>Advanced Settings • Evaraos Inc</title>
 
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=20" />
-  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=20" />
-  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=20" />
-  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=20" />
-  <link rel="stylesheet" href="/evaraos/assets/css/auth.css?v=20" />
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=21" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=21" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=21" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=21" />
+  <link rel="stylesheet" href="/evaraos/assets/css/auth.css?v=21" />
 
   <style>
     .settings-shell {
@@ -25,11 +25,38 @@
       z-index: 1;
     }
 
+    .settings-hero {
+      padding: 24px;
+      border-radius: 32px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .settings-hero h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.25rem);
+      line-height: 0.96;
+      letter-spacing: -0.05em;
+    }
+
+    .settings-hero p {
+      margin: 0;
+      max-width: 74ch;
+      line-height: 1.7;
+      opacity: 0.8;
+      font-size: 1rem;
+    }
+
     .settings-block {
       padding: 22px;
       border-radius: 30px;
       display: grid;
       gap: 18px;
+    }
+
+    .settings-head {
+      display: grid;
+      gap: 6px;
     }
 
     .settings-head h2 {
@@ -39,10 +66,20 @@
     }
 
     .settings-head p {
-      margin: 8px 0 0;
+      margin: 0;
       opacity: 0.74;
       max-width: 68ch;
       line-height: 1.6;
+    }
+
+    .settings-status-line {
+      font-size: 1rem;
+      line-height: 1.55;
+      opacity: 0.92;
+    }
+
+    .settings-status-line strong {
+      font-weight: 900;
     }
 
     .settings-preview {
@@ -138,6 +175,8 @@
       font-weight: 800;
       font-size: 1rem;
       width: 100%;
+      background: rgba(255,255,255,0.08);
+      color: inherit;
     }
 
     .settings-chip-row {
@@ -167,26 +206,17 @@
       justify-content: center;
       gap: 8px;
       cursor: pointer;
+      touch-action: manipulation;
     }
 
-    .settings-status-line {
-      font-size: 1rem;
-      line-height: 1.55;
-      opacity: 0.92;
-    }
-
-    .settings-status-line strong {
-      font-weight: 900;
-    }
-
-    .settings-colors-grid {
+    .settings-grid-2 {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 16px;
     }
 
     .settings-color-tool {
-      min-height: 198px;
+      min-height: 210px;
       border-radius: 28px;
       padding: 20px;
       display: grid;
@@ -231,7 +261,7 @@
 
     @media (max-width: 840px) {
       .settings-preview-grid,
-      .settings-colors-grid {
+      .settings-grid-2 {
         grid-template-columns: 1fr;
       }
 
@@ -246,6 +276,15 @@
   <div id="universalNav"></div>
 
   <main class="settings-shell">
+    <section class="settings-hero glass-card aurora-card active-glow">
+      <h1>Advanced Settings</h1>
+      <p>
+        This is your design control center for Evaraos Inc. Customize appearance mode,
+        beam behavior, navigation tint, card tint, button color, background aura, and
+        beam color with live visual previews.
+      </p>
+    </section>
+
     <section class="settings-block glass-card aurora-card active-glow">
       <div class="settings-head">
         <h2>Live Design Preview</h2>
@@ -324,10 +363,10 @@
     <section class="settings-block glass-card aurora-card active-glow">
       <div class="settings-head">
         <h2>Color Wheel Controls</h2>
-        <p>Use a real designer-style color picker for every major surface in the system.</p>
+        <p>Use a real color picker for every major surface in the system.</p>
       </div>
 
-      <div class="settings-colors-grid">
+      <div class="settings-grid-2">
         <article class="settings-color-tool glass-card aurora-card active-glow">
           <h3>Navigation Color</h3>
           <p>Controls nav tint and menu surface accents.</p>
@@ -371,9 +410,9 @@
     </section>
   </main>
 
-  <script src="/evaraos/assets/js/theme.js?v=20"></script>
-  <script type="module" src="/evaraos/assets/js/firebase.js?v=20"></script>
-  <script type="module" src="/evaraos/assets/js/route-guard.js?v=20"></script>
-  <script src="/evaraos/assets/js/nav.js?v=20"></script>
+  <script src="/evaraos/assets/js/theme.js?v=21"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js?v=21"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js?v=21"></script>
+  <script src="/evaraos/assets/js/nav.js?v=21"></script>
 </body>
 </html>
