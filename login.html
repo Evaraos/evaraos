@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Login • Evaraos Inc</title>
 
   <link rel="stylesheet" href="/evaraos/assets/css/base.css" />
@@ -11,14 +14,18 @@
   <link rel="stylesheet" href="/evaraos/assets/css/auth.css" />
   <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css" />
 </head>
-<body class="login-page">
+<body class="login-page auth-pending" data-route-guard="auth">
   <div class="page-grid-overlay"></div>
-  <div id="universalNav"></div>
+  <div id="universalNavRoot"></div>
 
   <main class="login-shell">
     <section class="login-panel glass-card aurora-card auth-panel">
       <div class="login-badge-wrap">
-        <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos logo" class="login-badge auth-badge" />
+        <img
+          src="/evaraos/assets/img/evaraos_logo.png"
+          alt="Evaraos logo"
+          class="login-badge auth-badge auth-badge-large"
+        />
       </div>
 
       <h1 class="login-title">Welcome Back</h1>
@@ -32,10 +39,10 @@
           <div class="input-shell aurora-card">
             <input
               id="loginEmail"
-              name="emailOrUsername"
+              name="email"
               type="text"
               class="input"
-              placeholder="Email or username"
+              placeholder="Enter your email or username"
               autocomplete="username"
               required
             />
@@ -50,12 +57,16 @@
               name="password"
               type="password"
               class="input"
-              placeholder="Password"
+              placeholder="Enter your password"
               autocomplete="current-password"
               required
             />
-
-            <button type="button" class="password-toggle" id="loginPasswordToggle" aria-label="Show password">
+            <button
+              type="button"
+              class="password-toggle"
+              id="loginPasswordToggle"
+              aria-label="Show password"
+            >
               <svg viewBox="0 0 24 24" class="password-eye-icon eye-open" aria-hidden="true">
                 <path d="M12 5c5.5 0 9.5 5.1 10.7 6.9.2.3.2.8 0 1.1C21.5 14.9 17.5 20 12 20S2.5 14.9 1.3 13.1a1 1 0 0 1 0-1.1C2.5 10.1 6.5 5 12 5Zm0 2C8 7 4.8 10.3 3.4 12 4.8 13.7 8 17 12 17s7.2-3.3 8.6-5C19.2 10.3 16 7 12 7Zm0 1.8A3.2 3.2 0 1 1 8.8 12 3.2 3.2 0 0 1 12 8.8Zm0 2A1.2 1.2 0 1 0 13.2 12 1.2 1.2 0 0 0 12 10.8Z"></path>
               </svg>
@@ -80,12 +91,18 @@
 
         <p id="loginMessage" class="login-message" aria-live="polite"></p>
       </form>
+
+      <div class="auth-footer-links">
+        <span>Need an account?</span>
+        <a href="/evaraos/signup.html">Create one</a>
+      </div>
     </section>
   </main>
 
   <script type="module" src="/evaraos/assets/js/theme.js"></script>
-  <script type="module" src="/evaraos/assets/js/nav.js"></script>
   <script type="module" src="/evaraos/assets/js/firebase.js"></script>
   <script type="module" src="/evaraos/assets/js/auth.js"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js"></script>
+  <script type="module" src="/evaraos/assets/js/nav.js"></script>
 </body>
 </html>
