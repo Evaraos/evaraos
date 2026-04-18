@@ -247,31 +247,45 @@ body.nav-menu-open .eva-backdrop {
   position: fixed;
   z-index: 2147483647;
   left: 50%;
-  top: calc(max(4px, env(safe-area-inset-top)) + 76px);
-  width: min(356px, calc(100vw - 22px));
-  max-height: calc(100vh - 92px - env(safe-area-inset-bottom));
+  top: calc(max(4px, env(safe-area-inset-top)) + 74px);
+  width: min(368px, calc(100vw - 18px));
+  max-height: calc(var(--eva-menu-max-height, 100vh - 92px - env(safe-area-inset-bottom)));
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   padding: 12px 12px max(14px, env(safe-area-inset-bottom));
-  border-radius: 26px;
+  border-radius: 28px;
   display: grid;
   gap: 10px;
-  background: rgba(10, 14, 22, 0.995);
-  border: 1px solid rgba(255,255,255,0.16);
+  background:
+    linear-gradient(180deg, rgba(18, 24, 36, 0.985) 0%, rgba(10, 14, 22, 0.99) 100%);
+  border: 1px solid rgba(255,255,255,0.14);
   box-shadow:
-    0 28px 70px rgba(0,0,0,0.66),
-    inset 0 1px 0 rgba(255,255,255,0.14);
+    0 28px 70px rgba(0,0,0,0.58),
+    0 0 0 1px rgba(255,255,255,0.04),
+    inset 0 1px 0 rgba(255,255,255,0.12);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transform: translateX(-50%) translateY(-8px) scale(0.98);
+  transform: translateX(-50%) translateY(-10px) scale(0.985);
   transform-origin: top center;
   transition:
-    opacity 0.24s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
-    visibility 0.24s ease;
+    opacity 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0.22s ease,
+    top 0.18s ease,
+    max-height 0.18s ease;
+  will-change: transform, opacity, top, max-height;
+}
+
+.eva-menu-panel::before {
+  content: "";
+  position: sticky;
+  top: -12px;
+  display: block;
+  height: 0;
+  pointer-events: none;
 }
 
 .eva-menu-panel::-webkit-scrollbar {
@@ -289,10 +303,12 @@ body.nav-menu-open .eva-backdrop {
 
 html[data-theme="light"] .eva-menu-panel,
 html[data-theme$="-light"] .eva-menu-panel {
-  background: rgba(247,248,248,0.995);
-  border: 1px solid rgba(255,255,255,0.96);
+  background:
+    linear-gradient(180deg, rgba(250, 251, 252, 0.985) 0%, rgba(242, 245, 247, 0.99) 100%);
+  border: 1px solid rgba(255,255,255,0.92);
   box-shadow:
-    0 24px 54px rgba(85,110,99,0.24),
+    0 24px 54px rgba(85,110,99,0.20),
+    0 0 0 1px rgba(255,255,255,0.36),
     inset 0 1px 0 rgba(255,255,255,1);
 }
 
