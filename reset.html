@@ -3,9 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+  <!-- Security / cache control -->
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
+
   <title>Reset Password • Evaraos Inc</title>
 
   <link rel="stylesheet" href="/evaraos/assets/css/base.css" />
@@ -13,6 +16,27 @@
   <link rel="stylesheet" href="/evaraos/assets/css/nav.css" />
   <link rel="stylesheet" href="/evaraos/assets/css/auth.css" />
   <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css" />
+
+  <script>
+    document.documentElement.classList.add("auth-pending");
+  </script>
+
+  <style>
+    html.auth-pending body,
+    body.auth-pending {
+      opacity: 0;
+      pointer-events: none;
+    }
+  </style>
+
+  <script type="module">
+    import { protectRoute } from "/evaraos/assets/js/firebase.js";
+    protectRoute({
+      requireAuth: false,
+      redirectGuestTo: "/evaraos/login.html",
+      redirectAuthedTo: "/evaraos/dashboard.html"
+    });
+  </script>
 </head>
 <body class="reset-page auth-pending" data-route-guard="auth">
   <div class="page-grid-overlay"></div>
