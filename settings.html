@@ -7,17 +7,17 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
-  <title>Advanced Settings • Evaraos Inc</title>
+  <title>Settings Hub • Evaraos Inc</title>
 
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=25" />
-  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=25" />
-  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=25" />
-  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=25" />
-  <link rel="stylesheet" href="/evaraos/assets/css/auth.css?v=25" />
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=26" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=26" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=26" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=26" />
+  <link rel="stylesheet" href="/evaraos/assets/css/auth.css?v=26" />
 
   <style>
     .settings-shell {
-      width: min(1120px, calc(100% - 24px));
+      width: min(1180px, calc(100% - 24px));
       margin: 108px auto 80px;
       display: grid;
       gap: 18px;
@@ -35,7 +35,7 @@
 
     .settings-hero h1 {
       margin: 0;
-      font-size: clamp(2rem, 4vw, 3.1rem);
+      font-size: clamp(2rem, 4vw, 3.15rem);
       line-height: 0.96;
       letter-spacing: -0.05em;
     }
@@ -45,7 +45,7 @@
       margin: 0;
       max-width: 74ch;
       line-height: 1.7;
-      opacity: 0.8;
+      opacity: 0.82;
       font-size: 1rem;
     }
 
@@ -58,6 +58,15 @@
       margin: 0;
       font-size: 1.42rem;
       letter-spacing: -0.03em;
+    }
+
+    .settings-kicker {
+      margin: 0;
+      font-size: 0.82rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      opacity: 0.72;
+      font-weight: 800;
     }
 
     .settings-status-line {
@@ -77,6 +86,7 @@
       padding-bottom: 2px;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
+      flex-wrap: wrap;
     }
 
     .settings-chip-row::-webkit-scrollbar {
@@ -112,6 +122,27 @@
 
     .settings-chip:active {
       transform: scale(0.985);
+    }
+
+    .settings-section-nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .settings-section-link {
+      min-height: 42px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      color: inherit;
+      font-weight: 800;
+      font-size: 0.92rem;
     }
 
     .settings-preview {
@@ -171,33 +202,52 @@
       flex: 0 0 auto;
     }
 
-    .settings-grid-2 {
+    .settings-grid-2,
+    .settings-grid-3 {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 16px;
+    }
+
+    .settings-grid-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .settings-grid-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .settings-preview-card,
+    .settings-color-tool,
+    .settings-mini-card {
+      border-radius: 28px;
+      padding: 20px;
+      display: grid;
+      gap: 14px;
+      align-content: start;
     }
 
     .settings-preview-card,
     .settings-color-tool {
       min-height: 182px;
-      border-radius: 28px;
-      padding: 20px;
-      display: grid;
-      align-content: space-between;
-      gap: 16px;
+    }
+
+    .settings-mini-card {
+      min-height: 150px;
     }
 
     .settings-preview-card h3,
-    .settings-color-tool h3 {
+    .settings-color-tool h3,
+    .settings-mini-card h3 {
       margin: 0;
       font-size: 1.06rem;
       letter-spacing: -0.02em;
     }
 
     .settings-preview-card p,
-    .settings-color-tool p {
+    .settings-color-tool p,
+    .settings-mini-card p {
       margin: 0;
-      opacity: 0.74;
+      opacity: 0.76;
       line-height: 1.55;
       font-size: 0.94rem;
     }
@@ -297,10 +347,91 @@
       pointer-events: none;
     }
 
+    .settings-toggle-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .settings-toggle-row:last-child {
+      border-bottom: 0;
+    }
+
+    .settings-toggle-copy {
+      display: grid;
+      gap: 4px;
+    }
+
+    .settings-toggle-copy strong {
+      font-size: 0.98rem;
+    }
+
+    .settings-toggle-copy span {
+      opacity: 0.74;
+      line-height: 1.45;
+      font-size: 0.9rem;
+    }
+
+    .settings-switch {
+      appearance: none;
+      width: 54px;
+      height: 32px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.12);
+      position: relative;
+      cursor: pointer;
+      flex: 0 0 auto;
+    }
+
+    .settings-switch::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.94);
+      transition: transform 0.18s ease;
+    }
+
+    .settings-switch:checked::after {
+      transform: translateX(22px);
+    }
+
+    .settings-pill-list {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .settings-pill {
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.06);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
     .settings-footer-actions {
       display: flex;
       gap: 12px;
       flex-wrap: wrap;
+    }
+
+    @media (max-width: 960px) {
+      .settings-grid-3 {
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (max-width: 840px) {
@@ -320,17 +451,65 @@
 
   <main class="settings-shell">
     <section class="settings-hero glass-card aurora-card active-glow beam-target">
-      <h1>Advanced Settings</h1>
+      <p class="settings-kicker">SETTINGS HUB</p>
+      <h1>Manage your account, appearance, security, notifications, and tools in one place.</h1>
       <p>
-        Tune the visual system for Evaraos with clean appearance controls, contextual beam behavior,
-        and custom color wheels that open only when you need them.
+        Keep settings centralized for now while Evaraos is evolving fast. Later, when the app grows,
+        these sections can split into their own dedicated pages.
       </p>
+
+      <div class="settings-section-nav">
+        <a class="settings-section-link beam-target" href="#settingsGeneral">General</a>
+        <a class="settings-section-link beam-target" href="#settingsAppearance">Appearance</a>
+        <a class="settings-section-link beam-target" href="#settingsSecurity">Security</a>
+        <a class="settings-section-link beam-target" href="#settingsNotifications">Notifications</a>
+        <a class="settings-section-link beam-target" href="#settingsDevices">Sessions & Devices</a>
+        <a class="settings-section-link beam-target" href="#settingsDeveloper">Developer / QA</a>
+      </div>
     </section>
 
-    <section class="settings-block glass-card aurora-card active-glow beam-target">
+    <section class="settings-block glass-card aurora-card active-glow beam-target" id="settingsGeneral">
       <div class="settings-head">
-        <h2>Live Design Preview</h2>
-        <p>Preview how the navigation, cards, buttons, and beam system react before you leave this page.</p>
+        <p class="settings-kicker">General</p>
+        <h2>Account & Workspace</h2>
+        <p>Core account and workspace preferences stay here while the platform grows.</p>
+      </div>
+
+      <div class="settings-grid-3">
+        <article class="settings-mini-card glass-card aurora-card beam-target">
+          <h3>Workspace Status</h3>
+          <p>Your centralized settings hub is active and ready for future expansion.</p>
+          <div class="settings-pill-list">
+            <span class="settings-pill">Live</span>
+            <span class="settings-pill">Centralized</span>
+          </div>
+        </article>
+
+        <article class="settings-mini-card glass-card aurora-card beam-target">
+          <h3>Role Awareness</h3>
+          <p>Use this area later for role-aware settings and organization-level controls.</p>
+          <div class="settings-pill-list">
+            <span class="settings-pill">Owner</span>
+            <span class="settings-pill">Admin</span>
+          </div>
+        </article>
+
+        <article class="settings-mini-card glass-card aurora-card beam-target">
+          <h3>Future Split Plan</h3>
+          <p>General stays here for now. Deeper settings can split later without breaking the hub.</p>
+          <div class="settings-pill-list">
+            <span class="settings-pill">Hub First</span>
+            <span class="settings-pill">Split Later</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="settings-block glass-card aurora-card active-glow beam-target" id="settingsAppearance">
+      <div class="settings-head">
+        <p class="settings-kicker">Appearance</p>
+        <h2>Theme, Beam, Nav, and Color System</h2>
+        <p>Customize the visual system with clean controls that stay centralized for now.</p>
       </div>
 
       <div class="settings-preview">
@@ -349,7 +528,7 @@
           <article class="settings-preview-card glass-card aurora-card beam-target">
             <div>
               <h3>Card Surface</h3>
-              <p>Preview of panel depth, border treatment, and hover beam response.</p>
+              <p>Preview panel depth, border treatment, and hover beam response.</p>
             </div>
             <button class="settings-preview-btn beam-target" type="button">Primary Button</button>
           </article>
@@ -363,10 +542,8 @@
           </article>
         </div>
       </div>
-    </section>
 
-    <section class="settings-block glass-card aurora-card active-glow beam-target">
-      <div class="settings-head">
+      <div class="settings-head" style="margin-top:4px;">
         <h2>Appearance Mode</h2>
         <p class="settings-status-line">
           Current mode: <strong data-theme-mode-text>Dark</strong>
@@ -378,10 +555,8 @@
         <button class="settings-chip beam-target" data-set-mode="light" type="button">Light</button>
         <button class="settings-chip beam-target" data-set-mode="custom" type="button">Custom</button>
       </div>
-    </section>
 
-    <section class="settings-block glass-card aurora-card active-glow beam-target">
-      <div class="settings-head">
+      <div class="settings-head" style="margin-top:4px;">
         <h2>Beam Settings</h2>
         <p class="settings-status-line">
           Current beam: <strong data-beam-mode-text>Contextual</strong>
@@ -394,15 +569,8 @@
         <button class="settings-chip beam-target" data-set-beam="rainbow" type="button">Rainbow</button>
         <button class="settings-chip beam-target" data-set-beam="custom" type="button">Custom Beam</button>
       </div>
-    </section>
 
-    <section class="settings-block glass-card aurora-card active-glow beam-target" data-color-wheel-section>
-      <div class="settings-head">
-        <h2>Color Wheel Controls</h2>
-        <p>Tap any control to open the actual system color picker. Clean controls, no giant ugly bars.</p>
-      </div>
-
-      <div class="settings-grid-2">
+      <div class="settings-grid-2" data-color-wheel-section>
         <article class="settings-color-tool glass-card aurora-card beam-target">
           <div class="settings-color-tool-top">
             <h3>Navigation</h3>
@@ -478,17 +646,123 @@
           <input class="settings-color-input" type="color" data-appearance-beam />
         </article>
       </div>
+    </section>
+
+    <section class="settings-block glass-card aurora-card active-glow beam-target" id="settingsSecurity">
+      <div class="settings-head">
+        <p class="settings-kicker">Security</p>
+        <h2>Auth, Sessions, Roles, and Devices</h2>
+        <p>Keep this section in the hub for now, then split later into its own dedicated security page.</p>
+      </div>
+
+      <div class="settings-grid-2">
+        <article class="settings-mini-card glass-card aurora-card beam-target">
+          <h3>Session Controls</h3>
+          <p>Later connect this section to active sessions, device history, and sign-out everywhere controls.</p>
+        </article>
+
+        <article class="settings-mini-card glass-card aurora-card beam-target">
+          <h3>Role Visibility</h3>
+          <p>Later connect role-based permissions, owner/admin controls, and access-level management.</p>
+        </article>
+      </div>
+
+      <div class="glass-card aurora-card" style="padding:18px;">
+        <div class="settings-toggle-row">
+          <div class="settings-toggle-copy">
+            <strong>Secure session reminders</strong>
+            <span>Placeholder for later login/session security prompts.</span>
+          </div>
+          <input class="settings-switch beam-target" type="checkbox" />
+        </div>
+
+        <div class="settings-toggle-row">
+          <div class="settings-toggle-copy">
+            <strong>Role change confirmations</strong>
+            <span>Placeholder for admin confirmation workflows on sensitive account changes.</span>
+          </div>
+          <input class="settings-switch beam-target" type="checkbox" />
+        </div>
+      </div>
+    </section>
+
+    <section class="settings-block glass-card aurora-card active-glow beam-target" id="settingsNotifications">
+      <div class="settings-head">
+        <p class="settings-kicker">Notifications</p>
+        <h2>Alerts and Reminders</h2>
+        <p>Keep reminder and alert preferences centralized until communications grow deep enough to split.</p>
+      </div>
+
+      <div class="glass-card aurora-card" style="padding:18px;">
+        <div class="settings-toggle-row">
+          <div class="settings-toggle-copy">
+            <strong>System alerts</strong>
+            <span>Later connect live platform notices, important operational flags, and priority updates.</span>
+          </div>
+          <input class="settings-switch beam-target" type="checkbox" checked />
+        </div>
+
+        <div class="settings-toggle-row">
+          <div class="settings-toggle-copy">
+            <strong>Reminder nudges</strong>
+            <span>Later connect reminders for jobs, leads, tasks, or admin workflows.</span>
+          </div>
+          <input class="settings-switch beam-target" type="checkbox" checked />
+        </div>
+
+        <div class="settings-toggle-row">
+          <div class="settings-toggle-copy">
+            <strong>Email summaries</strong>
+            <span>Later connect digest notifications, reports, and daily/weekly summaries.</span>
+          </div>
+          <input class="settings-switch beam-target" type="checkbox" />
+        </div>
+      </div>
+    </section>
+
+    <section class="settings-block glass-card aurora-card active-glow beam-target" id="settingsDevices">
+      <div class="settings-head">
+        <p class="settings-kicker">Sessions & Devices</p>
+        <h2>Device Awareness</h2>
+        <p>Keep this section inside the hub for now so security and session awareness stay easy to find.</p>
+      </div>
+
+      <div class="settings-grid-3">
+        <article class="settings-mini-card glass-card aurora-card beam-target">
+          <h3>Current Device</h3>
+          <p>Use this later for real device details, active browser session details, and trust status.</p>
+        </article>
+
+        <article class="settings-mini-card glass-card aurora-card beam-target">
+          <h3>Trusted Devices</h3>
+          <p>Use this later for saved devices, trusted session management, and sign-out controls.</p>
+        </article>
+
+        <article class="settings-mini-card glass-card aurora-card beam-target">
+          <h3>Session History</h3>
+          <p>Use this later for sign-in logs, suspicious activity notices, and recent access history.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="settings-block glass-card aurora-card active-glow beam-target" id="settingsDeveloper">
+      <div class="settings-head">
+        <p class="settings-kicker">Developer / QA</p>
+        <h2>Internal Tools</h2>
+        <p>Quick links to the systems you’re actively using while building Evaraos.</p>
+      </div>
 
       <div class="settings-footer-actions">
-        <button class="btn btn-theme-primary beam-target" data-appearance-reset type="button">Reset Appearance</button>
-        <a class="btn btn-theme-secondary beam-target" href="/evaraos/index.html">Back to Home</a>
+        <a class="btn btn-theme-primary beam-target" href="/evaraos/qa.html">Open QA Dashboard</a>
+        <a class="btn btn-theme-secondary beam-target" href="/evaraos/dashboard.html">Open Dashboard</a>
+        <button class="btn btn-theme-secondary beam-target" data-appearance-reset type="button">Reset Appearance</button>
       </div>
     </section>
   </main>
 
-  <script src="/evaraos/assets/js/theme.js?v=25"></script>
-  <script type="module" src="/evaraos/assets/js/firebase.js?v=25"></script>
-  <script type="module" src="/evaraos/assets/js/route-guard.js?v=25"></script>
-  <script src="/evaraos/assets/js/nav.js?v=25"></script>
+  <script src="/evaraos/assets/js/theme.js?v=26"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js?v=26"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js?v=26"></script>
+  <script src="/evaraos/assets/js/nav.js?v=26"></script>
 </body>
 </html>
