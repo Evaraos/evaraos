@@ -9,16 +9,16 @@
 
   <title>Advanced Settings • Evaraos Inc</title>
 
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=22" />
-  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=22" />
-  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=22" />
-  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=22" />
-  <link rel="stylesheet" href="/evaraos/assets/css/auth.css?v=22" />
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=25" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=25" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=25" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=25" />
+  <link rel="stylesheet" href="/evaraos/assets/css/auth.css?v=25" />
 
   <style>
     .settings-shell {
       width: min(1120px, calc(100% - 24px));
-      margin: 110px auto 80px;
+      margin: 108px auto 80px;
       display: grid;
       gap: 18px;
       position: relative;
@@ -35,7 +35,7 @@
 
     .settings-hero h1 {
       margin: 0;
-      font-size: clamp(2rem, 4vw, 3.25rem);
+      font-size: clamp(2rem, 4vw, 3.1rem);
       line-height: 0.96;
       letter-spacing: -0.05em;
     }
@@ -68,6 +68,50 @@
 
     .settings-status-line strong {
       font-weight: 900;
+    }
+
+    .settings-chip-row {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .settings-chip-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .settings-chip {
+      flex: 0 0 auto;
+      min-height: 46px;
+      padding: 0 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: inherit;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition:
+        transform 0.16s ease,
+        box-shadow 0.16s ease,
+        background 0.16s ease,
+        border-color 0.16s ease;
+    }
+
+    .settings-chip:hover {
+      transform: translateY(-1px);
+      background: rgba(255,255,255,0.09);
+    }
+
+    .settings-chip:active {
+      transform: scale(0.985);
     }
 
     .settings-preview {
@@ -127,14 +171,15 @@
       flex: 0 0 auto;
     }
 
-    .settings-preview-grid {
+    .settings-grid-2 {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 16px;
     }
 
-    .settings-preview-card {
-      min-height: 190px;
+    .settings-preview-card,
+    .settings-color-tool {
+      min-height: 182px;
       border-radius: 28px;
       padding: 20px;
       display: grid;
@@ -142,26 +187,29 @@
       gap: 16px;
     }
 
-    .settings-preview-card h3 {
+    .settings-preview-card h3,
+    .settings-color-tool h3 {
       margin: 0;
-      font-size: 1.14rem;
+      font-size: 1.06rem;
+      letter-spacing: -0.02em;
     }
 
-    .settings-preview-card p {
+    .settings-preview-card p,
+    .settings-color-tool p {
       margin: 0;
-      opacity: 0.72;
+      opacity: 0.74;
+      line-height: 1.55;
+      font-size: 0.94rem;
     }
 
     .settings-preview-btn {
-      min-height: 58px;
+      min-height: 56px;
       border-radius: 999px;
       border: 1px solid rgba(255,255,255,0.12);
-      padding: 0 18px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       font-weight: 800;
-      font-size: 1rem;
       width: 100%;
       background: rgba(255,255,255,0.08);
       color: inherit;
@@ -179,100 +227,74 @@
       transform: scale(0.985);
     }
 
-    .settings-chip-row {
+    .settings-color-tool-top {
+      display: grid;
+      gap: 6px;
+    }
+
+    .settings-color-swatch-row {
       display: flex;
-      gap: 10px;
-      overflow-x: auto;
-      padding-bottom: 2px;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
     }
 
-    .settings-chip-row::-webkit-scrollbar {
-      display: none;
-    }
-
-    .settings-chip {
+    .settings-color-swatch {
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.12),
+        0 10px 18px rgba(0,0,0,0.12);
       flex: 0 0 auto;
-      min-height: 46px;
-      padding: 0 18px;
+    }
+
+    .settings-color-meta {
+      min-width: 0;
+      display: grid;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .settings-color-value {
+      font-size: 0.84rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      opacity: 0.78;
+      text-transform: uppercase;
+    }
+
+    .settings-color-open {
+      min-height: 42px;
+      padding: 0 14px;
       border-radius: 999px;
       border: 1px solid rgba(255,255,255,0.12);
       background: rgba(255,255,255,0.06);
       color: inherit;
       font-weight: 800;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
       cursor: pointer;
-      touch-action: manipulation;
       transition:
         transform 0.16s ease,
-        box-shadow 0.16s ease,
         background 0.16s ease,
-        border-color 0.16s ease;
+        box-shadow 0.16s ease;
     }
 
-    .settings-chip:hover {
+    .settings-color-open:hover {
       transform: translateY(-1px);
       background: rgba(255,255,255,0.09);
     }
 
-    .settings-chip:active {
+    .settings-color-open:active {
       transform: scale(0.985);
     }
 
-    .settings-grid-2 {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
-    }
-
-    .settings-color-tool {
-      min-height: 220px;
-      border-radius: 28px;
-      padding: 20px;
-      display: grid;
-      gap: 14px;
-      align-content: start;
-    }
-
-    .settings-color-tool h3 {
-      margin: 0;
-      font-size: 1.04rem;
-      letter-spacing: -0.02em;
-    }
-
-    .settings-color-tool p {
-      margin: 0;
-      opacity: 0.74;
-      line-height: 1.5;
-      font-size: 0.94rem;
-    }
-
-    .settings-color-preview {
-      height: 56px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.12);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.14);
-    }
-
     .settings-color-input {
-      width: 100%;
-      height: 58px;
-      padding: 0;
-      border: 0;
-      background: transparent;
-      cursor: pointer;
-    }
-
-    .settings-color-value {
-      font-size: 0.86rem;
-      font-weight: 800;
-      letter-spacing: 0.04em;
-      opacity: 0.76;
-      text-transform: uppercase;
+      position: absolute;
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+      pointer-events: none;
     }
 
     .settings-footer-actions {
@@ -282,13 +304,12 @@
     }
 
     @media (max-width: 840px) {
-      .settings-preview-grid,
       .settings-grid-2 {
         grid-template-columns: 1fr;
       }
 
       .settings-shell {
-        margin-top: 104px;
+        margin-top: 102px;
       }
     }
   </style>
@@ -298,148 +319,176 @@
   <div id="universalNav"></div>
 
   <main class="settings-shell">
-    <section class="settings-hero glass-card aurora-card active-glow">
+    <section class="settings-hero glass-card aurora-card active-glow beam-target">
       <h1>Advanced Settings</h1>
       <p>
-        This is your design control center for Evaraos Inc. Customize appearance mode,
-        beam behavior, navigation tint, card tint, button color, background aura, and
-        beam color with live visual previews.
+        Tune the visual system for Evaraos with clean appearance controls, contextual beam behavior,
+        and custom color wheels that open only when you need them.
       </p>
     </section>
 
-    <section class="settings-block glass-card aurora-card active-glow">
+    <section class="settings-block glass-card aurora-card active-glow beam-target">
       <div class="settings-head">
         <h2>Live Design Preview</h2>
-        <p>Everything below reacts to your current nav tint, card tint, button tint, background aura, and beam mode.</p>
+        <p>Preview how the navigation, cards, buttons, and beam system react before you leave this page.</p>
       </div>
 
       <div class="settings-preview">
-        <div class="settings-preview-nav glass-card aurora-card active-glow">
+        <div class="settings-preview-nav glass-card aurora-card beam-target">
           <div class="settings-preview-brand">
-            <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos logo">
+            <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos logo" />
             <div class="settings-preview-brand-copy">
-              <strong>Live Navigation Preview</strong>
-              <span>Navbar tint and beam mode preview</span>
+              <strong>Navigation Preview</strong>
+              <span>Nav tint and beam behavior</span>
             </div>
           </div>
-          <div class="settings-preview-menu">☰</div>
+          <div class="settings-preview-menu beam-target">☰</div>
         </div>
 
-        <div class="settings-preview-grid">
-          <article class="settings-preview-card glass-card aurora-card active-glow">
+        <div class="settings-grid-2">
+          <article class="settings-preview-card glass-card aurora-card beam-target">
             <div>
               <h3>Card Surface</h3>
-              <p>Glass panel preview</p>
+              <p>Preview of panel depth, border treatment, and hover beam response.</p>
             </div>
-            <button class="settings-preview-btn">Primary Button</button>
+            <button class="settings-preview-btn beam-target" type="button">Primary Button</button>
           </article>
 
-          <article class="settings-preview-card glass-card aurora-card active-glow">
+          <article class="settings-preview-card glass-card aurora-card beam-target">
             <div>
-              <h3>Beam Engine</h3>
-              <p>Beam mode preview</p>
+              <h3>Beam Preview</h3>
+              <p>Hover, tap, or focus to preview contextual, rainbow, or custom beam styles.</p>
             </div>
-            <button class="settings-preview-btn">Accent Action</button>
+            <button class="settings-preview-btn beam-target" type="button">Beam Action</button>
           </article>
         </div>
       </div>
     </section>
 
-    <section class="settings-block glass-card aurora-card active-glow">
+    <section class="settings-block glass-card aurora-card active-glow beam-target">
       <div class="settings-head">
         <h2>Appearance Mode</h2>
         <p class="settings-status-line">
           Current mode: <strong data-theme-mode-text>Dark</strong>
-          · Family: <strong data-theme-group-text>Neutral</strong>
-          · Beam: <strong data-beam-mode-text>On</strong>
         </p>
       </div>
 
       <div class="settings-chip-row">
-        <button class="settings-chip" data-set-mode="dark">Dark</button>
-        <button class="settings-chip" data-set-mode="light">Light</button>
-        <button class="settings-chip" data-set-family="neutral">Neutral</button>
-        <button class="settings-chip" data-set-family="blue">Blue</button>
-        <button class="settings-chip" data-set-family="red">Red</button>
-        <button class="settings-chip" data-set-family="pink">Pink</button>
-        <button class="settings-chip" data-set-family="green">Green</button>
-        <button class="settings-chip" data-set-family="purple">Purple</button>
-        <button class="settings-chip" data-set-family="yellow">Yellow</button>
+        <button class="settings-chip beam-target" data-set-mode="dark" type="button">Dark</button>
+        <button class="settings-chip beam-target" data-set-mode="light" type="button">Light</button>
+        <button class="settings-chip beam-target" data-set-mode="custom" type="button">Custom</button>
       </div>
     </section>
 
-    <section class="settings-block glass-card aurora-card active-glow">
+    <section class="settings-block glass-card aurora-card active-glow beam-target">
       <div class="settings-head">
         <h2>Beam Settings</h2>
-        <p>Choose how the outline beam behaves across nav, cards, inputs, and active surfaces.</p>
+        <p class="settings-status-line">
+          Current beam: <strong data-beam-mode-text>Contextual</strong>
+        </p>
       </div>
 
       <div class="settings-chip-row">
-        <button class="settings-chip" data-set-beam="off">Beam Off</button>
-        <button class="settings-chip" data-set-beam="on">Beam On</button>
-        <button class="settings-chip" data-set-beam="rainbow">Rainbow Beam</button>
-        <button class="settings-chip" data-set-beam="custom">Custom Beam</button>
+        <button class="settings-chip beam-target" data-set-beam="off" type="button">Beam Off</button>
+        <button class="settings-chip beam-target" data-set-beam="contextual" type="button">Contextual</button>
+        <button class="settings-chip beam-target" data-set-beam="rainbow" type="button">Rainbow</button>
+        <button class="settings-chip beam-target" data-set-beam="custom" type="button">Custom Beam</button>
       </div>
     </section>
 
-    <section class="settings-block glass-card aurora-card active-glow">
+    <section class="settings-block glass-card aurora-card active-glow beam-target" data-color-wheel-section>
       <div class="settings-head">
         <h2>Color Wheel Controls</h2>
-        <p>Use a real color picker for every major surface in the system.</p>
+        <p>Tap any control to open the actual system color picker. Clean controls, no giant ugly bars.</p>
       </div>
 
       <div class="settings-grid-2">
-        <article class="settings-color-tool glass-card aurora-card active-glow">
-          <h3>Navigation Color</h3>
-          <p>Controls nav tint and menu surface accents.</p>
-          <div class="settings-color-preview" data-nav-color-preview></div>
+        <article class="settings-color-tool glass-card aurora-card beam-target">
+          <div class="settings-color-tool-top">
+            <h3>Navigation</h3>
+            <p>Controls nav tint and menu accent styling.</p>
+          </div>
+          <div class="settings-color-swatch-row">
+            <div class="settings-color-swatch" data-nav-color-preview></div>
+            <div class="settings-color-meta">
+              <div class="settings-color-value" data-nav-color-value>#FF3B30</div>
+              <button class="settings-color-open beam-target" type="button" onclick="document.querySelector('[data-appearance-nav]').click()">Open Wheel</button>
+            </div>
+          </div>
           <input class="settings-color-input" type="color" data-appearance-nav />
-          <div class="settings-color-value" data-nav-color-value>#FF3B30</div>
         </article>
 
-        <article class="settings-color-tool glass-card aurora-card active-glow">
-          <h3>Card Color</h3>
-          <p>Controls card borders and panel accent tint.</p>
-          <div class="settings-color-preview" data-card-color-preview></div>
+        <article class="settings-color-tool glass-card aurora-card beam-target">
+          <div class="settings-color-tool-top">
+            <h3>Cards</h3>
+            <p>Controls card borders, panel tint, and surface styling.</p>
+          </div>
+          <div class="settings-color-swatch-row">
+            <div class="settings-color-swatch" data-card-color-preview></div>
+            <div class="settings-color-meta">
+              <div class="settings-color-value" data-card-color-value>#8B5CF6</div>
+              <button class="settings-color-open beam-target" type="button" onclick="document.querySelector('[data-appearance-card]').click()">Open Wheel</button>
+            </div>
+          </div>
           <input class="settings-color-input" type="color" data-appearance-card />
-          <div class="settings-color-value" data-card-color-value>#8B5CF6</div>
         </article>
 
-        <article class="settings-color-tool glass-card aurora-card active-glow">
-          <h3>Button Color</h3>
-          <p>Controls primary button color and glow.</p>
-          <div class="settings-color-preview" data-button-color-preview></div>
+        <article class="settings-color-tool glass-card aurora-card beam-target">
+          <div class="settings-color-tool-top">
+            <h3>Buttons</h3>
+            <p>Controls primary action color and glow.</p>
+          </div>
+          <div class="settings-color-swatch-row">
+            <div class="settings-color-swatch" data-button-color-preview></div>
+            <div class="settings-color-meta">
+              <div class="settings-color-value" data-button-color-value>#2563EB</div>
+              <button class="settings-color-open beam-target" type="button" onclick="document.querySelector('[data-appearance-button]').click()">Open Wheel</button>
+            </div>
+          </div>
           <input class="settings-color-input" type="color" data-appearance-button />
-          <div class="settings-color-value" data-button-color-value>#2563EB</div>
         </article>
 
-        <article class="settings-color-tool glass-card aurora-card active-glow">
-          <h3>Background Aura</h3>
-          <p>Controls the page aura and ambient background color energy.</p>
-          <div class="settings-color-preview" data-background-color-preview></div>
+        <article class="settings-color-tool glass-card aurora-card beam-target">
+          <div class="settings-color-tool-top">
+            <h3>Background Aura</h3>
+            <p>Controls page energy, atmospheric tint, and ambient color depth.</p>
+          </div>
+          <div class="settings-color-swatch-row">
+            <div class="settings-color-swatch" data-background-color-preview></div>
+            <div class="settings-color-meta">
+              <div class="settings-color-value" data-background-color-value>#0F172A</div>
+              <button class="settings-color-open beam-target" type="button" onclick="document.querySelector('[data-appearance-background]').click()">Open Wheel</button>
+            </div>
+          </div>
           <input class="settings-color-input" type="color" data-appearance-background />
-          <div class="settings-color-value" data-background-color-value>#0F172A</div>
         </article>
 
-        <article class="settings-color-tool glass-card aurora-card active-glow">
-          <h3>Beam Color</h3>
-          <p>Controls the beam/focus outline color in custom or standard beam mode.</p>
-          <div class="settings-color-preview" data-beam-color-preview></div>
+        <article class="settings-color-tool glass-card aurora-card beam-target">
+          <div class="settings-color-tool-top">
+            <h3>Beam Color</h3>
+            <p>Controls the custom beam color used for contextual and custom interactive glow.</p>
+          </div>
+          <div class="settings-color-swatch-row">
+            <div class="settings-color-swatch" data-beam-color-preview></div>
+            <div class="settings-color-meta">
+              <div class="settings-color-value" data-beam-color-value>#7C3AED</div>
+              <button class="settings-color-open beam-target" type="button" onclick="document.querySelector('[data-appearance-beam]').click()">Open Wheel</button>
+            </div>
+          </div>
           <input class="settings-color-input" type="color" data-appearance-beam />
-          <div class="settings-color-value" data-beam-color-value>#7C3AED</div>
         </article>
       </div>
 
       <div class="settings-footer-actions">
-        <button class="btn btn-theme-primary" data-appearance-reset type="button">Reset Appearance</button>
-        <a class="btn btn-theme-secondary" href="/evaraos/index.html">Back to Home</a>
+        <button class="btn btn-theme-primary beam-target" data-appearance-reset type="button">Reset Appearance</button>
+        <a class="btn btn-theme-secondary beam-target" href="/evaraos/index.html">Back to Home</a>
       </div>
     </section>
   </main>
 
-  <script src="/evaraos/assets/js/theme.js?v=22"></script>
-  <script type="module" src="/evaraos/assets/js/firebase.js?v=22"></script>
-  <script type="module" src="/evaraos/assets/js/route-guard.js?v=22"></script>
-  <script src="/evaraos/assets/js/nav.js?v=22"></script>
+  <script src="/evaraos/assets/js/theme.js?v=25"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js?v=25"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js?v=25"></script>
+  <script src="/evaraos/assets/js/nav.js?v=25"></script>
 </body>
 </html>
