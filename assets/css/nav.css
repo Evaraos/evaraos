@@ -247,15 +247,15 @@ body.nav-menu-open .eva-backdrop {
   position: fixed;
   z-index: 2147483647;
   left: 50%;
-  top: calc(max(10px, env(safe-area-inset-top)) + 102px);
-  width: min(356px, calc(100vw - 28px));
-  max-height: calc(100vh - 132px);
+  top: calc(max(4px, env(safe-area-inset-top)) + 76px);
+  width: min(356px, calc(100vw - 22px));
+  max-height: calc(100vh - 92px - env(safe-area-inset-bottom));
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  padding: 14px;
-  border-radius: 28px;
+  padding: 12px 12px max(14px, env(safe-area-inset-bottom));
+  border-radius: 26px;
   display: grid;
   gap: 10px;
   background: rgba(10, 14, 22, 0.995);
@@ -431,11 +431,11 @@ html[data-theme$="-light"] .eva-chip-dot {
 
 @media (max-width: 480px) {
   .eva-menu-panel {
-    width: calc(100vw - 16px);
-    top: calc(max(10px, env(safe-area-inset-top)) + 96px);
-    max-height: calc(100vh - 118px);
-    border-radius: 24px;
-    padding: 12px;
+    width: calc(100vw - 12px);
+    top: calc(max(2px, env(safe-area-inset-top)) + 68px);
+    max-height: calc(100vh - 78px - env(safe-area-inset-bottom));
+    border-radius: 22px;
+    padding: 10px 10px max(14px, env(safe-area-inset-bottom));
   }
 
   .eva-link,
