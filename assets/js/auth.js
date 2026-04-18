@@ -1,230 +1,163 @@
+// assets/js/auth.js
+
 import {
   auth,
   db,
-  applyUserToUi
-} from "./firebase.js";
-
-import {
-  browserLocalPersistence,
-  browserSessionPersistence,
+  setAuthPersistence,
+  signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
-  setPersistence,
-  signInWithEmailAndPassword,
-  updateProfile
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  updateProfile,
+  syncUserSession
+} from "./firebase.js";
 
 import {
   doc,
   getDoc,
-  query,
+  setDoc,
   collection,
+  query,
   where,
   getDocs,
-  serverTimestamp,
-  setDoc
+  limit
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const loginForm = document.getElementById("loginForm");
-const signupForm = document.getElementById("signupForm");
-const resetForm = document.getElementById("resetForm");
+function byId(id) {
+  return document.getElementById(id);
+}
 
-function setMessage(id, message, isError = false) {
-  const el = document.getElementById(id);
+function setMessage(el, message, type = "info") {
   if (!el) return;
-  el.textContent = message;
-  el.style.color = isError ? "#ff9f93" : "#94f3c4";
+  el.textContent = message || "";
+  el.dataset.state = type;
 }
 
-function normalizeUsername(value = "") {
-  return String(value || "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "")
-    .replace(/[^a-z0-9._-]/g, "");
-}
+function bindPasswordToggle(buttonId, inputId) {
+  const button = byId(buttonId);
+  const input = byId(inputId);
+  if (!button || !input) return;
 
-function pulse(el) {
-  if (!el) return;
-  el.classList.remove("active-glow");
-  void el.offsetWidth;
-  el.classList.add("active-glow");
-  setTimeout(() => el.classList.remove("active-glow"), 220);
-}
-
-function bindPasswordToggle(toggleId, inputId) {
-  const toggle = document.getElementById(toggleId);
-  const input = document.getElementById(inputId);
-
-  if (!toggle || !input || toggle.dataset.bound === "true") return;
-  toggle.dataset.bound = "true";
-
-  toggle.addEventListener("click", () => {
-    const makeVisible = input.type === "password";
-    input.type = makeVisible ? "text" : "password";
-    toggle.classList.toggle("is-visible", makeVisible);
-    toggle.setAttribute("aria-label", makeVisible ? "Hide password" : "Show password");
-    pulse(toggle);
+  button.addEventListener("click", () => {
+    const isPassword = input.type === "password";
+    input.type = isPassword ? "text" : "password";
+    button.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
+    button.classList.toggle("is-visible", isPassword);
   });
 }
 
-function bindAllPasswordToggles() {
-  bindPasswordToggle("loginPasswordToggle", "loginPassword");
-  bindPasswordToggle("signupPasswordToggle", "signupPassword");
-  bindPasswordToggle("signupPasswordConfirmToggle", "signupPasswordConfirm");
-}
-
-async function getEmailFromIdentifier(identifier) {
-  const raw = String(identifier || "").trim();
+async function findEmailFromLogin(loginValue) {
+  const raw = String(loginValue || "").trim();
   if (!raw) return null;
 
   if (raw.includes("@")) {
-    return raw.toLowerCase();
+    return raw;
   }
 
-  const username = normalizeUsername(raw);
-  if (!username) return null;
+  const usersRef = collection(db, "users");
+  const usernameQuery = query(usersRef, where("username", "==", raw), limit(1));
+  const usernameSnap = await getDocs(usernameQuery);
 
-  const directRef = doc(db, "usernames", username);
-  const directSnap = await getDoc(directRef);
-
-  if (directSnap.exists()) {
-    const data = directSnap.data() || {};
-    if (data.email) return String(data.email).toLowerCase();
-    if (data.uid) {
-      const userRef = doc(db, "users", data.uid);
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists()) {
-        const userData = userSnap.data() || {};
-        if (userData.email) return String(userData.email).toLowerCase();
-      }
-    }
+  if (!usernameSnap.empty) {
+    const userData = usernameSnap.docs[0].data() || {};
+    return userData.email || null;
   }
 
-  const q = query(collection(db, "users"), where("username", "==", username));
-  const querySnap = await getDocs(q);
-
-  if (!querySnap.empty) {
-    const userData = querySnap.docs[0].data() || {};
-    if (userData.email) return String(userData.email).toLowerCase();
-  }
-
-  return null;
+  return raw;
 }
 
-async function setSessionPersistence(remember) {
-  await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
-}
-
-async function handleLogin(event) {
+async function handleLoginSubmit(event) {
   event.preventDefault();
 
-  const identifier = document.getElementById("loginEmail")?.value.trim() || "";
-  const password = document.getElementById("loginPassword")?.value || "";
-  const remember = Boolean(document.getElementById("rememberDevice")?.checked);
+  const form = event.currentTarget;
+  const emailInput = byId("loginEmail");
+  const passwordInput = byId("loginPassword");
+  const rememberInput = byId("rememberDevice");
+  const messageEl = byId("loginMessage");
 
-  if (!identifier) {
-    setMessage("loginMessage", "Enter your email or username.", true);
-    return;
-  }
+  const loginValue = emailInput?.value?.trim() || "";
+  const passwordValue = passwordInput?.value || "";
+  const rememberDevice = !!rememberInput?.checked;
 
-  if (!password) {
-    setMessage("loginMessage", "Enter your password.", true);
+  if (!loginValue || !passwordValue) {
+    setMessage(messageEl, "Enter your email or username and password.", "error");
     return;
   }
 
   try {
-    setMessage("loginMessage", "Signing in...");
-    await setSessionPersistence(remember);
+    setMessage(messageEl, "Signing you in...", "info");
+    await setAuthPersistence(rememberDevice);
 
-    const email = await getEmailFromIdentifier(identifier);
-    if (!email) {
-      setMessage("loginMessage", "We could not find that email or username.", true);
-      return;
-    }
-
-    const result = await signInWithEmailAndPassword(auth, email, password);
+    const resolvedEmail = await findEmailFromLogin(loginValue);
+    const result = await signInWithEmailAndPassword(auth, resolvedEmail, passwordValue);
     const user = result.user;
 
-    applyUserToUi({
-      displayName: user.displayName || email.split("@")[0],
-      email: user.email || email,
-      role: "owner"
-    });
+    let role = "customer";
+    try {
+      const userRef = doc(db, "users", user.uid);
+      const snap = await getDoc(userRef);
+      if (snap.exists()) {
+        const data = snap.data() || {};
+        role = data.role || "customer";
+      }
+    } catch {}
 
-    setMessage("loginMessage", "Login successful.");
-    window.location.href = "/evaraos/dashboard.html";
+    syncUserSession(user, role);
+    setMessage(messageEl, "Login successful. Redirecting...", "success");
+    window.location.replace("/evaraos/dashboard.html");
   } catch (error) {
     console.error("Login failed:", error);
-    const code = error?.code || "";
-
-    if (code.includes("invalid-credential") || code.includes("wrong-password")) {
-      setMessage("loginMessage", "Incorrect password or account details.", true);
-      return;
-    }
-
-    if (code.includes("too-many-requests")) {
-      setMessage("loginMessage", "Too many login attempts. Try again later.", true);
-      return;
-    }
-
-    if (code.includes("api-key-not-valid")) {
-      setMessage("loginMessage", "Firebase API key is invalid in the current config.", true);
-      return;
-    }
-
-    setMessage("loginMessage", error.message || "Unable to login right now.", true);
+    setMessage(messageEl, "Login failed. Check your credentials and try again.", "error");
   }
 }
 
-async function handleSignup(event) {
+async function handleSignupSubmit(event) {
   event.preventDefault();
 
-  const fullName = document.getElementById("signupName")?.value.trim() || "";
-  const usernameRaw = document.getElementById("signupUsername")?.value.trim() || "";
-  const username = normalizeUsername(usernameRaw);
-  const email = document.getElementById("signupEmail")?.value.trim().toLowerCase() || "";
-  const password = document.getElementById("signupPassword")?.value || "";
-  const confirmPassword = document.getElementById("signupPasswordConfirm")?.value || "";
-  const remember = Boolean(document.getElementById("signupRememberDevice")?.checked);
+  const nameInput = byId("signupName");
+  const usernameInput = byId("signupUsername");
+  const emailInput = byId("signupEmail");
+  const passwordInput = byId("signupPassword");
+  const confirmInput = byId("signupPasswordConfirm");
+  const rememberInput = byId("signupRememberDevice");
+  const messageEl = byId("signupMessage");
 
-  if (!fullName) {
-    setMessage("signupMessage", "Enter your full name.", true);
-    return;
-  }
+  const fullName = nameInput?.value?.trim() || "";
+  const username = usernameInput?.value?.trim() || "";
+  const email = emailInput?.value?.trim() || "";
+  const password = passwordInput?.value || "";
+  const confirmPassword = confirmInput?.value || "";
+  const rememberDevice = !!rememberInput?.checked;
 
-  if (!username || username.length < 2) {
-    setMessage("signupMessage", "Choose a valid username.", true);
-    return;
-  }
-
-  if (!email) {
-    setMessage("signupMessage", "Enter your email.", true);
-    return;
-  }
-
-  if (password.length < 6) {
-    setMessage("signupMessage", "Password must be at least 6 characters.", true);
+  if (!fullName || !username || !email || !password || !confirmPassword) {
+    setMessage(messageEl, "Fill out every field before creating your account.", "error");
     return;
   }
 
   if (password !== confirmPassword) {
-    setMessage("signupMessage", "Passwords do not match.", true);
+    setMessage(messageEl, "Passwords do not match.", "error");
+    return;
+  }
+
+  if (password.length < 6) {
+    setMessage(messageEl, "Password must be at least 6 characters.", "error");
     return;
   }
 
   try {
-    setMessage("signupMessage", "Creating account...");
+    setMessage(messageEl, "Creating your account...", "info");
+    await setAuthPersistence(rememberDevice);
 
-    const usernameRef = doc(db, "usernames", username);
-    const existingUsername = await getDoc(usernameRef);
+    const existingUsernameQuery = query(
+      collection(db, "users"),
+      where("username", "==", username),
+      limit(1)
+    );
+    const existingUsernameSnap = await getDocs(existingUsernameQuery);
 
-    if (existingUsername.exists()) {
-      setMessage("signupMessage", "That username is already taken.", true);
+    if (!existingUsernameSnap.empty) {
+      setMessage(messageEl, "That username is already taken.", "error");
       return;
     }
-
-    await setSessionPersistence(remember);
 
     const result = await createUserWithEmailAndPassword(auth, email, password);
     const user = result.user;
@@ -233,104 +166,77 @@ async function handleSignup(event) {
       displayName: fullName
     });
 
-    await setDoc(doc(db, "users", user.uid), {
+    const userDoc = {
       uid: user.uid,
       email,
+      username,
+      displayName: fullName,
       fullName,
-      displayName: fullName,
-      username,
-      role: "owner",
-      active: true,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    }, { merge: true });
+      role: "customer",
+      phone: "",
+      bio: "",
+      createdAt: new Date().toISOString()
+    };
 
-    await setDoc(usernameRef, {
-      uid: user.uid,
-      email,
-      username,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    }, { merge: true });
+    await setDoc(doc(db, "users", user.uid), userDoc, { merge: true });
 
-    applyUserToUi({
-      displayName: fullName,
-      email,
-      role: "owner"
-    });
-
-    setMessage("signupMessage", "Account created successfully.");
-    window.location.href = "/evaraos/dashboard.html";
+    syncUserSession(user, "customer");
+    setMessage(messageEl, "Account created successfully. Redirecting...", "success");
+    window.location.replace("/evaraos/dashboard.html");
   } catch (error) {
     console.error("Signup failed:", error);
-    const code = error?.code || "";
-
-    if (code.includes("email-already-in-use")) {
-      setMessage("signupMessage", "That email is already in use.", true);
-      return;
-    }
-
-    if (code.includes("weak-password")) {
-      setMessage("signupMessage", "Use a stronger password.", true);
-      return;
-    }
-
-    if (code.includes("permission-denied")) {
-      setMessage("signupMessage", "Firestore rules are blocking account setup.", true);
-      return;
-    }
-
-    if (code.includes("api-key-not-valid")) {
-      setMessage("signupMessage", "Firebase API key is invalid in the current config.", true);
-      return;
-    }
-
-    setMessage("signupMessage", error.message || "Unable to create account right now.", true);
+    setMessage(messageEl, "Could not create account. Try again.", "error");
   }
 }
 
-async function handleReset(event) {
+async function handleResetSubmit(event) {
   event.preventDefault();
 
-  const email = document.getElementById("resetEmail")?.value.trim().toLowerCase() || "";
+  const emailInput = byId("resetEmail");
+  const messageEl = byId("resetMessage");
+  const email = emailInput?.value?.trim() || "";
+
   if (!email) {
-    setMessage("resetMessage", "Enter your account email.", true);
+    setMessage(messageEl, "Enter your account email.", "error");
     return;
   }
 
   try {
+    setMessage(messageEl, "Sending reset email...", "info");
     await sendPasswordResetEmail(auth, email);
-    setMessage("resetMessage", "Password reset email sent.");
+    setMessage(messageEl, "Password reset email sent. Check your inbox.", "success");
   } catch (error) {
     console.error("Reset failed:", error);
-    const code = error?.code || "";
-
-    if (code.includes("user-not-found")) {
-      setMessage("resetMessage", "No account found for that email.", true);
-      return;
-    }
-
-    if (code.includes("api-key-not-valid")) {
-      setMessage("resetMessage", "Firebase API key is invalid in the current config.", true);
-      return;
-    }
-
-    setMessage("resetMessage", error.message || "Unable to send reset email.", true);
+    setMessage(messageEl, "Could not send reset email. Try again.", "error");
   }
 }
 
+function initLoginPage() {
+  const form = byId("loginForm");
+  if (!form) return;
+
+  bindPasswordToggle("loginPasswordToggle", "loginPassword");
+  form.addEventListener("submit", handleLoginSubmit);
+}
+
+function initSignupPage() {
+  const form = byId("signupForm");
+  if (!form) return;
+
+  bindPasswordToggle("signupPasswordToggle", "signupPassword");
+  bindPasswordToggle("signupPasswordConfirmToggle", "signupPasswordConfirm");
+  form.addEventListener("submit", handleSignupSubmit);
+}
+
+function initResetPage() {
+  const form = byId("resetForm");
+  if (!form) return;
+
+  form.addEventListener("submit", handleResetSubmit);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-  bindAllPasswordToggles();
-
-  if (loginForm) {
-    loginForm.addEventListener("submit", handleLogin);
-  }
-
-  if (signupForm) {
-    signupForm.addEventListener("submit", handleSignup);
-  }
-
-  if (resetForm) {
-    resetForm.addEventListener("submit", handleReset);
-  }
+  initLoginPage();
+  initSignupPage();
+  initResetPage();
 });
