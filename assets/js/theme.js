@@ -2,26 +2,9 @@ const STORAGE_KEY = "evaraos-theme";
 const APPEARANCE_KEY = "evaraos-appearance";
 
 const DEFAULT_THEME = "dark";
-const VALID_THEMES = [
-  "dark",
-  "light",
-  "blue-dark",
-  "blue-light",
-  "red-dark",
-  "red-light",
-  "pink-dark",
-  "pink-light",
-  "green-dark",
-  "green-light",
-  "purple-dark",
-  "purple-light",
-  "yellow-dark",
-  "yellow-light"
-];
 
 const DEFAULT_APPEARANCE = {
   mode: "dark",
-  family: "neutral",
   beamMode: "contextual",
   navColor: "#FF3B30",
   cardColor: "#8B5CF6",
@@ -32,7 +15,7 @@ const DEFAULT_APPEARANCE = {
 
 function normalizeTheme(theme = "") {
   const value = String(theme || "").trim().toLowerCase();
-  return VALID_THEMES.includes(value) ? value : DEFAULT_THEME;
+  return value === "light" ? "light" : "dark";
 }
 
 function normalizeHex(value, fallback) {
@@ -40,40 +23,19 @@ function normalizeHex(value, fallback) {
   return /^#[0-9A-F]{6}$/.test(safe) ? safe : fallback.toUpperCase();
 }
 
+function normalizeMode(value = "") {
+  const safe = String(value || "").trim().toLowerCase();
+  return ["dark", "light", "custom"].includes(safe) ? safe : "dark";
+}
+
 function normalizeBeamMode(value = "") {
   const safe = String(value || "").trim().toLowerCase();
   return ["off", "contextual", "rainbow", "custom"].includes(safe) ? safe : "contextual";
 }
 
-function buildTheme(family = "neutral", mode = "dark") {
-  const safeMode = mode === "light" ? "light" : "dark";
-  if (family === "neutral") return safeMode;
-  const candidate = `${family}-${safeMode}`;
-  return VALID_THEMES.includes(candidate) ? candidate : DEFAULT_THEME;
-}
-
-function getThemeParts(theme = DEFAULT_THEME) {
-  const safe = normalizeTheme(theme);
-  if (safe === "dark") return { family: "neutral", mode: "dark" };
-  if (safe === "light") return { family: "neutral", mode: "light" };
-  const [family, mode] = safe.split("-");
-  return {
-    family: family || "neutral",
-    mode: mode === "light" ? "light" : "dark"
-  };
-}
-
 function normalizeAppearance(appearance = {}) {
-  const theme = getThemeParts(
-    buildTheme(
-      appearance.family || DEFAULT_APPEARANCE.family,
-      appearance.mode || DEFAULT_APPEARANCE.mode
-    )
-  );
-
   return {
-    mode: theme.mode,
-    family: theme.family,
+    mode: normalizeMode(appearance.mode || DEFAULT_APPEARANCE.mode),
     beamMode: normalizeBeamMode(appearance.beamMode || DEFAULT_APPEARANCE.beamMode),
     navColor: normalizeHex(appearance.navColor, DEFAULT_APPEARANCE.navColor),
     cardColor: normalizeHex(appearance.cardColor, DEFAULT_APPEARANCE.cardColor),
@@ -132,7 +94,7 @@ function ensureAppearanceStyle() {
       background-image:
         radial-gradient(circle at 18% 16%, color-mix(in srgb, var(--user-background-tint) 16%, transparent), transparent 26%),
         radial-gradient(circle at 82% 14%, color-mix(in srgb, var(--user-nav-tint) 14%, transparent), transparent 24%),
-        radial-gradient(circle at 16% 82%, color-mix(in srgb, var(--user-card-tint) 10%, transparent), transparent 24%);
+        radial-gradient(circle at 16% 82%, color-mix(in srgb, var(--user-card-tint) 10%, transparent), transparent 24%) !important;
     }
 
     .glass-card,
@@ -282,41 +244,46 @@ function ensureAppearanceStyle() {
 }
 
 function syncThemeUi() {
-  const current = getThemeParts(getStoredTheme());
+  const currentTheme = getStoredTheme();
   const appearance = getStoredAppearance();
 
   document.querySelectorAll("[data-theme-mode-text]").forEach((el) => {
-    el.textContent = current.mode === "light" ? "Light" : "Dark";
-  });
-
-  document.querySelectorAll("[data-theme-group-text]").forEach((el) => {
-    el.textContent = current.family === "neutral"
-      ? "Neutral"
-      : current.family.charAt(0).toUpperCase() + current.family.slice(1);
+    el.textContent = currentTheme === "light" ? "Light" : "Dark";
   });
 
   document.querySelectorAll("[data-beam-mode-text]").forEach((el) => {
-    el.textContent = appearance.beamMode.charAt(0).toUpperCase() + appearance.beamMode.slice(1);
+    const label = appearance.beamMode === "contextual"
+      ? "Contextual"
+      : appearance.beamMode.charAt(0).toUpperCase() + appearance.beamMode.slice(1);
+    el.textContent = label;
   });
 
-  document.querySelectorAll("[data-nav-color-preview]").forEach((el) => {
-    el.style.background = appearance.navColor;
+  const previewMap = [
+    ["[data-nav-color-preview]", appearance.navColor],
+    ["[data-card-color-preview]", appearance.cardColor],
+    ["[data-button-color-preview]", appearance.buttonColor],
+    ["[data-background-color-preview]", appearance.backgroundColor],
+    ["[data-beam-color-preview]", appearance.beamColor]
+  ];
+
+  previewMap.forEach(([selector, value]) => {
+    document.querySelectorAll(selector).forEach((el) => {
+      el.style.background = value;
+    });
   });
 
-  document.querySelectorAll("[data-card-color-preview]").forEach((el) => {
-    el.style.background = appearance.cardColor;
-  });
+  const valueMap = [
+    ["[data-nav-color-value]", appearance.navColor],
+    ["[data-card-color-value]", appearance.cardColor],
+    ["[data-button-color-value]", appearance.buttonColor],
+    ["[data-background-color-value]", appearance.backgroundColor],
+    ["[data-beam-color-value]", appearance.beamColor]
+  ];
 
-  document.querySelectorAll("[data-button-color-preview]").forEach((el) => {
-    el.style.background = appearance.buttonColor;
-  });
-
-  document.querySelectorAll("[data-background-color-preview]").forEach((el) => {
-    el.style.background = appearance.backgroundColor;
-  });
-
-  document.querySelectorAll("[data-beam-color-preview]").forEach((el) => {
-    el.style.background = appearance.beamColor;
+  valueMap.forEach(([selector, value]) => {
+    document.querySelectorAll(selector).forEach((el) => {
+      el.textContent = value;
+    });
   });
 }
 
@@ -331,9 +298,9 @@ function applyAppearanceConfig(appearance = {}) {
   ensureAppearanceStyle();
 
   const safe = normalizeAppearance(appearance);
-  const theme = buildTheme(safe.family, safe.mode);
 
-  applyTheme(theme);
+  const themeToApply = safe.mode === "light" ? "light" : "dark";
+  applyTheme(themeToApply);
   setStoredAppearance(safe);
 
   const root = document.documentElement;
@@ -352,25 +319,6 @@ function resetAppearanceConfig() {
 }
 
 function bindThemeControls() {
-  document.querySelectorAll("[data-set-theme]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const theme = btn.getAttribute("data-set-theme");
-      if (!theme) return;
-      applyTheme(theme);
-    });
-  });
-
-  document.querySelectorAll("[data-set-family]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const family = btn.getAttribute("data-set-family") || "neutral";
-      const current = getStoredAppearance();
-      applyAppearanceConfig({
-        ...current,
-        family
-      });
-    });
-  });
-
   document.querySelectorAll("[data-set-mode]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const mode = btn.getAttribute("data-set-mode") || "dark";
@@ -415,28 +363,28 @@ function bindThemeControls() {
   if (navColor) {
     navColor.addEventListener("input", () => {
       const current = getStoredAppearance();
-      applyAppearanceConfig({ ...current, navColor: navColor.value });
+      applyAppearanceConfig({ ...current, mode: "custom", navColor: navColor.value });
     });
   }
 
   if (cardColor) {
     cardColor.addEventListener("input", () => {
       const current = getStoredAppearance();
-      applyAppearanceConfig({ ...current, cardColor: cardColor.value });
+      applyAppearanceConfig({ ...current, mode: "custom", cardColor: cardColor.value });
     });
   }
 
   if (buttonColor) {
     buttonColor.addEventListener("input", () => {
       const current = getStoredAppearance();
-      applyAppearanceConfig({ ...current, buttonColor: buttonColor.value });
+      applyAppearanceConfig({ ...current, mode: "custom", buttonColor: buttonColor.value });
     });
   }
 
   if (backgroundColor) {
     backgroundColor.addEventListener("input", () => {
       const current = getStoredAppearance();
-      applyAppearanceConfig({ ...current, backgroundColor: backgroundColor.value });
+      applyAppearanceConfig({ ...current, mode: "custom", backgroundColor: backgroundColor.value });
     });
   }
 
