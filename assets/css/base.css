@@ -19,6 +19,14 @@
 
   --shadow-dark: 0 20px 46px rgba(0,0,0,0.30);
   --shadow-light: 0 18px 40px rgba(104,123,115,0.10);
+
+  --user-nav-tint: #ff3b30;
+  --user-card-tint: #7c3aed;
+  --user-button-tint: #2563eb;
+  --user-background-tint: #7c3aed;
+  --user-bg-color: #7c3aed;
+  --user-bg-color-2: #2563eb;
+  --user-beam-color: #7c3aed;
 }
 
 *,
@@ -44,6 +52,7 @@ body {
     linear-gradient(180deg, #040812 0%, #091120 100%);
   background-attachment: fixed;
   overflow-x: hidden;
+  position: relative;
 }
 
 html[data-theme="light"] body,
@@ -66,15 +75,58 @@ a {
 
 button,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
 }
+
+/* =========================================
+   APPLE-LIKE MOVING AURORA BACKGROUND
+   ========================================= */
+
+.page-aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.page-aurora::before,
+.page-aurora::after {
+  content: "";
+  position: absolute;
+  width: 120%;
+  height: 120%;
+  filter: blur(120px);
+  opacity: 0.38;
+  animation: evaAuroraMove 18s infinite alternate ease-in-out;
+}
+
+.page-aurora::before {
+  background: radial-gradient(circle at 30% 30%, var(--user-bg-color, #7C3AED), transparent 60%);
+}
+
+.page-aurora::after {
+  background: radial-gradient(circle at 70% 60%, var(--user-bg-color-2, #2563EB), transparent 60%);
+  animation-delay: 4s;
+}
+
+@keyframes evaAuroraMove {
+  0%   { transform: translate(0%, 0%) scale(1); }
+  50%  { transform: translate(-10%, 10%) scale(1.08); }
+  100% { transform: translate(10%, -8%) scale(1); }
+}
+
+/* =========================================
+   GRID OVERLAY
+   ========================================= */
 
 .page-grid-overlay {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 0;
+  z-index: -1;
   opacity: 0.08;
   background:
     linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
@@ -97,6 +149,10 @@ footer {
   z-index: 1;
 }
 
+/* =========================================
+   GLASS SURFACES
+   ========================================= */
+
 .glass-card,
 .glass-shell {
   position: relative;
@@ -104,6 +160,11 @@ footer {
   border-radius: var(--radius-card);
   border: 1px solid var(--line-dark);
   background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--user-card-tint, #7C3AED) 10%, transparent),
+      transparent 60%
+    ),
     linear-gradient(180deg, var(--glass-dark), var(--glass-dark-2));
   box-shadow: var(--shadow-dark);
   backdrop-filter: blur(28px) saturate(165%);
@@ -116,6 +177,11 @@ html[data-theme$="-light"] .glass-card,
 html[data-theme$="-light"] .glass-shell {
   border-color: var(--line-light);
   background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--user-card-tint, #7C3AED) 8%, rgba(255,255,255,0.95)),
+      rgba(255,255,255,0.74) 60%
+    ),
     linear-gradient(180deg, var(--glass-light), var(--glass-light-2));
   box-shadow: var(--shadow-light);
 }
@@ -149,6 +215,10 @@ html[data-theme$="-light"] .glass-shell {
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
+
+/* =========================================
+   HERO + HOME FOUNDATIONS
+   ========================================= */
 
 .home-shell {
   width: min(100%, var(--page-max));
@@ -204,6 +274,10 @@ html[data-theme$="-light"] .hero-subtitle {
   flex: 0 0 auto;
 }
 
+/* =========================================
+   BUTTONS
+   ========================================= */
+
 .btn {
   min-height: 56px;
   padding: 0 20px;
@@ -236,7 +310,11 @@ html[data-theme$="-light"] .hero-subtitle {
 
 .btn-apple {
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08));
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--user-button-tint, #2563EB) 88%, white),
+      var(--user-button-tint, #2563EB)
+    );
   color: #fff;
   box-shadow:
     0 14px 28px rgba(0,0,0,0.16),
@@ -247,14 +325,15 @@ html[data-theme="light"] .btn,
 html[data-theme="light"] .btn-apple,
 html[data-theme$="-light"] .btn,
 html[data-theme$="-light"] .btn-apple {
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.97), rgba(255,255,255,0.82));
-  color: #14251f;
   border-color: rgba(255,255,255,0.92);
   box-shadow:
     0 16px 28px rgba(108,126,120,0.10),
     inset 0 1px 0 rgba(255,255,255,0.99);
 }
+
+/* =========================================
+   CONTENT PANELS
+   ========================================= */
 
 .section-panel {
   margin-top: 0;
@@ -302,6 +381,10 @@ html[data-theme$="-light"] .btn-apple {
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
 }
 
+/* =========================================
+   FOOTER
+   ========================================= */
+
 .site-footer {
   width: min(100%, var(--page-max));
   margin: 18px auto 24px;
@@ -334,6 +417,10 @@ html[data-theme$="-light"] .btn-apple {
   text-decoration: none;
   font-weight: 700;
 }
+
+/* =========================================
+   RESPONSIVE
+   ========================================= */
 
 @media (max-width: 760px) {
   .home-shell {
