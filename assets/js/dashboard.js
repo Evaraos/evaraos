@@ -65,11 +65,15 @@ function statusPillClass(status = "") {
   const value = normalizedStatus(status);
 
   if (["active", "healthy", "approved", "complete", "completed", "won", "closed"].includes(value)) {
-    return "good";
+    return "success";
   }
 
   if (["review", "pending", "new", "quoted"].includes(value)) {
-    return "alert";
+    return "warning";
+  }
+
+  if (["error", "failed", "blocked"].includes(value)) {
+    return "error";
   }
 
   return "working";
@@ -100,17 +104,54 @@ async function loadCollectionDocs(name, options = {}) {
   }
 }
 
+function createStateCard(type, title, message) {
+  return `
+    <article class="dashboard-state-card ${type}">
+      <strong>${title}</strong>
+      <span>${message}</span>
+    </article>
+  `;
+}
+
+function createSkeletonCards(count = 3) {
+  return `
+    <div class="dashboard-skeleton-grid">
+      ${Array.from({ length: count }).map(() => `
+        <article class="dashboard-skeleton-card">
+          <span class="dashboard-skeleton-line line-1"></span>
+          <span class="dashboard-skeleton-line line-2"></span>
+          <span class="dashboard-skeleton-line line-3"></span>
+        </article>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderLoadingStates() {
+  companiesList.innerHTML = createSkeletonCards(3);
+  usersRoleGrid.innerHTML = createSkeletonCards(3);
+  leadFlowStack.innerHTML = createSkeletonCards(3);
+  jobsList.innerHTML = createSkeletonCards(3);
+  activityFeed.innerHTML = createSkeletonCards(3);
+
+  statCompanies.textContent = "—";
+  statUsers.textContent = "—";
+  statLeads.textContent = "—";
+  statJobs.textContent = "—";
+
+  statCompaniesMeta.textContent = "Loading companies...";
+  statUsersMeta.textContent = "Loading users...";
+  statLeadsMeta.textContent = "Loading leads...";
+  statJobsMeta.textContent = "Loading jobs...";
+}
+
 function renderCompanies(companies) {
   if (!companies.length) {
-    companiesList.innerHTML = `
-      <article class="dashboard-list-item glass-card aurora-card">
-        <div>
-          <strong>No companies found</strong>
-          <span>Create company records in Firestore to populate this section.</span>
-        </div>
-        <span class="dashboard-status-pill alert">Empty</span>
-      </article>
-    `;
+    companiesList.innerHTML = createStateCard(
+      "empty",
+      "No companies found",
+      "Create company records in Firestore to populate this section."
+    );
     return;
   }
 
@@ -124,7 +165,7 @@ function renderCompanies(companies) {
       "Company record from Firestore";
 
     return `
-      <article class="dashboard-list-item glass-card aurora-card">
+      <article class="dashboard-list-item glass-card aurora-card active-glow">
         <div>
           <strong>${titleFromRecord(company, "Company")}</strong>
           <span>${subtitle}</span>
@@ -136,6 +177,15 @@ function renderCompanies(companies) {
 }
 
 function renderUsers(users) {
+  if (!users.length) {
+    usersRoleGrid.innerHTML = createStateCard(
+      "empty",
+      "No users found",
+      "Once user documents are added to Firestore, role counts will appear here."
+    );
+    return;
+  }
+
   const roleCounts = {
     owner: 0,
     admin: 0,
@@ -160,14 +210,26 @@ function renderUsers(users) {
   ];
 
   usersRoleGrid.innerHTML = cards.map(([label, count]) => `
-    <article class="dashboard-role-card glass-card aurora-card">
-      <strong>${label}</strong>
-      <span>${count} user${count === 1 ? "" : "s"}</span>
+    <article class="dashboard-role-card glass-card aurora-card active-glow">
+      <div>
+        <strong>${label}</strong>
+        <span>${count} user${count === 1 ? "" : "s"}</span>
+      </div>
+      <span class="dashboard-status-pill ${count > 0 ? "success" : "empty"}">${count}</span>
     </article>
   `).join("");
 }
 
 function renderLeadFlow(leads) {
+  if (!leads.length) {
+    leadFlowStack.innerHTML = createStateCard(
+      "empty",
+      "No leads found",
+      "Lead pipeline stages will appear once lead records exist in Firestore."
+    );
+    return;
+  }
+
   const total = leads.length || 1;
   const statuses = {
     new: 0,
@@ -191,7 +253,7 @@ function renderLeadFlow(leads) {
   leadFlowStack.innerHTML = rows.map(([label, count]) => {
     const width = Math.max(8, Math.round((count / total) * 100));
     return `
-      <div class="dashboard-progress-row">
+      <div class="dashboard-progress-row glass-card aurora-card active-glow">
         <div class="dashboard-progress-copy">
           <strong>${label}</strong>
           <span>${count} record${count === 1 ? "" : "s"}</span>
@@ -206,15 +268,11 @@ function renderLeadFlow(leads) {
 
 function renderJobs(jobs) {
   if (!jobs.length) {
-    jobsList.innerHTML = `
-      <article class="dashboard-list-item glass-card aurora-card">
-        <div>
-          <strong>No jobs found</strong>
-          <span>Create job records in Firestore to populate this section.</span>
-        </div>
-        <span class="dashboard-status-pill alert">Empty</span>
-      </article>
-    `;
+    jobsList.innerHTML = createStateCard(
+      "empty",
+      "No jobs found",
+      "Create job records in Firestore to populate this section."
+    );
     return;
   }
 
@@ -228,7 +286,7 @@ function renderJobs(jobs) {
       "Job record from Firestore";
 
     return `
-      <article class="dashboard-list-item glass-card aurora-card">
+      <article class="dashboard-list-item glass-card aurora-card active-glow">
         <div>
           <strong>${titleFromRecord(job, "Job")}</strong>
           <span>${subtitle}</span>
@@ -264,19 +322,21 @@ function renderActivity(companies, users, leads, jobs) {
   ].slice(0, 6);
 
   if (!merged.length) {
-    activityFeed.innerHTML = `
-      <article class="dashboard-feed-item glass-card aurora-card">
-        <strong>No recent records</strong>
-        <span>Once collections are populated, recent activity will appear here.</span>
-      </article>
-    `;
+    activityFeed.innerHTML = createStateCard(
+      "empty",
+      "No recent records",
+      "Once collections are populated, recent activity will appear here."
+    );
     return;
   }
 
   activityFeed.innerHTML = merged.map((item) => `
-    <article class="dashboard-feed-item glass-card aurora-card">
-      <strong>${item.kind}: ${item.title}</strong>
-      <span>Status: ${niceStatus(item.detail)}</span>
+    <article class="dashboard-feed-item glass-card aurora-card active-glow">
+      <div>
+        <strong>${item.kind}: ${item.title}</strong>
+        <span>Status: ${niceStatus(item.detail)}</span>
+      </div>
+      <span class="dashboard-status-pill working">${item.kind}</span>
     </article>
   `).join("");
 }
@@ -350,9 +410,54 @@ function renderFilteredDashboard(queryText = "") {
   renderActivity(companies, users, leads, jobs);
 }
 
+function renderErrorState(error) {
+  const message = error?.message || "Unknown Firestore error.";
+
+  companiesList.innerHTML = createStateCard(
+    "error",
+    "Unable to load companies",
+    message
+  );
+
+  usersRoleGrid.innerHTML = createStateCard(
+    "error",
+    "Users could not be read",
+    "Check Firestore permissions and collection structure."
+  );
+
+  leadFlowStack.innerHTML = createStateCard(
+    "error",
+    "Leads could not be read",
+    "Check the leads collection and Firestore rules."
+  );
+
+  jobsList.innerHTML = createStateCard(
+    "error",
+    "Unable to load jobs",
+    "Check the jobs collection and Firestore permissions."
+  );
+
+  activityFeed.innerHTML = createStateCard(
+    "error",
+    "Dashboard activity unavailable",
+    message
+  );
+
+  statCompanies.textContent = "0";
+  statUsers.textContent = "0";
+  statLeads.textContent = "0";
+  statJobs.textContent = "0";
+
+  statCompaniesMeta.textContent = "Load error";
+  statUsersMeta.textContent = "Load error";
+  statLeadsMeta.textContent = "Load error";
+  statJobsMeta.textContent = "Load error";
+}
+
 async function loadDashboardData() {
   heroStatusTitle.textContent = "Loading system data...";
   heroStatusText.textContent = "Connecting to Firestore collections.";
+  renderLoadingStates();
 
   try {
     const [companies, users, leads, jobs] = await Promise.all([
@@ -373,50 +478,7 @@ async function loadDashboardData() {
 
     heroStatusTitle.textContent = "Data load failed";
     heroStatusText.textContent = "Check Firestore rules, collection names, or missing exports in firebase.js.";
-
-    companiesList.innerHTML = `
-      <article class="dashboard-list-item glass-card aurora-card">
-        <div>
-          <strong>Unable to load companies</strong>
-          <span>${error.message || "Unknown Firestore error."}</span>
-        </div>
-        <span class="dashboard-status-pill alert">Error</span>
-      </article>
-    `;
-
-    usersRoleGrid.innerHTML = `
-      <article class="dashboard-role-card glass-card aurora-card">
-        <strong>Load error</strong>
-        <span>Users could not be read</span>
-      </article>
-    `;
-
-    leadFlowStack.innerHTML = `
-      <div class="dashboard-progress-row">
-        <div class="dashboard-progress-copy">
-          <strong>Load error</strong>
-          <span>Leads could not be read</span>
-        </div>
-        <div class="dashboard-progress-bar"><span style="width: 8%;"></span></div>
-      </div>
-    `;
-
-    jobsList.innerHTML = `
-      <article class="dashboard-list-item glass-card aurora-card">
-        <div>
-          <strong>Unable to load jobs</strong>
-          <span>Check the jobs collection and Firestore permissions.</span>
-        </div>
-        <span class="dashboard-status-pill alert">Error</span>
-      </article>
-    `;
-
-    activityFeed.innerHTML = `
-      <article class="dashboard-feed-item glass-card aurora-card">
-        <strong>Dashboard activity unavailable</strong>
-        <span>${error.message || "Unknown Firestore error."}</span>
-      </article>
-    `;
+    renderErrorState(error);
   }
 }
 
