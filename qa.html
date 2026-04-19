@@ -9,10 +9,10 @@
 
   <title>QA Automation Console • Evaraos Inc</title>
 
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=27" />
-  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=27" />
-  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=27" />
-  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=27" />
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=29" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=29" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=29" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=29" />
 
   <script>
     document.documentElement.classList.add("auth-pending");
@@ -253,7 +253,7 @@
 
           <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
             <p>Version Target</p>
-            <h3 id="versionTargetStat">v27</h3>
+            <h3 id="versionTargetStat">v29</h3>
             <span id="versionTargetMeta">Current expected asset version</span>
           </article>
         </div>
@@ -369,7 +369,7 @@
   <script type="module">
     const QA_STATE_KEY = "evaraos-qa-automation-v3";
     const AUDIT_JSON_URL = "/evaraos/tools/reports/repo-audit-ui.json";
-    const TARGET_VERSION = "27";
+    const TARGET_VERSION = "29";
 
     const signalRoot = document.getElementById("qaSignalRoot");
     const searchInput = document.getElementById("qaSearch");
@@ -426,6 +426,7 @@
             issueText.includes("v=19") ||
             issueText.includes("v=23") ||
             issueText.includes("v=25") ||
+            issueText.includes("v=27") ||
             issueText.includes("unversioned")
           ) {
             outdated.push({ file: file.file || "Unknown file", issue: issueText });
@@ -445,7 +446,7 @@
       const summary = summarizeSignals(auditSummary || {});
       const generatedAt = auditSummary?.generatedAt ? formatTimestamp(auditSummary.generatedAt) : "Unknown";
 
-      const signalCards = [
+      return [
         {
           title: "Repo Audit Health",
           description: "Automated reading of repo-audit JSON and file issue status.",
@@ -493,8 +494,6 @@
           ]
         }
       ];
-
-      return signalCards;
     }
 
     function renderSignals() {
@@ -610,7 +609,6 @@
 
           issues.forEach((issue) => {
             if (query && !fileMatches && !String(issue).toLowerCase().includes(query)) return;
-
             const issueRow = document.createElement("div");
             issueRow.className = "qa-finding";
             issueRow.textContent = issue;
@@ -641,13 +639,11 @@
       try {
         auditMessageText.textContent = "Fetching audit report...";
 
-        const response = await fetch(`${AUDIT_JSON_URL}?ts=${Date.now()}`, {
+        const response = await fetch(\`\${AUDIT_JSON_URL}?ts=\${Date.now()}\`, {
           cache: "no-store"
         });
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
+        if (!response.ok) throw new Error(\`HTTP \${response.status}\`);
 
         const summary = await response.json();
         automationState.lastAuditLoadedAt = Date.now();
@@ -730,9 +726,9 @@
     });
   </script>
 
-  <script src="/evaraos/assets/js/theme.js?v=27"></script>
-  <script type="module" src="/evaraos/assets/js/firebase.js?v=27"></script>
-  <script type="module" src="/evaraos/assets/js/route-guard.js?v=27"></script>
-  <script src="/evaraos/assets/js/nav.js?v=27"></script>
+  <script type="module" src="/evaraos/assets/js/theme.js?v=29"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js?v=29"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js?v=29"></script>
+  <script src="/evaraos/assets/js/nav.js?v=29"></script>
 </body>
 </html>
