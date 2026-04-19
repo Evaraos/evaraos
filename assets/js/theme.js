@@ -3,8 +3,24 @@ const APPEARANCE_KEY = "evaraos-appearance";
 
 const DEFAULT_THEME = "dark";
 
-const DEFAULT_APPEARANCE = {
+const PRESET_DARK = {
   mode: "dark",
+  beamMode: "contextual",
+  cardColor: "#8B5CF6",
+  buttonColor: "#2563EB",
+  backgroundColor: "#0F172A"
+};
+
+const PRESET_LIGHT = {
+  mode: "light",
+  beamMode: "contextual",
+  cardColor: "#A78BFA",
+  buttonColor: "#60A5FA",
+  backgroundColor: "#F4F7FB"
+};
+
+const DEFAULT_CUSTOM = {
+  mode: "custom",
   beamMode: "contextual",
   cardColor: "#8B5CF6",
   buttonColor: "#2563EB",
@@ -32,13 +48,22 @@ function normalizeBeamMode(value = "") {
 }
 
 function normalizeAppearance(appearance = {}) {
+  const mode = normalizeMode(appearance.mode || DEFAULT_THEME);
+  const preset = mode === "light" ? PRESET_LIGHT : mode === "custom" ? DEFAULT_CUSTOM : PRESET_DARK;
+
   return {
-    mode: normalizeMode(appearance.mode || DEFAULT_APPEARANCE.mode),
-    beamMode: normalizeBeamMode(appearance.beamMode || DEFAULT_APPEARANCE.beamMode),
-    cardColor: normalizeHex(appearance.cardColor, DEFAULT_APPEARANCE.cardColor),
-    buttonColor: normalizeHex(appearance.buttonColor, DEFAULT_APPEARANCE.buttonColor),
-    backgroundColor: normalizeHex(appearance.backgroundColor, DEFAULT_APPEARANCE.backgroundColor)
+    mode,
+    beamMode: normalizeBeamMode(appearance.beamMode || preset.beamMode),
+    cardColor: normalizeHex(appearance.cardColor, preset.cardColor),
+    buttonColor: normalizeHex(appearance.buttonColor, preset.buttonColor),
+    backgroundColor: normalizeHex(appearance.backgroundColor, preset.backgroundColor)
   };
+}
+
+function getPresetAppearance(mode) {
+  if (mode === "light") return { ...PRESET_LIGHT };
+  if (mode === "custom") return { ...DEFAULT_CUSTOM };
+  return { ...PRESET_DARK };
 }
 
 function getStoredTheme() {
@@ -58,10 +83,10 @@ function setStoredTheme(theme) {
 function getStoredAppearance() {
   try {
     const raw = localStorage.getItem(APPEARANCE_KEY);
-    if (!raw) return { ...DEFAULT_APPEARANCE };
+    if (!raw) return { ...PRESET_DARK };
     return normalizeAppearance(JSON.parse(raw));
   } catch {
-    return { ...DEFAULT_APPEARANCE };
+    return { ...PRESET_DARK };
   }
 }
 
@@ -79,13 +104,13 @@ function ensureAppearanceStyle() {
   styleEl.id = "evaraAppearanceStyle";
   styleEl.textContent = `
     :root {
-      --user-card-tint: ${DEFAULT_APPEARANCE.cardColor};
-      --user-button-tint: ${DEFAULT_APPEARANCE.buttonColor};
-      --user-background-tint: ${DEFAULT_APPEARANCE.backgroundColor};
-      --user-bg-color: ${DEFAULT_APPEARANCE.backgroundColor};
-      --user-bg-color-2: ${DEFAULT_APPEARANCE.cardColor};
-      --user-beam-color: ${DEFAULT_APPEARANCE.cardColor};
-      --user-nav-tint: ${DEFAULT_APPEARANCE.cardColor};
+      --user-card-tint: ${PRESET_DARK.cardColor};
+      --user-button-tint: ${PRESET_DARK.buttonColor};
+      --user-background-tint: ${PRESET_DARK.backgroundColor};
+      --user-bg-color: ${PRESET_DARK.backgroundColor};
+      --user-bg-color-2: ${PRESET_DARK.cardColor};
+      --user-beam-color: ${PRESET_DARK.cardColor};
+      --user-nav-tint: ${PRESET_DARK.cardColor};
     }
 
     body {
@@ -142,10 +167,10 @@ function ensureAppearanceStyle() {
       background:
         linear-gradient(
           180deg,
-          color-mix(in srgb, var(--user-button-tint) 14%, rgba(255,255,255,0.16)),
-          color-mix(in srgb, var(--user-button-tint) 8%, rgba(255,255,255,0.06))
+          color-mix(in srgb, var(--user-button-tint) 12%, rgba(255,255,255,0.18)),
+          color-mix(in srgb, var(--user-button-tint) 7%, rgba(255,255,255,0.06))
         ) !important;
-      border-color: color-mix(in srgb, var(--user-button-tint) 28%, rgba(255,255,255,0.10)) !important;
+      border-color: color-mix(in srgb, var(--user-button-tint) 26%, rgba(255,255,255,0.10)) !important;
       box-shadow:
         0 14px 24px rgba(0,0,0,0.12),
         inset 0 1px 0 rgba(255,255,255,0.18),
@@ -236,7 +261,7 @@ function ensureAppearanceStyle() {
       mask-composite: exclude;
       pointer-events: none;
       z-index: 2;
-      opacity: 0.86;
+      opacity: 0.82;
     }
 
     @keyframes evaraRainbowFlow {
@@ -302,6 +327,11 @@ function syncThemeUi() {
     const mode = btn.getAttribute("data-set-beam");
     btn.classList.toggle("is-active", mode === appearance.beamMode);
   });
+
+  const customSection = document.querySelector("[data-color-wheel-section]");
+  if (customSection) {
+    customSection.style.display = appearance.mode === "custom" ? "" : "none";
+  }
 }
 
 function applyTheme(theme) {
@@ -315,26 +345,27 @@ function applyAppearanceConfig(appearance = {}) {
   ensureAppearanceStyle();
 
   const safe = normalizeAppearance(appearance);
-
   const themeToApply = safe.mode === "light" ? "light" : "dark";
+  const preset = safe.mode === "light" ? PRESET_LIGHT : safe.mode === "custom" ? safe : PRESET_DARK;
+
   applyTheme(themeToApply);
   setStoredAppearance(safe);
 
   const root = document.documentElement;
-  root.style.setProperty("--user-card-tint", safe.cardColor);
-  root.style.setProperty("--user-button-tint", safe.buttonColor);
-  root.style.setProperty("--user-background-tint", safe.backgroundColor);
-  root.style.setProperty("--user-bg-color", safe.backgroundColor);
-  root.style.setProperty("--user-bg-color-2", safe.cardColor);
-  root.style.setProperty("--user-beam-color", safe.cardColor);
-  root.style.setProperty("--user-nav-tint", safe.cardColor);
+  root.style.setProperty("--user-card-tint", preset.cardColor);
+  root.style.setProperty("--user-button-tint", preset.buttonColor);
+  root.style.setProperty("--user-background-tint", preset.backgroundColor);
+  root.style.setProperty("--user-bg-color", preset.backgroundColor);
+  root.style.setProperty("--user-bg-color-2", preset.cardColor);
+  root.style.setProperty("--user-beam-color", preset.cardColor);
+  root.style.setProperty("--user-nav-tint", preset.cardColor);
   root.setAttribute("data-beam-mode", safe.beamMode);
 
   syncThemeUi();
 }
 
 function resetAppearanceConfig() {
-  applyAppearanceConfig({ ...DEFAULT_APPEARANCE });
+  applyAppearanceConfig({ ...PRESET_DARK });
 }
 
 function openColorInput(input) {
@@ -373,16 +404,22 @@ function bindThemeControls() {
       const mode = btn.getAttribute("data-set-mode") || "dark";
       const current = getStoredAppearance();
 
+      if (mode === "dark" || mode === "light") {
+        applyAppearanceConfig({
+          ...getPresetAppearance(mode),
+          beamMode: current.beamMode
+        });
+        return;
+      }
+
       applyAppearanceConfig({
         ...current,
-        mode
+        mode: "custom"
       });
 
-      if (mode === "custom") {
-        const customSection = document.querySelector("[data-color-wheel-section]");
-        if (customSection) {
-          customSection.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
+      const customSection = document.querySelector("[data-color-wheel-section]");
+      if (customSection) {
+        customSection.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     });
   });
