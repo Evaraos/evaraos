@@ -9,11 +9,11 @@
 
   <title>Settings Hub • Evaraos Inc</title>
 
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=28" />
-  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=28" />
-  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=28" />
-  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=28" />
-  <link rel="stylesheet" href="/evaraos/assets/css/auth.css?v=28" />
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=29" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=29" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=29" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=29" />
+  <link rel="stylesheet" href="/evaraos/assets/css/auth.css?v=29" />
 
   <style>
     .settings-shell {
@@ -355,6 +355,99 @@
       pointer-events: none;
     }
 
+    .settings-color-sheet {
+      position: fixed;
+      inset: 0;
+      z-index: 2147483646;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.18s ease, visibility 0.18s ease;
+    }
+
+    .settings-color-sheet.open {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .settings-color-sheet-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.46);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .settings-color-sheet-panel {
+      position: absolute;
+      left: 50%;
+      bottom: max(12px, env(safe-area-inset-bottom));
+      transform: translateX(-50%) translateY(12px);
+      width: min(420px, calc(100vw - 18px));
+      padding: 18px;
+      border-radius: 28px;
+      display: grid;
+      gap: 16px;
+      transition: transform 0.18s ease;
+    }
+
+    .settings-color-sheet.open .settings-color-sheet-panel {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .settings-color-sheet-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .settings-color-sheet-head strong {
+      font-size: 1.04rem;
+      letter-spacing: -0.02em;
+    }
+
+    .settings-color-sheet-close {
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+    }
+
+    .settings-color-sheet-body {
+      display: grid;
+      gap: 14px;
+    }
+
+    .settings-color-sheet-swatch {
+      width: 100%;
+      height: 88px;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.10),
+        0 10px 18px rgba(0,0,0,0.12);
+    }
+
+    .settings-color-sheet-input {
+      width: 100%;
+      height: 58px;
+      border: 0;
+      background: transparent;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .settings-color-sheet-value {
+      font-size: 0.9rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      opacity: 0.82;
+      text-transform: uppercase;
+    }
+
     .settings-toggle-row {
       display: flex;
       justify-content: space-between;
@@ -519,7 +612,7 @@
         <p class="settings-kicker">Appearance</p>
         <h2>Theme, Glass, and Beam System</h2>
         <p>
-          Keep the Apple-like glass feel, simplify the controls, and make customization more obvious.
+          Dark and Light use premium Apple-style presets. Custom keeps the same base family and unlocks tint controls.
         </p>
       </div>
 
@@ -529,7 +622,7 @@
             <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos logo" />
             <div class="settings-preview-brand-copy">
               <strong>Unified Surface Preview</strong>
-              <span>Nav and cards now share the same surface tint logic</span>
+              <span>Surface tint drives both cards and navigation</span>
             </div>
           </div>
           <div class="settings-preview-menu beam-target">☰</div>
@@ -539,15 +632,15 @@
           <article class="settings-preview-card glass-card aurora-card beam-target">
             <div>
               <h3>Surface Glass</h3>
-              <p>Cards and navigation keep the same semi-transparent Apple-like glass treatment.</p>
+              <p>Cards and navigation keep the same Apple-like semi-transparent glass surface.</p>
             </div>
             <button class="settings-preview-btn beam-target" type="button">Primary Button</button>
           </article>
 
           <article class="settings-preview-card glass-card aurora-card beam-target">
             <div>
-              <h3>Beam Behavior</h3>
-              <p>Contextual beam is the normal premium behavior unless you turn beam off completely.</p>
+              <h3>Beam Motion</h3>
+              <p>Contextual is the default moving animated beam unless beam is turned off.</p>
             </div>
             <button class="settings-preview-btn beam-target" type="button">Beam Action</button>
           </article>
@@ -584,13 +677,13 @@
         <article class="settings-color-tool glass-card aurora-card beam-target">
           <div class="settings-color-tool-top">
             <h3>Surface Tint</h3>
-            <p>Controls the shared light tint for cards and navigation while preserving the glass effect.</p>
+            <p>Controls the shared card + nav glass tint while keeping the premium glass effect intact.</p>
           </div>
           <div class="settings-color-swatch-row">
             <div class="settings-color-swatch" data-card-color-preview></div>
             <div class="settings-color-meta">
               <div class="settings-color-value" data-card-color-value>#8B5CF6</div>
-              <button class="settings-color-open beam-target" data-open-target="card" type="button">Open Wheel</button>
+              <button class="settings-color-open beam-target" data-open-target="card" type="button">Edit</button>
             </div>
           </div>
           <input class="settings-color-input" type="color" data-appearance-card />
@@ -599,13 +692,13 @@
         <article class="settings-color-tool glass-card aurora-card beam-target">
           <div class="settings-color-tool-top">
             <h3>Button Tint</h3>
-            <p>Keeps buttons semi-transparent and Apple-like instead of turning them into solid blocks.</p>
+            <p>Keeps buttons glassy and premium, lightly tinted inside the current preset family.</p>
           </div>
           <div class="settings-color-swatch-row">
             <div class="settings-color-swatch" data-button-color-preview></div>
             <div class="settings-color-meta">
               <div class="settings-color-value" data-button-color-value>#2563EB</div>
-              <button class="settings-color-open beam-target" data-open-target="button" type="button">Open Wheel</button>
+              <button class="settings-color-open beam-target" data-open-target="button" type="button">Edit</button>
             </div>
           </div>
           <input class="settings-color-input" type="color" data-appearance-button />
@@ -614,17 +707,47 @@
         <article class="settings-color-tool glass-card aurora-card beam-target">
           <div class="settings-color-tool-top">
             <h3>Background Aura</h3>
-            <p>Optional color energy for the moving page atmosphere behind the glass surfaces.</p>
+            <p>Optional moving ambient page color behind the glass surfaces.</p>
           </div>
           <div class="settings-color-swatch-row">
             <div class="settings-color-swatch" data-background-color-preview></div>
             <div class="settings-color-meta">
               <div class="settings-color-value" data-background-color-value>#0F172A</div>
-              <button class="settings-color-open beam-target" data-open-target="background" type="button">Open Wheel</button>
+              <button class="settings-color-open beam-target" data-open-target="background" type="button">Edit</button>
             </div>
           </div>
           <input class="settings-color-input" type="color" data-appearance-background />
         </article>
+
+        <article class="settings-color-tool glass-card aurora-card beam-target">
+          <div class="settings-color-tool-top">
+            <h3>Beam Color</h3>
+            <p>Controls the animated beam color when beam is on. Separate from surface tint.</p>
+          </div>
+          <div class="settings-color-swatch-row">
+            <div class="settings-color-swatch" data-beam-color-preview></div>
+            <div class="settings-color-meta">
+              <div class="settings-color-value" data-beam-color-value>#8B5CF6</div>
+              <button class="settings-color-open beam-target" data-open-target="beam" type="button">Edit</button>
+            </div>
+          </div>
+          <input class="settings-color-input" type="color" data-appearance-beam />
+        </article>
+      </div>
+
+      <div class="settings-color-sheet" id="settingsColorSheet" aria-hidden="true">
+        <div class="settings-color-sheet-backdrop" data-color-sheet-close></div>
+        <div class="settings-color-sheet-panel glass-card aurora-card active-glow beam-target">
+          <div class="settings-color-sheet-head">
+            <strong id="settingsColorSheetTitle">Edit Color</strong>
+            <button type="button" class="settings-color-sheet-close beam-target" data-color-sheet-close>✕</button>
+          </div>
+          <div class="settings-color-sheet-body">
+            <div class="settings-color-sheet-swatch" id="settingsColorSheetSwatch"></div>
+            <input type="color" id="settingsColorSheetInput" class="settings-color-sheet-input" />
+            <div class="settings-color-sheet-value" id="settingsColorSheetValue">#FFFFFF</div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -740,9 +863,9 @@
     </section>
   </main>
 
-  <script src="/evaraos/assets/js/theme.js?v=28"></script>
-  <script type="module" src="/evaraos/assets/js/firebase.js?v=28"></script>
-  <script type="module" src="/evaraos/assets/js/route-guard.js?v=28"></script>
-  <script src="/evaraos/assets/js/nav.js?v=28"></script>
+  <script type="module" src="/evaraos/assets/js/theme.js?v=29"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js?v=29"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js?v=29"></script>
+  <script src="/evaraos/assets/js/nav.js?v=29"></script>
 </body>
 </html>
