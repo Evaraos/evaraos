@@ -50,15 +50,106 @@ const STORAGE_KEYS = {
 let currentUser = null;
 let useSessionStorageForProfile = false;
 
+/* =========================================
+   GLOBAL LOADER
+   ========================================= */
+
+const GLOBAL_LOADER_ID = "evaraGlobalLoader";
+
+function ensureGlobalLoader() {
+  let loader = document.getElementById(GLOBAL_LOADER_ID);
+  if (loader) return loader;
+
+  if (!document.body) return null;
+
+  loader = document.createElement("div");
+  loader.id = GLOBAL_LOADER_ID;
+  loader.className = "evara-global-loader";
+  loader.setAttribute("aria-hidden", "true");
+
+  loader.innerHTML = `
+    <div class="evara-loader-backdrop"></div>
+    <div class="evara-loader-box glass-card">
+      <div class="evara-loader-mark">
+        <span class="evara-loader-ring"></span>
+        <span class="evara-loader-ring2"></span>
+        <span class="evara-loader-ring3"></span>
+
+        <div class="evara-loader-logo-wrap">
+          <img
+            src="/evaraos/assets/img/evaraos_logo.png"
+            alt="Evaraos"
+            class="evara-loader-logo"
+            onerror="this.onerror=null;this.src='/evaraos/assets/logo.png';"
+          />
+        </div>
+      </div>
+
+      <div class="evara-loader-copy">
+        <p class="evara-loader-title" id="evaraLoaderTitle">Loading Evaraos</p>
+        <p class="evara-loader-subtitle" id="evaraLoaderSubtitle">Preparing your workspace and syncing your secure session.</p>
+      </div>
+
+      <div class="evara-loader-dots" aria-hidden="true">
+        <span class="evara-loader-dot"></span>
+        <span class="evara-loader-dot"></span>
+        <span class="evara-loader-dot"></span>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(loader);
+  return loader;
+}
+
+export function showGlobalLoader({
+  title = "Loading Evaraos",
+  subtitle = "Preparing your workspace and syncing your secure session."
+} = {}) {
+  const loader = ensureGlobalLoader();
+  if (!loader) return;
+
+  const titleEl = loader.querySelector("#evaraLoaderTitle");
+  const subtitleEl = loader.querySelector("#evaraLoaderSubtitle");
+
+  if (titleEl) titleEl.textContent = title;
+  if (subtitleEl) subtitleEl.textContent = subtitle;
+
+  loader.classList.add("active");
+  loader.setAttribute("aria-hidden", "false");
+  document.body?.classList.add("app-loading");
+}
+
+export function hideGlobalLoader() {
+  const loader = document.getElementById(GLOBAL_LOADER_ID);
+  if (loader) {
+    loader.classList.remove("active");
+    loader.setAttribute("aria-hidden", "true");
+  }
+  document.body?.classList.remove("app-loading");
+}
+
+/* =========================================
+   CURRENT USER
+   ========================================= */
+
 export function getCurrentUser() {
   return currentUser;
 }
+
+/* =========================================
+   AUTH PERSISTENCE
+   ========================================= */
 
 export async function setAuthPersistence(rememberDevice = true) {
   const persistence = rememberDevice ? browserLocalPersistence : browserSessionPersistence;
   useSessionStorageForProfile = !rememberDevice;
   await setPersistence(auth, persistence);
 }
+
+/* =========================================
+   STORAGE HELPERS
+   ========================================= */
 
 function writeStorage(key, value) {
   try {
@@ -115,6 +206,10 @@ export function getSavedUserProfile() {
 export function clearSavedUserProfile() {
   removeStorage(STORAGE_KEYS.user);
 }
+
+/* =========================================
+   USER UI HELPERS
+   ========================================= */
 
 export function roleLabelFromRole(role = "") {
   const value = String(role || "").trim().toLowerCase();
@@ -181,7 +276,16 @@ export function clearUserSession() {
   clearSavedUserProfile();
 }
 
+/* =========================================
+   LOGOUT
+   ========================================= */
+
 export async function logoutAndRedirect(path = "/evaraos/login.html") {
+  showGlobalLoader({
+    title: "Signing out",
+    subtitle: "Clearing your secure session and returning to login."
+  });
+
   await signOut(auth);
   clearUserSession();
 
@@ -200,22 +304,40 @@ export async function logout() {
   await logoutAndRedirect("/evaraos/login.html");
 }
 
-export function markProtectedPagePending() {
+/* =========================================
+   ROUTE LOADING STATE
+   ========================================= */
+
+export function markProtectedPagePending(message = "Checking your secure session") {
   document.documentElement.classList.add("auth-pending");
   document.body?.classList.add("auth-pending");
+
+  showGlobalLoader({
+    title: "Loading Evaraos",
+    subtitle: message
+  });
 }
 
 export function resolveProtectedPage() {
   document.documentElement.classList.remove("auth-pending");
   document.body?.classList.remove("auth-pending");
+  hideGlobalLoader();
 }
+
+/* =========================================
+   ROUTE PROTECTION
+   ========================================= */
 
 export function protectRoute({
   requireAuth = true,
   redirectGuestTo = "/evaraos/login.html",
   redirectAuthedTo = "/evaraos/dashboard.html"
 } = {}) {
-  markProtectedPagePending();
+  markProtectedPagePending(
+    requireAuth
+      ? "Verifying your access and restoring your workspace."
+      : "Checking your current sign-in state."
+  );
 
   const path = window.location.pathname;
   const isAuthPage =
@@ -233,6 +355,10 @@ export function protectRoute({
       }
 
       if (!requireAuth && isAuthPage) {
+        showGlobalLoader({
+          title: "Redirecting",
+          subtitle: "You are already signed in. Opening your dashboard."
+        });
         window.location.replace(redirectAuthedTo);
         return;
       }
@@ -245,6 +371,10 @@ export function protectRoute({
     clearUserSession();
 
     if (requireAuth) {
+      showGlobalLoader({
+        title: "Redirecting to login",
+        subtitle: "This protected page requires an active secure session."
+      });
       window.location.replace(redirectGuestTo);
       return;
     }
@@ -257,11 +387,19 @@ export function protectRoute({
       const activeUser = auth.currentUser;
 
       if (requireAuth && !activeUser) {
+        showGlobalLoader({
+          title: "Restoring session",
+          subtitle: "No active session was found. Redirecting to login."
+        });
         window.location.replace(redirectGuestTo);
         return;
       }
 
       if (!requireAuth && activeUser && isAuthPage) {
+        showGlobalLoader({
+          title: "Restoring session",
+          subtitle: "You are already signed in. Redirecting now."
+        });
         window.location.replace(redirectAuthedTo);
         return;
       }
@@ -311,6 +449,10 @@ export async function getUserThemePreferences() {
     return null;
   }
 }
+
+/* =========================================
+   GLOBAL AUTH SYNC
+   ========================================= */
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
