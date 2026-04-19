@@ -10,6 +10,7 @@
   let rafId = null;
   let navPinnedOpen = false;
   let motionMode = "scroll";
+  let hasBootAnimated = false;
 
   let tapStartX = 0;
   let tapStartY = 0;
@@ -43,21 +44,40 @@
     return current === target || (current === "" && target === "index.html");
   }
 
-  function getRole() {
+  function getStoredUser() {
     try {
       const raw =
         localStorage.getItem("evaraos-user") ||
         sessionStorage.getItem("evaraos-user");
-      if (!raw) return "guest";
-      const parsed = JSON.parse(raw);
-      return String(parsed?.role || "guest").toLowerCase();
+      return raw ? JSON.parse(raw) : null;
     } catch {
-      return "guest";
+      return null;
     }
   }
 
+  function isAuthenticated() {
+    const user = getStoredUser();
+    return Boolean(user && (user.uid || user.email));
+  }
+
+  function getRole() {
+    const user = getStoredUser();
+    if (!user) return "guest";
+    return String(user.role || "guest").toLowerCase();
+  }
+
+  function getDisplayName() {
+    const user = getStoredUser();
+    if (!user) return "Profile";
+    return user.displayName || user.fullName || user.username || user.email || "Profile";
+  }
+
   function getTheme() {
-    return localStorage.getItem("evaraos-theme") || document.documentElement.getAttribute("data-theme") || "dark";
+    return (
+      localStorage.getItem("evaraos-theme") ||
+      document.documentElement.getAttribute("data-theme") ||
+      "dark"
+    );
   }
 
   function setTheme(theme) {
@@ -80,22 +100,103 @@
     } catch (_) {}
   }
 
+  function ensureTransitionLoader() {
+    let loader = document.getElementById("evaraGlobalLoader");
+    if (loader) return loader;
+
+    loader = document.createElement("div");
+    loader.id = "evaraGlobalLoader";
+    loader.className = "evara-global-loader";
+    loader.setAttribute("aria-hidden", "true");
+
+    loader.innerHTML = `
+      <div class="evara-loader-backdrop"></div>
+      <div class="evara-loader-box glass-card">
+        <div class="evara-loader-mark">
+          <span class="evara-loader-ring"></span>
+          <span class="evara-loader-ring2"></span>
+          <span class="evara-loader-ring3"></span>
+
+          <div class="evara-loader-logo-wrap">
+            <img
+              src="${getBasePath()}/assets/img/evaraos_logo.png"
+              alt="Evaraos"
+              class="evara-loader-logo"
+              onerror="this.onerror=null;this.src='${getBasePath()}/assets/logo.png';"
+            />
+          </div>
+        </div>
+
+        <div class="evara-loader-copy">
+          <p class="evara-loader-title" id="evaraLoaderTitle">Launching Evaraos</p>
+          <p class="evara-loader-subtitle" id="evaraLoaderSubtitle">Loading navigation, theme, and experience.</p>
+        </div>
+
+        <div class="evara-loader-dots" aria-hidden="true">
+          <span class="evara-loader-dot"></span>
+          <span class="evara-loader-dot"></span>
+          <span class="evara-loader-dot"></span>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(loader);
+    return loader;
+  }
+
+  function showTransitionLoader({
+    title = "Opening Evaraos",
+    subtitle = "Preparing your next screen."
+  } = {}) {
+    const loader = ensureTransitionLoader();
+    const titleEl = loader.querySelector("#evaraLoaderTitle");
+    const subtitleEl = loader.querySelector("#evaraLoaderSubtitle");
+
+    if (titleEl) titleEl.textContent = title;
+    if (subtitleEl) subtitleEl.textContent = subtitle;
+
+    loader.classList.add("active");
+    loader.setAttribute("aria-hidden", "false");
+    document.body.classList.add("app-loading");
+  }
+
+  function hideTransitionLoader() {
+    const loader = document.getElementById("evaraGlobalLoader");
+    if (loader) {
+      loader.classList.remove("active");
+      loader.setAttribute("aria-hidden", "true");
+    }
+    document.body.classList.remove("app-loading");
+  }
+
+  function navigateWithLoader(href, options = {}) {
+    if (!href) return;
+    showTransitionLoader(options);
+    window.setTimeout(() => {
+      window.location.assign(href);
+    }, 120);
+  }
+
   function getVisibleLinks() {
     const role = getRole();
+    const authed = isAuthenticated();
 
     const common = [
-      { page: "index.html", label: "Home", icon: "⌂" },
-      { page: "settings.html", label: "Settings", icon: "⚙︎" }
+      { page: "index.html", label: "Home", icon: "⌂" }
     ];
 
-    const authLinks = [
+    const guestMain = [
       { page: "login.html", label: "Login", icon: "⇥" },
       { page: "signup.html", label: "Sign Up", icon: "✚" },
       { page: "reset.html", label: "Reset", icon: "↺" }
     ];
 
+    const authedMain = [
+      { page: "dashboard.html", label: "Profile", icon: "◉" },
+      { page: "settings.html", label: "Settings", icon: "⚙︎" }
+    ];
+
     const ownerOnly = [
-      { page: "dashboard.html", label: "Dashboard", icon: "◫" },
       { page: "companies.html", label: "Companies", icon: "▣" },
       { page: "users.html", label: "Users", icon: "◉" },
       { page: "leads.html", label: "Leads", icon: "⌁" },
@@ -103,11 +204,15 @@
       { page: "qa.html", label: "QA", icon: "◎" }
     ];
 
+    const main = authed
+      ? [...common, ...authedMain, ...(role === "owner" ? ownerOnly : [])]
+      : [...common, ...guestMain];
+
     return {
-      common,
-      authLinks,
-      ownerOnly,
-      main: role === "owner" ? [...common, ...ownerOnly] : common
+      main,
+      authed,
+      role,
+      displayName: getDisplayName()
     };
   }
 
@@ -128,13 +233,29 @@
 
     const groups = getVisibleLinks();
     const mainLinks = groups.main.map((item) => navLink(item.page, item.label, item.icon)).join("");
-    const authLinks = groups.authLinks.map((item) => navLink(item.page, item.label, item.icon)).join("");
+
+    const utilityLinks = groups.authed
+      ? `
+        <button type="button" class="eva-chip" id="evaLogoutBtn">
+          <span class="eva-chip-row">
+            <span class="eva-chip-dot"></span>
+            <span>Logout</span>
+          </span>
+        </button>
+      `
+      : "";
 
     mount.innerHTML = `
       <div class="eva-nav-layer">
-        <header class="eva-nav-shell compact" id="evaNavShell">
+        <header class="eva-nav-shell ${atTopOfPage() ? "expanded" : "compact"}" id="evaNavShell">
           <div class="eva-nav-pill glass-shell" id="evaNavPill">
-            <div class="eva-brand" id="evaBrandBlock" role="button" tabindex="0" aria-label="Toggle navigation pill">
+            <a
+              href="${buildHref("index.html")}"
+              class="eva-brand"
+              id="evaBrandBlock"
+              data-home-link="${buildHref("index.html")}"
+              aria-label="Go to Home"
+            >
               <img
                 src="${getBasePath()}/assets/img/evaraos_logo.png"
                 alt="Evaraos logo"
@@ -145,7 +266,7 @@
                 <strong>Evaraos Inc</strong>
                 <span>Subsidiaries Allocation SaaS</span>
               </div>
-            </div>
+            </a>
 
             <div class="eva-menu-zone" id="evaMenuZone">
               <button
@@ -180,7 +301,7 @@
           <div class="eva-divider"></div>
 
           <div class="eva-quick" id="evaAuthLinks">
-            ${authLinks}
+            ${utilityLinks}
           </div>
 
           <div class="eva-divider"></div>
@@ -192,11 +313,6 @@
                 <span data-theme-label>Dark mode</span>
               </span>
             </button>
-
-            <a href="${buildHref("settings.html")}" class="eva-link" data-menu-link="${buildHref("settings.html")}" data-label="advanced settings">
-              <span class="eva-link-icon">⚙︎</span>
-              <span class="eva-link-label">Advanced settings</span>
-            </a>
           </div>
         </div>
       </div>
@@ -297,7 +413,7 @@
     navHaptic(8);
   }
 
-  function scheduleCompact(delay = 7000) {
+  function scheduleCompact(delay = 4200) {
     clearCompactTimer();
     if (document.body.classList.contains("nav-menu-open")) return;
     if (atTopOfPage()) return;
@@ -330,13 +446,13 @@
       if (lastScrollDirection < 0) {
         navPinnedOpen = true;
         setTarget(1, "scroll");
-        scheduleCompact(4000);
+        scheduleCompact(3800);
         return;
       }
 
       navPinnedOpen = false;
       setTarget(0, "scroll");
-    }, 110);
+    }, 90);
   }
 
   function lockBodyScroll() {
@@ -420,7 +536,7 @@
 
     if (isCompact()) {
       expandNav(true, "tap");
-      scheduleCompact(7000);
+      scheduleCompact(4200);
       return;
     }
 
@@ -432,12 +548,14 @@
 
   function bindTapToggle() {
     const pill = getNavPill();
-    const brand = getBrandBlock();
     const menuBtn = getMenuBtn();
-    if (!pill || !brand || !menuBtn) return;
+    const brand = getBrandBlock();
+
+    if (!pill || !menuBtn || !brand) return;
 
     function onTouchStart(event) {
       if (event.target.closest("#evaMenuBtn")) return;
+      if (event.target.closest("#evaBrandBlock")) return;
       const touch = event.touches ? event.touches[0] : event;
       tapStartX = touch.clientX;
       tapStartY = touch.clientY;
@@ -447,6 +565,7 @@
 
     function onTouchMove(event) {
       if (event.target.closest("#evaMenuBtn")) return;
+      if (event.target.closest("#evaBrandBlock")) return;
       const touch = event.touches ? event.touches[0] : event;
       const dx = Math.abs(touch.clientX - tapStartX);
       const dy = Math.abs(touch.clientY - tapStartY);
@@ -457,6 +576,7 @@
 
     function onTouchEnd(event) {
       if (event.target.closest("#evaMenuBtn")) return;
+      if (event.target.closest("#evaBrandBlock")) return;
       if (tapMoved || tapHandled) return;
       tapHandled = true;
       togglePill(event);
@@ -466,30 +586,40 @@
     pill.addEventListener("touchmove", onTouchMove, { passive: true });
     pill.addEventListener("touchend", onTouchEnd);
 
-    brand.addEventListener("touchstart", onTouchStart, { passive: true });
-    brand.addEventListener("touchmove", onTouchMove, { passive: true });
-    brand.addEventListener("touchend", onTouchEnd);
-
     pill.addEventListener("click", (event) => {
       if (event.target.closest("#evaMenuBtn")) return;
+      if (event.target.closest("#evaBrandBlock")) return;
       if (tapHandled) {
         tapHandled = false;
         return;
       }
       togglePill(event);
     });
+  }
+
+  function bindBrandHome() {
+    const brand = getBrandBlock();
+    if (!brand) return;
 
     brand.addEventListener("click", (event) => {
-      if (tapHandled) {
-        tapHandled = false;
-        return;
-      }
-      togglePill(event);
+      event.preventDefault();
+      event.stopPropagation();
+      navHaptic(10);
+      const href = brand.getAttribute("data-home-link");
+      navigateWithLoader(href, {
+        title: "Opening Home",
+        subtitle: "Loading the Evaraos home experience."
+      });
     });
 
     brand.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
-        togglePill(event);
+        event.preventDefault();
+        const href = brand.getAttribute("data-home-link");
+        navigateWithLoader(href, {
+          title: "Opening Home",
+          subtitle: "Loading the Evaraos home experience."
+        });
       }
     });
   }
@@ -503,9 +633,30 @@
         const href = link.getAttribute("data-menu-link");
         if (!href) return;
         closeMenu(false);
-        window.location.assign(href);
+        navigateWithLoader(href, {
+          title: "Loading page",
+          subtitle: "Preparing your next screen."
+        });
       });
     });
+
+    const logoutBtn = document.getElementById("evaLogoutBtn");
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", () => {
+        try {
+          localStorage.removeItem("evaraos-user");
+          localStorage.removeItem("evaraos-role");
+          sessionStorage.removeItem("evaraos-user");
+          sessionStorage.removeItem("evaraos-role");
+        } catch {}
+
+        closeMenu(false);
+        navigateWithLoader(buildHref("login.html"), {
+          title: "Signing out",
+          subtitle: "Clearing local session and returning to login."
+        });
+      });
+    }
   }
 
   function bindThemeToggle() {
@@ -659,26 +810,52 @@
 
   function animate() {
     const diff = targetProgress - progress;
-    const factor = motionMode === "tap" ? 0.085 : 0.082;
+    const factor = motionMode === "tap" ? 0.16 : 0.11;
     const next = Math.abs(diff) < 0.0006 ? targetProgress : progress + diff * factor;
     applyProgress(next);
     rafId = requestAnimationFrame(animate);
   }
 
+  function bootLoaderPulse() {
+    if (hasBootAnimated) return;
+    hasBootAnimated = true;
+
+    showTransitionLoader({
+      title: "Launching Evaraos",
+      subtitle: "Loading navigation, theme, and experience."
+    });
+
+    window.setTimeout(() => {
+      hideTransitionLoader();
+    }, 620);
+  }
+
   function init() {
     document.documentElement.setAttribute("data-theme", getTheme());
     renderNav();
+
+    const shell = getNavShell();
+    const immediate = atTopOfPage() ? 1 : 0;
+    progress = immediate;
+    targetProgress = immediate;
+
+    if (shell) {
+      shell.style.setProperty("--nav-progress", immediate.toFixed(4));
+      shell.classList.toggle("expanded", immediate === 1);
+      shell.classList.toggle("compact", immediate !== 1);
+    }
+
     bindTapToggle();
+    bindBrandHome();
     bindMenu();
     bindLinks();
     bindThemeToggle();
     bindSearch();
     bindTripleTap();
-    targetProgress = atTopOfPage() ? 1 : 0;
-    applyProgress(targetProgress);
     bindScrollBehavior();
     syncThemeLabel();
     animate();
+    bootLoaderPulse();
   }
 
   if (document.readyState === "loading") {
