@@ -271,6 +271,47 @@ export function protectRoute({
   });
 }
 
+/* =========================================
+   USER THEME PREFERENCES
+   ========================================= */
+
+export async function saveUserThemePreferences(themePreferences = {}) {
+  const user = auth.currentUser;
+  if (!user?.uid) return false;
+
+  try {
+    const userRef = doc(db, "users", user.uid);
+    await setDoc(
+      userRef,
+      {
+        themePreferences: themePreferences || {},
+        themePreferencesUpdatedAt: new Date().toISOString()
+      },
+      { merge: true }
+    );
+    return true;
+  } catch (error) {
+    console.error("Failed to save theme preferences:", error);
+    return false;
+  }
+}
+
+export async function getUserThemePreferences() {
+  const user = auth.currentUser;
+  if (!user?.uid) return null;
+
+  try {
+    const userRef = doc(db, "users", user.uid);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) return null;
+    const data = snap.data() || {};
+    return data.themePreferences || null;
+  } catch (error) {
+    console.error("Failed to load theme preferences:", error);
+    return null;
+  }
+}
+
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     currentUser = null;
@@ -294,7 +335,8 @@ onAuthStateChanged(auth, async (user) => {
           fullName: user.displayName || "",
           username: "",
           usernameLower: "",
-          role: "customer"
+          role: "customer",
+          themePreferences: null
         },
         { merge: true }
       );
