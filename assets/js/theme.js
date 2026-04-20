@@ -28,12 +28,24 @@ const PRESET_LIGHT = {
   beamColor: "#A78BFA"
 };
 
+const PRESET_GALAXY = {
+  mode: "galaxy",
+  baseFamily: "galaxy",
+  beamMode: "rainbow",
+  cardColor: "#D6A8FF",
+  buttonColor: "#FF8BD7",
+  backgroundColor: "#120A22",
+  beamColor: "#E3A6FF"
+};
+
 let activeColorSheetTarget = null;
 let hasBoundThemeControls = false;
 
 function normalizeTheme(theme = "") {
   const value = String(theme || "").trim().toLowerCase();
-  return value === "light" ? "light" : "dark";
+  if (value === "light") return "light";
+  if (value === "galaxy") return "galaxy";
+  return "dark";
 }
 
 function normalizeHex(value, fallback) {
@@ -43,12 +55,12 @@ function normalizeHex(value, fallback) {
 
 function normalizeMode(value = "") {
   const safe = String(value || "").trim().toLowerCase();
-  return ["dark", "light", "custom"].includes(safe) ? safe : "dark";
+  return ["dark", "light", "custom", "galaxy"].includes(safe) ? safe : "dark";
 }
 
 function normalizeBaseFamily(value = "") {
   const safe = String(value || "").trim().toLowerCase();
-  return safe === "light" ? "light" : "dark";
+  return ["light", "dark", "galaxy"].includes(safe) ? safe : "dark";
 }
 
 function normalizeBeamMode(value = "") {
@@ -57,7 +69,9 @@ function normalizeBeamMode(value = "") {
 }
 
 function getPresetAppearance(baseFamily = "dark") {
-  return baseFamily === "light" ? { ...PRESET_LIGHT } : { ...PRESET_DARK };
+  if (baseFamily === "light") return { ...PRESET_LIGHT };
+  if (baseFamily === "galaxy") return { ...PRESET_GALAXY };
+  return { ...PRESET_DARK };
 }
 
 function getStoredBaseFamily() {
@@ -86,6 +100,8 @@ function normalizeAppearance(appearance = {}) {
       ? "light"
       : requestedMode === "dark"
       ? "dark"
+      : requestedMode === "galaxy"
+      ? "galaxy"
       : rememberedBase;
 
   const preset = getPresetAppearance(baseFamily);
@@ -163,6 +179,14 @@ function ensureAppearanceStyle() {
         radial-gradient(circle at 18% 84%, color-mix(in srgb, var(--user-card-tint) 8%, transparent), transparent 24%) !important;
     }
 
+    html[data-theme="galaxy"] body {
+      background-image:
+        radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--user-background-tint) 26%, transparent), transparent 18%),
+        radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--user-card-tint) 22%, transparent), transparent 24%),
+        radial-gradient(circle at 82% 16%, color-mix(in srgb, var(--user-button-tint) 18%, transparent), transparent 24%),
+        radial-gradient(circle at 22% 84%, color-mix(in srgb, var(--user-beam-color) 14%, transparent), transparent 24%) !important;
+    }
+
     .glass-card,
     .glass-shell,
     .aurora-card,
@@ -197,6 +221,40 @@ function ensureAppearanceStyle() {
         0 0 0 1px color-mix(in srgb, var(--user-card-tint) 8%, transparent) !important;
     }
 
+    html[data-theme="galaxy"] .glass-card,
+    html[data-theme="galaxy"] .glass-shell,
+    html[data-theme="galaxy"] .aurora-card,
+    html[data-theme="galaxy"] .input-shell,
+    html[data-theme="galaxy"] .feature-card,
+    html[data-theme="galaxy"] .inline-card,
+    html[data-theme="galaxy"] .dashboard-feed-item,
+    html[data-theme="galaxy"] .dashboard-stat-card,
+    html[data-theme="galaxy"] .login-panel,
+    html[data-theme="galaxy"] .auth-panel,
+    html[data-theme="galaxy"] .dashboard-panel,
+    html[data-theme="galaxy"] .dashboard-hero,
+    html[data-theme="galaxy"] .dashboard-overview,
+    html[data-theme="galaxy"] .dashboard-sidebar-inner,
+    html[data-theme="galaxy"] .settings-preview-card,
+    html[data-theme="galaxy"] .settings-color-tool,
+    html[data-theme="galaxy"] .settings-mini-card,
+    html[data-theme="galaxy"] .stats-card,
+    html[data-theme="galaxy"] .section-panel,
+    html[data-theme="galaxy"] .cta-panel,
+    html[data-theme="galaxy"] .site-footer-inner,
+    html[data-theme="galaxy"] .eva-nav-pill,
+    html[data-theme="galaxy"] #evaNavPill,
+    html[data-theme="galaxy"] .eva-menu-panel,
+    html[data-theme="galaxy"] .settings-preview-nav,
+    html[data-theme="galaxy"] .settings-block,
+    html[data-theme="galaxy"] .settings-hero {
+      box-shadow:
+        0 24px 42px rgba(12,4,24,0.24),
+        inset 0 1px 0 rgba(255,255,255,0.10),
+        0 0 0 1px color-mix(in srgb, var(--user-card-tint) 12%, transparent),
+        0 0 28px color-mix(in srgb, var(--user-beam-color) 12%, transparent) !important;
+    }
+
     .eva-nav-pill,
     #evaNavPill,
     .settings-preview-nav {
@@ -214,6 +272,7 @@ function ensureAppearanceStyle() {
     .btn-theme-secondary,
     .settings-preview-btn,
     .settings-chip,
+    .settings-section-link,
     .settings-color-open,
     .settings-color-sheet-close,
     .eva-chip,
@@ -237,12 +296,33 @@ function ensureAppearanceStyle() {
       -webkit-backdrop-filter: blur(16px) saturate(145%) !important;
     }
 
+    html[data-theme="galaxy"] .btn,
+    html[data-theme="galaxy"] .btn-apple,
+    html[data-theme="galaxy"] .btn-theme-primary,
+    html[data-theme="galaxy"] .btn-theme-secondary,
+    html[data-theme="galaxy"] .settings-preview-btn,
+    html[data-theme="galaxy"] .settings-chip,
+    html[data-theme="galaxy"] .settings-section-link,
+    html[data-theme="galaxy"] .settings-color-open,
+    html[data-theme="galaxy"] .settings-color-sheet-close,
+    html[data-theme="galaxy"] .eva-chip,
+    html[data-theme="galaxy"] .eva-link,
+    html[data-theme="galaxy"] .eva-menu-btn {
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.24),
+        inset 0 -1px 0 rgba(255,255,255,0.04),
+        0 14px 26px rgba(12,4,24,0.20),
+        0 0 18px color-mix(in srgb, var(--user-button-tint) 12%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--user-button-tint) 8%, transparent) !important;
+    }
+
     .btn::before,
     .btn-apple::before,
     .btn-theme-primary::before,
     .btn-theme-secondary::before,
     .settings-preview-btn::before,
     .settings-chip::before,
+    .settings-section-link::before,
     .settings-color-open::before,
     .settings-color-sheet-close::before,
     .eva-chip::before,
@@ -270,6 +350,7 @@ function ensureAppearanceStyle() {
     .btn-theme-secondary > *,
     .settings-preview-btn > *,
     .settings-chip > *,
+    .settings-section-link > *,
     .settings-color-open > *,
     .settings-color-sheet-close > *,
     .eva-chip > *,
@@ -284,6 +365,13 @@ function ensureAppearanceStyle() {
         linear-gradient(color-mix(in srgb, var(--user-card-tint) 8%, transparent) 1px, transparent 1px),
         linear-gradient(90deg, color-mix(in srgb, var(--user-card-tint) 8%, transparent) 1px, transparent 1px) !important;
       opacity: 0.16 !important;
+    }
+
+    html[data-theme="galaxy"] .page-grid-overlay {
+      opacity: 0.14 !important;
+      background-image:
+        linear-gradient(color-mix(in srgb, var(--user-card-tint) 10%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in srgb, var(--user-beam-color) 8%, transparent) 1px, transparent 1px) !important;
     }
 
     html[data-beam-mode="off"] .beam-target:hover,
@@ -380,9 +468,17 @@ function syncThemeUi() {
 
   document.querySelectorAll("[data-theme-mode-text]").forEach((el) => {
     if (appearance.mode === "custom") {
-      el.textContent = `Custom (${appearance.baseFamily === "light" ? "Light" : "Dark"})`;
+      const label =
+        appearance.baseFamily === "light"
+          ? "Custom (Light)"
+          : appearance.baseFamily === "galaxy"
+          ? "Custom (Galaxy)"
+          : "Custom (Dark)";
+      el.textContent = label;
+    } else if (appearance.mode === "galaxy") {
+      el.textContent = "Galaxy";
     } else {
-      el.textContent = currentTheme === "light" ? "Light" : "Dark";
+      el.textContent = currentTheme === "light" ? "Light" : currentTheme === "galaxy" ? "Galaxy" : "Dark";
     }
   });
 
@@ -455,6 +551,8 @@ function getEffectiveAppearance(appearance = {}) {
       ? "light"
       : safe.mode === "dark"
       ? "dark"
+      : safe.mode === "galaxy"
+      ? "galaxy"
       : safe.baseFamily;
 
   const preset = safe.mode === "custom" ? safe : getPresetAppearance(effectiveBase);
@@ -481,7 +579,14 @@ function applyAppearanceTokens(appearance = {}) {
   root.style.setProperty("--user-nav-tint", preset.cardColor);
   root.setAttribute("data-beam-mode", safe.beamMode);
 
-  applyTheme(effectiveBase === "light" ? "light" : "dark");
+  applyTheme(
+    effectiveBase === "light"
+      ? "light"
+      : effectiveBase === "galaxy"
+      ? "galaxy"
+      : "dark"
+  );
+
   syncThemeUi();
 }
 
@@ -513,7 +618,7 @@ function applyAppearanceConfigLocalOnly(appearance = {}) {
 }
 
 function resetAppearanceConfig() {
-  const fallback = getStoredBaseFamily() === "light" ? PRESET_LIGHT : PRESET_DARK;
+  const fallback = getPresetAppearance(getStoredBaseFamily());
   applyAppearanceConfig({ ...fallback });
 }
 
@@ -623,7 +728,7 @@ function bindThemeControls() {
       const mode = btn.getAttribute("data-set-mode") || "dark";
       const current = getStoredAppearance();
 
-      if (mode === "dark" || mode === "light") {
+      if (mode === "dark" || mode === "light" || mode === "galaxy") {
         const preset = getPresetAppearance(mode);
         await applyAppearanceConfig({
           ...preset,
@@ -739,12 +844,6 @@ async function initTheme() {
 
   if (auth.currentUser) {
     await hydrateFromFirestoreIfAvailable();
-  } else if (typeof auth.onAuthStateChanged === "function") {
-    auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        await hydrateFromFirestoreIfAvailable();
-      }
-    });
   }
 }
 
