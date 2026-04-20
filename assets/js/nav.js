@@ -73,24 +73,44 @@
     return user.displayName || user.fullName || user.username || user.email || "Profile";
   }
 
-  function getTheme() {
-    return (
-      localStorage.getItem("evaraos-theme") ||
-      document.documentElement.getAttribute("data-theme") ||
-      "dark"
-    );
+  function getAppearanceTheme() {
+    try {
+      const raw = localStorage.getItem("evaraos-appearance");
+      if (raw) {
+        const appearance = JSON.parse(raw);
+        if (appearance.mode === "light") return "light";
+        if (appearance.mode === "galaxy") return "galaxy";
+        if (appearance.mode === "custom") {
+          if (appearance.baseFamily === "light") return "light";
+          if (appearance.baseFamily === "galaxy") return "galaxy";
+          return "dark";
+        }
+      }
+    } catch {}
+
+    const docTheme = document.documentElement.getAttribute("data-theme");
+    if (docTheme === "light" || docTheme === "galaxy") return docTheme;
+    return "dark";
   }
 
   function setTheme(theme) {
-    localStorage.setItem("evaraos-theme", theme);
-    document.documentElement.setAttribute("data-theme", theme);
+    const safe = theme === "light" || theme === "galaxy" ? theme : "dark";
+    document.documentElement.setAttribute("data-theme", safe);
     syncThemeLabel();
   }
 
   function syncThemeLabel() {
     const label = document.querySelector("[data-theme-label]");
     if (!label) return;
-    label.textContent = getTheme() === "light" ? "Light mode" : "Dark mode";
+
+    const theme = getAppearanceTheme();
+    if (theme === "light") {
+      label.textContent = "Light mode";
+    } else if (theme === "galaxy") {
+      label.textContent = "Galaxy mode";
+    } else {
+      label.textContent = "Dark mode";
+    }
   }
 
   function navHaptic(ms = 10) {
@@ -104,10 +124,6 @@
   function isCompact() {
     return progress <= 0.08;
   }
-
-  /* =========================================
-     TWO-TIER LOADER SYSTEM
-     ========================================= */
 
   function ensureLoaderSystem() {
     let micro = document.getElementById("evaraMicroLoader");
@@ -251,10 +267,6 @@
       window.location.assign(href);
     }, 90);
   }
-
-  /* =========================================
-     NAV CONTENT
-     ========================================= */
 
   function getVisibleLinks() {
     const role = getRole();
@@ -759,7 +771,21 @@
     toggle.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      setTheme(getTheme() === "light" ? "dark" : "light");
+
+      const current = getAppearanceTheme();
+      const next = current === "light" ? "dark" : "light";
+
+      try {
+        const raw = localStorage.getItem("evaraos-appearance");
+        if (raw) {
+          const appearance = JSON.parse(raw);
+          appearance.mode = next;
+          appearance.baseFamily = next;
+          localStorage.setItem("evaraos-appearance", JSON.stringify(appearance));
+        }
+      } catch {}
+
+      setTheme(next);
     });
   }
 
@@ -924,7 +950,7 @@
   }
 
   function init() {
-    document.documentElement.setAttribute("data-theme", getTheme());
+    setTheme(getAppearanceTheme());
     renderNav();
 
     const shell = getNavShell();
@@ -953,6 +979,7 @@
     bootLoaderPulse();
 
     window.addEventListener("pageshow", () => {
+      setTheme(getAppearanceTheme());
       hideAllLoaders();
     });
   }
