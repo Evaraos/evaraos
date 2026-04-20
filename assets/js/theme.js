@@ -851,6 +851,7 @@ window.EvaraTheme = {
   initTheme,
   applyTheme,
   applyAppearanceConfig,
+  applyAppearanceConfigLocalOnly,
   resetAppearanceConfig,
   getStoredAppearance,
   setStoredAppearance,
