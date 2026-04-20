@@ -18,6 +18,7 @@
   let tapHandled = false;
 
   let lockedScrollY = 0;
+  let longLoaderTimer = null;
 
   function getMount() {
     return document.getElementById("universalNavRoot") || document.getElementById("universalNav");
@@ -100,82 +101,160 @@
     } catch (_) {}
   }
 
-  function ensureTransitionLoader() {
-    let loader = document.getElementById("evaraGlobalLoader");
-    if (loader) return loader;
-
-    loader = document.createElement("div");
-    loader.id = "evaraGlobalLoader";
-    loader.className = "evara-global-loader";
-    loader.setAttribute("aria-hidden", "true");
-
-    loader.innerHTML = `
-      <div class="evara-loader-backdrop"></div>
-      <div class="evara-loader-box glass-card">
-        <div class="evara-loader-mark">
-          <span class="evara-loader-ring"></span>
-          <span class="evara-loader-ring2"></span>
-          <span class="evara-loader-ring3"></span>
-
-          <div class="evara-loader-logo-wrap">
-            <img
-              src="${getBasePath()}/assets/img/evaraos_logo.png"
-              alt="Evaraos"
-              class="evara-loader-logo"
-              onerror="this.onerror=null;this.src='${getBasePath()}/assets/logo.png';"
-            />
-          </div>
-        </div>
-
-        <div class="evara-loader-copy">
-          <p class="evara-loader-title" id="evaraLoaderTitle">Launching Evaraos</p>
-          <p class="evara-loader-subtitle" id="evaraLoaderSubtitle">Loading navigation, theme, and experience.</p>
-        </div>
-
-        <div class="evara-loader-dots" aria-hidden="true">
-          <span class="evara-loader-dot"></span>
-          <span class="evara-loader-dot"></span>
-          <span class="evara-loader-dot"></span>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(loader);
-    return loader;
+  function isCompact() {
+    return progress <= 0.08;
   }
 
-  function showTransitionLoader({
+  /* =========================================
+     TWO-TIER LOADER SYSTEM
+     ========================================= */
+
+  function ensureLoaderSystem() {
+    let micro = document.getElementById("evaraMicroLoader");
+    let full = document.getElementById("evaraGlobalLoader");
+
+    if (!micro) {
+      micro = document.createElement("div");
+      micro.id = "evaraMicroLoader";
+      micro.className = "evara-micro-loader";
+      micro.setAttribute("aria-hidden", "true");
+      micro.innerHTML = `
+        <div class="evara-micro-loader__orb">
+          <img
+            src="${getBasePath()}/assets/img/evaraos_logo.png"
+            alt="Evaraos"
+            class="evara-micro-loader__logo"
+            onerror="this.onerror=null;this.src='${getBasePath()}/assets/logo.png';"
+          />
+          <span class="evara-micro-loader__pulse"></span>
+          <span class="evara-micro-loader__sheen"></span>
+        </div>
+      `;
+      document.body.appendChild(micro);
+    }
+
+    if (!full) {
+      full = document.createElement("div");
+      full.id = "evaraGlobalLoader";
+      full.className = "evara-global-loader";
+      full.setAttribute("aria-hidden", "true");
+      full.innerHTML = `
+        <div class="evara-loader-backdrop"></div>
+        <div class="evara-loader-box glass-card">
+          <div class="evara-loader-mark evara-loader-mark--premium">
+            <span class="evara-loader-ring"></span>
+            <span class="evara-loader-ring2"></span>
+            <span class="evara-loader-ring3"></span>
+            <span class="evara-loader-particle evara-loader-particle--a"></span>
+            <span class="evara-loader-particle evara-loader-particle--b"></span>
+            <span class="evara-loader-particle evara-loader-particle--c"></span>
+
+            <div class="evara-loader-logo-wrap evara-loader-logo-wrap--premium">
+              <img
+                src="${getBasePath()}/assets/img/evaraos_logo.png"
+                alt="Evaraos"
+                class="evara-loader-logo evara-loader-logo--premium"
+                onerror="this.onerror=null;this.src='${getBasePath()}/assets/logo.png';"
+              />
+              <span class="evara-loader-logo-glow"></span>
+            </div>
+          </div>
+
+          <div class="evara-loader-copy">
+            <p class="evara-loader-title" id="evaraLoaderTitle">Launching Evaraos</p>
+            <p class="evara-loader-subtitle" id="evaraLoaderSubtitle">Loading navigation, theme, and experience.</p>
+          </div>
+
+          <div class="evara-loader-dots" aria-hidden="true">
+            <span class="evara-loader-dot"></span>
+            <span class="evara-loader-dot"></span>
+            <span class="evara-loader-dot"></span>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(full);
+    }
+
+    return { micro, full };
+  }
+
+  function clearLongLoaderTimer() {
+    if (longLoaderTimer) {
+      window.clearTimeout(longLoaderTimer);
+      longLoaderTimer = null;
+    }
+  }
+
+  function showMicroLoader() {
+    const { micro } = ensureLoaderSystem();
+    micro.classList.add("active");
+    micro.setAttribute("aria-hidden", "false");
+    document.body.classList.add("app-loading");
+  }
+
+  function hideMicroLoader() {
+    const micro = document.getElementById("evaraMicroLoader");
+    if (micro) {
+      micro.classList.remove("active");
+      micro.setAttribute("aria-hidden", "true");
+    }
+  }
+
+  function showFullLoader({
     title = "Opening Evaraos",
     subtitle = "Preparing your next screen."
   } = {}) {
-    const loader = ensureTransitionLoader();
-    const titleEl = loader.querySelector("#evaraLoaderTitle");
-    const subtitleEl = loader.querySelector("#evaraLoaderSubtitle");
+    const { full } = ensureLoaderSystem();
+    const titleEl = full.querySelector("#evaraLoaderTitle");
+    const subtitleEl = full.querySelector("#evaraLoaderSubtitle");
 
     if (titleEl) titleEl.textContent = title;
     if (subtitleEl) subtitleEl.textContent = subtitle;
 
-    loader.classList.add("active");
-    loader.setAttribute("aria-hidden", "false");
+    hideMicroLoader();
+    full.classList.add("active");
+    full.setAttribute("aria-hidden", "false");
     document.body.classList.add("app-loading");
   }
 
-  function hideTransitionLoader() {
-    const loader = document.getElementById("evaraGlobalLoader");
-    if (loader) {
-      loader.classList.remove("active");
-      loader.setAttribute("aria-hidden", "true");
+  function hideFullLoader() {
+    const full = document.getElementById("evaraGlobalLoader");
+    if (full) {
+      full.classList.remove("active");
+      full.setAttribute("aria-hidden", "true");
     }
+  }
+
+  function hideAllLoaders() {
+    clearLongLoaderTimer();
+    hideMicroLoader();
+    hideFullLoader();
     document.body.classList.remove("app-loading");
+  }
+
+  function beginSmartLoader({
+    title = "Opening Evaraos",
+    subtitle = "Preparing your next screen."
+  } = {}) {
+    showMicroLoader();
+    clearLongLoaderTimer();
+
+    longLoaderTimer = window.setTimeout(() => {
+      showFullLoader({ title, subtitle });
+    }, 260);
   }
 
   function navigateWithLoader(href, options = {}) {
     if (!href) return;
-    showTransitionLoader(options);
+    beginSmartLoader(options);
     window.setTimeout(() => {
       window.location.assign(href);
-    }, 120);
+    }, 90);
   }
+
+  /* =========================================
+     NAV CONTENT
+     ========================================= */
 
   function getVisibleLinks() {
     const role = getRole();
@@ -370,23 +449,28 @@
     return scrollBottom >= docHeight - 4;
   }
 
-  function isCompact() {
-    return progress <= 0.08;
-  }
-
   function applyProgress(value) {
     const shell = getNavShell();
+    const brand = getBrandBlock();
     if (!shell) return;
 
     progress = Math.max(0, Math.min(1, value));
     shell.style.setProperty("--nav-progress", progress.toFixed(4));
 
-    if (progress <= 0.08) {
-      shell.classList.add("compact");
-      shell.classList.remove("expanded");
-    } else {
-      shell.classList.remove("compact");
-      shell.classList.add("expanded");
+    const compact = progress <= 0.08;
+    shell.classList.toggle("compact", compact);
+    shell.classList.toggle("expanded", !compact);
+
+    if (brand) {
+      if (compact) {
+        brand.setAttribute("aria-disabled", "true");
+        brand.setAttribute("tabindex", "-1");
+        brand.style.pointerEvents = "none";
+      } else {
+        brand.removeAttribute("aria-disabled");
+        brand.setAttribute("tabindex", "0");
+        brand.style.pointerEvents = "auto";
+      }
     }
   }
 
@@ -549,9 +633,7 @@
   function bindTapToggle() {
     const pill = getNavPill();
     const menuBtn = getMenuBtn();
-    const brand = getBrandBlock();
-
-    if (!pill || !menuBtn || !brand) return;
+    if (!pill || !menuBtn) return;
 
     function onTouchStart(event) {
       if (event.target.closest("#evaMenuBtn")) return;
@@ -602,6 +684,12 @@
     if (!brand) return;
 
     brand.addEventListener("click", (event) => {
+      if (isCompact()) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+
       event.preventDefault();
       event.stopPropagation();
       navHaptic(10);
@@ -613,6 +701,11 @@
     });
 
     brand.addEventListener("keydown", (event) => {
+      if (isCompact()) {
+        event.preventDefault();
+        return;
+      }
+
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         const href = brand.getAttribute("data-home-link");
@@ -820,13 +913,13 @@
     if (hasBootAnimated) return;
     hasBootAnimated = true;
 
-    showTransitionLoader({
+    beginSmartLoader({
       title: "Launching Evaraos",
       subtitle: "Loading navigation, theme, and experience."
     });
 
     window.setTimeout(() => {
-      hideTransitionLoader();
+      hideAllLoaders();
     }, 620);
   }
 
@@ -845,6 +938,8 @@
       shell.classList.toggle("compact", immediate !== 1);
     }
 
+    applyProgress(immediate);
+
     bindTapToggle();
     bindBrandHome();
     bindMenu();
@@ -856,6 +951,10 @@
     syncThemeLabel();
     animate();
     bootLoaderPulse();
+
+    window.addEventListener("pageshow", () => {
+      hideAllLoaders();
+    });
   }
 
   if (document.readyState === "loading") {
