@@ -42,7 +42,8 @@
     .settings-color-tool::before,
     .settings-mini-card::before,
     .settings-preview-nav::before,
-    .settings-color-sheet-panel::before {
+    .settings-color-sheet-panel::before,
+    .settings-save-bar::before {
       content: "";
       position: absolute;
       inset: 0;
@@ -65,7 +66,8 @@
     .settings-color-tool > *,
     .settings-mini-card > *,
     .settings-preview-nav > *,
-    .settings-color-sheet-panel > * {
+    .settings-color-sheet-panel > *,
+    .settings-save-bar > * {
       position: relative;
       z-index: 1;
     }
@@ -321,14 +323,6 @@
         background 0.16s ease;
     }
 
-    .settings-preview-btn:hover {
-      transform: translateY(-1px);
-    }
-
-    .settings-preview-btn:active {
-      transform: scale(0.985);
-    }
-
     .settings-color-tool-top {
       display: grid;
       gap: 6px;
@@ -395,6 +389,54 @@
       pointer-events: none;
     }
 
+    .settings-save-bar {
+      position: sticky;
+      top: calc(max(10px, env(safe-area-inset-top)) + 82px);
+      z-index: 8;
+      border-radius: 22px;
+      padding: 14px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .settings-save-bar.is-dirty {
+      display: flex;
+    }
+
+    .settings-save-copy {
+      display: grid;
+      gap: 4px;
+    }
+
+    .settings-save-copy strong {
+      font-size: 0.98rem;
+      letter-spacing: -0.02em;
+    }
+
+    .settings-save-copy span {
+      font-size: 0.9rem;
+      opacity: 0.76;
+    }
+
+    .settings-save-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .settings-save-btn {
+      min-height: 44px;
+      padding: 0 16px;
+      border-radius: 999px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
     .settings-color-sheet {
       position: fixed;
       inset: 0;
@@ -419,24 +461,34 @@
       -webkit-backdrop-filter: blur(14px);
     }
 
-    .settings-color-sheet-panel {
+    .settings-color-sheet-stage {
       position: absolute;
-      left: 50%;
-      bottom: max(12px, env(safe-area-inset-bottom));
-      transform: translateX(-50%) translateY(12px);
-      width: min(420px, calc(100vw - 18px));
-      padding: 18px;
-      border-radius: 28px;
+      inset: 0;
       display: grid;
-      gap: 16px;
+      place-items: end center;
+      padding: 14px;
+      pointer-events: none;
+    }
+
+    .settings-color-sheet-panel {
+      pointer-events: auto;
+      width: min(520px, calc(100vw - 20px));
+      max-height: min(78vh, 720px);
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 20px;
+      border-radius: 30px;
+      display: grid;
+      gap: 18px;
+      transform: translateY(16px) scale(0.98);
       transition: transform 0.18s ease;
       position: relative;
-      overflow: hidden;
+      overflow-x: hidden;
       isolation: isolate;
     }
 
     .settings-color-sheet.open .settings-color-sheet-panel {
-      transform: translateX(-50%) translateY(0);
+      transform: translateY(0) scale(1);
     }
 
     .settings-color-sheet-head {
@@ -447,25 +499,29 @@
     }
 
     .settings-color-sheet-head strong {
-      font-size: 1.04rem;
+      font-size: 1.08rem;
       letter-spacing: -0.02em;
     }
 
     .settings-color-sheet-close {
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
       border-radius: 999px;
+      display: inline-grid;
+      place-items: center;
+      cursor: pointer;
+      flex: 0 0 auto;
     }
 
     .settings-color-sheet-body {
       display: grid;
-      gap: 14px;
+      gap: 16px;
     }
 
     .settings-color-sheet-swatch {
       width: 100%;
-      height: 88px;
-      border-radius: 22px;
+      height: 108px;
+      border-radius: 24px;
       box-shadow:
         inset 0 1px 0 rgba(255,255,255,0.10),
         0 10px 18px rgba(0,0,0,0.12);
@@ -473,7 +529,7 @@
 
     .settings-color-sheet-input {
       width: 100%;
-      height: 58px;
+      height: 68px;
       border: 0;
       background: transparent;
       padding: 0;
@@ -481,11 +537,26 @@
     }
 
     .settings-color-sheet-value {
-      font-size: 0.9rem;
+      font-size: 0.94rem;
       font-weight: 800;
       letter-spacing: 0.08em;
       opacity: 0.82;
       text-transform: uppercase;
+    }
+
+    .settings-color-sheet-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .settings-color-sheet-btn {
+      min-height: 46px;
+      padding: 0 16px;
+      border-radius: 999px;
+      font-weight: 800;
+      cursor: pointer;
     }
 
     .settings-toggle-row {
@@ -584,6 +655,10 @@
       .settings-shell {
         margin-top: 102px;
       }
+
+      .settings-save-bar {
+        top: calc(max(10px, env(safe-area-inset-top)) + 76px);
+      }
     }
   </style>
 </head>
@@ -608,6 +683,17 @@
         <a class="settings-section-link beam-target" href="#settingsNotifications">Notifications</a>
         <a class="settings-section-link beam-target" href="#settingsDevices">Sessions & Devices</a>
         <a class="settings-section-link beam-target" href="#settingsDeveloper">Developer / QA</a>
+      </div>
+    </section>
+
+    <section class="settings-save-bar glass-card aurora-card active-glow" id="settingsSaveBar">
+      <div class="settings-save-copy">
+        <strong>Unsaved appearance changes</strong>
+        <span>Preview first, then save when you’re ready.</span>
+      </div>
+      <div class="settings-save-actions">
+        <button class="settings-save-btn btn btn-theme-secondary beam-target" type="button" id="settingsDiscardBtn">Discard</button>
+        <button class="settings-save-btn btn btn-theme-primary beam-target" type="button" id="settingsSaveBtn">Save Changes</button>
       </div>
     </section>
 
@@ -778,15 +864,24 @@
 
       <div class="settings-color-sheet" id="settingsColorSheet" aria-hidden="true">
         <div class="settings-color-sheet-backdrop" data-color-sheet-close></div>
-        <div class="settings-color-sheet-panel glass-card aurora-card active-glow beam-target">
-          <div class="settings-color-sheet-head">
-            <strong id="settingsColorSheetTitle">Edit Color</strong>
-            <button type="button" class="settings-color-sheet-close beam-target" data-color-sheet-close>✕</button>
-          </div>
-          <div class="settings-color-sheet-body">
-            <div class="settings-color-sheet-swatch" id="settingsColorSheetSwatch"></div>
-            <input type="color" id="settingsColorSheetInput" class="settings-color-sheet-input" />
-            <div class="settings-color-sheet-value" id="settingsColorSheetValue">#FFFFFF</div>
+
+        <div class="settings-color-sheet-stage">
+          <div class="settings-color-sheet-panel glass-card aurora-card active-glow beam-target">
+            <div class="settings-color-sheet-head">
+              <strong id="settingsColorSheetTitle">Edit Color</strong>
+              <button type="button" class="settings-color-sheet-close beam-target" data-color-sheet-close id="settingsColorSheetCloseBtn">✕</button>
+            </div>
+
+            <div class="settings-color-sheet-body">
+              <div class="settings-color-sheet-swatch" id="settingsColorSheetSwatch"></div>
+              <input type="color" id="settingsColorSheetInput" class="settings-color-sheet-input" />
+              <div class="settings-color-sheet-value" id="settingsColorSheetValue">#FFFFFF</div>
+
+              <div class="settings-color-sheet-actions">
+                <button type="button" class="settings-color-sheet-btn btn btn-theme-secondary beam-target" data-color-sheet-close>Cancel</button>
+                <button type="button" class="settings-color-sheet-btn btn btn-theme-primary beam-target" id="settingsColorSheetDoneBtn">Done</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -908,5 +1003,123 @@
   <script type="module" src="/evaraos/assets/js/firebase.js?v=29"></script>
   <script type="module" src="/evaraos/assets/js/route-guard.js?v=29"></script>
   <script src="/evaraos/assets/js/nav.js?v=29"></script>
+
+  <script>
+    (() => {
+      const saveBar = document.getElementById("settingsSaveBar");
+      const saveBtn = document.getElementById("settingsSaveBtn");
+      const discardBtn = document.getElementById("settingsDiscardBtn");
+      const sheet = document.getElementById("settingsColorSheet");
+      const doneBtn = document.getElementById("settingsColorSheetDoneBtn");
+
+      let savedAppearanceSnapshot = null;
+      let draftAppearanceSnapshot = null;
+
+      function getAppearance() {
+        try {
+          if (window.EvaraTheme && typeof window.EvaraTheme.getStoredAppearance === "function") {
+            return JSON.parse(JSON.stringify(window.EvaraTheme.getStoredAppearance()));
+          }
+        } catch {}
+        return null;
+      }
+
+      function sameAppearance(a, b) {
+        return JSON.stringify(a || {}) === JSON.stringify(b || {});
+      }
+
+      function refreshDirtyState() {
+        const current = getAppearance();
+        draftAppearanceSnapshot = current;
+
+        if (!saveBar) return;
+
+        if (!sameAppearance(savedAppearanceSnapshot, draftAppearanceSnapshot)) {
+          saveBar.classList.add("is-dirty");
+        } else {
+          saveBar.classList.remove("is-dirty");
+        }
+      }
+
+      function captureSavedState() {
+        savedAppearanceSnapshot = getAppearance();
+        draftAppearanceSnapshot = getAppearance();
+        refreshDirtyState();
+      }
+
+      function wireWatchers() {
+        document.querySelectorAll(
+          "[data-set-mode], [data-set-beam], .settings-color-open, #settingsColorSheetInput, [data-appearance-reset]"
+        ).forEach((el) => {
+          ["click", "input", "change"].forEach((evt) => {
+            el.addEventListener(evt, () => {
+              setTimeout(refreshDirtyState, 50);
+            });
+          });
+        });
+      }
+
+      async function saveChanges() {
+        if (!window.EvaraTheme || typeof window.EvaraTheme.applyAppearanceConfig !== "function") {
+          captureSavedState();
+          return;
+        }
+
+        const current = getAppearance();
+        if (!current) return;
+
+        await window.EvaraTheme.applyAppearanceConfig(current);
+        captureSavedState();
+      }
+
+      function discardChanges() {
+        if (!window.EvaraTheme || typeof window.EvaraTheme.applyAppearanceConfigLocalOnly === "function") {
+          try {
+            if (savedAppearanceSnapshot && typeof window.EvaraTheme.applyAppearanceConfigLocalOnly === "function") {
+              window.EvaraTheme.applyAppearanceConfigLocalOnly(savedAppearanceSnapshot);
+              if (typeof window.EvaraTheme.hydrateThemeInputs === "function") {
+                window.EvaraTheme.hydrateThemeInputs();
+              }
+            }
+          } catch {}
+        }
+
+        setTimeout(captureSavedState, 50);
+      }
+
+      function closeSheet() {
+        if (!sheet) return;
+        sheet.classList.remove("open");
+        sheet.setAttribute("aria-hidden", "true");
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => {
+          captureSavedState();
+          wireWatchers();
+        }, 200);
+      });
+
+      if (saveBtn) {
+        saveBtn.addEventListener("click", saveChanges);
+      }
+
+      if (discardBtn) {
+        discardBtn.addEventListener("click", discardChanges);
+      }
+
+      if (doneBtn) {
+        doneBtn.addEventListener("click", closeSheet);
+      }
+
+      document.querySelectorAll("[data-color-sheet-close]").forEach((el) => {
+        el.addEventListener("click", closeSheet);
+      });
+
+      window.addEventListener("pageshow", () => {
+        setTimeout(captureSavedState, 120);
+      });
+    })();
+  </script>
 </body>
 </html>
