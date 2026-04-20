@@ -6,13 +6,14 @@ import {
 
 const STORAGE_KEY = "evaraos-theme";
 const APPEARANCE_KEY = "evaraos-appearance";
+const BASE_FAMILY_KEY = "evaraos-last-base-family";
 
 const PRESET_DARK = {
   mode: "dark",
   baseFamily: "dark",
   beamMode: "contextual",
   cardColor: "#8B5CF6",
-  buttonColor: "#2563EB",
+  buttonColor: "#4F7CFF",
   backgroundColor: "#0F172A",
   beamColor: "#8B5CF6"
 };
@@ -21,11 +22,14 @@ const PRESET_LIGHT = {
   mode: "light",
   baseFamily: "light",
   beamMode: "contextual",
-  cardColor: "#A78BFA",
-  buttonColor: "#60A5FA",
-  backgroundColor: "#F4F7FB",
+  cardColor: "#C4B5FD",
+  buttonColor: "#7DB7FF",
+  backgroundColor: "#F5F7FB",
   beamColor: "#A78BFA"
 };
+
+let activeColorSheetTarget = null;
+let hasBoundThemeControls = false;
 
 function normalizeTheme(theme = "") {
   const value = String(theme || "").trim().toLowerCase();
@@ -52,23 +56,42 @@ function normalizeBeamMode(value = "") {
   return ["off", "contextual", "rainbow"].includes(safe) ? safe : "contextual";
 }
 
-function getPresetAppearance(mode) {
-  return mode === "light" ? { ...PRESET_LIGHT } : { ...PRESET_DARK };
+function getPresetAppearance(baseFamily = "dark") {
+  return baseFamily === "light" ? { ...PRESET_LIGHT } : { ...PRESET_DARK };
+}
+
+function getStoredBaseFamily() {
+  try {
+    return normalizeBaseFamily(localStorage.getItem(BASE_FAMILY_KEY) || "dark");
+  } catch {
+    return "dark";
+  }
+}
+
+function setStoredBaseFamily(baseFamily = "dark") {
+  try {
+    localStorage.setItem(BASE_FAMILY_KEY, normalizeBaseFamily(baseFamily));
+  } catch {}
 }
 
 function normalizeAppearance(appearance = {}) {
-  const mode = normalizeMode(appearance.mode || "dark");
+  const requestedMode = normalizeMode(appearance.mode || "dark");
+  const rememberedBase =
+    requestedMode === "custom"
+      ? normalizeBaseFamily(appearance.baseFamily || getStoredBaseFamily())
+      : requestedMode;
+
   const baseFamily =
-    mode === "light"
+    requestedMode === "light"
       ? "light"
-      : mode === "dark"
+      : requestedMode === "dark"
       ? "dark"
-      : normalizeBaseFamily(appearance.baseFamily || "dark");
+      : rememberedBase;
 
   const preset = getPresetAppearance(baseFamily);
 
   return {
-    mode,
+    mode: requestedMode,
     baseFamily,
     beamMode: normalizeBeamMode(appearance.beamMode || preset.beamMode),
     cardColor: normalizeHex(appearance.cardColor, preset.cardColor),
@@ -127,9 +150,17 @@ function ensureAppearanceStyle() {
 
     body {
       background-image:
-        radial-gradient(circle at 18% 16%, color-mix(in srgb, var(--user-background-tint) 16%, transparent), transparent 26%),
-        radial-gradient(circle at 82% 14%, color-mix(in srgb, var(--user-card-tint) 12%, transparent), transparent 24%),
-        radial-gradient(circle at 16% 82%, color-mix(in srgb, var(--user-card-tint) 10%, transparent), transparent 24%) !important;
+        radial-gradient(circle at 18% 14%, color-mix(in srgb, var(--user-background-tint) 16%, transparent), transparent 28%),
+        radial-gradient(circle at 82% 16%, color-mix(in srgb, var(--user-card-tint) 10%, transparent), transparent 24%),
+        radial-gradient(circle at 18% 84%, color-mix(in srgb, var(--user-card-tint) 8%, transparent), transparent 24%) !important;
+    }
+
+    html[data-theme="light"] body,
+    html[data-theme$="-light"] body {
+      background-image:
+        radial-gradient(circle at 18% 14%, color-mix(in srgb, var(--user-background-tint) 18%, white), transparent 28%),
+        radial-gradient(circle at 82% 16%, color-mix(in srgb, var(--user-card-tint) 12%, transparent), transparent 24%),
+        radial-gradient(circle at 18% 84%, color-mix(in srgb, var(--user-card-tint) 8%, transparent), transparent 24%) !important;
     }
 
     .glass-card,
@@ -137,7 +168,6 @@ function ensureAppearanceStyle() {
     .aurora-card,
     .input-shell,
     .feature-card,
-    .hero,
     .inline-card,
     .dashboard-feed-item,
     .dashboard-stat-card,
@@ -151,52 +181,109 @@ function ensureAppearanceStyle() {
     .settings-color-tool,
     .settings-mini-card,
     .stats-card,
-    .hero-home,
     .section-panel,
     .cta-panel,
     .site-footer-inner,
     .eva-nav-pill,
     #evaNavPill,
     .eva-menu-panel,
-    .settings-preview-nav {
-      border-color: color-mix(in srgb, var(--user-card-tint) 24%, rgba(255,255,255,0.12)) !important;
+    .settings-preview-nav,
+    .settings-block,
+    .settings-hero {
+      border-color: color-mix(in srgb, var(--user-card-tint) 22%, rgba(255,255,255,0.12)) !important;
       box-shadow:
         0 18px 34px rgba(0,0,0,0.14),
         inset 0 1px 0 rgba(255,255,255,0.10),
-        0 0 0 1px color-mix(in srgb, var(--user-card-tint) 10%, transparent) !important;
+        0 0 0 1px color-mix(in srgb, var(--user-card-tint) 8%, transparent) !important;
     }
 
-    .btn-theme-primary,
-    .settings-preview-btn,
-    .premium-red-btn,
-    .login-actions-row .btn:first-child,
-    .hero-actions .btn:first-child,
-    .dashboard-hero-actions .btn:first-child,
-    .btn-apple,
-    .btn.btn-apple,
-    .btn.btn-theme-primary,
-    .btn {
+    .eva-nav-pill,
+    #evaNavPill,
+    .settings-preview-nav {
       background:
         linear-gradient(
           180deg,
-          color-mix(in srgb, var(--user-button-tint) 12%, rgba(255,255,255,0.18)),
-          color-mix(in srgb, var(--user-button-tint) 7%, rgba(255,255,255,0.06))
+          color-mix(in srgb, var(--user-card-tint) 10%, rgba(255,255,255,0.06)),
+          rgba(255,255,255,0.02)
         ) !important;
-      border-color: color-mix(in srgb, var(--user-button-tint) 26%, rgba(255,255,255,0.10)) !important;
+    }
+
+    .btn,
+    .btn-apple,
+    .btn-theme-primary,
+    .btn-theme-secondary,
+    .settings-preview-btn,
+    .settings-chip,
+    .settings-color-open,
+    .settings-color-sheet-close,
+    .eva-chip,
+    .eva-link,
+    .eva-menu-btn {
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(
+          180deg,
+          color-mix(in srgb, var(--user-button-tint) 10%, rgba(255,255,255,0.22)),
+          color-mix(in srgb, var(--user-button-tint) 4%, rgba(255,255,255,0.06))
+        ) !important;
+      border-color: color-mix(in srgb, var(--user-button-tint) 18%, rgba(255,255,255,0.12)) !important;
       box-shadow:
-        0 14px 24px rgba(0,0,0,0.12),
-        inset 0 1px 0 rgba(255,255,255,0.18),
-        0 0 0 1px color-mix(in srgb, var(--user-button-tint) 8%, transparent) !important;
-      color: inherit !important;
-      backdrop-filter: blur(16px) saturate(145%);
-      -webkit-backdrop-filter: blur(16px) saturate(145%);
+        inset 0 1px 0 rgba(255,255,255,0.22),
+        inset 0 -1px 0 rgba(255,255,255,0.04),
+        0 10px 22px rgba(0,0,0,0.10),
+        0 0 0 1px color-mix(in srgb, var(--user-button-tint) 6%, transparent) !important;
+      backdrop-filter: blur(16px) saturate(145%) !important;
+      -webkit-backdrop-filter: blur(16px) saturate(145%) !important;
+    }
+
+    .btn::before,
+    .btn-apple::before,
+    .btn-theme-primary::before,
+    .btn-theme-secondary::before,
+    .settings-preview-btn::before,
+    .settings-chip::before,
+    .settings-color-open::before,
+    .settings-color-sheet-close::before,
+    .eva-chip::before,
+    .eva-link::before,
+    .eva-menu-btn::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background:
+        linear-gradient(
+          135deg,
+          rgba(255,255,255,0.22),
+          rgba(255,255,255,0.06) 34%,
+          transparent 58%
+        );
+      opacity: 0.92;
+      z-index: 0;
+    }
+
+    .btn > *,
+    .btn-apple > *,
+    .btn-theme-primary > *,
+    .btn-theme-secondary > *,
+    .settings-preview-btn > *,
+    .settings-chip > *,
+    .settings-color-open > *,
+    .settings-color-sheet-close > *,
+    .eva-chip > *,
+    .eva-link > *,
+    .eva-menu-btn > * {
+      position: relative;
+      z-index: 1;
     }
 
     .page-grid-overlay {
       background-image:
         linear-gradient(color-mix(in srgb, var(--user-card-tint) 8%, transparent) 1px, transparent 1px),
         linear-gradient(90deg, color-mix(in srgb, var(--user-card-tint) 8%, transparent) 1px, transparent 1px) !important;
-      opacity: 0.18 !important;
+      opacity: 0.16 !important;
     }
 
     html[data-beam-mode="off"] .beam-target:hover,
@@ -224,7 +311,7 @@ function ensureAppearanceStyle() {
       box-shadow:
         0 0 0 1px color-mix(in srgb, var(--user-beam-color) 46%, transparent),
         0 0 18px color-mix(in srgb, var(--user-beam-color) 18%, transparent),
-        0 0 28px color-mix(in srgb, var(--user-beam-color) 8%, transparent),
+        0 0 30px color-mix(in srgb, var(--user-beam-color) 8%, transparent),
         inset 0 1px 0 rgba(255,255,255,0.12) !important;
     }
 
@@ -237,8 +324,8 @@ function ensureAppearanceStyle() {
       position: relative;
       isolation: isolate;
       box-shadow:
-        0 0 0 1px color-mix(in srgb, var(--user-beam-color) 18%, transparent),
-        0 0 16px color-mix(in srgb, var(--user-beam-color) 10%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--user-beam-color) 16%, transparent),
+        0 0 14px color-mix(in srgb, var(--user-beam-color) 8%, transparent),
         inset 0 1px 0 rgba(255,255,255,0.12) !important;
     }
 
@@ -256,15 +343,15 @@ function ensureAppearanceStyle() {
       background:
         linear-gradient(
           120deg,
-          color-mix(in srgb, var(--user-beam-color) 30%, #ff3b30),
-          color-mix(in srgb, var(--user-beam-color) 22%, #ff9500),
-          color-mix(in srgb, var(--user-beam-color) 20%, #ffd60a),
-          color-mix(in srgb, var(--user-beam-color) 18%, #34c759),
-          color-mix(in srgb, var(--user-beam-color) 18%, #0a84ff),
-          color-mix(in srgb, var(--user-beam-color) 18%, #5e5ce6),
-          color-mix(in srgb, var(--user-beam-color) 20%, #bf5af2),
-          color-mix(in srgb, var(--user-beam-color) 24%, #ff2d55),
-          color-mix(in srgb, var(--user-beam-color) 30%, #ff3b30)
+          color-mix(in srgb, var(--user-beam-color) 26%, #ff3b30),
+          color-mix(in srgb, var(--user-beam-color) 18%, #ff9500),
+          color-mix(in srgb, var(--user-beam-color) 18%, #ffd60a),
+          color-mix(in srgb, var(--user-beam-color) 16%, #34c759),
+          color-mix(in srgb, var(--user-beam-color) 16%, #0a84ff),
+          color-mix(in srgb, var(--user-beam-color) 16%, #5e5ce6),
+          color-mix(in srgb, var(--user-beam-color) 18%, #bf5af2),
+          color-mix(in srgb, var(--user-beam-color) 22%, #ff2d55),
+          color-mix(in srgb, var(--user-beam-color) 26%, #ff3b30)
         );
       background-size: 220% 220%;
       animation: evaraRainbowFlow 5.8s linear infinite;
@@ -273,7 +360,7 @@ function ensureAppearanceStyle() {
       mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       mask-composite: exclude;
       pointer-events: none;
-      z-index: 2;
+      z-index: 3;
       opacity: 0.82;
     }
 
@@ -361,15 +448,28 @@ async function persistAppearance(appearance) {
   await saveUserThemePreferences(appearance);
 }
 
-function applyAppearanceConfig(appearance = {}) {
-  ensureAppearanceStyle();
-
+function getEffectiveAppearance(appearance = {}) {
   const safe = normalizeAppearance(appearance);
-  const effectiveBase = safe.mode === "light" ? "light" : safe.mode === "dark" ? "dark" : safe.baseFamily;
-  const themeToApply = effectiveBase === "light" ? "light" : "dark";
+  const effectiveBase =
+    safe.mode === "light"
+      ? "light"
+      : safe.mode === "dark"
+      ? "dark"
+      : safe.baseFamily;
+
   const preset = safe.mode === "custom" ? safe : getPresetAppearance(effectiveBase);
 
-  applyTheme(themeToApply);
+  return {
+    safe,
+    effectiveBase,
+    preset
+  };
+}
+
+function applyAppearanceTokens(appearance = {}) {
+  ensureAppearanceStyle();
+
+  const { safe, effectiveBase, preset } = getEffectiveAppearance(appearance);
 
   const root = document.documentElement;
   root.style.setProperty("--user-card-tint", preset.cardColor);
@@ -381,126 +481,173 @@ function applyAppearanceConfig(appearance = {}) {
   root.style.setProperty("--user-nav-tint", preset.cardColor);
   root.setAttribute("data-beam-mode", safe.beamMode);
 
+  applyTheme(effectiveBase === "light" ? "light" : "dark");
   syncThemeUi();
-  persistAppearance(safe);
+}
+
+async function applyAppearanceConfig(appearance = {}) {
+  const safe = normalizeAppearance(appearance);
+
+  if (safe.mode === "custom") {
+    setStoredBaseFamily(safe.baseFamily);
+  } else {
+    setStoredBaseFamily(safe.mode);
+  }
+
+  setStoredAppearance(safe);
+  applyAppearanceTokens(safe);
+  await persistAppearance(safe);
 }
 
 function applyAppearanceConfigLocalOnly(appearance = {}) {
-  ensureAppearanceStyle();
-
   const safe = normalizeAppearance(appearance);
-  const effectiveBase = safe.mode === "light" ? "light" : safe.mode === "dark" ? "dark" : safe.baseFamily;
-  const themeToApply = effectiveBase === "light" ? "light" : "dark";
-  const preset = safe.mode === "custom" ? safe : getPresetAppearance(effectiveBase);
 
-  applyTheme(themeToApply);
+  if (safe.mode === "custom") {
+    setStoredBaseFamily(safe.baseFamily);
+  } else {
+    setStoredBaseFamily(safe.mode);
+  }
+
   setStoredAppearance(safe);
-
-  const root = document.documentElement;
-  root.style.setProperty("--user-card-tint", preset.cardColor);
-  root.style.setProperty("--user-button-tint", preset.buttonColor);
-  root.style.setProperty("--user-background-tint", preset.backgroundColor);
-  root.style.setProperty("--user-bg-color", preset.backgroundColor);
-  root.style.setProperty("--user-bg-color-2", preset.cardColor);
-  root.style.setProperty("--user-beam-color", safe.beamColor);
-  root.style.setProperty("--user-nav-tint", preset.cardColor);
-  root.setAttribute("data-beam-mode", safe.beamMode);
-
-  syncThemeUi();
+  applyAppearanceTokens(safe);
 }
 
 function resetAppearanceConfig() {
-  applyAppearanceConfig({ ...PRESET_DARK });
+  const fallback = getStoredBaseFamily() === "light" ? PRESET_LIGHT : PRESET_DARK;
+  applyAppearanceConfig({ ...fallback });
+}
+
+function getColorSheetEls() {
+  return {
+    sheet: document.getElementById("settingsColorSheet"),
+    sheetInput: document.getElementById("settingsColorSheetInput"),
+    sheetSwatch: document.getElementById("settingsColorSheetSwatch"),
+    sheetValue: document.getElementById("settingsColorSheetValue"),
+    sheetTitle: document.getElementById("settingsColorSheetTitle")
+  };
+}
+
+function openColorSheet(targetKey, title) {
+  const { sheet, sheetInput, sheetSwatch, sheetValue, sheetTitle } = getColorSheetEls();
+  if (!sheet || !sheetInput || !sheetSwatch || !sheetValue || !sheetTitle) return;
+
+  const appearance = getStoredAppearance();
+  activeColorSheetTarget = targetKey;
+
+  const currentValue =
+    targetKey === "cardColor"
+      ? appearance.cardColor
+      : targetKey === "buttonColor"
+      ? appearance.buttonColor
+      : targetKey === "backgroundColor"
+      ? appearance.backgroundColor
+      : appearance.beamColor;
+
+  sheetTitle.textContent = title;
+  sheetInput.value = currentValue;
+  sheetSwatch.style.background = currentValue;
+  sheetValue.textContent = currentValue.toUpperCase();
+  sheet.classList.add("open");
+  sheet.setAttribute("aria-hidden", "false");
+}
+
+function closeColorSheet() {
+  const { sheet } = getColorSheetEls();
+  if (!sheet) return;
+  sheet.classList.remove("open");
+  sheet.setAttribute("aria-hidden", "true");
+  activeColorSheetTarget = null;
+}
+
+function bindColorSheet() {
+  const { sheetInput, sheetSwatch, sheetValue } = getColorSheetEls();
+  if (!sheetInput || !sheetSwatch || !sheetValue) return;
+
+  const updateColor = async (value) => {
+    if (!activeColorSheetTarget) return;
+    const current = getStoredAppearance();
+
+    const next = {
+      ...current,
+      mode: "custom",
+      baseFamily: current.mode === "custom" ? current.baseFamily : getStoredBaseFamily(),
+      [activeColorSheetTarget]: value
+    };
+
+    await applyAppearanceConfig(next);
+    hydrateThemeInputs();
+    sheetSwatch.style.background = value;
+    sheetValue.textContent = value.toUpperCase();
+  };
+
+  sheetInput.addEventListener("input", async () => {
+    const value = normalizeHex(sheetInput.value, "#FFFFFF");
+    await updateColor(value);
+  });
+
+  sheetInput.addEventListener("change", async () => {
+    const value = normalizeHex(sheetInput.value, "#FFFFFF");
+    await updateColor(value);
+  });
+
+  document.querySelectorAll("[data-color-sheet-close]").forEach((btn) => {
+    btn.addEventListener("click", closeColorSheet);
+  });
 }
 
 function bindColorWheelOpeners() {
-  const openers = [
-    ["[data-appearance-card]", ".settings-color-open[data-open-target='card']", "Surface Tint"],
-    ["[data-appearance-button]", ".settings-color-open[data-open-target='button']", "Button Tint"],
-    ["[data-appearance-background]", ".settings-color-open[data-open-target='background']", "Background Aura"],
-    ["[data-appearance-beam]", ".settings-color-open[data-open-target='beam']", "Beam Color"]
+  const mapping = [
+    [".settings-color-open[data-open-target='card']", "cardColor", "Surface Tint"],
+    [".settings-color-open[data-open-target='button']", "buttonColor", "Button Tint"],
+    [".settings-color-open[data-open-target='background']", "backgroundColor", "Background Aura"],
+    [".settings-color-open[data-open-target='beam']", "beamColor", "Beam Color"]
   ];
 
-  const sheet = document.getElementById("settingsColorSheet");
-  const sheetInput = document.getElementById("settingsColorSheetInput");
-  const sheetSwatch = document.getElementById("settingsColorSheetSwatch");
-  const sheetValue = document.getElementById("settingsColorSheetValue");
-  const sheetTitle = document.getElementById("settingsColorSheetTitle");
-
-  let currentTargetInput = null;
-
-  function openSheet(targetInput, title) {
-    if (!sheet || !sheetInput || !sheetSwatch || !sheetValue || !sheetTitle || !targetInput) return;
-    currentTargetInput = targetInput;
-    sheetTitle.textContent = title;
-    sheetInput.value = targetInput.value || "#FFFFFF";
-    sheetSwatch.style.background = sheetInput.value;
-    sheetValue.textContent = sheetInput.value.toUpperCase();
-    sheet.classList.add("open");
-    sheet.setAttribute("aria-hidden", "false");
-  }
-
-  function closeSheet() {
-    if (!sheet) return;
-    sheet.classList.remove("open");
-    sheet.setAttribute("aria-hidden", "true");
-    currentTargetInput = null;
-  }
-
-  if (sheetInput) {
-    const propagate = () => {
-      if (!currentTargetInput) return;
-      currentTargetInput.value = sheetInput.value;
-      currentTargetInput.dispatchEvent(new Event("input", { bubbles: true }));
-      sheetSwatch.style.background = sheetInput.value;
-      sheetValue.textContent = sheetInput.value.toUpperCase();
-    };
-    sheetInput.addEventListener("input", propagate);
-    sheetInput.addEventListener("change", propagate);
-  }
-
-  document.querySelectorAll("[data-color-sheet-close]").forEach((btn) => {
-    btn.addEventListener("click", closeSheet);
-  });
-
-  openers.forEach(([inputSelector, openerSelector, title]) => {
-    const inputs = Array.from(document.querySelectorAll(inputSelector));
-    const openButtons = Array.from(document.querySelectorAll(openerSelector));
-
-    openButtons.forEach((btn, index) => {
-      const targetInput = inputs[index] || inputs[0];
-      if (!targetInput) return;
-
+  mapping.forEach(([selector, key, title]) => {
+    document.querySelectorAll(selector).forEach((btn) => {
       btn.addEventListener("click", (event) => {
         event.preventDefault();
         event.stopPropagation();
-        openSheet(targetInput, title);
+        openColorSheet(key, title);
       });
     });
   });
 }
 
 function bindThemeControls() {
+  if (hasBoundThemeControls) return;
+  hasBoundThemeControls = true;
+
   document.querySelectorAll("[data-set-mode]").forEach((btn) => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
       const mode = btn.getAttribute("data-set-mode") || "dark";
       const current = getStoredAppearance();
 
       if (mode === "dark" || mode === "light") {
         const preset = getPresetAppearance(mode);
-        applyAppearanceConfig({
+        await applyAppearanceConfig({
           ...preset,
+          mode,
+          baseFamily: mode,
           beamMode: current.beamMode,
           beamColor: current.beamColor
         });
+        hydrateThemeInputs();
         return;
       }
 
-      applyAppearanceConfig({
+      const rememberedBase =
+        current.mode === "custom"
+          ? current.baseFamily
+          : getStoredBaseFamily();
+
+      await applyAppearanceConfig({
         ...current,
         mode: "custom",
-        baseFamily: getStoredTheme()
+        baseFamily: rememberedBase
       });
+
+      hydrateThemeInputs();
 
       const customSection = document.querySelector("[data-color-wheel-section]");
       if (customSection) {
@@ -510,60 +657,21 @@ function bindThemeControls() {
   });
 
   document.querySelectorAll("[data-set-beam]").forEach((btn) => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
       const beamMode = btn.getAttribute("data-set-beam") || "contextual";
       const current = getStoredAppearance();
 
-      applyAppearanceConfig({
+      await applyAppearanceConfig({
         ...current,
         beamMode
       });
+
+      hydrateThemeInputs();
     });
   });
 
-  const bindColorInputs = (selector, updater) => {
-    document.querySelectorAll(selector).forEach((input) => {
-      input.addEventListener("input", () => {
-        const current = getStoredAppearance();
-        applyAppearanceConfig({
-          ...updater(current, input.value)
-        });
-      });
-
-      input.addEventListener("change", () => {
-        const current = getStoredAppearance();
-        applyAppearanceConfig({
-          ...updater(current, input.value)
-        });
-      });
-    });
-  };
-
-  bindColorInputs("[data-appearance-card]", (current, value) => ({
-    ...current,
-    mode: "custom",
-    cardColor: value
-  }));
-
-  bindColorInputs("[data-appearance-button]", (current, value) => ({
-    ...current,
-    mode: "custom",
-    buttonColor: value
-  }));
-
-  bindColorInputs("[data-appearance-background]", (current, value) => ({
-    ...current,
-    mode: "custom",
-    backgroundColor: value
-  }));
-
-  bindColorInputs("[data-appearance-beam]", (current, value) => ({
-    ...current,
-    beamColor: value
-  }));
-
   document.querySelectorAll("[data-appearance-reset]").forEach((resetBtn) => {
-    resetBtn.addEventListener("click", () => {
+    resetBtn.addEventListener("click", async () => {
       resetAppearanceConfig();
       hydrateThemeInputs();
     });
@@ -624,14 +732,15 @@ async function initTheme() {
   applyAppearanceConfigLocalOnly(localAppearance);
 
   bindThemeControls();
+  bindColorSheet();
   bindColorWheelOpeners();
   hydrateThemeInputs();
   markBeamTargets();
 
   if (auth.currentUser) {
     await hydrateFromFirestoreIfAvailable();
-  } else {
-    auth.onAuthStateChanged?.(async (user) => {
+  } else if (typeof auth.onAuthStateChanged === "function") {
+    auth.onAuthStateChanged(async (user) => {
       if (user) {
         await hydrateFromFirestoreIfAvailable();
       }
