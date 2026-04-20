@@ -31,6 +31,43 @@
       border-radius: 30px;
       display: grid;
       gap: 18px;
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .settings-hero::before,
+    .settings-block::before,
+    .settings-preview-card::before,
+    .settings-color-tool::before,
+    .settings-mini-card::before,
+    .settings-preview-nav::before,
+    .settings-color-sheet-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background:
+        linear-gradient(
+          135deg,
+          rgba(255,255,255,0.18),
+          rgba(255,255,255,0.05) 36%,
+          transparent 62%
+        );
+      opacity: 0.88;
+      z-index: 0;
+    }
+
+    .settings-hero > *,
+    .settings-block > *,
+    .settings-preview-card > *,
+    .settings-color-tool > *,
+    .settings-mini-card > *,
+    .settings-preview-nav > *,
+    .settings-color-sheet-panel > * {
+      position: relative;
+      z-index: 1;
     }
 
     .settings-hero h1 {
@@ -38,15 +75,17 @@
       font-size: clamp(2rem, 4vw, 3.15rem);
       line-height: 0.96;
       letter-spacing: -0.05em;
+      text-wrap: balance;
     }
 
     .settings-hero p,
     .settings-head p {
       margin: 0;
       max-width: 74ch;
-      line-height: 1.7;
+      line-height: 1.74;
       opacity: 0.82;
       font-size: 1rem;
+      text-wrap: pretty;
     }
 
     .settings-head {
@@ -58,6 +97,7 @@
       margin: 0;
       font-size: 1.42rem;
       letter-spacing: -0.03em;
+      text-wrap: balance;
     }
 
     .settings-kicker {
@@ -98,8 +138,6 @@
       min-height: 46px;
       padding: 0 18px;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
       color: inherit;
       font-weight: 800;
       display: inline-flex;
@@ -117,7 +155,6 @@
 
     .settings-chip:hover {
       transform: translateY(-1px);
-      background: rgba(255,255,255,0.09);
     }
 
     .settings-chip:active {
@@ -141,8 +178,6 @@
       min-height: 42px;
       padding: 0 14px;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -150,6 +185,8 @@
       color: inherit;
       font-weight: 800;
       font-size: 0.92rem;
+      position: relative;
+      overflow: hidden;
     }
 
     .settings-preview {
@@ -165,6 +202,9 @@
       justify-content: space-between;
       padding: 0 18px;
       gap: 16px;
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
     }
 
     .settings-preview-brand {
@@ -203,8 +243,6 @@
       border-radius: 999px;
       display: grid;
       place-items: center;
-      border: 1px solid rgba(255,255,255,0.16);
-      background: rgba(255,255,255,0.06);
       font-size: 1.3rem;
       flex: 0 0 auto;
     }
@@ -231,6 +269,9 @@
       display: grid;
       gap: 14px;
       align-content: start;
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
     }
 
     .settings-preview-card,
@@ -248,6 +289,7 @@
       margin: 0;
       font-size: 1.06rem;
       letter-spacing: -0.02em;
+      text-wrap: balance;
     }
 
     .settings-preview-card p,
@@ -255,21 +297,23 @@
     .settings-mini-card p {
       margin: 0;
       opacity: 0.76;
-      line-height: 1.55;
+      line-height: 1.6;
       font-size: 0.94rem;
+      text-wrap: pretty;
     }
 
     .settings-preview-btn {
       min-height: 56px;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.12);
       display: inline-flex;
       align-items: center;
       justify-content: center;
       font-weight: 800;
       width: 100%;
-      background: rgba(255,255,255,0.08);
       color: inherit;
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
       transition:
         transform 0.16s ease,
         box-shadow 0.16s ease,
@@ -301,7 +345,6 @@
       width: 58px;
       height: 58px;
       border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.14);
       box-shadow:
         inset 0 1px 0 rgba(255,255,255,0.12),
         0 10px 18px rgba(0,0,0,0.12);
@@ -327,8 +370,6 @@
       min-height: 42px;
       padding: 0 14px;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
       color: inherit;
       font-weight: 800;
       cursor: pointer;
@@ -340,7 +381,6 @@
 
     .settings-color-open:hover {
       transform: translateY(-1px);
-      background: rgba(255,255,255,0.09);
     }
 
     .settings-color-open:active {
@@ -390,6 +430,9 @@
       display: grid;
       gap: 16px;
       transition: transform 0.18s ease;
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
     }
 
     .settings-color-sheet.open .settings-color-sheet-panel {
@@ -412,8 +455,6 @@
       width: 40px;
       height: 40px;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
     }
 
     .settings-color-sheet-body {
@@ -425,7 +466,6 @@
       width: 100%;
       height: 88px;
       border-radius: 22px;
-      border: 1px solid rgba(255,255,255,0.12);
       box-shadow:
         inset 0 1px 0 rgba(255,255,255,0.10),
         0 10px 18px rgba(0,0,0,0.12);
@@ -474,6 +514,7 @@
       opacity: 0.74;
       line-height: 1.45;
       font-size: 0.9rem;
+      text-wrap: pretty;
     }
 
     .settings-switch {
@@ -514,13 +555,13 @@
       min-height: 34px;
       padding: 0 12px;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.06);
       display: inline-flex;
       align-items: center;
       justify-content: center;
       font-size: 0.84rem;
       font-weight: 800;
+      position: relative;
+      overflow: hidden;
     }
 
     .settings-footer-actions {
@@ -610,9 +651,9 @@
     <section class="settings-block glass-card aurora-card active-glow beam-target" id="settingsAppearance">
       <div class="settings-head">
         <p class="settings-kicker">Appearance</p>
-        <h2>Theme, Glass, and Beam System</h2>
+        <h2>Theme, Liquid Glass, and Beam System</h2>
         <p>
-          Dark and Light use premium Apple-style presets. Custom keeps the same base family and unlocks tint controls.
+          Dark and Light use premium Apple-like presets. Custom remembers the last base family and unlocks tint controls.
         </p>
       </div>
 
@@ -622,7 +663,7 @@
             <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos logo" />
             <div class="settings-preview-brand-copy">
               <strong>Unified Surface Preview</strong>
-              <span>Surface tint drives both cards and navigation</span>
+              <span>Surface tint drives cards and navigation</span>
             </div>
           </div>
           <div class="settings-preview-menu beam-target">☰</div>
@@ -632,15 +673,15 @@
           <article class="settings-preview-card glass-card aurora-card beam-target">
             <div>
               <h3>Surface Glass</h3>
-              <p>Cards and navigation keep the same Apple-like semi-transparent glass surface.</p>
+              <p>Cards and navigation keep the same premium semi-transparent glass surface.</p>
             </div>
-            <button class="settings-preview-btn beam-target" type="button">Primary Button</button>
+            <button class="settings-preview-btn beam-target" type="button">Liquid Glass Button</button>
           </article>
 
           <article class="settings-preview-card glass-card aurora-card beam-target">
             <div>
               <h3>Beam Motion</h3>
-              <p>Contextual is the default moving animated beam unless beam is turned off.</p>
+              <p>Contextual is the default animated beam unless beam is turned off.</p>
             </div>
             <button class="settings-preview-btn beam-target" type="button">Beam Action</button>
           </article>
@@ -692,12 +733,12 @@
         <article class="settings-color-tool glass-card aurora-card beam-target">
           <div class="settings-color-tool-top">
             <h3>Button Tint</h3>
-            <p>Keeps buttons glassy and premium, lightly tinted inside the current preset family.</p>
+            <p>Keeps buttons liquid-glassy and premium, with only a subtle tint inside the current base family.</p>
           </div>
           <div class="settings-color-swatch-row">
             <div class="settings-color-swatch" data-button-color-preview></div>
             <div class="settings-color-meta">
-              <div class="settings-color-value" data-button-color-value>#2563EB</div>
+              <div class="settings-color-value" data-button-color-value>#4F7CFF</div>
               <button class="settings-color-open beam-target" data-open-target="button" type="button">Edit</button>
             </div>
           </div>
@@ -707,7 +748,7 @@
         <article class="settings-color-tool glass-card aurora-card beam-target">
           <div class="settings-color-tool-top">
             <h3>Background Aura</h3>
-            <p>Optional moving ambient page color behind the glass surfaces.</p>
+            <p>Controls the ambient background glow behind the glass system.</p>
           </div>
           <div class="settings-color-swatch-row">
             <div class="settings-color-swatch" data-background-color-preview></div>
