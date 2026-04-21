@@ -10,14 +10,34 @@
 
   <title>Leads • Evaraos Inc</title>
 
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=26" />
-  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=26" />
-  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=26" />
-  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=26" />
-
   <script>
+    (function () {
+      try {
+        const raw = localStorage.getItem("evaraos-appearance");
+        if (!raw) return;
+        const appearance = JSON.parse(raw);
+        let theme = "dark";
+
+        if (appearance.mode === "light") theme = "light";
+        if (appearance.mode === "galaxy") theme = "galaxy";
+
+        if (appearance.mode === "custom") {
+          if (appearance.baseFamily === "light") theme = "light";
+          else if (appearance.baseFamily === "galaxy") theme = "galaxy";
+          else theme = "dark";
+        }
+
+        document.documentElement.setAttribute("data-theme", theme);
+      } catch {}
+    })();
+
     document.documentElement.classList.add("auth-pending");
   </script>
+
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=33" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=33" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=33" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=33" />
 
   <style>
     html.auth-pending body,
@@ -27,15 +47,26 @@
     }
   </style>
 </head>
-<body class="dashboard-body auth-pending" data-route-guard="private">
+<body class="dashboard-body auth-pending app-loading" data-route-guard="private">
+  <div class="page-aurora"></div>
+  <div id="galaxyEngine" class="galaxy-engine" aria-hidden="true"></div>
   <div class="page-grid-overlay"></div>
-  <div id="universalNav"></div>
+  <div id="universalNavRoot"></div>
+  <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
+  <div id="evaraFastLoader" class="evara-loader-fast active" aria-hidden="false">
+    <img
+      src="/evaraos/assets/img/evaraos_logo.png"
+      alt="Evaraos"
+      class="evara-loader-fast-logo"
+      onerror="this.onerror=null;this.src='/evaraos/assets/logo.png';"
+    />
+  </div>
 
   <div class="dashboard-shell">
     <aside class="dashboard-sidebar" id="dashboardSidebar">
-      <div class="dashboard-sidebar-inner glass-shell aurora-card active-glow">
+      <div class="dashboard-sidebar-inner glass-shell aurora-card active-glow beam-target">
         <div class="dashboard-sidebar-search">
-          <div class="dashboard-search-shell input-shell aurora-card active-glow">
+          <div class="dashboard-search-shell input-shell aurora-card active-glow beam-target">
             <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
               <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
             </svg>
@@ -55,23 +86,23 @@
         </div>
 
         <nav class="dashboard-sidebar-nav" aria-label="Leads sections">
-          <a href="#leadsOverviewSection" class="dashboard-nav-link active aurora-card">
+          <a href="#leadsOverviewSection" class="dashboard-nav-link active aurora-card beam-target">
             <span class="dashboard-nav-icon">◉</span>
             <span>Overview</span>
           </a>
 
-          <a href="#leadsListSection" class="dashboard-nav-link aurora-card">
+          <a href="#leadsListSection" class="dashboard-nav-link aurora-card beam-target">
             <span class="dashboard-nav-icon">◎</span>
             <span>Lead Queue</span>
           </a>
 
-          <a href="#leadsFlowSection" class="dashboard-nav-link aurora-card">
+          <a href="#leadsFlowSection" class="dashboard-nav-link aurora-card beam-target">
             <span class="dashboard-nav-icon">◌</span>
             <span>Pipeline</span>
           </a>
         </nav>
 
-        <div class="dashboard-sidebar-foot glass-card aurora-card active-glow">
+        <div class="dashboard-sidebar-foot glass-card aurora-card active-glow beam-target">
           <div class="dashboard-sidebar-foot-copy">
             <strong>Pipeline Control</strong>
             <span>
@@ -84,7 +115,7 @@
     </aside>
 
     <main class="dashboard-main">
-      <section class="dashboard-hero glass-card aurora-card active-glow" id="leadsOverviewSection">
+      <section class="dashboard-hero glass-card aurora-card active-glow beam-target" id="leadsOverviewSection">
         <div class="dashboard-hero-copy">
           <p class="dashboard-eyebrow">LEAD PIPELINE</p>
           <h1>Watch opportunities move through your system in real time.</h1>
@@ -99,7 +130,7 @@
           </div>
         </div>
 
-        <div class="dashboard-hero-panel glass-card aurora-card active-glow">
+        <div class="dashboard-hero-panel glass-card aurora-card active-glow beam-target">
           <div class="dashboard-hero-panel-top">
             <span class="dashboard-mini-badge">Lead Status</span>
             <span class="dashboard-live-dot"></span>
@@ -120,7 +151,7 @@
         </div>
       </section>
 
-      <section class="dashboard-overview glass-card aurora-card active-glow">
+      <section class="dashboard-overview glass-card aurora-card active-glow beam-target">
         <div class="dashboard-section-head">
           <div>
             <p class="dashboard-section-kicker">Snapshot</p>
@@ -129,25 +160,25 @@
         </div>
 
         <div class="dashboard-stats-grid">
-          <article class="dashboard-stat-card glass-card aurora-card active-glow">
+          <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
             <p>Total Leads</p>
             <h3 id="leadsStatTotal">0</h3>
             <span id="leadsStatTotalMeta">Loading pipeline...</span>
           </article>
 
-          <article class="dashboard-stat-card glass-card aurora-card active-glow">
+          <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
             <p>Open Leads</p>
             <h3 id="leadsStatOpen">0</h3>
             <span id="leadsStatOpenMeta">Checking statuses...</span>
           </article>
 
-          <article class="dashboard-stat-card glass-card aurora-card active-glow">
+          <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
             <p>Hot Leads</p>
             <h3 id="leadsStatHot">0</h3>
             <span id="leadsStatHotMeta">Checking priority...</span>
           </article>
 
-          <article class="dashboard-stat-card glass-card aurora-card active-glow">
+          <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
             <p>Filtered</p>
             <h3 id="leadsStatFiltered">0</h3>
             <span id="leadsStatFilteredMeta">Matches current search</span>
@@ -156,7 +187,7 @@
       </section>
 
       <section class="dashboard-grid-2">
-        <section class="dashboard-panel glass-card aurora-card active-glow" id="leadsListSection">
+        <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="leadsListSection">
           <div class="dashboard-section-head">
             <div>
               <p class="dashboard-section-kicker">Queue</p>
@@ -169,7 +200,7 @@
           <div class="dashboard-list" id="leadsList"></div>
         </section>
 
-        <section class="dashboard-panel glass-card aurora-card active-glow" id="leadsFlowSection">
+        <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="leadsFlowSection">
           <div class="dashboard-section-head">
             <div>
               <p class="dashboard-section-kicker">Pipeline</p>
@@ -181,7 +212,7 @@
         </section>
       </section>
 
-      <section class="dashboard-panel glass-card aurora-card active-glow">
+      <section class="dashboard-panel glass-card aurora-card active-glow beam-target">
         <div class="dashboard-section-head">
           <div>
             <p class="dashboard-section-kicker">Activity</p>
@@ -194,10 +225,12 @@
     </main>
   </div>
 
-  <script src="/evaraos/assets/js/theme.js?v=26"></script>
-  <script type="module" src="/evaraos/assets/js/firebase.js?v=26"></script>
-  <script type="module" src="/evaraos/assets/js/leads.js?v=26"></script>
-  <script type="module" src="/evaraos/assets/js/route-guard.js?v=26"></script>
-  <script src="/evaraos/assets/js/nav.js?v=26"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js?v=33"></script>
+  <script type="module" src="/evaraos/assets/js/theme.js?v=33"></script>
+  <script src="/evaraos/assets/js/loader.js?v=33"></script>
+  <script src="/evaraos/assets/js/galaxy.js?v=1"></script>
+  <script type="module" src="/evaraos/assets/js/leads.js?v=33"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js?v=33"></script>
+  <script src="/evaraos/assets/js/nav.js?v=33"></script>
 </body>
 </html>
