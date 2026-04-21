@@ -24,6 +24,16 @@ const jobsSortBtn = document.getElementById("jobsSortBtn");
 
 let jobsData = [];
 let sortAsc = true;
+let isLoadingJobs = false;
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 function jobName(job = {}) {
   return (
@@ -52,8 +62,16 @@ function pillClass(status = "") {
   const safe = String(status || "").toLowerCase();
   if (["completed", "done", "closed"].includes(safe)) return "success";
   if (["scheduled", "in progress", "active", "working"].includes(safe)) return "working";
-  if (["cancelled", "archived", "paused"].includes(safe)) return "muted";
-  return "working";
+  if (["cancelled", "archived", "paused"].includes(safe)) return "empty";
+  return "warning";
+}
+
+function setButtonLoading(isLoading) {
+  [jobsRefreshBtnTop, jobsRefreshBtnSide].forEach((btn) => {
+    if (!btn) return;
+    btn.disabled = isLoading;
+    btn.textContent = isLoading ? "Refreshing..." : "Refresh Data";
+  });
 }
 
 function filteredJobs() {
@@ -109,29 +127,66 @@ function renderStats(rows) {
   }
 }
 
+function renderLoadingState() {
+  if (jobsList) {
+    jobsList.innerHTML = `
+      <div class="dashboard-skeleton-grid">
+        <div class="dashboard-skeleton-card">
+          <div class="dashboard-skeleton-line line-1"></div>
+          <div class="dashboard-skeleton-line line-2"></div>
+          <div class="dashboard-skeleton-line line-3"></div>
+        </div>
+        <div class="dashboard-skeleton-card">
+          <div class="dashboard-skeleton-line line-1"></div>
+          <div class="dashboard-skeleton-line line-2"></div>
+          <div class="dashboard-skeleton-line line-3"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (jobsProgressStack) {
+    jobsProgressStack.innerHTML = `
+      <article class="dashboard-state-card loading">
+        <strong>Loading execution breakdown...</strong>
+        <span>Preparing job status buckets and counts.</span>
+      </article>
+    `;
+  }
+
+  if (jobsFeed) {
+    jobsFeed.innerHTML = `
+      <article class="dashboard-state-card loading">
+        <strong>Loading jobs...</strong>
+        <span>Pulling Firestore job records and preparing the feed.</span>
+      </article>
+    `;
+  }
+
+  if (jobsHeroTitle) jobsHeroTitle.textContent = "Loading jobs...";
+  if (jobsHeroText) jobsHeroText.textContent = "Connecting to Firestore job records.";
+}
+
 function renderList(rows) {
   if (!jobsList) return;
 
   if (!rows.length) {
     jobsList.innerHTML = `
-      <article class="dashboard-list-item glass-card aurora-card">
-        <div>
-          <strong>No jobs found</strong>
-          <span>Try another search or add job records in Firestore.</span>
-        </div>
-        <span class="dashboard-status-pill muted">Empty</span>
+      <article class="dashboard-state-card empty">
+        <strong>No jobs found</strong>
+        <span>Try another search or add job records in Firestore.</span>
       </article>
     `;
     return;
   }
 
   jobsList.innerHTML = rows.map((job) => {
-    const name = jobName(job);
-    const status = jobStatus(job);
-    const description = jobDescription(job);
+    const name = escapeHtml(jobName(job));
+    const status = escapeHtml(jobStatus(job));
+    const description = escapeHtml(jobDescription(job));
 
     return `
-      <article class="dashboard-list-item glass-card aurora-card">
+      <article class="dashboard-list-item glass-card aurora-card active-glow beam-target">
         <div>
           <strong>${name}</strong>
           <span>${description}</span>
@@ -160,7 +215,7 @@ function renderProgress(rows) {
     const width = Math.max(6, Math.round((count / total) * 100));
 
     return `
-      <div class="dashboard-progress-row">
+      <div class="dashboard-progress-row glass-card aurora-card active-glow beam-target">
         <div class="dashboard-progress-copy">
           <strong>${bucket.label}</strong>
           <span>${count} job(s)</span>
@@ -176,7 +231,7 @@ function renderFeed(rows) {
 
   if (!rows.length) {
     jobsFeed.innerHTML = `
-      <article class="dashboard-feed-item glass-card aurora-card">
+      <article class="dashboard-state-card empty">
         <strong>No job activity</strong>
         <span>Recent execution activity will appear here once records exist.</span>
       </article>
@@ -185,11 +240,11 @@ function renderFeed(rows) {
   }
 
   jobsFeed.innerHTML = rows.slice(0, 6).map((job) => {
-    const name = jobName(job);
-    const status = jobStatus(job);
+    const name = escapeHtml(jobName(job));
+    const status = escapeHtml(jobStatus(job));
 
     return `
-      <article class="dashboard-feed-item glass-card aurora-card">
+      <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
         <strong>${name}</strong>
         <span>Status: ${status}</span>
       </article>
@@ -206,6 +261,12 @@ function renderJobs() {
 }
 
 async function loadJobs() {
+  if (isLoadingJobs) return;
+
+  isLoadingJobs = true;
+  setButtonLoading(true);
+  renderLoadingState();
+
   try {
     const snap = await getDocs(collection(db, "jobs"));
     jobsData = snap.docs.map((docSnap) => ({
@@ -218,24 +279,33 @@ async function loadJobs() {
 
     if (jobsList) {
       jobsList.innerHTML = `
-        <article class="dashboard-list-item glass-card aurora-card">
-          <div>
-            <strong>Unable to load jobs</strong>
-            <span>${error.message || "Firestore request failed."}</span>
-          </div>
-          <span class="dashboard-status-pill danger">Error</span>
+        <article class="dashboard-state-card error">
+          <strong>Unable to load jobs</strong>
+          <span>${escapeHtml(error.message || "Firestore request failed.")}</span>
+        </article>
+      `;
+    }
+
+    if (jobsProgressStack) {
+      jobsProgressStack.innerHTML = `
+        <article class="dashboard-state-card error">
+          <strong>Execution load failed</strong>
+          <span>${escapeHtml(error.message || "Firestore request failed.")}</span>
         </article>
       `;
     }
 
     if (jobsFeed) {
       jobsFeed.innerHTML = `
-        <article class="dashboard-feed-item glass-card aurora-card">
+        <article class="dashboard-state-card error">
           <strong>Load failed</strong>
-          <span>${error.message || "Firestore request failed."}</span>
+          <span>${escapeHtml(error.message || "Firestore request failed.")}</span>
         </article>
       `;
     }
+  } finally {
+    isLoadingJobs = false;
+    setButtonLoading(false);
   }
 }
 
@@ -263,7 +333,7 @@ function bindEvents() {
 
 onAuthStateChanged(auth, (user) => {
   if (!user) {
-    window.location.href = "/evaraos/login.html";
+    window.location.replace("/evaraos/login.html");
     return;
   }
 
