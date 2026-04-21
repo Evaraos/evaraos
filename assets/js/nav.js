@@ -273,31 +273,112 @@
     });
   }
 
+  function iconSvg(name) {
+    const icons = {
+      home: `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 10.5 12 4l8 6.5"/>
+          <path d="M6.5 9.5V20h11V9.5"/>
+          <path d="M10 20v-5h4v5"/>
+        </svg>
+      `,
+      login: `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M10 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h3"/>
+          <path d="M14 8l4 4-4 4"/>
+          <path d="M8 12h10"/>
+        </svg>
+      `,
+      signup: `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/>
+          <path d="M5 20a7 7 0 0 1 14 0"/>
+          <path d="M19 8v6"/>
+          <path d="M16 11h6"/>
+        </svg>
+      `,
+      dashboard: `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 19V10"/>
+          <path d="M12 19V5"/>
+          <path d="M19 19v-8"/>
+          <path d="M4 19h16"/>
+        </svg>
+      `,
+      settings: `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="3.2"/>
+          <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 1 1-4 0v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 1 1 0-4h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a2 2 0 1 1 4 0v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6H20a2 2 0 1 1 0 4h-.2a1 1 0 0 0-.9.6Z"/>
+        </svg>
+      `,
+      companies: `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 20V8l8-4 8 4v12"/>
+          <path d="M9 20v-4h6v4"/>
+          <path d="M8 10h.01"/>
+          <path d="M12 10h.01"/>
+          <path d="M16 10h.01"/>
+          <path d="M8 13h.01"/>
+          <path d="M12 13h.01"/>
+          <path d="M16 13h.01"/>
+        </svg>
+      `,
+      users: `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M16 21v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1"/>
+          <circle cx="9.5" cy="8" r="3.5"/>
+          <path d="M20 21v-1a4 4 0 0 0-3-3.9"/>
+          <path d="M16.5 4.1a3.5 3.5 0 0 1 0 6.8"/>
+        </svg>
+      `,
+      leads: `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3l2.7 5.4L21 9.3l-4.5 4.4 1.1 6.3L12 17.2 6.4 20l1.1-6.3L3 9.3l6.3-.9L12 3Z"/>
+        </svg>
+      `,
+      jobs: `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M10 3h4"/>
+          <path d="M5 7h14v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7Z"/>
+          <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+        </svg>
+      `,
+      qa: `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M10 3h4"/>
+          <path d="M9 3v4l-4.5 7.8A4 4 0 0 0 8 21h8a4 4 0 0 0 3.5-6.2L15 7V3"/>
+          <path d="M8.5 14h7"/>
+        </svg>
+      `
+    };
+    return icons[name] || icons.home;
+  }
+
   function getVisibleLinks() {
     const role = getRole();
     const authed = isAuthenticated();
 
     const common = [
-      { page: "index.html", label: "Home", icon: "🏠", bubble: "home" }
+      { page: "index.html", label: "Home", icon: "home", bubble: "home" }
     ];
 
     const guestMain = [
-      { page: "login.html", label: "Login", icon: "🔐", bubble: "login" },
-      { page: "signup.html", label: "Sign Up", icon: "🪪", bubble: "signup" },
-      { page: "reset.html", label: "Reset Password", icon: "🔄", bubble: "reset" }
+      { page: "login.html", label: "Login", icon: "login", bubble: "login" },
+      { page: "signup.html", label: "Sign Up", icon: "signup", bubble: "signup" },
+      { page: "reset.html", label: "Reset Password", icon: "login", bubble: "reset" }
     ];
 
     const authedMain = [
-      { page: "dashboard.html", label: "Dashboard", icon: "📊", bubble: "dashboard" },
-      { page: "settings.html", label: "Settings", icon: "⚙️", bubble: "settings" }
+      { page: "dashboard.html", label: "Dashboard", icon: "dashboard", bubble: "dashboard" },
+      { page: "settings.html", label: "Settings", icon: "settings", bubble: "settings" }
     ];
 
     const ownerOnly = [
-      { page: "companies.html", label: "Companies", icon: "🏢", bubble: "companies" },
-      { page: "users.html", label: "Users", icon: "👥", bubble: "users" },
-      { page: "leads.html", label: "Leads", icon: "🎯", bubble: "leads" },
-      { page: "jobs.html", label: "Jobs", icon: "🧰", bubble: "jobs" },
-      { page: "qa.html", label: "QA", icon: "🧪", bubble: "qa" }
+      { page: "companies.html", label: "Companies", icon: "companies", bubble: "companies" },
+      { page: "users.html", label: "Users", icon: "users", bubble: "users" },
+      { page: "leads.html", label: "Leads", icon: "leads", bubble: "leads" },
+      { page: "jobs.html", label: "Jobs", icon: "jobs", bubble: "jobs" },
+      { page: "qa.html", label: "QA", icon: "qa", bubble: "qa" }
     ];
 
     const main = authed
@@ -306,14 +387,14 @@
 
     const quick = authed
       ? [
-          { page: "dashboard.html", label: "Dashboard", icon: "📊", bubble: "dashboard" },
-          { page: "settings.html", label: "Settings", icon: "⚙️", bubble: "settings" },
-          { page: "index.html", label: "Home", icon: "🏠", bubble: "home" }
+          { page: "dashboard.html", label: "Dashboard", icon: "dashboard", bubble: "dashboard" },
+          { page: "settings.html", label: "Settings", icon: "settings", bubble: "settings" },
+          { page: "index.html", label: "Home", icon: "home", bubble: "home" }
         ]
       : [
-          { page: "login.html", label: "Login", icon: "🔐", bubble: "login" },
-          { page: "signup.html", label: "Sign Up", icon: "🪪", bubble: "signup" },
-          { page: "index.html", label: "Home", icon: "🏠", bubble: "home" }
+          { page: "login.html", label: "Login", icon: "login", bubble: "login" },
+          { page: "signup.html", label: "Sign Up", icon: "signup", bubble: "signup" },
+          { page: "index.html", label: "Home", icon: "home", bubble: "home" }
         ];
 
     return {
@@ -330,7 +411,7 @@
     const active = isCurrentPage(page) ? " active" : "";
     return `
       <a href="${href}" class="eva-link${active}" data-menu-link="${href}" data-label="${label.toLowerCase()}">
-        <span class="eva-link-icon">${icon}</span>
+        <span class="eva-link-icon">${iconSvg(icon)}</span>
         <span class="eva-link-label">${label}</span>
       </a>
     `;
@@ -346,7 +427,7 @@
         aria-label="${label}"
         title="${label}"
       >
-        <span class="eva-quick-bubble-icon">${icon}</span>
+        <span class="eva-quick-bubble-icon">${iconSvg(icon)}</span>
         <span class="eva-quick-bubble-label">${label}</span>
       </button>
     `;
@@ -358,10 +439,7 @@
 
     const groups = getVisibleLinks();
     const mainLinks = groups.main.map((item) => navLink(item.page, item.label, item.icon)).join("");
-
-    const quickBubbles = groups.quick
-      .map((item) => bubbleLink(item.page, item.label, item.icon, item.bubble))
-      .join("");
+    const quickBubbles = groups.quick.map((item) => bubbleLink(item.page, item.label, item.icon, item.bubble)).join("");
 
     const utilityLinks = groups.authed
       ? `
@@ -729,11 +807,13 @@
     longPressTriggered = false;
     compactPressActive = true;
     pill.classList.add("is-pressing");
+    document.body.classList.add("eva-pressing-nav");
+    navHaptic(6);
 
     pressTimer = setTimeout(() => {
       longPressTriggered = true;
       showQuickBubbles();
-    }, 320);
+    }, 300);
   }
 
   function endCompactPress() {
@@ -741,6 +821,7 @@
     clearPressTimer();
     compactPressActive = false;
     if (pill) pill.classList.remove("is-pressing");
+    document.body.classList.remove("eva-pressing-nav");
   }
 
   function bindTapToggle() {
@@ -785,8 +866,8 @@
       togglePill(event);
     }
 
-    pill.addEventListener("touchstart", onTouchStart, { passive: true });
-    pill.addEventListener("touchmove", onTouchMove, { passive: true });
+    pill.addEventListener("touchstart", onTouchStart, { passive: false });
+    pill.addEventListener("touchmove", onTouchMove, { passive: false });
     pill.addEventListener("touchend", onTouchEnd);
     pill.addEventListener("touchcancel", endCompactPress);
 
@@ -804,11 +885,21 @@
 
     pill.addEventListener("mouseleave", endCompactPress);
 
+    pill.addEventListener("dragstart", (event) => {
+      event.preventDefault();
+    });
+
+    pill.addEventListener("selectstart", (event) => {
+      event.preventDefault();
+    });
+
     pill.addEventListener("click", (event) => {
       if (event.target.closest("#evaMenuBtn")) return;
       if (event.target.closest("#evaBrandBlock")) return;
       if (longPressTriggered) {
         longPressTriggered = false;
+        event.preventDefault();
+        event.stopPropagation();
         return;
       }
       if (tapHandled) {
@@ -1070,30 +1161,49 @@
     const style = document.createElement("style");
     style.id = "evaQuickBubbleStyles";
     style.textContent = `
-      .eva-nav-shell.quick-pressing #evaNavPill {
-        transform: scale(0.95) translateY(1px);
+      body.eva-pressing-nav,
+      body.eva-pressing-nav * {
+        -webkit-user-select: none !important;
+        user-select: none !important;
+        -webkit-touch-callout: none !important;
+      }
+
+      .eva-nav-shell.quick-pressing #evaNavPill,
+      #evaNavPill.is-pressing {
+        transform: scale(0.93) translateY(2px);
         box-shadow:
-          inset 0 2px 6px rgba(0,0,0,0.18),
-          0 10px 18px rgba(0,0,0,0.10);
-        transition: transform 0.16s ease, box-shadow 0.16s ease;
+          inset 0 4px 12px rgba(0,0,0,0.20),
+          0 8px 14px rgba(0,0,0,0.10),
+          0 0 0 1px rgba(255,255,255,0.04);
+        transition: transform 0.14s ease, box-shadow 0.14s ease;
       }
 
       .eva-quick-bubbles {
         position: absolute;
         left: 50%;
         top: calc(100% + 8px);
-        transform: translateX(-50%) translateY(10px) scale(0.96);
+        transform: translateX(-50%) translateY(12px) scale(0.94);
         display: flex;
-        gap: 10px;
+        gap: 8px;
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
         transition:
           opacity 0.18s ease,
           visibility 0.18s ease,
-          transform 0.18s ease;
+          transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
         z-index: 50;
         flex-wrap: nowrap;
+      }
+
+      .eva-quick-bubbles .eva-quick-bubble:nth-child(1) {
+        transform: translateY(10px) scale(0.94);
+      }
+      .eva-quick-bubbles .eva-quick-bubble:nth-child(2) {
+        transform: translateY(0px) scale(0.98);
+      }
+      .eva-quick-bubbles .eva-quick-bubble:nth-child(3) {
+        transform: translateY(10px) scale(0.94);
       }
 
       .eva-quick-bubbles.show {
@@ -1103,56 +1213,141 @@
         transform: translateX(-50%) translateY(0) scale(1);
       }
 
+      .eva-quick-bubbles.show .eva-quick-bubble {
+        transform: translateY(0) scale(1);
+      }
+
       .eva-quick-bubble {
         width: 72px;
         min-height: 72px;
         border-radius: 999px;
         padding: 10px 8px;
         display: grid;
-        gap: 4px;
+        gap: 5px;
         justify-items: center;
         align-content: center;
         cursor: pointer;
-        border: 1px solid rgba(255,255,255,0.16);
-        background:
-          linear-gradient(180deg, rgba(255,255,255,0.20), rgba(255,255,255,0.06));
-        backdrop-filter: blur(18px) saturate(150%);
-        -webkit-backdrop-filter: blur(18px) saturate(150%);
-        box-shadow:
-          0 14px 24px rgba(0,0,0,0.16),
-          inset 0 1px 0 rgba(255,255,255,0.24);
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
         color: inherit;
+        border: 1px solid rgba(255,255,255,0.18);
+        background:
+          radial-gradient(circle at 30% 26%, rgba(255,255,255,0.24), transparent 28%),
+          linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
+        backdrop-filter: blur(20px) saturate(160%);
+        -webkit-backdrop-filter: blur(20px) saturate(160%);
+        box-shadow:
+          0 16px 28px rgba(0,0,0,0.18),
+          inset 0 1px 0 rgba(255,255,255,0.28),
+          inset 0 -1px 0 rgba(255,255,255,0.03);
+        transition:
+          transform 0.16s ease,
+          box-shadow 0.16s ease,
+          border-color 0.16s ease;
+      }
+
+      .eva-quick-bubble::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        pointer-events: none;
+        background:
+          linear-gradient(
+            135deg,
+            rgba(255,255,255,0.24),
+            rgba(255,255,255,0.06) 36%,
+            transparent 62%
+          );
+        opacity: 0.92;
+        z-index: 0;
+      }
+
+      .eva-quick-bubble::after {
+        content: "";
+        position: absolute;
+        inset: 1px;
+        border-radius: inherit;
+        pointer-events: none;
+        background:
+          radial-gradient(circle at 74% 78%, rgba(255,255,255,0.08), transparent 24%);
+        z-index: 0;
       }
 
       .eva-quick-bubble:hover {
-        transform: translateY(-1px);
+        transform: translateY(-2px) scale(1.03) !important;
+        box-shadow:
+          0 20px 34px rgba(0,0,0,0.22),
+          inset 0 1px 0 rgba(255,255,255,0.30),
+          inset 0 -1px 0 rgba(255,255,255,0.03);
+      }
+
+      .eva-quick-bubble:active {
+        transform: scale(0.97) !important;
+      }
+
+      .eva-quick-bubble-icon,
+      .eva-quick-bubble-label {
+        position: relative;
+        z-index: 1;
       }
 
       .eva-quick-bubble-icon {
-        font-size: 1.2rem;
-        line-height: 1;
+        width: 22px;
+        height: 22px;
+        display: grid;
+        place-items: center;
+      }
+
+      .eva-quick-bubble-icon svg,
+      .eva-link-icon svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .eva-link-icon {
+        width: 20px;
+        height: 20px;
+        display: inline-grid;
+        place-items: center;
+        flex: 0 0 auto;
       }
 
       .eva-quick-bubble-label {
-        font-size: 0.68rem;
+        font-size: 0.64rem;
         font-weight: 800;
         text-align: center;
-        line-height: 1.1;
+        line-height: 1.08;
         letter-spacing: -0.01em;
+        max-width: 56px;
       }
 
       @media (max-width: 640px) {
         .eva-quick-bubbles {
-          gap: 8px;
+          gap: 7px;
         }
 
         .eva-quick-bubble {
           width: 66px;
           min-height: 66px;
+          padding: 9px 6px;
         }
 
         .eva-quick-bubble-label {
-          font-size: 0.62rem;
+          font-size: 0.58rem;
+          max-width: 48px;
+        }
+
+        .eva-quick-bubble-icon {
+          width: 20px;
+          height: 20px;
         }
       }
     `;
@@ -1193,6 +1388,7 @@
       setTheme(getAppearanceTheme());
       hideAllLoaders();
       hideQuickBubbles();
+      document.body.classList.remove("eva-pressing-nav");
     });
 
     window.addEventListener("beforeunload", () => {
