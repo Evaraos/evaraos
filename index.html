@@ -6,11 +6,36 @@
     name="viewport"
     content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no"
   />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Evaraos Inc</title>
 
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=29" />
-  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=29" />
-  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=29" />
+  <script>
+    (function () {
+      try {
+        const raw = localStorage.getItem("evaraos-appearance");
+        if (!raw) return;
+        const appearance = JSON.parse(raw);
+        let theme = "dark";
+
+        if (appearance.mode === "light") theme = "light";
+        if (appearance.mode === "galaxy") theme = "galaxy";
+
+        if (appearance.mode === "custom") {
+          if (appearance.baseFamily === "light") theme = "light";
+          else if (appearance.baseFamily === "galaxy") theme = "galaxy";
+          else theme = "dark";
+        }
+
+        document.documentElement.setAttribute("data-theme", theme);
+      } catch {}
+    })();
+  </script>
+
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=31" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=31" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=31" />
 
   <style>
     .home-shell {
@@ -41,6 +66,13 @@
       pointer-events: none;
       opacity: 0.94;
       z-index: 0;
+    }
+
+    html[data-theme="galaxy"] .hero-home::before {
+      background:
+        radial-gradient(circle at 78% 18%, rgba(255, 196, 250, 0.16), transparent 20%),
+        radial-gradient(circle at 12% 84%, rgba(130, 116, 255, 0.14), transparent 22%),
+        radial-gradient(circle at 46% 26%, rgba(255,255,255,0.08), transparent 14%);
     }
 
     .hero-grid {
@@ -106,15 +138,7 @@
       font-weight: 800;
       font-size: 1rem;
       letter-spacing: -0.02em;
-      border: 1px solid rgba(255,255,255,0.14);
       color: inherit;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.05));
-      backdrop-filter: blur(18px) saturate(145%);
-      -webkit-backdrop-filter: blur(18px) saturate(145%);
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.24),
-        0 12px 22px rgba(0,0,0,0.10);
       position: relative;
       overflow: hidden;
       isolation: isolate;
@@ -125,33 +149,8 @@
         background 0.18s ease;
     }
 
-    .btn-apple::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      pointer-events: none;
-      background:
-        linear-gradient(
-          135deg,
-          rgba(255,255,255,0.28),
-          rgba(255,255,255,0.08) 34%,
-          transparent 58%
-        );
-      z-index: 0;
-      opacity: 0.94;
-    }
-
-    .btn-apple > * {
-      position: relative;
-      z-index: 1;
-    }
-
     .btn-apple:hover {
       transform: translateY(-1px);
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.24),
-        0 16px 28px rgba(0,0,0,0.14);
     }
 
     .btn-apple:active {
@@ -693,7 +692,7 @@
     </div>
   </footer>
 
-  <script type="module" src="/evaraos/assets/js/theme.js?v=29"></script>
-  <script src="/evaraos/assets/js/nav.js?v=29"></script>
+  <script type="module" src="/evaraos/assets/js/theme.js?v=31"></script>
+  <script src="/evaraos/assets/js/nav.js?v=31"></script>
 </body>
 </html>
