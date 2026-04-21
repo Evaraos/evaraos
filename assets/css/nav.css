@@ -605,6 +605,31 @@ html[data-theme$="-light"] .eva-chip-dot {
   z-index: 0;
 }
 
+.eva-quick-bubble-orbit,
+.eva-quick-bubble-core {
+  pointer-events: none;
+}
+
+.eva-quick-bubble-orbit {
+  position: absolute;
+  inset: 7px;
+  border-radius: inherit;
+  border: 1px solid rgba(255,255,255,0.08);
+  opacity: 0.6;
+  z-index: 0;
+}
+
+.eva-quick-bubble-core {
+  position: absolute;
+  inset: 18px 16px 24px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 24%, rgba(255,255,255,0.18), transparent 34%),
+    linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.03));
+  opacity: 0.8;
+  z-index: 0;
+}
+
 .eva-quick-bubble:hover {
   transform: translateY(-2px) scale(1.04) !important;
   box-shadow:
@@ -723,6 +748,10 @@ html[data-theme="galaxy"] .eva-quick-bubble {
   .eva-quick-bubble-label {
     font-size: 0.47rem;
     max-width: 38px;
+  }
+
+  .eva-quick-bubble-core {
+    inset: 16px 14px 20px;
   }
 }
 
