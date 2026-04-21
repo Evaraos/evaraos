@@ -30,6 +30,22 @@ function setMessage(el, message, type = "info") {
   el.dataset.state = type;
 }
 
+function navigateWithLoader(url, options = {}) {
+  if (window.EvaraLoader && typeof window.EvaraLoader.beginNavigationLoad === "function") {
+    window.EvaraLoader.beginNavigationLoad(options);
+  }
+  window.location.replace(url);
+}
+
+function setFormBusy(form, isBusy, submitTextBusy, submitTextIdle) {
+  if (!form) return;
+  const submit = form.querySelector('button[type="submit"]');
+  if (!submit) return;
+
+  submit.disabled = isBusy;
+  submit.textContent = isBusy ? submitTextBusy : submitTextIdle;
+}
+
 function bindPasswordToggle(buttonId, inputId) {
   const button = byId(buttonId);
   const input = byId(inputId);
@@ -132,6 +148,7 @@ async function findEmailFromLogin(loginValue) {
 async function handleLoginSubmit(event) {
   event.preventDefault();
 
+  const form = byId("loginForm");
   const emailInput = byId("loginEmail");
   const passwordInput = byId("loginPassword");
   const rememberInput = byId("rememberDevice");
@@ -147,6 +164,7 @@ async function handleLoginSubmit(event) {
   }
 
   try {
+    setFormBusy(form, true, "Signing In...", "Login");
     setMessage(messageEl, "Signing you in...", "info");
     await setAuthPersistence(rememberDevice);
 
@@ -172,16 +190,22 @@ async function handleLoginSubmit(event) {
     });
 
     setMessage(messageEl, "Login successful. Redirecting...", "success");
-    window.location.replace("/evaraos/dashboard.html");
+    navigateWithLoader("/evaraos/dashboard.html", {
+      title: "Opening dashboard",
+      subtitle: "Loading your Evaraos workspace."
+    });
   } catch (error) {
     console.error("Login failed:", error);
     setMessage(messageEl, "Login failed. Check your credentials and try again.", "error");
+  } finally {
+    setFormBusy(form, false, "Signing In...", "Login");
   }
 }
 
 async function handleSignupSubmit(event) {
   event.preventDefault();
 
+  const form = byId("signupForm");
   const nameInput = byId("signupName");
   const usernameInput = byId("signupUsername");
   const emailInput = byId("signupEmail");
@@ -214,6 +238,7 @@ async function handleSignupSubmit(event) {
   }
 
   try {
+    setFormBusy(form, true, "Creating Account...", "Create Account");
     setMessage(messageEl, "Creating your account...", "info");
     await setAuthPersistence(rememberDevice);
 
@@ -258,16 +283,22 @@ async function handleSignupSubmit(event) {
     });
 
     setMessage(messageEl, "Account created successfully. Redirecting...", "success");
-    window.location.replace("/evaraos/dashboard.html");
+    navigateWithLoader("/evaraos/dashboard.html", {
+      title: "Creating workspace",
+      subtitle: "Opening your Evaraos dashboard."
+    });
   } catch (error) {
     console.error("Signup failed:", error);
     setMessage(messageEl, "Could not create account. Try again.", "error");
+  } finally {
+    setFormBusy(form, false, "Creating Account...", "Create Account");
   }
 }
 
 async function handleResetSubmit(event) {
   event.preventDefault();
 
+  const form = byId("resetForm");
   const emailInput = byId("resetEmail");
   const messageEl = byId("resetMessage");
   const email = emailInput?.value?.trim() || "";
@@ -278,12 +309,15 @@ async function handleResetSubmit(event) {
   }
 
   try {
+    setFormBusy(form, true, "Sending Reset Link...", "Send Reset Link");
     setMessage(messageEl, "Sending reset email...", "info");
     await sendPasswordResetEmail(auth, email);
     setMessage(messageEl, "Password reset email sent. Check your inbox.", "success");
   } catch (error) {
     console.error("Reset failed:", error);
     setMessage(messageEl, "Could not send reset email. Try again.", "error");
+  } finally {
+    setFormBusy(form, false, "Sending Reset Link...", "Send Reset Link");
   }
 }
 
