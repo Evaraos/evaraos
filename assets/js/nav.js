@@ -1,6 +1,4 @@
 (function () {
-  let tripleTapCount = 0;
-  let tripleTapTimer = null;
   let progress = 0;
   let targetProgress = 0;
   let lastY = window.scrollY;
@@ -20,6 +18,10 @@
   let lockedScrollY = 0;
   let longLoaderTimer = null;
   let isNavigatingAway = false;
+
+  let pressTimer = null;
+  let longPressTriggered = false;
+  let compactPressActive = false;
 
   function getMount() {
     return document.getElementById("universalNavRoot") || document.getElementById("universalNav");
@@ -119,7 +121,7 @@
       if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
         navigator.vibrate(ms);
       }
-    } catch (_) {}
+    } catch {}
   }
 
   function isCompact() {
@@ -258,7 +260,7 @@
 
     longLoaderTimer = window.setTimeout(() => {
       showFullLoader({ title, subtitle });
-    }, 120);
+    }, 100);
   }
 
   function navigateWithLoader(href, options = {}) {
@@ -276,34 +278,47 @@
     const authed = isAuthenticated();
 
     const common = [
-      { page: "index.html", label: "Home", icon: "⌂" }
+      { page: "index.html", label: "Home", icon: "🏠", bubble: "home" }
     ];
 
     const guestMain = [
-      { page: "login.html", label: "Login", icon: "⇥" },
-      { page: "signup.html", label: "Sign Up", icon: "✚" },
-      { page: "reset.html", label: "Reset", icon: "↺" }
+      { page: "login.html", label: "Login", icon: "🔐", bubble: "login" },
+      { page: "signup.html", label: "Sign Up", icon: "🪪", bubble: "signup" },
+      { page: "reset.html", label: "Reset Password", icon: "🔄", bubble: "reset" }
     ];
 
     const authedMain = [
-      { page: "dashboard.html", label: "Profile", icon: "◉" },
-      { page: "settings.html", label: "Settings", icon: "⚙︎" }
+      { page: "dashboard.html", label: "Dashboard", icon: "📊", bubble: "dashboard" },
+      { page: "settings.html", label: "Settings", icon: "⚙️", bubble: "settings" }
     ];
 
     const ownerOnly = [
-      { page: "companies.html", label: "Companies", icon: "▣" },
-      { page: "users.html", label: "Users", icon: "◉" },
-      { page: "leads.html", label: "Leads", icon: "⌁" },
-      { page: "jobs.html", label: "Jobs", icon: "✓" },
-      { page: "qa.html", label: "QA", icon: "◎" }
+      { page: "companies.html", label: "Companies", icon: "🏢", bubble: "companies" },
+      { page: "users.html", label: "Users", icon: "👥", bubble: "users" },
+      { page: "leads.html", label: "Leads", icon: "🎯", bubble: "leads" },
+      { page: "jobs.html", label: "Jobs", icon: "🧰", bubble: "jobs" },
+      { page: "qa.html", label: "QA", icon: "🧪", bubble: "qa" }
     ];
 
     const main = authed
       ? [...common, ...authedMain, ...(role === "owner" ? ownerOnly : [])]
       : [...common, ...guestMain];
 
+    const quick = authed
+      ? [
+          { page: "dashboard.html", label: "Dashboard", icon: "📊", bubble: "dashboard" },
+          { page: "settings.html", label: "Settings", icon: "⚙️", bubble: "settings" },
+          { page: "index.html", label: "Home", icon: "🏠", bubble: "home" }
+        ]
+      : [
+          { page: "login.html", label: "Login", icon: "🔐", bubble: "login" },
+          { page: "signup.html", label: "Sign Up", icon: "🪪", bubble: "signup" },
+          { page: "index.html", label: "Home", icon: "🏠", bubble: "home" }
+        ];
+
     return {
       main,
+      quick,
       authed,
       role,
       displayName: getDisplayName()
@@ -321,12 +336,32 @@
     `;
   }
 
+  function bubbleLink(page, label, icon, tone = "") {
+    const href = buildHref(page);
+    return `
+      <button
+        type="button"
+        class="eva-quick-bubble beam-target ${tone ? `bubble-${tone}` : ""}"
+        data-quick-link="${href}"
+        aria-label="${label}"
+        title="${label}"
+      >
+        <span class="eva-quick-bubble-icon">${icon}</span>
+        <span class="eva-quick-bubble-label">${label}</span>
+      </button>
+    `;
+  }
+
   function renderNav() {
     const mount = getMount();
     if (!mount) return;
 
     const groups = getVisibleLinks();
     const mainLinks = groups.main.map((item) => navLink(item.page, item.label, item.icon)).join("");
+
+    const quickBubbles = groups.quick
+      .map((item) => bubbleLink(item.page, item.label, item.icon, item.bubble))
+      .join("");
 
     const utilityLinks = groups.authed
       ? `
@@ -378,13 +413,17 @@
               </button>
             </div>
           </div>
+
+          <div class="eva-quick-bubbles" id="evaQuickBubbles" aria-hidden="true">
+            ${quickBubbles}
+          </div>
         </header>
 
         <div class="eva-backdrop" id="evaBackdrop"></div>
 
         <div class="eva-menu-panel" id="evaMenuPanel">
           <label class="eva-search">
-            <span>⌕</span>
+            <span>🔎</span>
             <input type="text" id="evaSearchInput" placeholder="Search pages" />
           </label>
 
@@ -437,6 +476,10 @@
     return document.getElementById("evaNavPill");
   }
 
+  function getQuickBubbles() {
+    return document.getElementById("evaQuickBubbles");
+  }
+
   function clearCompactTimer() {
     if (compactTimer) {
       clearTimeout(compactTimer);
@@ -448,6 +491,13 @@
     if (scrollSettleTimer) {
       clearTimeout(scrollSettleTimer);
       scrollSettleTimer = null;
+    }
+  }
+
+  function clearPressTimer() {
+    if (pressTimer) {
+      clearTimeout(pressTimer);
+      pressTimer = null;
     }
   }
 
@@ -595,6 +645,7 @@
     const btn = getMenuBtn();
     if (!zone || !btn) return;
 
+    hideQuickBubbles();
     updateMenuViewportFit();
     lockBodyScroll();
 
@@ -625,6 +676,29 @@
     }
   }
 
+  function showQuickBubbles() {
+    const bubbles = getQuickBubbles();
+    const shell = getNavShell();
+    if (!bubbles || !shell || !isCompact()) return;
+
+    shell.classList.add("quick-pressing");
+    bubbles.classList.add("show");
+    bubbles.setAttribute("aria-hidden", "false");
+    navHaptic(14);
+  }
+
+  function hideQuickBubbles() {
+    const bubbles = getQuickBubbles();
+    const shell = getNavShell();
+    if (bubbles) {
+      bubbles.classList.remove("show");
+      bubbles.setAttribute("aria-hidden", "true");
+    }
+    if (shell) {
+      shell.classList.remove("quick-pressing");
+    }
+  }
+
   function togglePill(event) {
     if (event) {
       event.preventDefault();
@@ -645,6 +719,30 @@
     }
   }
 
+  function startCompactPress(event) {
+    const pill = getNavPill();
+    if (!pill || !isCompact()) return;
+    if (event.target.closest("#evaMenuBtn")) return;
+    if (event.target.closest("#evaBrandBlock")) return;
+
+    clearPressTimer();
+    longPressTriggered = false;
+    compactPressActive = true;
+    pill.classList.add("is-pressing");
+
+    pressTimer = setTimeout(() => {
+      longPressTriggered = true;
+      showQuickBubbles();
+    }, 320);
+  }
+
+  function endCompactPress() {
+    const pill = getNavPill();
+    clearPressTimer();
+    compactPressActive = false;
+    if (pill) pill.classList.remove("is-pressing");
+  }
+
   function bindTapToggle() {
     const pill = getNavPill();
     const menuBtn = getMenuBtn();
@@ -653,11 +751,14 @@
     function onTouchStart(event) {
       if (event.target.closest("#evaMenuBtn")) return;
       if (event.target.closest("#evaBrandBlock")) return;
+
       const touch = event.touches ? event.touches[0] : event;
       tapStartX = touch.clientX;
       tapStartY = touch.clientY;
       tapMoved = false;
       tapHandled = false;
+
+      startCompactPress(event);
     }
 
     function onTouchMove(event) {
@@ -668,13 +769,18 @@
       const dy = Math.abs(touch.clientY - tapStartY);
       if (dx > 10 || dy > 10) {
         tapMoved = true;
+        endCompactPress();
       }
     }
 
     function onTouchEnd(event) {
       if (event.target.closest("#evaMenuBtn")) return;
       if (event.target.closest("#evaBrandBlock")) return;
-      if (tapMoved || tapHandled) return;
+
+      const wasLongPress = longPressTriggered;
+      endCompactPress();
+
+      if (tapMoved || tapHandled || wasLongPress) return;
       tapHandled = true;
       togglePill(event);
     }
@@ -682,10 +788,29 @@
     pill.addEventListener("touchstart", onTouchStart, { passive: true });
     pill.addEventListener("touchmove", onTouchMove, { passive: true });
     pill.addEventListener("touchend", onTouchEnd);
+    pill.addEventListener("touchcancel", endCompactPress);
+
+    pill.addEventListener("mousedown", (event) => {
+      if (event.target.closest("#evaMenuBtn")) return;
+      if (event.target.closest("#evaBrandBlock")) return;
+      startCompactPress(event);
+    });
+
+    pill.addEventListener("mouseup", () => {
+      const wasLongPress = longPressTriggered;
+      endCompactPress();
+      if (wasLongPress) return;
+    });
+
+    pill.addEventListener("mouseleave", endCompactPress);
 
     pill.addEventListener("click", (event) => {
       if (event.target.closest("#evaMenuBtn")) return;
       if (event.target.closest("#evaBrandBlock")) return;
+      if (longPressTriggered) {
+        longPressTriggered = false;
+        return;
+      }
       if (tapHandled) {
         tapHandled = false;
         return;
@@ -748,6 +873,19 @@
       });
     });
 
+    document.querySelectorAll("[data-quick-link]").forEach((btn) => {
+      btn.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const href = btn.getAttribute("data-quick-link");
+        hideQuickBubbles();
+        navigateWithLoader(href, {
+          title: "Opening shortcut",
+          subtitle: "Launching your quick action."
+        });
+      });
+    });
+
     const logoutBtn = document.getElementById("evaLogoutBtn");
     if (logoutBtn) {
       logoutBtn.addEventListener("click", () => {
@@ -806,34 +944,6 @@
     });
   }
 
-  function toggleQuickMode() {
-    const panel = getMenuPanel();
-    if (!panel) return;
-    panel.classList.toggle("quick-mode");
-    navHaptic(10);
-    updateMenuViewportFit();
-  }
-
-  function bindTripleTap() {
-    const btn = getMenuBtn();
-    if (!btn) return;
-
-    btn.addEventListener("click", () => {
-      tripleTapCount += 1;
-      clearTimeout(tripleTapTimer);
-
-      tripleTapTimer = setTimeout(() => {
-        tripleTapCount = 0;
-      }, 350);
-
-      if (tripleTapCount === 3) {
-        toggleQuickMode();
-        tripleTapCount = 0;
-        clearTimeout(tripleTapTimer);
-      }
-    });
-  }
-
   function bindMenu() {
     const zone = getMenuZone();
     const btn = getMenuBtn();
@@ -846,6 +956,7 @@
       event.preventDefault();
       event.stopPropagation();
       navHaptic(10);
+      hideQuickBubbles();
 
       if (document.body.classList.contains("nav-menu-open")) {
         closeMenu(true);
@@ -860,12 +971,16 @@
 
     backdrop.addEventListener("click", () => {
       closeMenu(true);
+      hideQuickBubbles();
     });
 
     document.addEventListener("click", (event) => {
       if (!zone.contains(event.target) && !panel.contains(event.target)) {
         if (document.body.classList.contains("nav-menu-open")) {
           closeMenu(true);
+        }
+        if (!event.target.closest("#evaQuickBubbles")) {
+          hideQuickBubbles();
         }
       }
     });
@@ -912,6 +1027,7 @@
           }
 
           settleAfterScroll();
+          hideQuickBubbles();
         }
 
         lastY = y;
@@ -945,12 +1061,108 @@
     showMicroLoader();
     window.setTimeout(() => {
       hideAllLoaders();
-    }, 360);
+    }, 320);
+  }
+
+  function injectQuickBubbleStyles() {
+    if (document.getElementById("evaQuickBubbleStyles")) return;
+
+    const style = document.createElement("style");
+    style.id = "evaQuickBubbleStyles";
+    style.textContent = `
+      .eva-nav-shell.quick-pressing #evaNavPill {
+        transform: scale(0.95) translateY(1px);
+        box-shadow:
+          inset 0 2px 6px rgba(0,0,0,0.18),
+          0 10px 18px rgba(0,0,0,0.10);
+        transition: transform 0.16s ease, box-shadow 0.16s ease;
+      }
+
+      .eva-quick-bubbles {
+        position: absolute;
+        left: 50%;
+        top: calc(100% + 8px);
+        transform: translateX(-50%) translateY(10px) scale(0.96);
+        display: flex;
+        gap: 10px;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition:
+          opacity 0.18s ease,
+          visibility 0.18s ease,
+          transform 0.18s ease;
+        z-index: 50;
+        flex-wrap: nowrap;
+      }
+
+      .eva-quick-bubbles.show {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: translateX(-50%) translateY(0) scale(1);
+      }
+
+      .eva-quick-bubble {
+        width: 72px;
+        min-height: 72px;
+        border-radius: 999px;
+        padding: 10px 8px;
+        display: grid;
+        gap: 4px;
+        justify-items: center;
+        align-content: center;
+        cursor: pointer;
+        border: 1px solid rgba(255,255,255,0.16);
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.20), rgba(255,255,255,0.06));
+        backdrop-filter: blur(18px) saturate(150%);
+        -webkit-backdrop-filter: blur(18px) saturate(150%);
+        box-shadow:
+          0 14px 24px rgba(0,0,0,0.16),
+          inset 0 1px 0 rgba(255,255,255,0.24);
+        color: inherit;
+      }
+
+      .eva-quick-bubble:hover {
+        transform: translateY(-1px);
+      }
+
+      .eva-quick-bubble-icon {
+        font-size: 1.2rem;
+        line-height: 1;
+      }
+
+      .eva-quick-bubble-label {
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-align: center;
+        line-height: 1.1;
+        letter-spacing: -0.01em;
+      }
+
+      @media (max-width: 640px) {
+        .eva-quick-bubbles {
+          gap: 8px;
+        }
+
+        .eva-quick-bubble {
+          width: 66px;
+          min-height: 66px;
+        }
+
+        .eva-quick-bubble-label {
+          font-size: 0.62rem;
+        }
+      }
+    `;
+    document.head.appendChild(style);
   }
 
   function init() {
     setTheme(getAppearanceTheme());
     renderNav();
+    injectQuickBubbleStyles();
 
     const shell = getNavShell();
     const immediate = atTopOfPage() ? 1 : 0;
@@ -971,7 +1183,6 @@
     bindLinks();
     bindThemeToggle();
     bindSearch();
-    bindTripleTap();
     bindScrollBehavior();
     syncThemeLabel();
     animate();
@@ -981,6 +1192,7 @@
       isNavigatingAway = false;
       setTheme(getAppearanceTheme());
       hideAllLoaders();
+      hideQuickBubbles();
     });
 
     window.addEventListener("beforeunload", () => {
