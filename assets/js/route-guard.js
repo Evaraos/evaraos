@@ -2,6 +2,11 @@
 
 import { protectRoute } from "./firebase.js";
 
+function clearAuthPending() {
+  document.documentElement.classList.remove("auth-pending");
+  document.body?.classList.remove("auth-pending");
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const mode = document.body?.dataset?.routeGuard || "";
 
@@ -11,6 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
       redirectGuestTo: "/evaraos/login.html",
       redirectAuthedTo: "/evaraos/dashboard.html"
     });
+    clearAuthPending();
     return;
   }
 
@@ -20,5 +26,9 @@ document.addEventListener("DOMContentLoaded", () => {
       redirectGuestTo: "/evaraos/login.html",
       redirectAuthedTo: "/evaraos/dashboard.html"
     });
+    clearAuthPending();
+    return;
   }
+
+  clearAuthPending();
 });
