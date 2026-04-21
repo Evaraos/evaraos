@@ -19,6 +19,7 @@
 
   let lockedScrollY = 0;
   let longLoaderTimer = null;
+  let isNavigatingAway = false;
 
   function getMount() {
     return document.getElementById("universalNavRoot") || document.getElementById("universalNav");
@@ -257,15 +258,17 @@
 
     longLoaderTimer = window.setTimeout(() => {
       showFullLoader({ title, subtitle });
-    }, 260);
+    }, 120);
   }
 
   function navigateWithLoader(href, options = {}) {
-    if (!href) return;
+    if (!href || isNavigatingAway) return;
+    isNavigatingAway = true;
     beginSmartLoader(options);
-    window.setTimeout(() => {
+
+    requestAnimationFrame(() => {
       window.location.assign(href);
-    }, 90);
+    });
   }
 
   function getVisibleLinks() {
@@ -939,14 +942,10 @@
     if (hasBootAnimated) return;
     hasBootAnimated = true;
 
-    beginSmartLoader({
-      title: "Launching Evaraos",
-      subtitle: "Loading navigation, theme, and experience."
-    });
-
+    showMicroLoader();
     window.setTimeout(() => {
       hideAllLoaders();
-    }, 620);
+    }, 360);
   }
 
   function init() {
@@ -979,8 +978,13 @@
     bootLoaderPulse();
 
     window.addEventListener("pageshow", () => {
+      isNavigatingAway = false;
       setTheme(getAppearanceTheme());
       hideAllLoaders();
+    });
+
+    window.addEventListener("beforeunload", () => {
+      showMicroLoader();
     });
   }
 
