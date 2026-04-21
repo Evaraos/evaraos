@@ -31,16 +31,16 @@
 
   <title>Settings Hub • Evaraos Inc</title>
 
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=31" />
-  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=31" />
-  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=31" />
-  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=31" />
-  <link rel="stylesheet" href="/evaraos/assets/css/auth.css?v=31" />
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=32" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=32" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=32" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=32" />
+  <link rel="stylesheet" href="/evaraos/assets/css/auth.css?v=32" />
 
   <style>
     .settings-shell {
       width: min(1180px, calc(100% - 24px));
-      margin: 104px auto 84px;
+      margin: 104px auto 92px;
       display: grid;
       gap: 18px;
       position: relative;
@@ -49,9 +49,10 @@
 
     .settings-hero,
     .settings-block,
-    .appearance-editor,
-    .appearance-actions,
-    .settings-color-sheet-panel {
+    .appearance-panel,
+    .settings-color-sheet-panel,
+    .settings-custom-sheet-panel,
+    .settings-save-float {
       padding: 22px;
       border-radius: 30px;
       display: grid;
@@ -63,13 +64,14 @@
 
     .settings-hero::before,
     .settings-block::before,
+    .appearance-panel::before,
     .settings-preview-card::before,
-    .settings-color-tool::before,
     .settings-mini-card::before,
+    .settings-color-tool::before,
     .settings-preview-nav::before,
-    .appearance-editor::before,
-    .appearance-actions::before,
-    .settings-color-sheet-panel::before {
+    .settings-color-sheet-panel::before,
+    .settings-custom-sheet-panel::before,
+    .settings-save-float::before {
       content: "";
       position: absolute;
       inset: 0;
@@ -88,13 +90,14 @@
 
     .settings-hero > *,
     .settings-block > *,
+    .appearance-panel > *,
     .settings-preview-card > *,
-    .settings-color-tool > *,
     .settings-mini-card > *,
+    .settings-color-tool > *,
     .settings-preview-nav > *,
-    .appearance-editor > *,
-    .appearance-actions > *,
-    .settings-color-sheet-panel > * {
+    .settings-color-sheet-panel > *,
+    .settings-custom-sheet-panel > *,
+    .settings-save-float > * {
       position: relative;
       z-index: 1;
     }
@@ -182,9 +185,6 @@
       justify-content: space-between;
       padding: 0 18px;
       gap: 16px;
-      position: relative;
-      overflow: hidden;
-      isolation: isolate;
     }
 
     .settings-preview-brand {
@@ -242,8 +242,8 @@
     }
 
     .settings-preview-card,
-    .settings-color-tool,
-    .settings-mini-card {
+    .settings-mini-card,
+    .settings-color-tool {
       border-radius: 28px;
       padding: 20px;
       display: grid;
@@ -264,8 +264,8 @@
     }
 
     .settings-preview-card h3,
-    .settings-color-tool h3,
-    .settings-mini-card h3 {
+    .settings-mini-card h3,
+    .settings-color-tool h3 {
       margin: 0;
       font-size: 1.06rem;
       letter-spacing: -0.02em;
@@ -273,8 +273,8 @@
     }
 
     .settings-preview-card p,
-    .settings-color-tool p,
-    .settings-mini-card p {
+    .settings-mini-card p,
+    .settings-color-tool p {
       margin: 0;
       opacity: 0.76;
       line-height: 1.6;
@@ -296,15 +296,38 @@
       isolation: isolate;
     }
 
-    .appearance-mode-grid,
-    .beam-mode-grid {
+    .appearance-choice-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 12px;
     }
 
-    .beam-mode-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+    .beam-toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      min-height: 58px;
+      padding: 14px 0 6px;
+    }
+
+    .beam-toggle-copy {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .beam-toggle-copy strong {
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .beam-toggle-copy span {
+      font-size: 0.92rem;
+      opacity: 0.74;
+      line-height: 1.5;
+      text-wrap: pretty;
     }
 
     .settings-chip {
@@ -342,21 +365,54 @@
         inset 0 1px 0 rgba(255,255,255,0.16);
     }
 
-    .appearance-editor-head {
-      display: grid;
-      gap: 6px;
+    .beam-switch {
+      appearance: none;
+      width: 62px;
+      height: 36px;
+      border-radius: 999px;
+      position: relative;
+      cursor: pointer;
+      flex: 0 0 auto;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.12),
+        0 8px 16px rgba(0,0,0,0.10);
+      transition: background 0.18s ease, box-shadow 0.18s ease;
     }
 
-    .appearance-editor-head h3 {
-      margin: 0;
-      font-size: 1.12rem;
-      letter-spacing: -0.02em;
+    .beam-switch::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.94);
+      transition: transform 0.18s ease;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.18);
     }
 
-    .appearance-editor-head p {
-      margin: 0;
-      opacity: 0.76;
-      line-height: 1.6;
+    .beam-switch:checked::after {
+      transform: translateX(26px);
+    }
+
+    .appearance-editor-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .appearance-launch-btn {
+      min-height: 50px;
+      padding: 0 18px;
+      border-radius: 999px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
     }
 
     .settings-color-tool-top {
@@ -405,47 +461,60 @@
       cursor: pointer;
     }
 
-    .settings-color-input {
-      position: absolute;
+    .settings-save-float {
+      position: fixed;
+      left: 50%;
+      bottom: max(16px, env(safe-area-inset-bottom));
+      transform: translateX(-50%) translateY(18px);
+      width: min(560px, calc(100vw - 20px));
+      z-index: 2147483640;
       opacity: 0;
-      width: 1px;
-      height: 1px;
+      visibility: hidden;
       pointer-events: none;
+      transition:
+        opacity 0.18s ease,
+        visibility 0.18s ease,
+        transform 0.18s ease;
+      gap: 10px;
+      padding: 16px;
     }
 
-    .appearance-actions {
-      gap: 12px;
-      display: none;
+    .settings-save-float.show {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateX(-50%) translateY(0);
     }
 
-    .appearance-actions-copy {
+    .settings-save-float-copy {
       display: grid;
       gap: 4px;
     }
 
-    .appearance-actions-copy strong {
+    .settings-save-float-copy strong {
       font-size: 0.98rem;
       letter-spacing: -0.02em;
     }
 
-    .appearance-actions-copy span {
-      font-size: 0.92rem;
+    .settings-save-float-copy span {
+      font-size: 0.9rem;
       opacity: 0.76;
     }
 
-    .appearance-actions-row {
+    .settings-save-float-actions {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
     }
 
-    .appearance-actions-row .btn {
-      min-height: 50px;
-      flex: 1 1 220px;
+    .settings-save-float-actions .btn {
+      min-height: 48px;
+      flex: 1 1 180px;
       justify-content: center;
     }
 
-    .settings-color-sheet {
+    .settings-color-sheet,
+    .settings-custom-sheet {
       position: fixed;
       inset: 0;
       z-index: 2147483646;
@@ -455,21 +524,24 @@
       transition: opacity 0.18s ease, visibility 0.18s ease;
     }
 
-    .settings-color-sheet.open {
+    .settings-color-sheet.open,
+    .settings-custom-sheet.open {
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
     }
 
-    .settings-color-sheet-backdrop {
+    .settings-color-sheet-backdrop,
+    .settings-custom-sheet-backdrop {
       position: absolute;
       inset: 0;
-      background: rgba(0,0,0,0.46);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
+      background: rgba(4, 6, 16, 0.56);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
     }
 
-    .settings-color-sheet-stage {
+    .settings-color-sheet-stage,
+    .settings-custom-sheet-stage {
       position: absolute;
       inset: 0;
       display: grid;
@@ -478,40 +550,45 @@
       pointer-events: none;
     }
 
-    .settings-color-sheet-panel {
+    .settings-color-sheet-panel,
+    .settings-custom-sheet-panel {
       pointer-events: auto;
-      width: min(520px, calc(100vw - 20px));
-      max-height: min(78vh, 720px);
+      width: min(560px, calc(100vw - 20px));
+      max-height: min(82vh, 760px);
       overflow: auto;
       -webkit-overflow-scrolling: touch;
       padding: 20px;
       border-radius: 30px;
       display: grid;
       gap: 18px;
-      transform: translateY(16px) scale(0.98);
+      transform: translateY(18px) scale(0.985);
       transition: transform 0.18s ease;
       position: relative;
       overflow-x: hidden;
       isolation: isolate;
     }
 
-    .settings-color-sheet.open .settings-color-sheet-panel {
+    .settings-color-sheet.open .settings-color-sheet-panel,
+    .settings-custom-sheet.open .settings-custom-sheet-panel {
       transform: translateY(0) scale(1);
     }
 
-    .settings-color-sheet-head {
+    .settings-color-sheet-head,
+    .settings-custom-sheet-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
     }
 
-    .settings-color-sheet-head strong {
+    .settings-color-sheet-head strong,
+    .settings-custom-sheet-head strong {
       font-size: 1.08rem;
       letter-spacing: -0.02em;
     }
 
-    .settings-color-sheet-close {
+    .settings-color-sheet-close,
+    .settings-custom-sheet-close {
       width: 44px;
       height: 44px;
       border-radius: 999px;
@@ -519,16 +596,18 @@
       place-items: center;
       cursor: pointer;
       flex: 0 0 auto;
+      color: inherit !important;
     }
 
-    .settings-color-sheet-body {
+    .settings-color-sheet-body,
+    .settings-custom-sheet-body {
       display: grid;
       gap: 16px;
     }
 
     .settings-color-sheet-swatch {
       width: 100%;
-      height: 108px;
+      height: 110px;
       border-radius: 24px;
       box-shadow:
         inset 0 1px 0 rgba(255,255,255,0.10),
@@ -537,7 +616,7 @@
 
     .settings-color-sheet-input {
       width: 100%;
-      height: 68px;
+      height: 56px;
       border: 0;
       background: transparent;
       padding: 0;
@@ -562,6 +641,61 @@
     .settings-color-sheet-btn {
       min-height: 46px;
       padding: 0 16px;
+      border-radius: 999px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .custom-sheet-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .custom-sheet-item {
+      min-height: 78px;
+      padding: 16px 16px 14px;
+      border-radius: 22px;
+      display: grid;
+      grid-template-columns: 58px 1fr auto;
+      align-items: center;
+      gap: 14px;
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .custom-sheet-item-swatch {
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.12),
+        0 10px 18px rgba(0,0,0,0.12);
+    }
+
+    .custom-sheet-item-copy {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .custom-sheet-item-copy strong {
+      font-size: 0.98rem;
+      letter-spacing: -0.02em;
+    }
+
+    .custom-sheet-item-copy span {
+      font-size: 0.84rem;
+      opacity: 0.74;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      word-break: break-word;
+    }
+
+    .custom-sheet-item-btn {
+      min-height: 42px;
+      min-width: 96px;
+      padding: 0 14px;
       border-radius: 999px;
       font-weight: 800;
       cursor: pointer;
@@ -651,8 +785,7 @@
 
     @media (max-width: 960px) {
       .settings-grid-3,
-      .appearance-mode-grid,
-      .beam-mode-grid {
+      .appearance-choice-grid {
         grid-template-columns: 1fr 1fr;
       }
     }
@@ -667,14 +800,22 @@
         width: min(calc(100% - 16px), 100%);
       }
 
-      .appearance-mode-grid,
-      .beam-mode-grid {
+      .appearance-choice-grid {
         grid-template-columns: 1fr;
       }
 
-      .appearance-actions-row {
+      .settings-save-float-actions {
         display: grid;
         grid-template-columns: 1fr;
+      }
+
+      .custom-sheet-item {
+        grid-template-columns: 58px 1fr;
+      }
+
+      .custom-sheet-item-btn {
+        grid-column: 1 / -1;
+        width: 100%;
       }
     }
   </style>
@@ -743,10 +884,10 @@
     <section class="settings-block glass-card aurora-card active-glow beam-target" id="settingsAppearance">
       <div class="settings-head">
         <p class="settings-kicker">Appearance</p>
-        <h2>Theme, Liquid Glass, and Beam System</h2>
+        <h2>Theme, Galactic Glass, and Beam</h2>
         <p>
-          Dark and Light use premium presets. Galaxy is the cinematic neon mode.
-          Custom unlocks tint controls without wrecking the base feel.
+          Dark and Light use premium presets. Galaxy is the cinematic animated mode.
+          Custom now opens in a dedicated pop-up editor instead of pushing the page around.
         </p>
       </div>
 
@@ -756,7 +897,7 @@
             <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos logo" />
             <div class="settings-preview-brand-copy">
               <strong>Unified Surface Preview</strong>
-              <span>Surface tint drives cards and navigation</span>
+              <span>Navigation and surfaces stay in the same visual family</span>
             </div>
           </div>
           <div class="settings-preview-menu beam-target">☰</div>
@@ -766,116 +907,49 @@
           <article class="settings-preview-card glass-card aurora-card beam-target">
             <div>
               <h3>Surface Glass</h3>
-              <p>Cards and navigation keep the same premium semi-transparent glass surface.</p>
+              <p>Cards and navigation keep the same premium semi-transparent liquid-glass surface.</p>
             </div>
             <button class="settings-preview-btn beam-target" type="button">Liquid Glass Button</button>
           </article>
 
           <article class="settings-preview-card glass-card aurora-card beam-target">
             <div>
-              <h3>Beam Motion</h3>
-              <p>Contextual is the default animated beam unless beam is turned off.</p>
+              <h3>Galaxy Special Mode</h3>
+              <p>Galaxy uses a richer galactic glow system, cinematic background depth, and stronger cosmic glass.</p>
             </div>
-            <button class="settings-preview-btn beam-target" type="button">Beam Action</button>
+            <button class="settings-preview-btn beam-target" type="button">Galactic Glass</button>
           </article>
         </div>
       </div>
 
-      <div class="appearance-editor glass-card aurora-card beam-target">
-        <div class="appearance-editor-head">
-          <h3>Appearance Mode</h3>
+      <div class="appearance-panel glass-card aurora-card beam-target">
+        <div class="settings-head">
+          <h2>Appearance Mode</h2>
           <p class="settings-status-line">Current mode: <strong data-theme-mode-text>Dark</strong></p>
         </div>
 
-        <div class="appearance-mode-grid">
+        <div class="appearance-choice-grid">
           <button class="settings-chip beam-target" data-set-mode="dark" type="button">Dark</button>
           <button class="settings-chip beam-target" data-set-mode="light" type="button">Light</button>
           <button class="settings-chip beam-target" data-set-mode="galaxy" type="button">Galaxy</button>
-          <button class="settings-chip beam-target" data-set-mode="custom" type="button">Custom</button>
+          <button class="settings-chip beam-target" data-open-custom-editor type="button">Custom</button>
         </div>
 
-        <div class="appearance-editor-head">
-          <h3>Beam</h3>
-          <p class="settings-status-line">Current beam: <strong data-beam-mode-text>Contextual</strong></p>
+        <div class="beam-toggle-row">
+          <div class="beam-toggle-copy">
+            <strong>Rainbow Beam</strong>
+            <span>Turn the animated beam glow on or off.</span>
+          </div>
+          <input id="settingsBeamToggle" class="beam-switch beam-target" type="checkbox" />
         </div>
 
-        <div class="beam-mode-grid">
-          <button class="settings-chip beam-target" data-set-beam="off" type="button">Beam Off</button>
-          <button class="settings-chip beam-target" data-set-beam="contextual" type="button">Contextual</button>
-          <button class="settings-chip beam-target" data-set-beam="rainbow" type="button">Rainbow</button>
-        </div>
-      </div>
-
-      <div class="settings-grid-2" data-color-wheel-section>
-        <article class="settings-color-tool glass-card aurora-card beam-target">
-          <div class="settings-color-tool-top">
-            <h3>Surface Tint</h3>
-            <p>Controls the shared card + nav glass tint while keeping the premium glass effect intact.</p>
-          </div>
-          <div class="settings-color-swatch-row">
-            <div class="settings-color-swatch" data-card-color-preview></div>
-            <div class="settings-color-meta">
-              <div class="settings-color-value" data-card-color-value>#8B5CF6</div>
-              <button class="settings-color-open beam-target" data-open-target="cardColor" type="button">Edit</button>
-            </div>
-          </div>
-          <input class="settings-color-input" type="color" data-appearance-card />
-        </article>
-
-        <article class="settings-color-tool glass-card aurora-card beam-target">
-          <div class="settings-color-tool-top">
-            <h3>Button Tint</h3>
-            <p>Keeps buttons liquid-glassy and premium, with only a subtle tint inside the current base family.</p>
-          </div>
-          <div class="settings-color-swatch-row">
-            <div class="settings-color-swatch" data-button-color-preview></div>
-            <div class="settings-color-meta">
-              <div class="settings-color-value" data-button-color-value>#4F7CFF</div>
-              <button class="settings-color-open beam-target" data-open-target="buttonColor" type="button">Edit</button>
-            </div>
-          </div>
-          <input class="settings-color-input" type="color" data-appearance-button />
-        </article>
-
-        <article class="settings-color-tool glass-card aurora-card beam-target">
-          <div class="settings-color-tool-top">
-            <h3>Background Aura</h3>
-            <p>Controls the ambient background glow behind the glass system.</p>
-          </div>
-          <div class="settings-color-swatch-row">
-            <div class="settings-color-swatch" data-background-color-preview></div>
-            <div class="settings-color-meta">
-              <div class="settings-color-value" data-background-color-value>#0F172A</div>
-              <button class="settings-color-open beam-target" data-open-target="backgroundColor" type="button">Edit</button>
-            </div>
-          </div>
-          <input class="settings-color-input" type="color" data-appearance-background />
-        </article>
-
-        <article class="settings-color-tool glass-card aurora-card beam-target">
-          <div class="settings-color-tool-top">
-            <h3>Beam Color</h3>
-            <p>Controls the animated beam color when beam is on. Separate from surface tint.</p>
-          </div>
-          <div class="settings-color-swatch-row">
-            <div class="settings-color-swatch" data-beam-color-preview></div>
-            <div class="settings-color-meta">
-              <div class="settings-color-value" data-beam-color-value>#8B5CF6</div>
-              <button class="settings-color-open beam-target" data-open-target="beamColor" type="button">Edit</button>
-            </div>
-          </div>
-          <input class="settings-color-input" type="color" data-appearance-beam />
-        </article>
-      </div>
-
-      <div class="appearance-actions glass-card aurora-card beam-target" id="settingsSaveBar">
-        <div class="appearance-actions-copy">
-          <strong>Unsaved appearance changes</strong>
-          <span>Preview first, then save when you’re ready.</span>
-        </div>
-        <div class="appearance-actions-row">
-          <button class="btn btn-theme-secondary beam-target" type="button" id="settingsDiscardBtn">Discard</button>
-          <button class="btn btn-theme-primary beam-target" type="button" id="settingsSaveBtn">Save Changes</button>
+        <div class="appearance-editor-actions">
+          <button class="appearance-launch-btn btn btn-theme-secondary beam-target" type="button" data-open-custom-editor>
+            Open Custom Editor
+          </button>
+          <button class="appearance-launch-btn btn btn-theme-secondary beam-target" type="button" data-appearance-reset>
+            Reset Appearance
+          </button>
         </div>
       </div>
     </section>
@@ -987,10 +1061,20 @@
       <div class="settings-footer-actions">
         <a class="btn btn-theme-primary beam-target" href="/evaraos/qa.html">Open QA Console</a>
         <a class="btn btn-theme-secondary beam-target" href="/evaraos/dashboard.html">Open Dashboard</a>
-        <button class="btn btn-theme-secondary beam-target" data-appearance-reset type="button">Reset Appearance</button>
       </div>
     </section>
   </main>
+
+  <div class="settings-save-float glass-card aurora-card active-glow" id="settingsSaveBar">
+    <div class="settings-save-float-copy">
+      <strong>Unsaved appearance changes</strong>
+      <span>Preview first, then save when you’re ready.</span>
+    </div>
+    <div class="settings-save-float-actions">
+      <button class="btn btn-theme-secondary beam-target" type="button" id="settingsDiscardBtn">Discard</button>
+      <button class="btn btn-theme-primary beam-target" type="button" id="settingsSaveBtn">Save Changes</button>
+    </div>
+  </div>
 
   <div class="settings-color-sheet" id="settingsColorSheet" aria-hidden="true">
     <div class="settings-color-sheet-backdrop" data-color-sheet-close></div>
@@ -999,7 +1083,7 @@
       <div class="settings-color-sheet-panel glass-card aurora-card active-glow beam-target">
         <div class="settings-color-sheet-head">
           <strong id="settingsColorSheetTitle">Edit Color</strong>
-          <button type="button" class="settings-color-sheet-close beam-target" data-color-sheet-close id="settingsColorSheetCloseBtn">✕</button>
+          <button type="button" class="settings-color-sheet-close beam-target" data-color-sheet-close id="settingsColorSheetCloseBtn">×</button>
         </div>
 
         <div class="settings-color-sheet-body">
@@ -1016,9 +1100,66 @@
     </div>
   </div>
 
-  <script type="module" src="/evaraos/assets/js/theme.js?v=31"></script>
-  <script type="module" src="/evaraos/assets/js/firebase.js?v=31"></script>
-  <script type="module" src="/evaraos/assets/js/route-guard.js?v=31"></script>
-  <script src="/evaraos/assets/js/nav.js?v=31"></script>
+  <div class="settings-custom-sheet" id="settingsCustomSheet" aria-hidden="true">
+    <div class="settings-custom-sheet-backdrop" data-custom-sheet-close></div>
+
+    <div class="settings-custom-sheet-stage">
+      <div class="settings-custom-sheet-panel glass-card aurora-card active-glow beam-target">
+        <div class="settings-custom-sheet-head">
+          <strong>Custom Theme Editor</strong>
+          <button type="button" class="settings-custom-sheet-close beam-target" data-custom-sheet-close id="settingsCustomSheetCloseBtn">×</button>
+        </div>
+
+        <div class="settings-custom-sheet-body">
+          <div class="custom-sheet-grid">
+            <div class="custom-sheet-item glass-card aurora-card beam-target">
+              <div class="custom-sheet-item-swatch" data-card-color-preview></div>
+              <div class="custom-sheet-item-copy">
+                <strong>Surface Tint</strong>
+                <span data-card-color-value>#8B5CF6</span>
+              </div>
+              <button class="custom-sheet-item-btn btn btn-theme-secondary beam-target settings-color-open" data-open-target="cardColor" type="button">Edit</button>
+            </div>
+
+            <div class="custom-sheet-item glass-card aurora-card beam-target">
+              <div class="custom-sheet-item-swatch" data-button-color-preview></div>
+              <div class="custom-sheet-item-copy">
+                <strong>Button Tint</strong>
+                <span data-button-color-value>#4F7CFF</span>
+              </div>
+              <button class="custom-sheet-item-btn btn btn-theme-secondary beam-target settings-color-open" data-open-target="buttonColor" type="button">Edit</button>
+            </div>
+
+            <div class="custom-sheet-item glass-card aurora-card beam-target">
+              <div class="custom-sheet-item-swatch" data-background-color-preview></div>
+              <div class="custom-sheet-item-copy">
+                <strong>Background Aura</strong>
+                <span data-background-color-value>#0F172A</span>
+              </div>
+              <button class="custom-sheet-item-btn btn btn-theme-secondary beam-target settings-color-open" data-open-target="backgroundColor" type="button">Edit</button>
+            </div>
+
+            <div class="custom-sheet-item glass-card aurora-card beam-target">
+              <div class="custom-sheet-item-swatch" data-beam-color-preview></div>
+              <div class="custom-sheet-item-copy">
+                <strong>Beam Color</strong>
+                <span data-beam-color-value>#8B5CF6</span>
+              </div>
+              <button class="custom-sheet-item-btn btn btn-theme-secondary beam-target settings-color-open" data-open-target="beamColor" type="button">Edit</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-color-sheet-actions">
+          <button type="button" class="settings-color-sheet-btn btn btn-theme-secondary beam-target" data-custom-sheet-close>Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/evaraos/assets/js/theme.js?v=32"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js?v=32"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js?v=32"></script>
+  <script src="/evaraos/assets/js/nav.js?v=32"></script>
 </body>
 </html>
