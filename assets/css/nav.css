@@ -27,25 +27,26 @@ body.eva-no-select,
 .eva-nav-shell {
   --nav-progress: 0;
   --pill-min-width: 76px;
-  --pill-max-width: min(calc(100vw - 24px), 1240px);
+  --pill-max-width: min(calc(100vw - 16px), 1240px);
   --pill-width: calc(var(--pill-min-width) + (var(--pill-max-width) - var(--pill-min-width)) * var(--nav-progress));
   --pill-height: calc(34px + 34px * var(--nav-progress));
   --pill-pad-x: calc(7px + 8px * var(--nav-progress));
   --pill-pad-y: calc(3px + 7px * var(--nav-progress));
-  --brand-gap: calc(0px + 0.5px * var(--nav-progress));
+  --brand-gap: calc(0px + 4px * var(--nav-progress));
   --compact-logo: 64px;
   --full-logo: 56px;
   --logo-size: calc(var(--compact-logo) + (var(--full-logo) - var(--compact-logo)) * var(--nav-progress));
   --menu-size: calc(0px + 36px * var(--nav-progress));
   --burger-scale: calc(0 + 1 * var(--nav-progress));
   --copy-opacity: var(--nav-progress);
-  --brand-max-width: calc(48px + 250px * var(--nav-progress));
+  --brand-max-width: calc(40px + 260px * var(--nav-progress));
 
   position: fixed;
-  top: max(10px, env(safe-area-inset-top));
+  top: max(8px, env(safe-area-inset-top));
   left: 50%;
   transform: translateX(-50%);
-  width: 100%;
+  width: auto;
+  max-width: calc(100vw - 12px);
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -63,7 +64,8 @@ body.eva-no-select,
 }
 
 .eva-nav-pill {
-  width: var(--pill-width);
+  width: min(var(--pill-width), calc(100vw - 12px));
+  max-width: calc(100vw - 12px);
   min-height: var(--pill-height);
   margin: 0 auto;
   padding: var(--pill-pad-y) var(--pill-pad-x);
@@ -112,18 +114,20 @@ body.eva-no-select,
   gap: var(--brand-gap);
   text-decoration: none;
   min-width: 0;
-  max-width: min(var(--brand-max-width), calc(100% - var(--menu-size) - 64px));
+  max-width: min(var(--brand-max-width), calc(100% - var(--menu-size) - 28px));
   pointer-events: auto;
   transition: none;
   will-change: gap, transform, max-width;
   -webkit-user-select: none;
   user-select: none;
   text-align: center;
+  padding-inline: 6px;
 }
 
 .eva-nav-shell.compact .eva-brand {
   left: 50%;
   max-width: 52px;
+  padding-inline: 0;
 }
 
 .eva-brand-copy {
@@ -172,7 +176,7 @@ html[data-theme$="-light"] .eva-brand-copy span {
 
 .eva-menu-zone {
   position: absolute;
-  right: calc(4px + 10px * var(--nav-progress));
+  right: calc(4px + 8px * var(--nav-progress));
   top: 50%;
   transform: translateY(-50%);
   width: var(--menu-size);
@@ -741,7 +745,17 @@ html[data-theme="galaxy"] .eva-quick-bubble {
 
 @media (max-width: 640px) {
   .eva-nav-shell {
-    top: max(8px, env(safe-area-inset-top));
+    top: max(6px, env(safe-area-inset-top));
+    max-width: calc(100vw - 8px);
+  }
+
+  .eva-nav-pill {
+    width: min(var(--pill-width), calc(100vw - 8px));
+    max-width: calc(100vw - 8px);
+  }
+
+  .eva-brand {
+    max-width: min(var(--brand-max-width), calc(100% - var(--menu-size) - 20px));
   }
 
   .eva-quick-bubbles {
@@ -770,6 +784,19 @@ html[data-theme="galaxy"] .eva-quick-bubble {
 }
 
 @media (max-width: 480px) {
+  .eva-nav-shell {
+    top: max(4px, env(safe-area-inset-top));
+  }
+
+  .eva-nav-pill {
+    width: min(var(--pill-width), calc(100vw - 6px));
+    max-width: calc(100vw - 6px);
+  }
+
+  .eva-brand {
+    max-width: min(var(--brand-max-width), calc(100% - var(--menu-size) - 16px));
+  }
+
   .eva-menu-panel {
     width: calc(100vw - 10px);
     top: calc(max(2px, env(safe-area-inset-top)) + 66px);
