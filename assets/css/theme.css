@@ -797,3 +797,53 @@ html[data-beam-mode="rainbow"] .btn:focus-visible::after {
 body.app-loading::before {
   opacity: 1;
 }
+
+/* =========================================
+   GALAXY ENGINE + LOADER FUSION PATCH
+========================================= */
+
+html[data-theme="galaxy"] .galaxy-engine {
+  opacity: 1;
+}
+
+html:not([data-theme="galaxy"]) .galaxy-engine {
+  opacity: 0;
+}
+
+html[data-theme="galaxy"] .evara-global-loader {
+  background: rgba(5, 6, 18, 0.65);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+}
+
+html[data-theme="galaxy"] .evara-loader-box {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.16),
+      rgba(140,120,255,0.10) 34%,
+      rgba(255,255,255,0.04) 78%
+    );
+  border: 1px solid rgba(140, 120, 255, 0.18);
+  box-shadow:
+    0 0 40px rgba(120, 100, 255, 0.25),
+    inset 0 0 30px rgba(140, 120, 255, 0.12);
+}
+
+html[data-theme="galaxy"] .evara-loader-logo {
+  filter:
+    drop-shadow(0 0 10px rgba(140,120,255,0.5))
+    drop-shadow(0 0 20px rgba(90,160,255,0.4));
+}
+
+html[data-theme="galaxy"] .evara-loader-ring,
+html[data-theme="galaxy"] .evara-loader-ring2,
+html[data-theme="galaxy"] .evara-loader-ring3 {
+  border-color: rgba(140,120,255,0.35);
+  box-shadow: 0 0 20px rgba(140,120,255,0.25);
+}
+
+html[data-theme="galaxy"] .evara-loader-dot {
+  background: radial-gradient(circle, #fff, rgba(140,120,255,0.4));
+  box-shadow: 0 0 10px rgba(140,120,255,0.4);
+}
