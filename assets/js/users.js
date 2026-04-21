@@ -23,6 +23,16 @@ const usersSortBtn = document.getElementById("usersSortBtn");
 
 let usersData = [];
 let sortAsc = true;
+let isLoadingUsers = false;
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 function normalizeRole(value = "") {
   return String(value || "").trim().toLowerCase();
@@ -50,7 +60,16 @@ function userPillClass(role = "") {
   const value = normalizeRole(role);
   if (["owner", "admin", "manager"].includes(value)) return "success";
   if (["sales", "technician"].includes(value)) return "working";
-  return "muted";
+  if (["customer"].includes(value)) return "empty";
+  return "warning";
+}
+
+function setButtonLoading(isLoading) {
+  [usersRefreshBtnTop, usersRefreshBtnSide].forEach((btn) => {
+    if (!btn) return;
+    btn.disabled = isLoading;
+    btn.textContent = isLoading ? "Refreshing..." : "Refresh";
+  });
 }
 
 function filteredUsers() {
@@ -106,34 +125,63 @@ function renderStats(rows) {
   }
 }
 
+function renderLoadingState() {
+  if (usersList) {
+    usersList.innerHTML = `
+      <div class="dashboard-skeleton-grid">
+        <div class="dashboard-skeleton-card">
+          <div class="dashboard-skeleton-line line-1"></div>
+          <div class="dashboard-skeleton-line line-2"></div>
+          <div class="dashboard-skeleton-line line-3"></div>
+        </div>
+        <div class="dashboard-skeleton-card">
+          <div class="dashboard-skeleton-line line-1"></div>
+          <div class="dashboard-skeleton-line line-2"></div>
+          <div class="dashboard-skeleton-line line-3"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (usersFeed) {
+    usersFeed.innerHTML = `
+      <article class="dashboard-state-card loading">
+        <strong>Loading users...</strong>
+        <span>Pulling Firestore user records and preparing the directory.</span>
+      </article>
+    `;
+  }
+
+  if (usersHeroTitle) usersHeroTitle.textContent = "Loading users...";
+  if (usersHeroText) usersHeroText.textContent = "Connecting to Firestore user records.";
+}
+
 function renderList(rows) {
   if (!usersList) return;
 
   if (!rows.length) {
     usersList.innerHTML = `
-      <article class="dashboard-list-item glass-card aurora-card">
-        <div>
-          <strong>No users found</strong>
-          <span>Try another search or add user records in Firestore.</span>
-        </div>
-        <span class="dashboard-status-pill muted">Empty</span>
+      <article class="dashboard-state-card empty">
+        <strong>No users found</strong>
+        <span>Try another search or add user records in Firestore.</span>
       </article>
     `;
     return;
   }
 
   usersList.innerHTML = rows.map((user) => {
-    const name = userName(user);
-    const email = userEmail(user);
-    const role = userRole(user);
+    const name = escapeHtml(userName(user));
+    const email = escapeHtml(userEmail(user));
+    const role = escapeHtml(userRole(user));
+    const pillClass = userPillClass(role);
 
     return `
-      <article class="dashboard-list-item glass-card aurora-card">
+      <article class="dashboard-list-item glass-card aurora-card active-glow beam-target">
         <div>
           <strong>${name}</strong>
           <span>${email}</span>
         </div>
-        <span class="dashboard-status-pill ${userPillClass(role)}">${role}</span>
+        <span class="dashboard-status-pill ${pillClass}">${role}</span>
       </article>
     `;
   }).join("");
@@ -144,7 +192,7 @@ function renderFeed(rows) {
 
   if (!rows.length) {
     usersFeed.innerHTML = `
-      <article class="dashboard-feed-item glass-card aurora-card">
+      <article class="dashboard-state-card empty">
         <strong>No user activity</strong>
         <span>User highlights will appear here once records exist.</span>
       </article>
@@ -153,11 +201,11 @@ function renderFeed(rows) {
   }
 
   usersFeed.innerHTML = rows.slice(0, 6).map((user) => {
-    const name = userName(user);
-    const role = userRole(user);
+    const name = escapeHtml(userName(user));
+    const role = escapeHtml(userRole(user));
 
     return `
-      <article class="dashboard-feed-item glass-card aurora-card">
+      <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
         <strong>${name}</strong>
         <span>Role: ${role}</span>
       </article>
@@ -173,6 +221,12 @@ function renderUsers() {
 }
 
 async function loadUsers() {
+  if (isLoadingUsers) return;
+
+  isLoadingUsers = true;
+  setButtonLoading(true);
+  renderLoadingState();
+
   try {
     const snap = await getDocs(collection(db, "users"));
     usersData = snap.docs.map((docSnap) => ({
@@ -185,24 +239,24 @@ async function loadUsers() {
 
     if (usersList) {
       usersList.innerHTML = `
-        <article class="dashboard-list-item glass-card aurora-card">
-          <div>
-            <strong>Unable to load users</strong>
-            <span>${error.message || "Firestore request failed."}</span>
-          </div>
-          <span class="dashboard-status-pill danger">Error</span>
+        <article class="dashboard-state-card error">
+          <strong>Unable to load users</strong>
+          <span>${escapeHtml(error.message || "Firestore request failed.")}</span>
         </article>
       `;
     }
 
     if (usersFeed) {
       usersFeed.innerHTML = `
-        <article class="dashboard-feed-item glass-card aurora-card">
+        <article class="dashboard-state-card error">
           <strong>Load failed</strong>
-          <span>${error.message || "Firestore request failed."}</span>
+          <span>${escapeHtml(error.message || "Firestore request failed.")}</span>
         </article>
       `;
     }
+  } finally {
+    isLoadingUsers = false;
+    setButtonLoading(false);
   }
 }
 
@@ -230,7 +284,7 @@ function bindEvents() {
 
 onAuthStateChanged(auth, (user) => {
   if (!user) {
-    window.location.href = "/evaraos/login.html";
+    window.location.replace("/evaraos/login.html");
     return;
   }
 
