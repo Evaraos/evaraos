@@ -38,6 +38,8 @@ let dashboardCache = {
   jobs: []
 };
 
+let isLoadingDashboard = false;
+
 function safeArray(snapshot) {
   return snapshot.docs.map((docItem) => ({
     id: docItem.id,
@@ -84,6 +86,10 @@ function statusPillClass(status = "") {
 
   if (["error", "failed", "blocked", "cancelled", "canceled"].includes(value)) {
     return "error";
+  }
+
+  if (["inactive", "archived", "paused", "lost", "cold"].includes(value)) {
+    return "empty";
   }
 
   return "working";
@@ -147,24 +153,26 @@ function createSkeletonCards(count = 3) {
 }
 
 function renderLoadingStates() {
-  companiesList.innerHTML = createSkeletonCards(3);
-  usersRoleGrid.innerHTML = createSkeletonCards(3);
-  leadFlowStack.innerHTML = createSkeletonCards(3);
-  jobsList.innerHTML = createSkeletonCards(3);
-  activityFeed.innerHTML = createSkeletonCards(3);
+  if (companiesList) companiesList.innerHTML = createSkeletonCards(3);
+  if (usersRoleGrid) usersRoleGrid.innerHTML = createSkeletonCards(3);
+  if (leadFlowStack) leadFlowStack.innerHTML = createSkeletonCards(3);
+  if (jobsList) jobsList.innerHTML = createSkeletonCards(3);
+  if (activityFeed) activityFeed.innerHTML = createSkeletonCards(3);
 
-  statCompanies.textContent = "—";
-  statUsers.textContent = "—";
-  statLeads.textContent = "—";
-  statJobs.textContent = "—";
+  if (statCompanies) statCompanies.textContent = "—";
+  if (statUsers) statUsers.textContent = "—";
+  if (statLeads) statLeads.textContent = "—";
+  if (statJobs) statJobs.textContent = "—";
 
-  statCompaniesMeta.textContent = "Loading companies...";
-  statUsersMeta.textContent = "Loading users...";
-  statLeadsMeta.textContent = "Loading leads...";
-  statJobsMeta.textContent = "Loading jobs...";
+  if (statCompaniesMeta) statCompaniesMeta.textContent = "Loading companies...";
+  if (statUsersMeta) statUsersMeta.textContent = "Loading users...";
+  if (statLeadsMeta) statLeadsMeta.textContent = "Loading leads...";
+  if (statJobsMeta) statJobsMeta.textContent = "Loading jobs...";
 }
 
 function renderCompanies(companies) {
+  if (!companiesList) return;
+
   if (!companies.length) {
     companiesList.innerHTML = createStateCard(
       "empty",
@@ -194,6 +202,8 @@ function renderCompanies(companies) {
 }
 
 function renderUsers(users) {
+  if (!usersRoleGrid) return;
+
   if (!users.length) {
     usersRoleGrid.innerHTML = createStateCard(
       "empty",
@@ -238,6 +248,8 @@ function renderUsers(users) {
 }
 
 function renderLeadFlow(leads) {
+  if (!leadFlowStack) return;
+
   if (!leads.length) {
     leadFlowStack.innerHTML = createStateCard(
       "empty",
@@ -284,6 +296,8 @@ function renderLeadFlow(leads) {
 }
 
 function renderJobs(jobs) {
+  if (!jobsList) return;
+
   if (!jobs.length) {
     jobsList.innerHTML = createStateCard(
       "empty",
@@ -338,6 +352,8 @@ function buildActivityItems(companies, users, leads, jobs) {
 }
 
 function renderActivity(companies, users, leads, jobs) {
+  if (!activityFeed) return;
+
   const merged = buildActivityItems(companies, users, leads, jobs);
 
   if (!merged.length) {
@@ -361,10 +377,10 @@ function renderActivity(companies, users, leads, jobs) {
 }
 
 function updateStats(companies, users, leads, jobs) {
-  statCompanies.textContent = String(companies.length);
-  statUsers.textContent = String(users.length);
-  statLeads.textContent = String(leads.length);
-  statJobs.textContent = String(jobs.length);
+  if (statCompanies) statCompanies.textContent = String(companies.length);
+  if (statUsers) statUsers.textContent = String(users.length);
+  if (statLeads) statLeads.textContent = String(leads.length);
+  if (statJobs) statJobs.textContent = String(jobs.length);
 
   const activeCompanies = companies.filter((item) =>
     ["active", "healthy", "approved"].includes(normalizedStatus(item.status || item.health || "active"))
@@ -378,10 +394,10 @@ function updateStats(companies, users, leads, jobs) {
     ["in progress", "active", "pending", "working", "scheduled"].includes(normalizedStatus(item.status))
   ).length;
 
-  statCompaniesMeta.textContent = `${activeCompanies} active`;
-  statUsersMeta.textContent = `${users.filter((u) => normalizedStatus(u.active) !== "false").length} active accounts`;
-  statLeadsMeta.textContent = `${openLeads} currently open`;
-  statJobsMeta.textContent = `${inProgressJobs} in motion`;
+  if (statCompaniesMeta) statCompaniesMeta.textContent = `${activeCompanies} active`;
+  if (statUsersMeta) statUsersMeta.textContent = `${users.filter((u) => normalizedStatus(u.active) !== "false").length} active accounts`;
+  if (statLeadsMeta) statLeadsMeta.textContent = `${openLeads} currently open`;
+  if (statJobsMeta) statJobsMeta.textContent = `${inProgressJobs} in motion`;
 }
 
 function renderFilteredDashboard(queryText = "") {
@@ -435,50 +451,63 @@ function renderFilteredDashboard(queryText = "") {
 function renderErrorState(error) {
   const message = error?.message || "Unknown Firestore error.";
 
-  companiesList.innerHTML = createStateCard(
-    "error",
-    "Unable to load companies",
-    message
-  );
+  if (companiesList) {
+    companiesList.innerHTML = createStateCard(
+      "error",
+      "Unable to load companies",
+      message
+    );
+  }
 
-  usersRoleGrid.innerHTML = createStateCard(
-    "error",
-    "Users could not be read",
-    "Check Firestore permissions and collection structure."
-  );
+  if (usersRoleGrid) {
+    usersRoleGrid.innerHTML = createStateCard(
+      "error",
+      "Users could not be read",
+      "Check Firestore permissions and collection structure."
+    );
+  }
 
-  leadFlowStack.innerHTML = createStateCard(
-    "error",
-    "Leads could not be read",
-    "Check the leads collection and Firestore rules."
-  );
+  if (leadFlowStack) {
+    leadFlowStack.innerHTML = createStateCard(
+      "error",
+      "Leads could not be read",
+      "Check the leads collection and Firestore rules."
+    );
+  }
 
-  jobsList.innerHTML = createStateCard(
-    "error",
-    "Unable to load jobs",
-    "Check the jobs collection and Firestore permissions."
-  );
+  if (jobsList) {
+    jobsList.innerHTML = createStateCard(
+      "error",
+      "Unable to load jobs",
+      "Check the jobs collection and Firestore permissions."
+    );
+  }
 
-  activityFeed.innerHTML = createStateCard(
-    "error",
-    "Dashboard activity unavailable",
-    message
-  );
+  if (activityFeed) {
+    activityFeed.innerHTML = createStateCard(
+      "error",
+      "Dashboard activity unavailable",
+      message
+    );
+  }
 
-  statCompanies.textContent = "0";
-  statUsers.textContent = "0";
-  statLeads.textContent = "0";
-  statJobs.textContent = "0";
+  if (statCompanies) statCompanies.textContent = "0";
+  if (statUsers) statUsers.textContent = "0";
+  if (statLeads) statLeads.textContent = "0";
+  if (statJobs) statJobs.textContent = "0";
 
-  statCompaniesMeta.textContent = "Load error";
-  statUsersMeta.textContent = "Load error";
-  statLeadsMeta.textContent = "Load error";
-  statJobsMeta.textContent = "Load error";
+  if (statCompaniesMeta) statCompaniesMeta.textContent = "Load error";
+  if (statUsersMeta) statUsersMeta.textContent = "Load error";
+  if (statLeadsMeta) statLeadsMeta.textContent = "Load error";
+  if (statJobsMeta) statJobsMeta.textContent = "Load error";
 }
 
 async function loadDashboardData() {
-  heroStatusTitle.textContent = "Loading system data...";
-  heroStatusText.textContent = "Connecting to Firestore collections.";
+  if (isLoadingDashboard) return;
+  isLoadingDashboard = true;
+
+  if (heroStatusTitle) heroStatusTitle.textContent = "Loading system data...";
+  if (heroStatusText) heroStatusText.textContent = "Connecting to Firestore collections.";
   renderLoadingStates();
 
   try {
@@ -494,14 +523,20 @@ async function loadDashboardData() {
     renderFilteredDashboard(dashboardSearch?.value || "");
 
     const totalRecords = companies.length + users.length + leads.length + jobs.length;
-    heroStatusTitle.textContent = "Live system connected";
-    heroStatusText.textContent = `Loaded ${totalRecords} total records across ${companies.length} companies, ${users.length} users, ${leads.length} leads, and ${jobs.length} jobs.`;
+    if (heroStatusTitle) heroStatusTitle.textContent = "Live system connected";
+    if (heroStatusText) {
+      heroStatusText.textContent = `Loaded ${totalRecords} total records across ${companies.length} companies, ${users.length} users, ${leads.length} leads, and ${jobs.length} jobs.`;
+    }
   } catch (error) {
     console.error("Dashboard data load failed:", error);
 
-    heroStatusTitle.textContent = "Data load failed";
-    heroStatusText.textContent = "Check Firestore rules, collection names, or missing exports in firebase.js.";
+    if (heroStatusTitle) heroStatusTitle.textContent = "Data load failed";
+    if (heroStatusText) {
+      heroStatusText.textContent = "Check Firestore rules, collection names, or missing exports in firebase.js.";
+    }
     renderErrorState(error);
+  } finally {
+    isLoadingDashboard = false;
   }
 }
 
@@ -529,7 +564,7 @@ function initDashboard() {
 
   onAuthStateChanged(auth, (user) => {
     if (!user) {
-      window.location.href = "/evaraos/login.html";
+      window.location.replace("/evaraos/login.html");
       return;
     }
     loadDashboardData();
