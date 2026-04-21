@@ -28,16 +28,16 @@
 
   <title>Settings Hub • Evaraos Inc</title>
 
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=29" />
-  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=29" />
-  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=29" />
-  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=29" />
-  <link rel="stylesheet" href="/evaraos/assets/css/auth.css?v=29" />
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=30" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=30" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=30" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=30" />
+  <link rel="stylesheet" href="/evaraos/assets/css/auth.css?v=30" />
 
   <style>
     .settings-shell {
       width: min(1180px, calc(100% - 24px));
-      margin: 108px auto 80px;
+      margin: 104px auto 84px;
       display: grid;
       gap: 18px;
       position: relative;
@@ -45,7 +45,9 @@
     }
 
     .settings-hero,
-    .settings-block {
+    .settings-block,
+    .appearance-editor,
+    .appearance-actions {
       padding: 22px;
       border-radius: 30px;
       display: grid;
@@ -61,7 +63,8 @@
     .settings-color-tool::before,
     .settings-mini-card::before,
     .settings-preview-nav::before,
-    .settings-save-bar::before {
+    .appearance-editor::before,
+    .appearance-actions::before {
       content: "";
       position: absolute;
       inset: 0;
@@ -84,7 +87,8 @@
     .settings-color-tool > *,
     .settings-mini-card > *,
     .settings-preview-nav > *,
-    .settings-save-bar > * {
+    .appearance-editor > *,
+    .appearance-actions > * {
       position: relative;
       z-index: 1;
     }
@@ -136,55 +140,6 @@
 
     .settings-status-line strong {
       font-weight: 900;
-    }
-
-    .settings-chip-row {
-      display: flex;
-      gap: 10px;
-      overflow-x: auto;
-      padding-bottom: 2px;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-      flex-wrap: wrap;
-    }
-
-    .settings-chip-row::-webkit-scrollbar {
-      display: none;
-    }
-
-    .settings-chip {
-      flex: 0 0 auto;
-      min-height: 46px;
-      padding: 0 18px;
-      border-radius: 999px;
-      color: inherit;
-      font-weight: 800;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      cursor: pointer;
-      touch-action: manipulation;
-      transition:
-        transform 0.16s ease,
-        box-shadow 0.16s ease,
-        background 0.16s ease,
-        border-color 0.16s ease;
-    }
-
-    .settings-chip:hover {
-      transform: translateY(-1px);
-    }
-
-    .settings-chip:active {
-      transform: scale(0.985);
-    }
-
-    .settings-chip.is-active {
-      box-shadow:
-        0 0 0 1px color-mix(in srgb, var(--user-beam-color, #7C3AED) 42%, transparent),
-        0 0 16px color-mix(in srgb, var(--user-beam-color, #7C3AED) 14%, transparent),
-        inset 0 1px 0 rgba(255,255,255,0.16);
     }
 
     .settings-section-nav {
@@ -335,47 +290,110 @@
       isolation: isolate;
     }
 
+    .appearance-mode-grid,
+    .beam-mode-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .beam-mode-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .settings-chip {
+      min-height: 58px;
+      width: 100%;
+      padding: 0 16px;
+      border-radius: 22px;
+      color: inherit;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition:
+        transform 0.16s ease,
+        box-shadow 0.16s ease,
+        background 0.16s ease,
+        border-color 0.16s ease;
+    }
+
+    .settings-chip:hover {
+      transform: translateY(-1px);
+    }
+
+    .settings-chip:active {
+      transform: scale(0.985);
+    }
+
+    .settings-chip.is-active {
+      box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--user-beam-color, #7C3AED) 42%, transparent),
+        0 0 16px color-mix(in srgb, var(--user-beam-color, #7C3AED) 14%, transparent),
+        inset 0 1px 0 rgba(255,255,255,0.16);
+    }
+
+    .appearance-editor-head {
+      display: grid;
+      gap: 6px;
+    }
+
+    .appearance-editor-head h3 {
+      margin: 0;
+      font-size: 1.12rem;
+      letter-spacing: -0.02em;
+    }
+
+    .appearance-editor-head p {
+      margin: 0;
+      opacity: 0.76;
+      line-height: 1.6;
+    }
+
     .settings-color-tool-top {
       display: grid;
       gap: 6px;
     }
 
     .settings-color-swatch-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: 68px 1fr;
+      align-items: end;
       gap: 14px;
     }
 
     .settings-color-swatch {
-      width: 58px;
-      height: 58px;
-      border-radius: 18px;
+      width: 68px;
+      height: 68px;
+      border-radius: 20px;
       box-shadow:
         inset 0 1px 0 rgba(255,255,255,0.12),
         0 10px 18px rgba(0,0,0,0.12);
-      flex: 0 0 auto;
     }
 
     .settings-color-meta {
-      min-width: 0;
       display: grid;
-      gap: 6px;
-      flex: 1;
+      gap: 8px;
+      min-width: 0;
     }
 
     .settings-color-value {
-      font-size: 0.84rem;
+      font-size: 0.92rem;
       font-weight: 800;
       letter-spacing: 0.06em;
-      opacity: 0.78;
+      opacity: 0.82;
       text-transform: uppercase;
+      word-break: break-word;
     }
 
     .settings-color-open {
-      min-height: 42px;
-      padding: 0 14px;
-      border-radius: 999px;
+      min-height: 48px;
+      width: 100%;
+      padding: 0 16px;
+      border-radius: 18px;
       color: inherit;
       font-weight: 800;
       cursor: pointer;
@@ -389,52 +407,35 @@
       pointer-events: none;
     }
 
-    .settings-save-bar {
-      position: sticky;
-      top: calc(max(10px, env(safe-area-inset-top)) + 82px);
-      z-index: 8;
-      border-radius: 22px;
-      padding: 14px;
-      display: none;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      flex-wrap: wrap;
-      overflow: hidden;
-      isolation: isolate;
+    .appearance-actions {
+      gap: 12px;
     }
 
-    .settings-save-bar.is-dirty {
-      display: flex;
-    }
-
-    .settings-save-copy {
+    .appearance-actions-copy {
       display: grid;
       gap: 4px;
     }
 
-    .settings-save-copy strong {
+    .appearance-actions-copy strong {
       font-size: 0.98rem;
       letter-spacing: -0.02em;
     }
 
-    .settings-save-copy span {
-      font-size: 0.9rem;
+    .appearance-actions-copy span {
+      font-size: 0.92rem;
       opacity: 0.76;
     }
 
-    .settings-save-actions {
+    .appearance-actions-row {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
     }
 
-    .settings-save-btn {
-      min-height: 44px;
-      padding: 0 16px;
-      border-radius: 999px;
-      font-weight: 800;
-      cursor: pointer;
+    .appearance-actions-row .btn {
+      min-height: 50px;
+      flex: 1 1 220px;
+      justify-content: center;
     }
 
     .settings-toggle-row {
@@ -520,8 +521,10 @@
     }
 
     @media (max-width: 960px) {
-      .settings-grid-3 {
-        grid-template-columns: 1fr;
+      .settings-grid-3,
+      .appearance-mode-grid,
+      .beam-mode-grid {
+        grid-template-columns: 1fr 1fr;
       }
     }
 
@@ -531,11 +534,18 @@
       }
 
       .settings-shell {
-        margin-top: 102px;
+        margin-top: 98px;
+        width: min(calc(100% - 16px), 100%);
       }
 
-      .settings-save-bar {
-        top: calc(max(10px, env(safe-area-inset-top)) + 76px);
+      .appearance-mode-grid,
+      .beam-mode-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .appearance-actions-row {
+        display: grid;
+        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -561,17 +571,6 @@
         <a class="settings-section-link beam-target" href="#settingsNotifications">Notifications</a>
         <a class="settings-section-link beam-target" href="#settingsDevices">Sessions & Devices</a>
         <a class="settings-section-link beam-target" href="#settingsDeveloper">Developer / QA</a>
-      </div>
-    </section>
-
-    <section class="settings-save-bar glass-card aurora-card active-glow" id="settingsSaveBar">
-      <div class="settings-save-copy">
-        <strong>Unsaved appearance changes</strong>
-        <span>Preview first, then save when you’re ready.</span>
-      </div>
-      <div class="settings-save-actions">
-        <button class="settings-save-btn btn btn-theme-secondary beam-target" type="button" id="settingsDiscardBtn">Discard</button>
-        <button class="settings-save-btn btn btn-theme-primary beam-target" type="button" id="settingsSaveBtn">Save Changes</button>
       </div>
     </section>
 
@@ -618,7 +617,7 @@
         <h2>Theme, Liquid Glass, and Beam System</h2>
         <p>
           Dark and Light use premium presets. Galaxy is the cinematic neon mode.
-          Custom remembers the last base family and unlocks tint controls.
+          Custom unlocks tint controls without wrecking the base feel.
         </p>
       </div>
 
@@ -653,31 +652,29 @@
         </div>
       </div>
 
-      <div class="settings-head" style="margin-top:4px;">
-        <h2>Appearance Mode</h2>
-        <p class="settings-status-line">
-          Current mode: <strong data-theme-mode-text>Dark</strong>
-        </p>
-      </div>
+      <div class="appearance-editor glass-card aurora-card beam-target">
+        <div class="appearance-editor-head">
+          <h3>Appearance Mode</h3>
+          <p class="settings-status-line">Current mode: <strong data-theme-mode-text>Dark</strong></p>
+        </div>
 
-      <div class="settings-chip-row">
-        <button class="settings-chip beam-target" data-set-mode="dark" type="button">Dark</button>
-        <button class="settings-chip beam-target" data-set-mode="light" type="button">Light</button>
-        <button class="settings-chip beam-target" data-set-mode="galaxy" type="button">Galaxy</button>
-        <button class="settings-chip beam-target" data-set-mode="custom" type="button">Custom</button>
-      </div>
+        <div class="appearance-mode-grid">
+          <button class="settings-chip beam-target" data-set-mode="dark" type="button">Dark</button>
+          <button class="settings-chip beam-target" data-set-mode="light" type="button">Light</button>
+          <button class="settings-chip beam-target" data-set-mode="galaxy" type="button">Galaxy</button>
+          <button class="settings-chip beam-target" data-set-mode="custom" type="button">Custom</button>
+        </div>
 
-      <div class="settings-head" style="margin-top:4px;">
-        <h2>Beam</h2>
-        <p class="settings-status-line">
-          Current beam: <strong data-beam-mode-text>Contextual</strong>
-        </p>
-      </div>
+        <div class="appearance-editor-head">
+          <h3>Beam</h3>
+          <p class="settings-status-line">Current beam: <strong data-beam-mode-text>Contextual</strong></p>
+        </div>
 
-      <div class="settings-chip-row">
-        <button class="settings-chip beam-target" data-set-beam="off" type="button">Beam Off</button>
-        <button class="settings-chip beam-target" data-set-beam="contextual" type="button">Contextual</button>
-        <button class="settings-chip beam-target" data-set-beam="rainbow" type="button">Rainbow</button>
+        <div class="beam-mode-grid">
+          <button class="settings-chip beam-target" data-set-beam="off" type="button">Beam Off</button>
+          <button class="settings-chip beam-target" data-set-beam="contextual" type="button">Contextual</button>
+          <button class="settings-chip beam-target" data-set-beam="rainbow" type="button">Rainbow</button>
+        </div>
       </div>
 
       <div class="settings-grid-2" data-color-wheel-section>
@@ -690,7 +687,7 @@
             <div class="settings-color-swatch" data-card-color-preview></div>
             <div class="settings-color-meta">
               <div class="settings-color-value" data-card-color-value>#8B5CF6</div>
-              <button class="settings-color-open beam-target" data-open-target="card" type="button">Edit</button>
+              <button class="settings-color-open beam-target" data-open-target="cardColor" type="button">Edit</button>
             </div>
           </div>
           <input class="settings-color-input" type="color" data-appearance-card />
@@ -705,7 +702,7 @@
             <div class="settings-color-swatch" data-button-color-preview></div>
             <div class="settings-color-meta">
               <div class="settings-color-value" data-button-color-value>#4F7CFF</div>
-              <button class="settings-color-open beam-target" data-open-target="button" type="button">Edit</button>
+              <button class="settings-color-open beam-target" data-open-target="buttonColor" type="button">Edit</button>
             </div>
           </div>
           <input class="settings-color-input" type="color" data-appearance-button />
@@ -720,7 +717,7 @@
             <div class="settings-color-swatch" data-background-color-preview></div>
             <div class="settings-color-meta">
               <div class="settings-color-value" data-background-color-value>#0F172A</div>
-              <button class="settings-color-open beam-target" data-open-target="background" type="button">Edit</button>
+              <button class="settings-color-open beam-target" data-open-target="backgroundColor" type="button">Edit</button>
             </div>
           </div>
           <input class="settings-color-input" type="color" data-appearance-background />
@@ -735,11 +732,22 @@
             <div class="settings-color-swatch" data-beam-color-preview></div>
             <div class="settings-color-meta">
               <div class="settings-color-value" data-beam-color-value>#8B5CF6</div>
-              <button class="settings-color-open beam-target" data-open-target="beam" type="button">Edit</button>
+              <button class="settings-color-open beam-target" data-open-target="beamColor" type="button">Edit</button>
             </div>
           </div>
           <input class="settings-color-input" type="color" data-appearance-beam />
         </article>
+      </div>
+
+      <div class="appearance-actions glass-card aurora-card beam-target" id="settingsSaveBar">
+        <div class="appearance-actions-copy">
+          <strong>Unsaved appearance changes</strong>
+          <span>Preview first, then save when you’re ready.</span>
+        </div>
+        <div class="appearance-actions-row">
+          <button class="btn btn-theme-secondary beam-target" type="button" id="settingsDiscardBtn">Discard</button>
+          <button class="btn btn-theme-primary beam-target" type="button" id="settingsSaveBtn">Save Changes</button>
+        </div>
       </div>
     </section>
 
@@ -855,10 +863,10 @@
     </section>
   </main>
 
-  <script type="module" src="/evaraos/assets/js/theme.js?v=29"></script>
-  <script type="module" src="/evaraos/assets/js/firebase.js?v=29"></script>
-  <script type="module" src="/evaraos/assets/js/route-guard.js?v=29"></script>
-  <script src="/evaraos/assets/js/nav.js?v=29"></script>
+  <script type="module" src="/evaraos/assets/js/theme.js?v=30"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js?v=30"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js?v=30"></script>
+  <script src="/evaraos/assets/js/nav.js?v=30"></script>
 
   <script>
     (() => {
@@ -884,12 +892,7 @@
       function refreshDirtyState() {
         const current = getAppearance();
         if (!saveBar) return;
-
-        if (!sameAppearance(savedAppearanceSnapshot, current)) {
-          saveBar.classList.add("is-dirty");
-        } else {
-          saveBar.classList.remove("is-dirty");
-        }
+        saveBar.style.display = !sameAppearance(savedAppearanceSnapshot, current) ? "grid" : "none";
       }
 
       function captureSavedState() {
@@ -903,7 +906,7 @@
         ).forEach((el) => {
           ["click", "input", "change"].forEach((evt) => {
             el.addEventListener(evt, () => {
-              setTimeout(refreshDirtyState, 60);
+              setTimeout(refreshDirtyState, 80);
             });
           });
         });
@@ -936,14 +939,14 @@
           }
         } catch {}
 
-        setTimeout(captureSavedState, 60);
+        setTimeout(captureSavedState, 80);
       }
 
       document.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => {
           captureSavedState();
           wireWatchers();
-        }, 220);
+        }, 240);
       });
 
       if (saveBtn) saveBtn.addEventListener("click", saveChanges);
