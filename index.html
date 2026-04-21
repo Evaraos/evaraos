@@ -473,10 +473,19 @@
     }
   </style>
 </head>
-<body class="home-page">
+<body class="home-page app-loading">
   <div class="page-aurora"></div>
   <div class="page-grid-overlay"></div>
   <div id="universalNavRoot"></div>
+  <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
+  <div id="evaraFastLoader" class="evara-loader-fast active" aria-hidden="false">
+    <img
+      src="/evaraos/assets/img/evaraos_logo.png"
+      alt="Evaraos"
+      class="evara-loader-fast-logo"
+      onerror="this.onerror=null;this.src='/evaraos/assets/logo.png';"
+    />
+  </div>
 
   <main class="home-shell">
     <section class="hero-home">
@@ -685,14 +694,16 @@
       </div>
 
       <div class="site-footer-right">
-        <a href="https://instagram.com/evaraos" target="_blank" rel="noopener noreferrer">@evaraos</a>
+        <a href="https://instagram.com/evaraos" target="_blank" rel="noopener noreferrer"> @evaraos</a>
         <a href="https://x.com/evaraos" target="_blank" rel="noopener noreferrer">@evaraos</a>
         <a href="https://tiktok.com/@evaraos" target="_blank" rel="noopener noreferrer">@evaraos</a>
       </div>
     </div>
   </footer>
 
+  <script type="module" src="/evaraos/assets/js/firebase.js?v=31"></script>
   <script type="module" src="/evaraos/assets/js/theme.js?v=31"></script>
+  <script src="/evaraos/assets/js/loader.js?v=31"></script>
   <script src="/evaraos/assets/js/nav.js?v=31"></script>
 </body>
 </html>
