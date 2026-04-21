@@ -3,9 +3,10 @@
   --bg-dark-2: #091120;
   --bg-light: #f7f9f8;
   --bg-light-2: #eef4f1;
-  --bg-galaxy: #070510;
-  --bg-galaxy-2: #130824;
-  --bg-galaxy-3: #251042;
+  --bg-galaxy: #050311;
+  --bg-galaxy-2: #120624;
+  --bg-galaxy-3: #23103f;
+  --bg-galaxy-4: #32155a;
 
   --text-dark: #f5f7ff;
   --muted-dark: rgba(230, 236, 255, 0.72);
@@ -57,12 +58,12 @@ html[data-theme$="-light"] {
 
 html[data-theme="galaxy"] {
   background:
-    radial-gradient(circle at 52% 18%, rgba(255, 235, 255, 0.18), transparent 12%),
-    radial-gradient(circle at 22% 18%, rgba(129, 96, 255, 0.22), transparent 20%),
-    radial-gradient(circle at 76% 16%, rgba(255, 118, 212, 0.18), transparent 18%),
-    radial-gradient(circle at 18% 72%, rgba(94, 119, 255, 0.15), transparent 20%),
-    radial-gradient(circle at 80% 78%, rgba(183, 118, 255, 0.12), transparent 22%),
-    linear-gradient(180deg, var(--bg-galaxy) 0%, var(--bg-galaxy-2) 58%, var(--bg-galaxy-3) 100%);
+    radial-gradient(circle at 50% 12%, rgba(255, 244, 251, 0.18), transparent 10%),
+    radial-gradient(circle at 18% 18%, rgba(135, 107, 255, 0.26), transparent 18%),
+    radial-gradient(circle at 82% 20%, rgba(255, 120, 214, 0.22), transparent 18%),
+    radial-gradient(circle at 22% 78%, rgba(82, 128, 255, 0.18), transparent 20%),
+    radial-gradient(circle at 76% 82%, rgba(202, 132, 255, 0.16), transparent 20%),
+    linear-gradient(180deg, var(--bg-galaxy) 0%, var(--bg-galaxy-2) 38%, var(--bg-galaxy-3) 72%, var(--bg-galaxy-4) 100%);
 }
 
 body {
@@ -93,12 +94,12 @@ html[data-theme$="-light"] body {
 html[data-theme="galaxy"] body {
   color: var(--text-galaxy);
   background:
-    radial-gradient(circle at 50% 14%, rgba(255, 240, 255, 0.18), transparent 11%),
-    radial-gradient(circle at 24% 18%, rgba(132, 102, 255, 0.24), transparent 18%),
-    radial-gradient(circle at 80% 20%, rgba(255, 135, 220, 0.18), transparent 18%),
-    radial-gradient(circle at 22% 76%, rgba(88, 128, 255, 0.14), transparent 20%),
-    radial-gradient(circle at 74% 84%, rgba(190, 124, 255, 0.12), transparent 20%),
-    linear-gradient(180deg, #070510 0%, #120824 54%, #241041 100%);
+    radial-gradient(circle at 50% 12%, rgba(255,245,251,0.16), transparent 9%),
+    radial-gradient(circle at 17% 18%, rgba(126,98,255,0.24), transparent 17%),
+    radial-gradient(circle at 82% 22%, rgba(255,132,215,0.18), transparent 18%),
+    radial-gradient(circle at 22% 82%, rgba(88,132,255,0.16), transparent 18%),
+    radial-gradient(circle at 76% 84%, rgba(204,136,255,0.14), transparent 18%),
+    linear-gradient(180deg, #050311 0%, #120624 38%, #241041 74%, #31155a 100%);
 }
 
 body::before {
@@ -114,26 +115,28 @@ body::before {
 html[data-theme="galaxy"] body::before {
   opacity: 1;
   background:
-    radial-gradient(circle at 12% 16%, rgba(255,255,255,0.92) 0 1px, transparent 2px),
-    radial-gradient(circle at 22% 30%, rgba(255,255,255,0.68) 0 1px, transparent 2px),
-    radial-gradient(circle at 34% 12%, rgba(255,255,255,0.62) 0 1px, transparent 2px),
-    radial-gradient(circle at 46% 26%, rgba(255,255,255,0.72) 0 1px, transparent 2px),
-    radial-gradient(circle at 58% 10%, rgba(255,255,255,0.88) 0 1px, transparent 2px),
-    radial-gradient(circle at 70% 22%, rgba(255,255,255,0.66) 0 1px, transparent 2px),
-    radial-gradient(circle at 82% 14%, rgba(255,255,255,0.76) 0 1px, transparent 2px),
-    radial-gradient(circle at 16% 60%, rgba(255,255,255,0.56) 0 1px, transparent 2px),
-    radial-gradient(circle at 28% 74%, rgba(255,255,255,0.84) 0 1px, transparent 2px),
-    radial-gradient(circle at 48% 62%, rgba(255,255,255,0.68) 0 1px, transparent 2px),
-    radial-gradient(circle at 66% 72%, rgba(255,255,255,0.78) 0 1px, transparent 2px),
-    radial-gradient(circle at 84% 68%, rgba(255,255,255,0.58) 0 1px, transparent 2px);
-  background-size: 100% 100%;
-  animation: galaxyStarDrift 22s linear infinite;
+    radial-gradient(circle at 8% 14%, rgba(255,255,255,0.95) 0 1px, transparent 2px),
+    radial-gradient(circle at 14% 26%, rgba(255,255,255,0.72) 0 1px, transparent 2px),
+    radial-gradient(circle at 18% 52%, rgba(255,255,255,0.86) 0 1px, transparent 2px),
+    radial-gradient(circle at 24% 74%, rgba(255,255,255,0.72) 0 1px, transparent 2px),
+    radial-gradient(circle at 30% 18%, rgba(255,255,255,0.64) 0 1px, transparent 2px),
+    radial-gradient(circle at 36% 34%, rgba(255,255,255,0.88) 0 1px, transparent 2px),
+    radial-gradient(circle at 42% 10%, rgba(255,255,255,0.70) 0 1px, transparent 2px),
+    radial-gradient(circle at 48% 56%, rgba(255,255,255,0.80) 0 1px, transparent 2px),
+    radial-gradient(circle at 54% 18%, rgba(255,255,255,0.92) 0 1px, transparent 2px),
+    radial-gradient(circle at 62% 72%, rgba(255,255,255,0.74) 0 1px, transparent 2px),
+    radial-gradient(circle at 68% 22%, rgba(255,255,255,0.64) 0 1px, transparent 2px),
+    radial-gradient(circle at 74% 44%, rgba(255,255,255,0.86) 0 1px, transparent 2px),
+    radial-gradient(circle at 82% 14%, rgba(255,255,255,0.96) 0 1px, transparent 2px),
+    radial-gradient(circle at 86% 62%, rgba(255,255,255,0.70) 0 1px, transparent 2px),
+    radial-gradient(circle at 92% 30%, rgba(255,255,255,0.84) 0 1px, transparent 2px);
+  animation: galaxyStarDrift 28s linear infinite;
 }
 
 body::after {
   content: "";
   position: fixed;
-  inset: -12%;
+  inset: -18%;
   pointer-events: none;
   z-index: 0;
   opacity: 0;
@@ -143,26 +146,29 @@ body::after {
 html[data-theme="galaxy"] body::after {
   opacity: 1;
   background:
+    radial-gradient(ellipse at 50% 38%, rgba(255, 228, 248, 0.20) 0%, rgba(255, 228, 248, 0.09) 20%, transparent 48%),
+    radial-gradient(ellipse at 22% 72%, rgba(108, 112, 255, 0.20) 0%, rgba(108, 112, 255, 0.08) 18%, transparent 44%),
+    radial-gradient(ellipse at 76% 82%, rgba(255, 118, 214, 0.16) 0%, rgba(255, 118, 214, 0.06) 18%, transparent 44%),
     conic-gradient(
-      from 210deg at 50% 50%,
+      from 220deg at 52% 50%,
       rgba(255,255,255,0) 0deg,
-      rgba(255,255,255,0) 320deg,
-      rgba(255,255,255,0.18) 340deg,
+      rgba(255,255,255,0) 314deg,
+      rgba(255,255,255,0.12) 338deg,
       rgba(255,255,255,0) 360deg
     );
-  filter: blur(60px);
-  animation: galaxyNebulaFloat 16s ease-in-out infinite;
+  filter: blur(52px);
+  animation: galaxyNebulaFloat 18s ease-in-out infinite;
 }
 
 @keyframes galaxyStarDrift {
   0% { transform: translate3d(0,0,0) scale(1); }
-  50% { transform: translate3d(-8px, 10px, 0) scale(1.012); }
+  50% { transform: translate3d(-10px, 12px, 0) scale(1.014); }
   100% { transform: translate3d(0,0,0) scale(1); }
 }
 
 @keyframes galaxyNebulaFloat {
-  0%, 100% { transform: translate3d(0,0,0) rotate(0deg); }
-  50% { transform: translate3d(10px,-12px,0) rotate(7deg); }
+  0%, 100% { transform: translate3d(0,0,0) rotate(0deg) scale(1); }
+  50% { transform: translate3d(12px,-14px,0) rotate(8deg) scale(1.04); }
 }
 
 .page-grid-overlay {
@@ -190,7 +196,7 @@ html[data-theme$="-light"] .page-grid-overlay {
 html[data-theme="galaxy"] .page-grid-overlay {
   opacity: 0.08;
   background:
-    linear-gradient(rgba(255, 220, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(rgba(255, 220, 255, 0.016) 1px, transparent 1px),
     linear-gradient(90deg, rgba(196, 170, 255, 0.02) 1px, transparent 1px);
   background-size: 56px 56px;
 }
@@ -317,16 +323,17 @@ html[data-theme="galaxy"] .glass {
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--user-card-tint, rgba(var(--tint-rgb), 1)) 12%, rgba(255,255,255,0.10)),
-      rgba(255,255,255,0.035) 58%
+      rgba(255,255,255,0.13),
+      color-mix(in srgb, var(--user-card-tint, rgba(var(--tint-rgb), 1)) 18%, rgba(255,255,255,0.03)) 42%,
+      rgba(255,255,255,0.03) 76%
     );
-  border: 1px solid rgba(255, 220, 255, 0.20);
+  border: 1px solid rgba(255, 220, 255, 0.22);
   box-shadow:
     0 28px 68px rgba(12, 6, 28, 0.42),
     0 0 0 1px rgba(255, 255, 255, 0.04),
     0 0 34px rgba(214, 168, 255, 0.14),
     0 0 62px rgba(255, 146, 209, 0.10),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .active-card-glow,
@@ -343,34 +350,10 @@ html[data-theme="galaxy"] .active-card-glow,
 html[data-theme="galaxy"] .active-glow {
   box-shadow:
     0 0 0 1px rgba(255, 225, 255, 0.18),
-    0 0 22px rgba(214, 168, 255, 0.20),
-    0 0 42px rgba(255, 146, 209, 0.14),
-    0 18px 38px rgba(8, 4, 22, 0.24),
+    0 0 24px rgba(214, 168, 255, 0.20),
+    0 0 44px rgba(255, 146, 209, 0.16),
+    0 20px 42px rgba(8, 4, 22, 0.24),
     inset 0 1px 0 rgba(255,255,255,0.24) !important;
-}
-
-html[data-theme="galaxy"] .hero-home.active-glow:hover,
-html[data-theme="galaxy"] .section-panel.active-glow:hover,
-html[data-theme="galaxy"] .feature-card.active-glow:hover,
-html[data-theme="galaxy"] .service-card.active-glow:hover,
-html[data-theme="galaxy"] .category-card.active-glow:hover,
-html[data-theme="galaxy"] .info-card.active-glow:hover,
-html[data-theme="galaxy"] .stats-card.active-glow:hover,
-html[data-theme="galaxy"] .cta-panel.active-glow:hover,
-html[data-theme="galaxy"] .site-footer-inner.active-glow:hover,
-html[data-theme="galaxy"] .dashboard-hero.active-glow:hover,
-html[data-theme="galaxy"] .dashboard-panel.active-glow:hover,
-html[data-theme="galaxy"] .dashboard-overview.active-glow:hover,
-html[data-theme="galaxy"] .dashboard-stat-card.active-glow:hover,
-html[data-theme="galaxy"] .dashboard-list-item.active-glow:hover,
-html[data-theme="galaxy"] .dashboard-feed-item.active-glow:hover,
-html[data-theme="galaxy"] .dashboard-role-card.active-glow:hover {
-  box-shadow:
-    0 0 0 1px rgba(255,225,255,0.18),
-    0 0 26px rgba(214,168,255,0.22),
-    0 0 48px rgba(255,146,209,0.16),
-    0 24px 54px rgba(10,4,24,0.28),
-    inset 0 1px 0 rgba(255,255,255,0.22) !important;
 }
 
 .btn,
@@ -382,6 +365,9 @@ html[data-theme="galaxy"] .dashboard-role-card.active-glow:hover {
 .settings-section-link,
 .settings-color-open,
 .settings-color-sheet-close,
+.settings-color-sheet-btn,
+.custom-sheet-item-btn,
+.appearance-launch-btn,
 .eva-chip,
 .eva-link,
 .eva-menu-btn {
@@ -419,15 +405,26 @@ html[data-theme="galaxy"] .settings-chip,
 html[data-theme="galaxy"] .settings-section-link,
 html[data-theme="galaxy"] .settings-color-open,
 html[data-theme="galaxy"] .settings-color-sheet-close,
+html[data-theme="galaxy"] .settings-color-sheet-btn,
+html[data-theme="galaxy"] .custom-sheet-item-btn,
+html[data-theme="galaxy"] .appearance-launch-btn,
 html[data-theme="galaxy"] .eva-chip,
 html[data-theme="galaxy"] .eva-link,
 html[data-theme="galaxy"] .eva-menu-btn {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.18),
+      color-mix(in srgb, var(--user-button-tint, rgba(var(--tint-rgb),1)) 20%, rgba(255,255,255,0.04)) 42%,
+      rgba(255,255,255,0.04) 78%
+    ) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.26),
+    inset 0 1px 0 rgba(255,255,255,0.28),
     inset 0 -1px 0 rgba(255,255,255,0.03),
     0 14px 26px rgba(9,4,22,0.22),
-    0 0 18px rgba(214,168,255,0.14),
-    0 0 0 1px color-mix(in srgb, var(--user-button-tint, rgba(var(--tint-rgb),1)) 8%, transparent) !important;
+    0 0 22px rgba(214,168,255,0.16),
+    0 0 0 1px color-mix(in srgb, var(--user-button-tint, rgba(var(--tint-rgb),1)) 10%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--user-button-tint, rgba(var(--tint-rgb),1)) 18%, rgba(255,255,255,0.24)) !important;
 }
 
 .btn::before,
@@ -439,6 +436,9 @@ html[data-theme="galaxy"] .eva-menu-btn {
 .settings-section-link::before,
 .settings-color-open::before,
 .settings-color-sheet-close::before,
+.settings-color-sheet-btn::before,
+.custom-sheet-item-btn::before,
+.appearance-launch-btn::before,
 .eva-chip::before,
 .eva-link::before,
 .eva-menu-btn::before {
@@ -458,6 +458,34 @@ html[data-theme="galaxy"] .eva-menu-btn {
   z-index: 0;
 }
 
+html[data-theme="galaxy"] .btn::after,
+html[data-theme="galaxy"] .btn-apple::after,
+html[data-theme="galaxy"] .btn-theme-primary::after,
+html[data-theme="galaxy"] .btn-theme-secondary::after,
+html[data-theme="galaxy"] .settings-preview-btn::after,
+html[data-theme="galaxy"] .settings-chip::after,
+html[data-theme="galaxy"] .settings-section-link::after,
+html[data-theme="galaxy"] .settings-color-open::after,
+html[data-theme="galaxy"] .settings-color-sheet-close::after,
+html[data-theme="galaxy"] .settings-color-sheet-btn::after,
+html[data-theme="galaxy"] .custom-sheet-item-btn::after,
+html[data-theme="galaxy"] .appearance-launch-btn::after,
+html[data-theme="galaxy"] .eva-chip::after,
+html[data-theme="galaxy"] .eva-link::after,
+html[data-theme="galaxy"] .eva-menu-btn::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 24% 28%, rgba(255,255,255,0.18), transparent 26%),
+    radial-gradient(circle at 78% 78%, rgba(255,132,215,0.10), transparent 24%),
+    radial-gradient(circle at 64% 24%, rgba(112,138,255,0.10), transparent 22%);
+  opacity: 0.92;
+  z-index: 0;
+}
+
 .btn > *,
 .btn-apple > *,
 .btn-theme-primary > *,
@@ -467,6 +495,9 @@ html[data-theme="galaxy"] .eva-menu-btn {
 .settings-section-link > *,
 .settings-color-open > *,
 .settings-color-sheet-close > *,
+.settings-color-sheet-btn > *,
+.custom-sheet-item-btn > *,
+.appearance-launch-btn > *,
 .eva-chip > *,
 .eva-link > *,
 .eva-menu-btn > * {
@@ -474,23 +505,14 @@ html[data-theme="galaxy"] .eva-menu-btn {
   z-index: 1;
 }
 
-html[data-beam-mode="contextual"] .beam-target:hover,
-html[data-beam-mode="contextual"] .beam-target.is-active,
-html[data-beam-mode="contextual"] .dashboard-nav-link.active,
-html[data-beam-mode="contextual"] .eva-link.active,
-html[data-beam-mode="contextual"] .input-shell:focus-within,
-html[data-beam-mode="contextual"] .btn:focus-visible,
-html:not([data-beam-mode]) .beam-target:hover,
-html:not([data-beam-mode]) .beam-target.is-active,
-html:not([data-beam-mode]) .dashboard-nav-link.active,
-html:not([data-beam-mode]) .eva-link.active,
-html:not([data-beam-mode]) .input-shell:focus-within,
-html:not([data-beam-mode]) .btn:focus-visible {
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--user-beam-color) 48%, transparent),
-    0 0 14px color-mix(in srgb, var(--user-beam-color) 16%, transparent),
-    0 0 28px color-mix(in srgb, var(--user-beam-color) 10%, transparent),
-    inset 0 1px 0 rgba(255,255,255,0.14) !important;
+html[data-beam-mode="off"] .beam-target:hover,
+html[data-beam-mode="off"] .beam-target.is-active,
+html[data-beam-mode="off"] .dashboard-nav-link.active,
+html[data-beam-mode="off"] .eva-link.active,
+html[data-beam-mode="off"] .input-shell:focus-within,
+html[data-beam-mode="off"] .btn:focus-visible {
+  box-shadow: none !important;
+  filter: none !important;
 }
 
 html[data-beam-mode="rainbow"] .beam-target:hover,
@@ -562,7 +584,7 @@ html[data-beam-mode="rainbow"] .btn:focus-visible::after {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.18s ease, visibility 0.18s ease;
+  transition: opacity 0.14s ease, visibility 0.14s ease;
 }
 
 .evara-micro-loader.active {
@@ -604,7 +626,7 @@ html[data-beam-mode="rainbow"] .btn:focus-visible::after {
       rgba(var(--tint-rgb), 0.18),
       rgba(255,255,255,0)
     );
-  animation: evaraMicroOrbit 1.4s linear infinite;
+  animation: evaraMicroOrbit 1.05s linear infinite;
   filter: blur(8px);
   opacity: 0.9;
 }
@@ -616,8 +638,8 @@ html[data-beam-mode="rainbow"] .btn:focus-visible::after {
   position: relative;
   z-index: 2;
   animation:
-    evaraLogoFloat 1.25s ease-in-out infinite,
-    evaraLogoWobble 2.2s ease-in-out infinite;
+    evaraLogoFloat 1.05s ease-in-out infinite,
+    evaraLogoWobble 1.8s ease-in-out infinite;
 }
 
 .evara-micro-loader__pulse,
@@ -633,7 +655,7 @@ html[data-beam-mode="rainbow"] .btn:focus-visible::after {
     0 0 0 1px rgba(var(--tint-rgb), 0.14),
     0 0 26px rgba(var(--tint-rgb), 0.10),
     0 0 42px rgba(var(--tint-rgb), 0.08);
-  animation: evaraPulseOrb 1.2s ease-in-out infinite;
+  animation: evaraPulseOrb 1s ease-in-out infinite;
 }
 
 .evara-micro-loader__sheen {
@@ -645,7 +667,7 @@ html[data-beam-mode="rainbow"] .btn:focus-visible::after {
       transparent 62%
     );
   transform: translateX(-130%);
-  animation: evaraSheenPass 1.25s ease-in-out infinite;
+  animation: evaraSheenPass 1s ease-in-out infinite;
 }
 
 @keyframes evaraMicroOrbit {
@@ -655,17 +677,17 @@ html[data-beam-mode="rainbow"] .btn:focus-visible::after {
 
 @keyframes evaraLogoFloat {
   0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
-  50% { transform: translateY(-3px) rotate(5deg) scale(1.03); }
+  50% { transform: translateY(-3px) rotate(6deg) scale(1.04); }
 }
 
 @keyframes evaraLogoWobble {
   0%, 100% { filter: drop-shadow(0 0 0 rgba(255,255,255,0)); }
-  50% { filter: drop-shadow(0 0 12px rgba(255,255,255,0.16)); }
+  50% { filter: drop-shadow(0 0 14px rgba(255,255,255,0.18)); }
 }
 
 @keyframes evaraPulseOrb {
   0%, 100% { opacity: 0.72; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.04); }
+  50% { opacity: 1; transform: scale(1.05); }
 }
 
 @keyframes evaraSheenPass {
@@ -681,9 +703,9 @@ html[data-beam-mode="rainbow"] .btn:focus-visible::after {
 
 .evara-loader-logo--premium {
   animation:
-    evaraLogoFloatLong 2.1s ease-in-out infinite,
-    evaraLogoSwirl 4.2s linear infinite,
-    evaraLogoPulseGlow 2.6s ease-in-out infinite;
+    evaraLogoFloatLong 1.85s ease-in-out infinite,
+    evaraLogoSwirl 3.2s linear infinite,
+    evaraLogoPulseGlow 2s ease-in-out infinite;
   transform-origin: center;
 }
 
@@ -695,7 +717,7 @@ html[data-beam-mode="rainbow"] .btn:focus-visible::after {
     radial-gradient(circle, rgba(var(--tint-rgb), 0.22), transparent 62%);
   filter: blur(14px);
   z-index: 0;
-  animation: evaraLogoGlow 2.2s ease-in-out infinite;
+  animation: evaraLogoGlow 1.9s ease-in-out infinite;
 }
 
 .evara-loader-particle {
@@ -712,40 +734,40 @@ html[data-beam-mode="rainbow"] .btn:focus-visible::after {
 .evara-loader-particle--a {
   top: 14%;
   left: 76%;
-  animation: evaraParticleOrbitA 4.2s linear infinite;
+  animation: evaraParticleOrbitA 3.2s linear infinite;
 }
 
 .evara-loader-particle--b {
   top: 70%;
   left: 18%;
-  animation: evaraParticleOrbitB 5.2s linear infinite;
+  animation: evaraParticleOrbitB 4s linear infinite;
 }
 
 .evara-loader-particle--c {
   top: 22%;
   left: 20%;
-  animation: evaraParticleOrbitC 4.8s linear infinite;
+  animation: evaraParticleOrbitC 3.6s linear infinite;
 }
 
 @keyframes evaraLogoFloatLong {
   0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-4px) scale(1.03); }
+  50% { transform: translateY(-4px) scale(1.04); }
 }
 
 @keyframes evaraLogoSwirl {
   0% { rotate: 0deg; }
-  50% { rotate: 10deg; }
+  50% { rotate: 12deg; }
   100% { rotate: 0deg; }
 }
 
 @keyframes evaraLogoPulseGlow {
   0%, 100% { filter: drop-shadow(0 0 0 rgba(255,255,255,0)); }
-  50% { filter: drop-shadow(0 0 18px rgba(255,255,255,0.20)); }
+  50% { filter: drop-shadow(0 0 18px rgba(255,255,255,0.22)); }
 }
 
 @keyframes evaraLogoGlow {
   0%, 100% { opacity: 0.54; transform: scale(0.96); }
-  50% { opacity: 0.96; transform: scale(1.08); }
+  50% { opacity: 0.98; transform: scale(1.08); }
 }
 
 @keyframes evaraParticleOrbitA {
