@@ -9,14 +9,33 @@
 
   <title>QA Automation Console • Evaraos Inc</title>
 
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=29" />
-  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=29" />
-  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=29" />
-  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=29" />
-
   <script>
-    document.documentElement.classList.add("auth-pending");
+    (function () {
+      try {
+        const raw = localStorage.getItem("evaraos-appearance");
+        if (!raw) return;
+        const appearance = JSON.parse(raw);
+        let theme = "dark";
+
+        if (appearance.mode === "light") theme = "light";
+        if (appearance.mode === "galaxy") theme = "galaxy";
+
+        if (appearance.mode === "custom") {
+          if (appearance.baseFamily === "light") theme = "light";
+          else if (appearance.baseFamily === "galaxy") theme = "galaxy";
+          else theme = "dark";
+        }
+
+        document.documentElement.setAttribute("data-theme", theme);
+      } catch {}
+      document.documentElement.classList.add("auth-pending");
+    })();
   </script>
+
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=33" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=33" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=33" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=33" />
 
   <style>
     html.auth-pending body,
@@ -125,10 +144,20 @@
     }
   </style>
 </head>
-<body class="dashboard-body auth-pending" data-route-guard="private">
+<body class="dashboard-body auth-pending app-loading" data-route-guard="private">
   <div class="page-aurora"></div>
+  <div id="galaxyEngine" class="galaxy-engine" aria-hidden="true"></div>
   <div class="page-grid-overlay"></div>
-  <div id="universalNav"></div>
+  <div id="universalNavRoot"></div>
+  <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
+  <div id="evaraFastLoader" class="evara-loader-fast active" aria-hidden="false">
+    <img
+      src="/evaraos/assets/img/evaraos_logo.png"
+      alt="Evaraos"
+      class="evara-loader-fast-logo"
+      onerror="this.onerror=null;this.src='/evaraos/assets/logo.png';"
+    />
+  </div>
 
   <div class="dashboard-shell">
     <aside class="dashboard-sidebar" id="dashboardSidebar">
@@ -253,7 +282,7 @@
 
           <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
             <p>Version Target</p>
-            <h3 id="versionTargetStat">v29</h3>
+            <h3 id="versionTargetStat">v33</h3>
             <span id="versionTargetMeta">Current expected asset version</span>
           </article>
         </div>
@@ -369,7 +398,7 @@
   <script type="module">
     const QA_STATE_KEY = "evaraos-qa-automation-v3";
     const AUDIT_JSON_URL = "/evaraos/tools/reports/repo-audit-ui.json";
-    const TARGET_VERSION = "29";
+    const TARGET_VERSION = "33";
 
     const signalRoot = document.getElementById("qaSignalRoot");
     const searchInput = document.getElementById("qaSearch");
@@ -427,6 +456,7 @@
             issueText.includes("v=23") ||
             issueText.includes("v=25") ||
             issueText.includes("v=27") ||
+            issueText.includes("v=29") ||
             issueText.includes("unversioned")
           ) {
             outdated.push({ file: file.file || "Unknown file", issue: issueText });
@@ -639,11 +669,11 @@
       try {
         auditMessageText.textContent = "Fetching audit report...";
 
-        const response = await fetch(\`\${AUDIT_JSON_URL}?ts=\${Date.now()}\`, {
+        const response = await fetch(`${AUDIT_JSON_URL}?ts=${Date.now()}`, {
           cache: "no-store"
         });
 
-        if (!response.ok) throw new Error(\`HTTP \${response.status}\`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const summary = await response.json();
         automationState.lastAuditLoadedAt = Date.now();
@@ -726,9 +756,11 @@
     });
   </script>
 
-  <script type="module" src="/evaraos/assets/js/theme.js?v=29"></script>
-  <script type="module" src="/evaraos/assets/js/firebase.js?v=29"></script>
-  <script type="module" src="/evaraos/assets/js/route-guard.js?v=29"></script>
-  <script src="/evaraos/assets/js/nav.js?v=29"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js?v=33"></script>
+  <script type="module" src="/evaraos/assets/js/theme.js?v=33"></script>
+  <script src="/evaraos/assets/js/loader.js?v=33"></script>
+  <script src="/evaraos/assets/js/galaxy.js?v=1"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js?v=33"></script>
+  <script src="/evaraos/assets/js/nav.js?v=33"></script>
 </body>
 </html>
