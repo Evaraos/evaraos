@@ -40,6 +40,8 @@ const PRESET_GALAXY = {
 
 let activeColorSheetTarget = null;
 let hasBoundThemeControls = false;
+let remoteHydrated = false;
+let draftAppearance = null;
 
 function normalizeTheme(theme = "") {
   const value = String(theme || "").trim().toLowerCase();
@@ -117,6 +119,10 @@ function normalizeAppearance(appearance = {}) {
   };
 }
 
+function cloneAppearance(value) {
+  return JSON.parse(JSON.stringify(normalizeAppearance(value || getStoredAppearance())));
+}
+
 function getStoredTheme() {
   try {
     return normalizeTheme(localStorage.getItem(STORAGE_KEY) || "dark");
@@ -142,9 +148,24 @@ function getStoredAppearance() {
 }
 
 function setStoredAppearance(appearance) {
+  const safe = normalizeAppearance(appearance);
   try {
-    localStorage.setItem(APPEARANCE_KEY, JSON.stringify(normalizeAppearance(appearance)));
+    localStorage.setItem(APPEARANCE_KEY, JSON.stringify(safe));
   } catch {}
+  return safe;
+}
+
+function getWorkingAppearance() {
+  return draftAppearance ? cloneAppearance(draftAppearance) : cloneAppearance(getStoredAppearance());
+}
+
+function setWorkingAppearance(appearance) {
+  draftAppearance = cloneAppearance(appearance);
+  return draftAppearance;
+}
+
+function clearWorkingAppearance() {
+  draftAppearance = null;
 }
 
 function ensureAppearanceStyle() {
@@ -213,7 +234,9 @@ function ensureAppearanceStyle() {
     .eva-menu-panel,
     .settings-preview-nav,
     .settings-block,
-    .settings-hero {
+    .settings-hero,
+    .appearance-editor,
+    .appearance-actions {
       border-color: color-mix(in srgb, var(--user-card-tint) 22%, rgba(255,255,255,0.12)) !important;
       box-shadow:
         0 18px 34px rgba(0,0,0,0.14),
@@ -247,7 +270,9 @@ function ensureAppearanceStyle() {
     html[data-theme="galaxy"] .eva-menu-panel,
     html[data-theme="galaxy"] .settings-preview-nav,
     html[data-theme="galaxy"] .settings-block,
-    html[data-theme="galaxy"] .settings-hero {
+    html[data-theme="galaxy"] .settings-hero,
+    html[data-theme="galaxy"] .appearance-editor,
+    html[data-theme="galaxy"] .appearance-actions {
       box-shadow:
         0 24px 42px rgba(12,4,24,0.24),
         inset 0 1px 0 rgba(255,255,255,0.10),
@@ -275,6 +300,7 @@ function ensureAppearanceStyle() {
     .settings-section-link,
     .settings-color-open,
     .settings-color-sheet-close,
+    .settings-color-sheet-btn,
     .eva-chip,
     .eva-link,
     .eva-menu-btn {
@@ -305,6 +331,7 @@ function ensureAppearanceStyle() {
     html[data-theme="galaxy"] .settings-section-link,
     html[data-theme="galaxy"] .settings-color-open,
     html[data-theme="galaxy"] .settings-color-sheet-close,
+    html[data-theme="galaxy"] .settings-color-sheet-btn,
     html[data-theme="galaxy"] .eva-chip,
     html[data-theme="galaxy"] .eva-link,
     html[data-theme="galaxy"] .eva-menu-btn {
@@ -325,6 +352,7 @@ function ensureAppearanceStyle() {
     .settings-section-link::before,
     .settings-color-open::before,
     .settings-color-sheet-close::before,
+    .settings-color-sheet-btn::before,
     .eva-chip::before,
     .eva-link::before,
     .eva-menu-btn::before {
@@ -353,6 +381,7 @@ function ensureAppearanceStyle() {
     .settings-section-link > *,
     .settings-color-open > *,
     .settings-color-sheet-close > *,
+    .settings-color-sheet-btn > *,
     .eva-chip > *,
     .eva-link > *,
     .eva-menu-btn > * {
@@ -463,8 +492,15 @@ function ensureAppearanceStyle() {
 }
 
 function syncThemeUi() {
-  const currentTheme = getStoredTheme();
-  const appearance = getStoredAppearance();
+  const appearance = getWorkingAppearance();
+  const effectiveTheme =
+    appearance.mode === "light"
+      ? "light"
+      : appearance.mode === "galaxy"
+      ? "galaxy"
+      : appearance.mode === "custom"
+      ? appearance.baseFamily
+      : "dark";
 
   document.querySelectorAll("[data-theme-mode-text]").forEach((el) => {
     if (appearance.mode === "custom") {
@@ -477,8 +513,10 @@ function syncThemeUi() {
       el.textContent = label;
     } else if (appearance.mode === "galaxy") {
       el.textContent = "Galaxy";
+    } else if (appearance.mode === "light") {
+      el.textContent = "Light";
     } else {
-      el.textContent = currentTheme === "light" ? "Light" : currentTheme === "galaxy" ? "Galaxy" : "Dark";
+      el.textContent = "Dark";
     }
   });
 
@@ -512,7 +550,7 @@ function syncThemeUi() {
 
   valueMap.forEach(([selector, value]) => {
     document.querySelectorAll(selector).forEach((el) => {
-      el.textContent = value;
+      el.textContent = value.toUpperCase();
     });
   });
 
@@ -530,6 +568,17 @@ function syncThemeUi() {
   if (customSection) {
     customSection.style.display = appearance.mode === "custom" ? "" : "none";
   }
+
+  const saveBar = document.getElementById("settingsSaveBar");
+  if (saveBar) {
+    const saved = getStoredAppearance();
+    const isDirty = JSON.stringify(normalizeAppearance(saved)) !== JSON.stringify(normalizeAppearance(appearance));
+    saveBar.style.display = isDirty ? "grid" : "none";
+  }
+
+  const rootTheme = effectiveTheme === "light" || effectiveTheme === "galaxy" ? effectiveTheme : "dark";
+  document.documentElement.setAttribute("data-theme", rootTheme);
+  setStoredTheme(rootTheme);
 }
 
 function applyTheme(theme) {
@@ -540,8 +589,11 @@ function applyTheme(theme) {
 }
 
 async function persistAppearance(appearance) {
-  setStoredAppearance(appearance);
-  await saveUserThemePreferences(appearance);
+  const safe = setStoredAppearance(appearance);
+  if (auth.currentUser) {
+    await saveUserThemePreferences(safe);
+  }
+  return safe;
 }
 
 function getEffectiveAppearance(appearance = {}) {
@@ -586,8 +638,6 @@ function applyAppearanceTokens(appearance = {}) {
       ? "galaxy"
       : "dark"
   );
-
-  syncThemeUi();
 }
 
 async function applyAppearanceConfig(appearance = {}) {
@@ -599,9 +649,11 @@ async function applyAppearanceConfig(appearance = {}) {
     setStoredBaseFamily(safe.mode);
   }
 
-  setStoredAppearance(safe);
-  applyAppearanceTokens(safe);
+  clearWorkingAppearance();
   await persistAppearance(safe);
+  applyAppearanceTokens(safe);
+  hydrateThemeInputs();
+  return safe;
 }
 
 function applyAppearanceConfigLocalOnly(appearance = {}) {
@@ -613,13 +665,27 @@ function applyAppearanceConfigLocalOnly(appearance = {}) {
     setStoredBaseFamily(safe.mode);
   }
 
-  setStoredAppearance(safe);
+  setWorkingAppearance(safe);
   applyAppearanceTokens(safe);
+  hydrateThemeInputs();
+  return safe;
 }
 
-function resetAppearanceConfig() {
+async function saveWorkingAppearance() {
+  const working = getWorkingAppearance();
+  return applyAppearanceConfig(working);
+}
+
+function discardWorkingAppearance() {
+  const saved = getStoredAppearance();
+  clearWorkingAppearance();
+  applyAppearanceTokens(saved);
+  hydrateThemeInputs();
+}
+
+async function resetAppearanceConfig() {
   const fallback = getPresetAppearance(getStoredBaseFamily());
-  applyAppearanceConfig({ ...fallback });
+  return applyAppearanceConfig({ ...fallback });
 }
 
 function getColorSheetEls() {
@@ -636,17 +702,10 @@ function openColorSheet(targetKey, title) {
   const { sheet, sheetInput, sheetSwatch, sheetValue, sheetTitle } = getColorSheetEls();
   if (!sheet || !sheetInput || !sheetSwatch || !sheetValue || !sheetTitle) return;
 
-  const appearance = getStoredAppearance();
+  const appearance = getWorkingAppearance();
   activeColorSheetTarget = targetKey;
 
-  const currentValue =
-    targetKey === "cardColor"
-      ? appearance.cardColor
-      : targetKey === "buttonColor"
-      ? appearance.buttonColor
-      : targetKey === "backgroundColor"
-      ? appearance.backgroundColor
-      : appearance.beamColor;
+  const currentValue = appearance[targetKey] || "#FFFFFF";
 
   sheetTitle.textContent = title;
   sheetInput.value = currentValue;
@@ -654,6 +713,7 @@ function openColorSheet(targetKey, title) {
   sheetValue.textContent = currentValue.toUpperCase();
   sheet.classList.add("open");
   sheet.setAttribute("aria-hidden", "false");
+  document.body.classList.add("app-loading");
 }
 
 function closeColorSheet() {
@@ -662,46 +722,59 @@ function closeColorSheet() {
   sheet.classList.remove("open");
   sheet.setAttribute("aria-hidden", "true");
   activeColorSheetTarget = null;
+  document.body.classList.remove("app-loading");
 }
 
 function bindColorSheet() {
   const { sheetInput, sheetSwatch, sheetValue } = getColorSheetEls();
   if (!sheetInput || !sheetSwatch || !sheetValue) return;
 
-  const updateColor = async (value) => {
+  const updateDraftColor = (value) => {
     if (!activeColorSheetTarget) return;
-    const current = getStoredAppearance();
+    const current = getWorkingAppearance();
 
     const next = {
       ...current,
       mode: "custom",
-      baseFamily: current.mode === "custom" ? current.baseFamily : getStoredBaseFamily(),
+      baseFamily:
+        current.mode === "custom"
+          ? current.baseFamily
+          : getStoredBaseFamily(),
       [activeColorSheetTarget]: value
     };
 
-    await applyAppearanceConfig(next);
-    hydrateThemeInputs();
+    applyAppearanceConfigLocalOnly(next);
     sheetSwatch.style.background = value;
     sheetValue.textContent = value.toUpperCase();
   };
 
-  sheetInput.addEventListener("input", async () => {
+  sheetInput.addEventListener("input", () => {
     const value = normalizeHex(sheetInput.value, "#FFFFFF");
-    await updateColor(value);
+    updateDraftColor(value);
   });
 
-  sheetInput.addEventListener("change", async () => {
+  sheetInput.addEventListener("change", () => {
     const value = normalizeHex(sheetInput.value, "#FFFFFF");
-    await updateColor(value);
+    updateDraftColor(value);
   });
 
   document.querySelectorAll("[data-color-sheet-close]").forEach((btn) => {
     btn.addEventListener("click", closeColorSheet);
   });
+
+  const doneBtn = document.getElementById("settingsColorSheetDoneBtn");
+  if (doneBtn) {
+    doneBtn.addEventListener("click", closeColorSheet);
+  }
 }
 
 function bindColorWheelOpeners() {
   const mapping = [
+    [".settings-color-open[data-open-target='cardColor']", "cardColor", "Surface Tint"],
+    [".settings-color-open[data-open-target='buttonColor']", "buttonColor", "Button Tint"],
+    [".settings-color-open[data-open-target='backgroundColor']", "backgroundColor", "Background Aura"],
+    [".settings-color-open[data-open-target='beamColor']", "beamColor", "Beam Color"],
+
     [".settings-color-open[data-open-target='card']", "cardColor", "Surface Tint"],
     [".settings-color-open[data-open-target='button']", "buttonColor", "Button Tint"],
     [".settings-color-open[data-open-target='background']", "backgroundColor", "Background Aura"],
@@ -724,20 +797,19 @@ function bindThemeControls() {
   hasBoundThemeControls = true;
 
   document.querySelectorAll("[data-set-mode]").forEach((btn) => {
-    btn.addEventListener("click", async () => {
+    btn.addEventListener("click", () => {
       const mode = btn.getAttribute("data-set-mode") || "dark";
-      const current = getStoredAppearance();
+      const current = getWorkingAppearance();
 
       if (mode === "dark" || mode === "light" || mode === "galaxy") {
         const preset = getPresetAppearance(mode);
-        await applyAppearanceConfig({
+        applyAppearanceConfigLocalOnly({
           ...preset,
           mode,
           baseFamily: mode,
           beamMode: current.beamMode,
           beamColor: current.beamColor
         });
-        hydrateThemeInputs();
         return;
       }
 
@@ -746,13 +818,11 @@ function bindThemeControls() {
           ? current.baseFamily
           : getStoredBaseFamily();
 
-      await applyAppearanceConfig({
+      applyAppearanceConfigLocalOnly({
         ...current,
         mode: "custom",
         baseFamily: rememberedBase
       });
-
-      hydrateThemeInputs();
 
       const customSection = document.querySelector("[data-color-wheel-section]");
       if (customSection) {
@@ -762,29 +832,40 @@ function bindThemeControls() {
   });
 
   document.querySelectorAll("[data-set-beam]").forEach((btn) => {
-    btn.addEventListener("click", async () => {
+    btn.addEventListener("click", () => {
       const beamMode = btn.getAttribute("data-set-beam") || "contextual";
-      const current = getStoredAppearance();
+      const current = getWorkingAppearance();
 
-      await applyAppearanceConfig({
+      applyAppearanceConfigLocalOnly({
         ...current,
         beamMode
       });
-
-      hydrateThemeInputs();
     });
   });
 
   document.querySelectorAll("[data-appearance-reset]").forEach((resetBtn) => {
     resetBtn.addEventListener("click", async () => {
-      resetAppearanceConfig();
-      hydrateThemeInputs();
+      await resetAppearanceConfig();
     });
   });
+
+  const saveBtn = document.getElementById("settingsSaveBtn");
+  if (saveBtn) {
+    saveBtn.addEventListener("click", async () => {
+      await saveWorkingAppearance();
+    });
+  }
+
+  const discardBtn = document.getElementById("settingsDiscardBtn");
+  if (discardBtn) {
+    discardBtn.addEventListener("click", () => {
+      discardWorkingAppearance();
+    });
+  }
 }
 
 function hydrateThemeInputs() {
-  const appearance = getStoredAppearance();
+  const appearance = getWorkingAppearance();
 
   document.querySelectorAll("[data-appearance-card]").forEach((input) => {
     input.value = appearance.cardColor;
@@ -823,18 +904,28 @@ function markBeamTargets() {
 }
 
 async function hydrateFromFirestoreIfAvailable() {
+  if (remoteHydrated) return;
   if (!auth.currentUser) return;
+
   const remotePrefs = await getUserThemePreferences();
-  if (!remotePrefs) return;
-  applyAppearanceConfigLocalOnly(remotePrefs);
+  if (!remotePrefs) {
+    remoteHydrated = true;
+    return;
+  }
+
+  clearWorkingAppearance();
+  setStoredAppearance(remotePrefs);
+  applyAppearanceTokens(remotePrefs);
   hydrateThemeInputs();
+  remoteHydrated = true;
 }
 
 async function initTheme() {
   ensureAppearanceStyle();
 
   const localAppearance = getStoredAppearance();
-  applyAppearanceConfigLocalOnly(localAppearance);
+  clearWorkingAppearance();
+  applyAppearanceTokens(localAppearance);
 
   bindThemeControls();
   bindColorSheet();
@@ -852,11 +943,16 @@ window.EvaraTheme = {
   applyTheme,
   applyAppearanceConfig,
   applyAppearanceConfigLocalOnly,
+  saveWorkingAppearance,
+  discardWorkingAppearance,
   resetAppearanceConfig,
   getStoredAppearance,
+  getWorkingAppearance,
   setStoredAppearance,
   normalizeAppearance,
-  hydrateThemeInputs
+  hydrateThemeInputs,
+  openColorSheet,
+  closeColorSheet
 };
 
 document.addEventListener("DOMContentLoaded", initTheme);
