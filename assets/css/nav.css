@@ -64,6 +64,9 @@
     border-radius 0.18s linear,
     box-shadow 0.16s ease,
     transform 0.16s ease;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .eva-brand {
@@ -81,6 +84,8 @@
   pointer-events: auto;
   transition: none;
   will-change: left, gap, transform, max-width;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .eva-nav-shell.compact .eva-brand {
@@ -129,6 +134,7 @@ html[data-theme$="-light"] .eva-brand-copy span {
   object-fit: contain;
   flex: 0 0 auto;
   will-change: width, height, transform;
+  -webkit-user-drag: none;
 }
 
 .eva-menu-zone {
@@ -166,6 +172,7 @@ html[data-theme$="-light"] .eva-brand-copy span {
     inset 0 1px 0 rgba(255,255,255,0.30);
   padding: 0;
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .eva-menu-btn:active {
@@ -383,6 +390,7 @@ html[data-theme$="-light"] .eva-search {
   cursor: pointer;
   touch-action: manipulation;
   gap: 12px;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html[data-theme="light"] .eva-link,
@@ -395,12 +403,22 @@ html[data-theme$="-light"] .eva-chip {
 }
 
 .eva-link-icon {
-  display: inline-flex;
-  width: 28px;
-  justify-content: center;
-  align-items: center;
-  font-size: 1rem;
+  width: 20px;
+  height: 20px;
+  display: inline-grid;
+  place-items: center;
   flex: 0 0 auto;
+}
+
+.eva-link-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.85;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .eva-link-label {
@@ -436,22 +454,23 @@ html[data-theme$="-light"] .eva-chip-dot {
   background: #14251f;
 }
 
-/* Quick bubble menu */
-.eva-nav-shell.quick-pressing #evaNavPill {
-  transform: scale(0.94) translateY(1px);
+/* Quick bubble menu polished */
+.eva-nav-shell.quick-pressing #evaNavPill,
+#evaNavPill.is-pressing {
+  transform: scale(0.93) translateY(2px);
   box-shadow:
-    inset 0 3px 10px rgba(0,0,0,0.22),
-    0 10px 18px rgba(0,0,0,0.12),
+    inset 0 4px 12px rgba(0,0,0,0.20),
+    0 8px 14px rgba(0,0,0,0.10),
     0 0 0 1px rgba(255,255,255,0.04);
 }
 
 .eva-quick-bubbles {
   position: absolute;
   left: 50%;
-  top: calc(100% + 10px);
+  top: calc(100% + 8px);
   transform: translateX(-50%) translateY(12px) scale(0.94);
   display: flex;
-  gap: 10px;
+  gap: 7px;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -461,6 +480,9 @@ html[data-theme$="-light"] .eva-chip-dot {
     transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
   z-index: 2147483647;
   flex-wrap: nowrap;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .eva-quick-bubbles.show {
@@ -470,13 +492,50 @@ html[data-theme$="-light"] .eva-chip-dot {
   transform: translateX(-50%) translateY(0) scale(1);
 }
 
+.eva-quick-bubbles .eva-quick-bubble:nth-child(1) {
+  transform: translateY(9px) scale(0.95);
+}
+
+.eva-quick-bubbles .eva-quick-bubble:nth-child(2) {
+  transform: translateY(0) scale(1);
+}
+
+.eva-quick-bubbles .eva-quick-bubble:nth-child(3) {
+  transform: translateY(9px) scale(0.95);
+}
+
+.eva-quick-bubbles.show .eva-quick-bubble {
+  animation: evaQuickBubbleRise 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.eva-quick-bubbles.show .eva-quick-bubble:nth-child(1) {
+  animation-delay: 0.00s;
+}
+
+.eva-quick-bubbles.show .eva-quick-bubble:nth-child(2) {
+  animation-delay: 0.02s;
+}
+
+.eva-quick-bubbles.show .eva-quick-bubble:nth-child(3) {
+  animation-delay: 0.04s;
+}
+
+@keyframes evaQuickBubbleRise {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .eva-quick-bubble {
-  width: 76px;
-  min-height: 76px;
+  width: 68px;
+  min-height: 68px;
   border-radius: 999px;
-  padding: 10px 8px;
+  padding: 8px 6px;
   display: grid;
-  gap: 5px;
+  gap: 4px;
   justify-items: center;
   align-content: center;
   cursor: pointer;
@@ -486,18 +545,19 @@ html[data-theme$="-light"] .eva-chip-dot {
   color: inherit;
   border: 1px solid rgba(255,255,255,0.18);
   background:
-    radial-gradient(circle at 30% 26%, rgba(255,255,255,0.24), transparent 28%),
-    linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
+    radial-gradient(circle at 30% 24%, rgba(255,255,255,0.30), transparent 28%),
+    linear-gradient(180deg, rgba(255,255,255,0.20), rgba(255,255,255,0.06));
+  backdrop-filter: blur(22px) saturate(165%);
+  -webkit-backdrop-filter: blur(22px) saturate(165%);
   box-shadow:
-    0 16px 28px rgba(0,0,0,0.18),
-    inset 0 1px 0 rgba(255,255,255,0.28),
+    0 16px 28px rgba(0,0,0,0.16),
+    inset 0 1px 0 rgba(255,255,255,0.32),
     inset 0 -1px 0 rgba(255,255,255,0.03);
   transition:
     transform 0.16s ease,
     box-shadow 0.16s ease,
     border-color 0.16s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .eva-quick-bubble::before {
@@ -509,11 +569,11 @@ html[data-theme$="-light"] .eva-chip-dot {
   background:
     linear-gradient(
       135deg,
-      rgba(255,255,255,0.24),
-      rgba(255,255,255,0.06) 36%,
+      rgba(255,255,255,0.26),
+      rgba(255,255,255,0.08) 34%,
       transparent 62%
     );
-  opacity: 0.92;
+  opacity: 0.94;
   z-index: 0;
 }
 
@@ -524,20 +584,21 @@ html[data-theme$="-light"] .eva-chip-dot {
   border-radius: inherit;
   pointer-events: none;
   background:
-    radial-gradient(circle at 74% 78%, rgba(255,255,255,0.08), transparent 24%);
+    radial-gradient(circle at 72% 78%, rgba(255,255,255,0.08), transparent 24%),
+    radial-gradient(circle at 34% 34%, rgba(255,255,255,0.10), transparent 24%);
   z-index: 0;
 }
 
 .eva-quick-bubble:hover {
-  transform: translateY(-2px) scale(1.02);
+  transform: translateY(-2px) scale(1.03) !important;
   box-shadow:
-    0 18px 32px rgba(0,0,0,0.22),
-    inset 0 1px 0 rgba(255,255,255,0.30),
+    0 20px 34px rgba(0,0,0,0.22),
+    inset 0 1px 0 rgba(255,255,255,0.34),
     inset 0 -1px 0 rgba(255,255,255,0.03);
 }
 
 .eva-quick-bubble:active {
-  transform: scale(0.97);
+  transform: scale(0.97) !important;
 }
 
 .eva-quick-bubble-icon,
@@ -547,96 +608,115 @@ html[data-theme$="-light"] .eva-chip-dot {
 }
 
 .eva-quick-bubble-icon {
-  font-size: 1.22rem;
-  line-height: 1;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+}
+
+.eva-quick-bubble-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .eva-quick-bubble-label {
-  font-size: 0.66rem;
+  font-size: 0.58rem;
   font-weight: 800;
   text-align: center;
-  line-height: 1.08;
+  line-height: 1.04;
   letter-spacing: -0.01em;
-  max-width: 56px;
+  max-width: 48px;
 }
 
 .eva-quick-bubble.bubble-home {
-  border-color: rgba(120, 190, 255, 0.22);
+  border-color: rgba(120, 190, 255, 0.24);
 }
 
 .eva-quick-bubble.bubble-dashboard {
-  border-color: rgba(162, 138, 255, 0.22);
+  border-color: rgba(162, 138, 255, 0.24);
 }
 
 .eva-quick-bubble.bubble-settings {
-  border-color: rgba(255, 170, 220, 0.22);
+  border-color: rgba(255, 170, 220, 0.24);
 }
 
 .eva-quick-bubble.bubble-login {
-  border-color: rgba(122, 214, 177, 0.22);
+  border-color: rgba(122, 214, 177, 0.24);
 }
 
 .eva-quick-bubble.bubble-signup {
-  border-color: rgba(255, 201, 110, 0.22);
+  border-color: rgba(255, 201, 110, 0.24);
 }
 
 .eva-quick-bubble.bubble-companies {
-  border-color: rgba(160, 198, 255, 0.22);
+  border-color: rgba(160, 198, 255, 0.24);
 }
 
 .eva-quick-bubble.bubble-users {
-  border-color: rgba(168, 255, 220, 0.22);
+  border-color: rgba(168, 255, 220, 0.24);
 }
 
 .eva-quick-bubble.bubble-leads {
-  border-color: rgba(255, 164, 125, 0.22);
+  border-color: rgba(255, 164, 125, 0.24);
 }
 
 .eva-quick-bubble.bubble-jobs {
-  border-color: rgba(255, 184, 232, 0.22);
+  border-color: rgba(255, 184, 232, 0.24);
 }
 
 .eva-quick-bubble.bubble-qa {
-  border-color: rgba(194, 166, 255, 0.22);
+  border-color: rgba(194, 166, 255, 0.24);
 }
 
 html[data-theme="light"] .eva-quick-bubble,
 html[data-theme$="-light"] .eva-quick-bubble {
   background:
-    radial-gradient(circle at 30% 26%, rgba(255,255,255,0.86), transparent 28%),
-    linear-gradient(180deg, rgba(255,255,255,0.92), rgba(245,248,247,0.84));
-  border: 1px solid rgba(255,255,255,0.92);
+    radial-gradient(circle at 30% 24%, rgba(255,255,255,0.90), transparent 28%),
+    linear-gradient(180deg, rgba(255,255,255,0.96), rgba(245,248,247,0.86));
+  border: 1px solid rgba(255,255,255,0.94);
   box-shadow:
     0 14px 24px rgba(88,108,98,0.14),
-    inset 0 1px 0 rgba(255,255,255,0.96);
+    inset 0 1px 0 rgba(255,255,255,0.98);
 }
 
 html[data-theme="galaxy"] .eva-quick-bubble {
   background:
-    radial-gradient(circle at 30% 26%, rgba(255,255,255,0.24), transparent 28%),
-    radial-gradient(circle at 76% 78%, rgba(255, 118, 214, 0.10), transparent 22%),
-    linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.05));
-  border: 1px solid rgba(255,225,255,0.22);
+    radial-gradient(circle at 28% 22%, rgba(255,255,255,0.32), transparent 28%),
+    radial-gradient(circle at 76% 78%, rgba(255, 118, 214, 0.12), transparent 22%),
+    radial-gradient(circle at 36% 76%, rgba(108, 132, 255, 0.10), transparent 22%),
+    linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.05));
+  border: 1px solid rgba(255,225,255,0.24);
   box-shadow:
     0 18px 34px rgba(8,4,22,0.28),
     0 0 18px rgba(214,168,255,0.14),
-    inset 0 1px 0 rgba(255,255,255,0.30);
+    inset 0 1px 0 rgba(255,255,255,0.32);
 }
 
 @media (max-width: 640px) {
   .eva-quick-bubbles {
-    gap: 8px;
+    gap: 6px;
   }
 
   .eva-quick-bubble {
-    width: 68px;
-    min-height: 68px;
-    padding: 9px 6px;
+    width: 64px;
+    min-height: 64px;
+    padding: 8px 5px;
+  }
+
+  .eva-quick-bubble-icon {
+    width: 17px;
+    height: 17px;
   }
 
   .eva-quick-bubble-label {
-    font-size: 0.60rem;
-    max-width: 48px;
+    font-size: 0.54rem;
+    max-width: 44px;
   }
 }
 
