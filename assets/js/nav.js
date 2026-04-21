@@ -128,6 +128,11 @@
     return progress <= 0.08;
   }
 
+  /* -----------------------------------------
+     Fallback loader support
+     Shared loader.js should own this in prod.
+     ----------------------------------------- */
+
   function ensureLoaderSystem() {
     let micro = document.getElementById("evaraMicroLoader");
     let full = document.getElementById("evaraGlobalLoader");
@@ -164,9 +169,6 @@
             <span class="evara-loader-ring"></span>
             <span class="evara-loader-ring2"></span>
             <span class="evara-loader-ring3"></span>
-            <span class="evara-loader-particle evara-loader-particle--a"></span>
-            <span class="evara-loader-particle evara-loader-particle--b"></span>
-            <span class="evara-loader-particle evara-loader-particle--c"></span>
 
             <div class="evara-loader-logo-wrap evara-loader-logo-wrap--premium">
               <img
@@ -209,6 +211,7 @@
     micro.classList.add("active");
     micro.setAttribute("aria-hidden", "false");
     document.body.classList.add("app-loading");
+    document.body.classList.remove("app-ready");
   }
 
   function hideMicroLoader() {
@@ -234,12 +237,13 @@
     full.classList.add("active");
     full.setAttribute("aria-hidden", "false");
     document.body.classList.add("app-loading");
+    document.body.classList.remove("app-ready");
   }
 
   function hideFullLoader() {
     const full = document.getElementById("evaraGlobalLoader");
     if (full) {
-      full.classList.remove("active");
+      full.classList.remove("active", "upgrading");
       full.setAttribute("aria-hidden", "true");
     }
   }
@@ -266,7 +270,12 @@
   function navigateWithLoader(href, options = {}) {
     if (!href || isNavigatingAway) return;
     isNavigatingAway = true;
-    beginSmartLoader(options);
+
+    if (window.EvaraLoader && typeof window.EvaraLoader.beginNavigationLoad === "function") {
+      window.EvaraLoader.beginNavigationLoad();
+    } else {
+      beginSmartLoader(options);
+    }
 
     requestAnimationFrame(() => {
       window.location.assign(href);
@@ -636,6 +645,7 @@
       setTarget(1, mode);
       return;
     }
+
     setTarget(0, mode);
     navHaptic(8);
   }
@@ -845,9 +855,11 @@
     function onTouchMove(event) {
       if (event.target.closest("#evaMenuBtn")) return;
       if (event.target.closest("#evaBrandBlock")) return;
+
       const touch = event.touches ? event.touches[0] : event;
       const dx = Math.abs(touch.clientX - tapStartX);
       const dy = Math.abs(touch.clientY - tapStartY);
+
       if (dx > 10 || dy > 10) {
         tapMoved = true;
         endCompactPress();
@@ -896,16 +908,19 @@
     pill.addEventListener("click", (event) => {
       if (event.target.closest("#evaMenuBtn")) return;
       if (event.target.closest("#evaBrandBlock")) return;
+
       if (longPressTriggered) {
         longPressTriggered = false;
         event.preventDefault();
         event.stopPropagation();
         return;
       }
+
       if (tapHandled) {
         tapHandled = false;
         return;
       }
+
       togglePill(event);
     });
   }
@@ -924,6 +939,7 @@
       event.preventDefault();
       event.stopPropagation();
       navHaptic(10);
+
       const href = brand.getAttribute("data-home-link");
       navigateWithLoader(href, {
         title: "Opening Home",
@@ -954,8 +970,10 @@
         event.preventDefault();
         event.stopPropagation();
         navHaptic(8);
+
         const href = link.getAttribute("data-menu-link");
         if (!href) return;
+
         closeMenu(false);
         navigateWithLoader(href, {
           title: "Loading page",
@@ -968,8 +986,10 @@
       btn.addEventListener("click", (event) => {
         event.preventDefault();
         event.stopPropagation();
+
         const href = btn.getAttribute("data-quick-link");
         hideQuickBubbles();
+
         navigateWithLoader(href, {
           title: "Opening shortcut",
           subtitle: "Launching your quick action."
@@ -1149,9 +1169,15 @@
     if (hasBootAnimated) return;
     hasBootAnimated = true;
 
+    if (window.EvaraLoader && typeof window.EvaraLoader.markAppReady === "function") {
+      window.EvaraLoader.markAppReady();
+      return;
+    }
+
     showMicroLoader();
     window.setTimeout(() => {
       hideAllLoaders();
+      document.body.classList.add("app-ready");
     }, 220);
   }
 
@@ -1189,10 +1215,21 @@
       hideAllLoaders();
       hideQuickBubbles();
       endCompactPress();
+
+      if (window.EvaraLoader && typeof window.EvaraLoader.completeNavigationLoad === "function") {
+        window.EvaraLoader.completeNavigationLoad();
+      } else {
+        document.body.classList.remove("app-loading");
+        document.body.classList.add("app-ready");
+      }
     });
 
     window.addEventListener("beforeunload", () => {
-      showMicroLoader();
+      if (window.EvaraLoader && typeof window.EvaraLoader.beginNavigationLoad === "function") {
+        window.EvaraLoader.beginNavigationLoad();
+      } else {
+        showMicroLoader();
+      }
     });
   }
 
