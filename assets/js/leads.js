@@ -24,6 +24,16 @@ const leadsSortBtn = document.getElementById("leadsSortBtn");
 
 let leadsData = [];
 let sortAsc = true;
+let isLoadingLeads = false;
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 function leadName(lead = {}) {
   return (
@@ -56,8 +66,16 @@ function pillClass(status = "") {
   const safe = String(status || "").toLowerCase();
   if (["won", "closed", "active"].includes(safe)) return "success";
   if (["new", "open", "contacted", "qualified"].includes(safe)) return "working";
-  if (["lost", "cold", "archived"].includes(safe)) return "muted";
-  return "working";
+  if (["lost", "cold", "archived"].includes(safe)) return "empty";
+  return "warning";
+}
+
+function setButtonLoading(isLoading) {
+  [leadsRefreshBtnTop, leadsRefreshBtnSide].forEach((btn) => {
+    if (!btn) return;
+    btn.disabled = isLoading;
+    btn.textContent = isLoading ? "Refreshing..." : "Refresh Data";
+  });
 }
 
 function filteredLeads() {
@@ -114,29 +132,66 @@ function renderStats(rows) {
   }
 }
 
+function renderLoadingState() {
+  if (leadsList) {
+    leadsList.innerHTML = `
+      <div class="dashboard-skeleton-grid">
+        <div class="dashboard-skeleton-card">
+          <div class="dashboard-skeleton-line line-1"></div>
+          <div class="dashboard-skeleton-line line-2"></div>
+          <div class="dashboard-skeleton-line line-3"></div>
+        </div>
+        <div class="dashboard-skeleton-card">
+          <div class="dashboard-skeleton-line line-1"></div>
+          <div class="dashboard-skeleton-line line-2"></div>
+          <div class="dashboard-skeleton-line line-3"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (leadFlowStack) {
+    leadFlowStack.innerHTML = `
+      <article class="dashboard-state-card loading">
+        <strong>Loading pipeline...</strong>
+        <span>Preparing lead flow buckets and status counts.</span>
+      </article>
+    `;
+  }
+
+  if (leadsFeed) {
+    leadsFeed.innerHTML = `
+      <article class="dashboard-state-card loading">
+        <strong>Loading lead activity...</strong>
+        <span>Pulling Firestore lead records and preparing the feed.</span>
+      </article>
+    `;
+  }
+
+  if (leadsHeroTitle) leadsHeroTitle.textContent = "Loading leads...";
+  if (leadsHeroText) leadsHeroText.textContent = "Connecting to Firestore lead records.";
+}
+
 function renderList(rows) {
   if (!leadsList) return;
 
   if (!rows.length) {
     leadsList.innerHTML = `
-      <article class="dashboard-list-item glass-card aurora-card">
-        <div>
-          <strong>No leads found</strong>
-          <span>Try another search or add lead records in Firestore.</span>
-        </div>
-        <span class="dashboard-status-pill muted">Empty</span>
+      <article class="dashboard-state-card empty">
+        <strong>No leads found</strong>
+        <span>Try another search or add lead records in Firestore.</span>
       </article>
     `;
     return;
   }
 
   leadsList.innerHTML = rows.map((lead) => {
-    const name = leadName(lead);
-    const status = leadStatus(lead);
-    const description = leadDescription(lead);
+    const name = escapeHtml(leadName(lead));
+    const status = escapeHtml(leadStatus(lead));
+    const description = escapeHtml(leadDescription(lead));
 
     return `
-      <article class="dashboard-list-item glass-card aurora-card">
+      <article class="dashboard-list-item glass-card aurora-card active-glow beam-target">
         <div>
           <strong>${name}</strong>
           <span>${description}</span>
@@ -165,7 +220,7 @@ function renderFlow(rows) {
     const width = Math.max(6, Math.round((count / total) * 100));
 
     return `
-      <div class="dashboard-progress-row">
+      <div class="dashboard-progress-row glass-card aurora-card active-glow beam-target">
         <div class="dashboard-progress-copy">
           <strong>${bucket.label}</strong>
           <span>${count} lead(s)</span>
@@ -181,7 +236,7 @@ function renderFeed(rows) {
 
   if (!rows.length) {
     leadsFeed.innerHTML = `
-      <article class="dashboard-feed-item glass-card aurora-card">
+      <article class="dashboard-state-card empty">
         <strong>No lead activity</strong>
         <span>Recent lead activity will appear here once records exist.</span>
       </article>
@@ -190,12 +245,12 @@ function renderFeed(rows) {
   }
 
   leadsFeed.innerHTML = rows.slice(0, 6).map((lead) => {
-    const name = leadName(lead);
-    const status = leadStatus(lead);
-    const priority = leadPriority(lead);
+    const name = escapeHtml(leadName(lead));
+    const status = escapeHtml(leadStatus(lead));
+    const priority = escapeHtml(leadPriority(lead));
 
     return `
-      <article class="dashboard-feed-item glass-card aurora-card">
+      <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
         <strong>${name}</strong>
         <span>Status: ${status} • Priority: ${priority}</span>
       </article>
@@ -212,6 +267,12 @@ function renderLeads() {
 }
 
 async function loadLeads() {
+  if (isLoadingLeads) return;
+
+  isLoadingLeads = true;
+  setButtonLoading(true);
+  renderLoadingState();
+
   try {
     const snap = await getDocs(collection(db, "leads"));
     leadsData = snap.docs.map((docSnap) => ({
@@ -224,24 +285,33 @@ async function loadLeads() {
 
     if (leadsList) {
       leadsList.innerHTML = `
-        <article class="dashboard-list-item glass-card aurora-card">
-          <div>
-            <strong>Unable to load leads</strong>
-            <span>${error.message || "Firestore request failed."}</span>
-          </div>
-          <span class="dashboard-status-pill danger">Error</span>
+        <article class="dashboard-state-card error">
+          <strong>Unable to load leads</strong>
+          <span>${escapeHtml(error.message || "Firestore request failed.")}</span>
+        </article>
+      `;
+    }
+
+    if (leadFlowStack) {
+      leadFlowStack.innerHTML = `
+        <article class="dashboard-state-card error">
+          <strong>Pipeline load failed</strong>
+          <span>${escapeHtml(error.message || "Firestore request failed.")}</span>
         </article>
       `;
     }
 
     if (leadsFeed) {
       leadsFeed.innerHTML = `
-        <article class="dashboard-feed-item glass-card aurora-card">
+        <article class="dashboard-state-card error">
           <strong>Load failed</strong>
-          <span>${error.message || "Firestore request failed."}</span>
+          <span>${escapeHtml(error.message || "Firestore request failed.")}</span>
         </article>
       `;
     }
+  } finally {
+    isLoadingLeads = false;
+    setButtonLoading(false);
   }
 }
 
@@ -269,7 +339,7 @@ function bindEvents() {
 
 onAuthStateChanged(auth, (user) => {
   if (!user) {
-    window.location.href = "/evaraos/login.html";
+    window.location.replace("/evaraos/login.html");
     return;
   }
 
