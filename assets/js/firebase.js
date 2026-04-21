@@ -70,18 +70,24 @@ function ensureGlobalLoader() {
   loader.innerHTML = `
     <div class="evara-loader-backdrop"></div>
     <div class="evara-loader-box glass-card">
-      <div class="evara-loader-mark">
+      <div class="evara-loader-mark evara-loader-mark--premium">
         <span class="evara-loader-ring"></span>
         <span class="evara-loader-ring2"></span>
         <span class="evara-loader-ring3"></span>
 
-        <div class="evara-loader-logo-wrap">
+        <div class="evara-loader-logo-wrap evara-loader-logo-wrap--premium">
+          <span class="evara-loader-logo-glow"></span>
+
           <img
             src="/evaraos/assets/img/evaraos_logo.png"
             alt="Evaraos"
-            class="evara-loader-logo"
+            class="evara-loader-logo evara-loader-logo--premium"
             onerror="this.onerror=null;this.src='/evaraos/assets/logo.png';"
           />
+
+          <span class="evara-loader-particle evara-loader-particle--a"></span>
+          <span class="evara-loader-particle evara-loader-particle--b"></span>
+          <span class="evara-loader-particle evara-loader-particle--c"></span>
         </div>
       </div>
 
@@ -127,6 +133,7 @@ export function hideGlobalLoader() {
     loader.setAttribute("aria-hidden", "true");
   }
   document.body?.classList.remove("app-loading");
+  document.body?.classList.add("app-ready");
 }
 
 /* =========================================
@@ -328,6 +335,8 @@ export function resolveProtectedPage() {
    ROUTE PROTECTION
    ========================================= */
 
+let protectRouteBound = false;
+
 export function protectRoute({
   requireAuth = true,
   redirectGuestTo = "/evaraos/login.html",
@@ -382,8 +391,12 @@ export function protectRoute({
     resolveProtectedPage();
   });
 
-  window.addEventListener("pageshow", (event) => {
-    if (event.persisted) {
+  if (!protectRouteBound) {
+    protectRouteBound = true;
+
+    window.addEventListener("pageshow", (event) => {
+      if (!event.persisted) return;
+
       const activeUser = auth.currentUser;
 
       if (requireAuth && !activeUser) {
@@ -405,8 +418,8 @@ export function protectRoute({
       }
 
       resolveProtectedPage();
-    }
-  });
+    });
+  }
 }
 
 /* =========================================
