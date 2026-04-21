@@ -10,14 +10,34 @@
 
   <title>Users • Evaraos Inc</title>
 
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=23" />
-  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=23" />
-  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=23" />
-  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=23" />
-
   <script>
+    (function () {
+      try {
+        const raw = localStorage.getItem("evaraos-appearance");
+        if (!raw) return;
+        const appearance = JSON.parse(raw);
+        let theme = "dark";
+
+        if (appearance.mode === "light") theme = "light";
+        if (appearance.mode === "galaxy") theme = "galaxy";
+
+        if (appearance.mode === "custom") {
+          if (appearance.baseFamily === "light") theme = "light";
+          else if (appearance.baseFamily === "galaxy") theme = "galaxy";
+          else theme = "dark";
+        }
+
+        document.documentElement.setAttribute("data-theme", theme);
+      } catch {}
+    })();
+
     document.documentElement.classList.add("auth-pending");
   </script>
+
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=33" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=33" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=33" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=33" />
 
   <style>
     html.auth-pending body,
@@ -27,15 +47,26 @@
     }
   </style>
 </head>
-<body class="dashboard-body auth-pending" data-route-guard="private">
+<body class="dashboard-body auth-pending app-loading" data-route-guard="private">
+  <div class="page-aurora"></div>
+  <div id="galaxyEngine" class="galaxy-engine" aria-hidden="true"></div>
   <div class="page-grid-overlay"></div>
-  <div id="universalNav"></div>
+  <div id="universalNavRoot"></div>
+  <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
+  <div id="evaraFastLoader" class="evara-loader-fast active" aria-hidden="false">
+    <img
+      src="/evaraos/assets/img/evaraos_logo.png"
+      alt="Evaraos"
+      class="evara-loader-fast-logo"
+      onerror="this.onerror=null;this.src='/evaraos/assets/logo.png';"
+    />
+  </div>
 
   <div class="dashboard-shell">
     <aside class="dashboard-sidebar" id="dashboardSidebar">
-      <div class="dashboard-sidebar-inner glass-shell aurora-card active-glow">
+      <div class="dashboard-sidebar-inner glass-shell aurora-card active-glow beam-target">
         <div class="dashboard-sidebar-search">
-          <div class="dashboard-search-shell input-shell aurora-card active-glow">
+          <div class="dashboard-search-shell input-shell aurora-card active-glow beam-target">
             <input
               type="search"
               class="dashboard-search-input input"
@@ -52,18 +83,18 @@
         </div>
 
         <nav class="dashboard-sidebar-nav" aria-label="Users sections">
-          <a href="#usersHeroSection" class="dashboard-nav-link active aurora-card">
+          <a href="#usersHeroSection" class="dashboard-nav-link active aurora-card beam-target">
             <span class="dashboard-nav-icon">◉</span>
             <span>Overview</span>
           </a>
 
-          <a href="#usersMainSection" class="dashboard-nav-link aurora-card">
+          <a href="#usersMainSection" class="dashboard-nav-link aurora-card beam-target">
             <span class="dashboard-nav-icon">◎</span>
             <span>Directory</span>
           </a>
         </nav>
 
-        <div class="dashboard-sidebar-foot glass-card aurora-card active-glow">
+        <div class="dashboard-sidebar-foot glass-card aurora-card active-glow beam-target">
           <div class="dashboard-sidebar-foot-copy">
             <strong>User Tools</strong>
             <span>
@@ -76,7 +107,7 @@
     </aside>
 
     <main class="dashboard-main">
-      <section class="dashboard-hero glass-card aurora-card active-glow" id="usersHeroSection">
+      <section class="dashboard-hero glass-card aurora-card active-glow beam-target" id="usersHeroSection">
         <div class="dashboard-hero-copy">
           <p class="dashboard-eyebrow">USER DIRECTORY</p>
           <h1 id="usersHeroTitle">Loading users...</h1>
@@ -90,7 +121,7 @@
           </div>
         </div>
 
-        <div class="dashboard-hero-panel glass-card aurora-card active-glow">
+        <div class="dashboard-hero-panel glass-card aurora-card active-glow beam-target">
           <div class="dashboard-hero-panel-top">
             <span class="dashboard-mini-badge">Directory Status</span>
             <span class="dashboard-live-dot"></span>
@@ -111,7 +142,7 @@
         </div>
       </section>
 
-      <section class="dashboard-overview glass-card aurora-card active-glow">
+      <section class="dashboard-overview glass-card aurora-card active-glow beam-target">
         <div class="dashboard-section-head">
           <div>
             <p class="dashboard-section-kicker">Snapshot</p>
@@ -120,25 +151,25 @@
         </div>
 
         <div class="dashboard-stats-grid">
-          <article class="dashboard-stat-card glass-card aurora-card active-glow">
+          <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
             <p>Total</p>
             <h3 id="usersStatTotal">0</h3>
             <span id="usersStatTotalMeta">User records loaded</span>
           </article>
 
-          <article class="dashboard-stat-card glass-card aurora-card active-glow">
+          <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
             <p>Owner/Admin</p>
             <h3 id="usersStatElevated">0</h3>
             <span id="usersStatElevatedMeta">Higher-access users</span>
           </article>
 
-          <article class="dashboard-stat-card glass-card aurora-card active-glow">
+          <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
             <p>Customers</p>
             <h3 id="usersStatCustomers">0</h3>
             <span id="usersStatCustomersMeta">Customer accounts</span>
           </article>
 
-          <article class="dashboard-stat-card glass-card aurora-card active-glow">
+          <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
             <p>Filtered</p>
             <h3 id="usersStatFiltered">0</h3>
             <span id="usersStatFilteredMeta">Matches current search</span>
@@ -147,7 +178,7 @@
       </section>
 
       <section class="dashboard-grid-2" id="usersMainSection">
-        <section class="dashboard-panel glass-card aurora-card active-glow">
+        <section class="dashboard-panel glass-card aurora-card active-glow beam-target">
           <div class="dashboard-section-head">
             <div>
               <p class="dashboard-section-kicker">Directory</p>
@@ -158,7 +189,7 @@
           <div class="dashboard-list" id="usersList"></div>
         </section>
 
-        <section class="dashboard-panel glass-card aurora-card active-glow">
+        <section class="dashboard-panel glass-card aurora-card active-glow beam-target">
           <div class="dashboard-section-head">
             <div>
               <p class="dashboard-section-kicker">Highlights</p>
@@ -172,10 +203,12 @@
     </main>
   </div>
 
-  <script src="/evaraos/assets/js/theme.js?v=23"></script>
-  <script type="module" src="/evaraos/assets/js/firebase.js?v=23"></script>
-  <script type="module" src="/evaraos/assets/js/users.js?v=23"></script>
-  <script type="module" src="/evaraos/assets/js/route-guard.js?v=23"></script>
-  <script src="/evaraos/assets/js/nav.js?v=23"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js?v=33"></script>
+  <script type="module" src="/evaraos/assets/js/theme.js?v=33"></script>
+  <script src="/evaraos/assets/js/loader.js?v=33"></script>
+  <script src="/evaraos/assets/js/galaxy.js?v=1"></script>
+  <script type="module" src="/evaraos/assets/js/users.js?v=33"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js?v=33"></script>
+  <script src="/evaraos/assets/js/nav.js?v=33"></script>
 </body>
 </html>
