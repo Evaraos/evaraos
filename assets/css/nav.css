@@ -45,10 +45,13 @@ body.eva-no-select,
   top: max(10px, env(safe-area-inset-top));
   left: 50%;
   transform: translateX(-50%);
-  width: var(--pill-width);
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
   z-index: 2147483647;
   pointer-events: none;
-  will-change: width, transform;
+  will-change: transform;
 }
 
 .eva-nav-shell.compact {
@@ -60,7 +63,9 @@ body.eva-no-select,
 }
 
 .eva-nav-pill {
+  width: var(--pill-width);
   min-height: var(--pill-height);
+  margin: 0 auto;
   padding: var(--pill-pad-y) var(--pill-pad-x);
   display: flex;
   align-items: center;
@@ -71,12 +76,16 @@ body.eva-no-select,
   position: relative;
   overflow: hidden;
   transition:
+    width 0.22s ease,
     min-height 0.18s linear,
     padding 0.18s linear,
     border-radius 0.18s linear,
     box-shadow 0.16s ease,
     transform 0.16s ease,
-    filter 0.16s ease;
+    filter 0.16s ease,
+    background 0.25s ease,
+    border-color 0.25s ease,
+    backdrop-filter 0.25s ease;
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
@@ -94,7 +103,7 @@ body.eva-no-select,
 
 .eva-brand {
   position: absolute;
-  left: calc(50% - 82px * var(--nav-progress));
+  left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
   display: flex;
@@ -106,9 +115,10 @@ body.eva-no-select,
   max-width: min(var(--brand-max-width), calc(100% - var(--menu-size) - 64px));
   pointer-events: auto;
   transition: none;
-  will-change: left, gap, transform, max-width;
+  will-change: gap, transform, max-width;
   -webkit-user-select: none;
   user-select: none;
+  text-align: center;
 }
 
 .eva-nav-shell.compact .eva-brand {
@@ -730,6 +740,10 @@ html[data-theme="galaxy"] .eva-quick-bubble {
 }
 
 @media (max-width: 640px) {
+  .eva-nav-shell {
+    top: max(8px, env(safe-area-inset-top));
+  }
+
   .eva-quick-bubbles {
     gap: 5px;
   }
