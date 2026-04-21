@@ -418,7 +418,7 @@ html[data-theme$="-light"] .glass-shell {
 .home-shell {
   width: min(100%, var(--page-max));
   margin: 0 auto;
-  padding: 122px 16px 32px;
+  padding: 84px 16px 32px;
 }
 
 .hero-home {
@@ -1000,7 +1000,7 @@ html[data-theme="galaxy"] .evara-loader-dot {
 
 @media (max-width: 760px) {
   .home-shell {
-    padding: 108px 12px 24px;
+    padding: 74px 12px 24px;
   }
 
   .hero-title {
