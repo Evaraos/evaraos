@@ -33,11 +33,11 @@
 
   <title>Settings Hub • Evaraos Inc</title>
 
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=32" />
-  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=32" />
-  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=32" />
-  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=32" />
-  <link rel="stylesheet" href="/evaraos/assets/css/auth.css?v=32" />
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=33" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=33" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=33" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=33" />
+  <link rel="stylesheet" href="/evaraos/assets/css/auth.css?v=33" />
 
   <style>
     html.auth-pending body,
@@ -75,7 +75,6 @@
     .appearance-panel::before,
     .settings-preview-card::before,
     .settings-mini-card::before,
-    .settings-color-tool::before,
     .settings-preview-nav::before,
     .settings-color-sheet-panel::before,
     .settings-custom-sheet-panel::before,
@@ -101,7 +100,6 @@
     .appearance-panel > *,
     .settings-preview-card > *,
     .settings-mini-card > *,
-    .settings-color-tool > *,
     .settings-preview-nav > *,
     .settings-color-sheet-panel > *,
     .settings-custom-sheet-panel > *,
@@ -250,8 +248,7 @@
     }
 
     .settings-preview-card,
-    .settings-mini-card,
-    .settings-color-tool {
+    .settings-mini-card {
       border-radius: 28px;
       padding: 20px;
       display: grid;
@@ -262,8 +259,7 @@
       isolation: isolate;
     }
 
-    .settings-preview-card,
-    .settings-color-tool {
+    .settings-preview-card {
       min-height: 182px;
     }
 
@@ -272,8 +268,7 @@
     }
 
     .settings-preview-card h3,
-    .settings-mini-card h3,
-    .settings-color-tool h3 {
+    .settings-mini-card h3 {
       margin: 0;
       font-size: 1.06rem;
       letter-spacing: -0.02em;
@@ -281,8 +276,7 @@
     }
 
     .settings-preview-card p,
-    .settings-mini-card p,
-    .settings-color-tool p {
+    .settings-mini-card p {
       margin: 0;
       opacity: 0.76;
       line-height: 1.6;
@@ -784,8 +778,9 @@
 </head>
 <body class="dashboard-body auth-pending app-loading" data-route-guard="private">
   <div class="page-aurora"></div>
+  <div id="galaxyEngine" class="galaxy-engine" aria-hidden="true"></div>
   <div class="page-grid-overlay"></div>
-  <div id="universalNav"></div>
+  <div id="universalNavRoot"></div>
   <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
   <div id="evaraFastLoader" class="evara-loader-fast active" aria-hidden="false">
     <img
@@ -1128,10 +1123,11 @@
     </div>
   </div>
 
-  <script type="module" src="/evaraos/assets/js/firebase.js?v=32"></script>
-  <script type="module" src="/evaraos/assets/js/theme.js?v=32"></script>
-  <script src="/evaraos/assets/js/loader.js?v=32"></script>
-  <script type="module" src="/evaraos/assets/js/route-guard.js?v=32"></script>
-  <script src="/evaraos/assets/js/nav.js?v=32"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js?v=33"></script>
+  <script type="module" src="/evaraos/assets/js/theme.js?v=33"></script>
+  <script src="/evaraos/assets/js/loader.js?v=33"></script>
+  <script src="/evaraos/assets/js/galaxy.js?v=1"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js?v=33"></script>
+  <script src="/evaraos/assets/js/nav.js?v=33"></script>
 </body>
 </html>
