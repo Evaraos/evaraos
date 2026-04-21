@@ -7,7 +7,6 @@
   const READY_CLASS_DELAY = 80;
   const PAGE_READY_FALLBACK = 1600;
 
-  let fastLoaderTimer = null;
   let fullLoaderTimer = null;
   let readyTimer = null;
   let transitionTimer = null;
@@ -95,31 +94,26 @@
     return el;
   }
 
-  function clearTimer(timerRefName) {
-    if (timerRefName === "fastLoaderTimer" && fastLoaderTimer) {
-      clearTimeout(fastLoaderTimer);
-      fastLoaderTimer = null;
-    }
-    if (timerRefName === "fullLoaderTimer" && fullLoaderTimer) {
+  function clearTimer(name) {
+    if (name === "fullLoaderTimer" && fullLoaderTimer) {
       clearTimeout(fullLoaderTimer);
       fullLoaderTimer = null;
     }
-    if (timerRefName === "readyTimer" && readyTimer) {
+    if (name === "readyTimer" && readyTimer) {
       clearTimeout(readyTimer);
       readyTimer = null;
     }
-    if (timerRefName === "transitionTimer" && transitionTimer) {
+    if (name === "transitionTimer" && transitionTimer) {
       clearTimeout(transitionTimer);
       transitionTimer = null;
     }
-    if (timerRefName === "pageReadyFallbackTimer" && pageReadyFallbackTimer) {
+    if (name === "pageReadyFallbackTimer" && pageReadyFallbackTimer) {
       clearTimeout(pageReadyFallbackTimer);
       pageReadyFallbackTimer = null;
     }
   }
 
   function clearAllTimers() {
-    clearTimer("fastLoaderTimer");
     clearTimer("fullLoaderTimer");
     clearTimer("readyTimer");
     clearTimer("transitionTimer");
