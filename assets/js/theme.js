@@ -236,6 +236,16 @@ function applyTheme(theme) {
   const safe = normalizeTheme(theme);
   document.documentElement.setAttribute("data-theme", safe);
   setStoredTheme(safe);
+
+  if (document.body) {
+    document.body.setAttribute("data-theme-active", safe);
+  }
+
+  window.dispatchEvent(
+    new CustomEvent("evara:theme-changed", {
+      detail: { theme: safe }
+    })
+  );
 }
 
 function applyAppearanceTokens(appearance = {}) {
@@ -678,4 +688,20 @@ window.EvaraTheme = {
   closeCustomSheet
 };
 
-document.addEventListener("DOMContentLoaded", initTheme);
+document.addEventListener("DOMContentLoaded", async () => {
+  await initTheme();
+
+  if (document.body) {
+    const activeTheme = document.documentElement.getAttribute("data-theme") || "dark";
+    document.body.setAttribute("data-theme-active", activeTheme);
+  }
+
+  window.dispatchEvent(
+    new CustomEvent("evara:theme-ready", {
+      detail: {
+        theme: document.documentElement.getAttribute("data-theme") || "dark",
+        appearance: getWorkingAppearance()
+      }
+    })
+  );
+});
