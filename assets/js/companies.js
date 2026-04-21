@@ -1,5 +1,3 @@
-// assets/js/companies.js
-
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
@@ -25,6 +23,16 @@ const companiesSortBtn = document.getElementById("companiesSortBtn");
 
 let companiesData = [];
 let sortAsc = true;
+let isLoadingCompanies = false;
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 function normalizeStatus(value = "") {
   return String(value || "").trim().toLowerCase();
@@ -62,8 +70,16 @@ function companyPillClass(status = "") {
   const value = normalizeStatus(status);
   if (["active", "healthy", "live", "approved"].includes(value)) return "success";
   if (["review", "pending", "draft"].includes(value)) return "working";
-  if (["inactive", "paused", "archived"].includes(value)) return "muted";
-  return "working";
+  if (["inactive", "paused", "archived"].includes(value)) return "empty";
+  return "warning";
+}
+
+function setButtonLoading(isLoading) {
+  [companiesRefreshBtnTop, companiesRefreshBtnSide].forEach((btn) => {
+    if (!btn) return;
+    btn.disabled = isLoading;
+    btn.textContent = isLoading ? "Refreshing..." : "Refresh";
+  });
 }
 
 function filteredCompanies() {
@@ -119,29 +135,57 @@ function renderStats(rows) {
   }
 }
 
+function renderLoadingState() {
+  if (companiesList) {
+    companiesList.innerHTML = `
+      <div class="dashboard-skeleton-grid">
+        <div class="dashboard-skeleton-card">
+          <div class="dashboard-skeleton-line line-1"></div>
+          <div class="dashboard-skeleton-line line-2"></div>
+          <div class="dashboard-skeleton-line line-3"></div>
+        </div>
+        <div class="dashboard-skeleton-card">
+          <div class="dashboard-skeleton-line line-1"></div>
+          <div class="dashboard-skeleton-line line-2"></div>
+          <div class="dashboard-skeleton-line line-3"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (companiesFeed) {
+    companiesFeed.innerHTML = `
+      <article class="dashboard-state-card loading">
+        <strong>Loading portfolio...</strong>
+        <span>Pulling Firestore company records and preparing the portfolio feed.</span>
+      </article>
+    `;
+  }
+
+  if (companiesHeroTitle) companiesHeroTitle.textContent = "Loading companies...";
+  if (companiesHeroText) companiesHeroText.textContent = "Connecting to Firestore company records.";
+}
+
 function renderList(rows) {
   if (!companiesList) return;
 
   if (!rows.length) {
     companiesList.innerHTML = `
-      <article class="dashboard-list-item glass-card aurora-card">
-        <div>
-          <strong>No companies found</strong>
-          <span>Try another search or add company records in Firestore.</span>
-        </div>
-        <span class="dashboard-status-pill muted">Empty</span>
+      <article class="dashboard-state-card empty">
+        <strong>No companies found</strong>
+        <span>Try another search or add company records in Firestore.</span>
       </article>
     `;
     return;
   }
 
   companiesList.innerHTML = rows.map((company) => {
-    const name = companyName(company);
-    const status = companyStatus(company);
-    const description = companyDescription(company);
+    const name = escapeHtml(companyName(company));
+    const status = escapeHtml(companyStatus(company));
+    const description = escapeHtml(companyDescription(company));
 
     return `
-      <article class="dashboard-list-item glass-card aurora-card">
+      <article class="dashboard-list-item glass-card aurora-card active-glow beam-target">
         <div>
           <strong>${name}</strong>
           <span>${description}</span>
@@ -157,7 +201,7 @@ function renderFeed(rows) {
 
   if (!rows.length) {
     companiesFeed.innerHTML = `
-      <article class="dashboard-feed-item glass-card aurora-card">
+      <article class="dashboard-state-card empty">
         <strong>No portfolio activity</strong>
         <span>Company activity will appear here once records exist.</span>
       </article>
@@ -166,11 +210,11 @@ function renderFeed(rows) {
   }
 
   companiesFeed.innerHTML = rows.slice(0, 6).map((company) => {
-    const name = companyName(company);
-    const status = companyStatus(company);
+    const name = escapeHtml(companyName(company));
+    const status = escapeHtml(companyStatus(company));
 
     return `
-      <article class="dashboard-feed-item glass-card aurora-card">
+      <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
         <strong>${name}</strong>
         <span>Status: ${status}</span>
       </article>
@@ -186,6 +230,12 @@ function renderCompanies() {
 }
 
 async function loadCompanies() {
+  if (isLoadingCompanies) return;
+
+  isLoadingCompanies = true;
+  setButtonLoading(true);
+  renderLoadingState();
+
   try {
     const snap = await getDocs(collection(db, "companies"));
     companiesData = snap.docs.map((docSnap) => ({
@@ -198,24 +248,24 @@ async function loadCompanies() {
 
     if (companiesList) {
       companiesList.innerHTML = `
-        <article class="dashboard-list-item glass-card aurora-card">
-          <div>
-            <strong>Unable to load companies</strong>
-            <span>${error.message || "Firestore request failed."}</span>
-          </div>
-          <span class="dashboard-status-pill danger">Error</span>
+        <article class="dashboard-state-card error">
+          <strong>Unable to load companies</strong>
+          <span>${escapeHtml(error.message || "Firestore request failed.")}</span>
         </article>
       `;
     }
 
     if (companiesFeed) {
       companiesFeed.innerHTML = `
-        <article class="dashboard-feed-item glass-card aurora-card">
+        <article class="dashboard-state-card error">
           <strong>Load failed</strong>
-          <span>${error.message || "Firestore request failed."}</span>
+          <span>${escapeHtml(error.message || "Firestore request failed.")}</span>
         </article>
       `;
     }
+  } finally {
+    isLoadingCompanies = false;
+    setButtonLoading(false);
   }
 }
 
@@ -243,7 +293,7 @@ function bindEvents() {
 
 onAuthStateChanged(auth, (user) => {
   if (!user) {
-    window.location.href = "/evaraos/login.html";
+    window.location.replace("/evaraos/login.html");
     return;
   }
 
