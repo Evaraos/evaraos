@@ -53,8 +53,46 @@
     return el;
   }
 
-  function getGlobalLoader() {
-    return document.getElementById(GLOBAL_LOADER_ID);
+  function ensureGlobalLoader() {
+    let el = document.getElementById(GLOBAL_LOADER_ID);
+    if (el) return el;
+
+    el = document.createElement("div");
+    el.id = GLOBAL_LOADER_ID;
+    el.className = "evara-global-loader";
+    el.setAttribute("aria-hidden", "true");
+    el.innerHTML = `
+      <div class="evara-loader-backdrop"></div>
+      <div class="evara-loader-box glass-card">
+        <div class="evara-loader-mark evara-loader-mark--premium">
+          <span class="evara-loader-ring"></span>
+          <span class="evara-loader-ring2"></span>
+          <span class="evara-loader-ring3"></span>
+
+          <div class="evara-loader-logo-wrap evara-loader-logo-wrap--premium">
+            <img
+              src="${getBasePath()}/assets/img/evaraos_logo.png"
+              alt="Evaraos"
+              class="evara-loader-logo evara-loader-logo--premium"
+              onerror="this.onerror=null;this.src='${getBasePath()}/assets/logo.png';"
+            />
+          </div>
+        </div>
+
+        <div class="evara-loader-copy">
+          <p class="evara-loader-title" id="evaraLoaderTitle">Launching Evaraos</p>
+          <p class="evara-loader-subtitle" id="evaraLoaderSubtitle">Loading navigation, theme, and experience.</p>
+        </div>
+
+        <div class="evara-loader-dots" aria-hidden="true">
+          <span class="evara-loader-dot"></span>
+          <span class="evara-loader-dot"></span>
+          <span class="evara-loader-dot"></span>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(el);
+    return el;
   }
 
   function clearTimer(timerRefName) {
@@ -117,22 +155,27 @@
     fast.setAttribute("aria-hidden", "true");
   }
 
-  function showFullLoader() {
-    const loader = getGlobalLoader();
-    if (!loader) return;
+  function showFullLoader(options = {}) {
+    const loader = ensureGlobalLoader();
+    const titleEl = loader.querySelector("#evaraLoaderTitle");
+    const subtitleEl = loader.querySelector("#evaraLoaderSubtitle");
+
+    if (titleEl && options.title) titleEl.textContent = options.title;
+    if (subtitleEl && options.subtitle) subtitleEl.textContent = options.subtitle;
 
     loader.classList.add("active", "upgrading");
     loader.setAttribute("aria-hidden", "false");
     document.body.classList.add("app-loading");
     document.body.classList.remove("app-ready");
 
+    clearTimer("transitionTimer");
     transitionTimer = setTimeout(() => {
       loader.classList.remove("upgrading");
     }, 260);
   }
 
   function hideFullLoader() {
-    const loader = getGlobalLoader();
+    const loader = document.getElementById(GLOBAL_LOADER_ID);
     if (!loader) return;
     loader.classList.remove("active", "upgrading");
     loader.setAttribute("aria-hidden", "true");
@@ -155,7 +198,7 @@
     }, READY_CLASS_DELAY);
   }
 
-  function beginNavigationLoad() {
+  function beginNavigationLoad(options = {}) {
     if (isTransitioning) return;
     isTransitioning = true;
 
@@ -164,8 +207,8 @@
     showFastLoader();
 
     fullLoaderTimer = setTimeout(() => {
-      showFullLoader();
       hideFastLoader();
+      showFullLoader(options);
     }, FAST_TO_FULL_DELAY);
   }
 
@@ -209,7 +252,10 @@
       }
 
       event.preventDefault();
-      beginNavigationLoad();
+      beginNavigationLoad({
+        title: "Opening Evaraos",
+        subtitle: "Preparing your next screen."
+      });
 
       requestAnimationFrame(() => {
         window.location.assign(anchor.href);
@@ -251,6 +297,7 @@
   function init() {
     ensurePageTransition();
     ensureFastLoader();
+    ensureGlobalLoader();
     setupInitialReadyFlow();
     interceptDocumentLinks();
     exposeApi();
