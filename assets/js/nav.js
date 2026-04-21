@@ -260,7 +260,7 @@
 
     longLoaderTimer = window.setTimeout(() => {
       showFullLoader({ title, subtitle });
-    }, 100);
+    }, 70);
   }
 
   function navigateWithLoader(href, options = {}) {
@@ -813,7 +813,7 @@
     pressTimer = setTimeout(() => {
       longPressTriggered = true;
       showQuickBubbles();
-    }, 300);
+    }, 280);
   }
 
   function endCompactPress() {
@@ -1152,212 +1152,12 @@
     showMicroLoader();
     window.setTimeout(() => {
       hideAllLoaders();
-    }, 320);
-  }
-
-  function injectQuickBubbleStyles() {
-    if (document.getElementById("evaQuickBubbleStyles")) return;
-
-    const style = document.createElement("style");
-    style.id = "evaQuickBubbleStyles";
-    style.textContent = `
-      body.eva-pressing-nav,
-      body.eva-pressing-nav * {
-        -webkit-user-select: none !important;
-        user-select: none !important;
-        -webkit-touch-callout: none !important;
-      }
-
-      .eva-nav-shell.quick-pressing #evaNavPill,
-      #evaNavPill.is-pressing {
-        transform: scale(0.93) translateY(2px);
-        box-shadow:
-          inset 0 4px 12px rgba(0,0,0,0.20),
-          0 8px 14px rgba(0,0,0,0.10),
-          0 0 0 1px rgba(255,255,255,0.04);
-        transition: transform 0.14s ease, box-shadow 0.14s ease;
-      }
-
-      .eva-quick-bubbles {
-        position: absolute;
-        left: 50%;
-        top: calc(100% + 8px);
-        transform: translateX(-50%) translateY(12px) scale(0.94);
-        display: flex;
-        gap: 8px;
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-        transition:
-          opacity 0.18s ease,
-          visibility 0.18s ease,
-          transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
-        z-index: 50;
-        flex-wrap: nowrap;
-      }
-
-      .eva-quick-bubbles .eva-quick-bubble:nth-child(1) {
-        transform: translateY(10px) scale(0.94);
-      }
-      .eva-quick-bubbles .eva-quick-bubble:nth-child(2) {
-        transform: translateY(0px) scale(0.98);
-      }
-      .eva-quick-bubbles .eva-quick-bubble:nth-child(3) {
-        transform: translateY(10px) scale(0.94);
-      }
-
-      .eva-quick-bubbles.show {
-        opacity: 1;
-        visibility: visible;
-        pointer-events: auto;
-        transform: translateX(-50%) translateY(0) scale(1);
-      }
-
-      .eva-quick-bubbles.show .eva-quick-bubble {
-        transform: translateY(0) scale(1);
-      }
-
-      .eva-quick-bubble {
-        width: 72px;
-        min-height: 72px;
-        border-radius: 999px;
-        padding: 10px 8px;
-        display: grid;
-        gap: 5px;
-        justify-items: center;
-        align-content: center;
-        cursor: pointer;
-        position: relative;
-        overflow: hidden;
-        isolation: isolate;
-        color: inherit;
-        border: 1px solid rgba(255,255,255,0.18);
-        background:
-          radial-gradient(circle at 30% 26%, rgba(255,255,255,0.24), transparent 28%),
-          linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
-        backdrop-filter: blur(20px) saturate(160%);
-        -webkit-backdrop-filter: blur(20px) saturate(160%);
-        box-shadow:
-          0 16px 28px rgba(0,0,0,0.18),
-          inset 0 1px 0 rgba(255,255,255,0.28),
-          inset 0 -1px 0 rgba(255,255,255,0.03);
-        transition:
-          transform 0.16s ease,
-          box-shadow 0.16s ease,
-          border-color 0.16s ease;
-      }
-
-      .eva-quick-bubble::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        pointer-events: none;
-        background:
-          linear-gradient(
-            135deg,
-            rgba(255,255,255,0.24),
-            rgba(255,255,255,0.06) 36%,
-            transparent 62%
-          );
-        opacity: 0.92;
-        z-index: 0;
-      }
-
-      .eva-quick-bubble::after {
-        content: "";
-        position: absolute;
-        inset: 1px;
-        border-radius: inherit;
-        pointer-events: none;
-        background:
-          radial-gradient(circle at 74% 78%, rgba(255,255,255,0.08), transparent 24%);
-        z-index: 0;
-      }
-
-      .eva-quick-bubble:hover {
-        transform: translateY(-2px) scale(1.03) !important;
-        box-shadow:
-          0 20px 34px rgba(0,0,0,0.22),
-          inset 0 1px 0 rgba(255,255,255,0.30),
-          inset 0 -1px 0 rgba(255,255,255,0.03);
-      }
-
-      .eva-quick-bubble:active {
-        transform: scale(0.97) !important;
-      }
-
-      .eva-quick-bubble-icon,
-      .eva-quick-bubble-label {
-        position: relative;
-        z-index: 1;
-      }
-
-      .eva-quick-bubble-icon {
-        width: 22px;
-        height: 22px;
-        display: grid;
-        place-items: center;
-      }
-
-      .eva-quick-bubble-icon svg,
-      .eva-link-icon svg {
-        width: 100%;
-        height: 100%;
-        display: block;
-        stroke: currentColor;
-        fill: none;
-        stroke-width: 1.8;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-      }
-
-      .eva-link-icon {
-        width: 20px;
-        height: 20px;
-        display: inline-grid;
-        place-items: center;
-        flex: 0 0 auto;
-      }
-
-      .eva-quick-bubble-label {
-        font-size: 0.64rem;
-        font-weight: 800;
-        text-align: center;
-        line-height: 1.08;
-        letter-spacing: -0.01em;
-        max-width: 56px;
-      }
-
-      @media (max-width: 640px) {
-        .eva-quick-bubbles {
-          gap: 7px;
-        }
-
-        .eva-quick-bubble {
-          width: 66px;
-          min-height: 66px;
-          padding: 9px 6px;
-        }
-
-        .eva-quick-bubble-label {
-          font-size: 0.58rem;
-          max-width: 48px;
-        }
-
-        .eva-quick-bubble-icon {
-          width: 20px;
-          height: 20px;
-        }
-      }
-    `;
-    document.head.appendChild(style);
+    }, 220);
   }
 
   function init() {
     setTheme(getAppearanceTheme());
     renderNav();
-    injectQuickBubbleStyles();
 
     const shell = getNavShell();
     const immediate = atTopOfPage() ? 1 : 0;
@@ -1388,7 +1188,7 @@
       setTheme(getAppearanceTheme());
       hideAllLoaders();
       hideQuickBubbles();
-      document.body.classList.remove("eva-pressing-nav");
+      endCompactPress();
     });
 
     window.addEventListener("beforeunload", () => {
