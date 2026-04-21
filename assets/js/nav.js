@@ -21,7 +21,6 @@
 
   let pressTimer = null;
   let longPressTriggered = false;
-  let compactPressActive = false;
 
   function getMount() {
     return document.getElementById("universalNavRoot") || document.getElementById("universalNav");
@@ -128,11 +127,6 @@
     return progress <= 0.08;
   }
 
-  /* -----------------------------------------
-     Fallback loader support
-     Shared loader.js should own this in prod.
-     ----------------------------------------- */
-
   function ensureLoaderSystem() {
     let micro = document.getElementById("evaraMicroLoader");
     let full = document.getElementById("evaraGlobalLoader");
@@ -177,7 +171,6 @@
                 class="evara-loader-logo evara-loader-logo--premium"
                 onerror="this.onerror=null;this.src='${getBasePath()}/assets/logo.png';"
               />
-              <span class="evara-loader-logo-glow"></span>
             </div>
           </div>
 
@@ -272,7 +265,7 @@
     isNavigatingAway = true;
 
     if (window.EvaraLoader && typeof window.EvaraLoader.beginNavigationLoad === "function") {
-      window.EvaraLoader.beginNavigationLoad();
+      window.EvaraLoader.beginNavigationLoad(options);
     } else {
       beginSmartLoader(options);
     }
@@ -815,7 +808,6 @@
 
     clearPressTimer();
     longPressTriggered = false;
-    compactPressActive = true;
     pill.classList.add("is-pressing");
     document.body.classList.add("eva-pressing-nav");
     navHaptic(6);
@@ -829,7 +821,6 @@
   function endCompactPress() {
     const pill = getNavPill();
     clearPressTimer();
-    compactPressActive = false;
     if (pill) pill.classList.remove("is-pressing");
     document.body.classList.remove("eva-pressing-nav");
   }
