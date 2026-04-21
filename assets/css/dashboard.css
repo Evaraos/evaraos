@@ -637,3 +637,51 @@ html[data-theme$="-light"] .dashboard-skeleton-card {
     align-items: flex-start;
   }
 }
+
+/* =========================================
+   SHARED APP SHELL PATCH
+========================================= */
+
+.dashboard-main,
+.dashboard-sidebar,
+.dashboard-sidebar-inner,
+.dashboard-panel,
+.dashboard-overview,
+.dashboard-hero {
+  position: relative;
+  z-index: 1;
+}
+
+body.app-loading .dashboard-shell {
+  opacity: 0.985;
+}
+
+body.app-ready .dashboard-shell {
+  opacity: 1;
+  transition: opacity 0.18s ease;
+}
+
+html[data-theme="galaxy"] .dashboard-hero,
+html[data-theme="galaxy"] .dashboard-overview,
+html[data-theme="galaxy"] .dashboard-panel,
+html[data-theme="galaxy"] .dashboard-sidebar-inner {
+  box-shadow:
+    0 28px 68px rgba(12, 6, 28, 0.36),
+    0 0 24px rgba(214,168,255,0.10),
+    inset 0 1px 0 rgba(255,255,255,0.14);
+}
+
+html[data-theme="galaxy"] .dashboard-mini-badge,
+html[data-theme="galaxy"] .dashboard-status-pill,
+html[data-theme="galaxy"] .dashboard-progress-row,
+html[data-theme="galaxy"] .dashboard-nav-link {
+  border-color: rgba(255,225,255,0.16);
+}
+
+html[data-theme="galaxy"] .dashboard-progress-bar {
+  background: rgba(255,255,255,0.10);
+}
+
+html[data-theme="galaxy"] .dashboard-progress-bar span {
+  background: linear-gradient(90deg, rgba(255,255,255,0.92), rgba(214,168,255,0.46));
+}
