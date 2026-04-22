@@ -429,6 +429,8 @@
         aria-label="${label}"
         title="${label}"
       >
+        <span class="eva-quick-bubble-orbit"></span>
+        <span class="eva-quick-bubble-core"></span>
         <span class="eva-quick-bubble-icon">${iconSvg(icon)}</span>
         <span class="eva-quick-bubble-label">${label}</span>
       </button>
@@ -458,6 +460,8 @@
       <div class="eva-nav-layer">
         <header class="eva-nav-shell ${atTopOfPage() ? "expanded" : "compact"}" id="evaNavShell">
           <div class="eva-nav-pill glass-shell" id="evaNavPill">
+            <div class="eva-left-spacer" aria-hidden="true"></div>
+
             <a
               href="${buildHref("index.html")}"
               class="eva-brand"
