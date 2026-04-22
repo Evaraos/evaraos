@@ -25,6 +25,17 @@ const jobsSortBtn = document.getElementById("jobsSortBtn");
 let jobsData = [];
 let sortAsc = true;
 let isLoadingJobs = false;
+let hasBoundEvents = false;
+let hasStartedAuthWatch = false;
+
+function navigateWithLoader(url, options = {}) {
+  if (window.EvaraLoader && typeof window.EvaraLoader.beginNavigationLoad === "function") {
+    window.EvaraLoader.beginNavigationLoad(options);
+  }
+  requestAnimationFrame(() => {
+    window.location.assign(url);
+  });
+}
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -310,6 +321,9 @@ async function loadJobs() {
 }
 
 function bindEvents() {
+  if (hasBoundEvents) return;
+  hasBoundEvents = true;
+
   jobsSearch?.addEventListener("input", renderJobs);
 
   jobsRefreshBtnTop?.addEventListener("click", loadJobs);
@@ -331,13 +345,27 @@ function bindEvents() {
   });
 }
 
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    window.location.replace("/evaraos/login.html");
-    return;
-  }
+function initJobsPage() {
+  if (hasStartedAuthWatch) return;
+  hasStartedAuthWatch = true;
 
-  loadJobs();
-});
+  bindEvents();
 
-document.addEventListener("DOMContentLoaded", bindEvents);
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      navigateWithLoader("/evaraos/login.html", {
+        title: "Returning to login",
+        subtitle: "Your session is not active."
+      });
+      return;
+    }
+
+    loadJobs();
+  });
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initJobsPage);
+} else {
+  initJobsPage();
+}
