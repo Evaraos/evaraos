@@ -34,7 +34,10 @@ function navigateWithLoader(url, options = {}) {
   if (window.EvaraLoader && typeof window.EvaraLoader.beginNavigationLoad === "function") {
     window.EvaraLoader.beginNavigationLoad(options);
   }
-  window.location.replace(url);
+
+  requestAnimationFrame(() => {
+    window.location.assign(url);
+  });
 }
 
 function setFormBusy(form, isBusy, submitTextBusy, submitTextIdle) {
