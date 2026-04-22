@@ -40,7 +40,8 @@
   <style>
     .home-shell {
       width: min(1280px, calc(100% - 24px));
-      margin: 108px auto 72px;
+      margin: 0 auto 72px;
+      padding-top: 82px;
       display: grid;
       gap: 22px;
       position: relative;
@@ -48,8 +49,8 @@
     }
 
     .hero-home {
-      padding: 10px 6px 4px;
-      min-height: 600px;
+      padding: 0 6px 4px;
+      min-height: 560px;
       display: grid;
       align-items: center;
       position: relative;
@@ -431,7 +432,8 @@
     @media (max-width: 680px) {
       .home-shell {
         width: min(calc(100% - 16px), 100%);
-        margin-top: 98px;
+        margin-bottom: 56px;
+        padding-top: 68px;
       }
 
       .section-panel,
@@ -441,7 +443,7 @@
       }
 
       .hero-home {
-        padding: 6px 0 0;
+        padding: 0;
         min-height: auto;
       }
 
@@ -456,7 +458,17 @@
         max-width: 100%;
       }
 
-      .hero-actions,
+      .hero-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .hero-actions .btn {
+        min-width: 0;
+        width: 100%;
+      }
+
       .cta-actions {
         display: grid;
         grid-template-columns: 1fr;
@@ -505,7 +517,6 @@
           <div class="hero-actions">
             <a href="/evaraos/login.html" class="btn btn-apple active-glow beam-target">Enter Platform</a>
             <a href="/evaraos/signup.html" class="btn btn-apple active-glow beam-target">Create Account</a>
-            <a href="/evaraos/settings.html" class="btn btn-apple active-glow beam-target">Customize Theme</a>
           </div>
         </div>
 
@@ -676,13 +687,11 @@
     <section class="cta-panel glass-card active-glow beam-target">
       <h2>Start inside the ecosystem.</h2>
       <p>
-        Access the platform, create your account, or open appearance settings to fully customize your
-        navigation tint, card tint, button tint, background aura, and beam system.
+        Access the platform or create your account to begin using Evaraos.
       </p>
       <div class="cta-actions">
         <a href="/evaraos/login.html" class="btn btn-apple active-glow beam-target">Login</a>
         <a href="/evaraos/signup.html" class="btn btn-apple active-glow beam-target">Sign Up</a>
-        <a href="/evaraos/settings.html" class="btn btn-apple active-glow beam-target">Open Settings</a>
       </div>
     </section>
   </main>
