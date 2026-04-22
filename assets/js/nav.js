@@ -16,8 +16,6 @@
   let tapHandled = false;
 
   let lockedScrollY = 0;
-  let longLoaderTimer = null;
-  let isNavigatingAway = false;
 
   let pressTimer = null;
   let longPressTriggered = false;
@@ -127,147 +125,11 @@
     return progress <= 0.08;
   }
 
-  function ensureLoaderSystem() {
-    let micro = document.getElementById("evaraMicroLoader");
-    let full = document.getElementById("evaraGlobalLoader");
-
-    if (!micro) {
-      micro = document.createElement("div");
-      micro.id = "evaraMicroLoader";
-      micro.className = "evara-micro-loader";
-      micro.setAttribute("aria-hidden", "true");
-      micro.innerHTML = `
-        <div class="evara-micro-loader__orb">
-          <img
-            src="${getBasePath()}/assets/img/evaraos_logo.png"
-            alt="Evaraos"
-            class="evara-micro-loader__logo"
-            onerror="this.onerror=null;this.src='${getBasePath()}/assets/logo.png';"
-          />
-          <span class="evara-micro-loader__pulse"></span>
-          <span class="evara-micro-loader__sheen"></span>
-        </div>
-      `;
-      document.body.appendChild(micro);
-    }
-
-    if (!full) {
-      full = document.createElement("div");
-      full.id = "evaraGlobalLoader";
-      full.className = "evara-global-loader";
-      full.setAttribute("aria-hidden", "true");
-      full.innerHTML = `
-        <div class="evara-loader-backdrop"></div>
-        <div class="evara-loader-box glass-card">
-          <div class="evara-loader-mark evara-loader-mark--premium">
-            <span class="evara-loader-ring"></span>
-            <span class="evara-loader-ring2"></span>
-            <span class="evara-loader-ring3"></span>
-
-            <div class="evara-loader-logo-wrap evara-loader-logo-wrap--premium">
-              <img
-                src="${getBasePath()}/assets/img/evaraos_logo.png"
-                alt="Evaraos"
-                class="evara-loader-logo evara-loader-logo--premium"
-                onerror="this.onerror=null;this.src='${getBasePath()}/assets/logo.png';"
-              />
-            </div>
-          </div>
-
-          <div class="evara-loader-copy">
-            <p class="evara-loader-title" id="evaraLoaderTitle">Launching Evaraos</p>
-            <p class="evara-loader-subtitle" id="evaraLoaderSubtitle">Loading navigation, theme, and experience.</p>
-          </div>
-
-          <div class="evara-loader-dots" aria-hidden="true">
-            <span class="evara-loader-dot"></span>
-            <span class="evara-loader-dot"></span>
-            <span class="evara-loader-dot"></span>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(full);
-    }
-
-    return { micro, full };
-  }
-
-  function clearLongLoaderTimer() {
-    if (longLoaderTimer) {
-      window.clearTimeout(longLoaderTimer);
-      longLoaderTimer = null;
-    }
-  }
-
-  function showMicroLoader() {
-    const { micro } = ensureLoaderSystem();
-    micro.classList.add("active");
-    micro.setAttribute("aria-hidden", "false");
-    document.body.classList.add("app-loading");
-    document.body.classList.remove("app-ready");
-  }
-
-  function hideMicroLoader() {
-    const micro = document.getElementById("evaraMicroLoader");
-    if (micro) {
-      micro.classList.remove("active");
-      micro.setAttribute("aria-hidden", "true");
-    }
-  }
-
-  function showFullLoader({
-    title = "Opening Evaraos",
-    subtitle = "Preparing your next screen."
-  } = {}) {
-    const { full } = ensureLoaderSystem();
-    const titleEl = full.querySelector("#evaraLoaderTitle");
-    const subtitleEl = full.querySelector("#evaraLoaderSubtitle");
-
-    if (titleEl) titleEl.textContent = title;
-    if (subtitleEl) subtitleEl.textContent = subtitle;
-
-    hideMicroLoader();
-    full.classList.add("active");
-    full.setAttribute("aria-hidden", "false");
-    document.body.classList.add("app-loading");
-    document.body.classList.remove("app-ready");
-  }
-
-  function hideFullLoader() {
-    const full = document.getElementById("evaraGlobalLoader");
-    if (full) {
-      full.classList.remove("active", "upgrading");
-      full.setAttribute("aria-hidden", "true");
-    }
-  }
-
-  function hideAllLoaders() {
-    clearLongLoaderTimer();
-    hideMicroLoader();
-    hideFullLoader();
-    document.body.classList.remove("app-loading");
-  }
-
-  function beginSmartLoader({
-    title = "Opening Evaraos",
-    subtitle = "Preparing your next screen."
-  } = {}) {
-    showMicroLoader();
-    clearLongLoaderTimer();
-
-    longLoaderTimer = window.setTimeout(() => {
-      showFullLoader({ title, subtitle });
-    }, 70);
-  }
-
   function navigateWithLoader(href, options = {}) {
-    if (!href || isNavigatingAway) return;
-    isNavigatingAway = true;
+    if (!href) return;
 
     if (window.EvaraLoader && typeof window.EvaraLoader.beginNavigationLoad === "function") {
       window.EvaraLoader.beginNavigationLoad(options);
-    } else {
-      beginSmartLoader(options);
     }
 
     requestAnimationFrame(() => {
@@ -461,6 +323,7 @@
         <header class="eva-nav-shell ${atTopOfPage() ? "expanded" : "compact"}" id="evaNavShell">
           <div class="eva-nav-pill glass-shell" id="evaNavPill">
             <div class="eva-left-spacer" aria-hidden="true"></div>
+            <div class="eva-right-spacer" aria-hidden="true"></div>
 
             <a
               href="${buildHref("index.html")}"
@@ -647,7 +510,7 @@
     navHaptic(8);
   }
 
-  function scheduleCompact(delay = 4200) {
+  function scheduleCompact(delay = 3000) {
     clearCompactTimer();
     if (document.body.classList.contains("nav-menu-open")) return;
     if (atTopOfPage()) return;
@@ -680,13 +543,13 @@
       if (lastScrollDirection < 0) {
         navPinnedOpen = true;
         setTarget(1, "scroll");
-        scheduleCompact(3800);
+        scheduleCompact(2800);
         return;
       }
 
       navPinnedOpen = false;
       setTarget(0, "scroll");
-    }, 90);
+    }, 70);
   }
 
   function lockBodyScroll() {
@@ -714,8 +577,8 @@
     if (!panel) return;
 
     const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-    const topInset = 6;
-    const menuTop = window.innerWidth <= 480 ? 66 : 74;
+    const topInset = 8;
+    const menuTop = window.innerWidth <= 480 ? 68 : 70;
     const bottomInset = 12;
 
     const maxHeight = Math.max(260, viewportHeight - menuTop - bottomInset);
@@ -794,7 +657,7 @@
 
     if (isCompact()) {
       expandNav(true, "tap");
-      scheduleCompact(4200);
+      scheduleCompact(3200);
       return;
     }
 
@@ -819,7 +682,7 @@
     pressTimer = setTimeout(() => {
       longPressTriggered = true;
       showQuickBubbles();
-    }, 280);
+    }, 260);
   }
 
   function endCompactPress() {
@@ -831,8 +694,7 @@
 
   function bindTapToggle() {
     const pill = getNavPill();
-    const menuBtn = getMenuBtn();
-    if (!pill || !menuBtn) return;
+    if (!pill) return;
 
     function onTouchStart(event) {
       if (event.target.closest("#evaMenuBtn")) return;
@@ -1127,7 +989,7 @@
             navPinnedOpen = false;
             setTarget(0, "scroll");
           } else {
-            const sensitivity = 0.024;
+            const sensitivity = 0.020;
             const next = Math.max(0, Math.min(1, targetProgress - dy * sensitivity));
             setTarget(next, "scroll");
           }
@@ -1154,13 +1016,13 @@
 
   function animate() {
     const diff = targetProgress - progress;
-    const factor = motionMode === "tap" ? 0.16 : 0.11;
+    const factor = motionMode === "tap" ? 0.20 : 0.14;
     const next = Math.abs(diff) < 0.0006 ? targetProgress : progress + diff * factor;
     applyProgress(next);
     rafId = requestAnimationFrame(animate);
   }
 
-  function bootLoaderPulse() {
+  function bootReadySignal() {
     if (hasBootAnimated) return;
     hasBootAnimated = true;
 
@@ -1169,11 +1031,8 @@
       return;
     }
 
-    showMicroLoader();
-    window.setTimeout(() => {
-      hideAllLoaders();
-      document.body.classList.add("app-ready");
-    }, 220);
+    document.body.classList.remove("app-loading");
+    document.body.classList.add("app-ready");
   }
 
   function init() {
@@ -1202,12 +1061,10 @@
     bindScrollBehavior();
     syncThemeLabel();
     animate();
-    bootLoaderPulse();
+    bootReadySignal();
 
     window.addEventListener("pageshow", () => {
-      isNavigatingAway = false;
       setTheme(getAppearanceTheme());
-      hideAllLoaders();
       hideQuickBubbles();
       endCompactPress();
 
@@ -1216,14 +1073,6 @@
       } else {
         document.body.classList.remove("app-loading");
         document.body.classList.add("app-ready");
-      }
-    });
-
-    window.addEventListener("beforeunload", () => {
-      if (window.EvaraLoader && typeof window.EvaraLoader.beginNavigationLoad === "function") {
-        window.EvaraLoader.beginNavigationLoad();
-      } else {
-        showMicroLoader();
       }
     });
   }
