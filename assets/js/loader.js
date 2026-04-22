@@ -3,9 +3,9 @@
   const PAGE_TRANSITION_ID = "evaPageTransition";
   const GLOBAL_LOADER_ID = "evaraGlobalLoader";
 
-  const FAST_TO_FULL_DELAY = 380;
-  const READY_CLASS_DELAY = 70;
-  const PAGE_READY_FALLBACK = 1200;
+  const FAST_TO_FULL_DELAY = 120;
+  const READY_CLASS_DELAY = 30;
+  const PAGE_READY_FALLBACK = 420;
 
   let fullLoaderTimer = null;
   let readyTimer = null;
@@ -41,12 +41,14 @@
     el.className = "evara-loader-fast";
     el.setAttribute("aria-hidden", "true");
     el.innerHTML = `
-      <img
-        src="${getBasePath()}/assets/img/evaraos_logo.png"
-        alt="Evaraos"
-        class="evara-loader-fast-logo"
-        onerror="this.onerror=null;this.src='${getBasePath()}/assets/logo.png';"
-      />
+      <div class="evara-loader-fast-wrap">
+        <img
+          src="${getBasePath()}/assets/img/evaraos_logo.png"
+          alt="Evaraos"
+          class="evara-loader-fast-logo"
+          onerror="this.onerror=null;this.src='${getBasePath()}/assets/logo.png';"
+        />
+      </div>
     `;
     document.body.appendChild(el);
     return el;
@@ -64,11 +66,10 @@
       <div class="evara-loader-backdrop"></div>
       <div class="evara-loader-box glass-card">
         <div class="evara-loader-mark evara-loader-mark--premium">
-          <span class="evara-loader-ring"></span>
-          <span class="evara-loader-ring2"></span>
-          <span class="evara-loader-ring3"></span>
-
-          <div class="evara-loader-logo-wrap evara-loader-logo-wrap--premium">
+          <div class="evara-loader-logo-wrap evara-loader-logo-wrap--premium evara-loader-pulse-wrap">
+            <span class="evara-loader-pulse-ring pulse-ring-a"></span>
+            <span class="evara-loader-pulse-ring pulse-ring-b"></span>
+            <span class="evara-loader-pulse-glow"></span>
             <img
               src="${getBasePath()}/assets/img/evaraos_logo.png"
               alt="Evaraos"
@@ -81,12 +82,6 @@
         <div class="evara-loader-copy">
           <p class="evara-loader-title" id="evaraLoaderTitle">Launching Evaraos</p>
           <p class="evara-loader-subtitle" id="evaraLoaderSubtitle">Loading navigation, theme, and experience.</p>
-        </div>
-
-        <div class="evara-loader-dots" aria-hidden="true">
-          <span class="evara-loader-dot"></span>
-          <span class="evara-loader-dot"></span>
-          <span class="evara-loader-dot"></span>
         </div>
       </div>
     `;
@@ -136,17 +131,29 @@
 
   function showFastLoader() {
     const fast = ensureFastLoader();
-    fast.classList.add("active");
+    fast.classList.remove("is-exiting");
+    fast.classList.add("active", "is-entering");
     fast.setAttribute("aria-hidden", "false");
     document.body.classList.add("app-loading");
     document.body.classList.remove("app-ready");
+
+    clearTimer("transitionTimer");
+    transitionTimer = setTimeout(() => {
+      fast.classList.remove("is-entering");
+    }, 170);
   }
 
   function hideFastLoader() {
     const fast = document.getElementById(FAST_LOADER_ID);
     if (!fast) return;
-    fast.classList.remove("active");
-    fast.setAttribute("aria-hidden", "true");
+
+    fast.classList.remove("is-entering");
+    fast.classList.add("is-exiting");
+
+    setTimeout(() => {
+      fast.classList.remove("active", "is-exiting");
+      fast.setAttribute("aria-hidden", "true");
+    }, 160);
   }
 
   function showFullLoader(options = {}) {
@@ -157,22 +164,29 @@
     if (titleEl && options.title) titleEl.textContent = options.title;
     if (subtitleEl && options.subtitle) subtitleEl.textContent = options.subtitle;
 
-    loader.classList.add("active", "upgrading");
+    loader.classList.remove("is-exiting");
+    loader.classList.add("active", "is-entering");
     loader.setAttribute("aria-hidden", "false");
     document.body.classList.add("app-loading");
     document.body.classList.remove("app-ready");
 
     clearTimer("transitionTimer");
     transitionTimer = setTimeout(() => {
-      loader.classList.remove("upgrading");
-    }, 220);
+      loader.classList.remove("is-entering");
+    }, 180);
   }
 
   function hideFullLoader() {
     const loader = document.getElementById(GLOBAL_LOADER_ID);
     if (!loader) return;
-    loader.classList.remove("active", "upgrading");
-    loader.setAttribute("aria-hidden", "true");
+
+    loader.classList.remove("is-entering");
+    loader.classList.add("is-exiting");
+
+    setTimeout(() => {
+      loader.classList.remove("active", "is-exiting");
+      loader.setAttribute("aria-hidden", "true");
+    }, 170);
   }
 
   function hideAllLoaders() {
