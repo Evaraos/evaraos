@@ -25,6 +25,17 @@ const leadsSortBtn = document.getElementById("leadsSortBtn");
 let leadsData = [];
 let sortAsc = true;
 let isLoadingLeads = false;
+let hasBoundEvents = false;
+let hasStartedAuthWatch = false;
+
+function navigateWithLoader(url, options = {}) {
+  if (window.EvaraLoader && typeof window.EvaraLoader.beginNavigationLoad === "function") {
+    window.EvaraLoader.beginNavigationLoad(options);
+  }
+  requestAnimationFrame(() => {
+    window.location.assign(url);
+  });
+}
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -316,6 +327,9 @@ async function loadLeads() {
 }
 
 function bindEvents() {
+  if (hasBoundEvents) return;
+  hasBoundEvents = true;
+
   leadsSearch?.addEventListener("input", renderLeads);
 
   leadsRefreshBtnTop?.addEventListener("click", loadLeads);
@@ -337,13 +351,27 @@ function bindEvents() {
   });
 }
 
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    window.location.replace("/evaraos/login.html");
-    return;
-  }
+function initLeadsPage() {
+  if (hasStartedAuthWatch) return;
+  hasStartedAuthWatch = true;
 
-  loadLeads();
-});
+  bindEvents();
 
-document.addEventListener("DOMContentLoaded", bindEvents);
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      navigateWithLoader("/evaraos/login.html", {
+        title: "Returning to login",
+        subtitle: "Your session is not active."
+      });
+      return;
+    }
+
+    loadLeads();
+  });
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initLeadsPage);
+} else {
+  initLeadsPage();
+}
