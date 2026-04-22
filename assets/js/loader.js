@@ -3,9 +3,9 @@
   const PAGE_TRANSITION_ID = "evaPageTransition";
   const GLOBAL_LOADER_ID = "evaraGlobalLoader";
 
-  const FAST_TO_FULL_DELAY = 260;
-  const READY_CLASS_DELAY = 22;
-  const PAGE_READY_FALLBACK = 240;
+  const FAST_TO_FULL_DELAY = 520;
+  const READY_CLASS_DELAY = 16;
+  const PAGE_READY_FALLBACK = 160;
 
   let fullLoaderTimer = null;
   let readyTimer = null;
@@ -140,7 +140,7 @@
     clearTimer("transitionTimer");
     transitionTimer = setTimeout(() => {
       fast.classList.remove("is-entering");
-    }, 120);
+    }, 100);
   }
 
   function hideFastLoader() {
@@ -153,7 +153,7 @@
     setTimeout(() => {
       fast.classList.remove("active", "is-exiting");
       fast.setAttribute("aria-hidden", "true");
-    }, 120);
+    }, 100);
   }
 
   function showFullLoader(options = {}) {
@@ -173,7 +173,7 @@
     clearTimer("transitionTimer");
     transitionTimer = setTimeout(() => {
       loader.classList.remove("is-entering");
-    }, 130);
+    }, 120);
   }
 
   function hideFullLoader() {
@@ -186,7 +186,7 @@
     setTimeout(() => {
       loader.classList.remove("active", "is-exiting");
       loader.setAttribute("aria-hidden", "true");
-    }, 120);
+    }, 100);
   }
 
   function hideAllLoaders() {
