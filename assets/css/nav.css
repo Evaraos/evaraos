@@ -103,6 +103,17 @@ body.eva-no-select,
     0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
+.eva-left-spacer {
+  position: absolute;
+  left: calc(4px + 8px * var(--nav-progress));
+  top: 50%;
+  transform: translateY(-50%);
+  width: var(--menu-size);
+  height: var(--menu-size);
+  pointer-events: none;
+  opacity: var(--nav-progress);
+}
+
 .eva-brand {
   position: absolute;
   left: 50%;
