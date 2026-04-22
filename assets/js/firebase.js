@@ -51,87 +51,41 @@ let currentUser = null;
 let useSessionStorageForProfile = false;
 
 /* =========================================
-   GLOBAL LOADER
+   SHARED NAVIGATION + LOADER BRIDGE
    ========================================= */
 
-const GLOBAL_LOADER_ID = "evaraGlobalLoader";
+function navigateWithLoader(path, options = {}, replace = false) {
+  if (window.EvaraLoader && typeof window.EvaraLoader.beginNavigationLoad === "function") {
+    window.EvaraLoader.beginNavigationLoad(options);
+  }
 
-function ensureGlobalLoader() {
-  let loader = document.getElementById(GLOBAL_LOADER_ID);
-  if (loader) return loader;
-
-  if (!document.body) return null;
-
-  loader = document.createElement("div");
-  loader.id = GLOBAL_LOADER_ID;
-  loader.className = "evara-global-loader";
-  loader.setAttribute("aria-hidden", "true");
-
-  loader.innerHTML = `
-    <div class="evara-loader-backdrop"></div>
-    <div class="evara-loader-box glass-card">
-      <div class="evara-loader-mark evara-loader-mark--premium">
-        <span class="evara-loader-ring"></span>
-        <span class="evara-loader-ring2"></span>
-        <span class="evara-loader-ring3"></span>
-
-        <div class="evara-loader-logo-wrap evara-loader-logo-wrap--premium">
-          <span class="evara-loader-logo-glow"></span>
-
-          <img
-            src="/evaraos/assets/img/evaraos_logo.png"
-            alt="Evaraos"
-            class="evara-loader-logo evara-loader-logo--premium"
-            onerror="this.onerror=null;this.src='/evaraos/assets/logo.png';"
-          />
-
-          <span class="evara-loader-particle evara-loader-particle--a"></span>
-          <span class="evara-loader-particle evara-loader-particle--b"></span>
-          <span class="evara-loader-particle evara-loader-particle--c"></span>
-        </div>
-      </div>
-
-      <div class="evara-loader-copy">
-        <p class="evara-loader-title" id="evaraLoaderTitle">Loading Evaraos</p>
-        <p class="evara-loader-subtitle" id="evaraLoaderSubtitle">Preparing your workspace and syncing your secure session.</p>
-      </div>
-
-      <div class="evara-loader-dots" aria-hidden="true">
-        <span class="evara-loader-dot"></span>
-        <span class="evara-loader-dot"></span>
-        <span class="evara-loader-dot"></span>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(loader);
-  return loader;
+  requestAnimationFrame(() => {
+    if (replace) {
+      window.location.replace(path);
+    } else {
+      window.location.assign(path);
+    }
+  });
 }
 
 export function showGlobalLoader({
   title = "Loading Evaraos",
   subtitle = "Preparing your workspace and syncing your secure session."
 } = {}) {
-  const loader = ensureGlobalLoader();
-  if (!loader) return;
+  if (window.EvaraLoader && typeof window.EvaraLoader.showFullLoader === "function") {
+    window.EvaraLoader.showFullLoader({ title, subtitle });
+    return;
+  }
 
-  const titleEl = loader.querySelector("#evaraLoaderTitle");
-  const subtitleEl = loader.querySelector("#evaraLoaderSubtitle");
-
-  if (titleEl) titleEl.textContent = title;
-  if (subtitleEl) subtitleEl.textContent = subtitle;
-
-  loader.classList.add("active");
-  loader.setAttribute("aria-hidden", "false");
   document.body?.classList.add("app-loading");
+  document.body?.classList.remove("app-ready");
 }
 
 export function hideGlobalLoader() {
-  const loader = document.getElementById(GLOBAL_LOADER_ID);
-  if (loader) {
-    loader.classList.remove("active");
-    loader.setAttribute("aria-hidden", "true");
+  if (window.EvaraLoader && typeof window.EvaraLoader.hideAllLoaders === "function") {
+    window.EvaraLoader.hideAllLoaders();
   }
+
   document.body?.classList.remove("app-loading");
   document.body?.classList.add("app-ready");
 }
@@ -304,7 +258,14 @@ export async function logoutAndRedirect(path = "/evaraos/login.html") {
     localStorage.removeItem("evaraos-last-private-page");
   } catch {}
 
-  window.location.replace(path);
+  navigateWithLoader(
+    path,
+    {
+      title: "Signed out",
+      subtitle: "Returning to login."
+    },
+    true
+  );
 }
 
 export async function logout() {
@@ -335,13 +296,20 @@ export function resolveProtectedPage() {
    ROUTE PROTECTION
    ========================================= */
 
-let protectRouteBound = false;
+let protectRouteActivePromise = null;
+let protectRouteResolver = null;
+let protectRouteUnsubscribe = null;
+let protectRoutePageshowBound = false;
 
 export function protectRoute({
   requireAuth = true,
   redirectGuestTo = "/evaraos/login.html",
   redirectAuthedTo = "/evaraos/dashboard.html"
 } = {}) {
+  if (protectRouteActivePromise) {
+    return protectRouteActivePromise;
+  }
+
   markProtectedPagePending(
     requireAuth
       ? "Verifying your access and restoring your workspace."
@@ -354,7 +322,24 @@ export function protectRoute({
     path.endsWith("/signup.html") ||
     path.endsWith("/reset.html");
 
-  onAuthStateChanged(auth, (user) => {
+  protectRouteActivePromise = new Promise((resolve) => {
+    protectRouteResolver = resolve;
+  });
+
+  const finish = () => {
+    if (protectRouteResolver) {
+      protectRouteResolver(true);
+    }
+    protectRouteResolver = null;
+    protectRouteActivePromise = null;
+  };
+
+  if (protectRouteUnsubscribe) {
+    protectRouteUnsubscribe();
+    protectRouteUnsubscribe = null;
+  }
+
+  protectRouteUnsubscribe = onAuthStateChanged(auth, (user) => {
     if (user) {
       currentUser = user;
 
@@ -364,15 +349,20 @@ export function protectRoute({
       }
 
       if (!requireAuth && isAuthPage) {
-        showGlobalLoader({
-          title: "Redirecting",
-          subtitle: "You are already signed in. Opening your dashboard."
-        });
-        window.location.replace(redirectAuthedTo);
+        navigateWithLoader(
+          redirectAuthedTo,
+          {
+            title: "Redirecting",
+            subtitle: "You are already signed in. Opening your dashboard."
+          },
+          true
+        );
+        finish();
         return;
       }
 
       resolveProtectedPage();
+      finish();
       return;
     }
 
@@ -380,19 +370,24 @@ export function protectRoute({
     clearUserSession();
 
     if (requireAuth) {
-      showGlobalLoader({
-        title: "Redirecting to login",
-        subtitle: "This protected page requires an active secure session."
-      });
-      window.location.replace(redirectGuestTo);
+      navigateWithLoader(
+        redirectGuestTo,
+        {
+          title: "Redirecting to login",
+          subtitle: "This protected page requires an active secure session."
+        },
+        true
+      );
+      finish();
       return;
     }
 
     resolveProtectedPage();
+    finish();
   });
 
-  if (!protectRouteBound) {
-    protectRouteBound = true;
+  if (!protectRoutePageshowBound) {
+    protectRoutePageshowBound = true;
 
     window.addEventListener("pageshow", (event) => {
       if (!event.persisted) return;
@@ -400,26 +395,34 @@ export function protectRoute({
       const activeUser = auth.currentUser;
 
       if (requireAuth && !activeUser) {
-        showGlobalLoader({
-          title: "Restoring session",
-          subtitle: "No active session was found. Redirecting to login."
-        });
-        window.location.replace(redirectGuestTo);
+        navigateWithLoader(
+          redirectGuestTo,
+          {
+            title: "Restoring session",
+            subtitle: "No active session was found. Redirecting to login."
+          },
+          true
+        );
         return;
       }
 
       if (!requireAuth && activeUser && isAuthPage) {
-        showGlobalLoader({
-          title: "Restoring session",
-          subtitle: "You are already signed in. Redirecting now."
-        });
-        window.location.replace(redirectAuthedTo);
+        navigateWithLoader(
+          redirectAuthedTo,
+          {
+            title: "Restoring session",
+            subtitle: "You are already signed in. Redirecting now."
+          },
+          true
+        );
         return;
       }
 
       resolveProtectedPage();
     });
   }
+
+  return protectRouteActivePromise;
 }
 
 /* =========================================
