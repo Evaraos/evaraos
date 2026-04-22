@@ -1,7 +1,7 @@
 :root {
-  --auth-shell-max: 860px;
-  --auth-panel-radius: 36px;
-  --auth-panel-pad: 34px;
+  --auth-shell-max: 920px;
+  --auth-panel-radius: 38px;
+  --auth-panel-pad: 36px;
   --auth-panel-pad-mobile: 22px;
   --auth-logo-size: 78px;
   --auth-title-size: clamp(2.6rem, 6vw, 4.8rem);
@@ -10,9 +10,9 @@
   --auth-input-radius: 999px;
   --auth-btn-height: 64px;
   --auth-btn-radius: 999px;
-  --auth-border: rgba(205, 189, 255, 0.26);
-  --auth-soft-line: rgba(255,255,255,0.08);
-  --auth-glow: rgba(124, 58, 237, 0.20);
+  --auth-border: rgba(205, 189, 255, 0.22);
+  --auth-soft-line: rgba(255,255,255,0.07);
+  --auth-glow: rgba(124, 58, 237, 0.16);
 }
 
 .login-page,
@@ -24,7 +24,7 @@
 
 .login-shell {
   width: min(var(--auth-shell-max), calc(100% - 24px));
-  margin: 122px auto 72px;
+  margin: 104px auto 64px;
   position: relative;
   z-index: 2;
 }
@@ -35,13 +35,13 @@
   padding: var(--auth-panel-pad);
   border-radius: var(--auth-panel-radius);
   overflow: hidden;
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
   background:
-    linear-gradient(135deg, rgba(22, 31, 49, 0.92) 0%, rgba(9, 13, 25, 0.94) 100%);
+    linear-gradient(135deg, rgba(20, 28, 46, 0.88) 0%, rgba(9, 13, 25, 0.92) 100%);
   border: 1px solid var(--auth-border);
   box-shadow:
-    0 28px 70px rgba(0,0,0,0.46),
+    0 28px 70px rgba(0,0,0,0.42),
     inset 0 1px 0 rgba(255,255,255,0.08),
     0 0 0 1px rgba(255,255,255,0.03);
 }
@@ -52,9 +52,9 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 82% 18%, rgba(255, 59, 48, 0.16), transparent 24%),
-    radial-gradient(circle at 12% 84%, rgba(59, 130, 246, 0.14), transparent 24%),
-    linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.04) 48%, transparent 52%);
+    radial-gradient(circle at 82% 18%, rgba(255, 59, 48, 0.12), transparent 22%),
+    radial-gradient(circle at 12% 84%, rgba(59, 130, 246, 0.10), transparent 22%),
+    linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.03) 48%, transparent 52%);
   pointer-events: none;
 }
 
@@ -66,14 +66,14 @@
   border-radius: inherit;
   pointer-events: none;
   box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,0.04),
-    0 0 40px rgba(139, 92, 246, 0.05);
+    inset 0 0 0 1px rgba(255,255,255,0.03),
+    0 0 30px rgba(139, 92, 246, 0.04);
 }
 
 .login-badge-wrap {
   display: flex;
   justify-content: center;
-  margin-bottom: 22px;
+  margin-bottom: 20px;
   position: relative;
   z-index: 1;
 }
@@ -84,8 +84,8 @@
   height: var(--auth-logo-size);
   object-fit: contain;
   filter:
-    drop-shadow(0 10px 18px rgba(255, 59, 48, 0.24))
-    drop-shadow(0 2px 6px rgba(255,255,255,0.08));
+    drop-shadow(0 10px 18px rgba(255, 59, 48, 0.18))
+    drop-shadow(0 2px 6px rgba(255,255,255,0.06));
 }
 
 .auth-badge-large {
@@ -105,12 +105,12 @@
 }
 
 .login-subtitle {
-  margin: 18px auto 30px;
+  margin: 16px auto 28px;
   max-width: 760px;
   text-align: center;
   font-size: var(--auth-subtitle-size);
-  line-height: 1.6;
-  color: rgba(231, 236, 255, 0.92);
+  line-height: 1.58;
+  color: rgba(231, 236, 255, 0.84);
   position: relative;
   z-index: 1;
 }
@@ -134,9 +134,9 @@
 }
 
 .field-label {
-  font-size: 1rem;
+  font-size: 0.98rem;
   font-weight: 700;
-  color: rgba(244, 247, 255, 0.96);
+  color: rgba(244, 247, 255, 0.92);
 }
 
 .input-shell,
@@ -145,23 +145,23 @@
   position: relative;
   min-height: var(--auth-input-height);
   border-radius: var(--auth-input-radius);
-  border: 1px solid rgba(200, 188, 255, 0.26);
+  border: 1px solid rgba(200, 188, 255, 0.18);
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+    linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025));
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.10),
-    0 8px 24px rgba(0,0,0,0.16);
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    0 8px 20px rgba(0,0,0,0.12);
   overflow: hidden;
 }
 
 .input-shell:focus-within,
 .password-wrap:focus-within,
 .remember-row:focus-within {
-  border-color: rgba(168, 85, 247, 0.46);
+  border-color: rgba(168, 85, 247, 0.34);
   box-shadow:
-    0 0 0 1px rgba(168, 85, 247, 0.38),
-    0 0 18px rgba(168, 85, 247, 0.12),
-    inset 0 1px 0 rgba(255,255,255,0.10);
+    0 0 0 1px rgba(168, 85, 247, 0.26),
+    0 0 16px rgba(168, 85, 247, 0.08),
+    inset 0 1px 0 rgba(255,255,255,0.08);
 }
 
 .input {
@@ -181,7 +181,7 @@
 }
 
 .input::placeholder {
-  color: rgba(234, 240, 255, 0.52);
+  color: rgba(234, 240, 255, 0.44);
   font-weight: 500;
 }
 
@@ -203,12 +203,12 @@ textarea.input {
 .password-toggle {
   border: 0;
   outline: 0;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.06);
   color: #f5f7ff;
   cursor: pointer;
   display: grid;
   place-items: center;
-  border-left: 1px solid rgba(255,255,255,0.10);
+  border-left: 1px solid rgba(255,255,255,0.08);
   margin: 6px;
   border-radius: 16px;
   min-height: calc(var(--auth-input-height) - 12px);
@@ -247,10 +247,10 @@ textarea.input {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-size: 1rem;
+  font-size: 0.98rem;
   font-weight: 600;
   cursor: pointer;
-  color: rgba(243, 246, 255, 0.96);
+  color: rgba(243, 246, 255, 0.92);
 }
 
 .remember-check input {
@@ -276,7 +276,7 @@ textarea.input {
   font-size: 1rem;
   font-weight: 800;
   text-decoration: none;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.10);
   cursor: pointer;
   box-sizing: border-box;
 }
@@ -286,28 +286,28 @@ textarea.input {
 .login-actions-row .btn:first-child {
   color: #f7fbff;
   background:
-    linear-gradient(135deg, rgba(73, 130, 255, 0.96) 0%, rgba(97, 152, 255, 0.84) 100%);
+    linear-gradient(135deg, rgba(73, 130, 255, 0.92) 0%, rgba(97, 152, 255, 0.80) 100%);
   box-shadow:
-    0 18px 34px rgba(37, 99, 235, 0.22),
-    inset 0 1px 0 rgba(255,255,255,0.18);
+    0 16px 28px rgba(37, 99, 235, 0.18),
+    inset 0 1px 0 rgba(255,255,255,0.16);
 }
 
 .btn-theme-secondary,
 .login-actions-row .btn:nth-child(2) {
   color: #f4f6ff;
-  background: rgba(5, 11, 28, 0.18);
-  border-color: rgba(255,255,255,0.10);
+  background: rgba(5, 11, 28, 0.14);
+  border-color: rgba(255,255,255,0.08);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.08),
-    0 10px 28px rgba(0,0,0,0.16);
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    0 8px 22px rgba(0,0,0,0.12);
 }
 
 .login-message {
-  min-height: 26px;
-  margin: 6px 2px 0;
-  font-size: 1rem;
+  min-height: 24px;
+  margin: 4px 2px 0;
+  font-size: 0.98rem;
   line-height: 1.45;
-  color: rgba(241, 245, 255, 0.94);
+  color: rgba(241, 245, 255, 0.90);
 }
 
 .login-message[data-state="error"] {
@@ -323,7 +323,7 @@ textarea.input {
 }
 
 .auth-footer-links {
-  margin-top: 10px;
+  margin-top: 8px;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -331,11 +331,11 @@ textarea.input {
   justify-content: flex-start;
   position: relative;
   z-index: 1;
-  font-size: 1rem;
+  font-size: 0.98rem;
 }
 
 .auth-footer-links span {
-  color: rgba(242, 246, 255, 0.90);
+  color: rgba(242, 246, 255, 0.84);
 }
 
 .auth-footer-links a {
@@ -353,21 +353,21 @@ html[data-theme="light"] .reset-page {
 html[data-theme="light"] .auth-panel,
 html[data-theme="light"] .login-panel {
   background:
-    linear-gradient(135deg, rgba(246, 248, 252, 0.96) 0%, rgba(237, 241, 247, 0.98) 100%);
-  border: 1px solid rgba(255,255,255,0.94);
+    linear-gradient(135deg, rgba(246, 248, 252, 0.94) 0%, rgba(237, 241, 247, 0.96) 100%);
+  border: 1px solid rgba(255,255,255,0.92);
   box-shadow:
-    0 24px 54px rgba(86, 111, 100, 0.18),
+    0 22px 46px rgba(86, 111, 100, 0.14),
     inset 0 1px 0 rgba(255,255,255,1);
 }
 
 html[data-theme="light"] .login-subtitle {
-  color: rgba(17, 32, 24, 0.82);
+  color: rgba(17, 32, 24, 0.74);
 }
 
 html[data-theme="light"] .field-label,
 html[data-theme="light"] .remember-check,
 html[data-theme="light"] .auth-footer-links span {
-  color: rgba(18, 33, 26, 0.92);
+  color: rgba(18, 33, 26, 0.86);
 }
 
 html[data-theme="light"] .input-shell,
@@ -375,10 +375,10 @@ html[data-theme="light"] .password-wrap,
 html[data-theme="light"] .remember-row {
   background:
     linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248,249,252,0.92));
-  border: 1px solid rgba(213, 221, 233, 0.84);
+  border: 1px solid rgba(213, 221, 233, 0.76);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.96),
-    0 8px 22px rgba(125, 141, 165, 0.10);
+    0 6px 18px rgba(125, 141, 165, 0.08);
 }
 
 html[data-theme="light"] .input {
@@ -386,20 +386,20 @@ html[data-theme="light"] .input {
 }
 
 html[data-theme="light"] .input::placeholder {
-  color: rgba(16, 32, 25, 0.42);
+  color: rgba(16, 32, 25, 0.38);
 }
 
 html[data-theme="light"] .password-toggle {
-  background: rgba(240, 243, 248, 0.95);
+  background: rgba(240, 243, 248, 0.94);
   color: #14251f;
-  border-left: 1px solid rgba(182, 194, 209, 0.72);
+  border-left: 1px solid rgba(182, 194, 209, 0.62);
 }
 
 html[data-theme="light"] .btn-theme-secondary,
 html[data-theme="light"] .login-actions-row .btn:nth-child(2) {
   color: #14251f;
-  background: rgba(255,255,255,0.82);
-  border-color: rgba(220, 228, 237, 0.90);
+  background: rgba(255,255,255,0.80);
+  border-color: rgba(220, 228, 237, 0.82);
 }
 
 html[data-theme="light"] .auth-footer-links a {
@@ -415,7 +415,7 @@ html[data-theme="light"] .auth-footer-links a {
 @media (max-width: 640px) {
   .login-shell {
     width: min(calc(100% - 16px), 100%);
-    margin: 108px auto 64px;
+    margin: 92px auto 56px;
   }
 
   .auth-panel,
@@ -430,8 +430,8 @@ html[data-theme="light"] .auth-footer-links a {
 
   .login-subtitle {
     margin: 14px auto 24px;
-    font-size: 1.02rem;
-    line-height: 1.55;
+    font-size: 1rem;
+    line-height: 1.52;
   }
 
   .login-actions-row {
@@ -446,6 +446,6 @@ html[data-theme="light"] .auth-footer-links a {
   }
 
   .auth-footer-links {
-    font-size: 0.96rem;
+    font-size: 0.95rem;
   }
 }
