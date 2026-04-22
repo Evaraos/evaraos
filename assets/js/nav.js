@@ -9,6 +9,7 @@
   let navPinnedOpen = false;
   let motionMode = "scroll";
   let hasBootAnimated = false;
+  let isNavigating = false;
 
   let tapStartX = 0;
   let tapStartY = 0;
@@ -126,7 +127,10 @@
   }
 
   function navigateWithLoader(href, options = {}) {
-    if (!href) return;
+    if (!href || isNavigating) return;
+    if (href === window.location.href) return;
+
+    isNavigating = true;
 
     if (window.EvaraLoader && typeof window.EvaraLoader.beginNavigationLoad === "function") {
       window.EvaraLoader.beginNavigationLoad(options);
@@ -510,7 +514,7 @@
     navHaptic(8);
   }
 
-  function scheduleCompact(delay = 3000) {
+  function scheduleCompact(delay = 2600) {
     clearCompactTimer();
     if (document.body.classList.contains("nav-menu-open")) return;
     if (atTopOfPage()) return;
@@ -543,13 +547,13 @@
       if (lastScrollDirection < 0) {
         navPinnedOpen = true;
         setTarget(1, "scroll");
-        scheduleCompact(2800);
+        scheduleCompact(2400);
         return;
       }
 
       navPinnedOpen = false;
       setTarget(0, "scroll");
-    }, 70);
+    }, 60);
   }
 
   function lockBodyScroll() {
@@ -657,7 +661,7 @@
 
     if (isCompact()) {
       expandNav(true, "tap");
-      scheduleCompact(3200);
+      scheduleCompact(2800);
       return;
     }
 
@@ -682,7 +686,7 @@
     pressTimer = setTimeout(() => {
       longPressTriggered = true;
       showQuickBubbles();
-    }, 260);
+    }, 240);
   }
 
   function endCompactPress() {
@@ -989,7 +993,7 @@
             navPinnedOpen = false;
             setTarget(0, "scroll");
           } else {
-            const sensitivity = 0.020;
+            const sensitivity = 0.018;
             const next = Math.max(0, Math.min(1, targetProgress - dy * sensitivity));
             setTarget(next, "scroll");
           }
@@ -1016,7 +1020,7 @@
 
   function animate() {
     const diff = targetProgress - progress;
-    const factor = motionMode === "tap" ? 0.20 : 0.14;
+    const factor = motionMode === "tap" ? 0.22 : 0.15;
     const next = Math.abs(diff) < 0.0006 ? targetProgress : progress + diff * factor;
     applyProgress(next);
     rafId = requestAnimationFrame(animate);
@@ -1064,6 +1068,7 @@
     bootReadySignal();
 
     window.addEventListener("pageshow", () => {
+      isNavigating = false;
       setTheme(getAppearanceTheme());
       hideQuickBubbles();
       endCompactPress();
