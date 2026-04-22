@@ -14,6 +14,7 @@
   let pageReadyFallbackTimer = null;
   let isTransitioning = false;
   let fullLoaderVisible = false;
+  let bootSettled = false;
 
   function getBasePath() {
     const path = window.location.pathname;
@@ -133,7 +134,9 @@
   function hidePageTransition() {
     const transition = document.getElementById(PAGE_TRANSITION_ID);
     document.documentElement.classList.remove("eva-transitioning");
-    if (transition) transition.classList.remove("active");
+    if (transition) {
+      transition.classList.remove("active");
+    }
   }
 
   function showFastLoader() {
@@ -186,8 +189,12 @@
 
     hideFastLoader(true);
 
-    if (titleEl && options.title) titleEl.textContent = options.title;
-    if (subtitleEl && options.subtitle) subtitleEl.textContent = options.subtitle;
+    if (titleEl) {
+      titleEl.textContent = options.title || "Opening Evaraos";
+    }
+    if (subtitleEl) {
+      subtitleEl.textContent = options.subtitle || "Preparing your next screen.";
+    }
 
     loader.classList.remove("is-exiting");
     loader.classList.add("active", "is-entering");
@@ -238,6 +245,7 @@
       document.body.classList.add("app-ready");
       document.documentElement.classList.remove("eva-transitioning");
       isTransitioning = false;
+      bootSettled = true;
     }, READY_CLASS_DELAY);
   }
 
@@ -338,7 +346,8 @@
       getState() {
         return {
           isTransitioning,
-          fullLoaderVisible
+          fullLoaderVisible,
+          bootSettled
         };
       }
     };
