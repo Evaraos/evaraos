@@ -27,7 +27,7 @@ body.eva-no-select,
 .eva-nav-shell {
   --nav-progress: 0;
   --pill-min-width: 76px;
-  --pill-max-width: min(calc(100vw - 16px), 1240px);
+  --pill-max-width: min(calc(100vw - 12px), 1240px);
   --pill-width: calc(var(--pill-min-width) + (var(--pill-max-width) - var(--pill-min-width)) * var(--nav-progress));
   --pill-height: calc(34px + 34px * var(--nav-progress));
   --pill-pad-x: calc(7px + 8px * var(--nav-progress));
@@ -39,14 +39,14 @@ body.eva-no-select,
   --menu-size: calc(0px + 36px * var(--nav-progress));
   --burger-scale: calc(0 + 1 * var(--nav-progress));
   --copy-opacity: var(--nav-progress);
-  --brand-max-width: calc(40px + 260px * var(--nav-progress));
+  --brand-max-width: calc(40px + 222px * var(--nav-progress));
 
   position: fixed;
-  top: max(8px, env(safe-area-inset-top));
+  top: max(4px, env(safe-area-inset-top));
   left: 50%;
   transform: translateX(-50%);
   width: auto;
-  max-width: calc(100vw - 12px);
+  max-width: calc(100vw - 4px);
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -64,8 +64,8 @@ body.eva-no-select,
 }
 
 .eva-nav-pill {
-  width: min(var(--pill-width), calc(100vw - 12px));
-  max-width: calc(100vw - 12px);
+  width: min(var(--pill-width), calc(100vw - 4px));
+  max-width: calc(100vw - 4px);
   min-height: var(--pill-height);
   margin: 0 auto;
   padding: var(--pill-pad-y) var(--pill-pad-x);
@@ -114,14 +114,14 @@ body.eva-no-select,
   gap: var(--brand-gap);
   text-decoration: none;
   min-width: 0;
-  max-width: min(var(--brand-max-width), calc(100% - var(--menu-size) - 28px));
+  max-width: min(var(--brand-max-width), calc(100% - var(--menu-size) - 18px));
   pointer-events: auto;
   transition: none;
   will-change: gap, transform, max-width;
   -webkit-user-select: none;
   user-select: none;
   text-align: center;
-  padding-inline: 6px;
+  padding-inline: 2px;
 }
 
 .eva-nav-shell.compact .eva-brand {
@@ -137,7 +137,7 @@ body.eva-no-select,
   opacity: var(--copy-opacity);
   pointer-events: none;
   overflow: hidden;
-  max-width: calc(220px * var(--nav-progress));
+  max-width: calc(200px * var(--nav-progress));
   transition: none;
   will-change: opacity, max-width;
 }
@@ -491,7 +491,6 @@ html[data-theme$="-light"] .eva-chip-dot {
   background: #14251f;
 }
 
-/* Quick bubble menu polished */
 .eva-quick-bubbles {
   position: absolute;
   left: 50%;
@@ -550,12 +549,8 @@ html[data-theme$="-light"] .eva-chip-dot {
 }
 
 @keyframes evaQuickBubbleRise {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .eva-quick-bubble {
@@ -691,33 +686,16 @@ html[data-theme$="-light"] .eva-chip-dot {
   text-wrap: balance;
 }
 
-.eva-quick-bubble.bubble-home {
-  border-color: rgba(120, 190, 255, 0.26);
-}
-
-.eva-quick-bubble.bubble-dashboard {
-  border-color: rgba(162, 138, 255, 0.26);
-}
-
-.eva-quick-bubble.bubble-settings {
-  border-color: rgba(255, 170, 220, 0.26);
-}
-
-.eva-quick-bubble.bubble-login {
-  border-color: rgba(122, 214, 177, 0.26);
-}
-
-.eva-quick-bubble.bubble-signup {
-  border-color: rgba(255, 201, 110, 0.26);
-}
-
+.eva-quick-bubble.bubble-home { border-color: rgba(120, 190, 255, 0.26); }
+.eva-quick-bubble.bubble-dashboard { border-color: rgba(162, 138, 255, 0.26); }
+.eva-quick-bubble.bubble-settings { border-color: rgba(255, 170, 220, 0.26); }
+.eva-quick-bubble.bubble-login { border-color: rgba(122, 214, 177, 0.26); }
+.eva-quick-bubble.bubble-signup { border-color: rgba(255, 201, 110, 0.26); }
 .eva-quick-bubble.bubble-companies,
 .eva-quick-bubble.bubble-users,
 .eva-quick-bubble.bubble-leads,
 .eva-quick-bubble.bubble-jobs,
-.eva-quick-bubble.bubble-qa {
-  border-color: rgba(214,168,255,0.26);
-}
+.eva-quick-bubble.bubble-qa { border-color: rgba(214,168,255,0.26); }
 
 html[data-theme="light"] .eva-quick-bubble,
 html[data-theme$="-light"] .eva-quick-bubble {
@@ -745,17 +723,17 @@ html[data-theme="galaxy"] .eva-quick-bubble {
 
 @media (max-width: 640px) {
   .eva-nav-shell {
-    top: max(6px, env(safe-area-inset-top));
-    max-width: calc(100vw - 8px);
+    top: max(2px, env(safe-area-inset-top));
+    max-width: calc(100vw - 2px);
   }
 
   .eva-nav-pill {
-    width: min(var(--pill-width), calc(100vw - 8px));
-    max-width: calc(100vw - 8px);
+    width: min(var(--pill-width), calc(100vw - 2px));
+    max-width: calc(100vw - 2px);
   }
 
   .eva-brand {
-    max-width: min(var(--brand-max-width), calc(100% - var(--menu-size) - 20px));
+    max-width: min(var(--brand-max-width), calc(100% - var(--menu-size) - 12px));
   }
 
   .eva-quick-bubbles {
@@ -785,16 +763,24 @@ html[data-theme="galaxy"] .eva-quick-bubble {
 
 @media (max-width: 480px) {
   .eva-nav-shell {
-    top: max(4px, env(safe-area-inset-top));
+    top: max(0px, env(safe-area-inset-top));
   }
 
   .eva-nav-pill {
-    width: min(var(--pill-width), calc(100vw - 6px));
-    max-width: calc(100vw - 6px);
+    width: min(var(--pill-width), calc(100vw - 2px));
+    max-width: calc(100vw - 2px);
   }
 
   .eva-brand {
-    max-width: min(var(--brand-max-width), calc(100% - var(--menu-size) - 16px));
+    max-width: min(var(--brand-max-width), calc(100% - var(--menu-size) - 10px));
+  }
+
+  .eva-brand-copy strong {
+    font-size: 0.94rem;
+  }
+
+  .eva-brand-copy span {
+    font-size: 0.70rem;
   }
 
   .eva-menu-panel {
