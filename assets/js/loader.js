@@ -3,9 +3,9 @@
   const PAGE_TRANSITION_ID = "evaPageTransition";
   const GLOBAL_LOADER_ID = "evaraGlobalLoader";
 
-  const FAST_TO_FULL_DELAY = 700;
-  const READY_CLASS_DELAY = 80;
-  const PAGE_READY_FALLBACK = 1600;
+  const FAST_TO_FULL_DELAY = 380;
+  const READY_CLASS_DELAY = 70;
+  const PAGE_READY_FALLBACK = 1200;
 
   let fullLoaderTimer = null;
   let readyTimer = null;
@@ -165,7 +165,7 @@
     clearTimer("transitionTimer");
     transitionTimer = setTimeout(() => {
       loader.classList.remove("upgrading");
-    }, 260);
+    }, 220);
   }
 
   function hideFullLoader() {
