@@ -3,10 +3,10 @@
   const PAGE_TRANSITION_ID = "evaPageTransition";
   const GLOBAL_LOADER_ID = "evaraGlobalLoader";
 
-  const MIN_FIRST_BOOT_VISIBLE = 280;
-  const MIN_NAV_VISIBLE = 180;
-  const FAST_TO_FULL_DELAY = 1000;
-  const EXIT_DURATION = 220;
+  const MIN_FIRST_BOOT_VISIBLE = 240;
+  const MIN_NAV_VISIBLE = 170;
+  const FAST_TO_FULL_DELAY = 1100;
+  const EXIT_DURATION = 260;
 
   let fullLoaderTimer = null;
   let exitTimer = null;
@@ -55,6 +55,14 @@
     el.className = "evara-loader-fast";
     el.setAttribute("aria-hidden", "true");
     el.innerHTML = `
+      <div class="evara-loader-fast-bg evara-loader-mode-bg" aria-hidden="true">
+        <span class="evara-loader-fast-bg-wave wave-a"></span>
+        <span class="evara-loader-fast-bg-wave wave-b"></span>
+        <span class="evara-loader-fast-bg-wave wave-c"></span>
+        <span class="evara-loader-fast-bg-glow glow-a"></span>
+        <span class="evara-loader-fast-bg-glow glow-b"></span>
+      </div>
+
       <div class="evara-loader-fast-wrap">
         <span class="evara-loader-fast-wave wave-a"></span>
         <span class="evara-loader-fast-wave wave-b"></span>
@@ -80,7 +88,17 @@
     el.className = "evara-global-loader";
     el.setAttribute("aria-hidden", "true");
     el.innerHTML = `
-      <div class="evara-loader-backdrop"></div>
+      <div class="evara-loader-backdrop evara-loader-mode-bg" aria-hidden="true">
+        <span class="evara-loader-bg-wave wave-1"></span>
+        <span class="evara-loader-bg-wave wave-2"></span>
+        <span class="evara-loader-bg-wave wave-3"></span>
+        <span class="evara-loader-bg-wave wave-4"></span>
+        <span class="evara-loader-bg-glow glow-1"></span>
+        <span class="evara-loader-bg-glow glow-2"></span>
+        <span class="evara-loader-bg-glow glow-3"></span>
+        <span class="evara-loader-bg-stars"></span>
+      </div>
+
       <div class="evara-loader-box glass-card">
         <div class="evara-loader-mark evara-loader-mark--premium">
           <div class="evara-loader-logo-wrap evara-loader-logo-wrap--premium evara-loader-pulse-wrap">
@@ -212,9 +230,7 @@
     const elapsed = performance.now() - startedAt;
     const wait = Math.max(0, minVisible - elapsed);
 
-    exitTimer = setTimeout(() => {
-      callback();
-    }, wait);
+    exitTimer = setTimeout(callback, wait);
   }
 
   function hideAllLoaders(immediate = false) {
