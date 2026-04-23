@@ -7,6 +7,9 @@
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
+  <meta name="theme-color" content="#050311" />
+  <link rel="manifest" href="/evaraos/manifest.json" />
+  <link rel="apple-touch-icon" href="/evaraos/assets/img/icon-192.png" />
 
   <title>Reset Password • Evaraos Inc</title>
 
@@ -14,107 +17,140 @@
     (function () {
       try {
         const raw = localStorage.getItem("evaraos-appearance");
-        if (!raw) return;
-        const appearance = JSON.parse(raw);
         let theme = "dark";
 
-        if (appearance.mode === "light") theme = "light";
-        if (appearance.mode === "galaxy") theme = "galaxy";
+        if (raw) {
+          const appearance = JSON.parse(raw);
 
-        if (appearance.mode === "custom") {
-          if (appearance.baseFamily === "light") theme = "light";
-          else if (appearance.baseFamily === "galaxy") theme = "galaxy";
-          else theme = "dark";
+          if (appearance.mode === "light") theme = "light";
+          else if (appearance.mode === "galaxy") theme = "galaxy";
+          else if (appearance.mode === "custom") {
+            if (appearance.baseFamily === "light") theme = "light";
+            else if (appearance.baseFamily === "galaxy") theme = "galaxy";
+            else theme = "dark";
+          }
         }
 
         document.documentElement.setAttribute("data-theme", theme);
-      } catch {}
-    })();
+      } catch {
+        document.documentElement.setAttribute("data-theme", "dark");
+      }
 
-    document.documentElement.classList.add("auth-pending");
+      document.documentElement.classList.add("boot-pending", "auth-pending");
+    })();
   </script>
 
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=33" />
-  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=33" />
-  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=33" />
-  <link rel="stylesheet" href="/evaraos/assets/css/auth.css?v=33" />
-  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=33" />
-
   <style>
+    html,
+    body {
+      background: #060814;
+    }
+
+    html[data-theme="light"],
+    html[data-theme="light"] body {
+      background: #f4f7f6;
+    }
+
+    html[data-theme="galaxy"],
+    html[data-theme="galaxy"] body {
+      background: #050311;
+    }
+
+    html.boot-pending body {
+      margin: 0;
+      overflow: hidden;
+      touch-action: none;
+    }
+
     html.auth-pending body,
     body.auth-pending {
       opacity: 0;
       pointer-events: none;
     }
+
+    body.reset-page {
+      margin: 0;
+      min-height: 100vh;
+      background: transparent;
+    }
+
+    body.app-loading #appRoot {
+      visibility: hidden;
+    }
+
+    body.app-ready #appRoot {
+      visibility: visible;
+    }
   </style>
+
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/auth.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=34" />
 </head>
 <body class="reset-page auth-pending app-loading" data-route-guard="auth">
-  <div class="page-aurora"></div>
-  <div id="galaxyEngine" class="galaxy-engine" aria-hidden="true"></div>
-  <div class="page-grid-overlay"></div>
   <div id="universalNavRoot"></div>
   <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
-  <div id="evaraFastLoader" class="evara-loader-fast active" aria-hidden="false">
-    <img
-      src="/evaraos/assets/img/evaraos_logo.png"
-      alt="Evaraos"
-      class="evara-loader-fast-logo"
-      onerror="this.onerror=null;this.src='/evaraos/assets/logo.png';"
-    />
+
+  <div id="appRoot">
+    <div class="page-aurora"></div>
+    <div id="galaxyEngine" class="galaxy-engine" aria-hidden="true"></div>
+    <div class="page-grid-overlay"></div>
+
+    <main class="reset-shell">
+      <section class="login-panel glass-card aurora-card auth-panel auth-panel-reset active-glow beam-target">
+        <div class="login-badge-wrap">
+          <img
+            src="/evaraos/assets/img/evaraos_logo.png"
+            alt="Evaraos logo"
+            class="login-badge auth-badge auth-badge-large"
+          />
+        </div>
+
+        <h1 class="login-title">Reset Password</h1>
+        <p class="login-subtitle">
+          Enter your account email and we’ll send you a secure password reset link.
+        </p>
+
+        <form id="resetForm" class="login-form" novalidate>
+          <div class="form-group">
+            <label class="field-label" for="resetEmail">Account Email</label>
+            <div class="input-shell aurora-card beam-target">
+              <input
+                id="resetEmail"
+                name="email"
+                type="email"
+                class="input"
+                placeholder="Enter your account email"
+                autocomplete="email"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="login-actions-row">
+            <button type="submit" class="btn btn-theme-primary premium-red-btn">Send Reset Link</button>
+            <a href="/evaraos/login.html" class="btn btn-theme-secondary">Back to Login</a>
+          </div>
+
+          <p id="resetMessage" class="login-message" aria-live="polite"></p>
+        </form>
+
+        <div class="auth-footer-links">
+          <span>Remembered your password?</span>
+          <a href="/evaraos/login.html">Return to login</a>
+        </div>
+      </section>
+    </main>
   </div>
 
-  <main class="login-shell">
-    <section class="login-panel glass-card aurora-card auth-panel auth-panel-reset">
-      <div class="login-badge-wrap">
-        <img
-          src="/evaraos/assets/img/evaraos_logo.png"
-          alt="Evaraos logo"
-          class="login-badge auth-badge auth-badge-large"
-        />
-      </div>
-
-      <h1 class="login-title">Reset Password</h1>
-      <p class="login-subtitle">
-        Enter your account email and we’ll send you a secure password reset link.
-      </p>
-
-      <form id="resetForm" class="login-form" novalidate>
-        <div class="form-group">
-          <label class="field-label" for="resetEmail">Account Email</label>
-          <div class="input-shell aurora-card">
-            <input
-              id="resetEmail"
-              name="email"
-              type="email"
-              class="input"
-              placeholder="Enter your account email"
-              autocomplete="email"
-              required
-            />
-          </div>
-        </div>
-
-        <div class="login-actions-row">
-          <button type="submit" class="btn btn-theme-primary premium-red-btn">Send Reset Link</button>
-          <a href="/evaraos/login.html" class="btn btn-theme-secondary">Back to Login</a>
-        </div>
-
-        <p id="resetMessage" class="login-message" aria-live="polite"></p>
-      </form>
-
-      <div class="auth-footer-links">
-        <span>Remembered your password?</span>
-        <a href="/evaraos/login.html">Return to login</a>
-      </div>
-    </section>
-  </main>
-
-  <script type="module" src="/evaraos/assets/js/firebase.js?v=33"></script>
-  <script type="module" src="/evaraos/assets/js/theme.js?v=33"></script>
-  <script src="/evaraos/assets/js/loader.js?v=33"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js?v=34"></script>
+  <script type="module" src="/evaraos/assets/js/theme.js?v=34"></script>
+  <script src="/evaraos/assets/js/loader.js?v=34"></script>
   <script src="/evaraos/assets/js/galaxy.js?v=1"></script>
-  <script type="module" src="/evaraos/assets/js/auth.js?v=33"></script>
-  <script type="module" src="/evaraos/assets/js/route-guard.js?v=33"></script>
-  <script src="/evaraos/assets/js/nav.js?v=33"></script>
+  <script type="module" src="/evaraos/assets/js/auth.js?v=34"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js?v=34"></script>
+  <script src="/evaraos/assets/js/nav.js?v=34"></script>
 </body>
 </html>
