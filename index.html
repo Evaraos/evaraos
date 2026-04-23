@@ -9,6 +9,9 @@
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
+  <meta name="theme-color" content="#050311" />
+  <link rel="manifest" href="/evaraos/manifest.json" />
+  <link rel="apple-touch-icon" href="/evaraos/assets/img/icon-192.png" />
   <title>Evaraos Inc</title>
 
   <script>
@@ -73,6 +76,16 @@
     body.app-ready #appRoot {
       visibility: visible;
     }
+
+    .install-cta-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: 12px;
+    }
+
+    #installBtn {
+      display: none;
+    }
   </style>
 
   <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=34" />
@@ -106,6 +119,12 @@
             <div class="hero-actions">
               <a href="/evaraos/login.html" class="btn btn-apple active-glow beam-target">Enter Platform</a>
               <a href="/evaraos/signup.html" class="btn btn-apple active-glow beam-target">Create Account</a>
+            </div>
+
+            <div class="install-cta-wrap">
+              <button id="installBtn" class="btn btn-apple active-glow beam-target" type="button">
+                Download App
+              </button>
             </div>
           </div>
 
@@ -306,5 +325,6 @@
   <script src="/evaraos/assets/js/loader.js?v=34"></script>
   <script src="/evaraos/assets/js/galaxy.js?v=1"></script>
   <script src="/evaraos/assets/js/nav.js?v=34"></script>
+  <script src="/evaraos/assets/js/install.js?v=1"></script>
 </body>
 </html>
