@@ -1,0 +1,364 @@
+.settings-shell {
+  width: min(1180px, calc(100% - 24px));
+  margin: 132px auto 92px;
+  display: grid;
+  gap: 18px;
+  position: relative;
+  z-index: 1;
+}
+
+.settings-hero,
+.settings-block,
+.settings-save-panel {
+  padding: 22px;
+  border-radius: 30px;
+  display: grid;
+  gap: 18px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.settings-hero h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.15rem);
+  line-height: 0.96;
+  letter-spacing: -0.05em;
+  text-wrap: balance;
+}
+
+.settings-hero p,
+.settings-head p {
+  margin: 0;
+  max-width: 74ch;
+  line-height: 1.74;
+  opacity: 0.82;
+  font-size: 1rem;
+  text-wrap: pretty;
+}
+
+.settings-head {
+  display: grid;
+  gap: 6px;
+}
+
+.settings-head h2 {
+  margin: 0;
+  font-size: 1.42rem;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.settings-kicker {
+  margin: 0;
+  font-size: 0.82rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.72;
+  font-weight: 800;
+}
+
+.settings-grid-2,
+.settings-grid-3 {
+  display: grid;
+  gap: 16px;
+}
+
+.settings-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.settings-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.settings-section-nav,
+.settings-footer-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.settings-section-link {
+  min-height: 42px;
+  padding: 0 14px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: inherit;
+  font-weight: 800;
+  font-size: 0.92rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.settings-hub-card {
+  min-height: 190px;
+  padding: 22px;
+  border-radius: 30px;
+  text-decoration: none;
+  color: inherit;
+  display: grid;
+  grid-template-columns: 54px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.settings-hub-card h2 {
+  margin: 4px 0 8px;
+  font-size: 1.28rem;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+.settings-hub-card p {
+  margin: 0;
+  line-height: 1.62;
+  opacity: 0.78;
+}
+
+.settings-card-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  font-size: 1.35rem;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+.settings-preview {
+  display: grid;
+  gap: 16px;
+}
+
+.settings-preview-nav {
+  min-height: 82px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  gap: 16px;
+}
+
+.settings-preview-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.settings-preview-brand img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+.settings-preview-brand-copy {
+  display: grid;
+  min-width: 0;
+}
+
+.settings-preview-brand-copy strong {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.settings-preview-brand-copy span {
+  font-size: 0.84rem;
+  opacity: 0.72;
+  white-space: nowrap;
+}
+
+.settings-preview-menu {
+  width: 50px;
+  height: 50px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 1.3rem;
+  flex: 0 0 auto;
+}
+
+.settings-preview-card {
+  min-height: 182px;
+  border-radius: 28px;
+  padding: 20px;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.settings-preview-card h3 {
+  margin: 0;
+  font-size: 1.06rem;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.settings-preview-card p {
+  margin: 0;
+  opacity: 0.76;
+  line-height: 1.6;
+  font-size: 0.94rem;
+  text-wrap: pretty;
+}
+
+.settings-preview-btn {
+  min-height: 56px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  width: 100%;
+}
+
+.appearance-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.settings-chip {
+  min-height: 58px;
+  width: 100%;
+  padding: 0 16px;
+  border-radius: 22px;
+  color: inherit;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.settings-chip.is-active {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--user-beam-color, #7c3aed) 42%, transparent),
+    0 0 16px color-mix(in srgb, var(--user-beam-color, #7c3aed) 14%, transparent),
+    inset 0 1px 0 rgba(255,255,255,0.16);
+}
+
+.settings-color-field {
+  min-height: 86px;
+  padding: 16px;
+  border-radius: 24px;
+  display: grid;
+  grid-template-columns: 1fr 72px;
+  align-items: center;
+  gap: 14px;
+}
+
+.settings-color-field span {
+  font-weight: 800;
+}
+
+.settings-color-field input {
+  width: 72px;
+  height: 48px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.settings-toggle-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+}
+
+.settings-toggle-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.settings-toggle-copy strong {
+  font-size: 0.98rem;
+}
+
+.settings-toggle-copy span {
+  opacity: 0.74;
+  line-height: 1.45;
+  font-size: 0.9rem;
+  text-wrap: pretty;
+}
+
+.settings-switch {
+  appearance: none;
+  width: 54px;
+  height: 32px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.12);
+  position: relative;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.settings-switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.94);
+  transition: transform 0.18s ease;
+}
+
+.settings-switch:checked::after {
+  transform: translateX(22px);
+}
+
+.settings-save-panel {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.settings-save-panel strong,
+.settings-save-panel span {
+  display: block;
+}
+
+.settings-save-panel span {
+  margin-top: 4px;
+  opacity: 0.76;
+  line-height: 1.5;
+}
+
+@media (max-width: 960px) {
+  .settings-grid-3,
+  .appearance-choice-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 840px) {
+  .settings-grid-2,
+  .settings-grid-3,
+  .appearance-choice-grid,
+  .settings-save-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-shell {
+    margin-top: 128px;
+    width: min(calc(100% - 16px), 100%);
+  }
+
+  .settings-hub-card {
+    grid-template-columns: 1fr;
+  }
+}
