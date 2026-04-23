@@ -847,3 +847,264 @@ html[data-theme="galaxy"] .evara-loader-dot {
   background: radial-gradient(circle, #fff, rgba(140,120,255,0.4));
   box-shadow: 0 0 10px rgba(140,120,255,0.4);
 }
+/* ===== STEP 1 PATCH: theme-specific beams, galaxy cinematic engine, premium loader waves ===== */
+
+:root {
+  --beam-opacity: 0.22;
+  --beam-blur: 22px;
+  --beam-accent-a: rgba(124, 58, 237, 0.34);
+  --beam-accent-b: rgba(79, 124, 255, 0.22);
+  --beam-accent-c: rgba(255, 255, 255, 0.08);
+}
+
+.active-glow,
+.beam-target {
+  position: relative;
+  isolation: isolate;
+}
+
+.active-glow::after,
+.beam-target::after {
+  content: "";
+  position: absolute;
+  inset: -28% -18%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: var(--beam-opacity);
+  filter: blur(var(--beam-blur));
+  background:
+    radial-gradient(circle at 18% 50%, var(--beam-accent-a), transparent 28%),
+    radial-gradient(circle at 82% 50%, var(--beam-accent-b), transparent 30%),
+    radial-gradient(circle at 50% 50%, var(--beam-accent-c), transparent 44%);
+  transform: translate3d(0, 0, 0);
+  animation: evaraBeamFloat 7.6s ease-in-out infinite;
+}
+
+.active-glow > *,
+.beam-target > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes evaraBeamFloat {
+  0% { transform: translate3d(-1.6%, 0, 0) scale(1); }
+  50% { transform: translate3d(1.6%, -1%, 0) scale(1.03); }
+  100% { transform: translate3d(-1.6%, 0, 0) scale(1); }
+}
+
+/* dark theme beam */
+html[data-theme="dark"] {
+  --beam-opacity: 0.20;
+  --beam-blur: 24px;
+  --beam-accent-a: rgba(124, 58, 237, 0.34);
+  --beam-accent-b: rgba(79, 124, 255, 0.22);
+  --beam-accent-c: rgba(255, 255, 255, 0.06);
+}
+
+/* light theme beam */
+html[data-theme="light"],
+html[data-theme$="-light"] {
+  --beam-opacity: 0.16;
+  --beam-blur: 18px;
+  --beam-accent-a: rgba(124, 58, 237, 0.14);
+  --beam-accent-b: rgba(79, 124, 255, 0.12);
+  --beam-accent-c: rgba(255, 255, 255, 0.26);
+}
+
+/* galaxy special beam only */
+html[data-theme="galaxy"] {
+  --beam-opacity: 0.32;
+  --beam-blur: 34px;
+  --beam-accent-a: rgba(194, 120, 255, 0.34);
+  --beam-accent-b: rgba(80, 124, 255, 0.28);
+  --beam-accent-c: rgba(255, 118, 214, 0.18);
+}
+
+html[data-theme="galaxy"] .active-glow::after,
+html[data-theme="galaxy"] .beam-target::after {
+  inset: -36% -24%;
+  background:
+    radial-gradient(circle at 12% 50%, rgba(129, 94, 255, 0.34), transparent 26%),
+    radial-gradient(circle at 34% 50%, rgba(214, 122, 255, 0.26), transparent 24%),
+    radial-gradient(circle at 66% 50%, rgba(94, 128, 255, 0.24), transparent 26%),
+    radial-gradient(circle at 88% 50%, rgba(255, 124, 214, 0.18), transparent 24%);
+  animation: evaraNebulaBeam 9.2s ease-in-out infinite;
+}
+
+@keyframes evaraNebulaBeam {
+  0% { transform: translate3d(-2.2%, 0, 0) scale(1); opacity: 0.28; }
+  25% { transform: translate3d(1.1%, -1%, 0) scale(1.04); opacity: 0.36; }
+  50% { transform: translate3d(2.4%, 0.6%, 0) scale(1.06); opacity: 0.34; }
+  75% { transform: translate3d(-0.8%, -0.8%, 0) scale(1.03); opacity: 0.38; }
+  100% { transform: translate3d(-2.2%, 0, 0) scale(1); opacity: 0.28; }
+}
+
+/* cinematic galaxy engine visuals */
+html[data-theme="galaxy"] .galaxy-engine {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+html[data-theme="galaxy"] .galaxy-nebula,
+html[data-theme="galaxy"] .galaxy-milkyway,
+html[data-theme="galaxy"] .galaxy-rift,
+html[data-theme="galaxy"] .galaxy-dust,
+html[data-theme="galaxy"] .galaxy-dust-two,
+html[data-theme="galaxy"] .galaxy-fog-band,
+html[data-theme="galaxy"] .galaxy-starfield {
+  position: absolute;
+  inset: -8%;
+  will-change: transform, opacity;
+}
+
+html[data-theme="galaxy"] .galaxy-nebula {
+  background:
+    radial-gradient(circle at 24% 58%, rgba(145, 102, 255, 0.22), transparent 26%),
+    radial-gradient(circle at 70% 64%, rgba(214, 124, 255, 0.14), transparent 24%),
+    radial-gradient(circle at 58% 28%, rgba(90, 132, 255, 0.12), transparent 20%);
+  mix-blend-mode: screen;
+  opacity: 0.92;
+}
+
+html[data-theme="galaxy"] .galaxy-milkyway {
+  background:
+    linear-gradient(
+      112deg,
+      transparent 0%,
+      rgba(255,255,255,0.04) 34%,
+      rgba(180, 156, 255, 0.08) 46%,
+      rgba(109, 126, 255, 0.06) 54%,
+      transparent 70%
+    );
+  opacity: 0.82;
+  transform: rotate(-10deg);
+}
+
+html[data-theme="galaxy"] .galaxy-rift {
+  background:
+    radial-gradient(circle at 52% 52%, rgba(255,255,255,0.045), transparent 12%),
+    linear-gradient(180deg, transparent 0%, rgba(114, 88, 255, 0.08) 50%, transparent 100%);
+  opacity: 0.58;
+}
+
+html[data-theme="galaxy"] .galaxy-dust,
+html[data-theme="galaxy"] .galaxy-dust-two {
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,0.08) 0.7px, transparent 1px),
+    radial-gradient(circle, rgba(188, 160, 255, 0.06) 0.8px, transparent 1.2px),
+    radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1.6px);
+  background-size: 180px 180px, 240px 240px, 320px 320px;
+  opacity: 0.34;
+}
+
+html[data-theme="galaxy"] .galaxy-dust-two {
+  opacity: 0.22;
+}
+
+html[data-theme="galaxy"] .galaxy-fog-band {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.03), transparent 34%),
+    linear-gradient(180deg, transparent 0%, rgba(132, 106, 255, 0.05) 50%, transparent 100%);
+  opacity: 0.54;
+}
+
+html[data-theme="galaxy"] .galaxy-starfield-hero {
+  opacity: 0.96;
+}
+
+html[data-theme="galaxy"] .galaxy-star {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.92);
+  box-shadow: 0 0 10px rgba(255,255,255,0.26);
+}
+
+html[data-theme="galaxy"] .galaxy-star.tiny { width: 2px; height: 2px; opacity: 0.44; }
+html[data-theme="galaxy"] .galaxy-star.small { width: 3px; height: 3px; opacity: 0.6; }
+html[data-theme="galaxy"] .galaxy-star.medium { width: 4px; height: 4px; opacity: 0.8; }
+html[data-theme="galaxy"] .galaxy-star.large { width: 6px; height: 6px; opacity: 0.94; }
+
+html[data-theme="galaxy"] .galaxy-star.twinkle {
+  animation: galaxyTwinkle 5.6s ease-in-out infinite;
+}
+
+html[data-theme="galaxy"] .galaxy-star.twinkle-slow {
+  animation: galaxyTwinkleSlow 8.6s ease-in-out infinite;
+}
+
+@keyframes galaxyTwinkle {
+  0%, 100% { opacity: 0.44; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.24); }
+}
+
+@keyframes galaxyTwinkleSlow {
+  0%, 100% { opacity: 0.34; transform: scale(1); }
+  50% { opacity: 0.82; transform: scale(1.14); }
+}
+
+/* stronger loader waves */
+.evara-loader-wave,
+.evara-loader-fast-wave {
+  position: absolute;
+  inset: 50%;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.evara-loader-wave {
+  width: 170px;
+  height: 170px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: radial-gradient(circle, rgba(255,255,255,0.06), transparent 62%);
+  animation: evaraLoaderWave 2.4s ease-out infinite;
+}
+
+.evara-loader-wave.wave-2 { animation-delay: 0.42s; }
+.evara-loader-wave.wave-3 { animation-delay: 0.84s; }
+
+.evara-loader-fast-wave {
+  width: 108px;
+  height: 108px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: radial-gradient(circle, rgba(255,255,255,0.05), transparent 64%);
+  animation: evaraLoaderFastWave 2s ease-out infinite;
+}
+
+.evara-loader-fast-wave.wave-b { animation-delay: 0.34s; }
+.evara-loader-fast-wave.wave-c { animation-delay: 0.68s; }
+
+@keyframes evaraLoaderWave {
+  0% { transform: translate(-50%, -50%) scale(0.72); opacity: 0.44; }
+  100% { transform: translate(-50%, -50%) scale(1.42); opacity: 0; }
+}
+
+@keyframes evaraLoaderFastWave {
+  0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0.38; }
+  100% { transform: translate(-50%, -50%) scale(1.34); opacity: 0; }
+}
+
+/* center full loader cleanly */
+.evara-global-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483646;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: max(18px, env(safe-area-inset-top)) 16px max(18px, env(safe-area-inset-bottom));
+}
+
+.evara-global-loader.active {
+  display: flex;
+}
+
+.evara-loader-box {
+  width: min(720px, calc(100vw - 32px));
+  margin: 0 auto;
+  position: relative;
+}
