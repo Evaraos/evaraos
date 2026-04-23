@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <meta name="theme-color" content="#050311" />
+  <link rel="manifest" href="/evaraos/manifest.json" />
+  <link rel="apple-touch-icon" href="/evaraos/assets/img/icon-192.png" />
+
+  <title>Notification Settings • Evaraos Inc</title>
+
+  <script>
+    (function () {
+      try {
+        var raw = localStorage.getItem("evaraos-appearance");
+        var theme = "dark";
+
+        if (raw) {
+          var appearance = JSON.parse(raw);
+
+          if (appearance.mode === "light") theme = "light";
+          else if (appearance.mode === "galaxy") theme = "galaxy";
+          else if (appearance.mode === "custom") {
+            if (appearance.baseFamily === "light") theme = "light";
+            else if (appearance.baseFamily === "galaxy") theme = "galaxy";
+            else theme = "dark";
+          }
+        }
+
+        document.documentElement.setAttribute("data-theme", theme);
+      } catch {
+        document.documentElement.setAttribute("data-theme", "dark");
+      }
+
+      document.documentElement.classList.add("boot-pending", "auth-pending");
+    })();
+  </script>
+
+  <style>
+    html,
+    body { background: #060814; }
+
+    html[data-theme="light"],
+    html[data-theme="light"] body { background: #f4f7f6; }
+
+    html[data-theme="galaxy"],
+    html[data-theme="galaxy"] body { background: #050311; }
+
+    html.boot-pending body {
+      margin: 0;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    html.auth-pending body,
+    body.auth-pending {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    body.dashboard-body {
+      margin: 0;
+      min-height: 100vh;
+      background: transparent;
+    }
+
+    body.app-loading #appRoot { visibility: hidden; }
+    body.app-ready #appRoot { visibility: visible; }
+  </style>
+
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/settings.css?v=1" />
+</head>
+<body class="dashboard-body auth-pending app-loading" data-route-guard="private">
+  <div id="universalNavRoot"></div>
+  <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
+
+  <div id="appRoot">
+    <div class="page-aurora"></div>
+    <div id="galaxyEngine" class="galaxy-engine" aria-hidden="true"></div>
+    <div class="page-grid-overlay"></div>
+
+    <main class="settings-shell">
+      <section class="settings-hero glass-card aurora-card active-glow beam-target">
+        <p class="settings-kicker">NOTIFICATIONS</p>
+        <h1>Control alerts, digests, and reminders.</h1>
+        <p>
+          Notification preferences are now separated from the main hub to keep the app cleaner and easier to expand.
+        </p>
+
+        <div class="settings-section-nav">
+          <a href="/evaraos/settings.html" class="settings-section-link beam-target">Back to Settings Hub</a>
+        </div>
+      </section>
+
+      <section class="settings-block glass-card aurora-card active-glow beam-target">
+        <div class="settings-head">
+          <p class="settings-kicker">Alerts</p>
+          <h2>Notification Preferences</h2>
+          <p>These switches are ready for a later Firestore-backed notification preferences controller.</p>
+        </div>
+
+        <div class="settings-toggle-row">
+          <div class="settings-toggle-copy">
+            <strong>System Alerts</strong>
+            <span>Important platform notices and operational alerts.</span>
+          </div>
+          <input id="notifySystem" class="settings-switch beam-target" type="checkbox" checked />
+        </div>
+
+        <div class="settings-toggle-row">
+          <div class="settings-toggle-copy">
+            <strong>Lead Updates</strong>
+            <span>New lead, lead assignment, and lead status updates.</span>
+          </div>
+          <input id="notifyLeads" class="settings-switch beam-target" type="checkbox" checked />
+        </div>
+
+        <div class="settings-toggle-row">
+          <div class="settings-toggle-copy">
+            <strong>Job Updates</strong>
+            <span>Job scheduled, in progress, completed, and issue alerts.</span>
+          </div>
+          <input id="notifyJobs" class="settings-switch beam-target" type="checkbox" checked />
+        </div>
+
+        <div class="settings-toggle-row">
+          <div class="settings-toggle-copy">
+            <strong>Email Digests</strong>
+            <span>Future daily and weekly summaries for owners and managers.</span>
+          </div>
+          <input id="notifyDigests" class="settings-switch beam-target" type="checkbox" />
+        </div>
+      </section>
+
+      <section class="settings-save-panel glass-card aurora-card active-glow beam-target">
+        <div>
+          <strong>Save notification changes</strong>
+          <span id="notificationsSaveMessage">Notification JavaScript connection coming next.</span>
+        </div>
+
+        <div class="settings-footer-actions">
+          <button id="saveNotificationsBtn" type="button" class="btn btn-theme-primary beam-target">Save Notifications</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="/evaraos/assets/js/firebase.js?v=34"></script>
+  <script type="module" src="/evaraos/assets/js/theme.js?v=34"></script>
+  <script src="/evaraos/assets/js/loader.js?v=34"></script>
+  <script src="/evaraos/assets/js/galaxy.js?v=1"></script>
+  <script type="module" src="/evaraos/assets/js/settings-shared.js?v=1"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js?v=34"></script>
+  <script src="/evaraos/assets/js/nav.js?v=34"></script>
+</body>
+</html>
