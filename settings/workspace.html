@@ -77,6 +77,7 @@
   <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=34" />
   <link rel="stylesheet" href="/evaraos/assets/css/settings.css?v=1" />
 </head>
+
 <body class="dashboard-body auth-pending app-loading" data-route-guard="private">
   <div id="universalNavRoot"></div>
   <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
@@ -103,7 +104,7 @@
         <div class="settings-head">
           <p class="settings-kicker">Defaults</p>
           <h2>Workspace Preferences</h2>
-          <p>These fields are staged for a future Firestore-backed workspace preferences controller.</p>
+          <p>These preferences save locally now and can later connect to Firestore workspace preferences.</p>
         </div>
 
         <div class="settings-grid-2">
@@ -140,7 +141,7 @@
       <section class="settings-save-panel glass-card aurora-card active-glow beam-target">
         <div>
           <strong>Save workspace changes</strong>
-          <span id="workspaceSaveMessage">Workspace JavaScript connection coming next.</span>
+          <span id="workspaceSaveMessage">Loading workspace preferences...</span>
         </div>
 
         <div class="settings-footer-actions">
@@ -155,6 +156,7 @@
   <script src="/evaraos/assets/js/loader.js?v=34"></script>
   <script src="/evaraos/assets/js/galaxy.js?v=1"></script>
   <script type="module" src="/evaraos/assets/js/settings-shared.js?v=1"></script>
+  <script type="module" src="/evaraos/assets/js/settings-workspace.js?v=1"></script>
   <script type="module" src="/evaraos/assets/js/route-guard.js?v=34"></script>
   <script src="/evaraos/assets/js/nav.js?v=34"></script>
 </body>
