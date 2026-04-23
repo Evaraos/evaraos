@@ -7,339 +7,345 @@
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
+  <meta name="theme-color" content="#050311" />
+  <link rel="manifest" href="/evaraos/manifest.json" />
+  <link rel="apple-touch-icon" href="/evaraos/assets/img/icon-192.png" />
 
   <title>Dashboard • Evaraos Inc</title>
 
   <script>
     (function () {
       try {
-        const raw = localStorage.getItem("evaraos-appearance");
-        if (!raw) return;
-        const appearance = JSON.parse(raw);
-        let theme = "dark";
+        var raw = localStorage.getItem("evaraos-appearance");
+        var theme = "dark";
 
-        if (appearance.mode === "light") theme = "light";
-        if (appearance.mode === "galaxy") theme = "galaxy";
+        if (raw) {
+          var appearance = JSON.parse(raw);
 
-        if (appearance.mode === "custom") {
-          if (appearance.baseFamily === "light") theme = "light";
-          else if (appearance.baseFamily === "galaxy") theme = "galaxy";
-          else theme = "dark";
+          if (appearance.mode === "light") theme = "light";
+          else if (appearance.mode === "galaxy") theme = "galaxy";
+          else if (appearance.mode === "custom") {
+            if (appearance.baseFamily === "light") theme = "light";
+            else if (appearance.baseFamily === "galaxy") theme = "galaxy";
+            else theme = "dark";
+          }
         }
 
         document.documentElement.setAttribute("data-theme", theme);
-      } catch {}
-    })();
+      } catch {
+        document.documentElement.setAttribute("data-theme", "dark");
+      }
 
-    document.documentElement.classList.add("auth-pending");
+      document.documentElement.classList.add("boot-pending", "auth-pending");
+    })();
   </script>
 
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=34" />
-  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=34" />
-  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=34" />
-  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=34" />
-
   <style>
+    html,
+    body {
+      background: #060814;
+    }
+
+    html[data-theme="light"],
+    html[data-theme="light"] body {
+      background: #f4f7f6;
+    }
+
+    html[data-theme="galaxy"],
+    html[data-theme="galaxy"] body {
+      background: #050311;
+    }
+
+    html.boot-pending body {
+      margin: 0;
+      overflow: hidden;
+      touch-action: none;
+    }
+
     html.auth-pending body,
     body.auth-pending {
       opacity: 0;
       pointer-events: none;
     }
+
+    body.dashboard-body {
+      margin: 0;
+      min-height: 100vh;
+      background: transparent;
+    }
+
+    body.app-loading #appRoot {
+      visibility: hidden;
+    }
+
+    body.app-ready #appRoot {
+      visibility: visible;
+    }
   </style>
+
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=34" />
 </head>
 <body class="dashboard-body auth-pending app-loading" data-route-guard="private">
-  <div class="page-aurora"></div>
-  <div id="galaxyEngine" class="galaxy-engine" aria-hidden="true"></div>
-  <div class="page-grid-overlay"></div>
   <div id="universalNavRoot"></div>
   <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
 
-  <div class="dashboard-shell">
-    <aside class="dashboard-sidebar" id="dashboardSidebar">
-      <div class="dashboard-sidebar-inner glass-shell aurora-card active-glow beam-target">
-        <div class="dashboard-sidebar-search">
-          <div class="dashboard-search-shell input-shell aurora-card active-glow beam-target">
-            <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
-              <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
-            </svg>
-            <input
-              type="search"
-              class="dashboard-search-input input"
-              id="dashboardSearch"
-              placeholder="Search companies, users, leads, jobs..."
-              aria-label="Search dashboard"
-            />
-          </div>
-        </div>
+  <div id="appRoot">
+    <div class="page-aurora"></div>
+    <div id="galaxyEngine" class="galaxy-engine" aria-hidden="true"></div>
+    <div class="page-grid-overlay"></div>
 
-        <div class="dashboard-sidebar-head">
-          <p class="dashboard-sidebar-eyebrow">Command Navigation</p>
-          <h2 id="dashboardOverviewTitle">Executive Control</h2>
-        </div>
-
-        <nav class="dashboard-sidebar-nav" aria-label="Dashboard sections">
-          <a href="#overviewSection" class="dashboard-nav-link active aurora-card beam-target">
-            <span class="dashboard-nav-icon">◉</span>
-            <span>Overview</span>
-          </a>
-          <a href="#kpiSection" class="dashboard-nav-link aurora-card beam-target">
-            <span class="dashboard-nav-icon">◎</span>
-            <span>KPI Board</span>
-          </a>
-          <a href="#companiesSection" class="dashboard-nav-link aurora-card beam-target">
-            <span class="dashboard-nav-icon">◌</span>
-            <span>Companies</span>
-          </a>
-          <a href="#usersSection" class="dashboard-nav-link aurora-card beam-target">
-            <span class="dashboard-nav-icon">◍</span>
-            <span>Users</span>
-          </a>
-          <a href="#pipelineSection" class="dashboard-nav-link aurora-card beam-target">
-            <span class="dashboard-nav-icon">◒</span>
-            <span>Pipeline</span>
-          </a>
-          <a href="#operationsSection" class="dashboard-nav-link aurora-card beam-target">
-            <span class="dashboard-nav-icon">◈</span>
-            <span>Operations</span>
-          </a>
-          <a href="#activitySection" class="dashboard-nav-link aurora-card beam-target">
-            <span class="dashboard-nav-icon">◐</span>
-            <span>Activity</span>
-          </a>
-        </nav>
-
-        <div class="dashboard-sidebar-foot glass-card aurora-card active-glow beam-target">
-          <div class="dashboard-sidebar-foot-copy">
-            <strong>System Health</strong>
-            <span>One premium operating system for subsidiaries, teams, customers, leads, and jobs.</span>
-          </div>
-          <a href="/evaraos/companies.html" class="btn btn-theme-primary beam-target">Open Companies</a>
-        </div>
-      </div>
-    </aside>
-
-    <main class="dashboard-main">
-      <section class="dashboard-hero glass-card aurora-card active-glow beam-target" id="overviewSection">
-        <div class="dashboard-hero-copy">
-          <p class="dashboard-eyebrow">OWNER DASHBOARD</p>
-          <h1>Run the ecosystem like a premium operating system.</h1>
-          <p class="dashboard-hero-text">
-            Watch subsidiaries, users, leads, jobs, approvals, and recent movement from one Apple-like command center built for Evaraos Inc.
-          </p>
-
-          <div class="dashboard-hero-actions">
-            <a href="/evaraos/companies.html" class="btn btn-theme-primary beam-target">Manage Companies</a>
-            <a href="/evaraos/leads.html" class="btn btn-theme-secondary beam-target">Open Leads</a>
-            <a href="/evaraos/qa.html" class="btn btn-theme-secondary beam-target">Open QA</a>
-          </div>
-        </div>
-
-        <div class="dashboard-hero-panel glass-card aurora-card active-glow beam-target">
-          <div class="dashboard-hero-panel-top">
-            <span class="dashboard-mini-badge">Live Platform</span>
-            <span class="dashboard-live-dot"></span>
+    <div class="dashboard-shell">
+      <aside class="dashboard-sidebar" id="dashboardSidebar">
+        <div class="dashboard-sidebar-inner glass-shell aurora-card active-glow beam-target">
+          <div class="dashboard-sidebar-search">
+            <div class="dashboard-search-shell input-shell aurora-card active-glow beam-target">
+              <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
+                <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
+              </svg>
+              <input
+                type="search"
+                class="dashboard-search-input input"
+                id="dashboardSearch"
+                placeholder="Search companies, users, leads, jobs..."
+                aria-label="Search dashboard"
+              />
+            </div>
           </div>
 
-          <div class="dashboard-hero-logo-wrap">
-            <img
-              src="/evaraos/assets/img/evaraos_logo.png"
-              alt="Evaraos"
-              class="dashboard-hero-logo"
-            />
+          <div class="dashboard-sidebar-head">
+            <p class="dashboard-sidebar-eyebrow">Command Navigation</p>
+            <h2 id="dashboardOverviewTitle">Executive Control</h2>
           </div>
 
-          <div class="dashboard-hero-panel-copy">
-            <strong id="heroStatusTitle">Loading system data...</strong>
-            <span id="heroStatusText">Connecting to Firestore collections.</span>
+          <nav class="dashboard-sidebar-nav" aria-label="Dashboard sections">
+            <a href="#overviewSection" class="dashboard-nav-link active aurora-card beam-target">
+              <span class="dashboard-nav-icon">◉</span>
+              <span>Overview</span>
+            </a>
+            <a href="#kpiSection" class="dashboard-nav-link aurora-card beam-target">
+              <span class="dashboard-nav-icon">◎</span>
+              <span>KPI Board</span>
+            </a>
+            <a href="#companiesSection" class="dashboard-nav-link aurora-card beam-target">
+              <span class="dashboard-nav-icon">◌</span>
+              <span>Companies</span>
+            </a>
+            <a href="#usersSection" class="dashboard-nav-link aurora-card beam-target">
+              <span class="dashboard-nav-icon">◍</span>
+              <span>Users</span>
+            </a>
+            <a href="#pipelineSection" class="dashboard-nav-link aurora-card beam-target">
+              <span class="dashboard-nav-icon">◒</span>
+              <span>Pipeline</span>
+            </a>
+            <a href="#operationsSection" class="dashboard-nav-link aurora-card beam-target">
+              <span class="dashboard-nav-icon">◈</span>
+              <span>Operations</span>
+            </a>
+            <a href="#activitySection" class="dashboard-nav-link aurora-card beam-target">
+              <span class="dashboard-nav-icon">◐</span>
+              <span>Activity</span>
+            </a>
+          </nav>
+
+          <div class="dashboard-sidebar-foot glass-card aurora-card active-glow beam-target">
+            <div class="dashboard-sidebar-foot-copy">
+              <strong>System Health</strong>
+              <span>One premium operating system for subsidiaries, teams, customers, leads, and jobs.</span>
+            </div>
+            <a href="/evaraos/companies.html" class="btn btn-theme-primary beam-target">Open Companies</a>
           </div>
         </div>
-      </section>
+      </aside>
 
-      <section class="dashboard-overview glass-card aurora-card active-glow beam-target" id="kpiSection">
-        <div class="dashboard-section-head">
-          <div>
-            <p class="dashboard-section-kicker">Snapshot</p>
-            <h2>Executive KPI Board</h2>
+      <main class="dashboard-main">
+        <section class="dashboard-hero glass-card aurora-card active-glow beam-target" id="overviewSection">
+          <div class="dashboard-hero-copy">
+            <p class="dashboard-eyebrow">OWNER DASHBOARD</p>
+            <h1>Run the ecosystem like a premium operating system.</h1>
+            <p class="dashboard-hero-text">
+              Watch subsidiaries, users, leads, jobs, approvals, and recent movement from one Apple-like command center built for Evaraos Inc.
+            </p>
+
+            <div class="dashboard-hero-actions">
+              <a href="/evaraos/companies.html" class="btn btn-theme-primary beam-target">Manage Companies</a>
+              <a href="/evaraos/leads.html" class="btn btn-theme-secondary beam-target">Open Leads</a>
+              <a href="/evaraos/qa.html" class="btn btn-theme-secondary beam-target">Open QA</a>
+            </div>
           </div>
-          <a href="/evaraos/settings.html" class="btn btn-theme-secondary beam-target">Open Settings</a>
-        </div>
 
-        <div class="dashboard-stats-grid">
-          <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
-            <p>Active Companies</p>
-            <h3 id="statCompanies">0</h3>
-            <span id="statCompaniesMeta">Loading companies...</span>
-          </article>
+          <div class="dashboard-hero-panel glass-card aurora-card active-glow beam-target">
+            <div class="dashboard-hero-panel-top">
+              <span class="dashboard-mini-badge">Live Platform</span>
+              <span class="dashboard-live-dot"></span>
+            </div>
 
-          <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
-            <p>Total Users</p>
-            <h3 id="statUsers">0</h3>
-            <span id="statUsersMeta">Loading users...</span>
-          </article>
+            <div class="dashboard-hero-logo-wrap">
+              <img
+                src="/evaraos/assets/img/evaraos_logo.png"
+                alt="Evaraos"
+                class="dashboard-hero-logo"
+              />
+            </div>
 
-          <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
-            <p>Open Leads</p>
-            <h3 id="statLeads">0</h3>
-            <span id="statLeadsMeta">Loading leads...</span>
-          </article>
+            <div class="dashboard-hero-panel-copy">
+              <strong id="heroStatusTitle">Loading system data...</strong>
+              <span id="heroStatusText">Connecting to Firestore collections.</span>
+            </div>
+          </div>
+        </section>
 
-          <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
-            <p>Jobs</p>
-            <h3 id="statJobs">0</h3>
-            <span id="statJobsMeta">Loading jobs...</span>
-          </article>
-        </div>
-      </section>
-
-      <section class="dashboard-grid-2">
-        <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="companiesSection">
+        <section class="dashboard-overview glass-card aurora-card active-glow beam-target" id="kpiSection">
           <div class="dashboard-section-head">
             <div>
-              <p class="dashboard-section-kicker">Subsidiaries</p>
-              <h2>Company Health</h2>
+              <p class="dashboard-section-kicker">Snapshot</p>
+              <h2>Executive KPI Board</h2>
             </div>
-            <a href="/evaraos/companies.html" class="dashboard-inline-link">View all</a>
+            <a href="/evaraos/settings.html" class="btn btn-theme-secondary beam-target">Open Settings</a>
           </div>
 
-          <div class="dashboard-list" id="companiesList">
-            <article class="dashboard-list-item glass-card aurora-card active-glow beam-target">
-              <div>
-                <strong>Loading companies...</strong>
-                <span>Please wait while Firestore data is retrieved.</span>
-              </div>
-              <span class="dashboard-status-pill working">Loading</span>
+          <div class="dashboard-stats-grid">
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
+              <p>Active Companies</p>
+              <h3 id="statCompanies">0</h3>
+              <span id="statCompaniesMeta">Loading companies...</span>
+            </article>
+
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
+              <p>Total Users</p>
+              <h3 id="statUsers">0</h3>
+              <span id="statUsersMeta">Loading users...</span>
+            </article>
+
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
+              <p>Open Leads</p>
+              <h3 id="statLeads">0</h3>
+              <span id="statLeadsMeta">Loading leads...</span>
+            </article>
+
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
+              <p>Jobs</p>
+              <h3 id="statJobs">0</h3>
+              <span id="statJobsMeta">Loading jobs...</span>
             </article>
           </div>
         </section>
 
-        <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="usersSection">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Access</p>
-              <h2>User Roles</h2>
-            </div>
-            <a href="/evaraos/users.html" class="dashboard-inline-link">Manage</a>
-          </div>
-
-          <div class="dashboard-role-grid" id="usersRoleGrid">
-            <article class="dashboard-role-card glass-card aurora-card active-glow beam-target">
+        <section class="dashboard-grid-2">
+          <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="companiesSection">
+            <div class="dashboard-section-head">
               <div>
-                <strong>Loading roles...</strong>
-                <span>Counting users by role</span>
+                <p class="dashboard-section-kicker">Subsidiaries</p>
+                <h2>Company Health</h2>
               </div>
-              <span class="dashboard-status-pill working">Loading</span>
-            </article>
-          </div>
-        </section>
-      </section>
-
-      <section class="dashboard-grid-2" id="pipelineSection">
-        <section class="dashboard-panel glass-card aurora-card active-glow beam-target">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Pipeline</p>
-              <h2>Lead Flow</h2>
+              <a href="/evaraos/companies.html" class="dashboard-inline-link">View all</a>
             </div>
-            <a href="/evaraos/leads.html" class="dashboard-inline-link">Review queue</a>
-          </div>
 
-          <div class="dashboard-progress-stack" id="leadFlowStack">
-            <div class="dashboard-progress-row glass-card aurora-card active-glow beam-target">
-              <div class="dashboard-progress-copy">
-                <strong>Loading lead flow...</strong>
-                <span>Reading Firestore data</span>
-              </div>
-              <div class="dashboard-progress-bar">
-                <span style="width: 20%;"></span>
-              </div>
+            <div class="dashboard-list" id="companiesList">
+              <article class="dashboard-list-item glass-card aurora-card active-glow beam-target">
+                <div>
+                  <strong>Loading companies...</strong>
+                  <span>Please wait while Firestore data is retrieved.</span>
+                </div>
+                <span class="dashboard-status-pill working">Loading</span>
+              </article>
             </div>
-          </div>
+          </section>
+
+          <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="usersSection">
+            <div class="dashboard-section-head">
+              <div>
+                <p class="dashboard-section-kicker">Access</p>
+                <h2>User Roles</h2>
+              </div>
+              <a href="/evaraos/users.html" class="dashboard-inline-link">Manage</a>
+            </div>
+
+            <div class="dashboard-role-grid" id="usersRoleGrid">
+              <article class="dashboard-role-card glass-card aurora-card active-glow beam-target">
+                <div>
+                  <strong>Loading roles...</strong>
+                  <span>Counting users by role</span>
+                </div>
+                <span class="dashboard-status-pill working">Loading</span>
+              </article>
+            </div>
+          </section>
         </section>
 
-        <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="operationsSection">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Execution</p>
-              <h2>Jobs In Motion</h2>
+        <section class="dashboard-grid-2" id="pipelineSection">
+          <section class="dashboard-panel glass-card aurora-card active-glow beam-target">
+            <div class="dashboard-section-head">
+              <div>
+                <p class="dashboard-section-kicker">Pipeline</p>
+                <h2>Lead Flow</h2>
+              </div>
+              <a href="/evaraos/leads.html" class="dashboard-inline-link">Review queue</a>
             </div>
-            <a href="/evaraos/jobs.html" class="dashboard-inline-link">Open jobs</a>
-          </div>
 
-          <div class="dashboard-list" id="jobsList">
-            <article class="dashboard-list-item glass-card aurora-card active-glow beam-target">
-              <div>
-                <strong>Loading jobs...</strong>
-                <span>Please wait while job records are retrieved.</span>
+            <div class="dashboard-progress-stack" id="leadFlowStack">
+              <div class="dashboard-progress-row glass-card aurora-card active-glow beam-target">
+                <div class="dashboard-progress-copy">
+                  <strong>Loading lead flow...</strong>
+                  <span>Reading Firestore data</span>
+                </div>
+                <div class="dashboard-progress-bar">
+                  <span style="width: 20%;"></span>
+                </div>
               </div>
-              <span class="dashboard-status-pill working">Loading</span>
-            </article>
-          </div>
-        </section>
-      </section>
-
-      <section class="dashboard-grid-2">
-        <section class="dashboard-panel glass-card aurora-card active-glow beam-target">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Command Center</p>
-              <h2>Quick Actions</h2>
             </div>
-          </div>
+          </section>
 
-          <div class="dashboard-list">
-            <a href="/evaraos/companies.html" class="dashboard-list-item glass-card aurora-card active-glow beam-target" style="text-decoration:none;color:inherit;">
+          <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="operationsSection">
+            <div class="dashboard-section-head">
               <div>
-                <strong>Open Companies</strong>
-                <span>Manage subsidiaries, categories, and operating structures.</span>
+                <p class="dashboard-section-kicker">Execution</p>
+                <h2>Jobs In Motion</h2>
               </div>
-              <span class="dashboard-status-pill success">Open</span>
-            </a>
+              <a href="/evaraos/jobs.html" class="dashboard-inline-link">Open jobs</a>
+            </div>
 
-            <a href="/evaraos/users.html" class="dashboard-list-item glass-card aurora-card active-glow beam-target" style="text-decoration:none;color:inherit;">
-              <div>
-                <strong>Open Users</strong>
-                <span>Review roles, permissions, and team access.</span>
-              </div>
-              <span class="dashboard-status-pill success">Open</span>
-            </a>
-
-            <a href="/evaraos/leads.html" class="dashboard-list-item glass-card aurora-card active-glow beam-target" style="text-decoration:none;color:inherit;">
-              <div>
-                <strong>Open Leads</strong>
-                <span>Monitor pipeline movement and assignments.</span>
-              </div>
-              <span class="dashboard-status-pill warning">Queue</span>
-            </a>
-          </div>
+            <div class="dashboard-list" id="jobsList">
+              <article class="dashboard-list-item glass-card aurora-card active-glow beam-target">
+                <div>
+                  <strong>Loading jobs...</strong>
+                  <span>Please wait while job records are retrieved.</span>
+                </div>
+                <span class="dashboard-status-pill working">Loading</span>
+              </article>
+            </div>
+          </section>
         </section>
 
         <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="activitySection">
           <div class="dashboard-section-head">
             <div>
-              <p class="dashboard-section-kicker">Recent Activity</p>
-              <h2>Latest Records</h2>
+              <p class="dashboard-section-kicker">Activity</p>
+              <h2>Recent Platform Events</h2>
             </div>
           </div>
 
           <div class="dashboard-feed" id="activityFeed">
             <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
               <div>
-                <strong>Loading activity...</strong>
-                <span>Recent changes will appear here once records load.</span>
+                <strong>Loading activity feed...</strong>
+                <span>Waiting for recent events from Firestore.</span>
               </div>
               <span class="dashboard-status-pill working">Loading</span>
             </article>
           </div>
         </section>
-      </section>
-    </main>
+      </main>
+    </div>
   </div>
 
   <script type="module" src="/evaraos/assets/js/firebase.js?v=34"></script>
   <script type="module" src="/evaraos/assets/js/theme.js?v=34"></script>
   <script src="/evaraos/assets/js/loader.js?v=34"></script>
   <script src="/evaraos/assets/js/galaxy.js?v=1"></script>
-  <script type="module" src="/evaraos/assets/js/dashboard.js?v=34"></script>
   <script type="module" src="/evaraos/assets/js/route-guard.js?v=34"></script>
   <script src="/evaraos/assets/js/nav.js?v=34"></script>
 </body>
