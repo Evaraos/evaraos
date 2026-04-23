@@ -46,7 +46,12 @@
 
     html[data-theme="light"],
     html[data-theme="light"] body {
-      background: #eef2f4;
+      background: #f4f7f6;
+    }
+
+    html[data-theme="galaxy"],
+    html[data-theme="galaxy"] body {
+      background: #050311;
     }
 
     html.boot-pending body {
@@ -63,11 +68,6 @@
 
     body.app-loading #appRoot {
       visibility: hidden;
-    }
-
-    body.app-loading #universalNavRoot,
-    body.app-loading #evaPageTransition {
-      visibility: visible;
     }
 
     body.app-ready #appRoot {
