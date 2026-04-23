@@ -39,13 +39,13 @@
   </script>
 
   <style>
-    html.boot-pending,
-    html.boot-pending body {
+    html,
+    body {
       background: #060814;
     }
 
-    html[data-theme="light"].boot-pending,
-    html[data-theme="light"].boot-pending body {
+    html[data-theme="light"],
+    html[data-theme="light"] body {
       background: #eef2f4;
     }
 
@@ -55,110 +55,23 @@
       touch-action: none;
     }
 
-    body.preboot-home {
+    body.home-page {
       margin: 0;
       min-height: 100vh;
       background: transparent;
     }
 
-    .preboot-shell {
-      position: fixed;
-      inset: 0;
-      z-index: 2147483647;
-      overflow: hidden;
-      pointer-events: none;
-      background:
-        radial-gradient(circle at 50% 30%, rgba(120, 98, 255, 0.18), transparent 28%),
-        linear-gradient(180deg, #040611 0%, #070b18 100%);
-    }
-
-    html[data-theme="light"] .preboot-shell {
-      background:
-        radial-gradient(circle at 50% 30%, rgba(120, 98, 255, 0.10), transparent 28%),
-        linear-gradient(180deg, #f6f8fa 0%, #edf2f4 100%);
-    }
-
-    .preboot-aurora,
-    .preboot-grid {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-    }
-
-    .preboot-aurora {
-      background:
-        radial-gradient(circle at 18% 72%, rgba(116, 91, 255, 0.16), transparent 24%),
-        radial-gradient(circle at 78% 32%, rgba(214, 122, 255, 0.10), transparent 22%);
-      opacity: 0.9;
-    }
-
-    .preboot-grid {
-      background-image:
-        linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-      background-size: 40px 40px;
-      opacity: 0.14;
-    }
-
-    html[data-theme="light"] .preboot-grid {
-      background-image:
-        linear-gradient(rgba(24,45,39,0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(24,45,39,0.03) 1px, transparent 1px);
-      opacity: 0.08;
-    }
-
-    .preboot-loader {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      width: 110px;
-      height: 110px;
-      display: grid;
-      place-items: center;
-    }
-
-    .preboot-loader-wave {
-      position: absolute;
-      inset: 50%;
-      width: 110px;
-      height: 110px;
-      border-radius: 999px;
-      transform: translate(-50%, -50%);
-      border: 1px solid rgba(255,255,255,0.10);
-      background: radial-gradient(circle, rgba(255,255,255,0.05), transparent 62%);
-      animation: prebootWave 2s ease-out infinite;
-    }
-
-    .preboot-loader-wave.wave-b { animation-delay: 0.34s; }
-    .preboot-loader-wave.wave-c { animation-delay: 0.68s; }
-
-    .preboot-loader img {
-      width: 82px;
-      height: 82px;
-      object-fit: contain;
-      position: relative;
-      z-index: 1;
-      filter: drop-shadow(0 8px 18px rgba(0,0,0,0.22));
-    }
-
-    @keyframes prebootWave {
-      0% { transform: translate(-50%, -50%) scale(0.72); opacity: 0.38; }
-      100% { transform: translate(-50%, -50%) scale(1.34); opacity: 0; }
-    }
-
-    body.preboot-home #appRoot {
+    body.app-loading #appRoot {
       visibility: hidden;
     }
 
-    body.preboot-home.app-ready #appRoot {
+    body.app-loading #universalNavRoot,
+    body.app-loading #evaPageTransition {
       visibility: visible;
     }
 
-    body.preboot-home.app-ready .preboot-shell {
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.16s ease, visibility 0.16s ease;
+    body.app-ready #appRoot {
+      visibility: visible;
     }
   </style>
 
@@ -167,28 +80,14 @@
   <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=34" />
   <link rel="stylesheet" href="/evaraos/assets/css/home.css?v=34" />
 </head>
-<body class="home-page preboot-home app-loading">
-  <div class="preboot-shell" id="prebootShell" aria-hidden="true">
-    <div class="preboot-aurora"></div>
-    <div class="preboot-grid"></div>
-    <div class="preboot-loader">
-      <span class="preboot-loader-wave wave-a"></span>
-      <span class="preboot-loader-wave wave-b"></span>
-      <span class="preboot-loader-wave wave-c"></span>
-      <img
-        src="/evaraos/assets/img/evaraos_logo.png"
-        alt="Evaraos"
-        onerror="this.onerror=null;this.src='/evaraos/assets/logo.png';"
-      />
-    </div>
-  </div>
+<body class="home-page app-loading">
+  <div id="universalNavRoot"></div>
+  <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
 
   <div id="appRoot">
     <div class="page-aurora"></div>
     <div id="galaxyEngine" class="galaxy-engine" aria-hidden="true"></div>
     <div class="page-grid-overlay"></div>
-    <div id="universalNavRoot"></div>
-    <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
 
     <main class="home-shell">
       <section class="hero-home">
@@ -407,20 +306,5 @@
   <script src="/evaraos/assets/js/loader.js?v=34"></script>
   <script src="/evaraos/assets/js/galaxy.js?v=1"></script>
   <script src="/evaraos/assets/js/nav.js?v=34"></script>
-
-  <script>
-    (function () {
-      function unlockBoot() {
-        document.documentElement.classList.remove("boot-pending");
-        document.body.classList.add("app-ready");
-        document.body.classList.remove("app-loading");
-      }
-
-      window.addEventListener("pageshow", unlockBoot);
-      window.addEventListener("load", function () {
-        requestAnimationFrame(unlockBoot);
-      });
-    })();
-  </script>
 </body>
 </html>
