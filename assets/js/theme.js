@@ -67,7 +67,7 @@ function normalizeBaseFamily(value = "") {
 
 function normalizeBeamMode(value = "") {
   const safe = String(value || "").trim().toLowerCase();
-  return ["off", "rainbow"].includes(safe) ? safe : "off";
+  return ["off", "default", "rainbow"].includes(safe) ? (safe === "default" ? "off" : safe) : "off";
 }
 
 function getPresetAppearance(baseFamily = "dark") {
@@ -90,11 +90,42 @@ function setStoredBaseFamily(baseFamily = "dark") {
   } catch {}
 }
 
+function migrateAppearanceKeys(appearance = {}) {
+  const next = { ...(appearance || {}) };
+
+  if (next.cardTint && !next.cardColor) next.cardColor = next.cardTint;
+  if (next.buttonTint && !next.buttonColor) next.buttonColor = next.buttonTint;
+  if (next.backgroundGlow && !next.backgroundColor) next.backgroundColor = next.backgroundGlow;
+
+  if (typeof next.rainbowBeam === "boolean" && !next.beamMode) {
+    next.beamMode = next.rainbowBeam ? "rainbow" : "off";
+  }
+
+  if (next.beamMode === "default") {
+    next.beamMode = "off";
+  }
+
+  return next;
+}
+
+function toSplitAppearanceShape(appearance = {}) {
+  const safe = normalizeAppearance(appearance);
+  return {
+    ...safe,
+    cardTint: safe.cardColor,
+    buttonTint: safe.buttonColor,
+    backgroundGlow: safe.backgroundColor,
+    rainbowBeam: safe.beamMode === "rainbow"
+  };
+}
+
 function normalizeAppearance(appearance = {}) {
-  const requestedMode = normalizeMode(appearance.mode || "dark");
+  const migrated = migrateAppearanceKeys(appearance);
+
+  const requestedMode = normalizeMode(migrated.mode || "dark");
   const rememberedBase =
     requestedMode === "custom"
-      ? normalizeBaseFamily(appearance.baseFamily || getStoredBaseFamily())
+      ? normalizeBaseFamily(migrated.baseFamily || getStoredBaseFamily())
       : requestedMode;
 
   const baseFamily =
@@ -111,11 +142,11 @@ function normalizeAppearance(appearance = {}) {
   return {
     mode: requestedMode,
     baseFamily,
-    beamMode: normalizeBeamMode(appearance.beamMode || preset.beamMode),
-    cardColor: normalizeHex(appearance.cardColor, preset.cardColor),
-    buttonColor: normalizeHex(appearance.buttonColor, preset.buttonColor),
-    backgroundColor: normalizeHex(appearance.backgroundColor, preset.backgroundColor),
-    beamColor: normalizeHex(appearance.beamColor, preset.beamColor)
+    beamMode: normalizeBeamMode(migrated.beamMode || preset.beamMode),
+    cardColor: normalizeHex(migrated.cardColor, preset.cardColor),
+    buttonColor: normalizeHex(migrated.buttonColor, preset.buttonColor),
+    backgroundColor: normalizeHex(migrated.backgroundColor, preset.backgroundColor),
+    beamColor: normalizeHex(migrated.beamColor, preset.beamColor)
   };
 }
 
@@ -149,9 +180,12 @@ function getStoredAppearance() {
 
 function setStoredAppearance(appearance) {
   const safe = normalizeAppearance(appearance);
+  const splitShape = toSplitAppearanceShape(safe);
+
   try {
-    localStorage.setItem(APPEARANCE_KEY, JSON.stringify(safe));
+    localStorage.setItem(APPEARANCE_KEY, JSON.stringify(splitShape));
   } catch {}
+
   return safe;
 }
 
@@ -261,7 +295,12 @@ function applyAppearanceTokens(appearance = {}) {
   root.style.setProperty("--user-bg-color-2", preset.cardColor);
   root.style.setProperty("--user-beam-color", safe.beamColor);
   root.style.setProperty("--user-nav-tint", preset.cardColor);
-  root.setAttribute("data-beam-mode", safe.beamMode);
+
+  root.style.setProperty("--user-card-color", preset.cardColor);
+  root.style.setProperty("--user-button-color", preset.buttonColor);
+  root.style.setProperty("--user-background-color", preset.backgroundColor);
+
+  root.setAttribute("data-beam-mode", safe.beamMode === "rainbow" ? "rainbow" : "off");
 
   applyTheme(
     effectiveBase === "light"
@@ -274,9 +313,11 @@ function applyAppearanceTokens(appearance = {}) {
 
 async function persistAppearance(appearance) {
   const safe = setStoredAppearance(appearance);
+
   if (auth.currentUser) {
-    await saveUserThemePreferences(safe);
+    await saveUserThemePreferences(toSplitAppearanceShape(safe));
   }
+
   return safe;
 }
 
@@ -692,7 +733,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await initTheme();
 
   if (document.body) {
-    const activeTheme = document.documentElement.getAttribute("data-theme") || "dark";
+    const activeTheme = document.documentElement.getAttribute("data-theme") || getStoredTheme();
     document.body.setAttribute("data-theme-active", activeTheme);
   }
 
@@ -700,7 +741,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     new CustomEvent("evara:theme-ready", {
       detail: {
         theme: document.documentElement.getAttribute("data-theme") || "dark",
-        appearance: getWorkingAppearance()
+        appearance: toSplitAppearanceShape(getWorkingAppearance())
       }
     })
   );
