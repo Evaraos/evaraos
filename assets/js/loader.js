@@ -3,7 +3,7 @@
   const PAGE_TRANSITION_ID = "evaPageTransition";
   const GLOBAL_LOADER_ID = "evaraGlobalLoader";
 
-  const MIN_FIRST_BOOT_VISIBLE = 240;
+  const MIN_FIRST_BOOT_VISIBLE = 220;
   const MIN_NAV_VISIBLE = 170;
   const FAST_TO_FULL_DELAY = 1100;
   const EXIT_DURATION = 260;
@@ -15,13 +15,6 @@
   let isTransitioning = false;
   let fullLoaderVisible = false;
   let firstBootDone = false;
-
-  function getBasePath() {
-    const path = window.location.pathname;
-    const marker = "/evaraos/";
-    const index = path.indexOf(marker);
-    return index >= 0 ? path.slice(0, index + marker.length - 1) : "/evaraos";
-  }
 
   function clearTimers() {
     if (fullLoaderTimer) {
@@ -46,6 +39,39 @@
     return el;
   }
 
+  function inlineMarkSVG(className) {
+    return `
+      <svg viewBox="0 0 100 100" class="${className}" aria-hidden="true" focusable="false">
+        <defs>
+          <radialGradient id="evaraCoreGrad" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#ffb3c0"></stop>
+            <stop offset="32%" stop-color="#ff355d"></stop>
+            <stop offset="72%" stop-color="#b10f35"></stop>
+            <stop offset="100%" stop-color="#5f0821"></stop>
+          </radialGradient>
+          <linearGradient id="evaraChrome" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#ffffff"></stop>
+            <stop offset="55%" stop-color="#d9dbe8"></stop>
+            <stop offset="100%" stop-color="#8c91a8"></stop>
+          </linearGradient>
+          <radialGradient id="evaraShine" cx="38%" cy="28%" r="55%">
+            <stop offset="0%" stop-color="rgba(255,255,255,0.98)"></stop>
+            <stop offset="100%" stop-color="rgba(255,255,255,0)"></stop>
+          </radialGradient>
+        </defs>
+
+        <circle cx="50" cy="50" r="28" fill="url(#evaraCoreGrad)"></circle>
+        <ellipse cx="50" cy="50" rx="37" ry="18" fill="none" stroke="url(#evaraChrome)" stroke-width="6.8" transform="rotate(-18 50 50)"></ellipse>
+        <ellipse cx="50" cy="50" rx="20" ry="37" fill="none" stroke="url(#evaraChrome)" stroke-width="6.8" transform="rotate(28 50 50)"></ellipse>
+        <circle cx="50" cy="50" r="10" fill="url(#evaraShine)" opacity="0.75"></circle>
+        <circle cx="72" cy="34" r="5.6" fill="#ff2048"></circle>
+        <circle cx="31" cy="34" r="5.2" fill="#ff6a7e"></circle>
+        <circle cx="72" cy="66" r="5.2" fill="#ff2048"></circle>
+        <circle cx="31" cy="66" r="5.2" fill="#ff6a7e"></circle>
+      </svg>
+    `;
+  }
+
   function ensureFastLoader() {
     let el = document.getElementById(FAST_LOADER_ID);
     if (el) return el;
@@ -61,18 +87,14 @@
         <span class="evara-loader-fast-bg-wave wave-c"></span>
         <span class="evara-loader-fast-bg-glow glow-a"></span>
         <span class="evara-loader-fast-bg-glow glow-b"></span>
+        <span class="evara-loader-fast-bg-stars"></span>
       </div>
 
       <div class="evara-loader-fast-wrap">
         <span class="evara-loader-fast-wave wave-a"></span>
         <span class="evara-loader-fast-wave wave-b"></span>
         <span class="evara-loader-fast-wave wave-c"></span>
-        <img
-          src="${getBasePath()}/assets/img/evaraos_logo.png"
-          alt="Evaraos"
-          class="evara-loader-fast-logo"
-          onerror="this.onerror=null;this.src='${getBasePath()}/assets/logo.png';"
-        />
+        ${inlineMarkSVG("evara-loader-fast-logo")}
       </div>
     `;
     document.body.appendChild(el);
@@ -109,12 +131,7 @@
             <span class="evara-loader-pulse-ring pulse-ring-b"></span>
             <span class="evara-loader-pulse-ring pulse-ring-c"></span>
             <span class="evara-loader-pulse-glow"></span>
-            <img
-              src="${getBasePath()}/assets/img/evaraos_logo.png"
-              alt="Evaraos"
-              class="evara-loader-logo evara-loader-logo--premium"
-              onerror="this.onerror=null;this.src='${getBasePath()}/assets/logo.png';"
-            />
+            ${inlineMarkSVG("evara-loader-logo evara-loader-logo--premium")}
           </div>
         </div>
 
@@ -229,7 +246,6 @@
   function finishVisiblePhase(startedAt, minVisible, callback) {
     const elapsed = performance.now() - startedAt;
     const wait = Math.max(0, minVisible - elapsed);
-
     exitTimer = setTimeout(callback, wait);
   }
 
