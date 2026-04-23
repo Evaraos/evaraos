@@ -24,6 +24,18 @@ const usersSortBtn = document.getElementById("usersSortBtn");
 let usersData = [];
 let sortAsc = true;
 let isLoadingUsers = false;
+let hasBoundEvents = false;
+let hasStartedAuthWatch = false;
+
+function navigateWithLoader(url, options = {}) {
+  if (window.EvaraLoader && typeof window.EvaraLoader.beginNavigationLoad === "function") {
+    window.EvaraLoader.beginNavigationLoad(options);
+  }
+
+  requestAnimationFrame(() => {
+    window.location.assign(url);
+  });
+}
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -43,6 +55,7 @@ function userName(user = {}) {
     user.fullName ||
     user.displayName ||
     user.name ||
+    user.username ||
     user.email ||
     "Unnamed User"
   );
@@ -59,7 +72,7 @@ function userRole(user = {}) {
 function userPillClass(role = "") {
   const value = normalizeRole(role);
   if (["owner", "admin", "manager"].includes(value)) return "success";
-  if (["sales", "technician"].includes(value)) return "working";
+  if (["sales", "sales rep", "technician", "tech"].includes(value)) return "working";
   if (["customer"].includes(value)) return "empty";
   return "warning";
 }
@@ -81,7 +94,9 @@ function filteredUsers() {
       return [
         userName(user),
         userEmail(user),
-        userRole(user)
+        userRole(user),
+        user.username || "",
+        user.uid || ""
       ].some((value) => String(value || "").toLowerCase().includes(term));
     });
   }
@@ -233,6 +248,7 @@ async function loadUsers() {
       id: docSnap.id,
       ...docSnap.data()
     }));
+
     renderUsers();
   } catch (error) {
     console.error("Failed to load users:", error);
@@ -261,6 +277,9 @@ async function loadUsers() {
 }
 
 function bindEvents() {
+  if (hasBoundEvents) return;
+  hasBoundEvents = true;
+
   usersSearch?.addEventListener("input", renderUsers);
 
   usersRefreshBtnTop?.addEventListener("click", loadUsers);
@@ -282,13 +301,27 @@ function bindEvents() {
   });
 }
 
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    window.location.replace("/evaraos/login.html");
-    return;
-  }
+function initUsersPage() {
+  if (hasStartedAuthWatch) return;
+  hasStartedAuthWatch = true;
 
-  loadUsers();
-});
+  bindEvents();
 
-document.addEventListener("DOMContentLoaded", bindEvents);
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      navigateWithLoader("/evaraos/login.html", {
+        title: "Returning to login",
+        subtitle: "Your session is not active."
+      });
+      return;
+    }
+
+    loadUsers();
+  });
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initUsersPage);
+} else {
+  initUsersPage();
+}
