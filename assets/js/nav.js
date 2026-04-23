@@ -17,7 +17,6 @@
   let tapHandled = false;
 
   let lockedScrollY = 0;
-
   let pressTimer = null;
   let longPressTriggered = false;
 
@@ -105,16 +104,12 @@
     if (!label) return;
 
     const theme = getAppearanceTheme();
-    if (theme === "light") {
-      label.textContent = "Light mode";
-    } else if (theme === "galaxy") {
-      label.textContent = "Galaxy mode";
-    } else {
-      label.textContent = "Dark mode";
-    }
+    if (theme === "light") label.textContent = "Light mode";
+    else if (theme === "galaxy") label.textContent = "Galaxy mode";
+    else label.textContent = "Dark mode";
   }
 
-  function navHaptic(ms = 10) {
+  function navHaptic(ms = 8) {
     try {
       if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
         navigator.vibrate(ms);
@@ -143,81 +138,16 @@
 
   function iconSvg(name) {
     const icons = {
-      home: `
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4 10.5 12 4l8 6.5"/>
-          <path d="M6.5 9.5V20h11V9.5"/>
-          <path d="M10 20v-5h4v5"/>
-        </svg>
-      `,
-      login: `
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M10 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h3"/>
-          <path d="M14 8l4 4-4 4"/>
-          <path d="M8 12h10"/>
-        </svg>
-      `,
-      signup: `
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/>
-          <path d="M5 20a7 7 0 0 1 14 0"/>
-          <path d="M19 8v6"/>
-          <path d="M16 11h6"/>
-        </svg>
-      `,
-      dashboard: `
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M5 19V10"/>
-          <path d="M12 19V5"/>
-          <path d="M19 19v-8"/>
-          <path d="M4 19h16"/>
-        </svg>
-      `,
-      settings: `
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="12" cy="12" r="3.2"/>
-          <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 1 1-4 0v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 1 1 0-4h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a2 2 0 1 1 4 0v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6H20a2 2 0 1 1 0 4h-.2a1 1 0 0 0-.9.6Z"/>
-        </svg>
-      `,
-      companies: `
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4 20V8l8-4 8 4v12"/>
-          <path d="M9 20v-4h6v4"/>
-          <path d="M8 10h.01"/>
-          <path d="M12 10h.01"/>
-          <path d="M16 10h.01"/>
-          <path d="M8 13h.01"/>
-          <path d="M12 13h.01"/>
-          <path d="M16 13h.01"/>
-        </svg>
-      `,
-      users: `
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M16 21v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1"/>
-          <circle cx="9.5" cy="8" r="3.5"/>
-          <path d="M20 21v-1a4 4 0 0 0-3-3.9"/>
-          <path d="M16.5 4.1a3.5 3.5 0 0 1 0 6.8"/>
-        </svg>
-      `,
-      leads: `
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 3l2.7 5.4L21 9.3l-4.5 4.4 1.1 6.3L12 17.2 6.4 20l1.1-6.3L3 9.3l6.3-.9L12 3Z"/>
-        </svg>
-      `,
-      jobs: `
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M10 3h4"/>
-          <path d="M5 7h14v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7Z"/>
-          <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-        </svg>
-      `,
-      qa: `
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M10 3h4"/>
-          <path d="M9 3v4l-4.5 7.8A4 4 0 0 0 8 21h8a4 4 0 0 0 3.5-6.2L15 7V3"/>
-          <path d="M8.5 14h7"/>
-        </svg>
-      `
+      home: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5"/><path d="M6.5 9.5V20h11V9.5"/><path d="M10 20v-5h4v5"/></svg>`,
+      login: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h3"/><path d="M14 8l4 4-4 4"/><path d="M8 12h10"/></svg>`,
+      signup: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M5 20a7 7 0 0 1 14 0"/><path d="M19 8v6"/><path d="M16 11h6"/></svg>`,
+      dashboard: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19V10"/><path d="M12 19V5"/><path d="M19 19v-8"/><path d="M4 19h16"/></svg>`,
+      settings: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 1 1-4 0v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 1 1 0-4h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a2 2 0 1 1 4 0v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6H20a2 2 0 1 1 0 4h-.2a1 1 0 0 0-.9.6Z"/></svg>`,
+      companies: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V8l8-4 8 4v12"/><path d="M9 20v-4h6v4"/><path d="M8 10h.01"/><path d="M12 10h.01"/><path d="M16 10h.01"/><path d="M8 13h.01"/><path d="M12 13h.01"/><path d="M16 13h.01"/></svg>`,
+      users: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1"/><circle cx="9.5" cy="8" r="3.5"/><path d="M20 21v-1a4 4 0 0 0-3-3.9"/><path d="M16.5 4.1a3.5 3.5 0 0 1 0 6.8"/></svg>`,
+      leads: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.4L21 9.3l-4.5 4.4 1.1 6.3L12 17.2 6.4 20l1.1-6.3L3 9.3l6.3-.9L12 3Z"/></svg>`,
+      jobs: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3h4"/><path d="M5 7h14v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7Z"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`,
+      qa: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3h4"/><path d="M9 3v4l-4.5 7.8A4 4 0 0 0 8 21h8a4 4 0 0 0 3.5-6.2L15 7V3"/><path d="M8.5 14h7"/></svg>`
     };
     return icons[name] || icons.home;
   }
@@ -226,21 +156,16 @@
     const role = getRole();
     const authed = isAuthenticated();
 
-    const common = [
-      { page: "index.html", label: "Home", icon: "home", bubble: "home" }
-    ];
-
+    const common = [{ page: "index.html", label: "Home", icon: "home", bubble: "home" }];
     const guestMain = [
       { page: "login.html", label: "Login", icon: "login", bubble: "login" },
       { page: "signup.html", label: "Sign Up", icon: "signup", bubble: "signup" },
       { page: "reset.html", label: "Reset Password", icon: "login", bubble: "reset" }
     ];
-
     const authedMain = [
       { page: "dashboard.html", label: "Dashboard", icon: "dashboard", bubble: "dashboard" },
       { page: "settings.html", label: "Settings", icon: "settings", bubble: "settings" }
     ];
-
     const ownerOnly = [
       { page: "companies.html", label: "Companies", icon: "companies", bubble: "companies" },
       { page: "users.html", label: "Users", icon: "users", bubble: "users" },
@@ -265,13 +190,7 @@
           { page: "index.html", label: "Home", icon: "home", bubble: "home" }
         ];
 
-    return {
-      main,
-      quick,
-      authed,
-      role,
-      displayName: getDisplayName()
-    };
+    return { main, quick, authed, role, displayName: getDisplayName() };
   }
 
   function navLink(page, label, icon) {
@@ -403,33 +322,13 @@
     `;
   }
 
-  function getMenuZone() {
-    return document.getElementById("evaMenuZone");
-  }
-
-  function getMenuBtn() {
-    return document.getElementById("evaMenuBtn");
-  }
-
-  function getMenuPanel() {
-    return document.getElementById("evaMenuPanel");
-  }
-
-  function getNavShell() {
-    return document.getElementById("evaNavShell");
-  }
-
-  function getBrandBlock() {
-    return document.getElementById("evaBrandBlock");
-  }
-
-  function getNavPill() {
-    return document.getElementById("evaNavPill");
-  }
-
-  function getQuickBubbles() {
-    return document.getElementById("evaQuickBubbles");
-  }
+  function getMenuZone() { return document.getElementById("evaMenuZone"); }
+  function getMenuBtn() { return document.getElementById("evaMenuBtn"); }
+  function getMenuPanel() { return document.getElementById("evaMenuPanel"); }
+  function getNavShell() { return document.getElementById("evaNavShell"); }
+  function getBrandBlock() { return document.getElementById("evaBrandBlock"); }
+  function getNavPill() { return document.getElementById("evaNavPill"); }
+  function getQuickBubbles() { return document.getElementById("evaQuickBubbles"); }
 
   function clearCompactTimer() {
     if (compactTimer) {
@@ -458,10 +357,7 @@
 
   function atBottomOfPage() {
     const scrollBottom = window.scrollY + window.innerHeight;
-    const docHeight = Math.max(
-      document.body.scrollHeight,
-      document.documentElement.scrollHeight
-    );
+    const docHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
     return scrollBottom >= docHeight - 4;
   }
 
@@ -499,22 +395,18 @@
     clearCompactTimer();
     if (pin) navPinnedOpen = true;
     setTarget(1, mode);
-    navHaptic(10);
   }
 
   function compactNav(unpin = false, mode = "scroll") {
     if (unpin) navPinnedOpen = false;
-
     if (atTopOfPage() && !document.body.classList.contains("nav-menu-open")) {
       setTarget(1, mode);
       return;
     }
-
     setTarget(0, mode);
-    navHaptic(8);
   }
 
-  function scheduleCompact(delay = 2200) {
+  function scheduleCompact(delay = 2000) {
     clearCompactTimer();
     if (document.body.classList.contains("nav-menu-open")) return;
     if (atTopOfPage()) return;
@@ -547,13 +439,13 @@
       if (lastScrollDirection < 0) {
         navPinnedOpen = true;
         setTarget(1, "scroll");
-        scheduleCompact(2000);
+        scheduleCompact(1800);
         return;
       }
 
       navPinnedOpen = false;
       setTarget(0, "scroll");
-    }, 48);
+    }, 42);
   }
 
   function lockBodyScroll() {
@@ -582,14 +474,12 @@
 
     const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
     const topInset = 8;
-    const menuTop = window.innerWidth <= 480 ? 68 : 70;
+    const menuTop = window.innerWidth <= 480 ? 62 : 66;
     const bottomInset = 12;
 
     const maxHeight = Math.max(260, viewportHeight - menuTop - bottomInset);
     panel.style.setProperty("--eva-menu-max-height", `${maxHeight}px`);
-
-    const top = `calc(max(${topInset}px, env(safe-area-inset-top)) + ${menuTop}px)`;
-    panel.style.top = top;
+    panel.style.top = `calc(max(${topInset}px, env(safe-area-inset-top)) + ${menuTop}px)`;
   }
 
   function openMenu() {
@@ -616,15 +506,11 @@
     zone.classList.remove("open");
     btn.setAttribute("aria-expanded", "false");
     unlockBodyScroll();
-    navHaptic(8);
 
     if (shouldCompact) {
       navPinnedOpen = false;
-      if (atTopOfPage()) {
-        setTarget(1, "tap");
-      } else {
-        setTarget(0, "tap");
-      }
+      if (atTopOfPage()) setTarget(1, "tap");
+      else setTarget(0, "tap");
     }
   }
 
@@ -636,7 +522,6 @@
     shell.classList.add("quick-pressing");
     bubbles.classList.add("show");
     bubbles.setAttribute("aria-hidden", "false");
-    navHaptic(14);
   }
 
   function hideQuickBubbles() {
@@ -646,9 +531,7 @@
       bubbles.classList.remove("show");
       bubbles.setAttribute("aria-hidden", "true");
     }
-    if (shell) {
-      shell.classList.remove("quick-pressing");
-    }
+    if (shell) shell.classList.remove("quick-pressing");
   }
 
   function togglePill(event) {
@@ -661,7 +544,7 @@
 
     if (isCompact()) {
       expandNav(true, "tap");
-      scheduleCompact(2400);
+      scheduleCompact(2200);
       return;
     }
 
@@ -681,12 +564,11 @@
     longPressTriggered = false;
     pill.classList.add("is-pressing");
     document.body.classList.add("eva-pressing-nav");
-    navHaptic(6);
 
     pressTimer = setTimeout(() => {
       longPressTriggered = true;
       showQuickBubbles();
-    }, 240);
+    }, 220);
   }
 
   function endCompactPress() {
@@ -709,7 +591,6 @@
       tapStartY = touch.clientY;
       tapMoved = false;
       tapHandled = false;
-
       startCompactPress(event);
     }
 
@@ -757,14 +638,8 @@
     });
 
     pill.addEventListener("mouseleave", endCompactPress);
-
-    pill.addEventListener("dragstart", (event) => {
-      event.preventDefault();
-    });
-
-    pill.addEventListener("selectstart", (event) => {
-      event.preventDefault();
-    });
+    pill.addEventListener("dragstart", (event) => event.preventDefault());
+    pill.addEventListener("selectstart", (event) => event.preventDefault());
 
     pill.addEventListener("click", (event) => {
       if (event.target.closest("#evaMenuBtn")) return;
@@ -799,7 +674,6 @@
 
       event.preventDefault();
       event.stopPropagation();
-      navHaptic(10);
 
       const href = brand.getAttribute("data-home-link");
       navigateWithLoader(href, {
@@ -830,7 +704,6 @@
       link.addEventListener("click", (event) => {
         event.preventDefault();
         event.stopPropagation();
-        navHaptic(8);
 
         const href = link.getAttribute("data-menu-link");
         if (!href) return;
@@ -927,14 +800,10 @@
     btn.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      navHaptic(10);
       hideQuickBubbles();
 
-      if (document.body.classList.contains("nav-menu-open")) {
-        closeMenu(true);
-      } else {
-        openMenu();
-      }
+      if (document.body.classList.contains("nav-menu-open")) closeMenu(true);
+      else openMenu();
     });
 
     panel.addEventListener("click", (event) => {
@@ -948,79 +817,61 @@
 
     document.addEventListener("click", (event) => {
       if (!zone.contains(event.target) && !panel.contains(event.target)) {
-        if (document.body.classList.contains("nav-menu-open")) {
-          closeMenu(true);
-        }
-        if (!event.target.closest("#evaQuickBubbles")) {
-          hideQuickBubbles();
-        }
+        if (document.body.classList.contains("nav-menu-open")) closeMenu(true);
+        if (!event.target.closest("#evaQuickBubbles")) hideQuickBubbles();
       }
     });
 
     window.addEventListener("resize", () => {
-      if (document.body.classList.contains("nav-menu-open")) {
-        updateMenuViewportFit();
-      }
+      if (document.body.classList.contains("nav-menu-open")) updateMenuViewportFit();
     });
 
     if (window.visualViewport) {
       window.visualViewport.addEventListener("resize", () => {
-        if (document.body.classList.contains("nav-menu-open")) {
-          updateMenuViewportFit();
-        }
+        if (document.body.classList.contains("nav-menu-open")) updateMenuViewportFit();
       });
     }
   }
 
   function bindScrollBehavior() {
-    window.addEventListener(
-      "scroll",
-      () => {
-        const y = window.scrollY;
-        const dy = y - lastY;
+    window.addEventListener("scroll", () => {
+      const y = window.scrollY;
+      const dy = y - lastY;
 
-        if (!document.body.classList.contains("nav-menu-open")) {
-          clearCompactTimer();
+      if (!document.body.classList.contains("nav-menu-open")) {
+        clearCompactTimer();
 
-          if (Math.abs(dy) > 0.05) {
-            lastScrollDirection = dy < 0 ? -1 : 1;
-          }
-
-          if (atTopOfPage()) {
-            navPinnedOpen = false;
-            setTarget(1, "scroll");
-          } else if (atBottomOfPage()) {
-            navPinnedOpen = false;
-            setTarget(0, "scroll");
-          } else {
-            const sensitivity = 0.014;
-            const next = Math.max(0, Math.min(1, targetProgress - dy * sensitivity));
-            setTarget(next, "scroll");
-          }
-
-          settleAfterScroll();
-          hideQuickBubbles();
+        if (Math.abs(dy) > 0.05) {
+          lastScrollDirection = dy < 0 ? -1 : 1;
         }
 
-        lastY = y;
-      },
-      { passive: true }
-    );
-
-    window.addEventListener(
-      "touchend",
-      () => {
-        if (!document.body.classList.contains("nav-menu-open")) {
-          settleAfterScroll();
+        if (atTopOfPage()) {
+          navPinnedOpen = false;
+          setTarget(1, "scroll");
+        } else if (atBottomOfPage()) {
+          navPinnedOpen = false;
+          setTarget(0, "scroll");
+        } else {
+          const sensitivity = 0.0105;
+          const next = Math.max(0, Math.min(1, targetProgress - dy * sensitivity));
+          setTarget(next, "scroll");
         }
-      },
-      { passive: true }
-    );
+
+        settleAfterScroll();
+        hideQuickBubbles();
+      }
+
+      lastY = y;
+    }, { passive: true });
+
+    window.addEventListener("touchend", () => {
+      if (!document.body.classList.contains("nav-menu-open")) settleAfterScroll();
+    }, { passive: true });
   }
 
   function animate() {
     const diff = targetProgress - progress;
-    const factor = motionMode === "tap" ? 0.24 : 0.17;
+    const factor = motionMode === "tap" ? 0.2 : 0.14;
     const next = Math.abs(diff) < 0.0006 ? targetProgress : progress + diff * factor;
     applyProgress(next);
     rafId = requestAnimationFrame(animate);
@@ -1033,11 +884,10 @@
     requestAnimationFrame(() => {
       if (window.EvaraLoader && typeof window.EvaraLoader.markAppReady === "function") {
         window.EvaraLoader.markAppReady();
-        return;
+      } else {
+        document.body.classList.remove("app-loading");
+        document.body.classList.add("app-ready");
       }
-
-      document.body.classList.remove("app-loading");
-      document.body.classList.add("app-ready");
     });
   }
 
