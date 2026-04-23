@@ -35,7 +35,7 @@
         document.documentElement.setAttribute("data-theme", "dark");
       }
 
-      document.documentElement.classList.add("boot-pending");
+      document.documentElement.classList.add("boot-pending", "auth-pending");
     })();
   </script>
 
@@ -61,6 +61,12 @@
       touch-action: none;
     }
 
+    html.auth-pending body,
+    body.auth-pending {
+      opacity: 0;
+      pointer-events: none;
+    }
+
     body.login-page {
       margin: 0;
       min-height: 100vh;
@@ -82,7 +88,7 @@
   <link rel="stylesheet" href="/evaraos/assets/css/auth.css?v=34" />
   <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=34" />
 </head>
-<body class="login-page app-loading" data-route-guard="auth">
+<body class="login-page auth-pending app-loading" data-route-guard="auth">
   <div id="universalNavRoot"></div>
   <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
 
@@ -92,7 +98,7 @@
     <div class="page-grid-overlay"></div>
 
     <main class="login-shell">
-      <section class="login-panel glass-card aurora-card auth-panel">
+      <section class="auth-panel login-panel glass-card aurora-card active-glow beam-target">
         <div class="login-badge-wrap">
           <img
             src="/evaraos/assets/img/evaraos_logo.png"
@@ -109,7 +115,7 @@
         <form id="loginForm" class="login-form" novalidate>
           <div class="form-group">
             <label class="field-label" for="loginEmail">Email or Username</label>
-            <div class="input-shell aurora-card">
+            <div class="input-shell aurora-card beam-target">
               <input
                 id="loginEmail"
                 name="email"
@@ -124,7 +130,7 @@
 
           <div class="form-group">
             <label class="field-label" for="loginPassword">Password</label>
-            <div class="password-wrap aurora-card">
+            <div class="password-wrap aurora-card beam-target">
               <input
                 id="loginPassword"
                 name="password"
@@ -150,7 +156,7 @@
             </div>
           </div>
 
-          <div class="remember-row aurora-card">
+          <div class="remember-row aurora-card beam-target">
             <label class="remember-check" for="rememberDevice">
               <input id="rememberDevice" name="rememberDevice" type="checkbox" checked />
               <span>Remember this device</span>
