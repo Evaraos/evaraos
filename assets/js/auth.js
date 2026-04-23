@@ -57,7 +57,7 @@ function bindPasswordToggle(buttonId, inputId) {
   button.addEventListener("click", () => {
     const show = input.type === "password";
     input.type = show ? "text" : "password";
-    button.classList.toggle("is-visible", show);
+    button.classList.toggle("is-open", show);
     button.setAttribute("aria-label", show ? "Hide password" : "Show password");
   });
 }
