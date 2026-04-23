@@ -1,5 +1,3 @@
-// assets/js/route-guard.js
-
 import { protectRoute } from "./firebase.js";
 
 function clearAuthPending() {
@@ -10,6 +8,10 @@ function clearAuthPending() {
 function showAppReady() {
   document.body?.classList.remove("app-loading");
   document.body?.classList.add("app-ready");
+
+  if (window.EvaraLoader && typeof window.EvaraLoader.markAppReady === "function") {
+    window.EvaraLoader.markAppReady();
+  }
 }
 
 async function handleProtectedRoute(mode) {
