@@ -7,6 +7,9 @@
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
+  <meta name="theme-color" content="#050311" />
+  <link rel="manifest" href="/evaraos/manifest.json" />
+  <link rel="apple-touch-icon" href="/evaraos/assets/img/icon-192.png" />
 
   <title>Users • Evaraos Inc</title>
 
@@ -14,185 +17,215 @@
     (function () {
       try {
         const raw = localStorage.getItem("evaraos-appearance");
-        if (!raw) return;
-        const appearance = JSON.parse(raw);
         let theme = "dark";
 
-        if (appearance.mode === "light") theme = "light";
-        if (appearance.mode === "galaxy") theme = "galaxy";
+        if (raw) {
+          const appearance = JSON.parse(raw);
 
-        if (appearance.mode === "custom") {
-          if (appearance.baseFamily === "light") theme = "light";
-          else if (appearance.baseFamily === "galaxy") theme = "galaxy";
-          else theme = "dark";
+          if (appearance.mode === "light") theme = "light";
+          else if (appearance.mode === "galaxy") theme = "galaxy";
+          else if (appearance.mode === "custom") {
+            if (appearance.baseFamily === "light") theme = "light";
+            else if (appearance.baseFamily === "galaxy") theme = "galaxy";
+            else theme = "dark";
+          }
         }
 
         document.documentElement.setAttribute("data-theme", theme);
-      } catch {}
-    })();
+      } catch {
+        document.documentElement.setAttribute("data-theme", "dark");
+      }
 
-    document.documentElement.classList.add("auth-pending");
+      document.documentElement.classList.add("boot-pending", "auth-pending");
+    })();
   </script>
 
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=34" />
-  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=34" />
-  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=34" />
-  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=34" />
-
   <style>
+    html,
+    body { background: #060814; }
+
+    html[data-theme="light"],
+    html[data-theme="light"] body { background: #f4f7f6; }
+
+    html[data-theme="galaxy"],
+    html[data-theme="galaxy"] body { background: #050311; }
+
+    html.boot-pending body {
+      margin: 0;
+      overflow: hidden;
+      touch-action: none;
+    }
+
     html.auth-pending body,
     body.auth-pending {
       opacity: 0;
       pointer-events: none;
     }
+
+    body.dashboard-body {
+      margin: 0;
+      min-height: 100vh;
+      background: transparent;
+    }
+
+    body.app-loading #appRoot { visibility: hidden; }
+    body.app-ready #appRoot { visibility: visible; }
   </style>
+
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=34" />
 </head>
 <body class="dashboard-body auth-pending app-loading" data-route-guard="private">
-  <div class="page-aurora"></div>
-  <div id="galaxyEngine" class="galaxy-engine" aria-hidden="true"></div>
-  <div class="page-grid-overlay"></div>
   <div id="universalNavRoot"></div>
   <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
 
-  <div class="dashboard-shell">
-    <aside class="dashboard-sidebar" id="dashboardSidebar">
-      <div class="dashboard-sidebar-inner glass-shell aurora-card active-glow beam-target">
-        <div class="dashboard-sidebar-search">
-          <div class="dashboard-search-shell input-shell aurora-card active-glow beam-target">
-            <input
-              type="search"
-              class="dashboard-search-input input"
-              id="usersSearch"
-              placeholder="Search users..."
-              aria-label="Search users"
-            />
-          </div>
-        </div>
+  <div id="appRoot">
+    <div class="page-aurora"></div>
+    <div id="galaxyEngine" class="galaxy-engine" aria-hidden="true"></div>
+    <div class="page-grid-overlay"></div>
 
-        <div class="dashboard-sidebar-head">
-          <p class="dashboard-sidebar-eyebrow">User Navigation</p>
-          <h2 id="dashboardOverviewTitle">Users Overview</h2>
-        </div>
-
-        <nav class="dashboard-sidebar-nav" aria-label="Users sections">
-          <a href="#usersHeroSection" class="dashboard-nav-link active aurora-card beam-target">
-            <span class="dashboard-nav-icon">◉</span>
-            <span>Overview</span>
-          </a>
-
-          <a href="#usersMainSection" class="dashboard-nav-link aurora-card beam-target">
-            <span class="dashboard-nav-icon">◎</span>
-            <span>Directory</span>
-          </a>
-        </nav>
-
-        <div class="dashboard-sidebar-foot glass-card aurora-card active-glow beam-target">
-          <div class="dashboard-sidebar-foot-copy">
-            <strong>User Tools</strong>
-            <span>
-              Search, sort, and review system users and access roles in one place.
-            </span>
-          </div>
-          <button type="button" id="usersRefreshBtnSide" class="btn btn-theme-primary">Refresh</button>
-        </div>
-      </div>
-    </aside>
-
-    <main class="dashboard-main">
-      <section class="dashboard-hero glass-card aurora-card active-glow beam-target" id="usersHeroSection">
-        <div class="dashboard-hero-copy">
-          <p class="dashboard-eyebrow">USER DIRECTORY</p>
-          <h1 id="usersHeroTitle">Loading users...</h1>
-          <p class="dashboard-hero-text" id="usersHeroText">
-            Connecting to Firestore user records.
-          </p>
-
-          <div class="dashboard-hero-actions">
-            <button type="button" id="usersRefreshBtnTop" class="btn btn-theme-primary">Refresh</button>
-            <button type="button" id="usersSortBtn" class="btn btn-theme-secondary">Sort A–Z</button>
-          </div>
-        </div>
-
-        <div class="dashboard-hero-panel glass-card aurora-card active-glow beam-target">
-          <div class="dashboard-hero-panel-top">
-            <span class="dashboard-mini-badge">Directory Status</span>
-            <span class="dashboard-live-dot"></span>
-          </div>
-
-          <div class="dashboard-hero-logo-wrap">
-            <img
-              src="/evaraos/assets/img/evaraos_logo.png"
-              alt="Evaraos"
-              class="dashboard-hero-logo"
-            />
-          </div>
-
-          <div class="dashboard-hero-panel-copy">
-            <strong>User Registry</strong>
-            <span>Track user roles, account status, and team structure.</span>
-          </div>
-        </div>
-      </section>
-
-      <section class="dashboard-overview glass-card aurora-card active-glow beam-target">
-        <div class="dashboard-section-head">
-          <div>
-            <p class="dashboard-section-kicker">Snapshot</p>
-            <h2>User Overview</h2>
-          </div>
-        </div>
-
-        <div class="dashboard-stats-grid">
-          <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
-            <p>Total</p>
-            <h3 id="usersStatTotal">0</h3>
-            <span id="usersStatTotalMeta">User records loaded</span>
-          </article>
-
-          <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
-            <p>Owner/Admin</p>
-            <h3 id="usersStatElevated">0</h3>
-            <span id="usersStatElevatedMeta">Higher-access users</span>
-          </article>
-
-          <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
-            <p>Customers</p>
-            <h3 id="usersStatCustomers">0</h3>
-            <span id="usersStatCustomersMeta">Customer accounts</span>
-          </article>
-
-          <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
-            <p>Filtered</p>
-            <h3 id="usersStatFiltered">0</h3>
-            <span id="usersStatFilteredMeta">Matches current search</span>
-          </article>
-        </div>
-      </section>
-
-      <section class="dashboard-grid-2" id="usersMainSection">
-        <section class="dashboard-panel glass-card aurora-card active-glow beam-target">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Directory</p>
-              <h2>Users</h2>
+    <div class="dashboard-shell">
+      <aside class="dashboard-sidebar" id="dashboardSidebar">
+        <div class="dashboard-sidebar-inner glass-shell aurora-card active-glow beam-target">
+          <div class="dashboard-sidebar-search">
+            <div class="dashboard-search-shell input-shell aurora-card active-glow beam-target">
+              <input
+                type="search"
+                class="dashboard-search-input input"
+                id="usersSearch"
+                placeholder="Search users..."
+                aria-label="Search users"
+              />
             </div>
           </div>
 
-          <div class="dashboard-list" id="usersList"></div>
-        </section>
+          <div class="dashboard-sidebar-head">
+            <p class="dashboard-sidebar-eyebrow">User Navigation</p>
+            <h2 id="dashboardOverviewTitle">Users Overview</h2>
+          </div>
 
-        <section class="dashboard-panel glass-card aurora-card active-glow beam-target">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Highlights</p>
-              <h2>Team Feed</h2>
+          <nav class="dashboard-sidebar-nav" aria-label="Users sections">
+            <a href="#usersHeroSection" class="dashboard-nav-link active aurora-card beam-target">
+              <span class="dashboard-nav-icon">◉</span>
+              <span>Overview</span>
+            </a>
+
+            <a href="#usersMainSection" class="dashboard-nav-link aurora-card beam-target">
+              <span class="dashboard-nav-icon">◎</span>
+              <span>Directory</span>
+            </a>
+          </nav>
+
+          <div class="dashboard-sidebar-foot glass-card aurora-card active-glow beam-target">
+            <div class="dashboard-sidebar-foot-copy">
+              <strong>User Tools</strong>
+              <span>
+                Search, sort, and review system users and access roles in one place.
+              </span>
+            </div>
+            <button type="button" id="usersRefreshBtnSide" class="btn btn-theme-primary">Refresh</button>
+          </div>
+        </div>
+      </aside>
+
+      <main class="dashboard-main">
+        <section class="dashboard-hero glass-card aurora-card active-glow beam-target" id="usersHeroSection">
+          <div class="dashboard-hero-copy">
+            <p class="dashboard-eyebrow">USER DIRECTORY</p>
+            <h1 id="usersHeroTitle">Loading users...</h1>
+            <p class="dashboard-hero-text" id="usersHeroText">
+              Connecting to Firestore user records.
+            </p>
+
+            <div class="dashboard-hero-actions">
+              <button type="button" id="usersRefreshBtnTop" class="btn btn-theme-primary">Refresh</button>
+              <button type="button" id="usersSortBtn" class="btn btn-theme-secondary">Sort A–Z</button>
             </div>
           </div>
 
-          <div class="dashboard-feed" id="usersFeed"></div>
+          <div class="dashboard-hero-panel glass-card aurora-card active-glow beam-target">
+            <div class="dashboard-hero-panel-top">
+              <span class="dashboard-mini-badge">Directory Status</span>
+              <span class="dashboard-live-dot"></span>
+            </div>
+
+            <div class="dashboard-hero-logo-wrap">
+              <img
+                src="/evaraos/assets/img/evaraos_logo.png"
+                alt="Evaraos"
+                class="dashboard-hero-logo"
+              />
+            </div>
+
+            <div class="dashboard-hero-panel-copy">
+              <strong>User Registry</strong>
+              <span>Track user roles, account status, and team structure.</span>
+            </div>
+          </div>
         </section>
-      </section>
-    </main>
+
+        <section class="dashboard-overview glass-card aurora-card active-glow beam-target">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Snapshot</p>
+              <h2>User Overview</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-stats-grid">
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
+              <p>Total</p>
+              <h3 id="usersStatTotal">0</h3>
+              <span id="usersStatTotalMeta">User records loaded</span>
+            </article>
+
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
+              <p>Owner/Admin</p>
+              <h3 id="usersStatElevated">0</h3>
+              <span id="usersStatElevatedMeta">Higher-access users</span>
+            </article>
+
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
+              <p>Customers</p>
+              <h3 id="usersStatCustomers">0</h3>
+              <span id="usersStatCustomersMeta">Customer accounts</span>
+            </article>
+
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
+              <p>Filtered</p>
+              <h3 id="usersStatFiltered">0</h3>
+              <span id="usersStatFilteredMeta">Matches current search</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="dashboard-grid-2" id="usersMainSection">
+          <section class="dashboard-panel glass-card aurora-card active-glow beam-target">
+            <div class="dashboard-section-head">
+              <div>
+                <p class="dashboard-section-kicker">Directory</p>
+                <h2>Users</h2>
+              </div>
+            </div>
+
+            <div class="dashboard-list" id="usersList"></div>
+          </section>
+
+          <section class="dashboard-panel glass-card aurora-card active-glow beam-target">
+            <div class="dashboard-section-head">
+              <div>
+                <p class="dashboard-section-kicker">Highlights</p>
+                <h2>Team Feed</h2>
+              </div>
+            </div>
+
+            <div class="dashboard-feed" id="usersFeed"></div>
+          </section>
+        </section>
+      </main>
+    </div>
   </div>
 
   <script type="module" src="/evaraos/assets/js/firebase.js?v=34"></script>
