@@ -514,7 +514,7 @@
     navHaptic(8);
   }
 
-  function scheduleCompact(delay = 2600) {
+  function scheduleCompact(delay = 2200) {
     clearCompactTimer();
     if (document.body.classList.contains("nav-menu-open")) return;
     if (atTopOfPage()) return;
@@ -547,13 +547,13 @@
       if (lastScrollDirection < 0) {
         navPinnedOpen = true;
         setTarget(1, "scroll");
-        scheduleCompact(2400);
+        scheduleCompact(2000);
         return;
       }
 
       navPinnedOpen = false;
       setTarget(0, "scroll");
-    }, 60);
+    }, 48);
   }
 
   function lockBodyScroll() {
@@ -661,7 +661,7 @@
 
     if (isCompact()) {
       expandNav(true, "tap");
-      scheduleCompact(2800);
+      scheduleCompact(2400);
       return;
     }
 
@@ -993,7 +993,7 @@
             navPinnedOpen = false;
             setTarget(0, "scroll");
           } else {
-            const sensitivity = 0.018;
+            const sensitivity = 0.014;
             const next = Math.max(0, Math.min(1, targetProgress - dy * sensitivity));
             setTarget(next, "scroll");
           }
@@ -1020,7 +1020,7 @@
 
   function animate() {
     const diff = targetProgress - progress;
-    const factor = motionMode === "tap" ? 0.22 : 0.15;
+    const factor = motionMode === "tap" ? 0.24 : 0.17;
     const next = Math.abs(diff) < 0.0006 ? targetProgress : progress + diff * factor;
     applyProgress(next);
     rafId = requestAnimationFrame(animate);
@@ -1030,13 +1030,15 @@
     if (hasBootAnimated) return;
     hasBootAnimated = true;
 
-    if (window.EvaraLoader && typeof window.EvaraLoader.markAppReady === "function") {
-      window.EvaraLoader.markAppReady();
-      return;
-    }
+    requestAnimationFrame(() => {
+      if (window.EvaraLoader && typeof window.EvaraLoader.markAppReady === "function") {
+        window.EvaraLoader.markAppReady();
+        return;
+      }
 
-    document.body.classList.remove("app-loading");
-    document.body.classList.add("app-ready");
+      document.body.classList.remove("app-loading");
+      document.body.classList.add("app-ready");
+    });
   }
 
   function init() {
