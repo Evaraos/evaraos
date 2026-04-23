@@ -13,128 +13,264 @@
   <script>
     (function () {
       try {
-        const raw = localStorage.getItem("evaraos-appearance");
-        if (!raw) return;
-        const appearance = JSON.parse(raw);
-        let theme = "dark";
+        var raw = localStorage.getItem("evaraos-appearance");
+        var theme = "dark";
 
-        if (appearance.mode === "light") theme = "light";
-        if (appearance.mode === "galaxy") theme = "galaxy";
+        if (raw) {
+          var appearance = JSON.parse(raw);
 
-        if (appearance.mode === "custom") {
-          if (appearance.baseFamily === "light") theme = "light";
-          else if (appearance.baseFamily === "galaxy") theme = "galaxy";
-          else theme = "dark";
+          if (appearance.mode === "light") theme = "light";
+          else if (appearance.mode === "galaxy") theme = "galaxy";
+          else if (appearance.mode === "custom") {
+            if (appearance.baseFamily === "light") theme = "light";
+            else if (appearance.baseFamily === "galaxy") theme = "galaxy";
+            else theme = "dark";
+          }
         }
 
         document.documentElement.setAttribute("data-theme", theme);
-      } catch {}
-    })();
+      } catch {
+        document.documentElement.setAttribute("data-theme", "dark");
+      }
 
-    document.documentElement.classList.add("auth-pending");
+      document.documentElement.classList.add("boot-pending", "auth-pending");
+    })();
   </script>
+
+  <style>
+    html.boot-pending,
+    html.boot-pending body {
+      background: #060814;
+    }
+
+    html[data-theme="light"].boot-pending,
+    html[data-theme="light"].boot-pending body {
+      background: #eef2f4;
+    }
+
+    html.boot-pending body {
+      margin: 0;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    body.preboot-auth {
+      margin: 0;
+      min-height: 100vh;
+      background: transparent;
+    }
+
+    .preboot-shell {
+      position: fixed;
+      inset: 0;
+      z-index: 2147483647;
+      overflow: hidden;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 30%, rgba(120, 98, 255, 0.18), transparent 28%),
+        linear-gradient(180deg, #040611 0%, #070b18 100%);
+    }
+
+    html[data-theme="light"] .preboot-shell {
+      background:
+        radial-gradient(circle at 50% 30%, rgba(120, 98, 255, 0.10), transparent 28%),
+        linear-gradient(180deg, #f6f8fa 0%, #edf2f4 100%);
+    }
+
+    .preboot-aurora,
+    .preboot-grid {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .preboot-aurora {
+      background:
+        radial-gradient(circle at 18% 72%, rgba(116, 91, 255, 0.16), transparent 24%),
+        radial-gradient(circle at 78% 32%, rgba(214, 122, 255, 0.10), transparent 22%);
+      opacity: 0.9;
+    }
+
+    .preboot-grid {
+      background-image:
+        linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.14;
+    }
+
+    html[data-theme="light"] .preboot-grid {
+      background-image:
+        linear-gradient(rgba(24,45,39,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(24,45,39,0.03) 1px, transparent 1px);
+      opacity: 0.08;
+    }
+
+    .preboot-loader {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 110px;
+      height: 110px;
+      display: grid;
+      place-items: center;
+    }
+
+    .preboot-loader-wave {
+      position: absolute;
+      inset: 50%;
+      width: 110px;
+      height: 110px;
+      border-radius: 999px;
+      transform: translate(-50%, -50%);
+      border: 1px solid rgba(255,255,255,0.10);
+      background: radial-gradient(circle, rgba(255,255,255,0.05), transparent 62%);
+      animation: prebootWave 2s ease-out infinite;
+    }
+
+    .preboot-loader-wave.wave-b { animation-delay: 0.34s; }
+    .preboot-loader-wave.wave-c { animation-delay: 0.68s; }
+
+    .preboot-loader img {
+      width: 82px;
+      height: 82px;
+      object-fit: contain;
+      position: relative;
+      z-index: 1;
+      filter: drop-shadow(0 8px 18px rgba(0,0,0,0.22));
+    }
+
+    @keyframes prebootWave {
+      0% { transform: translate(-50%, -50%) scale(0.72); opacity: 0.38; }
+      100% { transform: translate(-50%, -50%) scale(1.34); opacity: 0; }
+    }
+
+    body.preboot-auth #appRoot {
+      visibility: hidden;
+    }
+
+    body.preboot-auth.app-ready #appRoot {
+      visibility: visible;
+    }
+
+    body.preboot-auth.app-ready .preboot-shell {
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.16s ease, visibility 0.16s ease;
+    }
+  </style>
 
   <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=34" />
   <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=34" />
   <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=34" />
   <link rel="stylesheet" href="/evaraos/assets/css/auth.css?v=34" />
   <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=34" />
-
-  <style>
-    html.auth-pending body,
-    body.auth-pending {
-      opacity: 0;
-      pointer-events: none;
-    }
-  </style>
 </head>
-<body class="login-page auth-pending app-loading" data-route-guard="auth">
-  <div class="page-aurora"></div>
-  <div id="galaxyEngine" class="galaxy-engine" aria-hidden="true"></div>
-  <div class="page-grid-overlay"></div>
-  <div id="universalNavRoot"></div>
-  <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
+<body class="login-page preboot-auth auth-pending app-loading" data-route-guard="auth">
+  <div class="preboot-shell" id="prebootShell" aria-hidden="true">
+    <div class="preboot-aurora"></div>
+    <div class="preboot-grid"></div>
+    <div class="preboot-loader">
+      <span class="preboot-loader-wave wave-a"></span>
+      <span class="preboot-loader-wave wave-b"></span>
+      <span class="preboot-loader-wave wave-c"></span>
+      <img
+        src="/evaraos/assets/img/evaraos_logo.png"
+        alt="Evaraos"
+        onerror="this.onerror=null;this.src='/evaraos/assets/logo.png';"
+      />
+    </div>
+  </div>
 
-  <main class="login-shell">
-    <section class="login-panel glass-card aurora-card auth-panel">
-      <div class="login-badge-wrap">
-        <img
-          src="/evaraos/assets/img/evaraos_logo.png"
-          alt="Evaraos logo"
-          class="login-badge auth-badge auth-badge-large"
-        />
-      </div>
+  <div id="appRoot">
+    <div class="page-aurora"></div>
+    <div id="galaxyEngine" class="galaxy-engine" aria-hidden="true"></div>
+    <div class="page-grid-overlay"></div>
+    <div id="universalNavRoot"></div>
+    <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
 
-      <h1 class="login-title">Welcome Back</h1>
-      <p class="login-subtitle">
-        Sign in with your email or username to access your Evaraos control center.
-      </p>
+    <main class="login-shell">
+      <section class="login-panel glass-card aurora-card auth-panel">
+        <div class="login-badge-wrap">
+          <img
+            src="/evaraos/assets/img/evaraos_logo.png"
+            alt="Evaraos logo"
+            class="login-badge auth-badge auth-badge-large"
+          />
+        </div>
 
-      <form id="loginForm" class="login-form" novalidate>
-        <div class="form-group">
-          <label class="field-label" for="loginEmail">Email or Username</label>
-          <div class="input-shell aurora-card">
-            <input
-              id="loginEmail"
-              name="email"
-              type="text"
-              class="input"
-              placeholder="Enter your email or username"
-              autocomplete="username"
-              required
-            />
+        <h1 class="login-title">Welcome Back</h1>
+        <p class="login-subtitle">
+          Sign in with your email or username to access your Evaraos control center.
+        </p>
+
+        <form id="loginForm" class="login-form" novalidate>
+          <div class="form-group">
+            <label class="field-label" for="loginEmail">Email or Username</label>
+            <div class="input-shell aurora-card">
+              <input
+                id="loginEmail"
+                name="email"
+                type="text"
+                class="input"
+                placeholder="Enter your email or username"
+                autocomplete="username"
+                required
+              />
+            </div>
           </div>
-        </div>
 
-        <div class="form-group">
-          <label class="field-label" for="loginPassword">Password</label>
-          <div class="password-wrap aurora-card">
-            <input
-              id="loginPassword"
-              name="password"
-              type="password"
-              class="input"
-              placeholder="Enter your password"
-              autocomplete="current-password"
-              required
-            />
-            <button
-              type="button"
-              class="password-toggle"
-              id="loginPasswordToggle"
-              aria-label="Show password"
-            >
-              <svg viewBox="0 0 24 24" class="password-eye-icon eye-open" aria-hidden="true">
-                <path d="M12 5c5.5 0 9.5 5.1 10.7 6.9.2.3.2.8 0 1.1C21.5 14.9 17.5 20 12 20S2.5 14.9 1.3 13.1a1 1 0 0 1 0-1.1C2.5 10.1 6.5 5 12 5Zm0 2C8 7 4.8 10.3 3.4 12 4.8 13.7 8 17 12 17s7.2-3.3 8.6-5C19.2 10.3 16 7 12 7Zm0 1.8A3.2 3.2 0 1 1 8.8 12 3.2 3.2 0 0 1 12 8.8Zm0 2A1.2 1.2 0 1 0 13.2 12 1.2 1.2 0 0 0 12 10.8Z"></path>
-              </svg>
-              <svg viewBox="0 0 24 24" class="password-eye-icon eye-closed" aria-hidden="true">
-                <path d="M3.3 4.7 19.3 20.7l1.4-1.4-2.2-2.2c1.8-1.2 3.2-2.8 4.2-4.2a1 1 0 0 0 0-1.1C21.5 10.1 17.5 5 12 5c-1.8 0-3.5.5-5.1 1.2L4.7 3.3 3.3 4.7Zm5.1 5.1 1.5 1.5a2.2 2.2 0 0 0 2.8 2.8l1.5 1.5A4.2 4.2 0 0 1 8.4 9.8ZM12 7c4 0 7.2 3.3 8.6 5-1 1.3-2.8 3.2-5.1 4.3l-1.6-1.6a4.2 4.2 0 0 0-4.6-4.6L7.8 8.5C9.1 7.6 10.5 7 12 7ZM5.3 8.3C3.9 9.4 2.8 10.8 1.3 12.9a1 1 0 0 0 0 1.1C2.5 15.9 6.5 21 12 21c1.8 0 3.6-.5 5.1-1.3l-1.5-1.5A8.6 8.6 0 0 1 12 19c-4 0-7.2-3.3-8.6-5 .9-1.1 2.2-2.5 3.7-3.6L5.3 8.3Z"></path>
-              </svg>
-            </button>
+          <div class="form-group">
+            <label class="field-label" for="loginPassword">Password</label>
+            <div class="password-wrap aurora-card">
+              <input
+                id="loginPassword"
+                name="password"
+                type="password"
+                class="input"
+                placeholder="Enter your password"
+                autocomplete="current-password"
+                required
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                id="loginPasswordToggle"
+                aria-label="Show password"
+              >
+                <svg viewBox="0 0 24 24" class="password-eye-icon eye-open" aria-hidden="true">
+                  <path d="M12 5c5.5 0 9.5 5.1 10.7 6.9.2.3.2.8 0 1.1C21.5 14.9 17.5 20 12 20S2.5 14.9 1.3 13.1a1 1 0 0 1 0-1.1C2.5 10.1 6.5 5 12 5Zm0 2C8 7 4.8 10.3 3.4 12 4.8 13.7 8 17 12 17s7.2-3.3 8.6-5C19.2 10.3 16 7 12 7Zm0 1.8A3.2 3.2 0 1 1 8.8 12 3.2 3.2 0 0 1 12 8.8Zm0 2A1.2 1.2 0 1 0 13.2 12 1.2 1.2 0 0 0 12 10.8Z"></path>
+                </svg>
+                <svg viewBox="0 0 24 24" class="password-eye-icon eye-closed" aria-hidden="true">
+                  <path d="M3.3 4.7 19.3 20.7l1.4-1.4-2.2-2.2c1.8-1.2 3.2-2.8 4.2-4.2a1 1 0 0 0 0-1.1C21.5 10.1 17.5 5 12 5c-1.8 0-3.5.5-5.1 1.2L4.7 3.3 3.3 4.7Zm5.1 5.1 1.5 1.5a2.2 2.2 0 0 0 2.8 2.8l1.5 1.5A4.2 4.2 0 0 1 8.4 9.8ZM12 7c4 0 7.2 3.3 8.6 5-1 1.3-2.8 3.2-5.1 4.3l-1.6-1.6a4.2 4.2 0 0 0-4.6-4.6L7.8 8.5C9.1 7.6 10.5 7 12 7ZM5.3 8.3C3.9 9.4 2.8 10.8 1.3 12.9a1 1 0 0 0 0 1.1C2.5 15.9 6.5 21 12 21c1.8 0 3.6-.5 5.1-1.3l-1.5-1.5A8.6 8.6 0 0 1 12 19c-4 0-7.2-3.3-8.6-5 .9-1.1 2.2-2.5 3.7-3.6L5.3 8.3Z"></path>
+                </svg>
+              </button>
+            </div>
           </div>
+
+          <div class="remember-row aurora-card">
+            <label class="remember-check" for="rememberDevice">
+              <input id="rememberDevice" name="rememberDevice" type="checkbox" checked />
+              <span>Remember this device</span>
+            </label>
+          </div>
+
+          <div class="login-actions-row">
+            <button type="submit" class="btn btn-theme-primary premium-red-btn">Login</button>
+            <a href="/evaraos/reset.html" class="btn btn-theme-secondary">Forgot password?</a>
+          </div>
+
+          <p id="loginMessage" class="login-message" aria-live="polite"></p>
+        </form>
+
+        <div class="auth-footer-links">
+          <span>Need an account?</span>
+          <a href="/evaraos/signup.html">Create one</a>
         </div>
-
-        <div class="remember-row aurora-card">
-          <label class="remember-check" for="rememberDevice">
-            <input id="rememberDevice" name="rememberDevice" type="checkbox" checked />
-            <span>Remember this device</span>
-          </label>
-        </div>
-
-        <div class="login-actions-row">
-          <button type="submit" class="btn btn-theme-primary premium-red-btn">Login</button>
-          <a href="/evaraos/reset.html" class="btn btn-theme-secondary">Forgot password?</a>
-        </div>
-
-        <p id="loginMessage" class="login-message" aria-live="polite"></p>
-      </form>
-
-      <div class="auth-footer-links">
-        <span>Need an account?</span>
-        <a href="/evaraos/signup.html">Create one</a>
-      </div>
-    </section>
-  </main>
+      </section>
+    </main>
+  </div>
 
   <script type="module" src="/evaraos/assets/js/firebase.js?v=34"></script>
   <script type="module" src="/evaraos/assets/js/theme.js?v=34"></script>
@@ -143,5 +279,20 @@
   <script type="module" src="/evaraos/assets/js/auth.js?v=34"></script>
   <script type="module" src="/evaraos/assets/js/route-guard.js?v=34"></script>
   <script src="/evaraos/assets/js/nav.js?v=34"></script>
+
+  <script>
+    (function () {
+      function unlockBoot() {
+        document.documentElement.classList.remove("boot-pending", "auth-pending");
+        document.body.classList.add("app-ready");
+        document.body.classList.remove("app-loading");
+      }
+
+      window.addEventListener("pageshow", unlockBoot);
+      window.addEventListener("load", function () {
+        requestAnimationFrame(unlockBoot);
+      });
+    })();
+  </script>
 </body>
 </html>
