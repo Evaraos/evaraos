@@ -77,6 +77,7 @@
   <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=34" />
   <link rel="stylesheet" href="/evaraos/assets/css/settings.css?v=1" />
 </head>
+
 <body class="dashboard-body auth-pending app-loading" data-route-guard="private">
   <div id="universalNavRoot"></div>
   <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
@@ -103,7 +104,7 @@
         <div class="settings-head">
           <p class="settings-kicker">Profile</p>
           <h2>Account Details</h2>
-          <p>Profile editing can connect to Firestore in the next JavaScript pass.</p>
+          <p>Update your Evaraos profile details and local account identity.</p>
         </div>
 
         <div class="settings-grid-2">
@@ -132,7 +133,7 @@
       <section class="settings-save-panel glass-card aurora-card active-glow beam-target">
         <div>
           <strong>Save account changes</strong>
-          <span id="accountSaveMessage">Account JavaScript connection coming next.</span>
+          <span id="accountSaveMessage">Loading account preferences...</span>
         </div>
 
         <div class="settings-footer-actions">
@@ -147,6 +148,7 @@
   <script src="/evaraos/assets/js/loader.js?v=34"></script>
   <script src="/evaraos/assets/js/galaxy.js?v=1"></script>
   <script type="module" src="/evaraos/assets/js/settings-shared.js?v=1"></script>
+  <script type="module" src="/evaraos/assets/js/settings-account.js?v=1"></script>
   <script type="module" src="/evaraos/assets/js/route-guard.js?v=34"></script>
   <script src="/evaraos/assets/js/nav.js?v=34"></script>
 </body>
