@@ -11,6 +11,14 @@
   <link rel="manifest" href="/evaraos/manifest.json" />
   <link rel="apple-touch-icon" href="/evaraos/assets/img/icon-192.png" />
 
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin />
+  <link rel="dns-prefetch" href="https://www.gstatic.com" />
+  <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+  <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com" />
+  <link rel="preload" as="image" href="/evaraos/assets/img/evaraos_logo.png" />
+
   <title>Dashboard • Evaraos Inc</title>
 
   <script>
@@ -188,12 +196,15 @@
                 src="/evaraos/assets/img/evaraos_logo.png"
                 alt="Evaraos"
                 class="dashboard-hero-logo"
+                loading="eager"
+                decoding="async"
+                fetchpriority="high"
               />
             </div>
 
             <div class="dashboard-hero-panel-copy">
-              <strong id="heroStatusTitle">Loading system data...</strong>
-              <span id="heroStatusText">Connecting to Firestore collections.</span>
+              <strong id="heroStatusTitle">Workspace ready</strong>
+              <span id="heroStatusText">Dashboard is open. Live records are syncing in the background.</span>
             </div>
           </div>
         </section>
@@ -211,25 +222,25 @@
             <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
               <p>Active Companies</p>
               <h3 id="statCompanies">0</h3>
-              <span id="statCompaniesMeta">Loading companies...</span>
+              <span id="statCompaniesMeta">Syncing in background</span>
             </article>
 
             <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
               <p>Total Users</p>
               <h3 id="statUsers">0</h3>
-              <span id="statUsersMeta">Loading users...</span>
+              <span id="statUsersMeta">Syncing in background</span>
             </article>
 
             <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
               <p>Open Leads</p>
               <h3 id="statLeads">0</h3>
-              <span id="statLeadsMeta">Loading leads...</span>
+              <span id="statLeadsMeta">Syncing in background</span>
             </article>
 
             <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
               <p>Jobs</p>
               <h3 id="statJobs">0</h3>
-              <span id="statJobsMeta">Loading jobs...</span>
+              <span id="statJobsMeta">Syncing in background</span>
             </article>
           </div>
         </section>
@@ -247,10 +258,10 @@
             <div class="dashboard-list" id="companiesList">
               <article class="dashboard-list-item glass-card aurora-card active-glow beam-target">
                 <div>
-                  <strong>Loading companies...</strong>
-                  <span>Please wait while Firestore data is retrieved.</span>
+                  <strong>Company health is syncing</strong>
+                  <span>Your dashboard is visible first. Firestore records load after first paint.</span>
                 </div>
-                <span class="dashboard-status-pill working">Loading</span>
+                <span class="dashboard-status-pill working">Syncing</span>
               </article>
             </div>
           </section>
@@ -267,10 +278,10 @@
             <div class="dashboard-role-grid" id="usersRoleGrid">
               <article class="dashboard-role-card glass-card aurora-card active-glow beam-target">
                 <div>
-                  <strong>Loading roles...</strong>
-                  <span>Counting users by role</span>
+                  <strong>Role board is syncing</strong>
+                  <span>User role totals load in the background.</span>
                 </div>
-                <span class="dashboard-status-pill working">Loading</span>
+                <span class="dashboard-status-pill working">Syncing</span>
               </article>
             </div>
           </section>
@@ -289,8 +300,8 @@
             <div class="dashboard-progress-stack" id="leadFlowStack">
               <div class="dashboard-progress-row glass-card aurora-card active-glow beam-target">
                 <div class="dashboard-progress-copy">
-                  <strong>Loading lead flow...</strong>
-                  <span>Reading Firestore data</span>
+                  <strong>Lead flow is syncing</strong>
+                  <span>Pipeline counts will appear automatically.</span>
                 </div>
                 <div class="dashboard-progress-bar">
                   <span style="width: 20%;"></span>
@@ -311,10 +322,10 @@
             <div class="dashboard-list" id="jobsList">
               <article class="dashboard-list-item glass-card aurora-card active-glow beam-target">
                 <div>
-                  <strong>Loading jobs...</strong>
-                  <span>Please wait while job records are retrieved.</span>
+                  <strong>Jobs are syncing</strong>
+                  <span>Operations data will appear automatically.</span>
                 </div>
-                <span class="dashboard-status-pill working">Loading</span>
+                <span class="dashboard-status-pill working">Syncing</span>
               </article>
             </div>
           </section>
@@ -331,10 +342,10 @@
           <div class="dashboard-feed" id="activityFeed">
             <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
               <div>
-                <strong>Loading activity feed...</strong>
-                <span>Waiting for recent events from Firestore.</span>
+                <strong>Activity is syncing</strong>
+                <span>Recent platform activity loads without blocking the dashboard.</span>
               </div>
-              <span class="dashboard-status-pill working">Loading</span>
+              <span class="dashboard-status-pill working">Syncing</span>
             </article>
           </div>
         </section>
