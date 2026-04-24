@@ -1,0 +1,4 @@
+html[data-theme="light"] body,
+html[data-theme$="-light"] body {
+  color: var(--text-light);
+}
