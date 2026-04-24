@@ -1,112 +1,52 @@
-(function () {
-  const GALAXY_CSS_ID = "evaraGalaxyCss";
-  const GALAXY_CSS_HREF = "/evaraos/assets/css/effects/galaxy.css?v=1";
+function loadGalaxyCss() {
+  let link = document.getElementById(GALAXY_CSS_ID);
 
-  let galaxyLoaded = false;
-  let pending = false;
-
-  function currentTheme() {
-    return document.documentElement.getAttribute("data-theme") || "dark";
-  }
-
-  function shouldUseGalaxy() {
-    return currentTheme() === "galaxy";
-  }
-
-  function loadGalaxyCss() {
-    if (galaxyLoaded || pending) return;
-
-    pending = true;
-
-    let link = document.getElementById(GALAXY_CSS_ID);
-
-    if (!link) {
-      link = document.createElement("link");
-      link.id = GALAXY_CSS_ID;
-      link.rel = "stylesheet";
-      link.href = GALAXY_CSS_HREF;
-      link.media = "all";
-
-      link.onload = () => {
-        galaxyLoaded = true;
-        pending = false;
-
-        window.dispatchEvent(
-          new CustomEvent("evara:galaxy-css-ready", {
-            detail: { loaded: true }
-          })
-        );
-
-        if (window.EvaraGalaxy && typeof window.EvaraGalaxy.syncTheme === "function") {
-          window.EvaraGalaxy.syncTheme();
-        }
-      };
-
-      link.onerror = () => {
-        pending = false;
-      };
-
-      document.head.appendChild(link);
-      return;
-    }
-
+  if (link && galaxyLoaded) {
     link.disabled = false;
-    galaxyLoaded = true;
-    pending = false;
-  }
 
-  function disableGalaxyCss() {
-    const link = document.getElementById(GALAXY_CSS_ID);
-
-    if (link) {
-      link.disabled = true;
+    if (window.EvaraGalaxy && typeof window.EvaraGalaxy.syncTheme === "function") {
+      window.EvaraGalaxy.syncTheme();
     }
 
-    if (window.EvaraGalaxy && typeof window.EvaraGalaxy.stop === "function") {
-      window.EvaraGalaxy.stop();
-    }
+    return;
   }
 
-  function syncCss() {
-    if (shouldUseGalaxy()) {
-      loadGalaxyCss();
-    } else {
-      disableGalaxyCss();
-    }
-  }
+  if (pending) return;
 
-  function init() {
-    syncCss();
+  pending = true;
 
-    window.addEventListener("evara:theme-ready", syncCss);
-    window.addEventListener("evara:theme-changed", syncCss);
-    window.addEventListener("pageshow", syncCss);
+  if (!link) {
+    link = document.createElement("link");
+    link.id = GALAXY_CSS_ID;
+    link.rel = "stylesheet";
+    link.href = GALAXY_CSS_HREF;
+    link.media = "all";
 
-    const observer = new MutationObserver(syncCss);
+    link.onload = () => {
+      galaxyLoaded = true;
+      pending = false;
+      link.disabled = false;
 
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["data-theme"]
-    });
+      window.dispatchEvent(
+        new CustomEvent("evara:galaxy-css-ready", {
+          detail: { loaded: true }
+        })
+      );
 
-    window.EvaraThemeCssLoader = {
-      syncCss,
-      loadGalaxyCss,
-      disableGalaxyCss,
-      getState() {
-        return {
-          theme: currentTheme(),
-          galaxyLoaded,
-          pending,
-          hasGalaxyLink: Boolean(document.getElementById(GALAXY_CSS_ID))
-        };
+      if (window.EvaraGalaxy && typeof window.EvaraGalaxy.syncTheme === "function") {
+        window.EvaraGalaxy.syncTheme();
       }
     };
+
+    link.onerror = () => {
+      pending = false;
+    };
+
+    document.head.appendChild(link);
+    return;
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init, { once: true });
-  } else {
-    init();
-  }
-})();
+  link.disabled = false;
+  galaxyLoaded = true;
+  pending = false;
+}
