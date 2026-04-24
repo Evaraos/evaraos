@@ -1,6 +1,6 @@
 // assets/js/dashboard.js
 
-import { auth, db } from "./firebase.js";
+import { auth, db, getSavedUserProfile } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
   collection,
@@ -31,14 +31,44 @@ const activityFeed = document.getElementById("activityFeed");
 
 const dashboardSearch = document.getElementById("dashboardSearch");
 
+const COLLECTIONS = {
+  companies: "companies",
+  users: "users",
+  leads: "leads",
+  jobs: "jobs"
+};
+
+const CACHE_KEY = "evaraos-dashboard-cache-v1";
+const CACHE_TTL = 1000 * 60 * 3;
+
 let dashboardCache = {
   companies: [],
   users: [],
   leads: [],
-  jobs: []
+  jobs: [],
+  cachedAt: 0
 };
 
 let isLoadingDashboard = false;
+let hasLoadedOnce = false;
+let searchDebounce = null;
+
+function scheduleIdle(callback, timeout = 240) {
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(callback, { timeout: 1200 });
+    return;
+  }
+
+  setTimeout(callback, timeout);
+}
+
+function getLocalProfile() {
+  try {
+    return getSavedUserProfile?.() || null;
+  } catch {
+    return null;
+  }
+}
 
 function safeArray(snapshot) {
   return snapshot.docs.map((docItem) => ({
@@ -57,6 +87,7 @@ function titleFromRecord(record, fallback = "Untitled") {
     record.title ||
     record.companyName ||
     record.fullName ||
+    record.displayName ||
     record.customerName ||
     record.email ||
     fallback
@@ -110,12 +141,43 @@ function escapeHtml(value = "") {
     .replaceAll("'", "&#039;");
 }
 
+function saveDashboardCache(data) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({
+      ...data,
+      cachedAt: Date.now()
+    }));
+  } catch {}
+}
+
+function readDashboardCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+    const expired = Date.now() - Number(parsed.cachedAt || 0) > CACHE_TTL;
+
+    if (expired) return null;
+
+    return {
+      companies: Array.isArray(parsed.companies) ? parsed.companies : [],
+      users: Array.isArray(parsed.users) ? parsed.users : [],
+      leads: Array.isArray(parsed.leads) ? parsed.leads : [],
+      jobs: Array.isArray(parsed.jobs) ? parsed.jobs : [],
+      cachedAt: parsed.cachedAt || 0
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function loadCollectionDocs(name, options = {}) {
   const ref = collection(db, name);
 
   try {
     if (options.orderField) {
-      const q = query(ref, orderBy(options.orderField, "desc"), limit(options.limitCount || 6));
+      const q = query(ref, orderBy(options.orderField, "desc"), limit(options.limitCount || 8));
       const snap = await getDocs(q);
       return safeArray(snap);
     }
@@ -123,9 +185,15 @@ async function loadCollectionDocs(name, options = {}) {
     const snap = await getDocs(ref);
     return safeArray(snap);
   } catch (error) {
-    console.warn(`Failed loading collection "${name}" with query, retrying basic read.`, error);
-    const snap = await getDocs(ref);
-    return safeArray(snap);
+    console.warn(`Dashboard collection "${name}" query failed. Retrying basic read.`, error);
+
+    try {
+      const snap = await getDocs(ref);
+      return safeArray(snap);
+    } catch (fallbackError) {
+      console.warn(`Dashboard collection "${name}" failed. Returning empty array.`, fallbackError);
+      return [];
+    }
   }
 }
 
@@ -138,36 +206,66 @@ function createStateCard(type, title, message) {
   `;
 }
 
-function createSkeletonCards(count = 3) {
+function createInstantCard(title, message, pill = "Syncing") {
   return `
-    <div class="dashboard-skeleton-grid">
-      ${Array.from({ length: count }).map(() => `
-        <article class="dashboard-skeleton-card">
-          <span class="dashboard-skeleton-line line-1"></span>
-          <span class="dashboard-skeleton-line line-2"></span>
-          <span class="dashboard-skeleton-line line-3"></span>
-        </article>
-      `).join("")}
-    </div>
+    <article class="dashboard-list-item glass-card aurora-card active-glow beam-target">
+      <div>
+        <strong>${escapeHtml(title)}</strong>
+        <span>${escapeHtml(message)}</span>
+      </div>
+      <span class="dashboard-status-pill working">${escapeHtml(pill)}</span>
+    </article>
   `;
 }
 
-function renderLoadingStates() {
-  if (companiesList) companiesList.innerHTML = createSkeletonCards(3);
-  if (usersRoleGrid) usersRoleGrid.innerHTML = createSkeletonCards(3);
-  if (leadFlowStack) leadFlowStack.innerHTML = createSkeletonCards(3);
-  if (jobsList) jobsList.innerHTML = createSkeletonCards(3);
-  if (activityFeed) activityFeed.innerHTML = createSkeletonCards(3);
+function renderInstantShell() {
+  if (heroStatusTitle) heroStatusTitle.textContent = "Workspace ready";
+  if (heroStatusText) heroStatusText.textContent = "Dashboard is open. Live records are syncing in the background.";
 
   if (statCompanies) statCompanies.textContent = "—";
   if (statUsers) statUsers.textContent = "—";
   if (statLeads) statLeads.textContent = "—";
   if (statJobs) statJobs.textContent = "—";
 
-  if (statCompaniesMeta) statCompaniesMeta.textContent = "Loading companies...";
-  if (statUsersMeta) statUsersMeta.textContent = "Loading users...";
-  if (statLeadsMeta) statLeadsMeta.textContent = "Loading leads...";
-  if (statJobsMeta) statJobsMeta.textContent = "Loading jobs...";
+  if (statCompaniesMeta) statCompaniesMeta.textContent = "Syncing in background";
+  if (statUsersMeta) statUsersMeta.textContent = "Syncing in background";
+  if (statLeadsMeta) statLeadsMeta.textContent = "Syncing in background";
+  if (statJobsMeta) statJobsMeta.textContent = "Syncing in background";
+
+  if (companiesList) {
+    companiesList.innerHTML = createInstantCard(
+      "Company health is syncing",
+      "Your dashboard is visible first. Firestore records load after first paint."
+    );
+  }
+
+  if (usersRoleGrid) {
+    usersRoleGrid.innerHTML = createInstantCard(
+      "Role board is syncing",
+      "User role totals load in the background."
+    );
+  }
+
+  if (leadFlowStack) {
+    leadFlowStack.innerHTML = createInstantCard(
+      "Lead flow is syncing",
+      "Pipeline counts will appear automatically."
+    );
+  }
+
+  if (jobsList) {
+    jobsList.innerHTML = createInstantCard(
+      "Jobs are syncing",
+      "Operations data will appear automatically."
+    );
+  }
+
+  if (activityFeed) {
+    activityFeed.innerHTML = createInstantCard(
+      "Activity is syncing",
+      "Recent platform activity loads without blocking the dashboard."
+    );
+  }
 }
 
 function renderCompanies(companies) {
@@ -281,6 +379,7 @@ function renderLeadFlow(leads) {
 
   leadFlowStack.innerHTML = rows.map(([label, count]) => {
     const width = Math.max(count === 0 ? 6 : 10, Math.round((count / total) * 100));
+
     return `
       <div class="dashboard-progress-row glass-card aurora-card active-glow beam-target">
         <div class="dashboard-progress-copy">
@@ -386,6 +485,11 @@ function updateStats(companies, users, leads, jobs) {
     ["active", "healthy", "approved"].includes(normalizedStatus(item.status || item.health || "active"))
   ).length;
 
+  const activeUsers = users.filter((user) =>
+    normalizedStatus(user.active) !== "false" &&
+    normalizedStatus(user.status) !== "inactive"
+  ).length;
+
   const openLeads = leads.filter((item) =>
     !["won", "closed", "complete", "completed"].includes(normalizedStatus(item.status))
   ).length;
@@ -395,21 +499,25 @@ function updateStats(companies, users, leads, jobs) {
   ).length;
 
   if (statCompaniesMeta) statCompaniesMeta.textContent = `${activeCompanies} active`;
-  if (statUsersMeta) statUsersMeta.textContent = `${users.filter((u) => normalizedStatus(u.active) !== "false").length} active accounts`;
+  if (statUsersMeta) statUsersMeta.textContent = `${activeUsers} active accounts`;
   if (statLeadsMeta) statLeadsMeta.textContent = `${openLeads} currently open`;
   if (statJobsMeta) statJobsMeta.textContent = `${inProgressJobs} in motion`;
+}
+
+function renderDashboard(data = dashboardCache) {
+  updateStats(data.companies, data.users, data.leads, data.jobs);
+  renderCompanies(data.companies);
+  renderUsers(data.users);
+  renderLeadFlow(data.leads);
+  renderJobs(data.jobs);
+  renderActivity(data.companies, data.users, data.leads, data.jobs);
 }
 
 function renderFilteredDashboard(queryText = "") {
   const queryValue = String(queryText || "").trim().toLowerCase();
 
   if (!queryValue) {
-    updateStats(dashboardCache.companies, dashboardCache.users, dashboardCache.leads, dashboardCache.jobs);
-    renderCompanies(dashboardCache.companies);
-    renderUsers(dashboardCache.users);
-    renderLeadFlow(dashboardCache.leads);
-    renderJobs(dashboardCache.jobs);
-    renderActivity(dashboardCache.companies, dashboardCache.users, dashboardCache.leads, dashboardCache.jobs);
+    renderDashboard(dashboardCache);
     return;
   }
 
@@ -419,6 +527,7 @@ function renderFilteredDashboard(queryText = "") {
       item.title,
       item.companyName,
       item.fullName,
+      item.displayName,
       item.customerName,
       item.email,
       item.description,
@@ -435,108 +544,82 @@ function renderFilteredDashboard(queryText = "") {
     return haystack.includes(queryValue);
   });
 
-  const companies = filterItems(dashboardCache.companies);
-  const users = filterItems(dashboardCache.users);
-  const leads = filterItems(dashboardCache.leads);
-  const jobs = filterItems(dashboardCache.jobs);
-
-  updateStats(companies, users, leads, jobs);
-  renderCompanies(companies);
-  renderUsers(users);
-  renderLeadFlow(leads);
-  renderJobs(jobs);
-  renderActivity(companies, users, leads, jobs);
+  renderDashboard({
+    companies: filterItems(dashboardCache.companies),
+    users: filterItems(dashboardCache.users),
+    leads: filterItems(dashboardCache.leads),
+    jobs: filterItems(dashboardCache.jobs)
+  });
 }
 
-function renderErrorState(error) {
-  const message = error?.message || "Unknown Firestore error.";
+function renderErrorState(message = "Some live records could not be loaded.") {
+  if (heroStatusTitle) heroStatusTitle.textContent = "Dashboard opened";
+  if (heroStatusText) heroStatusText.textContent = message;
 
-  if (companiesList) {
-    companiesList.innerHTML = createStateCard(
-      "error",
-      "Unable to load companies",
-      message
-    );
+  if (!dashboardCache.companies.length && companiesList) {
+    companiesList.innerHTML = createStateCard("warning", "Companies unavailable", "Live records will retry next refresh.");
   }
 
-  if (usersRoleGrid) {
-    usersRoleGrid.innerHTML = createStateCard(
-      "error",
-      "Users could not be read",
-      "Check Firestore permissions and collection structure."
-    );
+  if (!dashboardCache.users.length && usersRoleGrid) {
+    usersRoleGrid.innerHTML = createStateCard("warning", "Users unavailable", "Live records will retry next refresh.");
   }
 
-  if (leadFlowStack) {
-    leadFlowStack.innerHTML = createStateCard(
-      "error",
-      "Leads could not be read",
-      "Check the leads collection and Firestore rules."
-    );
+  if (!dashboardCache.leads.length && leadFlowStack) {
+    leadFlowStack.innerHTML = createStateCard("warning", "Leads unavailable", "Live records will retry next refresh.");
   }
 
-  if (jobsList) {
-    jobsList.innerHTML = createStateCard(
-      "error",
-      "Unable to load jobs",
-      "Check the jobs collection and Firestore permissions."
-    );
+  if (!dashboardCache.jobs.length && jobsList) {
+    jobsList.innerHTML = createStateCard("warning", "Jobs unavailable", "Live records will retry next refresh.");
   }
-
-  if (activityFeed) {
-    activityFeed.innerHTML = createStateCard(
-      "error",
-      "Dashboard activity unavailable",
-      message
-    );
-  }
-
-  if (statCompanies) statCompanies.textContent = "0";
-  if (statUsers) statUsers.textContent = "0";
-  if (statLeads) statLeads.textContent = "0";
-  if (statJobs) statJobs.textContent = "0";
-
-  if (statCompaniesMeta) statCompaniesMeta.textContent = "Load error";
-  if (statUsersMeta) statUsersMeta.textContent = "Load error";
-  if (statLeadsMeta) statLeadsMeta.textContent = "Load error";
-  if (statJobsMeta) statJobsMeta.textContent = "Load error";
 }
 
 async function loadDashboardData() {
   if (isLoadingDashboard) return;
   isLoadingDashboard = true;
 
-  if (heroStatusTitle) heroStatusTitle.textContent = "Loading system data...";
-  if (heroStatusText) heroStatusText.textContent = "Connecting to Firestore collections.";
-  renderLoadingStates();
+  if (heroStatusTitle) heroStatusTitle.textContent = "Syncing live system";
+  if (heroStatusText) heroStatusText.textContent = "Dashboard is already open. Firestore records are updating in the background.";
 
   try {
-    const [companies, users, leads, jobs] = await Promise.all([
-      loadCollectionDocs("companies", { orderField: "updatedAt", limitCount: 8 }),
-      loadCollectionDocs("users"),
-      loadCollectionDocs("leads"),
-      loadCollectionDocs("jobs", { orderField: "updatedAt", limitCount: 8 })
+    const companiesPromise = loadCollectionDocs(COLLECTIONS.companies, { orderField: "updatedAt", limitCount: 8 });
+    const usersPromise = loadCollectionDocs(COLLECTIONS.users);
+    const leadsPromise = loadCollectionDocs(COLLECTIONS.leads);
+    const jobsPromise = loadCollectionDocs(COLLECTIONS.jobs, { orderField: "updatedAt", limitCount: 8 });
+
+    const [companiesResult, usersResult, leadsResult, jobsResult] = await Promise.allSettled([
+      companiesPromise,
+      usersPromise,
+      leadsPromise,
+      jobsPromise
     ]);
 
-    dashboardCache = { companies, users, leads, jobs };
+    dashboardCache = {
+      companies: companiesResult.status === "fulfilled" ? companiesResult.value : [],
+      users: usersResult.status === "fulfilled" ? usersResult.value : [],
+      leads: leadsResult.status === "fulfilled" ? leadsResult.value : [],
+      jobs: jobsResult.status === "fulfilled" ? jobsResult.value : [],
+      cachedAt: Date.now()
+    };
 
+    saveDashboardCache(dashboardCache);
     renderFilteredDashboard(dashboardSearch?.value || "");
 
-    const totalRecords = companies.length + users.length + leads.length + jobs.length;
+    const totalRecords =
+      dashboardCache.companies.length +
+      dashboardCache.users.length +
+      dashboardCache.leads.length +
+      dashboardCache.jobs.length;
+
     if (heroStatusTitle) heroStatusTitle.textContent = "Live system connected";
     if (heroStatusText) {
-      heroStatusText.textContent = `Loaded ${totalRecords} total records across ${companies.length} companies, ${users.length} users, ${leads.length} leads, and ${jobs.length} jobs.`;
+      heroStatusText.textContent = `Synced ${totalRecords} records across companies, users, leads, and jobs.`;
     }
   } catch (error) {
     console.error("Dashboard data load failed:", error);
-
-    if (heroStatusTitle) heroStatusTitle.textContent = "Data load failed";
-    if (heroStatusText) {
-      heroStatusText.textContent = "Check Firestore rules, collection names, or missing exports in firebase.js.";
-    }
-    renderErrorState(error);
+    renderErrorState("Dashboard stayed open, but live sync failed. Check Firestore rules or connection.");
   } finally {
     isLoadingDashboard = false;
+    hasLoadedOnce = true;
   }
 }
 
@@ -553,22 +636,62 @@ function bindSidebarAnchors() {
 
 function bindSearch() {
   if (!dashboardSearch) return;
+
   dashboardSearch.addEventListener("input", () => {
-    renderFilteredDashboard(dashboardSearch.value);
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(() => {
+      renderFilteredDashboard(dashboardSearch.value);
+    }, 80);
   });
+}
+
+function hydrateFromCacheOrShell() {
+  const cached = readDashboardCache();
+
+  if (cached) {
+    dashboardCache = cached;
+    renderDashboard(cached);
+
+    if (heroStatusTitle) heroStatusTitle.textContent = "Dashboard restored instantly";
+    if (heroStatusText) heroStatusText.textContent = "Showing cached records while live data refreshes in the background.";
+    return;
+  }
+
+  renderInstantShell();
+}
+
+function startBackgroundSync() {
+  if (hasLoadedOnce || isLoadingDashboard) return;
+
+  scheduleIdle(() => {
+    const localProfile = getLocalProfile();
+    const authReady = Boolean(auth.currentUser || localProfile?.uid);
+
+    if (!authReady) {
+      window.addEventListener("evara:session-ready", () => {
+        scheduleIdle(loadDashboardData, 120);
+      }, { once: true });
+      return;
+    }
+
+    loadDashboardData();
+  }, 180);
 }
 
 function initDashboard() {
   bindSidebarAnchors();
   bindSearch();
+  hydrateFromCacheOrShell();
+  startBackgroundSync();
 
   onAuthStateChanged(auth, (user) => {
-    if (!user) {
-      window.location.replace("/evaraos/login.html");
-      return;
-    }
-    loadDashboardData();
+    if (!user && !getLocalProfile()?.uid) return;
+    startBackgroundSync();
   });
 }
 
-document.addEventListener("DOMContentLoaded", initDashboard);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initDashboard, { once: true });
+} else {
+  initDashboard();
+}
