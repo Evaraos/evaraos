@@ -151,26 +151,26 @@ body::after {
 }
 
 html[data-theme="galaxy"] body::before {
-  opacity: 0.38;
+  opacity: 0.34;
   background:
-    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.04), transparent 14%),
-    radial-gradient(circle at 20% 72%, rgba(108, 112, 255, 0.10), transparent 18%),
-    radial-gradient(circle at 76% 82%, rgba(255, 118, 214, 0.08), transparent 18%);
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.035), transparent 14%),
+    radial-gradient(circle at 20% 72%, rgba(108, 112, 255, 0.08), transparent 18%),
+    radial-gradient(circle at 76% 82%, rgba(255, 118, 214, 0.06), transparent 18%);
 }
 
 html[data-theme="galaxy"] body::after {
-  opacity: 0.32;
+  opacity: 0.26;
   background:
     linear-gradient(
       112deg,
       transparent 0%,
-      rgba(122, 96, 255, 0.05) 26%,
-      rgba(214, 122, 255, 0.08) 42%,
-      rgba(96, 132, 255, 0.07) 58%,
+      rgba(122, 96, 255, 0.045) 26%,
+      rgba(214, 122, 255, 0.065) 42%,
+      rgba(96, 132, 255, 0.055) 58%,
       transparent 78%
     );
-  filter: blur(34px);
-  animation: galaxyNebulaBeamFloat 18s ease-in-out infinite;
+  filter: blur(28px);
+  animation: galaxyNebulaBeamFloat 24s ease-in-out infinite;
 }
 
 @keyframes galaxyNebulaBeamFloat {
@@ -201,10 +201,10 @@ html[data-theme$="-light"] .page-grid-overlay {
 }
 
 html[data-theme="galaxy"] .page-grid-overlay {
-  opacity: 0.06;
+  opacity: 0.05;
   background:
-    linear-gradient(rgba(255, 220, 255, 0.012) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(196, 170, 255, 0.016) 1px, transparent 1px);
+    linear-gradient(rgba(255, 220, 255, 0.010) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(196, 170, 255, 0.014) 1px, transparent 1px);
   background-size: 56px 56px;
 }
 
@@ -290,15 +290,15 @@ main,
     transparent 74%
   );
   transform: rotate(12deg);
-  animation: glassSweep 9s ease-in-out infinite;
+  animation: glassSweep 11s ease-in-out infinite;
   pointer-events: none;
   z-index: 0;
 }
 
 @keyframes glassSweep {
   0% { transform: translateX(-40%) rotate(12deg); opacity: 0; }
-  18% { opacity: 0.42; }
-  40% { transform: translateX(130%) rotate(12deg); opacity: 0.20; }
+  18% { opacity: 0.38; }
+  40% { transform: translateX(130%) rotate(12deg); opacity: 0.16; }
   100% { transform: translateX(130%) rotate(12deg); opacity: 0; }
 }
 
@@ -322,10 +322,10 @@ html[data-theme="galaxy"] .glass-shell,
 html[data-theme="galaxy"] .aurora-card,
 html[data-theme="galaxy"] .glass {
   box-shadow:
-    0 28px 68px rgba(12, 6, 28, 0.34),
+    0 28px 68px rgba(12, 6, 28, 0.30),
     0 0 0 1px rgba(255, 255, 255, 0.03),
-    0 0 24px rgba(214, 168, 255, 0.10),
-    0 0 42px rgba(255, 146, 209, 0.08),
+    0 0 22px rgba(214, 168, 255, 0.08),
+    0 0 36px rgba(255, 146, 209, 0.06),
     inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
@@ -343,11 +343,11 @@ html[data-theme="galaxy"] .glass {
 html[data-theme="galaxy"] .active-card-glow,
 html[data-theme="galaxy"] .active-glow {
   box-shadow:
-    0 0 0 1px rgba(255, 225, 255, 0.16),
-    0 0 18px rgba(214, 168, 255, 0.14),
-    0 0 30px rgba(255, 146, 209, 0.10),
-    0 20px 42px rgba(8, 4, 22, 0.22),
-    inset 0 1px 0 rgba(255,255,255,0.22) !important;
+    0 0 0 1px rgba(255, 225, 255, 0.14),
+    0 0 16px rgba(214, 168, 255, 0.12),
+    0 0 24px rgba(255, 146, 209, 0.08),
+    0 20px 42px rgba(8, 4, 22, 0.20),
+    inset 0 1px 0 rgba(255,255,255,0.20) !important;
 }
 
 .beam-target,
@@ -368,7 +368,7 @@ html[data-theme="galaxy"] .active-glow {
   background:
     radial-gradient(circle at 12% 50%, rgba(124, 58, 237, 0.24), transparent 24%),
     radial-gradient(circle at 88% 50%, rgba(79, 124, 255, 0.18), transparent 24%);
-  animation: beamFloat 8s ease-in-out infinite;
+  animation: beamFloat 10s ease-in-out infinite;
 }
 
 html[data-theme="light"] .beam-target::after,
@@ -383,13 +383,14 @@ html[data-theme$="-light"] .active-glow::after {
 
 html[data-theme="galaxy"] .beam-target::after,
 html[data-theme="galaxy"] .active-glow::after {
-  opacity: 0.28;
+  opacity: 0.20;
+  filter: blur(18px);
   background:
-    radial-gradient(circle at 8% 50%, rgba(128, 96, 255, 0.24), transparent 22%),
-    radial-gradient(circle at 24% 50%, rgba(214, 122, 255, 0.16), transparent 20%),
-    radial-gradient(circle at 76% 50%, rgba(96, 132, 255, 0.16), transparent 20%),
-    radial-gradient(circle at 92% 50%, rgba(255, 124, 214, 0.14), transparent 22%);
-  animation: nebulaEdgeFlow 9s ease-in-out infinite;
+    radial-gradient(circle at 8% 50%, rgba(128, 96, 255, 0.20), transparent 22%),
+    radial-gradient(circle at 24% 50%, rgba(214, 122, 255, 0.12), transparent 20%),
+    radial-gradient(circle at 76% 50%, rgba(96, 132, 255, 0.12), transparent 20%),
+    radial-gradient(circle at 92% 50%, rgba(255, 124, 214, 0.10), transparent 22%);
+  animation: nebulaEdgeFlow 16s ease-in-out infinite;
 }
 
 @keyframes beamFloat {
@@ -630,7 +631,7 @@ html[data-beam-mode="rainbow"] .btn:focus-visible::before {
   border-radius: 999px;
   filter: blur(22px);
   opacity: 0.22;
-  animation: loaderBgDrift 8s ease-in-out infinite;
+  animation: loaderBgDrift 10s ease-in-out infinite;
 }
 
 .evara-loader-bg-wave.wave-1,
@@ -673,7 +674,7 @@ html[data-beam-mode="rainbow"] .btn:focus-visible::before {
 
 @keyframes loaderBgDrift {
   0% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(1.6vw, -1.4vh, 0) scale(1.06); }
+  50% { transform: translate3d(1.4vw, -1.2vh, 0) scale(1.04); }
   100% { transform: translate3d(0, 0, 0) scale(1); }
 }
 
@@ -767,8 +768,13 @@ html[data-theme$="-light"] .evara-loader-bg-wave.wave-4 {
   animation: loaderWave 2.4s ease-out infinite;
 }
 
-.evara-loader-wave.wave-2 { animation-delay: 0.42s; }
-.evara-loader-wave.wave-3 { animation-delay: 0.84s; }
+.evara-loader-wave.wave-2 {
+  animation-delay: 0.42s;
+}
+
+.evara-loader-wave.wave-3 {
+  animation-delay: 0.84s;
+}
 
 .evara-loader-fast-wave {
   width: 108px;
@@ -778,17 +784,36 @@ html[data-theme$="-light"] .evara-loader-bg-wave.wave-4 {
   animation: loaderFastWave 2s ease-out infinite;
 }
 
-.evara-loader-fast-wave.wave-b { animation-delay: 0.34s; }
-.evara-loader-fast-wave.wave-c { animation-delay: 0.68s; }
+.evara-loader-fast-wave.wave-b {
+  animation-delay: 0.34s;
+}
+
+.evara-loader-fast-wave.wave-c {
+  animation-delay: 0.68s;
+}
 
 @keyframes loaderWave {
-  0% { transform: translate(-50%, -50%) scale(0.72); opacity: 0.44; }
-  100% { transform: translate(-50%, -50%) scale(1.42); opacity: 0; }
+  0% {
+    transform: translate(-50%, -50%) scale(0.72);
+    opacity: 0.44;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1.42);
+    opacity: 0;
+  }
 }
 
 @keyframes loaderFastWave {
-  0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0.38; }
-  100% { transform: translate(-50%, -50%) scale(1.34); opacity: 0; }
+  0% {
+    transform: translate(-50%, -50%) scale(0.7);
+    opacity: 0.38;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1.34);
+    opacity: 0;
+  }
 }
 
 .evara-micro-loader {
@@ -808,6 +833,23 @@ html[data-theme$="-light"] .evara-loader-bg-wave.wave-4 {
 }
 
 /* galaxy canvas */
+.galaxy-engine {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 220ms ease, visibility 220ms ease;
+  contain: layout paint size;
+}
+
+html[data-theme="galaxy"] .galaxy-engine {
+  opacity: 1;
+  visibility: visible;
+}
+
 .galaxy-canvas {
   position: absolute;
   inset: 0;
@@ -817,7 +859,15 @@ html[data-theme$="-light"] .evara-loader-bg-wave.wave-4 {
   pointer-events: none;
 }
 
-/* disable old heavy layers when canvas exists */
+/* Prevent galaxy canvas from competing with loader/auth boot */
+html.boot-pending .galaxy-engine,
+html.auth-pending .galaxy-engine,
+body.app-loading .galaxy-engine {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Disable old heavy galaxy layers when the new canvas engine is active */
 html[data-theme="galaxy"] .galaxy-starfield,
 html[data-theme="galaxy"] .galaxy-dust,
 html[data-theme="galaxy"] .galaxy-dust-two,
@@ -825,4 +875,81 @@ html[data-theme="galaxy"] .galaxy-fog-band,
 html[data-theme="galaxy"] .galaxy-rift,
 html[data-theme="galaxy"] .galaxy-milkyway {
   display: none !important;
+}
+
+/* Reduce fixed-background repaint cost on mobile */
+@media (max-width: 768px) {
+  body {
+    background-attachment: scroll !important;
+  }
+
+  html[data-theme="galaxy"] body::before {
+    opacity: 0.24;
+  }
+
+  html[data-theme="galaxy"] body::after {
+    opacity: 0.18;
+    filter: blur(24px);
+    animation-duration: 28s;
+  }
+
+  .beam-target::after,
+  .active-glow::after {
+    filter: blur(14px);
+  }
+
+  html[data-theme="galaxy"] .beam-target::after,
+  html[data-theme="galaxy"] .active-glow::after {
+    opacity: 0.18;
+    animation-duration: 18s;
+  }
+
+  .glass-card::after,
+  .glass-shell::after,
+  .aurora-card::after,
+  .glass::after {
+    animation-duration: 14s;
+    opacity: 0.22;
+  }
+}
+
+/* Respect reduced motion and preserve performance */
+@media (prefers-reduced-motion: reduce) {
+  .galaxy-engine,
+  .galaxy-canvas,
+  body::after,
+  .beam-target::after,
+  .active-glow::after,
+  .glass-card::after,
+  .glass-shell::after,
+  .aurora-card::after,
+  .glass::after,
+  .evara-loader-bg-wave,
+  .evara-loader-fast-bg-wave,
+  .evara-loader-wave,
+  .evara-loader-fast-wave {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Keep nav/menu above galaxy canvas no matter what */
+#universalNav,
+#universalNavRoot,
+.eva-nav-layer,
+.eva-nav-shell,
+.eva-menu-panel,
+.eva-backdrop {
+  z-index: 2147483647;
+}
+
+/* Keep page content above galaxy canvas */
+#appRoot,
+main,
+.site-footer,
+.dashboard-shell,
+.login-shell,
+.home-shell {
+  position: relative;
+  z-index: 1;
 }
