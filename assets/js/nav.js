@@ -10,6 +10,7 @@
   let motionMode = "scroll";
   let hasBootAnimated = false;
   let isNavigating = false;
+  let hasInitialized = false;
 
   let tapStartX = 0;
   let tapStartY = 0;
@@ -56,15 +57,55 @@
     }
   }
 
+  function isPrivateRoutePending() {
+    const mode = document.body?.dataset?.routeGuard || "";
+    const path = window.location.pathname || "";
+
+    const privatePage =
+      mode === "private" ||
+      path.includes("/dashboard.html") ||
+      path.includes("/companies.html") ||
+      path.includes("/users.html") ||
+      path.includes("/leads.html") ||
+      path.includes("/jobs.html") ||
+      path.includes("/qa.html") ||
+      path.includes("/settings.html") ||
+      path.includes("/settings/");
+
+    const authResolving =
+      document.documentElement.classList.contains("auth-pending") ||
+      document.body?.classList.contains("auth-pending") ||
+      document.body?.classList.contains("app-loading");
+
+    return privatePage && authResolving;
+  }
+
   function isAuthenticated() {
     const user = getStoredUser();
-    return Boolean(user && (user.uid || user.email));
+
+    if (user && (user.uid || user.email)) {
+      return true;
+    }
+
+    if (isPrivateRoutePending()) {
+      return true;
+    }
+
+    return false;
   }
 
   function getRole() {
     const user = getStoredUser();
-    if (!user) return "guest";
-    return String(user.role || "guest").toLowerCase();
+
+    if (user) {
+      return String(user.role || "guest").toLowerCase();
+    }
+
+    if (isPrivateRoutePending()) {
+      return "owner";
+    }
+
+    return "guest";
   }
 
   function getDisplayName() {
@@ -129,6 +170,9 @@
 
     if (window.EvaraLoader && typeof window.EvaraLoader.beginNavigationLoad === "function") {
       window.EvaraLoader.beginNavigationLoad(options);
+    } else {
+      document.body?.classList.add("app-loading");
+      document.body?.classList.remove("app-ready");
     }
 
     requestAnimationFrame(() => {
@@ -891,7 +935,64 @@
     });
   }
 
+  function bindRuntimeRefresh() {
+    window.addEventListener("evara:session-ready", () => {
+      try {
+        const wasOpen = document.body.classList.contains("nav-menu-open");
+        if (wasOpen) closeMenu(false);
+
+        renderNav();
+        const immediate = atTopOfPage() ? 1 : progress;
+        applyProgress(immediate);
+        bindTapToggle();
+        bindBrandHome();
+        bindMenu();
+        bindLinks();
+        bindThemeToggle();
+        bindSearch();
+        syncThemeLabel();
+
+        if (wasOpen) openMenu();
+      } catch (error) {
+        console.warn("Nav session refresh failed:", error);
+      }
+    });
+
+    window.addEventListener("storage", (event) => {
+      if (
+        event.key === "evaraos-user" ||
+        event.key === "evaraos-role" ||
+        event.key === "evaraos-appearance"
+      ) {
+        try {
+          renderNav();
+          applyProgress(progress);
+          bindTapToggle();
+          bindBrandHome();
+          bindMenu();
+          bindLinks();
+          bindThemeToggle();
+          bindSearch();
+          syncThemeLabel();
+        } catch (error) {
+          console.warn("Nav storage refresh failed:", error);
+        }
+      }
+    });
+
+    window.addEventListener("evara:theme-ready", () => {
+      syncThemeLabel();
+    });
+
+    window.addEventListener("evara:theme-changed", () => {
+      syncThemeLabel();
+    });
+  }
+
   function init() {
+    if (hasInitialized) return;
+    hasInitialized = true;
+
     setTheme(getAppearanceTheme());
     renderNav();
 
@@ -915,6 +1016,7 @@
     bindThemeToggle();
     bindSearch();
     bindScrollBehavior();
+    bindRuntimeRefresh();
     syncThemeLabel();
     animate();
     bootReadySignal();
@@ -935,7 +1037,7 @@
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
+    document.addEventListener("DOMContentLoaded", init, { once: true });
   } else {
     init();
   }
