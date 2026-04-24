@@ -42,6 +42,8 @@ let activeColorSheetTarget = null;
 let hasBoundThemeControls = false;
 let remoteHydrated = false;
 let draftAppearance = null;
+let themeReadyDispatched = false;
+let remoteHydrationQueued = false;
 
 function normalizeTheme(theme = "") {
   const value = String(theme || "").trim().toLowerCase();
@@ -202,6 +204,29 @@ function clearWorkingAppearance() {
   draftAppearance = null;
 }
 
+function dispatchThemeReady(source = "local") {
+  themeReadyDispatched = true;
+
+  window.dispatchEvent(
+    new CustomEvent("evara:theme-ready", {
+      detail: {
+        source,
+        theme: document.documentElement.getAttribute("data-theme") || "dark",
+        appearance: toSplitAppearanceShape(getWorkingAppearance())
+      }
+    })
+  );
+}
+
+function scheduleIdle(callback, fallbackDelay = 180) {
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(callback, { timeout: 1400 });
+    return;
+  }
+
+  setTimeout(callback, fallbackDelay);
+}
+
 function ensureAppearanceStyle() {
   let styleEl = document.getElementById("evaraAppearanceStyle");
   if (styleEl) return styleEl;
@@ -268,6 +293,8 @@ function getEffectiveAppearance(appearance = {}) {
 
 function applyTheme(theme) {
   const safe = normalizeTheme(theme);
+  const current = document.documentElement.getAttribute("data-theme");
+
   document.documentElement.setAttribute("data-theme", safe);
   setStoredTheme(safe);
 
@@ -275,11 +302,13 @@ function applyTheme(theme) {
     document.body.setAttribute("data-theme-active", safe);
   }
 
-  window.dispatchEvent(
-    new CustomEvent("evara:theme-changed", {
-      detail: { theme: safe }
-    })
-  );
+  if (current !== safe || themeReadyDispatched) {
+    window.dispatchEvent(
+      new CustomEvent("evara:theme-changed", {
+        detail: { theme: safe }
+      })
+    );
+  }
 }
 
 function applyAppearanceTokens(appearance = {}) {
@@ -335,6 +364,7 @@ async function applyAppearanceConfig(appearance = {}) {
   applyAppearanceTokens(safe);
   hydrateThemeInputs();
   syncThemeUi();
+  dispatchThemeReady("saved");
   return safe;
 }
 
@@ -366,6 +396,7 @@ function discardWorkingAppearance() {
   syncThemeUi();
   closeColorSheet();
   closeCustomSheet();
+  dispatchThemeReady("discarded");
 }
 
 async function resetAppearanceConfig() {
@@ -673,24 +704,54 @@ function markBeamTargets() {
 }
 
 async function hydrateFromFirestoreIfAvailable() {
-  if (remoteHydrated) return;
-  if (!auth.currentUser) return;
+  if (remoteHydrated) return false;
+  if (!auth.currentUser) return false;
 
-  const remotePrefs = await getUserThemePreferences();
-  if (!remotePrefs) {
+  try {
+    const remotePrefs = await getUserThemePreferences();
+
+    if (!remotePrefs) {
+      remoteHydrated = true;
+      return false;
+    }
+
+    clearWorkingAppearance();
+    setStoredAppearance(remotePrefs);
+    applyAppearanceTokens(remotePrefs);
+    hydrateThemeInputs();
+    syncThemeUi();
     remoteHydrated = true;
-    return;
+    dispatchThemeReady("remote");
+    return true;
+  } catch (error) {
+    console.warn("Theme remote hydration skipped:", error);
+    return false;
   }
-
-  clearWorkingAppearance();
-  setStoredAppearance(remotePrefs);
-  applyAppearanceTokens(remotePrefs);
-  hydrateThemeInputs();
-  syncThemeUi();
-  remoteHydrated = true;
 }
 
-async function initTheme() {
+function hydrateFromFirestoreInBackground() {
+  if (remoteHydrationQueued || remoteHydrated) return;
+  remoteHydrationQueued = true;
+
+  scheduleIdle(async () => {
+    remoteHydrationQueued = false;
+
+    if (!auth.currentUser) {
+      window.addEventListener(
+        "evara:session-ready",
+        () => {
+          hydrateFromFirestoreInBackground();
+        },
+        { once: true }
+      );
+      return;
+    }
+
+    await hydrateFromFirestoreIfAvailable();
+  }, 220);
+}
+
+async function initTheme({ hydrateRemote = false } = {}) {
   ensureAppearanceStyle();
 
   const localAppearance = getStoredAppearance();
@@ -705,9 +766,11 @@ async function initTheme() {
   syncThemeUi();
   markBeamTargets();
 
-  if (auth.currentUser) {
-    await hydrateFromFirestoreIfAvailable();
+  if (hydrateRemote) {
+    hydrateFromFirestoreInBackground();
   }
+
+  return localAppearance;
 }
 
 window.EvaraTheme = {
@@ -726,23 +789,18 @@ window.EvaraTheme = {
   openColorSheet,
   closeColorSheet,
   openCustomSheet,
-  closeCustomSheet
+  closeCustomSheet,
+  hydrateFromFirestoreInBackground
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
-  await initTheme();
+  await initTheme({ hydrateRemote: false });
 
   if (document.body) {
     const activeTheme = document.documentElement.getAttribute("data-theme") || getStoredTheme();
     document.body.setAttribute("data-theme-active", activeTheme);
   }
 
-  window.dispatchEvent(
-    new CustomEvent("evara:theme-ready", {
-      detail: {
-        theme: document.documentElement.getAttribute("data-theme") || "dark",
-        appearance: toSplitAppearanceShape(getWorkingAppearance())
-      }
-    })
-  );
+  dispatchThemeReady("local");
+  hydrateFromFirestoreInBackground();
 });
