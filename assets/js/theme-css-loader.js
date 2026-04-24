@@ -1,52 +1,145 @@
-function loadGalaxyCss() {
-  let link = document.getElementById(GALAXY_CSS_ID);
+(function () {
+  const GALAXY_CSS_ID = "evaraGalaxyCss";
+  const GALAXY_CSS_HREF = "/evaraos/assets/css/effects/galaxy.css?v=1";
 
-  if (link && galaxyLoaded) {
-    link.disabled = false;
+  let galaxyLoaded = false;
+  let pending = false;
 
+  function currentTheme() {
+    return document.documentElement.getAttribute("data-theme") || "dark";
+  }
+
+  function shouldUseGalaxy() {
+    return currentTheme() === "galaxy";
+  }
+
+  function getGalaxyLink() {
+    return document.getElementById(GALAXY_CSS_ID);
+  }
+
+  function syncGalaxyEngine() {
     if (window.EvaraGalaxy && typeof window.EvaraGalaxy.syncTheme === "function") {
       window.EvaraGalaxy.syncTheme();
     }
-
-    return;
   }
 
-  if (pending) return;
+  function stopGalaxyEngine() {
+    if (window.EvaraGalaxy && typeof window.EvaraGalaxy.stop === "function") {
+      window.EvaraGalaxy.stop();
+    }
+  }
 
-  pending = true;
+  function emitGalaxyReady() {
+    window.dispatchEvent(
+      new CustomEvent("evara:galaxy-css-ready", {
+        detail: {
+          loaded: true,
+          theme: currentTheme()
+        }
+      })
+    );
+  }
 
-  if (!link) {
-    link = document.createElement("link");
-    link.id = GALAXY_CSS_ID;
-    link.rel = "stylesheet";
-    link.href = GALAXY_CSS_HREF;
-    link.media = "all";
+  function loadGalaxyCss() {
+    let link = getGalaxyLink();
 
-    link.onload = () => {
-      galaxyLoaded = true;
-      pending = false;
+    if (link && galaxyLoaded) {
+      link.disabled = false;
+      syncGalaxyEngine();
+      return;
+    }
+
+    if (pending) return;
+
+    pending = true;
+
+    if (!link) {
+      link = document.createElement("link");
+      link.id = GALAXY_CSS_ID;
+      link.rel = "stylesheet";
+      link.href = GALAXY_CSS_HREF;
+      link.media = "all";
       link.disabled = false;
 
-      window.dispatchEvent(
-        new CustomEvent("evara:galaxy-css-ready", {
-          detail: { loaded: true }
-        })
-      );
+      link.onload = () => {
+        galaxyLoaded = true;
+        pending = false;
+        link.disabled = false;
 
-      if (window.EvaraGalaxy && typeof window.EvaraGalaxy.syncTheme === "function") {
-        window.EvaraGalaxy.syncTheme();
-      }
-    };
+        emitGalaxyReady();
+        syncGalaxyEngine();
+      };
 
-    link.onerror = () => {
-      pending = false;
-    };
+      link.onerror = () => {
+        pending = false;
+        console.warn("Evaraos galaxy CSS failed to load:", GALAXY_CSS_HREF);
+      };
 
-    document.head.appendChild(link);
-    return;
+      document.head.appendChild(link);
+      return;
+    }
+
+    link.disabled = false;
+    galaxyLoaded = true;
+    pending = false;
+    syncGalaxyEngine();
   }
 
-  link.disabled = false;
-  galaxyLoaded = true;
-  pending = false;
-}
+  function disableGalaxyCss() {
+    const link = getGalaxyLink();
+
+    if (link) {
+      link.disabled = true;
+    }
+
+    stopGalaxyEngine();
+  }
+
+  function syncCss() {
+    if (shouldUseGalaxy()) {
+      loadGalaxyCss();
+      return;
+    }
+
+    disableGalaxyCss();
+  }
+
+  function init() {
+    syncCss();
+
+    window.addEventListener("evara:theme-ready", syncCss);
+    window.addEventListener("evara:theme-changed", syncCss);
+    window.addEventListener("pageshow", syncCss);
+
+    const observer = new MutationObserver(syncCss);
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"]
+    });
+
+    window.EvaraThemeCssLoader = {
+      syncCss,
+      loadGalaxyCss,
+      disableGalaxyCss,
+      getState() {
+        const link = getGalaxyLink();
+
+        return {
+          theme: currentTheme(),
+          galaxyLoaded,
+          pending,
+          hasGalaxyLink: Boolean(link),
+          galaxyCssDisabled: link ? Boolean(link.disabled) : null,
+          galaxyHref: link ? link.href : null
+        };
+      }
+    };
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init, { once: true });
+  } else {
+    init();
+  }
+})();
