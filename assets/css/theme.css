@@ -1,5 +1,5 @@
 /* ===============================
-   EVARAOS THEME CORE (BATCH 1)
+   EVARAOS THEME CORE
    =============================== */
 
 /* Base */
@@ -10,4 +10,12 @@
 @import url("./themes/theme-dark.css");
 @import url("./themes/theme-light.css");
 
-/* (Galaxy loaded later dynamically) */
+/* Components */
+@import url("./components/glass.css");
+@import url("./components/buttons.css");
+
+/* Effects */
+@import url("./effects/beam.css");
+@import url("./effects/animations.css");
+
+/* Galaxy loaded dynamically later */
