@@ -1,0 +1,75 @@
+@keyframes glassSweep {
+  0% {
+    transform: translateX(-40%) rotate(12deg);
+    opacity: 0;
+  }
+
+  18% {
+    opacity: 0.38;
+  }
+
+  40% {
+    transform: translateX(130%) rotate(12deg);
+    opacity: 0.16;
+  }
+
+  100% {
+    transform: translateX(130%) rotate(12deg);
+    opacity: 0;
+  }
+}
+
+@keyframes beamFloat {
+  0% {
+    transform: translate3d(-2%, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(2%, -1%, 0) scale(1.03);
+  }
+
+  100% {
+    transform: translate3d(-2%, 0, 0) scale(1);
+  }
+}
+
+@keyframes nebulaEdgeFlow {
+  0% {
+    transform: translate3d(-2%, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(2%, -1%, 0) scale(1.04);
+  }
+
+  100% {
+    transform: translate3d(-2%, 0, 0) scale(1);
+  }
+}
+
+@keyframes rainbowFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::after,
+  .beam-target::after,
+  .active-glow::after,
+  .glass-card::after,
+  .glass-shell::after,
+  .aurora-card::after,
+  .glass::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+}
