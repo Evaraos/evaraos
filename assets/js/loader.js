@@ -3,28 +3,55 @@
   const PAGE_TRANSITION_ID = "evaPageTransition";
   const GLOBAL_LOADER_ID = "evaraGlobalLoader";
 
-  const MIN_FIRST_BOOT_VISIBLE = 220;
-  const MIN_NAV_VISIBLE = 170;
-  const FAST_TO_FULL_DELAY = 1100;
+  const MIN_FIRST_BOOT_VISIBLE = 180;
+  const MIN_NAV_VISIBLE = 160;
+  const FAST_TO_FULL_DELAY = 850;
   const EXIT_DURATION = 260;
+  const FORCE_READY_TIMEOUT = 4500;
 
   let fullLoaderTimer = null;
   let exitTimer = null;
+  let forceReadyTimer = null;
+
   let firstBootStartedAt = 0;
   let navStartedAt = 0;
+
   let isTransitioning = false;
   let fullLoaderVisible = false;
   let firstBootDone = false;
+  let initialBootStarted = false;
+  let hasMarkedReady = false;
 
   function clearTimers() {
     if (fullLoaderTimer) {
       clearTimeout(fullLoaderTimer);
       fullLoaderTimer = null;
     }
+
     if (exitTimer) {
       clearTimeout(exitTimer);
       exitTimer = null;
     }
+
+    if (forceReadyTimer) {
+      clearTimeout(forceReadyTimer);
+      forceReadyTimer = null;
+    }
+  }
+
+  function isAuthPending() {
+    return (
+      document.documentElement.classList.contains("auth-pending") ||
+      document.body?.classList.contains("auth-pending")
+    );
+  }
+
+  function isBootPending() {
+    return document.documentElement.classList.contains("boot-pending");
+  }
+
+  function shouldHoldInitialLoader() {
+    return isAuthPending() || isBootPending();
   }
 
   function ensurePageTransition() {
@@ -173,8 +200,8 @@
       fast.classList.remove("is-entering");
     });
 
-    document.body.classList.add("app-loading");
-    document.body.classList.remove("app-ready");
+    document.body?.classList.add("app-loading");
+    document.body?.classList.remove("app-ready");
     document.documentElement.classList.add("eva-fast-loading");
   }
 
@@ -218,8 +245,8 @@
       loader.classList.remove("is-entering");
     });
 
-    document.body.classList.add("app-loading");
-    document.body.classList.remove("app-ready");
+    document.body?.classList.add("app-loading");
+    document.body?.classList.remove("app-ready");
   }
 
   function hideFullLoader(immediate = false) {
@@ -249,26 +276,42 @@
     exitTimer = setTimeout(callback, wait);
   }
 
+  function unlockApp() {
+    document.body?.classList.remove("app-loading");
+    document.body?.classList.add("app-ready");
+    document.documentElement.classList.remove("boot-pending");
+  }
+
   function hideAllLoaders(immediate = false) {
     hideFastLoader(immediate);
     hideFullLoader(immediate);
     hidePageTransition();
-    document.body.classList.remove("app-loading");
-    document.body.classList.add("app-ready");
-    document.documentElement.classList.remove("boot-pending");
+    unlockApp();
     isTransitioning = false;
   }
 
-  function completeInitialBoot() {
+  function completeInitialBoot(force = false) {
+    if (firstBootDone && !force) return;
+
     clearTimers();
+
+    if (!force && shouldHoldInitialLoader()) {
+      forceReadyTimer = setTimeout(() => {
+        completeInitialBoot(true);
+      }, FORCE_READY_TIMEOUT);
+      return;
+    }
+
     finishVisiblePhase(firstBootStartedAt, MIN_FIRST_BOOT_VISIBLE, () => {
       hideAllLoaders(false);
       firstBootDone = true;
+      hasMarkedReady = true;
     });
   }
 
   function beginNavigationLoad(options = {}) {
     if (isTransitioning) return;
+
     isTransitioning = true;
     navStartedAt = performance.now();
 
@@ -277,7 +320,7 @@
     showFastLoader();
 
     fullLoaderTimer = setTimeout(() => {
-      if (document.body.classList.contains("app-loading")) {
+      if (isTransitioning && document.body?.classList.contains("app-loading")) {
         showFullLoader(options);
       }
     }, FAST_TO_FULL_DELAY);
@@ -285,13 +328,25 @@
 
   function completeNavigationLoad() {
     clearTimers();
-    finishVisiblePhase(navStartedAt, MIN_NAV_VISIBLE, () => {
+
+    finishVisiblePhase(navStartedAt || performance.now(), MIN_NAV_VISIBLE, () => {
       hideAllLoaders(false);
+      hasMarkedReady = true;
     });
+  }
+
+  function markAppReady() {
+    if (isTransitioning) {
+      completeNavigationLoad();
+      return;
+    }
+
+    completeInitialBoot(true);
   }
 
   function shouldInterceptLink(anchor) {
     if (!anchor) return false;
+
     const href = anchor.getAttribute("href") || "";
 
     if (!href) return false;
@@ -325,6 +380,7 @@
       }
 
       event.preventDefault();
+
       beginNavigationLoad({
         title: "Opening Evaraos",
         subtitle: "Preparing your next screen."
@@ -337,22 +393,46 @@
   }
 
   function setupInitialBoot() {
+    if (initialBootStarted) return;
+    initialBootStarted = true;
+
     firstBootStartedAt = performance.now();
-    document.body.classList.add("app-loading");
-    document.body.classList.remove("app-ready");
-    showFastLoader();
+
+    if (shouldHoldInitialLoader()) {
+      document.body?.classList.add("app-loading");
+      document.body?.classList.remove("app-ready");
+      showFastLoader();
+    } else {
+      document.body?.classList.add("app-ready");
+      document.body?.classList.remove("app-loading");
+      firstBootDone = true;
+      hasMarkedReady = true;
+      return;
+    }
 
     window.addEventListener("load", () => {
-      completeInitialBoot();
+      if (!shouldHoldInitialLoader()) {
+        completeInitialBoot(true);
+      } else {
+        completeInitialBoot(false);
+      }
     });
 
     window.addEventListener("pageshow", () => {
       if (!firstBootDone) {
-        completeInitialBoot();
+        if (!shouldHoldInitialLoader()) {
+          completeInitialBoot(true);
+        }
       } else if (!isTransitioning) {
         hideAllLoaders(true);
       }
     });
+
+    forceReadyTimer = setTimeout(() => {
+      if (!hasMarkedReady && !isTransitioning) {
+        completeInitialBoot(true);
+      }
+    }, FORCE_READY_TIMEOUT);
   }
 
   function exposeApi() {
@@ -364,18 +444,16 @@
       showFullLoader,
       hideFullLoader,
       hideAllLoaders,
-      markAppReady() {
-        if (isTransitioning) {
-          completeNavigationLoad();
-        } else {
-          completeInitialBoot();
-        }
-      },
+      markAppReady,
       getState() {
         return {
           isTransitioning,
           fullLoaderVisible,
-          firstBootDone
+          firstBootDone,
+          initialBootStarted,
+          hasMarkedReady,
+          authPending: isAuthPending(),
+          bootPending: isBootPending()
         };
       }
     };
@@ -385,11 +463,15 @@
     ensurePageTransition();
     ensureFastLoader();
     ensureGlobalLoader();
+    exposeApi();
     setupInitialBoot();
     interceptDocumentLinks();
-    exposeApi();
 
-    document.addEventListener("visibilitychange", () => {
+    window.addEventListener("evara:session-ready", () => {
+      markAppReady();
+    });
+
+    window.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible" && !isTransitioning && firstBootDone) {
         hideAllLoaders(true);
       }
