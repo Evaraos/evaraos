@@ -52,7 +52,14 @@ let useSessionStorageForProfile = false;
 let globalAuthSyncStarted = false;
 
 function dispatchSessionReady(detail = {}) {
-  window.dispatchEvent(new CustomEvent("evara:session-ready", { detail }));
+  window.dispatchEvent(
+    new CustomEvent("evara:session-ready", {
+      detail: {
+        at: Date.now(),
+        ...detail
+      }
+    })
+  );
 }
 
 function navigateWithLoader(path, options = {}, replace = false) {
@@ -61,11 +68,23 @@ function navigateWithLoader(path, options = {}, replace = false) {
   }
 
   requestAnimationFrame(() => {
-    replace ? window.location.replace(path) : window.location.assign(path);
+    if (replace) {
+      window.location.replace(path);
+    } else {
+      window.location.assign(path);
+    }
   });
 }
 
 export function showGlobalLoader() {
+  if (window.EvaraLoader?.beginNavigationLoad) {
+    window.EvaraLoader.beginNavigationLoad({
+      title: "Loading Evaraos",
+      subtitle: "Preparing your secure session."
+    });
+    return;
+  }
+
   document.body?.classList.add("app-loading");
   document.body?.classList.remove("app-ready");
 }
@@ -79,7 +98,7 @@ export function hideGlobalLoader() {
     window.EvaraLoader.markAppReady();
   }
 
-  dispatchSessionReady({ at: Date.now() });
+  dispatchSessionReady();
 }
 
 export function getCurrentUser() {
@@ -162,15 +181,29 @@ export function roleLabelFromRole(role = "") {
 }
 
 export function applyUserToUi(userData = {}) {
-  const displayName = userData.displayName || userData.fullName || userData.username || userData.email || "User";
+  const displayName =
+    userData.displayName ||
+    userData.fullName ||
+    userData.username ||
+    userData.email ||
+    "User";
+
   const email = userData.email || "";
   const role = userData.role || "customer";
   const initial = displayName.trim().charAt(0).toUpperCase() || "U";
   const roleText = roleLabelFromRole(role);
 
-  document.querySelectorAll("[data-user-name]").forEach((el) => { el.textContent = displayName; });
-  document.querySelectorAll("[data-user-email]").forEach((el) => { el.textContent = email; });
-  document.querySelectorAll("[data-user-avatar]").forEach((el) => { el.textContent = initial; });
+  document.querySelectorAll("[data-user-name]").forEach((el) => {
+    el.textContent = displayName;
+  });
+
+  document.querySelectorAll("[data-user-email]").forEach((el) => {
+    el.textContent = email;
+  });
+
+  document.querySelectorAll("[data-user-avatar]").forEach((el) => {
+    el.textContent = initial;
+  });
 
   const dashboardAvatar = document.getElementById("dashboardAvatar");
   const dashboardAvatarLarge = document.getElementById("dashboardAvatarLarge");
@@ -198,7 +231,11 @@ export function syncUserSession(user, role = "customer", extras = {}) {
   saveUserRole(profile.role);
   saveUserProfile(profile);
   applyUserToUi(profile);
-  dispatchSessionReady({ authenticated: true, role: profile.role });
+
+  dispatchSessionReady({
+    authenticated: true,
+    role: profile.role
+  });
 }
 
 export function clearUserSession() {
@@ -212,13 +249,22 @@ export async function logoutAndRedirect(path = "/evaraos/login.html") {
   await signOut(auth);
   clearUserSession();
 
-  try { sessionStorage.clear(); } catch {}
-  try { localStorage.removeItem("evaraos-last-private-page"); } catch {}
+  try {
+    sessionStorage.clear();
+  } catch {}
 
-  navigateWithLoader(path, {
-    title: "Signed out",
-    subtitle: "Returning to login."
-  }, true);
+  try {
+    localStorage.removeItem("evaraos-last-private-page");
+  } catch {}
+
+  navigateWithLoader(
+    path,
+    {
+      title: "Signed out",
+      subtitle: "Returning to login."
+    },
+    true
+  );
 }
 
 export async function logout() {
@@ -244,13 +290,6 @@ export function protectRoute({
 } = {}) {
   if (protectRouteActivePromise) return protectRouteActivePromise;
 
-  export function protectRoute({
-  requireAuth = true,
-  redirectGuestTo = "/evaraos/login.html",
-  redirectAuthedTo = "/evaraos/dashboard.html"
-} = {}) {
-  if (protectRouteActivePromise) return protectRouteActivePromise;
-
   const savedProfile = getSavedUserProfile();
 
   if (!savedProfile?.uid) {
@@ -268,30 +307,7 @@ export function protectRoute({
     resolveProtectedPage();
 
     protectRouteActivePromise = Promise.resolve(true);
-    setTimeout(() => {
-      protectRouteActivePromise = null;
-    }, 0);
 
-    return protectRouteActivePromise;
-  }
-
-  if (!savedProfile?.uid) {
-  markProtectedPagePending();
-}
-
-const path = window.location.pathname;
-  const isAuthPage =
-    path.endsWith("/login.html") ||
-    path.endsWith("/signup.html") ||
-    path.endsWith("/reset.html");
-
-  const savedProfile = getSavedUserProfile();
-
-  if (requireAuth && savedProfile?.uid) {
-    applyUserToUi(savedProfile);
-    resolveProtectedPage();
-
-    protectRouteActivePromise = Promise.resolve(true);
     setTimeout(() => {
       protectRouteActivePromise = null;
     }, 0);
@@ -315,10 +331,15 @@ const path = window.location.pathname;
         currentUser = user;
 
         if (!requireAuth && isAuthPage) {
-          navigateWithLoader(redirectAuthedTo, {
-            title: "Opening dashboard",
-            subtitle: "Your session is active."
-          }, true);
+          navigateWithLoader(
+            redirectAuthedTo,
+            {
+              title: "Opening dashboard",
+              subtitle: "Your session is active."
+            },
+            true
+          );
+
           resolve(true);
           protectRouteActivePromise = null;
           return;
@@ -338,10 +359,16 @@ const path = window.location.pathname;
 
       if (requireAuth) {
         clearUserSession();
-        navigateWithLoader(redirectGuestTo, {
-          title: "Returning to login",
-          subtitle: "Please sign in to continue."
-        }, true);
+
+        navigateWithLoader(
+          redirectGuestTo,
+          {
+            title: "Returning to login",
+            subtitle: "Please sign in to continue."
+          },
+          true
+        );
+
         resolve(false);
         protectRouteActivePromise = null;
         return;
@@ -362,10 +389,15 @@ export async function saveUserThemePreferences(themePreferences = {}) {
 
   try {
     const userRef = doc(db, "users", user.uid);
-    await setDoc(userRef, {
-      themePreferences: themePreferences || {},
-      themePreferencesUpdatedAt: new Date().toISOString()
-    }, { merge: true });
+
+    await setDoc(
+      userRef,
+      {
+        themePreferences: themePreferences || {},
+        themePreferencesUpdatedAt: new Date().toISOString()
+      },
+      { merge: true }
+    );
 
     return true;
   } catch (error) {
@@ -381,7 +413,9 @@ export async function getUserThemePreferences() {
   try {
     const userRef = doc(db, "users", user.uid);
     const snap = await getDoc(userRef);
+
     if (!snap.exists()) return null;
+
     return snap.data()?.themePreferences || null;
   } catch (error) {
     console.error("Failed to load theme preferences:", error);
@@ -402,6 +436,7 @@ function startGlobalAuthSync() {
     currentUser = user;
 
     const savedProfile = getSavedUserProfile();
+
     if (savedProfile?.uid) {
       applyUserToUi(savedProfile);
     } else {
@@ -415,16 +450,20 @@ function startGlobalAuthSync() {
       const snap = await getDoc(userRef);
 
       if (!snap.exists()) {
-        await setDoc(userRef, {
-          uid: user.uid,
-          email: user.email || "",
-          displayName: user.displayName || "",
-          fullName: user.displayName || "",
-          username: "",
-          usernameLower: "",
-          role: getSavedUserRole() || "customer",
-          themePreferences: null
-        }, { merge: true });
+        await setDoc(
+          userRef,
+          {
+            uid: user.uid,
+            email: user.email || "",
+            displayName: user.displayName || "",
+            fullName: user.displayName || "",
+            username: "",
+            usernameLower: "",
+            role: getSavedUserRole() || "customer",
+            themePreferences: null
+          },
+          { merge: true }
+        );
       }
 
       const freshSnap = await getDoc(userRef);
@@ -432,7 +471,12 @@ function startGlobalAuthSync() {
       const role = data.role || getSavedUserRole() || "customer";
 
       syncUserSession(user, role, {
-        displayName: data.displayName || data.fullName || user.displayName || user.email || "User",
+        displayName:
+          data.displayName ||
+          data.fullName ||
+          user.displayName ||
+          user.email ||
+          "User",
         fullName: data.fullName || data.displayName || user.displayName || "",
         username: data.username || ""
       });
