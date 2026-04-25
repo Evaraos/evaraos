@@ -244,7 +244,36 @@ export function protectRoute({
 } = {}) {
   if (protectRouteActivePromise) return protectRouteActivePromise;
 
+  export function protectRoute({
+  requireAuth = true,
+  redirectGuestTo = "/evaraos/login.html",
+  redirectAuthedTo = "/evaraos/dashboard.html"
+} = {}) {
+  if (protectRouteActivePromise) return protectRouteActivePromise;
+
   const savedProfile = getSavedUserProfile();
+
+  if (!savedProfile?.uid) {
+    markProtectedPagePending();
+  }
+
+  const path = window.location.pathname;
+  const isAuthPage =
+    path.endsWith("/login.html") ||
+    path.endsWith("/signup.html") ||
+    path.endsWith("/reset.html");
+
+  if (requireAuth && savedProfile?.uid) {
+    applyUserToUi(savedProfile);
+    resolveProtectedPage();
+
+    protectRouteActivePromise = Promise.resolve(true);
+    setTimeout(() => {
+      protectRouteActivePromise = null;
+    }, 0);
+
+    return protectRouteActivePromise;
+  }
 
   if (!savedProfile?.uid) {
   markProtectedPagePending();
