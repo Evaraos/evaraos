@@ -244,9 +244,13 @@ export function protectRoute({
 } = {}) {
   if (protectRouteActivePromise) return protectRouteActivePromise;
 
-  markProtectedPagePending();
+  const savedProfile = getSavedUserProfile();
 
-  const path = window.location.pathname;
+  if (!savedProfile?.uid) {
+  markProtectedPagePending();
+}
+
+const path = window.location.pathname;
   const isAuthPage =
     path.endsWith("/login.html") ||
     path.endsWith("/signup.html") ||
