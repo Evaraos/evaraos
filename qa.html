@@ -6,20 +6,46 @@
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <meta name="theme-color" content="#050311" />
+
+  <!-- Evaraos App Identity / PWA / Favicons -->
   <link rel="manifest" href="/evaraos/manifest.json" />
-  <link rel="apple-touch-icon" href="/evaraos/assets/img/icon-192.png" />
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/evaraos/assets/img/favicon-16.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/evaraos/assets/img/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/evaraos/assets/img/icon-192.png" />
+  <link rel="shortcut icon" href="/evaraos/favicon.ico" />
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/evaraos/assets/img/apple-touch-icon.png" />
+  <link rel="apple-touch-icon" href="/evaraos/assets/img/apple-touch-icon.png" />
+
+  <meta name="theme-color" content="#050311" />
+  <meta name="msapplication-TileColor" content="#050311" />
+  <meta name="msapplication-TileImage" content="/evaraos/assets/img/icon-192.png" />
+
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Evaraos" />
+  <meta name="application-name" content="Evaraos" />
+
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin />
+  <link rel="dns-prefetch" href="https://www.gstatic.com" />
+  <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+  <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com" />
+  <link rel="preload" as="image" href="/evaraos/assets/img/evaraos_logo.png" />
 
   <title>QA Automation Console • Evaraos Inc</title>
 
   <script>
     (function () {
       try {
-        const raw = localStorage.getItem("evaraos-appearance");
-        let theme = "dark";
+        var raw = localStorage.getItem("evaraos-appearance");
+        var theme = "dark";
 
         if (raw) {
-          const appearance = JSON.parse(raw);
+          var appearance = JSON.parse(raw);
 
           if (appearance.mode === "light") theme = "light";
           else if (appearance.mode === "galaxy") theme = "galaxy";
@@ -69,101 +95,15 @@
 
     body.app-loading #appRoot { visibility: hidden; }
     body.app-ready #appRoot { visibility: visible; }
-
-    .qa-toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .qa-block-grid {
-      display: grid;
-      gap: 16px;
-    }
-
-    .qa-signal-grid {
-      display: grid;
-      gap: 12px;
-    }
-
-    .qa-signal-card {
-      display: grid;
-      gap: 12px;
-      padding: 18px;
-      border-radius: 24px;
-    }
-
-    .qa-signal-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .qa-signal-meta {
-      display: grid;
-      gap: 4px;
-    }
-
-    .qa-signal-meta h3 {
-      margin: 0;
-      font-size: 1.08rem;
-      letter-spacing: -0.02em;
-    }
-
-    .qa-signal-meta p {
-      margin: 0;
-      opacity: 0.75;
-      line-height: 1.55;
-      font-size: 0.94rem;
-    }
-
-    .qa-pill-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .qa-pill {
-      min-height: 34px;
-      padding: 0 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.06);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.82rem;
-      font-weight: 800;
-      opacity: 0.92;
-    }
-
-    .qa-findings {
-      display: grid;
-      gap: 10px;
-    }
-
-    .qa-finding {
-      padding: 12px 14px;
-      border-radius: 18px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      line-height: 1.55;
-      font-size: 0.94rem;
-    }
-
-    .qa-status-good { border: 1px solid rgba(52, 199, 89, 0.22); }
-    .qa-status-watch { border: 1px solid rgba(255, 214, 10, 0.22); }
-    .qa-status-bad { border: 1px solid rgba(255, 59, 48, 0.22); }
-    .qa-status-neutral { border: 1px solid rgba(255,255,255,0.12); }
   </style>
 
   <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=34" />
-  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=36" />
   <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=34" />
   <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/qa.css?v=1" />
 </head>
+
 <body class="dashboard-body auth-pending app-loading" data-route-guard="private">
   <div id="universalNavRoot"></div>
   <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
@@ -201,18 +141,22 @@
               <span class="dashboard-nav-icon">◉</span>
               <span>Overview</span>
             </a>
+
             <a href="#qaHealthSection" class="dashboard-nav-link aurora-card beam-target">
               <span class="dashboard-nav-icon">◎</span>
               <span>System Health</span>
             </a>
+
             <a href="#qaAutomationSection" class="dashboard-nav-link aurora-card beam-target">
               <span class="dashboard-nav-icon">◌</span>
               <span>Auto Find / Fix</span>
             </a>
+
             <a href="#qaAuditSection" class="dashboard-nav-link aurora-card beam-target">
               <span class="dashboard-nav-icon">◐</span>
               <span>Repo Audit</span>
             </a>
+
             <a href="#qaArchitectureSection" class="dashboard-nav-link aurora-card beam-target">
               <span class="dashboard-nav-icon">◍</span>
               <span>Future Architecture</span>
@@ -224,7 +168,9 @@
               <strong>Automated QA Hub</strong>
               <span>Repo audit, version sweep, UI system health, and architecture signals from one page.</span>
             </div>
-            <button type="button" id="resetAutomationBtn" class="btn btn-theme-primary beam-target">Reset Automation State</button>
+            <button type="button" id="resetAutomationBtn" class="btn btn-theme-primary beam-target">
+              Reset Automation State
+            </button>
           </div>
         </div>
       </aside>
@@ -257,6 +203,9 @@
                 src="/evaraos/assets/img/evaraos_logo.png"
                 alt="Evaraos"
                 class="dashboard-hero-logo"
+                loading="eager"
+                decoding="async"
+                fetchpriority="high"
               />
             </div>
 
@@ -367,13 +316,14 @@
               <strong>Audit source</strong>
               <span id="auditSourceText">/evaraos/tools/reports/repo-audit-ui.json</span>
             </article>
+
             <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
               <strong>Latest audit message</strong>
               <span id="auditMessageText">Waiting for audit report...</span>
             </article>
           </div>
 
-          <div id="auditFilesRoot" class="dashboard-feed" style="margin-top:16px;"></div>
+          <div id="auditFilesRoot" class="dashboard-feed qa-inline-gap"></div>
         </section>
 
         <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="qaArchitectureSection">
@@ -410,368 +360,6 @@
     </div>
   </div>
 
-  <script type="module">
-    const QA_STATE_KEY = "evaraos-qa-automation-v3";
-    const AUDIT_JSON_URL = "/evaraos/tools/reports/repo-audit-ui.json";
-    const TARGET_VERSION = "34";
-
-    const signalRoot = document.getElementById("qaSignalRoot");
-    const searchInput = document.getElementById("qaSearch");
-
-    const auditFilesRoot = document.getElementById("auditFilesRoot");
-    const auditScoreStat = document.getElementById("auditScoreStat");
-    const auditGeneratedAtStat = document.getElementById("auditGeneratedAtStat");
-    const auditPassingFilesStat = document.getElementById("auditPassingFilesStat");
-    const auditFailingFilesStat = document.getElementById("auditFailingFilesStat");
-    const versionTargetStat = document.getElementById("versionTargetStat");
-    const versionTargetMeta = document.getElementById("versionTargetMeta");
-    const auditSourceText = document.getElementById("auditSourceText");
-    const auditMessageText = document.getElementById("auditMessageText");
-    const qaHeroTitle = document.getElementById("qaHeroTitle");
-    const qaHeroText = document.getElementById("qaHeroText");
-
-    const autoFindBtn = document.getElementById("autoFindBtn");
-    const autoFixSmallBtn = document.getElementById("autoFixSmallBtn");
-    const refreshAuditBtn = document.getElementById("refreshAuditBtn");
-    const resetAutomationBtn = document.getElementById("resetAutomationBtn");
-
-    let auditSummary = null;
-    let automationState = loadAutomationState();
-
-    function loadAutomationState() {
-      try {
-        return JSON.parse(localStorage.getItem(QA_STATE_KEY) || "{}");
-      } catch {
-        return {};
-      }
-    }
-
-    function saveAutomationState(nextState) {
-      localStorage.setItem(QA_STATE_KEY, JSON.stringify(nextState));
-    }
-
-    function formatTimestamp(value) {
-      if (!value) return "Unknown";
-      const date = new Date(value);
-      if (Number.isNaN(date.getTime())) return String(value);
-      return date.toLocaleString();
-    }
-
-    function summarizeSignals(summary) {
-      const files = Array.isArray(summary?.files) ? summary.files : [];
-      const failing = files.filter((file) => file.status !== "pass");
-      const outdated = [];
-
-      files.forEach((file) => {
-        const issues = Array.isArray(file.issues) ? file.issues : [];
-        issues.forEach((issue) => {
-          const issueText = String(issue || "");
-          if (
-            issueText.includes("v=19") ||
-            issueText.includes("v=23") ||
-            issueText.includes("v=25") ||
-            issueText.includes("v=27") ||
-            issueText.includes("v=29") ||
-            issueText.includes("v=33") ||
-            issueText.includes("unversioned")
-          ) {
-            outdated.push({ file: file.file || "Unknown file", issue: issueText });
-          }
-        });
-      });
-
-      return {
-        failingCount: failing.length,
-        outdatedCount: outdated.length,
-        failingFiles: failing,
-        outdatedFiles: outdated
-      };
-    }
-
-    function buildSignalCards() {
-      const summary = summarizeSignals(auditSummary || {});
-      const generatedAt = auditSummary?.generatedAt ? formatTimestamp(auditSummary.generatedAt) : "Unknown";
-
-      return [
-        {
-          title: "Repo Audit Health",
-          description: "Automated reading of repo-audit JSON and file issue status.",
-          statusClass: summary.failingCount === 0 ? "qa-status-good" : "qa-status-watch",
-          pills: [
-            `${summary.failingCount} file${summary.failingCount === 1 ? "" : "s"} with issues`,
-            `Generated ${generatedAt}`
-          ],
-          findings: summary.failingCount === 0
-            ? ["No failing files reported in the current audit JSON."]
-            : summary.failingFiles.slice(0, 6).map((file) => `${file.file || "Unknown file"} — ${file.scoreText || file.status || "Issue detected"}`)
-        },
-        {
-          title: "Version Sweep Health",
-          description: "Automated surfacing of stale asset versions and unversioned imports from audit findings.",
-          statusClass: summary.outdatedCount === 0 ? "qa-status-good" : "qa-status-bad",
-          pills: [
-            `Target ${TARGET_VERSION}`,
-            `${summary.outdatedCount} stale finding${summary.outdatedCount === 1 ? "" : "s"}`
-          ],
-          findings: summary.outdatedCount === 0
-            ? [`No stale version findings detected against target v${TARGET_VERSION}.`]
-            : summary.outdatedFiles.slice(0, 8).map((item) => `${item.file}: ${item.issue}`)
-        },
-        {
-          title: "UI System Alignment",
-          description: "Tracks the current strategic direction: centralized settings, centralized QA, split later.",
-          statusClass: "qa-status-good",
-          pills: ["Centralized now", "Split later"],
-          findings: [
-            "QA remains one automated console for now.",
-            "Settings remains one categorized hub for now.",
-            "Appearance, security, and notifications can split later when depth justifies it."
-          ]
-        },
-        {
-          title: "Automation Integrity",
-          description: "Clarifies what the browser-side QA system can and cannot do honestly.",
-          statusClass: "qa-status-neutral",
-          pills: ["Auto Find enabled", "Browser-safe fixes only"],
-          findings: [
-            "Auto Find can refresh audit JSON and recompute automated health.",
-            "Auto Fix Small Issues only resets/normalizes browser-side QA state.",
-            "Repo code rewrites do not happen from this page."
-          ]
-        }
-      ];
-    }
-
-    function renderSignals() {
-      const query = (searchInput.value || "").trim().toLowerCase();
-      const signalCards = buildSignalCards();
-
-      signalRoot.innerHTML = "";
-
-      signalCards.forEach((card) => {
-        const haystack = [
-          card.title,
-          card.description,
-          ...card.pills,
-          ...card.findings
-        ].join(" ").toLowerCase();
-
-        if (query && !haystack.includes(query)) return;
-
-        const article = document.createElement("article");
-        article.className = `qa-signal-card glass-card aurora-card active-glow beam-target ${card.statusClass}`;
-
-        article.innerHTML = `
-          <div class="qa-signal-head">
-            <div class="qa-signal-meta">
-              <h3>${card.title}</h3>
-              <p>${card.description}</p>
-            </div>
-            <div class="qa-pill-row">
-              ${card.pills.map((pill) => `<span class="qa-pill">${pill}</span>`).join("")}
-            </div>
-          </div>
-          <div class="qa-findings">
-            ${card.findings.map((finding) => `<div class="qa-finding">${finding}</div>`).join("")}
-          </div>
-        `;
-
-        signalRoot.appendChild(article);
-      });
-
-      if (!signalRoot.children.length) {
-        signalRoot.innerHTML = `
-          <article class="qa-signal-card glass-card aurora-card active-glow beam-target qa-status-neutral">
-            <div class="qa-signal-meta">
-              <h3>No matching automated signals</h3>
-              <p>Try a different search term or refresh the audit report.</p>
-            </div>
-          </article>
-        `;
-      }
-    }
-
-    function renderAuditSummary(summary) {
-      auditSummary = summary;
-
-      const files = Array.isArray(summary?.files) ? summary.files : [];
-      const passing = Number(summary?.passingFiles ?? 0);
-      const failing = Number(summary?.failingFiles ?? 0);
-      const missing = Number(summary?.missingFiles ?? 0);
-
-      auditScoreStat.textContent = summary?.auditScoreText || "--";
-      auditGeneratedAtStat.textContent = `Generated ${formatTimestamp(summary?.generatedAt)}`;
-      auditPassingFilesStat.textContent = String(passing);
-      auditFailingFilesStat.textContent = String(failing + missing);
-      versionTargetStat.textContent = `v${TARGET_VERSION}`;
-      versionTargetMeta.textContent = "Current expected asset version";
-
-      const signalSummary = summarizeSignals(summary);
-      if (signalSummary.failingCount === 0) {
-        qaHeroTitle.textContent = "Automated health looking strong";
-        qaHeroText.textContent = `Audit JSON loaded. No failing files detected and target asset version is v${TARGET_VERSION}.`;
-      } else {
-        qaHeroTitle.textContent = "Automated issues detected";
-        qaHeroText.textContent = `Audit JSON loaded. ${signalSummary.failingCount} file${signalSummary.failingCount === 1 ? "" : "s"} still need attention.`;
-      }
-
-      auditMessageText.textContent = `Loaded ${files.length} file entries from the UI audit report.`;
-
-      const query = (searchInput.value || "").trim().toLowerCase();
-      auditFilesRoot.innerHTML = "";
-
-      files.forEach((file) => {
-        const fileName = file.file || "Unknown file";
-        const issues = Array.isArray(file.issues) ? file.issues : [];
-        const status = file.status || "fail";
-        const scoreText = file.scoreText || "--";
-
-        const fileMatches = fileName.toLowerCase().includes(query);
-        const issueMatches = issues.some((issue) => String(issue).toLowerCase().includes(query));
-
-        if (query && !fileMatches && !issueMatches) return;
-
-        const article = document.createElement("article");
-        article.className = "dashboard-feed-item glass-card aurora-card active-glow beam-target";
-
-        article.innerHTML = `
-          <strong>${fileName} — ${scoreText}</strong>
-          <span style="display:block;margin-top:8px;">
-            ${
-              status === "pass"
-                ? "All audit checks passed for this file."
-                : status === "missing"
-                ? "This file is missing from the repo audit target."
-                : `This file has ${issues.length} outstanding audit issue(s).`
-            }
-          </span>
-        `;
-
-        if (issues.length) {
-          const wrap = document.createElement("div");
-          wrap.style.marginTop = "14px";
-          wrap.style.display = "grid";
-          wrap.style.gap = "10px";
-
-          issues.forEach((issue) => {
-            if (query && !fileMatches && !String(issue).toLowerCase().includes(query)) return;
-            const issueRow = document.createElement("div");
-            issueRow.className = "qa-finding";
-            issueRow.textContent = issue;
-            wrap.appendChild(issueRow);
-          });
-
-          if (wrap.children.length) article.appendChild(wrap);
-        }
-
-        auditFilesRoot.appendChild(article);
-      });
-
-      if (!auditFilesRoot.children.length) {
-        auditFilesRoot.innerHTML = `
-          <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
-            <strong>No matching audit results</strong>
-            <span>Try a different search term or refresh the audit report.</span>
-          </article>
-        `;
-      }
-
-      renderSignals();
-    }
-
-    async function loadAuditReport() {
-      auditSourceText.textContent = AUDIT_JSON_URL;
-
-      try {
-        auditMessageText.textContent = "Fetching audit report...";
-
-        const response = await fetch(`${AUDIT_JSON_URL}?ts=${Date.now()}`, {
-          cache: "no-store"
-        });
-
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-        const summary = await response.json();
-        automationState.lastAuditLoadedAt = Date.now();
-        saveAutomationState(automationState);
-        renderAuditSummary(summary);
-      } catch (error) {
-        console.error("Audit report load failed:", error);
-        qaHeroTitle.textContent = "Audit report missing";
-        qaHeroText.textContent = "Could not read repo audit JSON. Run the audit generator and reload this page.";
-
-        auditFilesRoot.innerHTML = `
-          <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
-            <strong>Audit report not loaded</strong>
-            <span>
-              Could not read <code>/evaraos/tools/reports/repo-audit-ui.json</code>.
-              Run the audit script, make sure the JSON file exists in that path, then reload this page.
-            </span>
-          </article>
-        `;
-        auditScoreStat.textContent = "--";
-        auditGeneratedAtStat.textContent = "No report found";
-        auditPassingFilesStat.textContent = "--";
-        auditFailingFilesStat.textContent = "--";
-        auditMessageText.textContent = "Run node tools/repo-audit.js and commit the report.";
-        renderSignals();
-      }
-    }
-
-    function autoFind() {
-      automationState.lastAutoFindAt = Date.now();
-      saveAutomationState(automationState);
-      refreshAuditBtn.classList.add("active-glow");
-      setTimeout(() => refreshAuditBtn.classList.remove("active-glow"), 240);
-      loadAuditReport();
-    }
-
-    function autoFixSmallIssues() {
-      automationState = {
-        lastAutoFixAt: Date.now(),
-        normalized: true
-      };
-      saveAutomationState(automationState);
-      qaHeroTitle.textContent = "Automation state refreshed";
-      qaHeroText.textContent = "Browser-side QA state normalized and ready for a fresh audit read.";
-      renderSignals();
-    }
-
-    searchInput.addEventListener("input", () => {
-      if (auditSummary) {
-        renderAuditSummary(auditSummary);
-      } else {
-        renderSignals();
-      }
-    });
-
-    autoFindBtn.addEventListener("click", autoFind);
-    autoFixSmallBtn.addEventListener("click", autoFixSmallIssues);
-    refreshAuditBtn.addEventListener("click", loadAuditReport);
-
-    resetAutomationBtn.addEventListener("click", () => {
-      automationState = {};
-      saveAutomationState(automationState);
-      qaHeroTitle.textContent = "Automation state reset";
-      qaHeroText.textContent = "QA automation state was cleared. Reloading audit report now.";
-      loadAuditReport();
-    });
-
-    document.addEventListener("DOMContentLoaded", async () => {
-      document.querySelectorAll(".dashboard-nav-link").forEach((link) => {
-        link.addEventListener("click", () => {
-          document.querySelectorAll(".dashboard-nav-link").forEach((item) => {
-            item.classList.remove("active");
-          });
-          link.classList.add("active");
-        });
-      });
-
-      renderSignals();
-      await loadAuditReport();
-    });
-  </script>
-
   <script src="/evaraos/assets/js/loader.js?v=35"></script>
   <script type="module" src="/evaraos/assets/js/firebase.js?v=35"></script>
   <script type="module" src="/evaraos/assets/js/theme.js?v=36"></script>
@@ -779,5 +367,6 @@
   <script src="/evaraos/assets/js/galaxy.js?v=2"></script>
   <script type="module" src="/evaraos/assets/js/route-guard.js?v=35"></script>
   <script src="/evaraos/assets/js/nav.js?v=35"></script>
+  <script type="module" src="/evaraos/assets/js/qa.js?v=1"></script>
 </body>
 </html>
