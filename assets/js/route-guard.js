@@ -1,10 +1,16 @@
 import { protectRoute } from "./firebase.js";
 
 let hasFinishedRouteGuard = false;
+let hasPaintedOptimistically = false;
 
 function clearAuthPending() {
   document.documentElement.classList.remove("auth-pending");
   document.body?.classList.remove("auth-pending");
+}
+
+function markBodyReady() {
+  document.body?.classList.remove("app-loading");
+  document.body?.classList.add("app-ready");
 }
 
 function dispatchSessionReady(detail = {}) {
@@ -18,17 +24,47 @@ function dispatchSessionReady(detail = {}) {
   );
 }
 
+function safeMarkReady(detail = {}) {
+  clearAuthPending();
+  markBodyReady();
+  dispatchSessionReady(detail);
+
+  if (window.EvaraLoader && typeof window.EvaraLoader.markAppReady === "function") {
+    window.EvaraLoader.markAppReady();
+  }
+}
+
+function paintOptimistically(detail = {}) {
+  if (hasPaintedOptimistically) return;
+  hasPaintedOptimistically = true;
+
+  clearAuthPending();
+  markBodyReady();
+
+  if (window.EvaraLoader && typeof window.EvaraLoader.hideAllLoaders === "function") {
+    window.EvaraLoader.hideAllLoaders(true);
+  }
+
+  window.dispatchEvent(
+    new CustomEvent("evara:optimistic-paint", {
+      detail: {
+        at: Date.now(),
+        ...detail
+      }
+    })
+  );
+}
+
 function beginGuardRedirect(url, options = {}) {
   hasFinishedRouteGuard = true;
+
+  clearAuthPending();
 
   if (window.EvaraLoader && typeof window.EvaraLoader.beginNavigationLoad === "function") {
     window.EvaraLoader.beginNavigationLoad({
       title: options.title || "Redirecting",
       subtitle: options.subtitle || "Taking you to the right page."
     });
-  } else {
-    document.body?.classList.add("app-loading");
-    document.body?.classList.remove("app-ready");
   }
 
   requestAnimationFrame(() => {
@@ -40,15 +76,7 @@ function showAppReady(detail = {}) {
   if (hasFinishedRouteGuard) return;
   hasFinishedRouteGuard = true;
 
-  clearAuthPending();
-  dispatchSessionReady(detail);
-
-  if (window.EvaraLoader && typeof window.EvaraLoader.markAppReady === "function") {
-    window.EvaraLoader.markAppReady();
-  } else {
-    document.body?.classList.remove("app-loading");
-    document.body?.classList.add("app-ready");
-  }
+  safeMarkReady(detail);
 }
 
 function getStoredUser() {
@@ -68,59 +96,99 @@ function hasLocalSession() {
   return Boolean(user && (user.uid || user.email));
 }
 
-async function handleProtectedRoute(mode) {
-  const currentPath = window.location.pathname || "";
-  const isLoginPage = currentPath.includes("/login.html");
-  const isDashboardPage = currentPath.includes("/dashboard.html");
+function isPrivateMode(mode) {
+  return mode === "private";
+}
 
-  if (mode === "private") {
-    await protectRoute({
-      requireAuth: true,
-      redirectGuestTo: "/evaraos/login.html",
-      redirectAuthedTo: "/evaraos/dashboard.html"
+function isAuthMode(mode) {
+  return mode === "auth";
+}
+
+async function handlePrivateRoute() {
+  const localSession = hasLocalSession();
+
+  if (localSession) {
+    paintOptimistically({
+      mode: "private",
+      authenticated: true,
+      source: "local-session"
     });
-
-    if (!hasLocalSession() && !isLoginPage) {
-      beginGuardRedirect("/evaraos/login.html", {
-        title: "Returning to login",
-        subtitle: "Your session needs to be verified again."
-      });
-      return;
-    }
-
-    showAppReady({
-      mode,
-      authenticated: true
-    });
-    return;
   }
 
-  if (mode === "auth") {
-    await protectRoute({
-      requireAuth: false,
-      redirectGuestTo: "/evaraos/login.html",
-      redirectAuthedTo: "/evaraos/dashboard.html"
-    });
+  await protectRoute({
+    requireAuth: true,
+    redirectGuestTo: "/evaraos/login.html",
+    redirectAuthedTo: "/evaraos/dashboard.html"
+  });
 
-    if (hasLocalSession() && !isDashboardPage) {
-      beginGuardRedirect("/evaraos/dashboard.html", {
-        title: "Opening dashboard",
-        subtitle: "Your session is already active."
-      });
-      return;
-    }
-
-    showAppReady({
-      mode,
-      authenticated: hasLocalSession()
+  if (!hasLocalSession()) {
+    beginGuardRedirect("/evaraos/login.html", {
+      title: "Returning to login",
+      subtitle: "Your session needs to be verified again."
     });
     return;
   }
 
   showAppReady({
+    mode: "private",
+    authenticated: true,
+    source: localSession ? "verified-after-local-session" : "verified"
+  });
+}
+
+async function handleAuthRoute() {
+  paintOptimistically({
+    mode: "auth",
+    authenticated: hasLocalSession(),
+    source: "auth-page-fast-paint"
+  });
+
+  await protectRoute({
+    requireAuth: false,
+    redirectGuestTo: "/evaraos/login.html",
+    redirectAuthedTo: "/evaraos/dashboard.html"
+  });
+
+  if (hasLocalSession()) {
+    beginGuardRedirect("/evaraos/dashboard.html", {
+      title: "Opening dashboard",
+      subtitle: "Your session is already active."
+    });
+    return;
+  }
+
+  showAppReady({
+    mode: "auth",
+    authenticated: false,
+    source: "verified-guest"
+  });
+}
+
+async function handlePublicRoute(mode) {
+  paintOptimistically({
+    mode: mode || "public",
+    authenticated: hasLocalSession(),
+    source: "public-fast-paint"
+  });
+
+  showAppReady({
     mode: mode || "public",
     authenticated: hasLocalSession()
   });
+}
+
+async function handleProtectedRoute(mode) {
+  if (isPrivateMode(mode)) {
+    await handlePrivateRoute();
+    return;
+  }
+
+  if (isAuthMode(mode)) {
+    await handleAuthRoute();
+    return;
+  }
+
+  await handlePublicRoute(mode);
 }
 
 async function initRouteGuard() {
