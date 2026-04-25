@@ -3,40 +3,36 @@
   const PAGE_TRANSITION_ID = "evaPageTransition";
   const GLOBAL_LOADER_ID = "evaraGlobalLoader";
 
-  const MIN_FIRST_BOOT_VISIBLE = 180;
-  const MIN_NAV_VISIBLE = 160;
-  const FAST_TO_FULL_DELAY = 850;
-  const EXIT_DURATION = 260;
-  const FORCE_READY_TIMEOUT = 4500;
+  const NAV_TRANSITION_DELAY = 250;
+  const FAST_LOADER_DELAY = 650;
+  const FULL_LOADER_DELAY = 1800;
+  const FORCE_READY_TIMEOUT = 3200;
+  const EXIT_DURATION = 180;
 
+  let transitionTimer = null;
+  let fastLoaderTimer = null;
   let fullLoaderTimer = null;
-  let exitTimer = null;
   let forceReadyTimer = null;
-
-  let firstBootStartedAt = 0;
-  let navStartedAt = 0;
+  let exitTimer = null;
 
   let isTransitioning = false;
   let fullLoaderVisible = false;
   let firstBootDone = false;
   let initialBootStarted = false;
   let hasMarkedReady = false;
+  let loadersCreated = false;
 
-  function clearTimers() {
-    if (fullLoaderTimer) {
-      clearTimeout(fullLoaderTimer);
-      fullLoaderTimer = null;
-    }
+  function clearTimer(timer) {
+    if (timer) clearTimeout(timer);
+    return null;
+  }
 
-    if (exitTimer) {
-      clearTimeout(exitTimer);
-      exitTimer = null;
-    }
-
-    if (forceReadyTimer) {
-      clearTimeout(forceReadyTimer);
-      forceReadyTimer = null;
-    }
+  function clearLoadTimers() {
+    transitionTimer = clearTimer(transitionTimer);
+    fastLoaderTimer = clearTimer(fastLoaderTimer);
+    fullLoaderTimer = clearTimer(fullLoaderTimer);
+    forceReadyTimer = clearTimer(forceReadyTimer);
+    exitTimer = clearTimer(exitTimer);
   }
 
   function isAuthPending() {
@@ -50,8 +46,8 @@
     return document.documentElement.classList.contains("boot-pending");
   }
 
-  function shouldHoldInitialLoader() {
-    return isAuthPending() || isBootPending();
+  function isAppPending() {
+    return isAuthPending() || isBootPending() || document.body?.classList.contains("app-loading");
   }
 
   function ensurePageTransition() {
@@ -124,6 +120,7 @@
         ${inlineMarkSVG("evara-loader-fast-logo")}
       </div>
     `;
+
     document.body.appendChild(el);
     return el;
   }
@@ -168,40 +165,50 @@
         </div>
       </div>
     `;
+
     document.body.appendChild(el);
     return el;
   }
 
+  function ensureLoaders() {
+    if (loadersCreated) return;
+    ensurePageTransition();
+    ensureFastLoader();
+    ensureGlobalLoader();
+    loadersCreated = true;
+  }
+
   function showPageTransition() {
-    const transition = ensurePageTransition();
+    ensureLoaders();
+    const transition = document.getElementById(PAGE_TRANSITION_ID);
     document.documentElement.classList.add("eva-transitioning");
-    transition.classList.add("active");
+    transition?.classList.add("active");
   }
 
   function hidePageTransition() {
     const transition = document.getElementById(PAGE_TRANSITION_ID);
     document.documentElement.classList.remove("eva-transitioning");
-    if (transition) transition.classList.remove("active");
+    transition?.classList.remove("active");
   }
 
   function showFastLoader() {
-    const fast = ensureFastLoader();
-    const global = ensureGlobalLoader();
+    ensureLoaders();
 
-    global.classList.remove("active", "is-entering", "is-exiting");
-    global.setAttribute("aria-hidden", "true");
+    const fast = document.getElementById(FAST_LOADER_ID);
+    const global = document.getElementById(GLOBAL_LOADER_ID);
+
+    global?.classList.remove("active", "is-entering", "is-exiting");
+    global?.setAttribute("aria-hidden", "true");
     fullLoaderVisible = false;
 
-    fast.classList.remove("is-exiting");
-    fast.classList.add("active", "is-entering");
-    fast.setAttribute("aria-hidden", "false");
+    fast?.classList.remove("is-exiting");
+    fast?.classList.add("active", "is-entering");
+    fast?.setAttribute("aria-hidden", "false");
 
     requestAnimationFrame(() => {
-      fast.classList.remove("is-entering");
+      fast?.classList.remove("is-entering");
     });
 
-    document.body?.classList.add("app-loading");
-    document.body?.classList.remove("app-ready");
     document.documentElement.classList.add("eva-fast-loading");
   }
 
@@ -227,7 +234,11 @@
   }
 
   function showFullLoader(options = {}) {
-    const loader = ensureGlobalLoader();
+    ensureLoaders();
+
+    const loader = document.getElementById(GLOBAL_LOADER_ID);
+    if (!loader) return;
+
     const titleEl = loader.querySelector("#evaraLoaderTitle");
     const subtitleEl = loader.querySelector("#evaraLoaderSubtitle");
 
@@ -244,9 +255,6 @@
     requestAnimationFrame(() => {
       loader.classList.remove("is-entering");
     });
-
-    document.body?.classList.add("app-loading");
-    document.body?.classList.remove("app-ready");
   }
 
   function hideFullLoader(immediate = false) {
@@ -270,12 +278,6 @@
     }, EXIT_DURATION);
   }
 
-  function finishVisiblePhase(startedAt, minVisible, callback) {
-    const elapsed = performance.now() - startedAt;
-    const wait = Math.max(0, minVisible - elapsed);
-    exitTimer = setTimeout(callback, wait);
-  }
-
   function unlockApp() {
     document.body?.classList.remove("app-loading");
     document.body?.classList.add("app-ready");
@@ -283,65 +285,60 @@
   }
 
   function hideAllLoaders(immediate = false) {
+    clearLoadTimers();
     hideFastLoader(immediate);
     hideFullLoader(immediate);
     hidePageTransition();
     unlockApp();
     isTransitioning = false;
+    firstBootDone = true;
+    hasMarkedReady = true;
   }
 
-  function completeInitialBoot(force = false) {
-    if (firstBootDone && !force) return;
+  function scheduleSlowLoaders(options = {}) {
+    transitionTimer = setTimeout(() => {
+      if (!isTransitioning && firstBootDone) return;
+      if (!isAppPending() && !isTransitioning) return;
+      showPageTransition();
+    }, NAV_TRANSITION_DELAY);
 
-    clearTimers();
+    fastLoaderTimer = setTimeout(() => {
+      if (!isTransitioning && firstBootDone) return;
+      if (!isAppPending() && !isTransitioning) return;
+      showFastLoader();
+    }, FAST_LOADER_DELAY);
 
-    if (!force && shouldHoldInitialLoader()) {
-      forceReadyTimer = setTimeout(() => {
-        completeInitialBoot(true);
-      }, FORCE_READY_TIMEOUT);
-      return;
-    }
+    fullLoaderTimer = setTimeout(() => {
+      if (!isTransitioning && firstBootDone) return;
+      if (!isAppPending() && !isTransitioning) return;
+      showFullLoader(options);
+    }, FULL_LOADER_DELAY);
+  }
 
-    finishVisiblePhase(firstBootStartedAt, MIN_FIRST_BOOT_VISIBLE, () => {
-      hideAllLoaders(false);
-      firstBootDone = true;
-      hasMarkedReady = true;
-    });
+  function markAppReady() {
+    hideAllLoaders(false);
   }
 
   function beginNavigationLoad(options = {}) {
     if (isTransitioning) return;
 
     isTransitioning = true;
-    navStartedAt = performance.now();
+    clearLoadTimers();
 
-    clearTimers();
-    showPageTransition();
-    showFastLoader();
+    scheduleSlowLoaders({
+      title: options.title || "Opening Evaraos",
+      subtitle: options.subtitle || "Preparing your next screen."
+    });
 
-    fullLoaderTimer = setTimeout(() => {
-      if (isTransitioning && document.body?.classList.contains("app-loading")) {
-        showFullLoader(options);
+    forceReadyTimer = setTimeout(() => {
+      if (isTransitioning) {
+        hideAllLoaders(true);
       }
-    }, FAST_TO_FULL_DELAY);
+    }, FORCE_READY_TIMEOUT);
   }
 
   function completeNavigationLoad() {
-    clearTimers();
-
-    finishVisiblePhase(navStartedAt || performance.now(), MIN_NAV_VISIBLE, () => {
-      hideAllLoaders(false);
-      hasMarkedReady = true;
-    });
-  }
-
-  function markAppReady() {
-    if (isTransitioning) {
-      completeNavigationLoad();
-      return;
-    }
-
-    completeInitialBoot(true);
+    hideAllLoaders(false);
   }
 
   function shouldInterceptLink(anchor) {
@@ -396,43 +393,38 @@
     if (initialBootStarted) return;
     initialBootStarted = true;
 
-    firstBootStartedAt = performance.now();
+    document.body?.classList.remove("app-loading");
+    document.body?.classList.add("app-ready");
 
-    if (shouldHoldInitialLoader()) {
-      document.body?.classList.add("app-loading");
-      document.body?.classList.remove("app-ready");
-      showFastLoader();
-    } else {
-      document.body?.classList.add("app-ready");
-      document.body?.classList.remove("app-loading");
+    if (!isAppPending()) {
       firstBootDone = true;
       hasMarkedReady = true;
+      document.documentElement.classList.remove("boot-pending");
       return;
     }
 
+    scheduleSlowLoaders({
+      title: "Loading Evaraos",
+      subtitle: "Checking your secure session."
+    });
+
+    forceReadyTimer = setTimeout(() => {
+      if (!hasMarkedReady) {
+        hideAllLoaders(true);
+      }
+    }, FORCE_READY_TIMEOUT);
+
     window.addEventListener("load", () => {
-      if (!shouldHoldInitialLoader()) {
-        completeInitialBoot(true);
-      } else {
-        completeInitialBoot(false);
+      if (!isAuthPending()) {
+        hideAllLoaders(false);
       }
     });
 
     window.addEventListener("pageshow", () => {
-      if (!firstBootDone) {
-        if (!shouldHoldInitialLoader()) {
-          completeInitialBoot(true);
-        }
-      } else if (!isTransitioning) {
+      if (!isAuthPending()) {
         hideAllLoaders(true);
       }
     });
-
-    forceReadyTimer = setTimeout(() => {
-      if (!hasMarkedReady && !isTransitioning) {
-        completeInitialBoot(true);
-      }
-    }, FORCE_READY_TIMEOUT);
   }
 
   function exposeApi() {
@@ -453,16 +445,15 @@
           initialBootStarted,
           hasMarkedReady,
           authPending: isAuthPending(),
-          bootPending: isBootPending()
+          bootPending: isBootPending(),
+          appPending: isAppPending(),
+          loadersCreated
         };
       }
     };
   }
 
   function init() {
-    ensurePageTransition();
-    ensureFastLoader();
-    ensureGlobalLoader();
     exposeApi();
     setupInitialBoot();
     interceptDocumentLinks();
