@@ -183,29 +183,28 @@
     isNavigating = true;
     forcePageVisible();
 
-    if (window.EvaraLoader) {
-      if (typeof window.EvaraLoader.beginNavigationLoad === "function") {
-        window.EvaraLoader.beginNavigationLoad({
-          title: options.title || "Opening Evaraos",
-          subtitle: options.subtitle || "Preparing your next screen."
-        });
-      }
-
-      if (typeof window.EvaraLoader.showFastLoader === "function") {
-        window.EvaraLoader.showFastLoader();
-      }
+    if (window.EvaraLoader && typeof window.EvaraLoader.beginNavigationLoad === "function") {
+      window.EvaraLoader.beginNavigationLoad({
+        title: options.title || "Opening Evaraos",
+        subtitle: options.subtitle || "Preparing your next screen."
+      });
     }
 
-    const fallbackTimer = setTimeout(() => {
-      if (!isNavigating) return;
-      forcePageVisible();
-      window.location.href = targetUrl.href;
-    }, 900);
-
     requestAnimationFrame(() => {
-      clearTimeout(fallbackTimer);
       window.location.assign(targetUrl.href);
     });
+
+    setTimeout(() => {
+      if (!isNavigating) return;
+
+      forcePageVisible();
+
+      try {
+        window.location.href = targetUrl.href;
+      } catch {
+        window.location.assign(targetUrl.href);
+      }
+    }, 1200);
   }
 
   function iconSvg(name) {
