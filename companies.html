@@ -7,20 +7,46 @@
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <meta name="theme-color" content="#050311" />
+
+  <!-- Evaraos App Identity / PWA / Favicons -->
   <link rel="manifest" href="/evaraos/manifest.json" />
-  <link rel="apple-touch-icon" href="/evaraos/assets/img/icon-192.png" />
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/evaraos/assets/img/favicon-16.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/evaraos/assets/img/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/evaraos/assets/img/icon-192.png" />
+  <link rel="shortcut icon" href="/evaraos/favicon.ico" />
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/evaraos/assets/img/apple-touch-icon.png" />
+  <link rel="apple-touch-icon" href="/evaraos/assets/img/apple-touch-icon.png" />
+
+  <meta name="theme-color" content="#050311" />
+  <meta name="msapplication-TileColor" content="#050311" />
+  <meta name="msapplication-TileImage" content="/evaraos/assets/img/icon-192.png" />
+
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Evaraos" />
+  <meta name="application-name" content="Evaraos" />
+
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin />
+  <link rel="dns-prefetch" href="https://www.gstatic.com" />
+  <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+  <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com" />
+  <link rel="preload" as="image" href="/evaraos/assets/img/evaraos_logo.png" />
 
   <title>Companies • Evaraos Inc</title>
 
   <script>
     (function () {
       try {
-        const raw = localStorage.getItem("evaraos-appearance");
-        let theme = "dark";
+        var raw = localStorage.getItem("evaraos-appearance");
+        var theme = "dark";
 
         if (raw) {
-          const appearance = JSON.parse(raw);
+          var appearance = JSON.parse(raw);
 
           if (appearance.mode === "light") theme = "light";
           else if (appearance.mode === "galaxy") theme = "galaxy";
@@ -73,7 +99,7 @@
   </style>
 
   <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=34" />
-  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=36" />
   <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=34" />
   <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=34" />
 </head>
@@ -156,6 +182,9 @@
                 src="/evaraos/assets/img/evaraos_logo.png"
                 alt="Evaraos"
                 class="dashboard-hero-logo"
+                loading="eager"
+                decoding="async"
+                fetchpriority="high"
               />
             </div>
 
