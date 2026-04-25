@@ -1,5 +1,6 @@
 /* ===============================
    EVARAOS THEME CORE
+   Scalable import hub
    =============================== */
 
 /* Base */
@@ -20,5 +21,8 @@
 
 /* Loader */
 @import url("./loaders/loader.css");
+
+/* Loader viewport safety override */
+@import url("./loaders/loader-viewport.css");
 
 /* Galaxy is loaded dynamically by theme-css-loader.js */
