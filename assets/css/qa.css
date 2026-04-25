@@ -1,0 +1,106 @@
+/* ===============================
+   EVARAOS QA CONSOLE
+   =============================== */
+
+.qa-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.qa-block-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.qa-signal-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.qa-signal-card {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 24px;
+}
+
+.qa-signal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.qa-signal-meta {
+  display: grid;
+  gap: 4px;
+}
+
+.qa-signal-meta h3 {
+  margin: 0;
+  font-size: 1.08rem;
+  letter-spacing: -0.02em;
+}
+
+.qa-signal-meta p {
+  margin: 0;
+  opacity: 0.75;
+  line-height: 1.55;
+  font-size: 0.94rem;
+}
+
+.qa-pill-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.qa-pill {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.06);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.82rem;
+  font-weight: 800;
+  opacity: 0.92;
+}
+
+.qa-findings {
+  display: grid;
+  gap: 10px;
+}
+
+.qa-finding {
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  line-height: 1.55;
+  font-size: 0.94rem;
+}
+
+.qa-status-good {
+  border: 1px solid rgba(52, 199, 89, 0.22);
+}
+
+.qa-status-watch {
+  border: 1px solid rgba(255, 214, 10, 0.22);
+}
+
+.qa-status-bad {
+  border: 1px solid rgba(255, 59, 48, 0.22);
+}
+
+.qa-status-neutral {
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+.qa-inline-gap {
+  margin-top: 16px;
+}
