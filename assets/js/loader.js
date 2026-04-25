@@ -3,16 +3,18 @@
   const PAGE_TRANSITION_ID = "evaPageTransition";
   const GLOBAL_LOADER_ID = "evaraGlobalLoader";
 
-  const NAV_TRANSITION_DELAY = 250;
-  const FAST_LOADER_DELAY = 650;
-  const FULL_LOADER_DELAY = 1800;
+  const INITIAL_FAST_LOADER_DELAY = 650;
+  const INITIAL_FULL_LOADER_DELAY = 1800;
+  const NAV_FULL_LOADER_DELAY = 900;
   const FORCE_READY_TIMEOUT = 3200;
+  const FORCE_NAV_TIMEOUT = 4200;
   const EXIT_DURATION = 180;
 
-  let transitionTimer = null;
-  let fastLoaderTimer = null;
-  let fullLoaderTimer = null;
+  let initialFastTimer = null;
+  let initialFullTimer = null;
+  let navFullTimer = null;
   let forceReadyTimer = null;
+  let forceNavTimer = null;
   let exitTimer = null;
 
   let isTransitioning = false;
@@ -27,11 +29,12 @@
     return null;
   }
 
-  function clearLoadTimers() {
-    transitionTimer = clearTimer(transitionTimer);
-    fastLoaderTimer = clearTimer(fastLoaderTimer);
-    fullLoaderTimer = clearTimer(fullLoaderTimer);
+  function clearAllTimers() {
+    initialFastTimer = clearTimer(initialFastTimer);
+    initialFullTimer = clearTimer(initialFullTimer);
+    navFullTimer = clearTimer(navFullTimer);
     forceReadyTimer = clearTimer(forceReadyTimer);
+    forceNavTimer = clearTimer(forceNavTimer);
     exitTimer = clearTimer(exitTimer);
   }
 
@@ -48,6 +51,14 @@
 
   function isAppPending() {
     return isAuthPending() || isBootPending() || document.body?.classList.contains("app-loading");
+  }
+
+  function unlockApp() {
+    document.documentElement.classList.remove("boot-pending");
+    document.documentElement.classList.remove("auth-pending");
+    document.body?.classList.remove("auth-pending");
+    document.body?.classList.remove("app-loading");
+    document.body?.classList.add("app-ready");
   }
 
   function ensurePageTransition() {
@@ -243,6 +254,7 @@
     const subtitleEl = loader.querySelector("#evaraLoaderSubtitle");
 
     hideFastLoader(true);
+    unlockApp();
 
     if (titleEl) titleEl.textContent = options.title || "Opening Evaraos";
     if (subtitleEl) subtitleEl.textContent = options.subtitle || "Preparing your next screen.";
@@ -278,14 +290,8 @@
     }, EXIT_DURATION);
   }
 
-  function unlockApp() {
-    document.body?.classList.remove("app-loading");
-    document.body?.classList.add("app-ready");
-    document.documentElement.classList.remove("boot-pending");
-  }
-
   function hideAllLoaders(immediate = false) {
-    clearLoadTimers();
+    clearAllTimers();
     hideFastLoader(immediate);
     hideFullLoader(immediate);
     hidePageTransition();
@@ -295,49 +301,46 @@
     hasMarkedReady = true;
   }
 
-  function scheduleSlowLoaders(options = {}) {
-    transitionTimer = setTimeout(() => {
-      if (!isTransitioning && firstBootDone) return;
-      if (!isAppPending() && !isTransitioning) return;
-      showPageTransition();
-    }, NAV_TRANSITION_DELAY);
-
-    fastLoaderTimer = setTimeout(() => {
-      if (!isTransitioning && firstBootDone) return;
-      if (!isAppPending() && !isTransitioning) return;
+  function scheduleInitialSlowLoaders(options = {}) {
+    initialFastTimer = setTimeout(() => {
+      if (!isAppPending()) return;
       showFastLoader();
-    }, FAST_LOADER_DELAY);
+    }, INITIAL_FAST_LOADER_DELAY);
 
-    fullLoaderTimer = setTimeout(() => {
-      if (!isTransitioning && firstBootDone) return;
-      if (!isAppPending() && !isTransitioning) return;
+    initialFullTimer = setTimeout(() => {
+      if (!isAppPending()) return;
       showFullLoader(options);
-    }, FULL_LOADER_DELAY);
-  }
-
-  function markAppReady() {
-    hideAllLoaders(false);
+    }, INITIAL_FULL_LOADER_DELAY);
   }
 
   function beginNavigationLoad(options = {}) {
     if (isTransitioning) return;
 
     isTransitioning = true;
-    clearLoadTimers();
+    clearAllTimers();
+    unlockApp();
+    showPageTransition();
+    showFastLoader();
 
-    scheduleSlowLoaders({
-      title: options.title || "Opening Evaraos",
-      subtitle: options.subtitle || "Preparing your next screen."
-    });
+    navFullTimer = setTimeout(() => {
+      if (!isTransitioning) return;
+      showFullLoader({
+        title: options.title || "Opening Evaraos",
+        subtitle: options.subtitle || "Preparing your next screen."
+      });
+    }, NAV_FULL_LOADER_DELAY);
 
-    forceReadyTimer = setTimeout(() => {
-      if (isTransitioning) {
-        hideAllLoaders(true);
-      }
-    }, FORCE_READY_TIMEOUT);
+    forceNavTimer = setTimeout(() => {
+      if (!isTransitioning) return;
+      hideAllLoaders(true);
+    }, FORCE_NAV_TIMEOUT);
   }
 
   function completeNavigationLoad() {
+    hideAllLoaders(false);
+  }
+
+  function markAppReady() {
     hideAllLoaders(false);
   }
 
@@ -393,17 +396,15 @@
     if (initialBootStarted) return;
     initialBootStarted = true;
 
-    document.body?.classList.remove("app-loading");
-    document.body?.classList.add("app-ready");
+    unlockApp();
 
     if (!isAppPending()) {
       firstBootDone = true;
       hasMarkedReady = true;
-      document.documentElement.classList.remove("boot-pending");
       return;
     }
 
-    scheduleSlowLoaders({
+    scheduleInitialSlowLoaders({
       title: "Loading Evaraos",
       subtitle: "Checking your secure session."
     });
