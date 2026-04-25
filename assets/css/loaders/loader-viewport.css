@@ -1,0 +1,39 @@
+/* ===============================
+   EVARAOS LOADER VIEWPORT LOCK
+   Keeps loaders centered while scrolling
+   =============================== */
+
+.evara-global-loader,
+.evara-loader-fast {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  transform: none !important;
+  z-index: 2147483647 !important;
+}
+
+.evara-global-loader.active,
+.evara-loader-fast.active {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.evara-loader-fast {
+  pointer-events: none !important;
+}
+
+.evara-global-loader {
+  pointer-events: auto !important;
+}
+
+.evara-loader-box,
+.evara-loader-fast-wrap {
+  position: relative !important;
+  transform: none !important;
+  margin: auto !important;
+}
