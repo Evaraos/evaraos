@@ -83,13 +83,8 @@
   function isAuthenticated() {
     const user = getStoredUser();
 
-    if (user && (user.uid || user.email)) {
-      return true;
-    }
-
-    if (isPrivateRoutePending()) {
-      return true;
-    }
+    if (user && (user.uid || user.email)) return true;
+    if (isPrivateRoutePending()) return true;
 
     return false;
   }
@@ -97,13 +92,8 @@
   function getRole() {
     const user = getStoredUser();
 
-    if (user) {
-      return String(user.role || "guest").toLowerCase();
-    }
-
-    if (isPrivateRoutePending()) {
-      return "owner";
-    }
+    if (user) return String(user.role || "guest").toLowerCase();
+    if (isPrivateRoutePending()) return "owner";
 
     return "guest";
   }
@@ -162,21 +152,59 @@
     return progress <= 0.08;
   }
 
+  function forcePageVisible() {
+    document.documentElement.classList.remove("auth-pending");
+    document.documentElement.classList.remove("boot-pending");
+    document.body?.classList.remove("auth-pending");
+    document.body?.classList.remove("app-loading");
+    document.body?.classList.add("app-ready");
+  }
+
   function navigateWithLoader(href, options = {}) {
     if (!href || isNavigating) return;
-    if (href === window.location.href) return;
 
-    isNavigating = true;
+    let targetUrl;
 
-    if (window.EvaraLoader && typeof window.EvaraLoader.beginNavigationLoad === "function") {
-      window.EvaraLoader.beginNavigationLoad(options);
-    } else {
-      document.body?.classList.add("app-loading");
-      document.body?.classList.remove("app-ready");
+    try {
+      targetUrl = new URL(href, window.location.origin);
+    } catch {
+      return;
     }
 
+    const currentUrl = new URL(window.location.href);
+    const samePage =
+      currentUrl.origin === targetUrl.origin &&
+      currentUrl.pathname === targetUrl.pathname &&
+      currentUrl.search === targetUrl.search &&
+      currentUrl.hash === targetUrl.hash;
+
+    if (samePage) return;
+
+    isNavigating = true;
+    forcePageVisible();
+
+    if (window.EvaraLoader) {
+      if (typeof window.EvaraLoader.beginNavigationLoad === "function") {
+        window.EvaraLoader.beginNavigationLoad({
+          title: options.title || "Opening Evaraos",
+          subtitle: options.subtitle || "Preparing your next screen."
+        });
+      }
+
+      if (typeof window.EvaraLoader.showFastLoader === "function") {
+        window.EvaraLoader.showFastLoader();
+      }
+    }
+
+    const fallbackTimer = setTimeout(() => {
+      if (!isNavigating) return;
+      forcePageVisible();
+      window.location.href = targetUrl.href;
+    }, 900);
+
     requestAnimationFrame(() => {
-      window.location.assign(href);
+      clearTimeout(fallbackTimer);
+      window.location.assign(targetUrl.href);
     });
   }
 
@@ -292,13 +320,7 @@
             <div class="eva-left-spacer" aria-hidden="true"></div>
             <div class="eva-right-spacer" aria-hidden="true"></div>
 
-            <a
-              href="${buildHref("index.html")}"
-              class="eva-brand"
-              id="evaBrandBlock"
-              data-home-link="${buildHref("index.html")}"
-              aria-label="Go to Home"
-            >
+            <a href="${buildHref("index.html")}" class="eva-brand" id="evaBrandBlock" data-home-link="${buildHref("index.html")}" aria-label="Go to Home">
               <img
                 src="${getBasePath()}/assets/img/evaraos_logo.png"
                 alt="Evaraos logo"
@@ -312,13 +334,7 @@
             </a>
 
             <div class="eva-menu-zone" id="evaMenuZone">
-              <button
-                class="eva-menu-btn"
-                type="button"
-                id="evaMenuBtn"
-                aria-expanded="false"
-                aria-label="Open menu"
-              >
+              <button class="eva-menu-btn" type="button" id="evaMenuBtn" aria-expanded="false" aria-label="Open menu">
                 <span class="eva-burger">
                   <span class="eva-burger-line top"></span>
                   <span class="eva-burger-line mid"></span>
