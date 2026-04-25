@@ -3,31 +3,89 @@
    =============================== */
 
 .evara-global-loader,
-.evara-micro-loader {
+.evara-micro-loader,
+.evara-loader-fast {
   z-index: 2147483647;
 }
 
+/* Full screen global loader */
 .evara-global-loader {
-  position: fixed;
-  inset: 0;
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  max-height: 100dvh !important;
   display: none;
   align-items: center;
   justify-content: center;
   padding: max(18px, env(safe-area-inset-top)) 16px max(18px, env(safe-area-inset-bottom));
+  overflow: hidden !important;
+  transform: none !important;
+  pointer-events: auto;
 }
 
 .evara-global-loader.active {
-  display: flex;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
+/* Fast loader */
+.evara-loader-fast {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  max-height: 100dvh !important;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden !important;
+  transform: none !important;
+  pointer-events: none;
+}
+
+.evara-loader-fast.active {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Exit/entry helpers */
+.evara-global-loader.is-entering,
+.evara-loader-fast.is-entering {
+  opacity: 1;
+}
+
+.evara-global-loader.is-exiting,
+.evara-loader-fast.is-exiting {
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+/* Loader content */
 .evara-loader-box {
   width: min(720px, calc(100vw - 32px));
-  margin: 0 auto;
-  position: relative;
+  margin: auto !important;
+  position: relative !important;
+  transform: none !important;
+}
+
+.evara-loader-fast-wrap {
+  position: relative !important;
+  width: 112px;
+  height: 112px;
+  display: grid;
+  place-items: center;
+  margin: auto !important;
+  transform: none !important;
 }
 
 .evara-loader-mode-bg,
-.evara-loader-fast-bg {
+.evara-loader-fast-bg,
+.evara-loader-backdrop {
   position: absolute;
   inset: 0;
   overflow: hidden;
@@ -146,16 +204,32 @@ html[data-theme$="-light"] .evara-loader-bg-wave.wave-4 {
   width: 56px;
   height: 56px;
   display: block;
+  position: relative;
+  z-index: 2;
 }
 
 .evara-loader-logo--premium {
   width: 112px;
   height: 112px;
   display: block;
+  position: relative;
+  z-index: 2;
+}
+
+.evara-loader-mark,
+.evara-loader-mark--premium,
+.evara-loader-logo-wrap,
+.evara-loader-logo-wrap--premium,
+.evara-loader-pulse-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
 }
 
 .evara-loader-wave,
-.evara-loader-fast-wave {
+.evara-loader-fast-wave,
+.evara-loader-pulse-ring,
+.evara-loader-pulse-glow {
   position: absolute;
   inset: 50%;
   border-radius: 999px;
@@ -193,6 +267,55 @@ html[data-theme$="-light"] .evara-loader-bg-wave.wave-4 {
 
 .evara-loader-fast-wave.wave-c {
   animation-delay: 0.68s;
+}
+
+.evara-loader-pulse-ring {
+  width: 150px;
+  height: 150px;
+  border: 1px solid rgba(255,255,255,0.10);
+  opacity: 0.4;
+  animation: loaderPulseRing 2.6s ease-out infinite;
+}
+
+.evara-loader-pulse-ring.pulse-ring-b {
+  animation-delay: 0.45s;
+}
+
+.evara-loader-pulse-ring.pulse-ring-c {
+  animation-delay: 0.9s;
+}
+
+.evara-loader-pulse-glow {
+  width: 140px;
+  height: 140px;
+  background: radial-gradient(circle, rgba(255, 53, 93, 0.18), transparent 64%);
+  filter: blur(14px);
+}
+
+.evara-loader-copy {
+  position: relative;
+  z-index: 2;
+  margin-top: 18px;
+  display: grid;
+  gap: 6px;
+  text-align: center;
+}
+
+.evara-loader-title,
+.evara-loader-subtitle {
+  margin: 0;
+}
+
+.evara-loader-title {
+  font-size: clamp(1.1rem, 3vw, 1.55rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.evara-loader-subtitle {
+  opacity: 0.72;
+  font-size: 0.95rem;
+  line-height: 1.45;
 }
 
 .evara-micro-loader {
@@ -246,5 +369,27 @@ html[data-theme$="-light"] .evara-loader-bg-wave.wave-4 {
   100% {
     transform: translate(-50%, -50%) scale(1.34);
     opacity: 0;
+  }
+}
+
+@keyframes loaderPulseRing {
+  0% {
+    transform: translate(-50%, -50%) scale(0.76);
+    opacity: 0.34;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1.42);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .evara-loader-bg-wave,
+  .evara-loader-fast-bg-wave,
+  .evara-loader-wave,
+  .evara-loader-fast-wave,
+  .evara-loader-pulse-ring {
+    animation: none !important;
   }
 }
