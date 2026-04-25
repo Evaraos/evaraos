@@ -59,7 +59,7 @@ export function togglePill(event) {
     return;
   }
 
-  if (!window.scrollY <= 4) {
+  if (window.scrollY > 4) {
     NAV_STATE.navPinnedOpen = false;
     compactNav(true, "tap");
   }
