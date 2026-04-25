@@ -3,19 +3,22 @@
   const PAGE_TRANSITION_ID = "evaPageTransition";
   const GLOBAL_LOADER_ID = "evaraGlobalLoader";
 
-  const INITIAL_FAST_LOADER_DELAY = 650;
-  const INITIAL_FULL_LOADER_DELAY = 1800;
-  const NAV_FULL_LOADER_DELAY = 900;
+  const NAV_TRANSITION_DELAY = 180;
+  const NAV_FAST_LOADER_DELAY = 520;
+  const NAV_FULL_LOADER_DELAY = 1400;
+
+  const INITIAL_FAST_LOADER_DELAY = 850;
+  const INITIAL_FULL_LOADER_DELAY = 2200;
+
   const FORCE_READY_TIMEOUT = 3200;
   const FORCE_NAV_TIMEOUT = 4200;
-  const EXIT_DURATION = 180;
+  const EXIT_DURATION = 160;
 
-  let initialFastTimer = null;
-  let initialFullTimer = null;
-  let navFullTimer = null;
+  let transitionTimer = null;
+  let fastLoaderTimer = null;
+  let fullLoaderTimer = null;
   let forceReadyTimer = null;
   let forceNavTimer = null;
-  let exitTimer = null;
 
   let isTransitioning = false;
   let fullLoaderVisible = false;
@@ -30,12 +33,11 @@
   }
 
   function clearAllTimers() {
-    initialFastTimer = clearTimer(initialFastTimer);
-    initialFullTimer = clearTimer(initialFullTimer);
-    navFullTimer = clearTimer(navFullTimer);
+    transitionTimer = clearTimer(transitionTimer);
+    fastLoaderTimer = clearTimer(fastLoaderTimer);
+    fullLoaderTimer = clearTimer(fullLoaderTimer);
     forceReadyTimer = clearTimer(forceReadyTimer);
     forceNavTimer = clearTimer(forceNavTimer);
-    exitTimer = clearTimer(exitTimer);
   }
 
   function isAuthPending() {
@@ -302,12 +304,12 @@
   }
 
   function scheduleInitialSlowLoaders(options = {}) {
-    initialFastTimer = setTimeout(() => {
+    fastLoaderTimer = setTimeout(() => {
       if (!isAppPending()) return;
       showFastLoader();
     }, INITIAL_FAST_LOADER_DELAY);
 
-    initialFullTimer = setTimeout(() => {
+    fullLoaderTimer = setTimeout(() => {
       if (!isAppPending()) return;
       showFullLoader(options);
     }, INITIAL_FULL_LOADER_DELAY);
@@ -319,10 +321,18 @@
     isTransitioning = true;
     clearAllTimers();
     unlockApp();
-    showPageTransition();
-    showFastLoader();
 
-    navFullTimer = setTimeout(() => {
+    transitionTimer = setTimeout(() => {
+      if (!isTransitioning) return;
+      showPageTransition();
+    }, NAV_TRANSITION_DELAY);
+
+    fastLoaderTimer = setTimeout(() => {
+      if (!isTransitioning) return;
+      showFastLoader();
+    }, NAV_FAST_LOADER_DELAY);
+
+    fullLoaderTimer = setTimeout(() => {
       if (!isTransitioning) return;
       showFullLoader({
         title: options.title || "Opening Evaraos",
