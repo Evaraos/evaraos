@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evaraos Icon Generator</title>
+
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #050311;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      padding: 24px;
+    }
+
+    .card {
+      width: min(720px, 100%);
+      padding: 28px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.35);
+      text-align: center;
+    }
+
+    button {
+      cursor: pointer;
+      margin-top: 18px;
+      border: 0;
+      border-radius: 999px;
+      padding: 14px 22px;
+      background: #ff254f;
+      color: white;
+      font-weight: 800;
+      font-size: 15px;
+    }
+
+    .log {
+      margin-top: 18px;
+      text-align: left;
+      font-size: 13px;
+      line-height: 1.6;
+      opacity: 0.85;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="card">
+    <h1>Evaraos Icon Generator</h1>
+    <p>
+      This generates favicon, Apple Touch Icon, PWA icons, maskable icons, and favicon.ico
+      from <strong>/evaraos/assets/img/evaraos_logo.png</strong>.
+    </p>
+
+    <button id="generateBtn">Generate & Download Icons</button>
+
+    <div class="log" id="log">Ready.</div>
+  </main>
+
+  <script>
+    const SOURCE_LOGO = "/evaraos/assets/img/evaraos_logo.png";
+
+    const ICONS = [
+      { name: "favicon-16.png", size: 16, maskable: false },
+      { name: "favicon-32.png", size: 32, maskable: false },
+      { name: "apple-touch-icon.png", size: 180, maskable: false },
+      { name: "icon-192.png", size: 192, maskable: false },
+      { name: "icon-192-maskable.png", size: 192, maskable: true },
+      { name: "icon-512.png", size: 512, maskable: false },
+      { name: "icon-512-maskable.png", size: 512, maskable: true }
+    ];
+
+    const logEl = document.getElementById("log");
+    const btn = document.getElementById("generateBtn");
+
+    function log(message) {
+      logEl.textContent += "\n" + message;
+    }
+
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error("Could not load logo: " + src));
+        img.src = src + "?v=" + Date.now();
+      });
+    }
+
+    function drawIcon(img, size, maskable = false) {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      canvas.width = size;
+      canvas.height = size;
+
+      const bg = ctx.createRadialGradient(size * 0.5, size * 0.36, size * 0.08, size * 0.5, size * 0.5, size * 0.72);
+      bg.addColorStop(0, "#ff4f70");
+      bg.addColorStop(0.42, "#b91235");
+      bg.addColorStop(1, "#050311");
+
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, size, size);
+
+      ctx.save();
+      ctx.globalAlpha = 0.28;
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(size * 0.26, size * 0.18, size * 0.18, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      const padding = maskable ? size * 0.24 : size * 0.14;
+      const drawSize = size - padding * 2;
+
+      ctx.drawImage(img, padding, padding, drawSize, drawSize);
+
+      return canvas;
+    }
+
+    function canvasToBlob(canvas, type = "image/png") {
+      return new Promise((resolve) => {
+        canvas.toBlob((blob) => resolve(blob), type);
+      });
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    async function pngBytesFromCanvas(canvas) {
+      const blob = await canvasToBlob(canvas, "image/png");
+      return new Uint8Array(await blob.arrayBuffer());
+    }
+
+    function createIcoFromPngBytes(pngBytes) {
+      const headerSize = 6;
+      const entrySize = 16;
+      const imageOffset = headerSize + entrySize;
+      const buffer = new ArrayBuffer(imageOffset + pngBytes.length);
+      const view = new DataView(buffer);
+
+      view.setUint16(0, 0, true);
+      view.setUint16(2, 1, true);
+      view.setUint16(4, 1, true);
+
+      view.setUint8(6, 32);
+      view.setUint8(7, 32);
+      view.setUint8(8, 0);
+      view.setUint8(9, 0);
+      view.setUint16(10, 1, true);
+      view.setUint16(12, 32, true);
+      view.setUint32(14, pngBytes.length, true);
+      view.setUint32(18, imageOffset, true);
+
+      new Uint8Array(buffer, imageOffset).set(pngBytes);
+
+      return new Blob([buffer], { type: "image/x-icon" });
+    }
+
+    btn.addEventListener("click", async () => {
+      logEl.textContent = "Loading source logo...";
+
+      try {
+        const img = await loadImage(SOURCE_LOGO);
+        log("Logo loaded.");
+
+        for (const icon of ICONS) {
+          const canvas = drawIcon(img, icon.size, icon.maskable);
+          const blob = await canvasToBlob(canvas, "image/png");
+          downloadBlob(blob, icon.name);
+          log("Downloaded: " + icon.name);
+        }
+
+        const faviconCanvas = drawIcon(img, 32, false);
+        const faviconPngBytes = await pngBytesFromCanvas(faviconCanvas);
+        const icoBlob = createIcoFromPngBytes(faviconPngBytes);
+        downloadBlob(icoBlob, "favicon.ico");
+        log("Downloaded: favicon.ico");
+
+        log("");
+        log("Upload PNG files into: assets/img/");
+        log("Upload favicon.ico into repo root: favicon.ico");
+      } catch (error) {
+        console.error(error);
+        log("ERROR: " + error.message);
+      }
+    });
+  </script>
+</body>
+</html>
