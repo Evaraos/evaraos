@@ -1,84 +1,500 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Customer Dashboard | Evaraos</title>
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=26" />
-<link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=26" />
-<link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=26" />
-<link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=26" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <!-- Evaraos App Identity / PWA / Favicons -->
+  <link rel="manifest" href="/evaraos/manifest.json" />
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/evaraos/assets/img/favicon-16.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/evaraos/assets/img/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/evaraos/assets/img/icon-192.png" />
+  <link rel="shortcut icon" href="/evaraos/favicon.ico" />
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/evaraos/assets/img/apple-touch-icon.png" />
+  <link rel="apple-touch-icon" href="/evaraos/assets/img/apple-touch-icon.png" />
+
+  <meta name="theme-color" content="#050311" />
+  <meta name="msapplication-TileColor" content="#050311" />
+  <meta name="msapplication-TileImage" content="/evaraos/assets/img/icon-192.png" />
+
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Evaraos" />
+  <meta name="application-name" content="Evaraos" />
+
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin />
+  <link rel="dns-prefetch" href="https://www.gstatic.com" />
+  <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+  <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com" />
+  <link rel="preload" as="image" href="/evaraos/assets/img/evaraos_logo.png" />
+
+  <title>Customer Portal • Evaraos Inc</title>
+
+  <script>
+    (function () {
+      try {
+        var raw = localStorage.getItem("evaraos-appearance");
+        var theme = "dark";
+
+        if (raw) {
+          var appearance = JSON.parse(raw);
+
+          if (appearance.mode === "light") theme = "light";
+          else if (appearance.mode === "galaxy") theme = "galaxy";
+          else if (appearance.mode === "custom") {
+            if (appearance.baseFamily === "light") theme = "light";
+            else if (appearance.baseFamily === "galaxy") theme = "galaxy";
+            else theme = "dark";
+          }
+        }
+
+        document.documentElement.setAttribute("data-theme", theme);
+      } catch {
+        document.documentElement.setAttribute("data-theme", "dark");
+      }
+
+      document.documentElement.classList.add("boot-pending", "auth-pending");
+    })();
+  </script>
+
+  <style>
+    html,
+    body { background: #060814; }
+
+    html[data-theme="light"],
+    html[data-theme="light"] body { background: #f4f7f6; }
+
+    html[data-theme="galaxy"],
+    html[data-theme="galaxy"] body { background: #050311; }
+
+    html.boot-pending body {
+      margin: 0;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    html.auth-pending body,
+    body.auth-pending {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    body.dashboard-body {
+      margin: 0;
+      min-height: 100vh;
+      background: transparent;
+    }
+
+    body.app-loading #appRoot { visibility: hidden; }
+    body.app-ready #appRoot { visibility: visible; }
+
+    .customer-page-wrap {
+      width: min(1220px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 132px 0 56px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .customer-title-row,
+    .section-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .customer-kicker {
+      margin: 0 0 8px;
+      color: var(--theme-primary, #ff2f57);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .customer-title {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 4.5rem);
+      line-height: 0.95;
+      letter-spacing: -0.06em;
+    }
+
+    .customer-copy,
+    .muted {
+      color: var(--text-muted, rgba(255,255,255,0.68));
+      line-height: 1.65;
+    }
+
+    .customer-copy {
+      margin: 14px 0 0;
+      max-width: 760px;
+    }
+
+    .customer-avatar {
+      width: 78px;
+      height: 78px;
+      border-radius: 26px;
+      display: grid;
+      place-items: center;
+      font-size: 26px;
+      font-weight: 950;
+      background:
+        radial-gradient(circle at 28% 18%, rgba(255,255,255,0.55), transparent 34%),
+        linear-gradient(135deg, rgba(255,47,87,0.92), rgba(70,10,26,0.78));
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.28);
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 9px 13px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.08);
+      color: var(--text-primary, #fff);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+
+    .customer-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .customer-stat-card,
+    .service-card {
+      border-radius: 22px;
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+    }
+
+    .customer-stat-card h3,
+    .service-card h3 {
+      margin: 0 0 10px;
+    }
+
+    .customer-stat-card p {
+      margin: 0;
+      color: var(--text-muted, rgba(255,255,255,0.68));
+      overflow-wrap: anywhere;
+    }
+
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .service-status {
+      display: inline-flex;
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: rgba(45, 255, 159, 0.12);
+      border: 1px solid rgba(45, 255, 159, 0.24);
+      color: #70ffbd;
+      font-size: 12px;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+
+    .service-status.inactive {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.14);
+      color: var(--text-muted, rgba(255,255,255,0.68));
+    }
+
+    .service-title {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .service-meta {
+      margin-top: 10px;
+      color: var(--text-muted, rgba(255,255,255,0.68));
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    .empty-state {
+      border-radius: 20px;
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: var(--text-muted, rgba(255,255,255,0.68));
+      line-height: 1.6;
+    }
+
+    @media (max-width: 960px) {
+      .customer-grid,
+      .service-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .customer-page-wrap {
+        width: min(100% - 20px, 1220px);
+        padding-top: 112px;
+      }
+
+      .customer-grid,
+      .service-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=36" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=34" />
 </head>
-<body class="app-shell app-theme">
-  <div class="app-bg">
-    <div class="bg-orb bg-orb-1"></div>
-    <div class="bg-orb bg-orb-2"></div>
-    <div class="bg-grid"></div>
-  </div>
 
-  <header id="topbar" class="topbar"></header>
+<body class="dashboard-body auth-pending app-loading" data-route-guard="private">
+  <div id="universalNavRoot"></div>
+  <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
 
-  <div class="page-shell">
-    <aside id="sidebar" class="sidebar"></aside>
+  <div id="appRoot">
+    <div class="page-aurora"></div>
+    <div id="galaxyEngine" class="galaxy-engine" aria-hidden="true"></div>
+    <div class="page-grid-overlay"></div>
 
-    <main class="main-content">
-      <section class="glass-card aurora-card shine-border">
-        <div class="section-title-row">
+    <main class="customer-page-wrap">
+      <section class="glass-card aurora-card active-glow beam-target">
+        <div class="customer-title-row">
           <div>
-            <h1 id="welcomeTitle" style="margin:0;">Welcome</h1>
-            <p id="welcomeSubtext" class="muted" style="margin:8px 0 0;">
+            <p class="customer-kicker">CUSTOMER PORTAL</p>
+            <h1 class="customer-title" id="welcomeTitle">Welcome</h1>
+            <p class="customer-copy" id="welcomeSubtext">
               Loading your customer portal...
             </p>
+
+            <div style="margin-top:16px;">
+              <span class="chip" id="customerHandleChip">@user</span>
+              <span class="chip" id="customerStatusChip">Portal Active</span>
+            </div>
           </div>
-          <div class="chip" id="customerHandleChip">@user</div>
+
+          <div class="customer-avatar" id="customerAvatar">C</div>
         </div>
       </section>
 
-      <section class="grid grid-3">
-        <div class="card aurora-card shine-border">
+      <section class="customer-grid">
+        <article class="customer-stat-card aurora-card active-glow beam-target">
           <h3>Customer Name</h3>
           <p id="customerName">Loading...</p>
-        </div>
-        <div class="card aurora-card shine-border">
+        </article>
+
+        <article class="customer-stat-card aurora-card active-glow beam-target">
           <h3>Email</h3>
           <p id="customerEmail">Loading...</p>
-        </div>
-        <div class="card aurora-card shine-border">
+        </article>
+
+        <article class="customer-stat-card aurora-card active-glow beam-target">
           <h3>Company</h3>
           <p id="customerCompany">Loading...</p>
-        </div>
+        </article>
       </section>
 
-      <section class="glass-card aurora-card shine-border">
+      <section class="glass-card aurora-card active-glow beam-target" style="margin-top:18px;">
         <div class="section-title-row">
-          <h2 style="margin:0;">Your Services</h2>
+          <div>
+            <p class="customer-kicker">Services</p>
+            <h2 style="margin:0;">Your Services</h2>
+          </div>
+
+          <a href="/evaraos/settings.html" class="btn btn-theme-secondary beam-target">Open Settings</a>
         </div>
-        <div id="servicesList" class="service-grid" style="margin-top:18px;"></div>
+
+        <div id="servicesList" class="service-grid">
+          <div class="empty-state">Loading services...</div>
+        </div>
       </section>
     </main>
   </div>
 
+  <script src="/evaraos/assets/js/loader.js?v=35"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js?v=36"></script>
+  <script type="module" src="/evaraos/assets/js/theme.js?v=36"></script>
+  <script src="/evaraos/assets/js/theme-css-loader.js?v=1"></script>
+  <script src="/evaraos/assets/js/galaxy.js?v=2"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js?v=35"></script>
+  <script type="module" src="/evaraos/assets/js/nav.js?v=37"></script>
+
   <script type="module">
     import {
-      bindTopbar,
       requireAuth,
       loadCompany,
-      renderSidebar,
-      hasPermission
+      hasPermission,
+      fetchAllCollection
     } from "/evaraos/assets/js/app.js";
 
-    import {
-      updateOwnUsername,
-      changeOwnPassword,
-      buildUserIdentity,
-      updateOwnCustomerProfile,
-      fetchCustomerServices
-    } from "/evaraos/assets/js/auth.js";
+    function normalize(value = "") {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function escapeHtml(value = "") {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
 
     function initials(name) {
-      const parts = (name || "").trim().split(" ").filter(Boolean);
+      const parts = String(name || "").trim().split(" ").filter(Boolean);
       if (!parts.length) return "C";
-      return parts.slice(0, 2).map(part => part[0]?.toUpperCase()).join("");
+      return parts.slice(0, 2).map((part) => part[0]?.toUpperCase()).join("");
+    }
+
+    function displayName(user = {}) {
+      return user.name || user.fullName || user.displayName || user.username || user.email || "Customer";
+    }
+
+    function getHandle(user = {}) {
+      if (user.handle) return user.handle;
+      if (user.username) return `@${user.username}`;
+      if (user.email) return `@${String(user.email).split("@")[0]}`;
+      return "@user";
+    }
+
+    async function fetchCustomerServices(user = {}) {
+      const possibleCollections = ["customer_services", "services", "subscriptions", "jobs"];
+      const allMatches = [];
+
+      for (const collectionName of possibleCollections) {
+        try {
+          const docs = await fetchAllCollection(collectionName, { max: 500 });
+
+          const matches = docs.filter((item) => {
+            const possibleIds = [
+              item.customerId,
+              item.customerUid,
+              item.userId,
+              item.uid,
+              item.ownerId,
+              item.clientId
+            ].map(normalize);
+
+            const possibleEmails = [
+              item.customerEmail,
+              item.email,
+              item.clientEmail
+            ].map(normalize);
+
+            return (
+              possibleIds.includes(normalize(user.id)) ||
+              possibleIds.includes(normalize(user.uid)) ||
+              possibleEmails.includes(normalize(user.email))
+            );
+          });
+
+          matches.forEach((item) => {
+            allMatches.push({
+              ...item,
+              sourceCollection: collectionName
+            });
+          });
+        } catch (error) {
+          console.warn(`Could not load ${collectionName}:`, error);
+        }
+      }
+
+      return allMatches;
+    }
+
+    function serviceName(service = {}) {
+      return (
+        service.name ||
+        service.serviceName ||
+        service.title ||
+        service.type ||
+        service.jobType ||
+        "Customer Service"
+      );
+    }
+
+    function serviceBilling(service = {}) {
+      return (
+        service.billingType ||
+        service.billing ||
+        service.plan ||
+        service.frequency ||
+        service.subscriptionType ||
+        "Standard"
+      );
+    }
+
+    function servicePolicy(service = {}) {
+      return (
+        service.cancellationPolicy ||
+        service.policy ||
+        service.notes ||
+        service.description ||
+        "Service details will appear here once configured."
+      );
+    }
+
+    function serviceStatus(service = {}) {
+      return normalize(service.status || service.state || "active");
+    }
+
+    function renderServices(services = []) {
+      const root = document.getElementById("servicesList");
+      if (!root) return;
+
+      if (!services.length) {
+        root.innerHTML = `
+          <div class="empty-state">
+            No customer services are attached to this account yet. Once services, subscriptions,
+            or jobs are assigned to your profile, they will appear here.
+          </div>
+        `;
+        return;
+      }
+
+      root.innerHTML = services.map((service) => {
+        const status = serviceStatus(service);
+        const active = ["active", "scheduled", "booked", "in_progress", "completed"].includes(status);
+
+        return `
+          <article class="service-card aurora-card active-glow beam-target">
+            <div class="service-status ${active ? "" : "inactive"}">
+              ${active ? "Active Service" : "Inactive Service"}
+            </div>
+
+            <h3 class="service-title">${escapeHtml(serviceName(service))}</h3>
+
+            <div class="service-meta">
+              Billing: ${escapeHtml(serviceBilling(service))}<br>
+              Status: ${escapeHtml(status || "active")}<br>
+              Source: ${escapeHtml(service.sourceCollection || "services")}<br>
+              ${escapeHtml(servicePolicy(service))}
+            </div>
+          </article>
+        `;
+      }).join("");
     }
 
     requireAuth(async (user) => {
@@ -87,41 +503,22 @@
         return;
       }
 
-      await bindTopbar(user);
-
-      const sidebar = document.getElementById("sidebar");
-      if (sidebar) {
-        sidebar.innerHTML = renderSidebar(user.role, "customer_dashboard");
-      }
-
       const company = await loadCompany(user.companyId);
+      const name = displayName(user);
       const services = await fetchCustomerServices(user);
 
-      document.getElementById("welcomeTitle").textContent = `Welcome, ${user.name || "Customer"}`;
+      document.getElementById("welcomeTitle").textContent = `Welcome, ${name}`;
       document.getElementById("welcomeSubtext").textContent =
         `You are viewing your customer portal for ${company?.name || user.companyId || "Evaraos"}.`;
 
-      document.getElementById("customerHandleChip").textContent =
-        user.handle || `@${user.username || "user"}`;
-
-      document.getElementById("customerName").textContent = user.name || "Customer";
+      document.getElementById("customerHandleChip").textContent = getHandle(user);
+      document.getElementById("customerAvatar").textContent = initials(name);
+      document.getElementById("customerName").textContent = name;
       document.getElementById("customerEmail").textContent = user.email || "No email";
       document.getElementById("customerCompany").textContent = company?.name || user.companyId || "No company";
+      document.getElementById("customerStatusChip").textContent = `${services.length} Service${services.length === 1 ? "" : "s"}`;
 
-      document.getElementById("servicesList").innerHTML = services.map(service => `
-        <div class="service-card glass-card aurora-card shine-border">
-          <div>
-            <div class="service-status ${service.status !== "active" ? "inactive" : ""}">
-              ${service.status === "active" ? "Active Service" : "Inactive Service"}
-            </div>
-            <h3 class="service-title">${service.name}</h3>
-            <div class="service-meta">
-              Billing: ${service.billingType}<br>
-              ${service.cancellationPolicy}
-            </div>
-          </div>
-        </div>
-      `).join("");
+      renderServices(services);
     });
   </script>
 </body>
