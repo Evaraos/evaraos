@@ -1,0 +1,92 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function userRole() {
+      return signedIn() && userDoc().exists() ? userDoc().data.role : null;
+    }
+
+    function isOwnerOrAdmin() {
+      return signedIn() && userRole() in ['owner', 'super_admin', 'admin'];
+    }
+
+    function isManagerPlus() {
+      return signedIn() && userRole() in ['owner', 'super_admin', 'admin', 'manager', 'operations_coordinator'];
+    }
+
+    function ownsUserDoc(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    // User profiles must be readable enough for role checks and dashboards.
+    match /users/{userId} {
+      allow create: if signedIn() && (ownsUserDoc(userId) || isOwnerOrAdmin());
+      allow read: if signedIn() && (ownsUserDoc(userId) || isManagerPlus());
+      allow update: if signedIn() && (ownsUserDoc(userId) || isOwnerOrAdmin());
+      allow delete: if isOwnerOrAdmin() && !ownsUserDoc(userId);
+    }
+
+    // Companies are the parent records everything connects to.
+    match /companies/{companyId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isOwnerOrAdmin();
+    }
+
+    // History and audit are written by the client after app CRUD actions.
+    // Owners/admins can read all logs. Signed-in users may create logs from app actions.
+    match /history_timeline/{logId} {
+      allow read: if isOwnerOrAdmin();
+      allow create: if signedIn();
+      allow update, delete: if false;
+    }
+
+    match /audit_logs/{logId} {
+      allow read: if isOwnerOrAdmin();
+      allow create: if signedIn();
+      allow update, delete: if false;
+    }
+
+    match /leads/{leadId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isManagerPlus();
+    }
+
+    match /jobs/{jobId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isManagerPlus();
+    }
+
+    match /customer_services/{serviceId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isManagerPlus();
+    }
+
+    match /services/{serviceId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isManagerPlus();
+    }
+
+    match /subscriptions/{subscriptionId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isManagerPlus();
+    }
+
+    match /payments/{paymentId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isOwnerOrAdmin();
+    }
+
+    // Default locked down for anything not listed yet.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
