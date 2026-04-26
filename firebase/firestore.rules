@@ -6,27 +6,38 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function userDoc() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    function currentUserExists() {
+      return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
     }
 
     function userRole() {
-      return signedIn() && userDoc().exists() ? userDoc().data.role : null;
+      return currentUserExists()
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        : null;
     }
 
     function isOwnerOrAdmin() {
-      return signedIn() && userRole() in ['owner', 'super_admin', 'admin'];
+      return signedIn() && userRole() in [
+        'owner', 'Owner', 'OWNER',
+        'super_admin', 'Super Admin', 'SUPER_ADMIN',
+        'admin', 'Admin', 'ADMIN'
+      ];
     }
 
     function isManagerPlus() {
-      return signedIn() && userRole() in ['owner', 'super_admin', 'admin', 'manager', 'operations_coordinator'];
+      return signedIn() && userRole() in [
+        'owner', 'Owner', 'OWNER',
+        'super_admin', 'Super Admin', 'SUPER_ADMIN',
+        'admin', 'Admin', 'ADMIN',
+        'manager', 'Manager', 'MANAGER',
+        'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR'
+      ];
     }
 
     function ownsUserDoc(userId) {
       return signedIn() && request.auth.uid == userId;
     }
 
-    // User profiles must be readable enough for role checks and dashboards.
     match /users/{userId} {
       allow create: if signedIn() && (ownsUserDoc(userId) || isOwnerOrAdmin());
       allow read: if signedIn() && (ownsUserDoc(userId) || isManagerPlus());
@@ -34,14 +45,11 @@ service cloud.firestore {
       allow delete: if isOwnerOrAdmin() && !ownsUserDoc(userId);
     }
 
-    // Companies are the parent records everything connects to.
     match /companies/{companyId} {
       allow read: if signedIn();
       allow create, update, delete: if isOwnerOrAdmin();
     }
 
-    // History and audit are written by the client after app CRUD actions.
-    // Owners/admins can read all logs. Signed-in users may create logs from app actions.
     match /history_timeline/{logId} {
       allow read: if isOwnerOrAdmin();
       allow create: if signedIn();
@@ -84,7 +92,6 @@ service cloud.firestore {
       allow create, update, delete: if isOwnerOrAdmin();
     }
 
-    // Default locked down for anything not listed yet.
     match /{document=**} {
       allow read, write: if false;
     }
