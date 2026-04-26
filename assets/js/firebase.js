@@ -23,10 +23,10 @@ import {
   limit,
   getDoc,
   getDocs,
-  setDoc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
+  setDoc as firebaseSetDoc,
+  addDoc as firebaseAddDoc,
+  updateDoc as firebaseUpdateDoc,
+  deleteDoc as firebaseDeleteDoc,
   serverTimestamp,
   Timestamp,
   writeBatch,
@@ -48,6 +48,8 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
+const HISTORY_SKIP_COLLECTIONS = new Set(["audit_logs", "history_timeline"]);
+
 export {
   onAuthStateChanged,
   signOut,
@@ -66,10 +68,6 @@ export {
   limit,
   getDoc,
   getDocs,
-  setDoc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
   serverTimestamp,
   Timestamp,
   writeBatch,
@@ -110,7 +108,223 @@ function navigateWithLoader(path, options = {}, replace = false) {
   });
 }
 
-export function showGlobalLoader() {
+function topCollection(path = "") {
+  return String(path || "").split("/")[0] || "unknown";
+}
+
+function documentCollectionPath(docRef) {
+  return docRef?.parent?.path || String(docRef?.path || "").split("/").slice(0, -1).join("/");
+}
+
+function shouldRecordHistory(path = "") {
+  return !HISTORY_SKIP_COLLECTIONS.has(topCollection(path));
+}
+
+function safeHistoryValue(value) {
+  if (value === undefined) return null;
+  if (value === null) return null;
+
+  const type = typeof value;
+
+  if (type === "string" || type === "number" || type === "boolean") return value;
+  if (value instanceof Date) return value.toISOString();
+  if (value?.seconds && typeof value.seconds === "number") return value;
+  if (Array.isArray(value)) return value.slice(0, 30).map(safeHistoryValue);
+
+  if (type === "object") {
+    const constructorName = value?.constructor?.name || "Object";
+    if (constructorName !== "Object") return `[${constructorName}]`;
+
+    const output = {};
+    Object.entries(value).slice(0, 40).forEach(([key, child]) => {
+      output[key] = safeHistoryValue(child);
+    });
+    return output;
+  }
+
+  return String(value);
+}
+
+function safeSnapshot(data = {}) {
+  const output = {};
+  Object.entries(data || {}).forEach(([key, value]) => {
+    if (["password", "token", "secret", "apiKey", "privateKey"].includes(String(key).toLowerCase())) return;
+    output[key] = safeHistoryValue(value);
+  });
+  return output;
+}
+
+function targetNameFromData(data = {}, fallback = "") {
+  return (
+    data.displayName ||
+    data.fullName ||
+    data.name ||
+    data.companyName ||
+    data.brand ||
+    data.title ||
+    data.email ||
+    fallback ||
+    "Record"
+  );
+}
+
+function actorSnapshot() {
+  const profile = getSavedUserProfile() || {};
+  const user = auth.currentUser || currentUser || {};
+
+  return {
+    uid: user.uid || profile.uid || profile.id || "",
+    email: user.email || profile.email || "",
+    name:
+      profile.displayName ||
+      profile.fullName ||
+      profile.name ||
+      profile.username ||
+      user.displayName ||
+      user.email ||
+      "System",
+    role: profile.role || getSavedUserRole() || "guest"
+  };
+}
+
+async function recordFirestoreHistory({ action, collectionPath, documentPath, documentId, data = {}, extra = {} } = {}) {
+  try {
+    if (!collectionPath || !shouldRecordHistory(collectionPath)) return;
+
+    const entityType = topCollection(collectionPath);
+    const actor = actorSnapshot();
+    const snapshot = safeSnapshot(data || {});
+    const changedFields = Object.keys(data || {}).filter((field) => field !== "updatedAt" && field !== "createdAt");
+    const targetName = targetNameFromData(snapshot, documentId);
+
+    const timelinePayload = {
+      action,
+      eventType: action,
+      entityType,
+      collectionPath,
+      documentPath: documentPath || "",
+      documentId: documentId || "",
+      targetId: documentId || "",
+      targetName,
+      targetDisplayName: targetName,
+      targetCollection: entityType,
+      companyId: snapshot.companyId || (entityType === "companies" ? documentId : ""),
+      companyName: snapshot.companyName || snapshot.name || "",
+      actorUserId: actor.uid,
+      actorEmail: actor.email,
+      actorName: actor.name,
+      actorRole: actor.role,
+      changedFields,
+      snapshot,
+      notes: `${action} ${entityType} record`,
+      createdAt: serverTimestamp(),
+      ...extra
+    };
+
+    const auditPayload = {
+      action,
+      actorUserId: actor.uid,
+      actorEmail: actor.email,
+      actorName: actor.name,
+      actorRole: actor.role,
+      targetUserId: entityType === "users" ? documentId || snapshot.uid || "" : "",
+      targetUserName: entityType === "users" ? targetName : "",
+      targetCompanyId: entityType === "companies" ? documentId || "" : snapshot.companyId || "",
+      targetCompanyName: entityType === "companies" ? targetName : snapshot.companyName || "",
+      targetCollection: entityType,
+      targetDocumentId: documentId || "",
+      changedFields,
+      notes: `${action} ${entityType} record`,
+      createdAt: serverTimestamp(),
+      ...extra
+    };
+
+    await Promise.all([
+      firebaseAddDoc(collection(db, "history_timeline"), timelinePayload),
+      firebaseAddDoc(collection(db, "audit_logs"), auditPayload)
+    ]);
+  } catch (error) {
+    console.warn("History timeline write skipped:", error);
+  }
+}
+
+export async function addDoc(collectionRef, data) {
+  const createdRef = await firebaseAddDoc(collectionRef, data);
+
+  await recordFirestoreHistory({
+    action: `${topCollection(collectionRef?.path)}_created`,
+    collectionPath: collectionRef?.path || "",
+    documentPath: createdRef?.path || "",
+    documentId: createdRef?.id || "",
+    data,
+    extra: {
+      operation: "create"
+    }
+  });
+
+  return createdRef;
+}
+
+export async function setDoc(docRef, data, options) {
+  if (options) {
+    await firebaseSetDoc(docRef, data, options);
+  } else {
+    await firebaseSetDoc(docRef, data);
+  }
+
+  const collectionPath = documentCollectionPath(docRef);
+
+  await recordFirestoreHistory({
+    action: options?.merge ? `${topCollection(collectionPath)}_merged` : `${topCollection(collectionPath)}_set`,
+    collectionPath,
+    documentPath: docRef?.path || "",
+    documentId: docRef?.id || "",
+    data,
+    extra: {
+      operation: options?.merge ? "merge" : "set"
+    }
+  });
+}
+
+export async function updateDoc(docRef, data) {
+  await firebaseUpdateDoc(docRef, data);
+
+  const collectionPath = documentCollectionPath(docRef);
+
+  await recordFirestoreHistory({
+    action: `${topCollection(collectionPath)}_updated`,
+    collectionPath,
+    documentPath: docRef?.path || "",
+    documentId: docRef?.id || "",
+    data,
+    extra: {
+      operation: "update"
+    }
+  });
+}
+
+export async function deleteDoc(docRef) {
+  const collectionPath = documentCollectionPath(docRef);
+  const documentPath = docRef?.path || "";
+  const documentId = docRef?.id || "";
+
+  await firebaseDeleteDoc(docRef);
+
+  await recordFirestoreHistory({
+    action: `${topCollection(collectionPath)}_deleted`,
+    collectionPath,
+    documentPath,
+    documentId,
+    data: {
+      id: documentId
+    },
+    extra: {
+      operation: "delete"
+    }
+  });
+}
+
+export async function showGlobalLoader() {
   if (window.EvaraLoader?.beginNavigationLoad) {
     window.EvaraLoader.beginNavigationLoad({
       title: "Loading Evaraos",
