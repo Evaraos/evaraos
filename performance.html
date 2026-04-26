@@ -1,42 +1,302 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>User Performance | Evaraos</title>
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=26" />
-<link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=26" />
-<link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=26" />
-<link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=26" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <!-- Evaraos App Identity / PWA / Favicons -->
+  <link rel="manifest" href="/evaraos/manifest.json" />
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/evaraos/assets/img/favicon-16.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/evaraos/assets/img/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/evaraos/assets/img/icon-192.png" />
+  <link rel="shortcut icon" href="/evaraos/favicon.ico" />
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/evaraos/assets/img/apple-touch-icon.png" />
+  <link rel="apple-touch-icon" href="/evaraos/assets/img/apple-touch-icon.png" />
+
+  <meta name="theme-color" content="#050311" />
+  <meta name="msapplication-TileColor" content="#050311" />
+  <meta name="msapplication-TileImage" content="/evaraos/assets/img/icon-192.png" />
+
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Evaraos" />
+  <meta name="application-name" content="Evaraos" />
+
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin />
+  <link rel="dns-prefetch" href="https://www.gstatic.com" />
+  <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+  <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com" />
+  <link rel="preload" as="image" href="/evaraos/assets/img/evaraos_logo.png" />
+
+  <title>Performance • Evaraos Inc</title>
+
+  <script>
+    (function () {
+      try {
+        var raw = localStorage.getItem("evaraos-appearance");
+        var theme = "dark";
+
+        if (raw) {
+          var appearance = JSON.parse(raw);
+
+          if (appearance.mode === "light") theme = "light";
+          else if (appearance.mode === "galaxy") theme = "galaxy";
+          else if (appearance.mode === "custom") {
+            if (appearance.baseFamily === "light") theme = "light";
+            else if (appearance.baseFamily === "galaxy") theme = "galaxy";
+            else theme = "dark";
+          }
+        }
+
+        document.documentElement.setAttribute("data-theme", theme);
+      } catch {
+        document.documentElement.setAttribute("data-theme", "dark");
+      }
+
+      document.documentElement.classList.add("boot-pending", "auth-pending");
+    })();
+  </script>
+
+  <style>
+    html,
+    body { background: #060814; }
+
+    html[data-theme="light"],
+    html[data-theme="light"] body { background: #f4f7f6; }
+
+    html[data-theme="galaxy"],
+    html[data-theme="galaxy"] body { background: #050311; }
+
+    html.boot-pending body {
+      margin: 0;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    html.auth-pending body,
+    body.auth-pending {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    body.dashboard-body {
+      margin: 0;
+      min-height: 100vh;
+      background: transparent;
+    }
+
+    body.app-loading #appRoot { visibility: hidden; }
+    body.app-ready #appRoot { visibility: visible; }
+
+    .legacy-page-wrap {
+      width: min(1220px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 132px 0 56px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .legacy-title-row,
+    .section-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .legacy-kicker {
+      margin: 0 0 8px;
+      color: var(--theme-primary, #ff2f57);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .legacy-title {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 4.5rem);
+      line-height: 0.95;
+      letter-spacing: -0.06em;
+    }
+
+    .legacy-copy,
+    .muted {
+      color: var(--text-muted, rgba(255,255,255,0.68));
+      line-height: 1.65;
+    }
+
+    .legacy-copy {
+      margin: 14px 0 0;
+      max-width: 760px;
+    }
+
+    .content-root {
+      display: grid;
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text-muted, rgba(255,255,255,0.68));
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.08);
+      color: var(--text-primary, #fff);
+      padding: 13px 14px;
+      outline: none;
+    }
+
+    .field input::placeholder {
+      color: rgba(255,255,255,0.42);
+    }
+
+    .field select option {
+      color: #111;
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .quick-links-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .quick-link-card,
+    .card {
+      border-radius: 22px;
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 8px 12px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.08);
+      color: var(--text-primary, #fff);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+
+    @media (max-width: 960px) {
+      .grid-3,
+      .quick-links-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .legacy-page-wrap {
+        width: min(100% - 20px, 1220px);
+        padding-top: 112px;
+      }
+
+      .form-grid,
+      .grid-3,
+      .quick-links-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .top-actions {
+        justify-content: flex-start;
+      }
+    }
+  </style>
+
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=36" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=34" />
 </head>
-<body class="app-shell app-theme">
-  <div class="app-bg">
-    <div class="bg-orb bg-orb-1"></div>
-    <div class="bg-orb bg-orb-2"></div>
-    <div class="bg-grid"></div>
-  </div>
 
-  <header id="topbar" class="topbar"></header>
+<body class="dashboard-body auth-pending app-loading" data-route-guard="private">
+  <div id="universalNavRoot"></div>
+  <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
 
-  <div class="page-shell">
-    <aside id="sidebar" class="sidebar"></aside>
+  <div id="appRoot">
+    <div class="page-aurora"></div>
+    <div id="galaxyEngine" class="galaxy-engine" aria-hidden="true"></div>
+    <div class="page-grid-overlay"></div>
 
-    <main class="main-content">
-      <section class="glass-card aurora-card shine-border">
-        <div class="section-title-row">
+    <main class="legacy-page-wrap">
+      <section class="glass-card aurora-card active-glow beam-target">
+        <div class="legacy-title-row">
           <div>
-            <h1 style="margin:0;">Performance</h1>
-            <p class="muted" style="margin:8px 0 0;">
-              Review team performance, productivity visibility, and role-based output.
+            <p class="legacy-kicker">PERFORMANCE CENTER</p>
+            <h1 class="legacy-title">Performance</h1>
+            <p class="legacy-copy">
+              Review team performance, productivity visibility, role-based output,
+              lead conversion, job completion, and tracked revenue.
             </p>
           </div>
+
+          <a href="/evaraos/sales_reps.html" class="btn btn-theme-secondary beam-target">Open Sales Reps</a>
         </div>
       </section>
 
-      <main id="performanceRoot" class="content-root"></main>
+      <main id="performanceRoot" class="content-root">
+        <section class="glass-card aurora-card active-glow beam-target">
+          Loading performance...
+        </section>
+      </main>
     </main>
   </div>
 
-  <script type="module" src="/evaraos/assets/js/performance.js"></script>
+  <script src="/evaraos/assets/js/loader.js?v=35"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js?v=36"></script>
+  <script type="module" src="/evaraos/assets/js/theme.js?v=36"></script>
+  <script src="/evaraos/assets/js/theme-css-loader.js?v=1"></script>
+  <script src="/evaraos/assets/js/galaxy.js?v=2"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js?v=35"></script>
+  <script type="module" src="/evaraos/assets/js/nav.js?v=37"></script>
+  <script type="module" src="/evaraos/assets/js/performance.js?v=1"></script>
 </body>
 </html>
