@@ -16,8 +16,21 @@ import {
 import {
   getFirestore,
   doc,
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
   getDoc,
-  setDoc
+  getDocs,
+  setDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp,
+  Timestamp,
+  writeBatch,
+  runTransaction
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -36,10 +49,31 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 export {
+  onAuthStateChanged,
+  signOut,
+  setPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
-  updateProfile
+  updateProfile,
+  doc,
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  getDoc,
+  getDocs,
+  setDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp,
+  Timestamp,
+  writeBatch,
+  runTransaction
 };
 
 const STORAGE_KEYS = {
@@ -90,7 +124,7 @@ export function showGlobalLoader() {
 }
 
 export function hideGlobalLoader() {
-  document.documentElement.classList.remove("auth-pending");
+  document.documentElement.classList.remove("auth-pending", "boot-pending");
   document.body?.classList.remove("auth-pending", "app-loading");
   document.body?.classList.add("app-ready");
 
@@ -167,14 +201,30 @@ export function clearSavedUserProfile() {
   removeStorage(STORAGE_KEYS.user);
 }
 
+export function normalizeRole(role = "") {
+  const value = String(role || "").trim().toLowerCase();
+
+  if (value === "tech") return "technician";
+  if (value === "sales_rep") return "sales";
+  if (value === "super_admin") return "owner";
+  if (value === "operations_coordinator") return "manager";
+
+  return value || "customer";
+}
+
 export function roleLabelFromRole(role = "") {
   const value = String(role || "").trim().toLowerCase();
 
   if (value === "owner") return "Executive Access";
+  if (value === "super_admin") return "Executive Access";
   if (value === "admin") return "Admin Access";
   if (value === "manager") return "Manager Access";
+  if (value === "operations_coordinator") return "Operations Access";
   if (value === "sales") return "Sales Access";
+  if (value === "sales_rep") return "Sales Access";
   if (value === "technician") return "Technician Access";
+  if (value === "tech") return "Technician Access";
+  if (value === "hr") return "HR Access";
   if (value === "customer") return "Customer Access";
 
   return "Customer Access";
@@ -184,6 +234,7 @@ export function applyUserToUi(userData = {}) {
   const displayName =
     userData.displayName ||
     userData.fullName ||
+    userData.name ||
     userData.username ||
     userData.email ||
     "User";
@@ -205,6 +256,10 @@ export function applyUserToUi(userData = {}) {
     el.textContent = initial;
   });
 
+  document.querySelectorAll("[data-user-role]").forEach((el) => {
+    el.textContent = roleText;
+  });
+
   const dashboardAvatar = document.getElementById("dashboardAvatar");
   const dashboardAvatarLarge = document.getElementById("dashboardAvatarLarge");
   const dashboardProfileName = document.getElementById("dashboardProfileName");
@@ -221,11 +276,16 @@ export function syncUserSession(user, role = "customer", extras = {}) {
 
   const profile = {
     uid: user.uid || "",
+    id: user.uid || "",
     email: user.email || "",
     displayName: extras.displayName || user.displayName || user.email || "",
     fullName: extras.fullName || extras.displayName || user.displayName || "",
+    name: extras.name || extras.fullName || extras.displayName || user.displayName || "",
     username: extras.username || "",
-    role: role || "customer"
+    role: role || "customer",
+    companyId: extras.companyId || "",
+    approvalStatus: extras.approvalStatus || "",
+    status: extras.status || "active"
   };
 
   saveUserRole(profile.role);
@@ -423,6 +483,50 @@ export async function getUserThemePreferences() {
   }
 }
 
+function getDisplayNameFromFirestoreData(data = {}, user = {}) {
+  return (
+    data.displayName ||
+    data.fullName ||
+    data.name ||
+    data.username ||
+    user.displayName ||
+    user.email ||
+    "User"
+  );
+}
+
+async function ensureUserDocument(user) {
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
+
+  if (!snap.exists()) {
+    await setDoc(
+      userRef,
+      {
+        uid: user.uid,
+        id: user.uid,
+        email: user.email || "",
+        displayName: user.displayName || "",
+        fullName: user.displayName || "",
+        name: user.displayName || "",
+        username: "",
+        usernameLower: "",
+        role: getSavedUserRole() || "customer",
+        status: "active",
+        approvalStatus: "approved",
+        companyId: "",
+        themePreferences: null,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
+  }
+
+  const freshSnap = await getDoc(userRef);
+  return freshSnap.exists() ? freshSnap.data() || {} : {};
+}
+
 function startGlobalAuthSync() {
   if (globalAuthSyncStarted) return;
   globalAuthSyncStarted = true;
@@ -446,39 +550,18 @@ function startGlobalAuthSync() {
     }
 
     try {
-      const userRef = doc(db, "users", user.uid);
-      const snap = await getDoc(userRef);
-
-      if (!snap.exists()) {
-        await setDoc(
-          userRef,
-          {
-            uid: user.uid,
-            email: user.email || "",
-            displayName: user.displayName || "",
-            fullName: user.displayName || "",
-            username: "",
-            usernameLower: "",
-            role: getSavedUserRole() || "customer",
-            themePreferences: null
-          },
-          { merge: true }
-        );
-      }
-
-      const freshSnap = await getDoc(userRef);
-      const data = freshSnap.exists() ? freshSnap.data() || {} : {};
+      const data = await ensureUserDocument(user);
       const role = data.role || getSavedUserRole() || "customer";
+      const displayName = getDisplayNameFromFirestoreData(data, user);
 
       syncUserSession(user, role, {
-        displayName:
-          data.displayName ||
-          data.fullName ||
-          user.displayName ||
-          user.email ||
-          "User",
-        fullName: data.fullName || data.displayName || user.displayName || "",
-        username: data.username || ""
+        displayName,
+        fullName: data.fullName || data.displayName || data.name || user.displayName || "",
+        name: data.name || data.fullName || data.displayName || user.displayName || "",
+        username: data.username || "",
+        companyId: data.companyId || "",
+        approvalStatus: data.approvalStatus || "",
+        status: data.status || "active"
       });
     } catch (error) {
       console.warn("Background auth sync delayed:", error);
