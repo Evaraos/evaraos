@@ -6,10 +6,7 @@ import {
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
   updateProfile,
-  syncUserSession
-} from "./firebase.js";
-
-import {
+  syncUserSession,
   doc,
   getDoc,
   setDoc,
@@ -17,8 +14,9 @@ import {
   query,
   where,
   getDocs,
-  limit
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  limit,
+  serverTimestamp
+} from "./firebase.js";
 
 function byId(id) {
   return document.getElementById(id);
@@ -66,6 +64,65 @@ function normalizeUsername(value) {
   return String(value || "").trim().toLowerCase();
 }
 
+function companyName(company = {}) {
+  return company.name || company.companyName || company.brand || company.title || "Untitled Company";
+}
+
+function companyStatus(company = {}) {
+  return String(company.status || company.health || company.state || "active").trim().toLowerCase();
+}
+
+async function loadCompaniesForSignup() {
+  try {
+    const snap = await getDocs(collection(db, "companies"));
+    return snap.docs
+      .map((companyDoc) => ({ id: companyDoc.id, ...companyDoc.data() }))
+      .sort((a, b) => companyName(a).localeCompare(companyName(b)));
+  } catch (error) {
+    console.warn("Could not load companies for signup:", error);
+    return [];
+  }
+}
+
+function injectSignupCompanySelector(companies = []) {
+  const form = byId("signupForm");
+  const usernameInput = byId("signupUsername");
+
+  if (!form || !usernameInput || byId("signupCompanyId")) return;
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "form-group";
+  wrapper.innerHTML = `
+    <label class="field-label" for="signupCompanyId">Company / Workspace</label>
+    <div class="input-shell aurora-card beam-target">
+      <select id="signupCompanyId" name="companyId" class="input">
+        <option value="">No company yet / Evaraos owner workspace</option>
+        ${companies.map((company) => {
+          const id = String(company.id || "").replace(/"/g, "&quot;");
+          const name = String(companyName(company)).replace(/</g, "&lt;").replace(/>/g, "&gt;");
+          const status = companyStatus(company);
+          return `<option value="${id}">${name}${status ? ` • ${status}` : ""}</option>`;
+        }).join("")}
+      </select>
+    </div>
+  `;
+
+  const usernameGroup = usernameInput.closest(".form-group");
+  const parentGrid = usernameGroup?.parentElement;
+
+  if (parentGrid?.classList.contains("form-grid-2")) {
+    parentGrid.appendChild(wrapper);
+  } else {
+    form.insertBefore(wrapper, form.querySelector(".login-actions-row"));
+  }
+}
+
+function getSelectedSignupCompany(companies = []) {
+  const companyId = String(byId("signupCompanyId")?.value || "").trim();
+  if (!companyId) return null;
+  return companies.find((company) => String(company.id) === companyId) || null;
+}
+
 async function backfillLegacyUserDoc(user) {
   if (!user?.uid) return { role: "owner", username: "" };
 
@@ -76,15 +133,22 @@ async function backfillLegacyUserDoc(user) {
     const fallbackName = user.displayName || user.email || "User";
     const userDoc = {
       uid: user.uid,
+      id: user.uid,
       email: user.email || "",
       username: "",
       usernameLower: "",
       displayName: fallbackName,
       fullName: fallbackName,
+      name: fallbackName,
       role: "owner",
       phone: "",
       bio: "",
-      createdAt: new Date().toISOString()
+      status: "active",
+      approvalStatus: "approved",
+      companyId: "",
+      companyName: "",
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
     };
     await setDoc(userRef, userDoc, { merge: true });
     return userDoc;
@@ -94,12 +158,19 @@ async function backfillLegacyUserDoc(user) {
   const username = String(data.username || "").trim();
   const patch = {};
 
+  if (!data.id) patch.id = user.uid;
+  if (!data.uid) patch.uid = user.uid;
+
   if (!data.displayName && data.fullName) {
     patch.displayName = data.fullName;
   }
 
   if (!data.fullName && data.displayName) {
     patch.fullName = data.displayName;
+  }
+
+  if (!data.name && (data.displayName || data.fullName)) {
+    patch.name = data.displayName || data.fullName;
   }
 
   if (username && !data.usernameLower) {
@@ -109,6 +180,10 @@ async function backfillLegacyUserDoc(user) {
   if (!data.role) {
     patch.role = "owner";
   }
+
+  if (!data.status) patch.status = "active";
+  if (!data.approvalStatus) patch.approvalStatus = "approved";
+  if (!data.updatedAt) patch.updatedAt = serverTimestamp();
 
   if (Object.keys(patch).length) {
     await setDoc(userRef, patch, { merge: true });
@@ -187,9 +262,13 @@ async function handleLoginSubmit(event) {
     const role = String(userData.role || "owner").toLowerCase();
 
     syncUserSession(user, role, {
-      displayName: userData.displayName || userData.fullName || user.displayName || user.email || "User",
-      fullName: userData.fullName || userData.displayName || user.displayName || "",
-      username: userData.username || ""
+      displayName: userData.displayName || userData.fullName || userData.name || user.displayName || user.email || "User",
+      fullName: userData.fullName || userData.displayName || userData.name || user.displayName || "",
+      name: userData.name || userData.fullName || userData.displayName || user.displayName || "",
+      username: userData.username || "",
+      companyId: userData.companyId || "",
+      approvalStatus: userData.approvalStatus || "approved",
+      status: userData.status || "active"
     });
 
     setMessage(messageEl, "Login successful. Redirecting...", "success");
@@ -257,6 +336,11 @@ async function handleSignupSubmit(event) {
       return;
     }
 
+    const companies = window.EvaraSignupCompanies || [];
+    const selectedCompany = getSelectedSignupCompany(companies);
+    const selectedCompanyId = selectedCompany?.id || "";
+    const selectedCompanyName = selectedCompany ? companyName(selectedCompany) : "";
+
     const result = await createUserWithEmailAndPassword(auth, email, password);
     const user = result.user;
 
@@ -266,15 +350,24 @@ async function handleSignupSubmit(event) {
 
     const userDoc = {
       uid: user.uid,
+      id: user.uid,
       email,
       username,
       usernameLower,
       displayName: fullName,
       fullName,
+      name: fullName,
       role: "owner",
       phone: "",
       bio: "",
-      createdAt: new Date().toISOString()
+      status: "active",
+      approvalStatus: "approved",
+      companyId: selectedCompanyId,
+      companyName: selectedCompanyName,
+      companySlug: selectedCompany?.slug || "",
+      companyCategory: selectedCompany?.category || selectedCompany?.industry || "",
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
     };
 
     await setDoc(doc(db, "users", user.uid), userDoc, { merge: true });
@@ -282,7 +375,11 @@ async function handleSignupSubmit(event) {
     syncUserSession(user, "owner", {
       displayName: fullName,
       fullName,
-      username
+      name: fullName,
+      username,
+      companyId: selectedCompanyId,
+      approvalStatus: "approved",
+      status: "active"
     });
 
     setMessage(messageEl, "Account created successfully. Redirecting...", "success");
@@ -292,7 +389,7 @@ async function handleSignupSubmit(event) {
     });
   } catch (error) {
     console.error("Signup failed:", error);
-    setMessage(messageEl, "Could not create account. Try again.", "error");
+    setMessage(messageEl, error.message || "Could not create account. Try again.", "error");
   } finally {
     setFormBusy(form, false, "Creating Account...", "Create Account");
   }
@@ -332,12 +429,17 @@ function initLoginPage() {
   form.addEventListener("submit", handleLoginSubmit);
 }
 
-function initSignupPage() {
+async function initSignupPage() {
   const form = byId("signupForm");
   if (!form) return;
 
   bindPasswordToggle("signupPasswordToggle", "signupPassword");
   bindPasswordToggle("signupPasswordConfirmToggle", "signupPasswordConfirm");
+
+  const companies = await loadCompaniesForSignup();
+  window.EvaraSignupCompanies = companies;
+  injectSignupCompanySelector(companies);
+
   form.addEventListener("submit", handleSignupSubmit);
 }
 
