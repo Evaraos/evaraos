@@ -3,17 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Evaraos Liquid Glass Icon Generator</title>
+  <title>Evaraos HD Icon Studio</title>
 
   <style>
     :root {
       --bg: #050311;
-      --panel: rgba(255, 255, 255, 0.09);
-      --panel-border: rgba(255, 255, 255, 0.18);
       --text: #ffffff;
       --muted: rgba(255, 255, 255, 0.72);
+      --panel: rgba(255, 255, 255, 0.10);
+      --line: rgba(255, 255, 255, 0.16);
       --red: #ff2f57;
-      --red-dark: #8f0c29;
     }
 
     * { box-sizing: border-box; }
@@ -21,43 +20,46 @@
     body {
       margin: 0;
       min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background:
-        radial-gradient(circle at 18% 16%, rgba(255, 47, 87, 0.26), transparent 28%),
-        radial-gradient(circle at 82% 12%, rgba(255, 255, 255, 0.08), transparent 22%),
-        radial-gradient(circle at 50% 84%, rgba(126, 86, 255, 0.14), transparent 34%),
-        linear-gradient(180deg, #050311 0%, #100414 52%, #210713 100%);
       color: var(--text);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      padding: 24px;
+      background:
+        radial-gradient(circle at 16% 14%, rgba(255, 58, 92, 0.28), transparent 28%),
+        radial-gradient(circle at 86% 12%, rgba(255, 255, 255, 0.10), transparent 22%),
+        radial-gradient(circle at 52% 84%, rgba(150, 110, 255, 0.16), transparent 34%),
+        linear-gradient(180deg, #050311 0%, #100414 50%, #210713 100%);
+      padding: 22px;
+    }
+
+    .shell {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      display: grid;
+      gap: 18px;
     }
 
     .card {
-      width: min(980px, 100%);
-      padding: 28px;
       border-radius: 30px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.055));
-      border: 1px solid var(--panel-border);
-      box-shadow:
-        0 36px 110px rgba(0, 0, 0, 0.42),
-        inset 0 1px 0 rgba(255,255,255,0.18);
+      background: linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.055));
+      border: 1px solid var(--line);
+      box-shadow: 0 34px 100px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.18);
       backdrop-filter: blur(24px) saturate(160%);
       -webkit-backdrop-filter: blur(24px) saturate(160%);
+      overflow: hidden;
     }
 
-    .top {
+    .hero {
       display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
+      grid-template-columns: 1.05fr 0.95fr;
       gap: 24px;
+      padding: 28px;
       align-items: center;
     }
 
     h1 {
       margin: 0 0 10px;
-      font-size: clamp(2rem, 5vw, 4.3rem);
-      line-height: 0.94;
-      letter-spacing: -0.07em;
+      font-size: clamp(2.1rem, 5.4vw, 5rem);
+      letter-spacing: -0.075em;
+      line-height: 0.92;
     }
 
     p {
@@ -67,146 +69,196 @@
       font-size: 15px;
     }
 
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
+    code {
+      color: #fff;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 2px 7px;
+      border-radius: 9px;
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
       margin-top: 22px;
     }
 
+    .mode-btn,
     button {
       cursor: pointer;
-      border: 1px solid rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.17);
       border-radius: 999px;
-      padding: 14px 20px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.08));
+      padding: 13px 15px;
       color: white;
       font-weight: 900;
-      font-size: 14px;
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.28),
-        0 14px 32px rgba(0,0,0,0.22);
+      font-size: 13px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.20), rgba(255,255,255,0.07));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 12px 28px rgba(0,0,0,0.22);
       backdrop-filter: blur(16px) saturate(160%);
       -webkit-backdrop-filter: blur(16px) saturate(160%);
     }
 
+    .mode-btn.active,
     button.primary {
-      border-color: rgba(255, 106, 134, 0.62);
-      background: linear-gradient(180deg, #ff476d, #c81038 55%, #8f0c29);
+      border-color: rgba(255, 124, 148, 0.70);
+      background: linear-gradient(180deg, #ff5778, #d4143f 52%, #8f0c29);
     }
 
-    .preview-wrap {
-      display: grid;
-      gap: 14px;
-      justify-items: center;
-    }
-
-    .preview-main {
-      width: 220px;
-      height: 220px;
-      border-radius: 48px;
-      overflow: hidden;
-      box-shadow:
-        0 28px 80px rgba(0,0,0,0.45),
-        0 0 0 1px rgba(255,255,255,0.16);
-      background: rgba(255,255,255,0.08);
-    }
-
-    .preview-main canvas,
-    .preview-tile canvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
-
-    .preview-row {
+    .actions {
       display: flex;
-      gap: 10px;
       flex-wrap: wrap;
-      justify-content: center;
+      gap: 12px;
       margin-top: 18px;
     }
 
-    .preview-tile {
+    .preview-area {
+      display: grid;
+      gap: 12px;
+      justify-items: center;
+    }
+
+    .preview-frame {
+      width: min(320px, 76vw);
+      aspect-ratio: 1 / 1;
+      border-radius: 74px;
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.03)),
+        repeating-conic-gradient(from 45deg, rgba(255,255,255,0.06) 0 25%, rgba(0,0,0,0.08) 0 50%) 50% / 32px 32px;
+      box-shadow: 0 30px 90px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.16);
+    }
+
+    .preview-frame canvas,
+    .tile canvas { display: block; width: 100%; height: 100%; }
+
+    .tile-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      padding: 0 24px 22px;
+    }
+
+    .tile {
       width: 64px;
       height: 64px;
       border-radius: 16px;
       overflow: hidden;
-      background: rgba(255,255,255,0.08);
-      box-shadow: 0 12px 28px rgba(0,0,0,0.26);
+      background: repeating-conic-gradient(from 45deg, rgba(255,255,255,0.08) 0 25%, rgba(0,0,0,0.14) 0 50%) 50% / 18px 18px;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.12);
+    }
+
+    .settings {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      padding: 12px;
+      border-radius: 18px;
+      background: rgba(0,0,0,0.18);
+      border: 1px solid rgba(255,255,255,0.10);
+      color: rgba(255,255,255,0.78);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    input[type="range"] { width: 100%; }
+
+    .note,
+    .log {
+      margin-top: 16px;
+      padding: 15px 16px;
+      border-radius: 18px;
+      background: rgba(0,0,0,0.24);
+      border: 1px solid rgba(255,255,255,0.10);
+      color: rgba(255,255,255,0.78);
+      font-size: 13px;
+      line-height: 1.55;
     }
 
     .log {
-      margin-top: 22px;
-      padding: 16px;
-      border-radius: 18px;
-      background: rgba(0,0,0,0.22);
-      border: 1px solid rgba(255,255,255,0.10);
-      text-align: left;
-      font-size: 13px;
-      line-height: 1.6;
-      color: rgba(255,255,255,0.82);
       white-space: pre-wrap;
       max-height: 220px;
       overflow: auto;
+      margin: 0 24px 24px;
     }
 
-    .note {
-      margin-top: 18px;
-      padding: 14px 16px;
-      border-radius: 18px;
-      background: rgba(255, 47, 87, 0.11);
-      border: 1px solid rgba(255, 111, 140, 0.20);
-      color: rgba(255,255,255,0.78);
-      font-size: 13px;
-    }
-
-    code {
-      color: #fff;
-      background: rgba(255,255,255,0.10);
-      padding: 2px 6px;
-      border-radius: 8px;
-    }
-
-    @media (max-width: 820px) {
-      .top { grid-template-columns: 1fr; }
-      .preview-main { width: 190px; height: 190px; border-radius: 42px; }
+    @media (max-width: 880px) {
+      .hero { grid-template-columns: 1fr; }
+      .mode-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .settings { grid-template-columns: 1fr; }
+      .preview-frame { border-radius: 56px; }
     }
   </style>
 </head>
 
 <body>
-  <main class="card">
-    <div class="top">
-      <section>
-        <h1>Liquid Glass Icons</h1>
+  <main class="shell">
+    <section class="card hero">
+      <div>
+        <h1>HD Icon Studio</h1>
         <p>
-          This version keeps the real Evaraos logo centered, trims transparent padding automatically,
-          preserves the logo aspect ratio, and wraps it in a cleaner Liquid Glass app tile.
+          Generate sharper Evaraos app icons in Liquid Red, Light Glass, Dark Glass, Galaxy, and See-Through Glass.
+          The canvas renders oversized first, then downsamples for cleaner edges.
         </p>
+
+        <div class="mode-grid" id="modeGrid"></div>
+
+        <div class="settings">
+          <label>
+            Logo size
+            <input id="logoScale" type="range" min="52" max="88" value="72" />
+          </label>
+          <label>
+            Glass strength
+            <input id="glassStrength" type="range" min="0" max="100" value="72" />
+          </label>
+          <label>
+            HD render scale
+            <input id="renderScale" type="range" min="2" max="5" value="4" />
+          </label>
+        </div>
 
         <div class="actions">
           <button id="previewBtn">Refresh Preview</button>
-          <button id="generateBtn" class="primary">Generate & Download Icons</button>
+          <button id="generateBtn" class="primary">Download Selected Mode</button>
+          <button id="generateAllBtn">Download All Variants</button>
         </div>
 
         <div class="note">
-          Upload PNG files into <code>assets/img/</code>. Upload <code>favicon.ico</code> into the repo root.
+          For your live manifest, upload the selected-mode files without prefixes into <code>assets/img/</code> and upload
+          <code>favicon.ico</code> into the repo root. Variant downloads are prefixed for future light/dark/galaxy systems.
         </div>
-      </section>
+      </div>
 
-      <section class="preview-wrap" aria-label="Icon preview">
-        <div class="preview-main" id="previewMain"></div>
-        <p>512px preview. iPhone will round the corners automatically.</p>
-      </section>
-    </div>
+      <div class="preview-area">
+        <div class="preview-frame" id="previewMain"></div>
+        <p id="previewLabel">Preview</p>
+      </div>
+    </section>
 
-    <div class="preview-row" id="previewRow"></div>
-    <div class="log" id="log">Ready. Click Refresh Preview first.</div>
+    <section class="card">
+      <div class="tile-row" id="previewRow"></div>
+      <div class="log" id="log">Ready.</div>
+    </section>
   </main>
 
   <script>
     const SOURCE_LOGO = "/evaraos/assets/img/evaraos_logo.png";
+
+    const MODES = {
+      liquid: { label: "Liquid Red", transparent: false },
+      light: { label: "Light Glass", transparent: false },
+      dark: { label: "Dark Glass", transparent: false },
+      galaxy: { label: "Galaxy", transparent: false },
+      clear: { label: "See-Through Glass", transparent: true }
+    };
 
     const ICONS = [
       { name: "favicon-16.png", size: 16, maskable: false, favicon: true },
@@ -218,21 +270,34 @@
       { name: "icon-512-maskable.png", size: 512, maskable: true }
     ];
 
-    const logEl = document.getElementById("log");
+    const modeGrid = document.getElementById("modeGrid");
     const previewMain = document.getElementById("previewMain");
     const previewRow = document.getElementById("previewRow");
-    const previewBtn = document.getElementById("previewBtn");
-    const generateBtn = document.getElementById("generateBtn");
+    const previewLabel = document.getElementById("previewLabel");
+    const logEl = document.getElementById("log");
+    const logoScaleInput = document.getElementById("logoScale");
+    const glassStrengthInput = document.getElementById("glassStrength");
+    const renderScaleInput = document.getElementById("renderScale");
 
+    let activeMode = "liquid";
     let cachedLogoCanvas = null;
 
-    function log(message) {
-      logEl.textContent += "\n" + message;
-      logEl.scrollTop = logEl.scrollHeight;
-    }
+    function resetLog(message = "Ready.") { logEl.textContent = message; }
+    function log(message) { logEl.textContent += "\n" + message; logEl.scrollTop = logEl.scrollHeight; }
 
-    function resetLog(message = "Ready.") {
-      logEl.textContent = message;
+    function setupModes() {
+      modeGrid.innerHTML = Object.entries(MODES).map(([key, mode]) => `
+        <button type="button" class="mode-btn ${key === activeMode ? "active" : ""}" data-mode="${key}">${mode.label}</button>
+      `).join("");
+
+      modeGrid.querySelectorAll("[data-mode]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          activeMode = btn.dataset.mode;
+          modeGrid.querySelectorAll(".mode-btn").forEach((item) => item.classList.remove("active"));
+          btn.classList.add("active");
+          refreshPreview();
+        });
+      });
     }
 
     function loadImage(src) {
@@ -262,37 +327,23 @@
 
     function getTrimmedLogoCanvas(img) {
       const source = document.createElement("canvas");
-      const sourceCtx = source.getContext("2d", { willReadFrequently: true });
-
+      const ctx = source.getContext("2d", { willReadFrequently: true });
       source.width = img.naturalWidth || img.width;
       source.height = img.naturalHeight || img.height;
-      sourceCtx.clearRect(0, 0, source.width, source.height);
-      sourceCtx.drawImage(img, 0, 0);
+      ctx.clearRect(0, 0, source.width, source.height);
+      ctx.drawImage(img, 0, 0);
 
-      let imageData;
-      try {
-        imageData = sourceCtx.getImageData(0, 0, source.width, source.height);
-      } catch {
-        return source;
-      }
+      let data;
+      try { data = ctx.getImageData(0, 0, source.width, source.height).data; }
+      catch { return source; }
 
-      const data = imageData.data;
-      let minX = source.width;
-      let minY = source.height;
-      let maxX = 0;
-      let maxY = 0;
-      let found = false;
-
+      let minX = source.width, minY = source.height, maxX = 0, maxY = 0, found = false;
       for (let y = 0; y < source.height; y++) {
         for (let x = 0; x < source.width; x++) {
-          const index = (y * source.width + x) * 4;
-          const alpha = data[index + 3];
-          const red = data[index];
-          const green = data[index + 1];
-          const blue = data[index + 2];
-          const visible = alpha > 12 && (red + green + blue > 18);
-
-          if (visible) {
+          const i = (y * source.width + x) * 4;
+          const a = data[i + 3];
+          const brightness = data[i] + data[i + 1] + data[i + 2];
+          if (a > 10 && brightness > 18) {
             found = true;
             if (x < minX) minX = x;
             if (y < minY) minY = y;
@@ -303,169 +354,232 @@
       }
 
       if (!found) return source;
-
-      const pad = Math.ceil(Math.max(maxX - minX, maxY - minY) * 0.045);
+      const pad = Math.ceil(Math.max(maxX - minX, maxY - minY) * 0.035);
       minX = Math.max(0, minX - pad);
       minY = Math.max(0, minY - pad);
       maxX = Math.min(source.width - 1, maxX + pad);
       maxY = Math.min(source.height - 1, maxY + pad);
 
-      const trimWidth = maxX - minX + 1;
-      const trimHeight = maxY - minY + 1;
-
-      const trimmed = document.createElement("canvas");
-      const trimmedCtx = trimmed.getContext("2d");
-      trimmed.width = trimWidth;
-      trimmed.height = trimHeight;
-      trimmedCtx.drawImage(source, minX, minY, trimWidth, trimHeight, 0, 0, trimWidth, trimHeight);
-
-      return trimmed;
+      const w = maxX - minX + 1;
+      const h = maxY - minY + 1;
+      const out = document.createElement("canvas");
+      out.width = w;
+      out.height = h;
+      out.getContext("2d").drawImage(source, minX, minY, w, h, 0, 0, w, h);
+      return out;
     }
 
-    function drawLiquidBackground(ctx, size) {
-      const radius = size * 0.215;
+    async function getLogoCanvas() {
+      if (cachedLogoCanvas) return cachedLogoCanvas;
+      const img = await loadImage(SOURCE_LOGO);
+      cachedLogoCanvas = getTrimmedLogoCanvas(img);
+      return cachedLogoCanvas;
+    }
 
-      const base = ctx.createLinearGradient(0, 0, size, size);
-      base.addColorStop(0, "#ff6f87");
-      base.addColorStop(0.22, "#ff254f");
-      base.addColorStop(0.52, "#b80f35");
-      base.addColorStop(0.78, "#320812");
-      base.addColorStop(1, "#050311");
-      ctx.fillStyle = base;
-      ctx.fillRect(0, 0, size, size);
+    function addNoise(ctx, size, alpha) {
+      const step = Math.max(3, Math.floor(size / 96));
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      for (let y = 0; y < size; y += step) {
+        for (let x = 0; x < size; x += step) {
+          const v = Math.random() * 255;
+          ctx.fillStyle = `rgba(${v},${v},${v},0.13)`;
+          ctx.fillRect(x, y, step, step);
+        }
+      }
+      ctx.restore();
+    }
+
+    function modeGradient(ctx, size, mode) {
+      if (mode === "light") {
+        const g = ctx.createLinearGradient(0, 0, size, size);
+        g.addColorStop(0, "#ffffff");
+        g.addColorStop(0.38, "#f4f6fb");
+        g.addColorStop(0.68, "#ffdce4");
+        g.addColorStop(1, "#b41334");
+        return g;
+      }
+
+      if (mode === "dark") {
+        const g = ctx.createLinearGradient(0, 0, size, size);
+        g.addColorStop(0, "#2c3445");
+        g.addColorStop(0.34, "#0a0c14");
+        g.addColorStop(0.72, "#790d25");
+        g.addColorStop(1, "#020206");
+        return g;
+      }
+
+      if (mode === "galaxy") {
+        const g = ctx.createLinearGradient(0, 0, size, size);
+        g.addColorStop(0, "#8f70ff");
+        g.addColorStop(0.26, "#351766");
+        g.addColorStop(0.52, "#120624");
+        g.addColorStop(0.76, "#d02975");
+        g.addColorStop(1, "#050311");
+        return g;
+      }
+
+      if (mode === "clear") {
+        const g = ctx.createLinearGradient(0, 0, size, size);
+        g.addColorStop(0, "rgba(255,255,255,0.40)");
+        g.addColorStop(0.38, "rgba(255,255,255,0.18)");
+        g.addColorStop(0.7, "rgba(255,47,87,0.18)");
+        g.addColorStop(1, "rgba(255,255,255,0.06)");
+        return g;
+      }
+
+      const g = ctx.createLinearGradient(0, 0, size, size);
+      g.addColorStop(0, "#ff879a");
+      g.addColorStop(0.2, "#ff2f57");
+      g.addColorStop(0.48, "#b70f34");
+      g.addColorStop(0.76, "#360812");
+      g.addColorStop(1, "#050311");
+      return g;
+    }
+
+    function drawBackground(ctx, size, mode, glass) {
+      const isClear = mode === "clear";
+      ctx.clearRect(0, 0, size, size);
+
+      if (!isClear) {
+        ctx.fillStyle = modeGradient(ctx, size, mode);
+        ctx.fillRect(0, 0, size, size);
+      } else {
+        ctx.fillStyle = modeGradient(ctx, size, mode);
+        ctx.fillRect(0, 0, size, size);
+      }
 
       ctx.save();
-      ctx.globalAlpha = 0.9;
-      ctx.filter = `blur(${Math.max(2, size * 0.035)}px)`;
+      ctx.filter = `blur(${Math.max(6, size * 0.045)}px)`;
+      ctx.globalAlpha = 0.82;
 
-      let glow = ctx.createRadialGradient(size * 0.24, size * 0.18, 0, size * 0.24, size * 0.18, size * 0.46);
-      glow.addColorStop(0, "rgba(255,255,255,0.72)");
-      glow.addColorStop(0.38, "rgba(255,158,178,0.20)");
+      let glow = ctx.createRadialGradient(size * 0.24, size * 0.16, 0, size * 0.24, size * 0.16, size * 0.46);
+      glow.addColorStop(0, mode === "light" ? "rgba(255,255,255,0.86)" : "rgba(255,255,255,0.72)");
+      glow.addColorStop(0.42, mode === "galaxy" ? "rgba(180,110,255,0.24)" : "rgba(255,150,170,0.22)");
       glow.addColorStop(1, "rgba(255,255,255,0)");
       ctx.fillStyle = glow;
       ctx.fillRect(0, 0, size, size);
 
-      glow = ctx.createRadialGradient(size * 0.84, size * 0.18, 0, size * 0.84, size * 0.18, size * 0.42);
-      glow.addColorStop(0, "rgba(255,220,230,0.34)");
+      glow = ctx.createRadialGradient(size * 0.85, size * 0.18, 0, size * 0.85, size * 0.18, size * 0.42);
+      glow.addColorStop(0, mode === "galaxy" ? "rgba(255,80,180,0.38)" : "rgba(255,255,255,0.30)");
       glow.addColorStop(1, "rgba(255,255,255,0)");
       ctx.fillStyle = glow;
       ctx.fillRect(0, 0, size, size);
 
-      glow = ctx.createRadialGradient(size * 0.5, size * 0.96, 0, size * 0.5, size * 0.96, size * 0.52);
-      glow.addColorStop(0, "rgba(0,0,0,0.36)");
+      glow = ctx.createRadialGradient(size * 0.5, size * 0.98, 0, size * 0.5, size * 0.98, size * 0.58);
+      glow.addColorStop(0, isClear ? "rgba(255,255,255,0.09)" : "rgba(0,0,0,0.34)");
       glow.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = glow;
       ctx.fillRect(0, 0, size, size);
       ctx.restore();
 
+      if (mode === "galaxy") {
+        ctx.save();
+        ctx.globalAlpha = 0.5;
+        for (let i = 0; i < Math.max(28, size / 7); i++) {
+          const x = Math.random() * size;
+          const y = Math.random() * size;
+          const r = Math.random() * Math.max(1, size * 0.004) + 0.6;
+          ctx.fillStyle = Math.random() > 0.5 ? "rgba(255,255,255,0.74)" : "rgba(220,170,255,0.58)";
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
       ctx.save();
-      ctx.globalAlpha = 0.22;
-      ctx.strokeStyle = "rgba(255,255,255,0.55)";
-      ctx.lineWidth = Math.max(1, size * 0.012);
+      ctx.globalAlpha = 0.14 + glass * 0.003;
+      ctx.strokeStyle = mode === "light" ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.62)";
+      ctx.lineWidth = Math.max(1, size * 0.011);
       for (let i = 0; i < 3; i++) {
         ctx.beginPath();
-        ctx.ellipse(
-          size * 0.5,
-          size * 0.52,
-          size * (0.34 + i * 0.06),
-          size * (0.18 + i * 0.035),
-          -0.45,
-          0,
-          Math.PI * 2
-        );
+        ctx.ellipse(size * 0.5, size * 0.52, size * (0.32 + i * 0.065), size * (0.17 + i * 0.038), -0.44, 0, Math.PI * 2);
         ctx.stroke();
       }
       ctx.restore();
 
       ctx.save();
-      ctx.globalAlpha = 0.56;
-      const shine = ctx.createLinearGradient(0, 0, size, size * 0.72);
-      shine.addColorStop(0, "rgba(255,255,255,0.58)");
-      shine.addColorStop(0.22, "rgba(255,255,255,0.18)");
-      shine.addColorStop(0.46, "rgba(255,255,255,0.035)");
+      ctx.globalAlpha = 0.28 + glass * 0.004;
+      const shine = ctx.createLinearGradient(0, 0, size, size * 0.74);
+      shine.addColorStop(0, "rgba(255,255,255,0.72)");
+      shine.addColorStop(0.24, "rgba(255,255,255,0.20)");
+      shine.addColorStop(0.54, "rgba(255,255,255,0.035)");
       shine.addColorStop(1, "rgba(255,255,255,0)");
       ctx.fillStyle = shine;
       ctx.beginPath();
       ctx.moveTo(0, 0);
       ctx.lineTo(size, 0);
-      ctx.lineTo(size, size * 0.22);
-      ctx.bezierCurveTo(size * 0.72, size * 0.36, size * 0.28, size * 0.40, 0, size * 0.25);
+      ctx.lineTo(size, size * 0.25);
+      ctx.bezierCurveTo(size * 0.72, size * 0.40, size * 0.26, size * 0.42, 0, size * 0.27);
       ctx.closePath();
       ctx.fill();
       ctx.restore();
 
-      ctx.save();
-      ctx.strokeStyle = "rgba(255,255,255,0.34)";
-      ctx.lineWidth = Math.max(1, size * 0.012);
-      roundedRect(ctx, size * 0.025, size * 0.025, size * 0.95, size * 0.95, radius);
-      ctx.stroke();
+      if (!isClear) addNoise(ctx, size, 0.032);
 
-      ctx.strokeStyle = "rgba(0,0,0,0.18)";
-      ctx.lineWidth = Math.max(1, size * 0.018);
-      roundedRect(ctx, size * 0.018, size * 0.018, size * 0.964, size * 0.964, radius * 1.08);
+      ctx.save();
+      ctx.strokeStyle = mode === "light" ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.35)";
+      ctx.lineWidth = Math.max(1, size * 0.011);
+      roundedRect(ctx, size * 0.024, size * 0.024, size * 0.952, size * 0.952, size * 0.22);
       ctx.stroke();
       ctx.restore();
     }
 
-    function drawLogoContain(ctx, logoCanvas, size, maskable = false, favicon = false) {
-      const maxLogo = favicon
-        ? size * 0.86
-        : maskable
-          ? size * 0.58
-          : size * 0.72;
+    function drawLogo(ctx, logo, size, options) {
+      const scalePercent = Number(logoScaleInput.value || 72) / 100;
+      const maxLogo = options.favicon ? size * 0.86 : options.maskable ? size * Math.min(scalePercent, 0.62) : size * scalePercent;
+      const aspect = logo.width / logo.height;
+      let w = maxLogo;
+      let h = maxLogo;
+      if (aspect >= 1) h = maxLogo / aspect;
+      else w = maxLogo * aspect;
 
-      const aspect = logoCanvas.width / logoCanvas.height;
-      let drawW = maxLogo;
-      let drawH = maxLogo;
-
-      if (aspect >= 1) {
-        drawH = maxLogo / aspect;
-      } else {
-        drawW = maxLogo * aspect;
-      }
-
-      const x = (size - drawW) / 2;
-      const y = (size - drawH) / 2;
+      const x = (size - w) / 2;
+      const y = (size - h) / 2;
 
       ctx.save();
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
-
-      ctx.shadowColor = "rgba(0,0,0,0.44)";
-      ctx.shadowBlur = Math.max(2, size * 0.045);
-      ctx.shadowOffsetY = Math.max(1, size * 0.018);
-      ctx.drawImage(logoCanvas, x, y, drawW, drawH);
-
+      ctx.shadowColor = options.mode === "light" ? "rgba(100,0,20,0.22)" : "rgba(0,0,0,0.50)";
+      ctx.shadowBlur = Math.max(2, size * 0.038);
+      ctx.shadowOffsetY = Math.max(1, size * 0.017);
+      ctx.drawImage(logo, x, y, w, h);
       ctx.restore();
     }
 
-    function drawIcon(logoCanvas, size, maskable = false, favicon = false) {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
+    function makeIconCanvas(logo, finalSize, options = {}) {
+      const scale = options.hd ? Number(renderScaleInput.value || 4) : 1;
+      const workSize = finalSize * scale;
+      const work = document.createElement("canvas");
+      const ctx = work.getContext("2d", { alpha: true });
+      work.width = workSize;
+      work.height = workSize;
 
-      canvas.width = size;
-      canvas.height = size;
+      const mode = options.mode || activeMode;
+      const glass = Number(glassStrengthInput.value || 72);
+      drawBackground(ctx, workSize, mode, glass);
+      drawLogo(ctx, logo, workSize, { ...options, mode });
 
-      drawLiquidBackground(ctx, size);
-      drawLogoContain(ctx, logoCanvas, size, maskable, favicon);
+      if (scale === 1) return work;
 
-      ctx.save();
-      ctx.globalAlpha = favicon ? 0.18 : 0.32;
-      const finalShine = ctx.createLinearGradient(0, 0, size, size);
-      finalShine.addColorStop(0, "rgba(255,255,255,0.42)");
-      finalShine.addColorStop(0.35, "rgba(255,255,255,0.05)");
-      finalShine.addColorStop(1, "rgba(255,255,255,0)");
-      ctx.fillStyle = finalShine;
-      ctx.fillRect(0, 0, size, size);
-      ctx.restore();
-
-      return canvas;
+      const out = document.createElement("canvas");
+      out.width = finalSize;
+      out.height = finalSize;
+      const outCtx = out.getContext("2d", { alpha: true });
+      outCtx.imageSmoothingEnabled = true;
+      outCtx.imageSmoothingQuality = "high";
+      outCtx.drawImage(work, 0, 0, finalSize, finalSize);
+      return out;
     }
 
     function canvasToBlob(canvas, type = "image/png") {
-      return new Promise((resolve) => {
-        canvas.toBlob((blob) => resolve(blob), type);
-      });
+      return new Promise((resolve) => canvas.toBlob(resolve, type));
+    }
+
+    async function pngBytes(canvas) {
+      const blob = await canvasToBlob(canvas, "image/png");
+      return new Uint8Array(await blob.arrayBuffer());
     }
 
     function downloadBlob(blob, filename) {
@@ -476,121 +590,102 @@
       document.body.appendChild(a);
       a.click();
       a.remove();
-
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
-    async function pngBytesFromCanvas(canvas) {
-      const blob = await canvasToBlob(canvas, "image/png");
-      return new Uint8Array(await blob.arrayBuffer());
-    }
-
     function createIcoFromPngEntries(entries) {
-      const headerSize = 6;
+      const header = 6;
       const entrySize = 16;
-      const imageOffset = headerSize + entrySize * entries.length;
-      const totalImageBytes = entries.reduce((sum, entry) => sum + entry.bytes.length, 0);
-      const buffer = new ArrayBuffer(imageOffset + totalImageBytes);
+      const imageOffset = header + entrySize * entries.length;
+      const total = entries.reduce((sum, e) => sum + e.bytes.length, 0);
+      const buffer = new ArrayBuffer(imageOffset + total);
       const view = new DataView(buffer);
       const bytes = new Uint8Array(buffer);
-
       view.setUint16(0, 0, true);
       view.setUint16(2, 1, true);
       view.setUint16(4, entries.length, true);
-
       let offset = imageOffset;
-
       entries.forEach((entry, index) => {
-        const entryStart = headerSize + entrySize * index;
-        const sizeValue = entry.size >= 256 ? 0 : entry.size;
-
-        view.setUint8(entryStart + 0, sizeValue);
-        view.setUint8(entryStart + 1, sizeValue);
-        view.setUint8(entryStart + 2, 0);
-        view.setUint8(entryStart + 3, 0);
-        view.setUint16(entryStart + 4, 1, true);
-        view.setUint16(entryStart + 6, 32, true);
-        view.setUint32(entryStart + 8, entry.bytes.length, true);
-        view.setUint32(entryStart + 12, offset, true);
-
+        const start = header + entrySize * index;
+        const s = entry.size >= 256 ? 0 : entry.size;
+        view.setUint8(start, s);
+        view.setUint8(start + 1, s);
+        view.setUint8(start + 2, 0);
+        view.setUint8(start + 3, 0);
+        view.setUint16(start + 4, 1, true);
+        view.setUint16(start + 6, 32, true);
+        view.setUint32(start + 8, entry.bytes.length, true);
+        view.setUint32(start + 12, offset, true);
         bytes.set(entry.bytes, offset);
         offset += entry.bytes.length;
       });
-
       return new Blob([buffer], { type: "image/x-icon" });
     }
 
-    async function getLogoCanvas() {
-      if (cachedLogoCanvas) return cachedLogoCanvas;
-
-      const img = await loadImage(SOURCE_LOGO);
-      cachedLogoCanvas = getTrimmedLogoCanvas(img);
-      return cachedLogoCanvas;
-    }
-
     async function refreshPreview() {
-      resetLog("Loading logo and building preview...");
-
-      const logoCanvas = await getLogoCanvas();
-      log(`Logo trimmed to ${logoCanvas.width}x${logoCanvas.height}.`);
+      resetLog("Building HD preview...");
+      const logo = await getLogoCanvas();
+      log(`Logo source trimmed to ${logo.width}x${logo.height}.`);
+      log("Note: If the original logo file is low-res, the glass tile can be HD but the logo itself needs a higher-res source PNG/SVG for true HD.");
 
       previewMain.innerHTML = "";
       previewRow.innerHTML = "";
+      previewLabel.textContent = MODES[activeMode].label + " preview";
 
-      const mainCanvas = drawIcon(logoCanvas, 512, false, false);
-      previewMain.appendChild(mainCanvas);
+      previewMain.appendChild(makeIconCanvas(logo, 512, { mode: activeMode, hd: true }));
 
       [16, 32, 180, 192, 512].forEach((size) => {
         const tile = document.createElement("div");
-        tile.className = "preview-tile";
-        const canvas = drawIcon(logoCanvas, size, false, size <= 32);
-        tile.appendChild(canvas);
+        tile.className = "tile";
+        tile.title = size + "px";
+        tile.appendChild(makeIconCanvas(logo, size, { mode: activeMode, favicon: size <= 32, hd: true }));
         previewRow.appendChild(tile);
       });
 
-      log("Preview ready. If it looks good, generate downloads.");
+      log("Preview ready.");
     }
 
-    async function generateIcons() {
-      resetLog("Generating Liquid Glass icon files...");
-
-      const logoCanvas = await getLogoCanvas();
+    async function downloadMode(mode, prefixed = false) {
+      const logo = await getLogoCanvas();
+      const prefix = prefixed ? `${mode}-` : "";
 
       for (const icon of ICONS) {
-        const canvas = drawIcon(logoCanvas, icon.size, icon.maskable, icon.favicon);
+        const canvas = makeIconCanvas(logo, icon.size, { mode, maskable: icon.maskable, favicon: icon.favicon, hd: true });
         const blob = await canvasToBlob(canvas, "image/png");
-        downloadBlob(blob, icon.name);
-        log("Downloaded: " + icon.name);
+        downloadBlob(blob, prefix + icon.name);
+        log("Downloaded: " + prefix + icon.name);
       }
 
-      const favicon16 = await pngBytesFromCanvas(drawIcon(logoCanvas, 16, false, true));
-      const favicon32 = await pngBytesFromCanvas(drawIcon(logoCanvas, 32, false, true));
-      const icoBlob = createIcoFromPngEntries([
-        { size: 16, bytes: favicon16 },
-        { size: 32, bytes: favicon32 }
-      ]);
-
-      downloadBlob(icoBlob, "favicon.ico");
-      log("Downloaded: favicon.ico");
-      log("");
-      log("Upload PNG files into: assets/img/");
-      log("Upload favicon.ico into repo root.");
+      const icoEntries = [];
+      for (const s of [16, 32, 48]) {
+        icoEntries.push({ size: s, bytes: await pngBytes(makeIconCanvas(logo, s, { mode, favicon: true, hd: true })) });
+      }
+      downloadBlob(createIcoFromPngEntries(icoEntries), prefix + "favicon.ico");
+      log("Downloaded: " + prefix + "favicon.ico");
     }
 
-    previewBtn.addEventListener("click", () => {
-      refreshPreview().catch((error) => {
-        console.error(error);
-        resetLog("ERROR: " + error.message);
-      });
-    });
+    async function generateSelected() {
+      resetLog("Downloading selected mode: " + MODES[activeMode].label);
+      await downloadMode(activeMode, false);
+      log("");
+      log("Use these non-prefixed files for the current live manifest.");
+    }
 
-    generateBtn.addEventListener("click", () => {
-      generateIcons().catch((error) => {
-        console.error(error);
-        resetLog("ERROR: " + error.message);
-      });
-    });
+    async function generateAll() {
+      resetLog("Downloading all variants...");
+      for (const mode of Object.keys(MODES)) {
+        await downloadMode(mode, true);
+      }
+      log("");
+      log("All variants downloaded with prefixes for future theme-aware icon work.");
+    }
 
+    document.getElementById("previewBtn").addEventListener("click", () => refreshPreview().catch((e) => resetLog("ERROR: " + e.message)));
+    document.getElementById("generateBtn").addEventListener("click", () => generateSelected().catch((e) => resetLog("ERROR: " + e.message)));
+    document.getElementById("generateAllBtn").addEventListener("click", () => generateAll().catch((e) => resetLog("ERROR: " + e.message)));
+    [logoScaleInput, glassStrengthInput, renderScaleInput].forEach((input) => input.addEventListener("input", () => refreshPreview().catch(() => {})));
+
+    setupModes();
     refreshPreview().catch(() => {});
   </script>
 </body>
