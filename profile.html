@@ -4,271 +4,362 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
-  <!-- Security / cache control -->
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
+  <!-- Evaraos App Identity / PWA / Favicons -->
+  <link rel="manifest" href="/evaraos/manifest.json" />
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/evaraos/assets/img/favicon-16.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/evaraos/assets/img/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/evaraos/assets/img/icon-192.png" />
+  <link rel="shortcut icon" href="/evaraos/favicon.ico" />
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/evaraos/assets/img/apple-touch-icon.png" />
+  <link rel="apple-touch-icon" href="/evaraos/assets/img/apple-touch-icon.png" />
+
+  <meta name="theme-color" content="#050311" />
+  <meta name="msapplication-TileColor" content="#050311" />
+  <meta name="msapplication-TileImage" content="/evaraos/assets/img/icon-192.png" />
+
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Evaraos" />
+  <meta name="application-name" content="Evaraos" />
+
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin />
+  <link rel="dns-prefetch" href="https://www.gstatic.com" />
+  <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+  <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com" />
+  <link rel="preload" as="image" href="/evaraos/assets/img/evaraos_logo.png" />
+
   <title>Profile • Evaraos Inc</title>
-  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=26" />
-  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=26" />
-  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=26" />
-  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=26" />
 
   <script>
-    document.documentElement.classList.add("auth-pending");
+    (function () {
+      try {
+        var raw = localStorage.getItem("evaraos-appearance");
+        var theme = "dark";
+
+        if (raw) {
+          var appearance = JSON.parse(raw);
+
+          if (appearance.mode === "light") theme = "light";
+          else if (appearance.mode === "galaxy") theme = "galaxy";
+          else if (appearance.mode === "custom") {
+            if (appearance.baseFamily === "light") theme = "light";
+            else if (appearance.baseFamily === "galaxy") theme = "galaxy";
+            else theme = "dark";
+          }
+        }
+
+        document.documentElement.setAttribute("data-theme", theme);
+      } catch {
+        document.documentElement.setAttribute("data-theme", "dark");
+      }
+
+      document.documentElement.classList.add("boot-pending", "auth-pending");
+    })();
   </script>
 
   <style>
+    html,
+    body { background: #060814; }
+
+    html[data-theme="light"],
+    html[data-theme="light"] body { background: #f4f7f6; }
+
+    html[data-theme="galaxy"],
+    html[data-theme="galaxy"] body { background: #050311; }
+
+    html.boot-pending body {
+      margin: 0;
+      overflow: hidden;
+      touch-action: none;
+    }
+
     html.auth-pending body,
     body.auth-pending {
       opacity: 0;
       pointer-events: none;
     }
+
+    body.dashboard-body {
+      margin: 0;
+      min-height: 100vh;
+      background: transparent;
+    }
+
+    body.app-loading #appRoot { visibility: hidden; }
+    body.app-ready #appRoot { visibility: visible; }
   </style>
+
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=36" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=34" />
 </head>
-<body class="dashboard-body auth-pending" data-route-guard="private">
-  <div class="page-grid-overlay"></div>
-  <div id="universalNav"></div>
 
-  <div class="dashboard-shell">
-    <aside class="dashboard-sidebar" id="dashboardSidebar">
-      <div class="dashboard-sidebar-inner glass-shell aurora-card">
-        <div class="dashboard-sidebar-head">
-          <p class="dashboard-sidebar-eyebrow">Account Navigation</p>
-          <h2 id="dashboardOverviewTitle">Profile Overview</h2>
-        </div>
+<body class="dashboard-body auth-pending app-loading" data-route-guard="private">
+  <div id="universalNavRoot"></div>
+  <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
 
-        <nav class="dashboard-sidebar-nav" aria-label="Profile sections">
-          <a href="#profileSection" class="dashboard-nav-link active aurora-card">
-            <span class="dashboard-nav-icon">◉</span>
-            <span>Profile</span>
-          </a>
+  <div id="appRoot">
+    <div class="page-aurora"></div>
+    <div id="galaxyEngine" class="galaxy-engine" aria-hidden="true"></div>
+    <div class="page-grid-overlay"></div>
 
-          <a href="#contactSection" class="dashboard-nav-link aurora-card">
-            <span class="dashboard-nav-icon">◎</span>
-            <span>Contact</span>
-          </a>
-
-          <a href="#accountSection" class="dashboard-nav-link aurora-card">
-            <span class="dashboard-nav-icon">◌</span>
-            <span>Account</span>
-          </a>
-        </nav>
-
-        <div class="dashboard-sidebar-foot glass-card aurora-card">
-          <div class="dashboard-sidebar-foot-copy">
-            <strong>Account Center</strong>
-            <span>
-              Update your name, username, contact details, and role-facing profile information from one place.
-            </span>
-          </div>
-          <a href="/evaraos/settings.html" class="btn btn-theme-primary">Open Settings</a>
-        </div>
-      </div>
-    </aside>
-
-    <main class="dashboard-main">
-      <section class="dashboard-hero glass-card aurora-card" id="profileSection">
-        <div class="dashboard-hero-copy">
-          <p class="dashboard-eyebrow">PROFILE CENTER</p>
-          <h1>Keep your account identity polished and current.</h1>
-          <p class="dashboard-hero-text">
-            Update your display name, username, contact info, and profile details while keeping your
-            Evaraos account aligned across the platform.
-          </p>
-
-          <div class="dashboard-hero-actions">
-            <button type="button" id="saveProfileBtnTop" class="btn btn-theme-primary">Save Profile</button>
-            <a href="/evaraos/security.html" class="btn btn-theme-secondary">Account Security</a>
-          </div>
-        </div>
-
-        <div class="dashboard-hero-panel glass-card aurora-card">
-          <div class="dashboard-hero-panel-top">
-            <span class="dashboard-mini-badge">Profile Status</span>
-            <span class="dashboard-live-dot"></span>
+    <div class="dashboard-shell">
+      <aside class="dashboard-sidebar" id="dashboardSidebar">
+        <div class="dashboard-sidebar-inner glass-shell aurora-card active-glow beam-target">
+          <div class="dashboard-sidebar-head">
+            <p class="dashboard-sidebar-eyebrow">Account Navigation</p>
+            <h2 id="dashboardOverviewTitle">Profile Overview</h2>
           </div>
 
-          <div class="dashboard-hero-logo-wrap">
-            <div class="dashboard-avatar dashboard-avatar-large" id="profileHeroAvatar">G</div>
-          </div>
+          <nav class="dashboard-sidebar-nav" aria-label="Profile sections">
+            <a href="#profileSection" class="dashboard-nav-link active aurora-card beam-target">
+              <span class="dashboard-nav-icon">◉</span>
+              <span>Profile</span>
+            </a>
 
-          <div class="dashboard-hero-panel-copy">
-            <strong id="profileHeroName">Loading profile...</strong>
-            <span id="profileHeroRole">Syncing account data.</span>
+            <a href="#contactSection" class="dashboard-nav-link aurora-card beam-target">
+              <span class="dashboard-nav-icon">◎</span>
+              <span>Contact</span>
+            </a>
+
+            <a href="#accountSection" class="dashboard-nav-link aurora-card beam-target">
+              <span class="dashboard-nav-icon">◌</span>
+              <span>Account</span>
+            </a>
+          </nav>
+
+          <div class="dashboard-sidebar-foot glass-card aurora-card active-glow beam-target">
+            <div class="dashboard-sidebar-foot-copy">
+              <strong>Account Center</strong>
+              <span>
+                Update your name, username, contact details, and role-facing profile information from one place.
+              </span>
+            </div>
+
+            <a href="/evaraos/settings.html" class="btn btn-theme-primary beam-target">Open Settings</a>
           </div>
         </div>
-      </section>
+      </aside>
 
-      <section class="dashboard-overview glass-card aurora-card">
-        <div class="dashboard-section-head">
-          <div>
-            <p class="dashboard-section-kicker">Snapshot</p>
-            <h2>Profile Overview</h2>
-          </div>
-        </div>
+      <main class="dashboard-main">
+        <section class="dashboard-hero glass-card aurora-card active-glow beam-target" id="profileSection">
+          <div class="dashboard-hero-copy">
+            <p class="dashboard-eyebrow">PROFILE CENTER</p>
+            <h1>Keep your account identity polished and current.</h1>
+            <p class="dashboard-hero-text">
+              Update your display name, username, contact info, and profile details while keeping your
+              Evaraos account aligned across the platform.
+            </p>
 
-        <div class="dashboard-stats-grid">
-          <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Display Name</p>
-            <h3 id="profileStatInitial">G</h3>
-            <span id="profileStatNameMeta">Loading name...</span>
-          </article>
-
-          <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Email</p>
-            <h3 id="profileStatEmailHead">—</h3>
-            <span id="profileStatEmailMeta">Loading email...</span>
-          </article>
-
-          <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Role</p>
-            <h3 id="profileStatRoleHead">—</h3>
-            <span id="profileStatRoleMeta">Loading role...</span>
-          </article>
-
-          <article class="dashboard-stat-card glass-card aurora-card">
-            <p>Status</p>
-            <h3 id="profileStatStatusHead">Live</h3>
-            <span id="profileStatStatusMeta">Profile connected</span>
-          </article>
-        </div>
-      </section>
-
-      <section class="dashboard-grid-2">
-        <section class="dashboard-panel glass-card aurora-card" id="contactSection">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Identity</p>
-              <h2>Profile Details</h2>
+            <div class="dashboard-hero-actions">
+              <button type="button" id="saveProfileBtnTop" class="btn btn-theme-primary beam-target">
+                Save Profile
+              </button>
+              <a href="/evaraos/security.html" class="btn btn-theme-secondary beam-target">Account Security</a>
             </div>
           </div>
 
-          <form id="profileForm" class="login-form" novalidate>
-            <div class="form-grid-2">
-              <div class="form-group">
-                <label class="field-label" for="profileFullName">Full Name</label>
-                <div class="input-shell aurora-card">
-                  <input
-                    id="profileFullName"
-                    name="fullName"
-                    type="text"
-                    class="input"
-                    placeholder="Enter your full name"
-                    autocomplete="name"
-                  />
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label class="field-label" for="profileUsername">Username</label>
-                <div class="input-shell aurora-card">
-                  <input
-                    id="profileUsername"
-                    name="username"
-                    type="text"
-                    class="input"
-                    placeholder="Choose a username"
-                    autocomplete="username"
-                  />
-                </div>
-              </div>
+          <div class="dashboard-hero-panel glass-card aurora-card active-glow beam-target">
+            <div class="dashboard-hero-panel-top">
+              <span class="dashboard-mini-badge">Profile Status</span>
+              <span class="dashboard-live-dot"></span>
             </div>
 
-            <div class="form-grid-2">
-              <div class="form-group">
-                <label class="field-label" for="profileEmail">Email</label>
-                <div class="input-shell aurora-card">
-                  <input
-                    id="profileEmail"
-                    name="email"
-                    type="email"
-                    class="input"
-                    placeholder="Your email"
-                    autocomplete="email"
-                    readonly
-                  />
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label class="field-label" for="profilePhone">Phone</label>
-                <div class="input-shell aurora-card">
-                  <input
-                    id="profilePhone"
-                    name="phone"
-                    type="tel"
-                    class="input"
-                    placeholder="Enter your phone number"
-                    autocomplete="tel"
-                  />
-                </div>
-              </div>
+            <div class="dashboard-hero-logo-wrap">
+              <div class="dashboard-avatar dashboard-avatar-large" id="profileHeroAvatar">G</div>
             </div>
 
-            <div class="form-grid-2">
-              <div class="form-group">
-                <label class="field-label" for="profileRole">Role</label>
-                <div class="input-shell aurora-card">
-                  <input
-                    id="profileRole"
-                    name="role"
-                    type="text"
-                    class="input"
-                    placeholder="Role"
-                    readonly
-                  />
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label class="field-label" for="profileBio">Bio</label>
-                <div class="input-shell aurora-card">
-                  <textarea
-                    id="profileBio"
-                    name="bio"
-                    class="input"
-                    placeholder="Add a short bio"
-                    rows="5"
-                    style="resize: vertical; min-height: 140px;"
-                  ></textarea>
-                </div>
-              </div>
+            <div class="dashboard-hero-panel-copy">
+              <strong id="profileHeroName">Loading profile...</strong>
+              <span id="profileHeroRole">Syncing account data.</span>
             </div>
-
-            <div class="login-actions-row">
-              <button type="submit" class="btn btn-theme-primary">Save Profile</button>
-              <button type="button" id="profileResetBtn" class="btn btn-theme-secondary">Reset Changes</button>
-            </div>
-
-            <p id="profileMessage" class="login-message" aria-live="polite"></p>
-          </form>
+          </div>
         </section>
 
-        <section class="dashboard-panel glass-card aurora-card" id="accountSection">
+        <section class="dashboard-overview glass-card aurora-card active-glow beam-target">
           <div class="dashboard-section-head">
             <div>
-              <p class="dashboard-section-kicker">Account</p>
-              <h2>Profile Summary</h2>
+              <p class="dashboard-section-kicker">Snapshot</p>
+              <h2>Profile Overview</h2>
             </div>
           </div>
 
-          <div class="dashboard-feed" id="profileSummaryFeed">
-            <article class="dashboard-feed-item glass-card aurora-card">
-              <strong>Loading profile...</strong>
-              <span>Your profile summary will appear here once the account data is loaded.</span>
+          <div class="dashboard-stats-grid">
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
+              <p>Display Name</p>
+              <h3 id="profileStatInitial">G</h3>
+              <span id="profileStatNameMeta">Loading name...</span>
+            </article>
+
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
+              <p>Email</p>
+              <h3 id="profileStatEmailHead">—</h3>
+              <span id="profileStatEmailMeta">Loading email...</span>
+            </article>
+
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
+              <p>Role</p>
+              <h3 id="profileStatRoleHead">—</h3>
+              <span id="profileStatRoleMeta">Loading role...</span>
+            </article>
+
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
+              <p>Status</p>
+              <h3 id="profileStatStatusHead">Live</h3>
+              <span id="profileStatStatusMeta">Profile connected</span>
             </article>
           </div>
         </section>
-      </section>
-    </main>
+
+        <section class="dashboard-grid-2">
+          <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="contactSection">
+            <div class="dashboard-section-head">
+              <div>
+                <p class="dashboard-section-kicker">Identity</p>
+                <h2>Profile Details</h2>
+              </div>
+            </div>
+
+            <form id="profileForm" class="login-form" novalidate>
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="field-label" for="profileFullName">Full Name</label>
+                  <div class="input-shell aurora-card beam-target">
+                    <input
+                      id="profileFullName"
+                      name="fullName"
+                      type="text"
+                      class="input"
+                      placeholder="Enter your full name"
+                      autocomplete="name"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="field-label" for="profileUsername">Username</label>
+                  <div class="input-shell aurora-card beam-target">
+                    <input
+                      id="profileUsername"
+                      name="username"
+                      type="text"
+                      class="input"
+                      placeholder="Choose a username"
+                      autocomplete="username"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="field-label" for="profileEmail">Email</label>
+                  <div class="input-shell aurora-card beam-target">
+                    <input
+                      id="profileEmail"
+                      name="email"
+                      type="email"
+                      class="input"
+                      placeholder="Your email"
+                      autocomplete="email"
+                      readonly
+                    />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="field-label" for="profilePhone">Phone</label>
+                  <div class="input-shell aurora-card beam-target">
+                    <input
+                      id="profilePhone"
+                      name="phone"
+                      type="tel"
+                      class="input"
+                      placeholder="Enter your phone number"
+                      autocomplete="tel"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="field-label" for="profileRole">Role</label>
+                  <div class="input-shell aurora-card beam-target">
+                    <input
+                      id="profileRole"
+                      name="role"
+                      type="text"
+                      class="input"
+                      placeholder="Role"
+                      readonly
+                    />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="field-label" for="profileBio">Bio</label>
+                  <div class="input-shell aurora-card beam-target">
+                    <textarea
+                      id="profileBio"
+                      name="bio"
+                      class="input"
+                      placeholder="Add a short bio"
+                      rows="5"
+                      style="resize: vertical; min-height: 140px;"
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div class="login-actions-row">
+                <button type="submit" class="btn btn-theme-primary beam-target">Save Profile</button>
+                <button type="button" id="profileResetBtn" class="btn btn-theme-secondary beam-target">
+                  Reset Changes
+                </button>
+              </div>
+
+              <p id="profileMessage" class="login-message" aria-live="polite"></p>
+            </form>
+          </section>
+
+          <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="accountSection">
+            <div class="dashboard-section-head">
+              <div>
+                <p class="dashboard-section-kicker">Account</p>
+                <h2>Profile Summary</h2>
+              </div>
+            </div>
+
+            <div class="dashboard-feed" id="profileSummaryFeed">
+              <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
+                <strong>Loading profile...</strong>
+                <span>Your profile summary will appear here once the account data is loaded.</span>
+              </article>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
   </div>
 
-  <script type="module" src="/evaraos/assets/js/theme.js"></script>
-  <script type="module" src="/evaraos/assets/js/firebase.js"></script>
-  <script type="module" src="/evaraos/assets/js/profile.js"></script>
-  <script type="module" src="/evaraos/assets/js/route-guard.js"></script>
+  <script src="/evaraos/assets/js/loader.js?v=35"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js?v=35"></script>
+  <script type="module" src="/evaraos/assets/js/theme.js?v=36"></script>
+  <script src="/evaraos/assets/js/theme-css-loader.js?v=1"></script>
+  <script src="/evaraos/assets/js/galaxy.js?v=2"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js?v=35"></script>
   <script type="module" src="/evaraos/assets/js/nav.js?v=37"></script>
+  <script type="module" src="/evaraos/assets/js/profile.js?v=1"></script>
 </body>
 </html>
