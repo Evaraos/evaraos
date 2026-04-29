@@ -40,6 +40,10 @@ function value(id) {
   return String(byId(id)?.value || "").trim();
 }
 
+function inviteCodeValue() {
+  return value("appInviteCode").toUpperCase().replace(/[^A-Z0-9-]+/g, "").slice(0, 32);
+}
+
 function fileValue(id) {
   return byId(id)?.files?.[0] || null;
 }
@@ -150,12 +154,15 @@ async function uploadAttachment(uid, file, kind) {
 function buildApplicationPayload(user, attachments = []) {
   const email = value("appEmail").toLowerCase();
   const roleRequested = value("appRole");
+  const inviteCode = inviteCodeValue();
 
   return {
     applicantUid: user.uid,
     applicantEmail: email,
     fullName: value("appFullName"),
     username: normalizeUsername(email),
+    inviteCode,
+    inviteCodeNormalized: inviteCode,
     roleRequested,
     desiredRole: roleRequested,
     desiredCompany: value("appDesiredCompany"),
@@ -186,6 +193,7 @@ function buildApplicationPayload(user, attachments = []) {
     searchText: [
       value("appFullName"),
       email,
+      inviteCode,
       roleRequested,
       value("appDesiredCompany"),
       value("appDesiredMarket"),
@@ -234,6 +242,7 @@ async function handleSubmit(event) {
       approvalStatus: DEFAULT_PUBLIC_APPROVAL,
       staffApplicationStatus: "submitted",
       staffApplicationRoleRequested: value("appRole"),
+      staffInviteCode: inviteCodeValue(),
       companyId: "",
       companyName: value("appDesiredCompany"),
       createdAt: serverTimestamp(),
@@ -284,8 +293,18 @@ async function handleSubmit(event) {
   }
 }
 
+function prefillInviteCode() {
+  const inviteInput = byId("appInviteCode");
+  if (!inviteInput) return;
+
+  const params = new URLSearchParams(window.location.search);
+  const invite = params.get("invite") || params.get("code") || "";
+  if (invite) inviteInput.value = invite.toUpperCase();
+}
+
 function init() {
   if (!form) return;
+  prefillInviteCode();
   form.addEventListener("submit", handleSubmit);
 
   if (window.EvaraLoader?.markAppReady) {
