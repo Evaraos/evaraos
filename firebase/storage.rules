@@ -1,0 +1,98 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function currentUserExists() {
+      return signedIn() && firestore.exists(/databases/(default)/documents/users/$(request.auth.uid));
+    }
+
+    function currentUser() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid));
+    }
+
+    function userRole() {
+      return currentUserExists() ? currentUser().data.role : null;
+    }
+
+    function userCompanyId() {
+      return currentUserExists() ? currentUser().data.companyId : null;
+    }
+
+    function isOwnerOrAdmin() {
+      return signedIn() && userRole() in [
+        'owner', 'Owner', 'OWNER',
+        'super_admin', 'Super Admin', 'SUPER_ADMIN',
+        'admin', 'Admin', 'ADMIN'
+      ];
+    }
+
+    function isOperationsPlus() {
+      return signedIn() && userRole() in [
+        'owner', 'Owner', 'OWNER',
+        'super_admin', 'Super Admin', 'SUPER_ADMIN',
+        'admin', 'Admin', 'ADMIN',
+        'manager', 'Manager', 'MANAGER',
+        'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR'
+      ];
+    }
+
+    function isStaff() {
+      return signedIn() && userRole() in [
+        'owner', 'Owner', 'OWNER',
+        'admin', 'Admin', 'ADMIN',
+        'manager', 'Manager', 'MANAGER',
+        'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR',
+        'sales', 'Sales', 'SALES',
+        'sales_rep', 'Sales Rep', 'SALES_REP',
+        'technician', 'Technician', 'TECHNICIAN',
+        'cleaner', 'Cleaner', 'CLEANER',
+        'staff', 'Staff', 'STAFF'
+      ];
+    }
+
+    function isSafeImage() {
+      return request.resource != null
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    function companyMatches(companyId) {
+      return isOwnerOrAdmin()
+        || userCompanyId() == companyId
+        || userCompanyId() == null
+        || userCompanyId() == '';
+    }
+
+    match /users/{userId}/{fileName} {
+      allow read: if signedIn() && (request.auth.uid == userId || isOperationsPlus());
+      allow create, update: if signedIn() && request.auth.uid == userId && isSafeImage();
+      allow delete: if signedIn() && (request.auth.uid == userId || isOwnerOrAdmin());
+    }
+
+    match /companies/{companyId}/{fileName} {
+      allow read: if signedIn();
+      allow create, update: if isOperationsPlus() && companyMatches(companyId) && isSafeImage();
+      allow delete: if isOwnerOrAdmin();
+    }
+
+    match /jobs/{jobId}/{fileName} {
+      allow read: if signedIn();
+      allow create, update: if isStaff() && isSafeImage();
+      allow delete: if isOwnerOrAdmin();
+    }
+
+    match /customers/{customerId}/{fileName} {
+      allow read: if signedIn() && (request.auth.uid == customerId || isOperationsPlus());
+      allow create, update: if signedIn() && (request.auth.uid == customerId || isOperationsPlus()) && isSafeImage();
+      allow delete: if isOwnerOrAdmin();
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
