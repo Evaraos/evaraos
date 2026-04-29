@@ -28,6 +28,14 @@ const DEFAULT_PUBLIC_STATUS = "pending";
 const DEFAULT_PUBLIC_APPROVAL = "pending";
 const MAX_ATTACHMENT_BYTES = 15 * 1024 * 1024;
 
+const AVAILABLE_STAFF_ROLES = [
+  { value: "sales_rep", label: "Sales Rep" },
+  { value: "technician", label: "Technician" },
+  { value: "cleaner", label: "Cleaner" },
+  { value: "field_staff", label: "Field Staff" },
+  { value: "crew_lead", label: "Crew Lead" }
+];
+
 const form = document.getElementById("staffApplicationForm");
 const submitBtn = document.getElementById("staffApplicationSubmit");
 const messageEl = document.getElementById("staffApplicationMessage");
@@ -40,8 +48,8 @@ function value(id) {
   return String(byId(id)?.value || "").trim();
 }
 
-function inviteCodeValue() {
-  return value("appInviteCode").toUpperCase().replace(/[^A-Z0-9-]+/g, "").slice(0, 32);
+function checkboxValue(id) {
+  return Boolean(byId(id)?.checked);
 }
 
 function fileValue(id) {
@@ -62,6 +70,11 @@ function setBusy(isBusy, text = "Submit Staff Application") {
 
 function normalizeUsername(email = "") {
   return String(email || "").trim().toLowerCase().split("@")[0].replace(/[^a-z0-9._-]+/g, "").slice(0, 40);
+}
+
+function sanitizeRole(role = "") {
+  const cleaned = String(role || "").trim().toLowerCase();
+  return AVAILABLE_STAFF_ROLES.some((item) => item.value === cleaned) ? cleaned : "";
 }
 
 function validateAttachment(file, label, required = false) {
@@ -91,6 +104,9 @@ function validateForm() {
     ["appDriversLicense", "Driver’s license answer"],
     ["appTransportation", "Transportation answer"],
     ["appAvailability", "Availability"],
+    ["appEmploymentType", "Employment type"],
+    ["appEarliestStartDate", "Earliest start date"],
+    ["appBackgroundConsent", "Background check consent"],
     ["appIdType", "Document type"],
     ["appEmergencyName", "Emergency contact name"],
     ["appEmergencyPhone", "Emergency contact phone"]
@@ -100,13 +116,22 @@ function validateForm() {
     if (!value(id)) throw new Error(`${label} is required.`);
   }
 
+  if (!sanitizeRole(value("appRole"))) {
+    throw new Error("Select a valid role to apply for.");
+  }
+
   if (value("appPassword").length < 6) {
     throw new Error("Password must be at least 6 characters.");
+  }
+
+  if (!checkboxValue("appConsentAccurate")) {
+    throw new Error("Confirm that the application information is accurate before submitting.");
   }
 
   validateAttachment(fileValue("appIdFront"), "Identity document", true);
   validateAttachment(fileValue("appIdBack"), "Back side attachment", false);
   validateAttachment(fileValue("appResume"), "Resume / extra proof", false);
+  validateAttachment(fileValue("appProfilePhoto"), "Profile photo", false);
 }
 
 async function usernameAvailable(usernameLower) {
@@ -147,22 +172,21 @@ async function uploadAttachment(uid, file, kind) {
     type: file.type,
     path,
     downloadURL,
+    verified: false,
     uploadedAt: new Date().toISOString()
   };
 }
 
 function buildApplicationPayload(user, attachments = []) {
   const email = value("appEmail").toLowerCase();
-  const roleRequested = value("appRole");
-  const inviteCode = inviteCodeValue();
+  const roleRequested = sanitizeRole(value("appRole"));
+  const profilePhoto = attachments.find((item) => item.kind === "profile_photo");
 
   return {
     applicantUid: user.uid,
     applicantEmail: email,
     fullName: value("appFullName"),
     username: normalizeUsername(email),
-    inviteCode,
-    inviteCodeNormalized: inviteCode,
     roleRequested,
     desiredRole: roleRequested,
     desiredCompany: value("appDesiredCompany"),
@@ -178,12 +202,21 @@ function buildApplicationPayload(user, attachments = []) {
     driversLicenseState: value("appDriversState"),
     hasReliableTransportation: value("appTransportation"),
     availability: value("appAvailability"),
+    preferredSchedule: value("appPreferredSchedule"),
+    employmentType: value("appEmploymentType"),
+    earliestStartDate: value("appEarliestStartDate"),
+    payExpectation: value("appPayExpectation"),
+    equipmentExperience: value("appEquipmentExperience"),
+    backgroundConsent: value("appBackgroundConsent"),
+    consentAccurate: checkboxValue("appConsentAccurate"),
     experienceSummary: value("appExperience"),
     idDocumentType: value("appIdType"),
     emergencyContactName: value("appEmergencyName"),
     emergencyContactPhone: value("appEmergencyPhone"),
     attachments,
     attachmentCount: attachments.length,
+    profilePhotoUploaded: Boolean(profilePhoto),
+    profilePhotoURL: profilePhoto?.downloadURL || "",
     status: "submitted",
     verificationStatus: "pending_review",
     reviewNotes: "",
@@ -193,13 +226,13 @@ function buildApplicationPayload(user, attachments = []) {
     searchText: [
       value("appFullName"),
       email,
-      inviteCode,
       roleRequested,
       value("appDesiredCompany"),
       value("appDesiredMarket"),
       value("appPhone"),
       value("appCity"),
-      value("appState")
+      value("appState"),
+      value("appEmploymentType")
     ].filter(Boolean).join(" ").toLowerCase()
   };
 }
@@ -241,8 +274,7 @@ async function handleSubmit(event) {
       status: DEFAULT_PUBLIC_STATUS,
       approvalStatus: DEFAULT_PUBLIC_APPROVAL,
       staffApplicationStatus: "submitted",
-      staffApplicationRoleRequested: value("appRole"),
-      staffInviteCode: inviteCodeValue(),
+      staffApplicationRoleRequested: sanitizeRole(value("appRole")),
       companyId: "",
       companyName: value("appDesiredCompany"),
       createdAt: serverTimestamp(),
@@ -265,6 +297,9 @@ async function handleSubmit(event) {
     setMessage("Uploading verification attachments...", "");
 
     const uploads = [];
+    const profilePhoto = await uploadAttachment(user.uid, fileValue("appProfilePhoto"), "profile_photo");
+    if (profilePhoto) uploads.push(profilePhoto);
+
     const idFront = await uploadAttachment(user.uid, fileValue("appIdFront"), "id_front");
     if (idFront) uploads.push(idFront);
 
@@ -281,6 +316,7 @@ async function handleSubmit(event) {
 
     setMessage("Application submitted. Leadership will review your verification and approve your role if accepted.", "success");
     form?.reset();
+    document.querySelectorAll(".role-pill").forEach((pill) => pill.classList.remove("active"));
 
     setTimeout(() => {
       window.location.assign("/evaraos/customer_dashboard.html");
@@ -293,18 +329,115 @@ async function handleSubmit(event) {
   }
 }
 
-function prefillInviteCode() {
-  const inviteInput = byId("appInviteCode");
-  if (!inviteInput) return;
+function removeStaffInviteField() {
+  const inviteField = byId("appInviteCode")?.closest(".application-field");
+  inviteField?.remove();
+}
 
-  const params = new URLSearchParams(window.location.search);
-  const invite = params.get("invite") || params.get("code") || "";
-  if (invite) inviteInput.value = invite.toUpperCase();
+function upgradeRolePicker() {
+  const roleSelect = byId("appRole");
+  if (!roleSelect || document.getElementById("appRolePills")) return;
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "application-field full";
+  wrapper.innerHTML = `
+    <label>Role you want to apply for</label>
+    <p class="form-subnote">Pick the role you want. Leadership can approve, deny, or move you into a better fit after review.</p>
+    <div id="appRolePills" class="role-pill-container">
+      ${AVAILABLE_STAFF_ROLES.map((role) => `<button type="button" class="role-pill" data-role="${role.value}">${role.label}</button>`).join("")}
+    </div>
+  `;
+
+  const roleField = roleSelect.closest(".application-field");
+  roleField?.parentElement?.insertBefore(wrapper, roleField);
+  roleSelect.type = "hidden";
+  roleField.style.display = "none";
+
+  wrapper.querySelectorAll(".role-pill").forEach((pill) => {
+    pill.addEventListener("click", () => {
+      wrapper.querySelectorAll(".role-pill").forEach((item) => item.classList.remove("active"));
+      pill.classList.add("active");
+      roleSelect.value = pill.dataset.role || "";
+    });
+  });
+}
+
+function injectDetailedApplicationFields() {
+  if (document.getElementById("appEmploymentType")) return;
+
+  const transportationSection = byId("appExperience")?.closest(".form-section");
+  const identitySection = byId("appIdType")?.closest(".form-section");
+  if (!transportationSection || !identitySection) return;
+
+  const details = document.createElement("div");
+  details.className = "form-section";
+  details.innerHTML = `
+    <h2 class="form-section-title">Work Preferences + Screening</h2>
+    <p class="form-subnote">This helps Evaraos route you to the right company, crew, schedule, and onboarding path.</p>
+    <div class="application-grid">
+      <div class="application-field">
+        <label for="appEmploymentType">Employment type desired</label>
+        <select id="appEmploymentType" required>
+          <option value="">Select</option>
+          <option value="1099_contractor">1099 Contractor</option>
+          <option value="w2_employee">W-2 Employee</option>
+          <option value="part_time">Part-Time</option>
+          <option value="full_time">Full-Time</option>
+        </select>
+      </div>
+      <div class="application-field">
+        <label for="appEarliestStartDate">Earliest start date</label>
+        <input id="appEarliestStartDate" type="date" required />
+      </div>
+      <div class="application-field">
+        <label for="appPayExpectation">Pay expectation</label>
+        <input id="appPayExpectation" type="text" placeholder="$18/hr, commission, per job, negotiable..." />
+      </div>
+      <div class="application-field">
+        <label for="appBackgroundConsent">Background check consent</label>
+        <select id="appBackgroundConsent" required>
+          <option value="">Select</option>
+          <option value="yes">Yes, I consent if required</option>
+          <option value="no">No</option>
+        </select>
+      </div>
+      <div class="application-field full">
+        <label for="appPreferredSchedule">Preferred schedule details</label>
+        <textarea id="appPreferredSchedule" rows="3" placeholder="Best days, blocked times, weekly availability, travel range..."></textarea>
+      </div>
+      <div class="application-field full">
+        <label for="appEquipmentExperience">Equipment / field experience</label>
+        <textarea id="appEquipmentExperience" rows="4" placeholder="Pressure washer, truck/trailer, cleaning chemicals, D2D sales, CRM apps, route work, customer service..."></textarea>
+      </div>
+    </div>
+  `;
+
+  identitySection.parentElement.insertBefore(details, identitySection);
+
+  const photoField = document.createElement("div");
+  photoField.className = "application-field";
+  photoField.innerHTML = `
+    <label for="appProfilePhoto">Profile photo</label>
+    <input id="appProfilePhoto" type="file" accept="image/*" />
+  `;
+  identitySection.querySelector(".application-grid")?.prepend(photoField);
+
+  const consent = document.createElement("div");
+  consent.className = "application-notice";
+  consent.innerHTML = `
+    <label style="display:flex;gap:10px;align-items:flex-start;font-weight:900;color:inherit;">
+      <input id="appConsentAccurate" type="checkbox" style="width:auto;margin-top:4px;" />
+      <span>I confirm this application is accurate, my documents belong to me, and Evaraos may review my information for staff onboarding.</span>
+    </label>
+  `;
+  form?.insertBefore(consent, document.querySelector(".application-actions"));
 }
 
 function init() {
   if (!form) return;
-  prefillInviteCode();
+  removeStaffInviteField();
+  upgradeRolePicker();
+  injectDetailedApplicationFields();
   form.addEventListener("submit", handleSubmit);
 
   if (window.EvaraLoader?.markAppReady) {
