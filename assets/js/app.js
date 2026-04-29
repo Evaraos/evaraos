@@ -24,13 +24,13 @@ const THEME_KEY = "evara-theme";
 const ROLE_PERMISSIONS = {
   owner: ["all"],
   super_admin: ["all"],
-  admin: ["dashboard", "companies", "users", "sales_reps", "leads", "jobs", "audit", "org", "performance", "customer_dashboard"],
-  manager: ["dashboard", "users", "sales_reps", "leads", "jobs", "performance"],
-  operations_coordinator: ["dashboard", "users", "jobs", "performance"],
+  admin: ["dashboard", "companies", "users", "applications", "sales_reps", "leads", "jobs", "audit", "org", "performance", "customer_dashboard"],
+  manager: ["dashboard", "users", "applications", "sales_reps", "leads", "jobs", "performance"],
+  operations_coordinator: ["dashboard", "users", "applications", "jobs", "performance"],
   sales_rep: ["dashboard", "leads", "sales_reps"],
   technician: ["dashboard", "jobs"],
   tech: ["dashboard", "jobs"],
-  hr: ["dashboard", "users"],
+  hr: ["dashboard", "users", "applications"],
   customer: ["customer_dashboard", "self"],
   guest: []
 };
@@ -68,6 +68,7 @@ export function renderSidebar(role, active = "") {
     { key: "dashboard", href: "/evaraos/dashboard.html", label: "Dashboard", roles: ["owner", "super_admin", "admin", "manager", "sales_rep", "technician", "operations_coordinator", "hr"] },
     { key: "companies", href: "/evaraos/companies.html", label: "Companies", roles: ["owner", "super_admin", "admin"] },
     { key: "users", href: "/evaraos/users.html", label: "Users", roles: ["owner", "super_admin", "admin", "manager", "operations_coordinator", "hr"] },
+    { key: "applications", href: "/evaraos/applications.html", label: "Applications", roles: ["owner", "super_admin", "admin", "manager", "operations_coordinator", "hr"] },
     { key: "sales_reps", href: "/evaraos/sales_reps.html", label: "Sales Reps", roles: ["owner", "super_admin", "admin", "manager"] },
     { key: "leads", href: "/evaraos/leads.html", label: "Leads", roles: ["owner", "super_admin", "admin", "manager", "sales_rep"] },
     { key: "jobs", href: "/evaraos/jobs.html", label: "Jobs", roles: ["owner", "super_admin", "admin", "manager", "technician", "operations_coordinator"] },
