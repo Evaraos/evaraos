@@ -1,0 +1,44 @@
+name: Repair light-first HTML defaults
+
+on:
+  push:
+    branches:
+      - evaraos
+    paths:
+      - "**/*.html"
+      - "tools/repo-audit.js"
+      - ".github/workflows/repair-light-theme.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: evaraos
+
+      - name: Apply light-first HTML repairs
+        run: node tools/repo-audit.js --fix
+
+      - name: Remove generated audit reports from automated commit
+        run: rm -rf tools/reports
+
+      - name: Commit repaired HTML files
+        run: |
+          if git diff --quiet; then
+            echo "No HTML repairs needed."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "*.html" "settings/*.html"
+          git commit -m "Apply light-first HTML defaults"
+          git push
