@@ -10,10 +10,16 @@ service cloud.firestore {
       return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
     }
 
+    function currentUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
     function userRole() {
-      return currentUserExists()
-        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
-        : null;
+      return currentUserExists() ? currentUser().data.role : null;
+    }
+
+    function userCompanyId() {
+      return currentUserExists() ? currentUser().data.companyId : null;
     }
 
     function isOwnerOrAdmin() {
@@ -33,12 +39,61 @@ service cloud.firestore {
         'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR',
         'sales', 'Sales', 'SALES',
         'sales_rep', 'Sales Rep', 'SALES_REP',
-        'technician', 'Technician', 'TECHNICIAN'
+        'technician', 'Technician', 'TECHNICIAN',
+        'cleaner', 'Cleaner', 'CLEANER',
+        'staff', 'Staff', 'STAFF'
+      ];
+    }
+
+    function isCompanyDispatcher() {
+      return signedIn() && userRole() in [
+        'owner', 'Owner', 'OWNER',
+        'admin', 'Admin', 'ADMIN',
+        'manager', 'Manager', 'MANAGER',
+        'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR',
+        'sales', 'Sales', 'SALES',
+        'sales_rep', 'Sales Rep', 'SALES_REP'
+      ];
+    }
+
+    function isStaffDispatcher() {
+      return signedIn() && userRole() in [
+        'owner', 'Owner', 'OWNER',
+        'admin', 'Admin', 'ADMIN',
+        'manager', 'Manager', 'MANAGER',
+        'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR',
+        'technician', 'Technician', 'TECHNICIAN',
+        'cleaner', 'Cleaner', 'CLEANER',
+        'staff', 'Staff', 'STAFF',
+        'sales', 'Sales', 'SALES',
+        'sales_rep', 'Sales Rep', 'SALES_REP'
       ];
     }
 
     function ownsUserDoc(userId) {
       return signedIn() && request.auth.uid == userId;
+    }
+
+    function companyClaimUpdate() {
+      return isCompanyDispatcher()
+        && resource.data.companyClaimed != true
+        && request.resource.data.companyClaimed == true
+        && request.resource.data.companyClaimedBy == request.auth.uid
+        && request.resource.data.status == 'claimed';
+    }
+
+    function staffClaimUpdate() {
+      return isStaffDispatcher()
+        && resource.data.companyClaimed == true
+        && resource.data.staffClaimed != true
+        && request.resource.data.staffClaimed == true
+        && request.resource.data.staffClaimedBy == request.auth.uid
+        && request.resource.data.status == 'in_progress'
+        && (
+          resource.data.companyId == null ||
+          userCompanyId() == null ||
+          resource.data.companyId == userCompanyId()
+        );
     }
 
     match /users/{userId} {
@@ -84,7 +139,9 @@ service cloud.firestore {
 
     match /jobs/{jobId} {
       allow read: if signedIn();
-      allow create, update, delete: if isManagerPlus();
+      allow create: if isManagerPlus();
+      allow update: if isOwnerOrAdmin() || companyClaimUpdate() || staffClaimUpdate() || isManagerPlus();
+      allow delete: if isOwnerOrAdmin();
     }
 
     match /customer_services/{serviceId} {
