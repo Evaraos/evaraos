@@ -77,6 +77,16 @@ service cloud.firestore {
       ];
     }
 
+    function isStaffAssignableRole(roleValue) {
+      return roleValue in [
+        'sales', 'Sales', 'SALES',
+        'sales_rep', 'Sales Rep', 'SALES_REP',
+        'technician', 'Technician', 'TECHNICIAN',
+        'cleaner', 'Cleaner', 'CLEANER',
+        'staff', 'Staff', 'STAFF'
+      ];
+    }
+
     function ownsUserDoc(userId) {
       return signedIn() && request.auth.uid == userId;
     }
@@ -111,6 +121,32 @@ service cloud.firestore {
           'themePreferencesUpdatedAt',
           'notificationPreferences',
           'updatedAt'
+        ]);
+    }
+
+    function safeStaffApprovalUserUpdate(userId) {
+      return isOperationsPlus()
+        && !ownsUserDoc(userId)
+        && isStaffAssignableRole(request.resource.data.role)
+        && request.resource.data.status in ['active', 'approved']
+        && request.resource.data.approvalStatus == 'approved'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'role',
+          'status',
+          'approvalStatus',
+          'companyId',
+          'companyName',
+          'companySlug',
+          'companyCategory',
+          'staffApplicationId',
+          'approvedAt',
+          'approvedBy',
+          'approvedByEmail',
+          'approvedByName',
+          'updatedAt',
+          'updatedBy',
+          'updatedByEmail',
+          'updatedByName'
         ]);
     }
 
@@ -151,15 +187,93 @@ service cloud.firestore {
       return isOperationsPlus() && sameCompanyOrPlatform(resource.data.companyId);
     }
 
+    function safeStaffApplicationCreate(applicationId) {
+      return signedIn()
+        && applicationId == request.auth.uid
+        && request.resource.data.applicantUid == request.auth.uid
+        && request.resource.data.status == 'submitted'
+        && request.resource.data.verificationStatus == 'pending_review'
+        && isStaffAssignableRole(request.resource.data.roleRequested);
+    }
+
+    function safeStaffApplicationSelfUpdate(applicationId) {
+      return signedIn()
+        && applicationId == request.auth.uid
+        && resource.data.applicantUid == request.auth.uid
+        && resource.data.status in ['submitted', 'needs_more_info']
+        && request.resource.data.status in ['submitted', 'needs_more_info']
+        && request.resource.data.applicantUid == resource.data.applicantUid
+        && request.resource.data.roleRequested == resource.data.roleRequested
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'fullName',
+          'phone',
+          'address',
+          'city',
+          'state',
+          'zip',
+          'dateOfBirth',
+          'workAuthorization',
+          'hasDriversLicense',
+          'driversLicenseState',
+          'hasReliableTransportation',
+          'availability',
+          'experienceSummary',
+          'emergencyContactName',
+          'emergencyContactPhone',
+          'attachments',
+          'status',
+          'verificationStatus',
+          'updatedAt'
+        ]);
+    }
+
+    function safeStaffApplicationReviewUpdate() {
+      return isOperationsPlus()
+        && request.resource.data.applicantUid == resource.data.applicantUid
+        && request.resource.data.roleRequested == resource.data.roleRequested
+        && request.resource.data.status in ['submitted', 'needs_more_info', 'approved', 'rejected']
+        && request.resource.data.verificationStatus in ['pending_review', 'verified', 'rejected', 'needs_more_info']
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status',
+          'verificationStatus',
+          'reviewNotes',
+          'reviewedAt',
+          'reviewedBy',
+          'reviewedByEmail',
+          'reviewedByName',
+          'approvedAt',
+          'approvedBy',
+          'approvedByEmail',
+          'approvedByName',
+          'rejectedAt',
+          'rejectedBy',
+          'rejectedByEmail',
+          'rejectedByName',
+          'updatedAt'
+        ]);
+    }
+
     match /users/{userId} {
       allow create: if isOwnerOrAdmin() || safeSelfUserCreate(userId);
       allow read: if signedIn() && (ownsUserDoc(userId) || isManagerPlus());
-      allow update: if isOwnerOrAdmin() || safeSelfUserUpdate(userId);
+      allow update: if isOwnerOrAdmin() || safeSelfUserUpdate(userId) || safeStaffApprovalUserUpdate(userId);
       allow delete: if isOwnerOrAdmin() && !ownsUserDoc(userId);
     }
 
     match /companies/{companyId} {
       allow read: if signedIn();
+      allow create, update, delete: if isOwnerOrAdmin();
+    }
+
+    match /staff_applications/{applicationId} {
+      allow create: if safeStaffApplicationCreate(applicationId);
+      allow read: if signedIn() && (isOperationsPlus() || applicationId == request.auth.uid);
+      allow update: if safeStaffApplicationSelfUpdate(applicationId) || safeStaffApplicationReviewUpdate();
+      allow delete: if isOwnerOrAdmin();
+    }
+
+    match /invites/{inviteId} {
+      allow read: if isOperationsPlus();
       allow create, update, delete: if isOwnerOrAdmin();
     }
 
