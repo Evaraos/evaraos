@@ -1,4 +1,9 @@
-import { protectRoute } from "./firebase.js";
+import {
+  protectRoute,
+  auth,
+  onAuthStateChanged,
+  clearUserSession
+} from "./firebase.js";
 
 let hasFinishedRouteGuard = false;
 let hasPaintedOptimistically = false;
@@ -96,6 +101,17 @@ function hasLocalSession() {
   return Boolean(user && (user.uid || user.email));
 }
 
+function waitForVerifiedFirebaseUser() {
+  if (auth.currentUser) return Promise.resolve(auth.currentUser);
+
+  return new Promise((resolve) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (unsubscribe) unsubscribe();
+      resolve(user || null);
+    });
+  });
+}
+
 function isPrivateMode(mode) {
   return mode === "private";
 }
@@ -105,14 +121,15 @@ function isAuthMode(mode) {
 }
 
 async function handlePrivateRoute() {
-  const localSession = hasLocalSession();
+  const verifiedUser = await waitForVerifiedFirebaseUser();
 
-  if (localSession) {
-    paintOptimistically({
-      mode: "private",
-      authenticated: true,
-      source: "local-session"
+  if (!verifiedUser) {
+    clearUserSession?.();
+    beginGuardRedirect("/evaraos/login.html", {
+      title: "Returning to login",
+      subtitle: "Please sign in to continue."
     });
+    return;
   }
 
   await protectRoute({
@@ -121,41 +138,31 @@ async function handlePrivateRoute() {
     redirectAuthedTo: "/evaraos/dashboard.html"
   });
 
-  if (!hasLocalSession()) {
-    beginGuardRedirect("/evaraos/login.html", {
-      title: "Returning to login",
-      subtitle: "Your session needs to be verified again."
-    });
-    return;
-  }
-
   showAppReady({
     mode: "private",
     authenticated: true,
-    source: localSession ? "verified-after-local-session" : "verified"
+    source: "firebase-verified"
   });
 }
 
 async function handleAuthRoute() {
-  paintOptimistically({
-    mode: "auth",
-    authenticated: hasLocalSession(),
-    source: "auth-page-fast-paint"
-  });
+  const verifiedUser = await waitForVerifiedFirebaseUser();
 
-  await protectRoute({
-    requireAuth: false,
-    redirectGuestTo: "/evaraos/login.html",
-    redirectAuthedTo: "/evaraos/dashboard.html"
-  });
-
-  if (hasLocalSession()) {
+  if (verifiedUser) {
     beginGuardRedirect("/evaraos/dashboard.html", {
       title: "Opening dashboard",
-      subtitle: "Your session is already active."
+      subtitle: "Your Firebase session is active."
     });
     return;
   }
+
+  clearUserSession?.();
+
+  paintOptimistically({
+    mode: "auth",
+    authenticated: false,
+    source: "verified-guest"
+  });
 
   showAppReady({
     mode: "auth",
@@ -199,10 +206,11 @@ async function initRouteGuard() {
   } catch (error) {
     console.error("Route guard failed:", error);
 
-    if (mode === "private" && !hasLocalSession()) {
+    if (mode === "private") {
+      clearUserSession?.();
       beginGuardRedirect("/evaraos/login.html", {
         title: "Returning to login",
-        subtitle: "Unable to verify your session."
+        subtitle: "Unable to verify your Firebase session."
       });
       return;
     }
