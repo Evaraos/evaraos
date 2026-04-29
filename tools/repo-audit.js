@@ -50,6 +50,8 @@ function repairHtml(relative, content) {
   next = next.replace(/var\s+theme\s*=\s*"dark";/g, "var theme = \"light\";");
   next = next.replace(/setAttribute\("data-theme",\s*"dark"\)/g, "setAttribute(\"data-theme\", \"light\")");
   next = next.replace(/background:\s*#060814;/gi, "background: #f4f7f6;");
+  next = next.replace(/<meta\s+name="theme-color"\s+content="#050311"\s*\/>/gi, '<meta name="theme-color" content="#f4f7f6" />');
+  next = next.replace(/<meta\s+name="msapplication-TileColor"\s+content="#050311"\s*\/>/gi, '<meta name="msapplication-TileColor" content="#f4f7f6" />');
 
   if (next !== content) {
     HTML_REPAIR_FILES.push(relative);
@@ -84,6 +86,16 @@ function checkHtml(relative, content) {
   checks.push({
     label: "light first-paint background",
     pass: !/background:\s*#060814;/i.test(content)
+  });
+
+  checks.push({
+    label: "light browser theme meta",
+    pass: !/<meta\s+name="theme-color"\s+content="#050311"/i.test(content)
+  });
+
+  checks.push({
+    label: "light tile color meta",
+    pass: !/<meta\s+name="msapplication-TileColor"\s+content="#050311"/i.test(content)
   });
 
   checks.push({
