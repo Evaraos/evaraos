@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <link rel="manifest" href="/evaraos/manifest.json" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/evaraos/assets/img/favicon-32.png" />
+  <link rel="apple-touch-icon" href="/evaraos/assets/img/apple-touch-icon.png" />
+  <meta name="theme-color" content="#f4f7f6" />
+  <meta name="msapplication-TileColor" content="#f4f7f6" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Evaraos" />
+  <meta name="application-name" content="Evaraos" />
+
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin />
+  <link rel="preload" as="image" href="/evaraos/assets/img/evaraos_logo.png" />
+
+  <title>Staff Application • Evaraos Inc</title>
+
+  <script>
+    (function () {
+      try {
+        var raw = localStorage.getItem("evaraos-appearance");
+        var theme = "light";
+        if (raw) {
+          var appearance = JSON.parse(raw);
+          if (appearance.mode === "galaxy") theme = "galaxy";
+          else if (appearance.mode === "custom" && appearance.baseFamily === "galaxy") theme = "galaxy";
+        }
+        document.documentElement.setAttribute("data-theme", theme);
+      } catch {
+        document.documentElement.setAttribute("data-theme", "light");
+      }
+      document.documentElement.classList.add("boot-pending");
+    })();
+  </script>
+
+  <style>
+    html, body { background: #f4f7f6; }
+    html[data-theme="galaxy"], html[data-theme="galaxy"] body { background: #050311; }
+    html.boot-pending body { margin: 0; overflow-x: hidden; }
+    body.staff-application-page { margin: 0; min-height: 100vh; background: transparent; }
+    body.app-loading #appRoot { visibility: hidden; }
+    body.app-ready #appRoot { visibility: visible; }
+
+    .application-wrap {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 132px 0 64px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .application-hero {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+      align-items: stretch;
+      margin-bottom: 18px;
+    }
+
+    .application-kicker {
+      margin: 0 0 10px;
+      color: var(--theme-primary, #ff2f57);
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .application-title {
+      margin: 0;
+      font-size: clamp(2.2rem, 6vw, 5.2rem);
+      line-height: 0.92;
+      letter-spacing: -0.07em;
+    }
+
+    .application-copy,
+    .application-muted {
+      color: var(--text-muted, rgba(255,255,255,0.68));
+      line-height: 1.65;
+    }
+
+    .application-copy { max-width: 760px; margin: 16px 0 0; }
+
+    .application-steps {
+      display: grid;
+      gap: 10px;
+    }
+
+    .step-card {
+      border-radius: 22px;
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+    }
+
+    .step-card strong { display: block; margin-bottom: 6px; }
+    .step-card span { color: var(--text-muted, rgba(255,255,255,0.68)); line-height: 1.5; font-size: 14px; }
+
+    .application-form-card { padding: 22px; }
+    .form-section { margin-top: 22px; }
+    .form-section:first-child { margin-top: 0; }
+    .form-section-title { margin: 0 0 12px; font-size: 20px; letter-spacing: -0.03em; }
+
+    .application-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .application-field.full { grid-column: 1 / -1; }
+
+    .application-field label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text-muted, rgba(255,255,255,0.68));
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .application-field input,
+    .application-field select,
+    .application-field textarea {
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.08);
+      color: var(--text-primary, #fff);
+      padding: 13px 14px;
+      outline: none;
+      font: inherit;
+      box-sizing: border-box;
+    }
+
+    .application-field select option { color: #111; }
+    .application-field input[type="file"] { padding: 12px; }
+
+    .application-notice {
+      border-radius: 20px;
+      padding: 14px;
+      border: 1px solid rgba(255,47,87,0.2);
+      background: rgba(255,47,87,0.08);
+      color: var(--text-muted, rgba(255,255,255,0.72));
+      line-height: 1.55;
+      font-weight: 700;
+      margin: 14px 0;
+    }
+
+    .application-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 22px;
+    }
+
+    .application-message {
+      margin: 0;
+      color: var(--text-muted, rgba(255,255,255,0.7));
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .application-message[data-state="success"] { color: #70ffbd; }
+    .application-message[data-state="error"] { color: #ff9b8f; }
+
+    @media (max-width: 860px) {
+      .application-hero,
+      .application-grid { grid-template-columns: 1fr; }
+      .application-wrap { width: min(100% - 20px, 1180px); padding-top: 112px; }
+    }
+  </style>
+
+  <link rel="stylesheet" href="/evaraos/assets/css/base.css?v=34" />
+  <link rel="stylesheet" href="/evaraos/assets/css/theme.css?v=36" />
+  <link rel="stylesheet" href="/evaraos/assets/css/nav.css?v=35" />
+  <link rel="stylesheet" href="/evaraos/assets/css/dashboard.css?v=34" />
+</head>
+<body class="staff-application-page app-loading" data-route-guard="public">
+  <div id="universalNavRoot"></div>
+  <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
+
+  <div id="appRoot">
+    <div class="page-aurora"></div>
+    <div id="galaxyEngine" class="galaxy-engine" aria-hidden="true"></div>
+    <div class="page-grid-overlay"></div>
+
+    <main class="application-wrap">
+      <section class="application-hero">
+        <article class="glass-card aurora-card active-glow beam-target">
+          <p class="application-kicker">STAFF APPLICATION</p>
+          <h1 class="application-title">Apply to work through Evaraos.</h1>
+          <p class="application-copy">
+            Submit your staff application, identity verification attachment, desired role, availability,
+            and experience. An owner, company admin, or manager reviews it before access is approved.
+          </p>
+        </article>
+
+        <aside class="glass-card aurora-card active-glow beam-target application-steps">
+          <div class="step-card"><strong>1. Create secure account</strong><span>Your account stays customer/pending until reviewed.</span></div>
+          <div class="step-card"><strong>2. Submit verification</strong><span>Upload ID, driver’s license, passport, and optional resume.</span></div>
+          <div class="step-card"><strong>3. Leadership approval</strong><span>Approved applicants receive their staff role and company assignment.</span></div>
+        </aside>
+      </section>
+
+      <section class="glass-card aurora-card active-glow beam-target application-form-card">
+        <form id="staffApplicationForm" novalidate>
+          <div class="form-section">
+            <h2 class="form-section-title">Account + Role</h2>
+            <div class="application-grid">
+              <div class="application-field">
+                <label for="appFullName">Full legal name</label>
+                <input id="appFullName" type="text" autocomplete="name" required />
+              </div>
+              <div class="application-field">
+                <label for="appEmail">Email</label>
+                <input id="appEmail" type="email" autocomplete="email" required />
+              </div>
+              <div class="application-field">
+                <label for="appPassword">Create password</label>
+                <input id="appPassword" type="password" autocomplete="new-password" minlength="6" required />
+              </div>
+              <div class="application-field">
+                <label for="appRole">Role applying for</label>
+                <select id="appRole" required>
+                  <option value="">Select role</option>
+                  <option value="sales_rep">Sales Rep / Lead Gen</option>
+                  <option value="technician">Technician</option>
+                  <option value="cleaner">Cleaner</option>
+                  <option value="staff">General Staff</option>
+                </select>
+              </div>
+              <div class="application-field">
+                <label for="appDesiredCompany">Company / LLC applying under</label>
+                <input id="appDesiredCompany" type="text" placeholder="Supreme True Clean, OneofOne Cleaning, Evaraos..." />
+              </div>
+              <div class="application-field">
+                <label for="appDesiredMarket">Market / city</label>
+                <input id="appDesiredMarket" type="text" placeholder="Jacksonville, FL" />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h2 class="form-section-title">Personal + Contact Info</h2>
+            <div class="application-grid">
+              <div class="application-field"><label for="appPhone">Phone</label><input id="appPhone" type="tel" autocomplete="tel" required /></div>
+              <div class="application-field"><label for="appDob">Date of birth</label><input id="appDob" type="date" required /></div>
+              <div class="application-field full"><label for="appAddress">Street address</label><input id="appAddress" type="text" autocomplete="street-address" required /></div>
+              <div class="application-field"><label for="appCity">City</label><input id="appCity" type="text" required /></div>
+              <div class="application-field"><label for="appState">State</label><input id="appState" type="text" maxlength="24" required /></div>
+              <div class="application-field"><label for="appZip">ZIP</label><input id="appZip" type="text" autocomplete="postal-code" required /></div>
+              <div class="application-field"><label for="appWorkAuth">Authorized to work?</label><select id="appWorkAuth" required><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h2 class="form-section-title">Transportation + Availability</h2>
+            <div class="application-grid">
+              <div class="application-field"><label for="appDriversLicense">Driver’s license?</label><select id="appDriversLicense" required><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+              <div class="application-field"><label for="appDriversState">License state</label><input id="appDriversState" type="text" maxlength="24" /></div>
+              <div class="application-field"><label for="appTransportation">Reliable transportation?</label><select id="appTransportation" required><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+              <div class="application-field"><label for="appAvailability">Availability</label><input id="appAvailability" type="text" placeholder="Mon-Fri mornings, weekends, full-time..." required /></div>
+              <div class="application-field full"><label for="appExperience">Experience summary</label><textarea id="appExperience" rows="5" placeholder="Sales, cleaning, field work, customer service, equipment, certifications..."></textarea></div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h2 class="form-section-title">Identity Verification Attachments</h2>
+            <p class="application-notice">
+              Upload one valid identity document. Accepted attachments: image or PDF, up to 15MB each.
+              Use ID front/back, driver’s license, passport, or resume if requested.
+            </p>
+            <div class="application-grid">
+              <div class="application-field"><label for="appIdType">Document type</label><select id="appIdType" required><option value="">Select</option><option value="state_id">State ID</option><option value="drivers_license">Driver’s License</option><option value="passport">Passport</option><option value="other">Other Government ID</option></select></div>
+              <div class="application-field"><label for="appIdFront">ID / license / passport file</label><input id="appIdFront" type="file" accept="image/*,application/pdf" required /></div>
+              <div class="application-field"><label for="appIdBack">Back side if applicable</label><input id="appIdBack" type="file" accept="image/*,application/pdf" /></div>
+              <div class="application-field"><label for="appResume">Resume / extra proof</label><input id="appResume" type="file" accept="image/*,application/pdf" /></div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h2 class="form-section-title">Emergency Contact</h2>
+            <div class="application-grid">
+              <div class="application-field"><label for="appEmergencyName">Emergency contact name</label><input id="appEmergencyName" type="text" required /></div>
+              <div class="application-field"><label for="appEmergencyPhone">Emergency contact phone</label><input id="appEmergencyPhone" type="tel" required /></div>
+            </div>
+          </div>
+
+          <div class="application-actions">
+            <p id="staffApplicationMessage" class="application-message" aria-live="polite"></p>
+            <button id="staffApplicationSubmit" type="submit" class="btn btn-theme-primary premium-red-btn beam-target">Submit Staff Application</button>
+          </div>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script src="/evaraos/assets/js/loader.js?v=35"></script>
+  <script type="module" src="/evaraos/assets/js/firebase.js?v=36"></script>
+  <script type="module" src="/evaraos/assets/js/theme.js?v=37"></script>
+  <script src="/evaraos/assets/js/theme-css-loader.js?v=1"></script>
+  <script src="/evaraos/assets/js/galaxy.js?v=2"></script>
+  <script type="module" src="/evaraos/assets/js/route-guard.js?v=36"></script>
+  <script type="module" src="/evaraos/assets/js/nav.js?v=38"></script>
+  <script type="module" src="/evaraos/assets/js/staff-application.js?v=1"></script>
+</body>
+</html>
