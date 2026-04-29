@@ -173,10 +173,10 @@ function setStoredTheme(theme) {
 function getStoredAppearance() {
   try {
     const raw = localStorage.getItem(APPEARANCE_KEY);
-    if (!raw) return { ...PRESET_DARK };
+    if (!raw) return { ...PRESET_LIGHT };
     return normalizeAppearance(JSON.parse(raw));
   } catch {
-    return { ...PRESET_DARK };
+    return { ...PRESET_LIGHT };
   }
 }
 
