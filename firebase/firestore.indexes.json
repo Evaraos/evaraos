@@ -42,6 +42,22 @@
       ]
     },
     {
+      "collectionGroup": "staff_applications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "submittedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "staff_applications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "roleRequested", "order": "ASCENDING" },
+        { "fieldPath": "submittedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "customer_services",
       "queryScope": "COLLECTION",
       "fields": [
