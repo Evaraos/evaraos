@@ -80,9 +80,9 @@ function getPresetAppearance(baseFamily = "dark") {
 
 function getStoredBaseFamily() {
   try {
-    return normalizeBaseFamily(localStorage.getItem(BASE_FAMILY_KEY) || "dark");
+    return normalizeBaseFamily(localStorage.getItem(BASE_FAMILY_KEY) || "light");
   } catch {
-    return "dark";
+    return "light";
   }
 }
 
