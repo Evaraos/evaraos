@@ -60,6 +60,15 @@ service firebase.storage {
         && request.resource.contentType.matches('image/.*');
     }
 
+    function isSafeApplicationAttachment() {
+      return request.resource != null
+        && request.resource.size < 15 * 1024 * 1024
+        && (
+          request.resource.contentType.matches('image/.*') ||
+          request.resource.contentType == 'application/pdf'
+        );
+    }
+
     function companyMatches(companyId) {
       return isOwnerOrAdmin()
         || userCompanyId() == companyId
@@ -89,6 +98,12 @@ service firebase.storage {
       allow read: if signedIn() && (request.auth.uid == customerId || isOperationsPlus());
       allow create, update: if signedIn() && (request.auth.uid == customerId || isOperationsPlus()) && isSafeImage();
       allow delete: if isOwnerOrAdmin();
+    }
+
+    match /staff_applications/{applicationId}/{fileName} {
+      allow read: if signedIn() && (request.auth.uid == applicationId || isOperationsPlus());
+      allow create, update: if signedIn() && request.auth.uid == applicationId && isSafeApplicationAttachment();
+      allow delete: if signedIn() && (request.auth.uid == applicationId || isOwnerOrAdmin());
     }
 
     match /{allPaths=**} {
