@@ -30,7 +30,10 @@ service cloud.firestore {
         'super_admin', 'Super Admin', 'SUPER_ADMIN',
         'admin', 'Admin', 'ADMIN',
         'manager', 'Manager', 'MANAGER',
-        'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR'
+        'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR',
+        'sales', 'Sales', 'SALES',
+        'sales_rep', 'Sales Rep', 'SALES_REP',
+        'technician', 'Technician', 'TECHNICIAN'
       ];
     }
 
@@ -65,6 +68,18 @@ service cloud.firestore {
     match /leads/{leadId} {
       allow read: if signedIn();
       allow create, update, delete: if isManagerPlus();
+
+      match /activities/{activityId} {
+        allow read: if signedIn();
+        allow create: if isManagerPlus();
+        allow update, delete: if isOwnerOrAdmin();
+      }
+    }
+
+    match /lead_activities/{activityId} {
+      allow read: if signedIn();
+      allow create: if isManagerPlus();
+      allow update, delete: if isOwnerOrAdmin();
     }
 
     match /jobs/{jobId} {
