@@ -6,11 +6,15 @@
   let pending = false;
 
   function currentTheme() {
-    return document.documentElement.getAttribute("data-theme") || "dark";
+    return document.documentElement.getAttribute("data-theme") || "light";
   }
 
   function shouldUseGalaxy() {
     return currentTheme() === "galaxy";
+  }
+
+  function markThemeHydrated() {
+    document.documentElement.setAttribute("data-evara-theme-ready", "true");
   }
 
   function getGalaxyLink() {
@@ -104,11 +108,16 @@
     disableGalaxyCss();
   }
 
+  function syncAfterThemeReady() {
+    markThemeHydrated();
+    syncCss();
+  }
+
   function init() {
     syncCss();
 
-    window.addEventListener("evara:theme-ready", syncCss);
-    window.addEventListener("evara:theme-changed", syncCss);
+    window.addEventListener("evara:theme-ready", syncAfterThemeReady);
+    window.addEventListener("evara:theme-changed", syncAfterThemeReady);
     window.addEventListener("pageshow", syncCss);
 
     const observer = new MutationObserver(syncCss);
@@ -122,6 +131,7 @@
       syncCss,
       loadGalaxyCss,
       disableGalaxyCss,
+      markThemeHydrated,
       getState() {
         const link = getGalaxyLink();
 
@@ -131,7 +141,8 @@
           pending,
           hasGalaxyLink: Boolean(link),
           galaxyCssDisabled: link ? Boolean(link.disabled) : null,
-          galaxyHref: link ? link.href : null
+          galaxyHref: link ? link.href : null,
+          hydrated: document.documentElement.getAttribute("data-evara-theme-ready") === "true"
         };
       }
     };

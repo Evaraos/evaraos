@@ -45,6 +45,39 @@ function bootReadySignal() {
   });
 }
 
+function bindAlwaysHomeLogo() {
+  const brand = document.getElementById("evaBrandBlock");
+  if (!brand || brand.dataset.alwaysHomeBound === "true") return;
+
+  brand.dataset.alwaysHomeBound = "true";
+
+  brand.addEventListener(
+    "click",
+    (event) => {
+      const href = brand.getAttribute("data-home-link") || "/evaraos/index.html";
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (typeof event.stopImmediatePropagation === "function") {
+        event.stopImmediatePropagation();
+      }
+
+      if (window.EvaraLoader && typeof window.EvaraLoader.beginNavigationLoad === "function") {
+        window.EvaraLoader.beginNavigationLoad({
+          title: "Opening Home",
+          subtitle: "Loading the Evaraos home experience."
+        });
+      }
+
+      requestAnimationFrame(() => {
+        window.location.assign(href);
+      });
+    },
+    true
+  );
+}
+
 export function initNav() {
   if (NAV_STATE.hasInitialized) return;
 
@@ -54,6 +87,8 @@ export function initNav() {
 
   const rendered = renderNav();
   if (!rendered) return;
+
+  bindAlwaysHomeLogo();
 
   const shell = getNavShell();
   const immediate = atTopOfPage() ? 1 : 0;

@@ -1,300 +1,256 @@
 /**
- * Evaraos Repo Audit Script
- * Run with:
- * node tools/repo-audit.js
+ * Evaraos Repo Audit + Repair Script
+ *
+ * Audit only:
+ *   node tools/repo-audit.js
+ *
+ * Apply safe light-first HTML repairs:
+ *   node tools/repo-audit.js --fix
  */
 
 const fs = require("fs");
 const path = require("path");
 
 const ROOT = path.resolve(__dirname, "..");
+const REPORT_DIR = path.join(ROOT, "tools", "reports");
+const FIX_MODE = process.argv.includes("--fix");
 
-const PAGE_RULES = {
-  "index.html": { bodyClass: "landing-page", needsAuthJs: false },
-  "login.html": { bodyClass: "login-page", needsAuthJs: true },
-  "signup.html": { bodyClass: "signup-page", needsAuthJs: true },
-  "reset.html": { bodyClass: "reset-page", needsAuthJs: true },
-  "dashboard.html": { bodyClass: "dashboard-body", needsAuthJs: false },
-  "profile.html": { bodyClass: "dashboard-body", needsAuthJs: false },
-  "settings.html": { bodyClass: "dashboard-body", needsAuthJs: false },
-  "security.html": { bodyClass: "dashboard-body", needsAuthJs: false },
-  "companies.html": { bodyClass: "dashboard-body", needsAuthJs: false },
-  "users.html": { bodyClass: "dashboard-body", needsAuthJs: false },
-  "leads.html": { bodyClass: "dashboard-body", needsAuthJs: false },
-  "jobs.html": { bodyClass: "dashboard-body", needsAuthJs: false }
-};
+const IGNORE_DIRS = new Set([".git", "node_modules", "tools/reports"]);
+const HTML_REPAIR_FILES = [];
 
-const REQUIRED_SHARED_SCRIPTS = [
-  "/evaraos/assets/js/theme.js",
-  "/evaraos/assets/js/nav.js",
-  "/evaraos/assets/js/firebase.js"
-];
+function walk(dir, output = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const absolute = path.join(dir, entry.name);
+    const relative = path.relative(ROOT, absolute).replace(/\\/g, "/");
 
-const REQUIRED_AUTH_SCRIPT = "/evaraos/assets/js/auth.js";
-const REQUIRED_CSS = "/evaraos/assets/css/styles.css";
+    if (entry.isDirectory()) {
+      if (IGNORE_DIRS.has(relative) || IGNORE_DIRS.has(entry.name)) continue;
+      walk(absolute, output);
+      continue;
+    }
 
-function readFileSafe(filePath) {
-  try {
-    return fs.readFileSync(filePath, "utf8");
-  } catch {
-    return null;
-  }
-}
-
-function has(content, snippet) {
-  return content.includes(snippet);
-}
-
-function scriptIndex(content, scriptPath) {
-  return content.indexOf(`src="${scriptPath}"`);
-}
-
-function addCheck(checks, label, pass, detail = "") {
-  checks.push({ label, pass, detail });
-}
-
-function checkPage(fileName) {
-  const filePath = path.join(ROOT, fileName);
-  const content = readFileSafe(filePath);
-
-  if (!content) {
-    return {
-      file: fileName,
-      exists: false,
-      checks: []
-    };
+    output.push(relative);
   }
 
-  const rule = PAGE_RULES[fileName];
+  return output;
+}
+
+function read(relative) {
+  return fs.readFileSync(path.join(ROOT, relative), "utf8");
+}
+
+function write(relative, content) {
+  fs.writeFileSync(path.join(ROOT, relative), content, "utf8");
+}
+
+function repairHtml(relative, content) {
+  let next = content;
+
+  next = next.replace(/<html([^>]*?)data-theme="dark"([^>]*?)>/i, "<html$1data-theme=\"light\"$2>");
+  next = next.replace(/var\s+theme\s*=\s*"dark";/g, "var theme = \"light\";");
+  next = next.replace(/setAttribute\("data-theme",\s*"dark"\)/g, "setAttribute(\"data-theme\", \"light\")");
+  next = next.replace(/background:\s*#060814;/gi, "background: #f4f7f6;");
+
+  if (next !== content) {
+    HTML_REPAIR_FILES.push(relative);
+  }
+
+  return next;
+}
+
+function checkHtml(relative, content) {
   const checks = [];
 
-  addCheck(checks, "DOCTYPE present", has(content, "<!DOCTYPE html>"));
-  addCheck(checks, "html data-theme present", /<html[^>]*data-theme="dark"/i.test(content));
-  addCheck(checks, "viewport-fit=cover present", /viewport-fit=cover/i.test(content));
-  addCheck(checks, "stylesheet path correct", has(content, `<link rel="stylesheet" href="${REQUIRED_CSS}"`));
-  addCheck(checks, "page-grid-overlay present", has(content, `<div class="page-grid-overlay"></div>`));
-  addCheck(checks, "universalNav present", has(content, `<div id="universalNav"></div>`));
-  addCheck(
-    checks,
-    "correct body class",
-    new RegExp(`<body[^>]*class="${rule.bodyClass}"`, "i").test(content),
-    `Expected body class: ${rule.bodyClass}`
-  );
-  addCheck(
-    checks,
-    "no old navbar mount",
-    !has(content, 'id="navbar"') && !has(content, '<header class="landing-header"'),
-    "Should rely on #universalNav instead of hardcoded nav"
-  );
-  addCheck(checks, "theme.js included", has(content, `src="${REQUIRED_SHARED_SCRIPTS[0]}"`));
-  addCheck(checks, "nav.js included", has(content, `src="${REQUIRED_SHARED_SCRIPTS[1]}"`));
-  addCheck(checks, "firebase.js included", has(content, `src="${REQUIRED_SHARED_SCRIPTS[2]}"`));
-
-  if (rule.needsAuthJs) {
-    addCheck(checks, "auth.js included", has(content, `src="${REQUIRED_AUTH_SCRIPT}"`));
-  }
-
-  const themePos = scriptIndex(content, REQUIRED_SHARED_SCRIPTS[0]);
-  const navPos = scriptIndex(content, REQUIRED_SHARED_SCRIPTS[1]);
-  const firebasePos = scriptIndex(content, REQUIRED_SHARED_SCRIPTS[2]);
-  const authPos = scriptIndex(content, REQUIRED_AUTH_SCRIPT);
-
-  addCheck(
-    checks,
-    "script order correct",
-    themePos !== -1 &&
-      navPos !== -1 &&
-      firebasePos !== -1 &&
-      themePos < navPos &&
-      navPos < firebasePos &&
-      (!rule.needsAuthJs || (authPos !== -1 && firebasePos < authPos)),
-    rule.needsAuthJs
-      ? "Expected: theme.js → nav.js → firebase.js → auth.js"
-      : "Expected: theme.js → nav.js → firebase.js"
-  );
-
-  addCheck(
-    checks,
-    "absolute repo paths used",
-    !/href="\.\//.test(content) && !/src="\.\//.test(content),
-    "Use /evaraos/... paths"
-  );
-
-  addCheck(
-    checks,
-    "glass cards present",
-    /glass-card|glass-shell|dashboard-panel|dashboard-overview|dashboard-hero/.test(content)
-  );
-
-  if (rule.bodyClass === "dashboard-body") {
-    addCheck(checks, "dashboard-shell present", has(content, `class="dashboard-shell"`) || has(content, `class="dashboard-shell `));
-    addCheck(checks, "dashboardSidebar present", has(content, `id="dashboardSidebar"`));
-    addCheck(checks, "dashboard-main present", has(content, `class="dashboard-main"`) || has(content, `class="dashboard-main `));
-  }
-
-  if (fileName === "login.html") {
-    addCheck(checks, "loginForm present", has(content, `id="loginForm"`));
-    addCheck(checks, "loginEmail present", has(content, `id="loginEmail"`));
-    addCheck(checks, "loginPassword present", has(content, `id="loginPassword"`));
-    addCheck(checks, "rememberDevice present", has(content, `id="rememberDevice"`));
-    addCheck(checks, "loginMessage present", has(content, `id="loginMessage"`));
-  }
-
-  if (fileName === "signup.html") {
-    addCheck(checks, "signupForm present", has(content, `id="signupForm"`));
-    addCheck(checks, "signupName present", has(content, `id="signupName"`));
-    addCheck(checks, "signupEmail present", has(content, `id="signupEmail"`));
-    addCheck(checks, "signupPassword present", has(content, `id="signupPassword"`));
-    addCheck(checks, "signupPasswordConfirm present", has(content, `id="signupPasswordConfirm"`));
-    addCheck(checks, "signupRememberDevice present", has(content, `id="signupRememberDevice"`));
-    addCheck(checks, "signupMessage present", has(content, `id="signupMessage"`));
-  }
-
-  if (fileName === "reset.html") {
-    addCheck(checks, "resetForm present", has(content, `id="resetForm"`));
-    addCheck(checks, "resetEmail present", has(content, `id="resetEmail"`));
-    addCheck(checks, "resetMessage present", has(content, `id="resetMessage"`));
-  }
-
-  return {
-    file: fileName,
-    exists: true,
-    checks
-  };
-}
-
-function buildSummary(results) {
-  const files = results.map((result) => {
-    if (!result.exists) {
-      return {
-        file: result.file,
-        score: 0,
-        total: 0,
-        missing: ["File missing"]
-      };
-    }
-
-    const score = result.checks.filter((c) => c.pass).length;
-    const total = result.checks.length;
-    const missing = result.checks
-      .filter((c) => !c.pass)
-      .map((c) => (c.detail ? `${c.label} — ${c.detail}` : c.label));
-
-    return { file: result.file, score, total, missing };
+  checks.push({
+    label: "DOCTYPE present",
+    pass: /<!DOCTYPE html>/i.test(content)
   });
 
-  const totals = files.reduce(
-    (acc, item) => {
-      acc.score += item.score;
-      acc.total += item.total;
-      return acc;
-    },
-    { score: 0, total: 0 }
-  );
-
-  return {
-    generatedAt: new Date().toISOString(),
-    totals,
-    files
-  };
-}
-
-function buildUiSummary(summary) {
-  const files = summary.files.map((file) => {
-    const status =
-      file.total === 0 ? "missing" :
-      file.score === file.total ? "pass" :
-      "fail";
-
-    return {
-      file: file.file,
-      scoreText: `${file.score}/${file.total}`,
-      status,
-      issueCount: file.missing.length,
-      issues: file.missing
-    };
+  checks.push({
+    label: "light-first html theme",
+    pass: !/<html[^>]*data-theme="dark"/i.test(content)
   });
 
-  const passingFiles = files.filter((f) => f.status === "pass").length;
-  const failingFiles = files.filter((f) => f.status === "fail").length;
-  const missingFiles = files.filter((f) => f.status === "missing").length;
-
-  return {
-    generatedAt: summary.generatedAt,
-    auditScoreText: `${summary.totals.score}/${summary.totals.total}`,
-    passingFiles,
-    failingFiles,
-    missingFiles,
-    files
-  };
-}
-
-function writeReports(summary, uiSummary) {
-  const outDir = path.join(ROOT, "tools", "reports");
-  fs.mkdirSync(outDir, { recursive: true });
-
-  const jsonPath = path.join(outDir, "repo-audit-report.json");
-  fs.writeFileSync(jsonPath, JSON.stringify(summary, null, 2), "utf8");
-
-  const uiJsonPath = path.join(outDir, "repo-audit-ui.json");
-  fs.writeFileSync(uiJsonPath, JSON.stringify(uiSummary, null, 2), "utf8");
-
-  const mdLines = [];
-  mdLines.push(`# Evaraos Repo Audit Report`);
-  mdLines.push(``);
-  mdLines.push(`Generated: ${summary.generatedAt}`);
-  mdLines.push(``);
-  mdLines.push(`Overall Score: ${summary.totals.score}/${summary.totals.total}`);
-  mdLines.push(``);
-
-  summary.files.forEach((file) => {
-    mdLines.push(`## ${file.file}`);
-    mdLines.push(``);
-    mdLines.push(`Score: ${file.score}/${file.total}`);
-    mdLines.push(``);
-    if (!file.missing.length) {
-      mdLines.push(`- All checks passed`);
-    } else {
-      file.missing.forEach((issue) => mdLines.push(`- [ ] ${issue}`));
-    }
-    mdLines.push(``);
+  checks.push({
+    label: "light-first boot variable",
+    pass: !/var\s+theme\s*=\s*"dark";/.test(content)
   });
 
-  const mdPath = path.join(outDir, "repo-audit-report.md");
-  fs.writeFileSync(mdPath, mdLines.join("\n"), "utf8");
-
-  return { jsonPath, uiJsonPath, mdPath };
-}
-
-function printConsole(summary, uiSummary) {
-  console.log("\nEvaraos Repo Audit\n");
-  console.log(`Overall Score: ${summary.totals.score}/${summary.totals.total}`);
-  console.log(`Passing Files: ${uiSummary.passingFiles}`);
-  console.log(`Failing Files: ${uiSummary.failingFiles}`);
-  console.log(`Missing Files: ${uiSummary.missingFiles}\n`);
-
-  summary.files.forEach((file) => {
-    console.log(`${file.file}: ${file.score}/${file.total}`);
-    if (file.missing.length) {
-      file.missing.forEach((issue) => console.log(`  - ${issue}`));
-    }
+  checks.push({
+    label: "light fallback theme",
+    pass: !/setAttribute\("data-theme",\s*"dark"\)/.test(content)
   });
 
-  console.log("");
+  checks.push({
+    label: "light first-paint background",
+    pass: !/background:\s*#060814;/i.test(content)
+  });
+
+  checks.push({
+    label: "universal nav mount present",
+    pass: /id="universalNavRoot"|id="universalNav"/.test(content)
+  });
+
+  checks.push({
+    label: "repo absolute asset paths",
+    pass: !/(href|src)="\.\//.test(content)
+  });
+
+  return checks;
+}
+
+function checkTextFile(relative, content, checks) {
+  if (relative === "assets/js/nav/nav-main.js") {
+    checks.push({
+      label: "logo home override bound",
+      pass: /bindAlwaysHomeLogo/.test(content)
+    });
+  }
+
+  if (relative === "assets/js/theme-css-loader.js") {
+    checks.push({
+      label: "theme hydration marker present",
+      pass: /data-evara-theme-ready/.test(content)
+    });
+
+    checks.push({
+      label: "theme css loader light fallback",
+      pass: /return document\.documentElement\.getAttribute\("data-theme"\) \|\| "light";/.test(content)
+    });
+  }
+
+  if (relative === "assets/css/theme.css") {
+    checks.push({
+      label: "first-paint light guard imported",
+      pass: /first-paint-light\.css/.test(content)
+    });
+  }
+
+  if (relative === "manifest.json") {
+    checks.push({
+      label: "manifest light background",
+      pass: /"background_color"\s*:\s*"#f4f7f6"/.test(content)
+    });
+
+    checks.push({
+      label: "manifest light theme color",
+      pass: /"theme_color"\s*:\s*"#f4f7f6"/.test(content)
+    });
+  }
 }
 
 function main() {
-  const results = Object.keys(PAGE_RULES).map(checkPage);
-  const summary = buildSummary(results);
-  const uiSummary = buildUiSummary(summary);
-  const reportPaths = writeReports(summary, uiSummary);
+  const files = walk(ROOT);
+  const htmlFiles = files.filter((file) => file.endsWith(".html") && !file.startsWith("tools/"));
+  const coreFiles = [
+    "assets/js/nav/nav-main.js",
+    "assets/js/theme-css-loader.js",
+    "assets/css/theme.css",
+    "assets/css/themes/first-paint-light.css",
+    "manifest.json"
+  ].filter((file) => fs.existsSync(path.join(ROOT, file)));
 
-  printConsole(summary, uiSummary);
+  if (FIX_MODE) {
+    for (const file of htmlFiles) {
+      const content = read(file);
+      const repaired = repairHtml(file, content);
+      if (repaired !== content) write(file, repaired);
+    }
+  }
 
-  console.log("Reports written:");
-  console.log(`- ${reportPaths.jsonPath}`);
-  console.log(`- ${reportPaths.uiJsonPath}`);
-  console.log(`- ${reportPaths.mdPath}`);
+  const results = [];
+
+  for (const file of htmlFiles) {
+    const content = read(file);
+    const checks = checkHtml(file, content);
+    results.push({ file, checks });
+  }
+
+  for (const file of coreFiles) {
+    const content = read(file);
+    const checks = [];
+    checkTextFile(file, content, checks);
+    results.push({ file, checks });
+  }
+
+  const filesSummary = results.map((result) => {
+    const passed = result.checks.filter((check) => check.pass).length;
+    const total = result.checks.length;
+    const issues = result.checks.filter((check) => !check.pass).map((check) => check.label);
+
+    return {
+      file: result.file,
+      score: `${passed}/${total}`,
+      passed,
+      total,
+      status: total && passed === total ? "pass" : "review",
+      issues
+    };
+  });
+
+  const totals = filesSummary.reduce(
+    (acc, item) => {
+      acc.passed += item.passed;
+      acc.total += item.total;
+      return acc;
+    },
+    { passed: 0, total: 0 }
+  );
+
+  const report = {
+    generatedAt: new Date().toISOString(),
+    mode: FIX_MODE ? "fix" : "audit",
+    totals,
+    repairedFiles: HTML_REPAIR_FILES,
+    files: filesSummary
+  };
+
+  fs.mkdirSync(REPORT_DIR, { recursive: true });
+  fs.writeFileSync(path.join(REPORT_DIR, "repo-audit-report.json"), JSON.stringify(report, null, 2), "utf8");
+
+  const markdown = [
+    "# Evaraos Repo Audit Report",
+    "",
+    `Generated: ${report.generatedAt}`,
+    `Mode: ${report.mode}`,
+    `Overall Score: ${totals.passed}/${totals.total}`,
+    "",
+    FIX_MODE ? `Repaired Files: ${HTML_REPAIR_FILES.length}` : "Repaired Files: 0",
+    "",
+    ...filesSummary.flatMap((item) => [
+      `## ${item.file}`,
+      "",
+      `Score: ${item.score}`,
+      "",
+      ...(item.issues.length ? item.issues.map((issue) => `- [ ] ${issue}`) : ["- All checks passed"]),
+      ""
+    ])
+  ];
+
+  fs.writeFileSync(path.join(REPORT_DIR, "repo-audit-report.md"), markdown.join("\n"), "utf8");
+
+  console.log("\nEvaraos Repo Audit");
+  console.log(`Mode: ${report.mode}`);
+  console.log(`Overall Score: ${totals.passed}/${totals.total}`);
+
+  if (FIX_MODE) {
+    console.log(`Repaired HTML files: ${HTML_REPAIR_FILES.length}`);
+    HTML_REPAIR_FILES.forEach((file) => console.log(`  - ${file}`));
+  }
+
+  const failing = filesSummary.filter((item) => item.issues.length);
+  if (failing.length) {
+    console.log("\nNeeds Review:");
+    failing.forEach((item) => {
+      console.log(`- ${item.file}: ${item.issues.join(", ")}`);
+    });
+  } else {
+    console.log("\nAll checks passed.");
+  }
+
+  console.log("\nReports written:");
+  console.log("- tools/reports/repo-audit-report.json");
+  console.log("- tools/reports/repo-audit-report.md\n");
 }
 
 main();

@@ -11,6 +11,9 @@
 @import url("./themes/theme-dark.css");
 @import url("./themes/theme-light.css");
 
+/* Light-first boot safety net for pages still carrying old dark inline defaults */
+@import url("./themes/first-paint-light.css?v=1");
+
 /* Components */
 @import url("./components/glass.css");
 @import url("./components/buttons.css");
