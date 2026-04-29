@@ -48,7 +48,7 @@ function actorSnapshot() {
 }
 
 function roleAllowed(role = "") {
-  return ["sales", "sales_rep", "technician", "cleaner", "staff"].includes(normalize(role));
+  return ["sales", "sales_rep", "technician", "cleaner", "staff", "field_staff", "crew_lead"].includes(normalize(role));
 }
 
 function statusClass(status = "") {
@@ -64,7 +64,8 @@ function displayRole(role = "") {
   if (value === "sales_rep" || value === "sales") return "Sales Rep";
   if (value === "technician") return "Technician";
   if (value === "cleaner") return "Cleaner";
-  if (value === "staff") return "General Staff";
+  if (value === "field_staff" || value === "staff") return "Field Staff";
+  if (value === "crew_lead") return "Crew Lead";
   return role || "Staff";
 }
 
@@ -77,7 +78,6 @@ function filteredApplications() {
     const textMatch = !term || [
       app.fullName,
       app.applicantEmail,
-      app.inviteCode,
       app.roleRequested,
       app.desiredCompany,
       app.desiredMarket,
@@ -85,7 +85,10 @@ function filteredApplications() {
       app.city,
       app.state,
       app.status,
-      app.verificationStatus
+      app.verificationStatus,
+      app.preferredSchedule,
+      app.equipmentExperience,
+      app.backgroundConsent
     ].some((value) => normalize(value).includes(term));
 
     return statusMatch && textMatch;
@@ -126,7 +129,7 @@ function renderApplicationCard(app = {}) {
           <span class="pill ${statusClass(status)}">${escapeHtml(status.replaceAll("_", " "))}</span>
           <span class="pill ${statusClass(verification)}">Verification: ${escapeHtml(verification.replaceAll("_", " "))}</span>
           <span class="pill">${escapeHtml(displayRole(app.roleRequested))}</span>
-          ${app.inviteCode ? `<span class="pill success">Invite: ${escapeHtml(app.inviteCode)}</span>` : ""}
+          ${app.profilePhotoUploaded ? `<span class="pill success">Photo Added</span>` : ""}
         </div>
       </div>
 
@@ -136,12 +139,20 @@ function renderApplicationCard(app = {}) {
         <div class="detail-box"><strong>Address</strong><span>${escapeHtml([app.address, app.city, app.state, app.zip].filter(Boolean).join(", "))}</span></div>
         <div class="detail-box"><strong>Work Auth</strong><span>${escapeHtml(app.workAuthorization || "Not set")}</span></div>
         <div class="detail-box"><strong>Driver / Transport</strong><span>${escapeHtml(`DL: ${app.hasDriversLicense || "?"} • Transport: ${app.hasReliableTransportation || "?"}`)}</span></div>
-        <div class="detail-box"><strong>Availability</strong><span>${escapeHtml(app.availability || "Not set")}</span></div>
+        <div class="detail-box"><strong>Availability</strong><span>${escapeHtml(app.availability || app.preferredSchedule || "Not set")}</span></div>
+        <div class="detail-box"><strong>Employment Type</strong><span>${escapeHtml(app.employmentType || "Not set")}</span></div>
+        <div class="detail-box"><strong>Start Date</strong><span>${escapeHtml(app.earliestStartDate || "Not set")}</span></div>
+        <div class="detail-box"><strong>Pay Expectation</strong><span>${escapeHtml(app.payExpectation || "Not set")}</span></div>
       </div>
 
       <div class="detail-box">
         <strong>Experience</strong>
         <span>${escapeHtml(app.experienceSummary || "No experience summary provided.")}</span>
+      </div>
+
+      <div class="detail-box">
+        <strong>Equipment / Background</strong>
+        <span>${escapeHtml(app.equipmentExperience || "No equipment info.")} ${app.backgroundConsent ? `• Background consent: ${app.backgroundConsent}` : ""}</span>
       </div>
 
       <div class="attachment-row">
@@ -172,7 +183,12 @@ function renderApplications() {
   if (!listEl) return;
 
   if (!rows.length) {
-    listEl.innerHTML = `<div class="empty-card">No staff applications match the current filter.</div>`;
+    listEl.innerHTML = `
+      <div class="empty-card">
+        <h3>No applications yet</h3>
+        <p>Staff can apply directly from the Apply as Staff page. New submissions will appear here for review and approval.</p>
+      </div>
+    `;
     return;
   }
 
@@ -189,7 +205,7 @@ async function loadApplications() {
     renderApplications();
   } catch (error) {
     console.error("Failed to load applications:", error);
-    if (listEl) listEl.innerHTML = `<div class="empty-card">Unable to load applications: ${escapeHtml(error.message || "Firestore error")}</div>`;
+    if (listEl) listEl.innerHTML = `<div class="empty-card"><h3>Unable to load applications</h3><p>${escapeHtml(error.message || "Firestore error")}</p></div>`;
   } finally {
     if (refreshBtn) refreshBtn.textContent = "Refresh";
   }
@@ -247,6 +263,47 @@ async function updateApplicationReview(id, status, verificationStatus) {
   await updateDoc(doc(db, "staff_applications", id), nowPayload);
 }
 
+function buildStaffProfile(app = {}, company = {}, actor = {}) {
+  return {
+    uid: app.applicantUid,
+    userId: app.applicantUid,
+    email: app.applicantEmail || "",
+    fullName: app.fullName || "",
+    phone: app.phone || "",
+    role: app.roleRequested,
+    companyId: company.companyId || "",
+    companyName: company.companyName || app.desiredCompany || "",
+    market: app.desiredMarket || "",
+    status: "active",
+    approvalStatus: "approved",
+    employmentType: app.employmentType || "",
+    availability: app.availability || app.preferredSchedule || "",
+    earliestStartDate: app.earliestStartDate || "",
+    payExpectation: app.payExpectation || "",
+    hasDriversLicense: app.hasDriversLicense || "",
+    driversLicenseState: app.driversLicenseState || "",
+    hasReliableTransportation: app.hasReliableTransportation || "",
+    equipmentExperience: app.equipmentExperience || "",
+    profilePhotoURL: (app.attachments || []).find((file) => file.kind === "profile_photo")?.downloadURL || "",
+    applicationId: app.id || app.applicantUid,
+    attachments: app.attachments || [],
+    onboardingStage: "approved_pending_setup",
+    onboardingTasks: {
+      reviewPolicies: false,
+      completeTaxDocs: false,
+      completeTraining: false,
+      receiveAssignment: false,
+      activatePayouts: false
+    },
+    approvedAt: serverTimestamp(),
+    approvedBy: actor.uid,
+    approvedByEmail: actor.email,
+    approvedByName: actor.name,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  };
+}
+
 async function approveApplication(id) {
   const app = getApplication(id);
   if (!app) return;
@@ -279,6 +336,8 @@ async function approveApplication(id) {
       updatedByName: actor.name
     });
 
+    await setDoc(doc(db, "staff_profiles", app.applicantUid), buildStaffProfile(app, company, actor), { merge: true });
+
     await loadApplications();
   } catch (error) {
     console.error("Approval failed:", error);
@@ -309,85 +368,15 @@ async function rejectApplication(id) {
   }
 }
 
-function randomCodePart(length = 6) {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let output = "";
-  const values = new Uint32Array(length);
-  crypto.getRandomValues(values);
-  values.forEach((value) => {
-    output += chars[value % chars.length];
-  });
-  return output;
-}
-
-function buildInviteCode(role = "staff") {
-  const prefix = normalize(role).replace(/[^a-z0-9]+/g, "").slice(0, 4).toUpperCase() || "STAF";
-  return `${prefix}-${randomCodePart(4)}-${randomCodePart(4)}`;
-}
-
-async function createStaffInvite() {
-  const role = window.prompt("Role for invite: sales_rep, technician, cleaner, or staff", "sales_rep") || "";
-  const normalizedRole = normalize(role);
-  if (!roleAllowed(normalizedRole)) {
-    alert("Invite role must be sales_rep, technician, cleaner, or staff.");
-    return;
-  }
-
-  const companyName = window.prompt("Company / LLC for this invite", "Supreme True Clean") || "";
-  const market = window.prompt("Market / city for this invite", "Jacksonville, FL") || "";
-  const actor = actorSnapshot();
-  const code = buildInviteCode(normalizedRole);
-  const link = `${window.location.origin}/evaraos/staff_application.html?invite=${encodeURIComponent(code)}`;
-
-  try {
-    await setDoc(doc(db, "invites", code), {
-      code,
-      codeNormalized: code,
-      type: "staff_application",
-      status: "active",
-      roleSuggested: normalizedRole,
-      companyName,
-      market,
-      applicationUrl: link,
-      maxUses: 1,
-      useCount: 0,
-      createdAt: serverTimestamp(),
-      createdBy: actor.uid,
-      createdByEmail: actor.email,
-      createdByName: actor.name,
-      updatedAt: serverTimestamp()
-    }, { merge: false });
-
-    try {
-      await navigator.clipboard.writeText(link);
-      alert(`Invite created and copied:\n\n${code}\n${link}`);
-    } catch {
-      alert(`Invite created:\n\n${code}\n${link}`);
-    }
-  } catch (error) {
-    console.error("Invite creation failed:", error);
-    alert(error.message || "Could not create invite code.");
-  }
-}
-
-function injectInviteButton() {
-  const toolbar = document.querySelector(".applications-toolbar");
-  if (!toolbar || document.getElementById("createStaffInviteBtn")) return;
-
-  const button = document.createElement("button");
-  button.id = "createStaffInviteBtn";
-  button.type = "button";
-  button.className = "btn btn-theme-primary beam-target";
-  button.textContent = "Create Staff Invite";
-  toolbar.appendChild(button);
+function removeLegacyInviteButton() {
+  document.getElementById("createStaffInviteBtn")?.remove();
 }
 
 function bindEvents() {
-  injectInviteButton();
+  removeLegacyInviteButton();
   searchEl?.addEventListener("input", renderApplications);
   statusFilterEl?.addEventListener("change", renderApplications);
   refreshBtn?.addEventListener("click", loadApplications);
-  document.getElementById("createStaffInviteBtn")?.addEventListener("click", createStaffInvite);
 
   listEl?.addEventListener("click", (event) => {
     const approve = event.target.closest("[data-approve]");
