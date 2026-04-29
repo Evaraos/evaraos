@@ -5,6 +5,7 @@ import {
   collection,
   getDocs,
   doc,
+  setDoc,
   updateDoc,
   getSavedUserProfile,
   serverTimestamp
@@ -76,6 +77,7 @@ function filteredApplications() {
     const textMatch = !term || [
       app.fullName,
       app.applicantEmail,
+      app.inviteCode,
       app.roleRequested,
       app.desiredCompany,
       app.desiredMarket,
@@ -124,6 +126,7 @@ function renderApplicationCard(app = {}) {
           <span class="pill ${statusClass(status)}">${escapeHtml(status.replaceAll("_", " "))}</span>
           <span class="pill ${statusClass(verification)}">Verification: ${escapeHtml(verification.replaceAll("_", " "))}</span>
           <span class="pill">${escapeHtml(displayRole(app.roleRequested))}</span>
+          ${app.inviteCode ? `<span class="pill success">Invite: ${escapeHtml(app.inviteCode)}</span>` : ""}
         </div>
       </div>
 
@@ -182,7 +185,7 @@ async function loadApplications() {
   try {
     const snap = await getDocs(collection(db, "staff_applications"));
     applications = snap.docs.map((item) => ({ id: item.id, ...item.data() }));
-    applications.sort((a, b) => String(b.submittedAt?.seconds || 0).localeCompare(String(a.submittedAt?.seconds || 0)));
+    applications.sort((a, b) => Number(b.submittedAt?.seconds || 0) - Number(a.submittedAt?.seconds || 0));
     renderApplications();
   } catch (error) {
     console.error("Failed to load applications:", error);
@@ -306,10 +309,85 @@ async function rejectApplication(id) {
   }
 }
 
+function randomCodePart(length = 6) {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let output = "";
+  const values = new Uint32Array(length);
+  crypto.getRandomValues(values);
+  values.forEach((value) => {
+    output += chars[value % chars.length];
+  });
+  return output;
+}
+
+function buildInviteCode(role = "staff") {
+  const prefix = normalize(role).replace(/[^a-z0-9]+/g, "").slice(0, 4).toUpperCase() || "STAF";
+  return `${prefix}-${randomCodePart(4)}-${randomCodePart(4)}`;
+}
+
+async function createStaffInvite() {
+  const role = window.prompt("Role for invite: sales_rep, technician, cleaner, or staff", "sales_rep") || "";
+  const normalizedRole = normalize(role);
+  if (!roleAllowed(normalizedRole)) {
+    alert("Invite role must be sales_rep, technician, cleaner, or staff.");
+    return;
+  }
+
+  const companyName = window.prompt("Company / LLC for this invite", "Supreme True Clean") || "";
+  const market = window.prompt("Market / city for this invite", "Jacksonville, FL") || "";
+  const actor = actorSnapshot();
+  const code = buildInviteCode(normalizedRole);
+  const link = `${window.location.origin}/evaraos/staff_application.html?invite=${encodeURIComponent(code)}`;
+
+  try {
+    await setDoc(doc(db, "invites", code), {
+      code,
+      codeNormalized: code,
+      type: "staff_application",
+      status: "active",
+      roleSuggested: normalizedRole,
+      companyName,
+      market,
+      applicationUrl: link,
+      maxUses: 1,
+      useCount: 0,
+      createdAt: serverTimestamp(),
+      createdBy: actor.uid,
+      createdByEmail: actor.email,
+      createdByName: actor.name,
+      updatedAt: serverTimestamp()
+    }, { merge: false });
+
+    try {
+      await navigator.clipboard.writeText(link);
+      alert(`Invite created and copied:\n\n${code}\n${link}`);
+    } catch {
+      alert(`Invite created:\n\n${code}\n${link}`);
+    }
+  } catch (error) {
+    console.error("Invite creation failed:", error);
+    alert(error.message || "Could not create invite code.");
+  }
+}
+
+function injectInviteButton() {
+  const toolbar = document.querySelector(".applications-toolbar");
+  if (!toolbar || document.getElementById("createStaffInviteBtn")) return;
+
+  const button = document.createElement("button");
+  button.id = "createStaffInviteBtn";
+  button.type = "button";
+  button.className = "btn btn-theme-primary beam-target";
+  button.textContent = "Create Staff Invite";
+  toolbar.appendChild(button);
+}
+
 function bindEvents() {
+  injectInviteButton();
   searchEl?.addEventListener("input", renderApplications);
   statusFilterEl?.addEventListener("change", renderApplications);
   refreshBtn?.addEventListener("click", loadApplications);
+  document.getElementById("createStaffInviteBtn")?.addEventListener("click", createStaffInvite);
 
   listEl?.addEventListener("click", (event) => {
     const approve = event.target.closest("[data-approve]");
