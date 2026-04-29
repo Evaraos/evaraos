@@ -18,6 +18,10 @@ import {
   serverTimestamp
 } from "./firebase.js";
 
+const DEFAULT_PUBLIC_ROLE = "customer";
+const DEFAULT_PUBLIC_STATUS = "pending";
+const DEFAULT_PUBLIC_APPROVAL = "pending";
+
 function byId(id) {
   return document.getElementById(id);
 }
@@ -96,7 +100,7 @@ function injectSignupCompanySelector(companies = []) {
     <label class="field-label" for="signupCompanyId">Company / Workspace</label>
     <div class="input-shell aurora-card beam-target">
       <select id="signupCompanyId" name="companyId" class="input">
-        <option value="">No company yet / Evaraos owner workspace</option>
+        <option value="">No company yet / customer portal</option>
         ${companies.map((company) => {
           const id = String(company.id || "").replace(/"/g, "&quot;");
           const name = String(companyName(company)).replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -124,7 +128,14 @@ function getSelectedSignupCompany(companies = []) {
 }
 
 async function backfillLegacyUserDoc(user) {
-  if (!user?.uid) return { role: "owner", username: "" };
+  if (!user?.uid) {
+    return {
+      role: DEFAULT_PUBLIC_ROLE,
+      username: "",
+      status: DEFAULT_PUBLIC_STATUS,
+      approvalStatus: DEFAULT_PUBLIC_APPROVAL
+    };
+  }
 
   const userRef = doc(db, "users", user.uid);
   const snap = await getDoc(userRef);
@@ -140,11 +151,11 @@ async function backfillLegacyUserDoc(user) {
       displayName: fallbackName,
       fullName: fallbackName,
       name: fallbackName,
-      role: "owner",
+      role: DEFAULT_PUBLIC_ROLE,
       phone: "",
       bio: "",
-      status: "active",
-      approvalStatus: "approved",
+      status: DEFAULT_PUBLIC_STATUS,
+      approvalStatus: DEFAULT_PUBLIC_APPROVAL,
       companyId: "",
       companyName: "",
       createdAt: serverTimestamp(),
@@ -178,11 +189,11 @@ async function backfillLegacyUserDoc(user) {
   }
 
   if (!data.role) {
-    patch.role = "owner";
+    patch.role = DEFAULT_PUBLIC_ROLE;
   }
 
-  if (!data.status) patch.status = "active";
-  if (!data.approvalStatus) patch.approvalStatus = "approved";
+  if (!data.status) patch.status = DEFAULT_PUBLIC_STATUS;
+  if (!data.approvalStatus) patch.approvalStatus = DEFAULT_PUBLIC_APPROVAL;
   if (!data.updatedAt) patch.updatedAt = serverTimestamp();
 
   if (Object.keys(patch).length) {
@@ -259,7 +270,7 @@ async function handleLoginSubmit(event) {
     const user = result.user;
 
     const userData = await backfillLegacyUserDoc(user);
-    const role = String(userData.role || "owner").toLowerCase();
+    const role = String(userData.role || DEFAULT_PUBLIC_ROLE).toLowerCase();
 
     syncUserSession(user, role, {
       displayName: userData.displayName || userData.fullName || userData.name || user.displayName || user.email || "User",
@@ -267,14 +278,14 @@ async function handleLoginSubmit(event) {
       name: userData.name || userData.fullName || userData.displayName || user.displayName || "",
       username: userData.username || "",
       companyId: userData.companyId || "",
-      approvalStatus: userData.approvalStatus || "approved",
-      status: userData.status || "active"
+      approvalStatus: userData.approvalStatus || DEFAULT_PUBLIC_APPROVAL,
+      status: userData.status || DEFAULT_PUBLIC_STATUS
     });
 
     setMessage(messageEl, "Login successful. Redirecting...", "success");
-    navigateWithLoader("/evaraos/dashboard.html", {
-      title: "Opening dashboard",
-      subtitle: "Loading your Evaraos workspace."
+    navigateWithLoader(role === "customer" ? "/evaraos/customer_dashboard.html" : "/evaraos/dashboard.html", {
+      title: role === "customer" ? "Opening portal" : "Opening dashboard",
+      subtitle: role === "customer" ? "Loading your customer portal." : "Loading your Evaraos workspace."
     });
   } catch (error) {
     console.error("Login failed:", error);
@@ -357,11 +368,11 @@ async function handleSignupSubmit(event) {
       displayName: fullName,
       fullName,
       name: fullName,
-      role: "owner",
+      role: DEFAULT_PUBLIC_ROLE,
       phone: "",
       bio: "",
-      status: "active",
-      approvalStatus: "approved",
+      status: DEFAULT_PUBLIC_STATUS,
+      approvalStatus: DEFAULT_PUBLIC_APPROVAL,
       companyId: selectedCompanyId,
       companyName: selectedCompanyName,
       companySlug: selectedCompany?.slug || "",
@@ -372,20 +383,20 @@ async function handleSignupSubmit(event) {
 
     await setDoc(doc(db, "users", user.uid), userDoc, { merge: true });
 
-    syncUserSession(user, "owner", {
+    syncUserSession(user, DEFAULT_PUBLIC_ROLE, {
       displayName: fullName,
       fullName,
       name: fullName,
       username,
       companyId: selectedCompanyId,
-      approvalStatus: "approved",
-      status: "active"
+      approvalStatus: DEFAULT_PUBLIC_APPROVAL,
+      status: DEFAULT_PUBLIC_STATUS
     });
 
-    setMessage(messageEl, "Account created successfully. Redirecting...", "success");
-    navigateWithLoader("/evaraos/dashboard.html", {
-      title: "Creating workspace",
-      subtitle: "Opening your Evaraos dashboard."
+    setMessage(messageEl, "Account created. Your customer portal is opening while approval stays pending.", "success");
+    navigateWithLoader("/evaraos/customer_dashboard.html", {
+      title: "Opening portal",
+      subtitle: "Loading your customer account."
     });
   } catch (error) {
     console.error("Signup failed:", error);
