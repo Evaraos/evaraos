@@ -4,6 +4,8 @@ import {
   onAuthStateChanged,
   collection,
   onSnapshot,
+  query,
+  limit,
   updateDoc,
   doc,
   serverTimestamp,
@@ -27,6 +29,10 @@ const jobsRefreshBtnTop = document.getElementById("jobsRefreshBtnTop");
 const jobsRefreshBtnSide = document.getElementById("jobsRefreshBtnSide");
 const jobsSortBtn = document.getElementById("jobsSortBtn");
 
+const LIVE_LIMIT = 50;
+const FEED_LIMIT = 6;
+const RENDER_DEBOUNCE_MS = 90;
+
 let jobsData = [];
 let sortAsc = true;
 let hasBoundEvents = false;
@@ -34,11 +40,19 @@ let hasStartedAuthWatch = false;
 let currentFirebaseUser = null;
 let unsubscribeJobs = null;
 let isLiveFeedConnected = false;
+let renderTimer = null;
+
+let lastListHtml = "";
+let lastProgressHtml = "";
+let lastFeedHtml = "";
+let lastHeroTitle = "";
+let lastHeroText = "";
 
 function navigateWithLoader(url, options = {}) {
   if (window.EvaraLoader && typeof window.EvaraLoader.beginNavigationLoad === "function") {
     window.EvaraLoader.beginNavigationLoad(options);
   }
+
   requestAnimationFrame(() => window.location.assign(url));
 }
 
@@ -81,9 +95,11 @@ function assignedNames(job = {}) {
 
 function pillClass(status = "") {
   const safe = normalize(status);
+
   if (["completed", "done", "closed"].includes(safe)) return "success";
   if (["open", "available", "claimed", "scheduled", "in_progress", "in progress", "active", "working"].includes(safe)) return "working";
   if (["cancelled", "canceled", "archived", "paused"].includes(safe)) return "empty";
+
   return "warning";
 }
 
@@ -95,6 +111,7 @@ function claimPill(job = {}) {
 
 function actorProfile() {
   const profile = getSavedUserProfile?.() || {};
+
   return {
     uid: currentFirebaseUser?.uid || profile.uid || "",
     email: currentFirebaseUser?.email || profile.email || "",
@@ -116,23 +133,62 @@ function isCompanyLevelRole(role = "") {
 }
 
 function isStaffRole(role = "") {
-  return ["technician", "tech", "cleaner", "staff", "sales", "sales_rep", "manager", "operations_coordinator", "owner", "admin"].includes(normalize(role));
+  return [
+    "technician",
+    "tech",
+    "cleaner",
+    "staff",
+    "sales",
+    "sales_rep",
+    "manager",
+    "operations_coordinator",
+    "owner",
+    "admin"
+  ].includes(normalize(role));
 }
 
 function canClaimCompany(job = {}) {
   const actor = actorProfile();
-  if (!actor.uid || !isCompanyLevelRole(actor.role)) return false;
-  if (job.companyClaimed) return false;
-  return true;
+  return Boolean(actor.uid && isCompanyLevelRole(actor.role) && !job.companyClaimed);
 }
 
 function canClaimStaff(job = {}) {
   const actor = actorProfile();
+
   if (!actor.uid || !isStaffRole(actor.role)) return false;
-  if (!job.companyClaimed) return false;
-  if (job.staffClaimed) return false;
+  if (!job.companyClaimed || job.staffClaimed) return false;
   if (job.companyId && actor.companyId && String(job.companyId) !== String(actor.companyId)) return false;
+
   return true;
+}
+
+function setTextIfChanged(el, value) {
+  if (!el) return;
+
+  const next = String(value ?? "");
+  if (el.textContent !== next) el.textContent = next;
+}
+
+function setHtmlIfChanged(el, html, cacheValue) {
+  if (!el) return cacheValue;
+
+  if (cacheValue !== html) {
+    el.innerHTML = html;
+  }
+
+  return html;
+}
+
+function setHero(title, text) {
+  if (title !== lastHeroTitle) {
+    setTextIfChanged(jobsHeroTitle, title);
+    lastHeroTitle = title;
+  }
+
+  if (text !== lastHeroText) {
+    setTextIfChanged(jobsHeroText, text);
+    lastHeroText = text;
+  }
 }
 
 function setFeedConnectedState(isConnected) {
@@ -140,62 +196,54 @@ function setFeedConnectedState(isConnected) {
 
   [jobsRefreshBtnTop, jobsRefreshBtnSide].forEach((btn) => {
     if (!btn) return;
+
     btn.disabled = false;
-    btn.textContent = isConnected ? "Reconnect Feed" : "Connect Feed";
+    setTextIfChanged(btn, isConnected ? "Reconnect Feed" : "Connect Feed");
   });
-
-  if (jobsHeroTitle) {
-    jobsHeroTitle.textContent = isConnected
-      ? `${jobsData.length} jobs live`
-      : "Connecting live job feed...";
-  }
-
-  if (jobsHeroText) {
-    jobsHeroText.textContent = isConnected
-      ? "Live dispatch is connected. Jobs, company claims, and staff accepts update instantly without refreshing."
-      : "Connecting to the live Firestore dispatch stream.";
-  }
 }
 
 function renderLoadingState() {
-  if (jobsList) {
-    jobsList.innerHTML = `
+  lastListHtml = setHtmlIfChanged(
+    jobsList,
+    `
       <div class="dashboard-skeleton-grid">
-        <div class="dashboard-skeleton-card"><div class="dashboard-skeleton-line line-1"></div><div class="dashboard-skeleton-line line-2"></div><div class="dashboard-skeleton-line line-3"></div></div>
-        <div class="dashboard-skeleton-card"><div class="dashboard-skeleton-line line-1"></div><div class="dashboard-skeleton-line line-2"></div><div class="dashboard-skeleton-line line-3"></div></div>
+        <div class="dashboard-skeleton-card">
+          <div class="dashboard-skeleton-line line-1"></div>
+          <div class="dashboard-skeleton-line line-2"></div>
+          <div class="dashboard-skeleton-line line-3"></div>
+        </div>
+        <div class="dashboard-skeleton-card">
+          <div class="dashboard-skeleton-line line-1"></div>
+          <div class="dashboard-skeleton-line line-2"></div>
+          <div class="dashboard-skeleton-line line-3"></div>
+        </div>
       </div>
-    `;
-  }
+    `,
+    lastListHtml
+  );
 
-  if (jobsProgressStack) {
-    jobsProgressStack.innerHTML = `
-      <article class="dashboard-state-card loading">
-        <strong>Connecting live dispatch...</strong>
-        <span>Opening Firestore real-time job feed.</span>
-      </article>
-    `;
-  }
+  lastProgressHtml = setHtmlIfChanged(
+    jobsProgressStack,
+    `<article class="dashboard-state-card loading"><strong>Connecting live dispatch...</strong><span>Opening optimized Firestore real-time job feed.</span></article>`,
+    lastProgressHtml
+  );
 
-  if (jobsFeed) {
-    jobsFeed.innerHTML = `
-      <article class="dashboard-state-card loading">
-        <strong>Live feed starting...</strong>
-        <span>Jobs will appear instantly when created, claimed, or accepted.</span>
-      </article>
-    `;
-  }
+  lastFeedHtml = setHtmlIfChanged(
+    jobsFeed,
+    `<article class="dashboard-state-card loading"><strong>Live feed starting...</strong><span>Jobs update instantly without full page refresh.</span></article>`,
+    lastFeedHtml
+  );
 
-  if (jobsHeroTitle) jobsHeroTitle.textContent = "Connecting live job feed...";
-  if (jobsHeroText) jobsHeroText.textContent = "Opening live Firestore listener for Uber-style dispatch.";
+  setHero("Connecting live job feed...", "Opening optimized live listener for Uber-style dispatch.");
 }
 
 function filteredJobs() {
   const term = normalize(jobsSearch?.value || "");
-  let rows = [...jobsData];
+  let rows = jobsData;
 
   if (term) {
-    rows = rows.filter((job) => {
-      return [
+    rows = rows.filter((job) =>
+      [
         jobName(job),
         jobStatus(job),
         jobDescription(job),
@@ -206,15 +254,17 @@ function filteredJobs() {
         job.serviceType,
         job.address,
         assignedNames(job).join(" ")
-      ].some((value) => String(value || "").toLowerCase().includes(term));
-    });
+      ].some((value) => String(value || "").toLowerCase().includes(term))
+    );
   }
 
-  rows.sort((a, b) => {
+  rows = [...rows].sort((a, b) => {
     const left = jobName(a).toLowerCase();
     const right = jobName(b).toLowerCase();
+
     if (left < right) return sortAsc ? -1 : 1;
     if (left > right) return sortAsc ? 1 : -1;
+
     return 0;
   });
 
@@ -223,88 +273,96 @@ function filteredJobs() {
 
 function renderStats(rows) {
   const active = rows.filter((row) =>
-    ["open", "available", "claimed", "scheduled", "in_progress", "in progress", "active", "working"].includes(normalize(jobStatus(row)))
+    ["open", "available", "claimed", "scheduled", "in_progress", "in progress", "active", "working"].includes(
+      normalize(jobStatus(row))
+    )
   ).length;
 
   const completed = rows.filter((row) =>
     ["completed", "done", "closed"].includes(normalize(jobStatus(row)))
   ).length;
 
-  if (jobsStatTotal) jobsStatTotal.textContent = String(jobsData.length);
-  if (jobsStatActive) jobsStatActive.textContent = String(active);
-  if (jobsStatCompleted) jobsStatCompleted.textContent = String(completed);
-  if (jobsStatFiltered) jobsStatFiltered.textContent = String(rows.length);
+  setTextIfChanged(jobsStatTotal, jobsData.length);
+  setTextIfChanged(jobsStatActive, active);
+  setTextIfChanged(jobsStatCompleted, completed);
+  setTextIfChanged(jobsStatFiltered, rows.length);
 
-  if (jobsHeroTitle) {
-    jobsHeroTitle.textContent = isLiveFeedConnected
+  setHero(
+    isLiveFeedConnected
       ? `${jobsData.length} jobs live`
       : jobsData.length
         ? `${jobsData.length} jobs connected`
-        : "No jobs found yet.";
-  }
-
-  if (jobsHeroText) {
-    jobsHeroText.textContent = isLiveFeedConnected
-      ? "Live dispatch is connected. Jobs, company claims, and staff accepts update instantly without refreshing."
+        : "No jobs found yet.",
+    isLiveFeedConnected
+      ? `Optimized live dispatch connected. Showing up to ${LIVE_LIMIT} jobs for faster mobile performance.`
       : jobsData.length
         ? "Dispatch is live: companies claim platform jobs first, then staff claim execution first-come first-served."
-        : "Create or convert leads into jobs to populate the dispatch board.";
-  }
+        : "Create or convert leads into jobs to populate the dispatch board."
+  );
 }
 
 function renderList(rows) {
-  if (!jobsList) return;
+  const visibleRows = rows.slice(0, LIVE_LIMIT);
 
-  if (!rows.length) {
-    jobsList.innerHTML = `
-      <article class="dashboard-state-card empty">
-        <strong>No jobs found</strong>
-        <span>Try another search or convert a lead into a job.</span>
-      </article>
-    `;
+  if (!visibleRows.length) {
+    lastListHtml = setHtmlIfChanged(
+      jobsList,
+      `<article class="dashboard-state-card empty"><strong>No jobs found</strong><span>Try another search or convert a lead into a job.</span></article>`,
+      lastListHtml
+    );
     return;
   }
 
-  jobsList.innerHTML = rows.map((job) => {
-    const id = escapeHtml(job.id);
-    const name = escapeHtml(jobName(job));
-    const status = escapeHtml(jobStatus(job));
-    const description = escapeHtml(jobDescription(job));
-    const company = escapeHtml(jobCompany(job));
-    const claim = claimPill(job);
-    const team = assignedNames(job).length ? escapeHtml(assignedNames(job).join(", ")) : "Unassigned";
-    const companyButton = canClaimCompany(job)
-      ? `<button type="button" class="btn btn-theme-primary job-company-claim-btn" data-company-claim="${id}">Claim for Company</button>`
-      : "";
-    const staffButton = canClaimStaff(job)
-      ? `<button type="button" class="btn btn-theme-primary job-staff-claim-btn" data-staff-claim="${id}">Accept Job</button>`
-      : "";
+  const html =
+    visibleRows
+      .map((job) => {
+        const id = escapeHtml(job.id);
+        const name = escapeHtml(jobName(job));
+        const status = escapeHtml(jobStatus(job));
+        const description = escapeHtml(jobDescription(job));
+        const company = escapeHtml(jobCompany(job));
+        const claim = claimPill(job);
+        const team = assignedNames(job).length ? escapeHtml(assignedNames(job).join(", ")) : "Unassigned";
 
-    return `
-      <article class="dashboard-list-item glass-card aurora-card active-glow beam-target job-dispatch-item" data-job-id="${id}">
-        <div class="job-dispatch-content">
-          <strong>${name}</strong>
-          <span>${description}</span>
-          <div class="job-dispatch-meta">
-            <span>${company}</span>
-            <span>Team: ${team}</span>
-            <span>${escapeHtml(job.customerPhone || job.customerEmail || "No customer contact")}</span>
-          </div>
-        </div>
-        <div class="job-dispatch-actions">
-          <span class="dashboard-status-pill ${pillClass(status)}">${status}</span>
-          <span class="dashboard-status-pill ${claim.cls}">${claim.label}</span>
-          ${companyButton}
-          ${staffButton}
-        </div>
-      </article>
-    `;
-  }).join("");
+        const companyButton = canClaimCompany(job)
+          ? `<button type="button" class="btn btn-theme-primary job-company-claim-btn" data-company-claim="${id}">Claim for Company</button>`
+          : "";
+
+        const staffButton = canClaimStaff(job)
+          ? `<button type="button" class="btn btn-theme-primary job-staff-claim-btn" data-staff-claim="${id}">Accept Job</button>`
+          : "";
+
+        return `
+          <article class="dashboard-list-item glass-card aurora-card active-glow beam-target job-dispatch-item" data-job-id="${id}">
+            <div class="job-dispatch-content">
+              <strong>${name}</strong>
+              <span>${description}</span>
+
+              <div class="job-dispatch-meta">
+                <span>${company}</span>
+                <span>Team: ${team}</span>
+                <span>${escapeHtml(job.customerPhone || job.customerEmail || "No customer contact")}</span>
+              </div>
+            </div>
+
+            <div class="job-dispatch-actions">
+              <span class="dashboard-status-pill ${pillClass(status)}">${status}</span>
+              <span class="dashboard-status-pill ${claim.cls}">${claim.label}</span>
+              ${companyButton}
+              ${staffButton}
+            </div>
+          </article>
+        `;
+      })
+      .join("") +
+    (rows.length > LIVE_LIMIT
+      ? `<article class="dashboard-state-card working"><strong>Showing first ${LIVE_LIMIT}</strong><span>Use search to narrow ${rows.length} live jobs.</span></article>`
+      : "");
+
+  lastListHtml = setHtmlIfChanged(jobsList, html, lastListHtml);
 }
 
 function renderProgress(rows) {
-  if (!jobsProgressStack) return;
-
   const buckets = [
     { key: "open", label: "Open Market" },
     { key: "claimed", label: "Company Claimed" },
@@ -316,59 +374,75 @@ function renderProgress(rows) {
 
   const total = rows.length || 1;
 
-  jobsProgressStack.innerHTML = buckets.map((bucket) => {
-    const count = rows.filter((row) =>
-      normalize(jobStatus(row)) === bucket.key ||
-      (bucket.key === "in_progress" && normalize(jobStatus(row)) === "in progress")
-    ).length;
+  const html = buckets
+    .map((bucket) => {
+      const count = rows.filter(
+        (row) =>
+          normalize(jobStatus(row)) === bucket.key ||
+          (bucket.key === "in_progress" && normalize(jobStatus(row)) === "in progress")
+      ).length;
 
-    const width = Math.max(6, Math.round((count / total) * 100));
+      const width = Math.max(6, Math.round((count / total) * 100));
 
-    return `
-      <div class="dashboard-progress-row glass-card aurora-card active-glow beam-target">
-        <div class="dashboard-progress-copy">
-          <strong>${bucket.label}</strong>
-          <span>${count} job(s)</span>
+      return `
+        <div class="dashboard-progress-row glass-card aurora-card active-glow beam-target">
+          <div class="dashboard-progress-copy">
+            <strong>${bucket.label}</strong>
+            <span>${count} job(s)</span>
+          </div>
+          <div class="dashboard-progress-bar"><span style="width: ${width}%;"></span></div>
         </div>
-        <div class="dashboard-progress-bar"><span style="width: ${width}%;"></span></div>
-      </div>
-    `;
-  }).join("");
+      `;
+    })
+    .join("");
+
+  lastProgressHtml = setHtmlIfChanged(jobsProgressStack, html, lastProgressHtml);
 }
 
 function renderFeed(rows) {
-  if (!jobsFeed) return;
+  const visibleRows = rows.slice(0, FEED_LIMIT);
 
-  if (!rows.length) {
-    jobsFeed.innerHTML = `
-      <article class="dashboard-state-card empty">
-        <strong>No job activity</strong>
-        <span>Recent execution activity will appear here once records exist.</span>
-      </article>
-    `;
+  if (!visibleRows.length) {
+    lastFeedHtml = setHtmlIfChanged(
+      jobsFeed,
+      `<article class="dashboard-state-card empty"><strong>No job activity</strong><span>Recent execution activity will appear here once records exist.</span></article>`,
+      lastFeedHtml
+    );
     return;
   }
 
-  jobsFeed.innerHTML = rows.slice(0, 8).map((job) => {
-    const name = escapeHtml(jobName(job));
-    const status = escapeHtml(jobStatus(job));
-    const claim = claimPill(job);
+  const html = visibleRows
+    .map((job) => {
+      const name = escapeHtml(jobName(job));
+      const status = escapeHtml(jobStatus(job));
+      const claim = claimPill(job);
 
-    return `
-      <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
-        <strong>${name}</strong>
-        <span>Status: ${status} • ${claim.label}</span>
-      </article>
-    `;
-  }).join("");
+      return `
+        <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
+          <strong>${name}</strong>
+          <span>Status: ${status} • ${claim.label}</span>
+        </article>
+      `;
+    })
+    .join("");
+
+  lastFeedHtml = setHtmlIfChanged(jobsFeed, html, lastFeedHtml);
 }
 
-function renderJobs() {
+function renderJobsNow() {
+  renderTimer = null;
+
   const rows = filteredJobs();
+
   renderStats(rows);
   renderList(rows);
   renderProgress(rows);
   renderFeed(rows);
+}
+
+function scheduleRenderJobs() {
+  if (renderTimer) clearTimeout(renderTimer);
+  renderTimer = setTimeout(renderJobsNow, RENDER_DEBOUNCE_MS);
 }
 
 function startLiveJobsFeed() {
@@ -380,7 +454,7 @@ function startLiveJobsFeed() {
   renderLoadingState();
 
   unsubscribeJobs = onSnapshot(
-    collection(db, "jobs"),
+    query(collection(db, "jobs"), limit(LIVE_LIMIT)),
     (snapshot) => {
       jobsData = snapshot.docs.map((docSnap) => ({
         id: docSnap.id,
@@ -388,22 +462,19 @@ function startLiveJobsFeed() {
       }));
 
       setFeedConnectedState(true);
-      renderJobs();
+      scheduleRenderJobs();
     },
     (error) => {
       console.error("Live jobs feed failed:", error);
       setFeedConnectedState(false);
 
-      const errorCard = `
-        <article class="dashboard-state-card error">
-          <strong>Live feed disconnected</strong>
-          <span>${escapeHtml(error.message || "Firestore listener failed.")}</span>
-        </article>
-      `;
+      const errorCard = `<article class="dashboard-state-card error"><strong>Live feed disconnected</strong><span>${escapeHtml(
+        error.message || "Firestore listener failed."
+      )}</span></article>`;
 
-      if (jobsList) jobsList.innerHTML = errorCard;
-      if (jobsProgressStack) jobsProgressStack.innerHTML = errorCard;
-      if (jobsFeed) jobsFeed.innerHTML = errorCard;
+      lastListHtml = setHtmlIfChanged(jobsList, errorCard, lastListHtml);
+      lastProgressHtml = setHtmlIfChanged(jobsProgressStack, errorCard, lastProgressHtml);
+      lastFeedHtml = setHtmlIfChanged(jobsFeed, errorCard, lastFeedHtml);
     }
   );
 }
@@ -464,15 +535,72 @@ function injectDispatchStyles() {
   const style = document.createElement("style");
   style.id = "jobDispatchStyles";
   style.textContent = `
-    .job-dispatch-item { align-items: flex-start; gap: 16px; }
-    .job-dispatch-content { min-width: 0; display: grid; gap: 8px; }
-    .job-dispatch-meta { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px; }
-    .job-dispatch-meta span { border-radius: 999px; padding: 6px 9px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color: var(--text-muted, rgba(255,255,255,0.68)); font-size: 11px; font-weight: 800; }
-    .job-dispatch-actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 260px; }
-    .job-dispatch-actions .btn { min-height: 34px; padding: 8px 10px; font-size: 12px; }
+    .job-dispatch-item {
+      align-items: flex-start;
+      gap: 14px;
+      contain: content;
+    }
+
+    .job-dispatch-content {
+      min-width: 0;
+      display: grid;
+      gap: 7px;
+    }
+
+    .job-dispatch-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 4px;
+    }
+
+    .job-dispatch-meta span {
+      border-radius: 999px;
+      padding: 6px 9px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      color: var(--text-muted, rgba(255,255,255,0.68));
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .job-dispatch-actions {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      min-width: 250px;
+    }
+
+    .job-dispatch-actions .btn {
+      min-height: 34px;
+      padding: 8px 10px;
+      font-size: 12px;
+    }
+
     @media (max-width: 760px) {
-      .job-dispatch-item { display: grid; }
-      .job-dispatch-actions { justify-content: flex-start; min-width: 0; }
+      .job-dispatch-item {
+        display: grid;
+        box-shadow: none !important;
+        animation: none !important;
+      }
+
+      .job-dispatch-actions {
+        justify-content: flex-start;
+        min-width: 0;
+      }
+
+      .job-dispatch-meta span {
+        font-size: 10px;
+        padding: 5px 8px;
+      }
+
+      #jobsList .aurora-card,
+      #jobsFeed .aurora-card,
+      #jobsProgressStack .aurora-card {
+        animation: none !important;
+      }
     }
   `;
 
@@ -485,15 +613,14 @@ function bindEvents() {
 
   injectDispatchStyles();
 
-  jobsSearch?.addEventListener("input", renderJobs);
-
+  jobsSearch?.addEventListener("input", scheduleRenderJobs);
   jobsRefreshBtnTop?.addEventListener("click", startLiveJobsFeed);
   jobsRefreshBtnSide?.addEventListener("click", startLiveJobsFeed);
 
   jobsSortBtn?.addEventListener("click", () => {
     sortAsc = !sortAsc;
     jobsSortBtn.textContent = sortAsc ? "Sort A–Z" : "Sort Z–A";
-    renderJobs();
+    scheduleRenderJobs();
   });
 
   jobsList?.addEventListener("click", async (event) => {
@@ -504,15 +631,9 @@ function bindEvents() {
     if (staffBtn) return claimStaffJob(staffBtn.getAttribute("data-staff-claim"));
   });
 
-  document.querySelectorAll(".dashboard-nav-link").forEach((link) => {
-    link.addEventListener("click", () => {
-      document.querySelectorAll(".dashboard-nav-link").forEach((item) => item.classList.remove("active"));
-      link.classList.add("active");
-    });
-  });
-
   window.addEventListener("beforeunload", () => {
     if (unsubscribeJobs) unsubscribeJobs();
+    if (renderTimer) clearTimeout(renderTimer);
   });
 }
 
