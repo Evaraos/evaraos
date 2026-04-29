@@ -23,6 +23,7 @@ import {
   limit,
   getDoc,
   getDocs,
+  onSnapshot,
   setDoc as firebaseSetDoc,
   addDoc as firebaseAddDoc,
   updateDoc as firebaseUpdateDoc,
@@ -68,6 +69,7 @@ export {
   limit,
   getDoc,
   getDocs,
+  onSnapshot,
   serverTimestamp,
   Timestamp,
   writeBatch,
@@ -266,11 +268,8 @@ export async function addDoc(collectionRef, data) {
 }
 
 export async function setDoc(docRef, data, options) {
-  if (options) {
-    await firebaseSetDoc(docRef, data, options);
-  } else {
-    await firebaseSetDoc(docRef, data);
-  }
+  if (options) await firebaseSetDoc(docRef, data, options);
+  else await firebaseSetDoc(docRef, data);
 
   const collectionPath = documentCollectionPath(docRef);
 
@@ -417,18 +416,15 @@ export function clearSavedUserProfile() {
 
 export function normalizeRole(role = "") {
   const value = String(role || "").trim().toLowerCase();
-
   if (value === "tech") return "technician";
   if (value === "sales_rep") return "sales";
   if (value === "super_admin") return "owner";
   if (value === "operations_coordinator") return "manager";
-
   return value || "customer";
 }
 
 export function roleLabelFromRole(role = "") {
   const value = String(role || "").trim().toLowerCase();
-
   if (value === "owner") return "Executive Access";
   if (value === "super_admin") return "Executive Access";
   if (value === "admin") return "Admin Access";
@@ -440,39 +436,20 @@ export function roleLabelFromRole(role = "") {
   if (value === "tech") return "Technician Access";
   if (value === "hr") return "HR Access";
   if (value === "customer") return "Customer Access";
-
   return "Customer Access";
 }
 
 export function applyUserToUi(userData = {}) {
-  const displayName =
-    userData.displayName ||
-    userData.fullName ||
-    userData.name ||
-    userData.username ||
-    userData.email ||
-    "User";
-
+  const displayName = userData.displayName || userData.fullName || userData.name || userData.username || userData.email || "User";
   const email = userData.email || "";
   const role = userData.role || "customer";
   const initial = displayName.trim().charAt(0).toUpperCase() || "U";
   const roleText = roleLabelFromRole(role);
 
-  document.querySelectorAll("[data-user-name]").forEach((el) => {
-    el.textContent = displayName;
-  });
-
-  document.querySelectorAll("[data-user-email]").forEach((el) => {
-    el.textContent = email;
-  });
-
-  document.querySelectorAll("[data-user-avatar]").forEach((el) => {
-    el.textContent = initial;
-  });
-
-  document.querySelectorAll("[data-user-role]").forEach((el) => {
-    el.textContent = roleText;
-  });
+  document.querySelectorAll("[data-user-name]").forEach((el) => { el.textContent = displayName; });
+  document.querySelectorAll("[data-user-email]").forEach((el) => { el.textContent = email; });
+  document.querySelectorAll("[data-user-avatar]").forEach((el) => { el.textContent = initial; });
+  document.querySelectorAll("[data-user-role]").forEach((el) => { el.textContent = roleText; });
 
   const dashboardAvatar = document.getElementById("dashboardAvatar");
   const dashboardAvatarLarge = document.getElementById("dashboardAvatarLarge");
@@ -498,6 +475,7 @@ export function syncUserSession(user, role = "customer", extras = {}) {
     username: extras.username || "",
     role: role || "customer",
     companyId: extras.companyId || "",
+    companyName: extras.companyName || "",
     approvalStatus: extras.approvalStatus || "",
     status: extras.status || "active"
   };
@@ -506,10 +484,7 @@ export function syncUserSession(user, role = "customer", extras = {}) {
   saveUserProfile(profile);
   applyUserToUi(profile);
 
-  dispatchSessionReady({
-    authenticated: true,
-    role: profile.role
-  });
+  dispatchSessionReady({ authenticated: true, role: profile.role });
 }
 
 export function clearUserSession() {
@@ -519,26 +494,11 @@ export function clearUserSession() {
 
 export async function logoutAndRedirect(path = "/evaraos/login.html") {
   showGlobalLoader();
-
   await signOut(auth);
   clearUserSession();
-
-  try {
-    sessionStorage.clear();
-  } catch {}
-
-  try {
-    localStorage.removeItem("evaraos-last-private-page");
-  } catch {}
-
-  navigateWithLoader(
-    path,
-    {
-      title: "Signed out",
-      subtitle: "Returning to login."
-    },
-    true
-  );
+  try { sessionStorage.clear(); } catch {}
+  try { localStorage.removeItem("evaraos-last-private-page"); } catch {}
+  navigateWithLoader(path, { title: "Signed out", subtitle: "Returning to login." }, true);
 }
 
 export async function logout() {
@@ -557,35 +517,19 @@ export function resolveProtectedPage() {
 let protectRouteActivePromise = null;
 let protectRouteUnsubscribe = null;
 
-export function protectRoute({
-  requireAuth = true,
-  redirectGuestTo = "/evaraos/login.html",
-  redirectAuthedTo = "/evaraos/dashboard.html"
-} = {}) {
+export function protectRoute({ requireAuth = true, redirectGuestTo = "/evaraos/login.html", redirectAuthedTo = "/evaraos/dashboard.html" } = {}) {
   if (protectRouteActivePromise) return protectRouteActivePromise;
-
   const savedProfile = getSavedUserProfile();
-
-  if (!savedProfile?.uid) {
-    markProtectedPagePending();
-  }
+  if (!savedProfile?.uid) markProtectedPagePending();
 
   const path = window.location.pathname;
-  const isAuthPage =
-    path.endsWith("/login.html") ||
-    path.endsWith("/signup.html") ||
-    path.endsWith("/reset.html");
+  const isAuthPage = path.endsWith("/login.html") || path.endsWith("/signup.html") || path.endsWith("/reset.html");
 
   if (requireAuth && savedProfile?.uid) {
     applyUserToUi(savedProfile);
     resolveProtectedPage();
-
     protectRouteActivePromise = Promise.resolve(true);
-
-    setTimeout(() => {
-      protectRouteActivePromise = null;
-    }, 0);
-
+    setTimeout(() => { protectRouteActivePromise = null; }, 0);
     return protectRouteActivePromise;
   }
 
@@ -603,26 +547,14 @@ export function protectRoute({
 
       if (user) {
         currentUser = user;
-
         if (!requireAuth && isAuthPage) {
-          navigateWithLoader(
-            redirectAuthedTo,
-            {
-              title: "Opening dashboard",
-              subtitle: "Your session is active."
-            },
-            true
-          );
-
+          navigateWithLoader(redirectAuthedTo, { title: "Opening dashboard", subtitle: "Your session is active." }, true);
           resolve(true);
           protectRouteActivePromise = null;
           return;
         }
 
-        syncUserSession(user, getSavedUserRole() || "customer", {
-          displayName: user.displayName || user.email || "User"
-        });
-
+        syncUserSession(user, getSavedUserRole() || "customer", { displayName: user.displayName || user.email || "User" });
         resolveProtectedPage();
         resolve(true);
         protectRouteActivePromise = null;
@@ -630,19 +562,9 @@ export function protectRoute({
       }
 
       currentUser = null;
-
       if (requireAuth) {
         clearUserSession();
-
-        navigateWithLoader(
-          redirectGuestTo,
-          {
-            title: "Returning to login",
-            subtitle: "Please sign in to continue."
-          },
-          true
-        );
-
+        navigateWithLoader(redirectGuestTo, { title: "Returning to login", subtitle: "Please sign in to continue." }, true);
         resolve(false);
         protectRouteActivePromise = null;
         return;
@@ -660,19 +582,8 @@ export function protectRoute({
 export async function saveUserThemePreferences(themePreferences = {}) {
   const user = auth.currentUser;
   if (!user?.uid) return false;
-
   try {
-    const userRef = doc(db, "users", user.uid);
-
-    await setDoc(
-      userRef,
-      {
-        themePreferences: themePreferences || {},
-        themePreferencesUpdatedAt: new Date().toISOString()
-      },
-      { merge: true }
-    );
-
+    await setDoc(doc(db, "users", user.uid), { themePreferences: themePreferences || {}, themePreferencesUpdatedAt: new Date().toISOString() }, { merge: true });
     return true;
   } catch (error) {
     console.error("Failed to save theme preferences:", error);
@@ -683,13 +594,9 @@ export async function saveUserThemePreferences(themePreferences = {}) {
 export async function getUserThemePreferences() {
   const user = auth.currentUser;
   if (!user?.uid) return null;
-
   try {
-    const userRef = doc(db, "users", user.uid);
-    const snap = await getDoc(userRef);
-
+    const snap = await getDoc(doc(db, "users", user.uid));
     if (!snap.exists()) return null;
-
     return snap.data()?.themePreferences || null;
   } catch (error) {
     console.error("Failed to load theme preferences:", error);
@@ -698,15 +605,7 @@ export async function getUserThemePreferences() {
 }
 
 function getDisplayNameFromFirestoreData(data = {}, user = {}) {
-  return (
-    data.displayName ||
-    data.fullName ||
-    data.name ||
-    data.username ||
-    user.displayName ||
-    user.email ||
-    "User"
-  );
+  return data.displayName || data.fullName || data.name || data.username || user.displayName || user.email || "User";
 }
 
 async function ensureUserDocument(user) {
@@ -714,27 +613,24 @@ async function ensureUserDocument(user) {
   const snap = await getDoc(userRef);
 
   if (!snap.exists()) {
-    await setDoc(
-      userRef,
-      {
-        uid: user.uid,
-        id: user.uid,
-        email: user.email || "",
-        displayName: user.displayName || "",
-        fullName: user.displayName || "",
-        name: user.displayName || "",
-        username: "",
-        usernameLower: "",
-        role: getSavedUserRole() || "customer",
-        status: "active",
-        approvalStatus: "approved",
-        companyId: "",
-        themePreferences: null,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      },
-      { merge: true }
-    );
+    await setDoc(userRef, {
+      uid: user.uid,
+      id: user.uid,
+      email: user.email || "",
+      displayName: user.displayName || "",
+      fullName: user.displayName || "",
+      name: user.displayName || "",
+      username: "",
+      usernameLower: "",
+      role: getSavedUserRole() || "customer",
+      status: "active",
+      approvalStatus: "approved",
+      companyId: "",
+      companyName: "",
+      themePreferences: null,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
   }
 
   const freshSnap = await getDoc(userRef);
@@ -752,16 +648,10 @@ function startGlobalAuthSync() {
     }
 
     currentUser = user;
-
     const savedProfile = getSavedUserProfile();
 
-    if (savedProfile?.uid) {
-      applyUserToUi(savedProfile);
-    } else {
-      syncUserSession(user, getSavedUserRole() || "customer", {
-        displayName: user.displayName || user.email || "User"
-      });
-    }
+    if (savedProfile?.uid) applyUserToUi(savedProfile);
+    else syncUserSession(user, getSavedUserRole() || "customer", { displayName: user.displayName || user.email || "User" });
 
     try {
       const data = await ensureUserDocument(user);
@@ -774,6 +664,7 @@ function startGlobalAuthSync() {
         name: data.name || data.fullName || data.displayName || user.displayName || "",
         username: data.username || "",
         companyId: data.companyId || "",
+        companyName: data.companyName || "",
         approvalStatus: data.approvalStatus || "",
         status: data.status || "active"
       });
