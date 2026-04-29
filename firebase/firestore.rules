@@ -30,6 +30,16 @@ service cloud.firestore {
       ];
     }
 
+    function isOperationsPlus() {
+      return signedIn() && userRole() in [
+        'owner', 'Owner', 'OWNER',
+        'super_admin', 'Super Admin', 'SUPER_ADMIN',
+        'admin', 'Admin', 'ADMIN',
+        'manager', 'Manager', 'MANAGER',
+        'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR'
+      ];
+    }
+
     function isManagerPlus() {
       return signedIn() && userRole() in [
         'owner', 'Owner', 'OWNER',
@@ -38,10 +48,7 @@ service cloud.firestore {
         'manager', 'Manager', 'MANAGER',
         'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR',
         'sales', 'Sales', 'SALES',
-        'sales_rep', 'Sales Rep', 'SALES_REP',
-        'technician', 'Technician', 'TECHNICIAN',
-        'cleaner', 'Cleaner', 'CLEANER',
-        'staff', 'Staff', 'STAFF'
+        'sales_rep', 'Sales Rep', 'SALES_REP'
       ];
     }
 
@@ -74,12 +81,60 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == userId;
     }
 
+    function safeSelfUserCreate(userId) {
+      return ownsUserDoc(userId)
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.id == request.auth.uid
+        && request.resource.data.role == 'customer'
+        && request.resource.data.status == 'pending'
+        && request.resource.data.approvalStatus == 'pending';
+    }
+
+    function safeSelfUserUpdate(userId) {
+      return ownsUserDoc(userId)
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.companyId == resource.data.companyId
+        && request.resource.data.companyName == resource.data.companyName
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.approvalStatus == resource.data.approvalStatus
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'displayName',
+          'fullName',
+          'name',
+          'username',
+          'usernameLower',
+          'phone',
+          'bio',
+          'notes',
+          'photoURL',
+          'themePreferences',
+          'themePreferencesUpdatedAt',
+          'notificationPreferences',
+          'updatedAt'
+        ]);
+    }
+
+    function validAuditCreate() {
+      return signedIn()
+        && request.resource.data.actorUserId == request.auth.uid
+        && request.resource.data.createdAt == request.time;
+    }
+
+    function sameCompanyOrPlatform(recordCompanyId) {
+      return recordCompanyId == null ||
+        recordCompanyId == '' ||
+        userCompanyId() == null ||
+        userCompanyId() == '' ||
+        recordCompanyId == userCompanyId();
+    }
+
     function companyClaimUpdate() {
       return isCompanyDispatcher()
         && resource.data.companyClaimed != true
         && request.resource.data.companyClaimed == true
         && request.resource.data.companyClaimedBy == request.auth.uid
-        && request.resource.data.status == 'claimed';
+        && request.resource.data.status == 'claimed'
+        && sameCompanyOrPlatform(resource.data.companyId);
     }
 
     function staffClaimUpdate() {
@@ -89,17 +144,17 @@ service cloud.firestore {
         && request.resource.data.staffClaimed == true
         && request.resource.data.staffClaimedBy == request.auth.uid
         && request.resource.data.status == 'in_progress'
-        && (
-          resource.data.companyId == null ||
-          userCompanyId() == null ||
-          resource.data.companyId == userCompanyId()
-        );
+        && sameCompanyOrPlatform(resource.data.companyId);
+    }
+
+    function operationsJobUpdate() {
+      return isOperationsPlus() && sameCompanyOrPlatform(resource.data.companyId);
     }
 
     match /users/{userId} {
-      allow create: if signedIn() && (ownsUserDoc(userId) || isOwnerOrAdmin());
+      allow create: if isOwnerOrAdmin() || safeSelfUserCreate(userId);
       allow read: if signedIn() && (ownsUserDoc(userId) || isManagerPlus());
-      allow update: if signedIn() && (ownsUserDoc(userId) || isOwnerOrAdmin());
+      allow update: if isOwnerOrAdmin() || safeSelfUserUpdate(userId);
       allow delete: if isOwnerOrAdmin() && !ownsUserDoc(userId);
     }
 
@@ -110,19 +165,20 @@ service cloud.firestore {
 
     match /history_timeline/{logId} {
       allow read: if isOwnerOrAdmin();
-      allow create: if signedIn();
+      allow create: if validAuditCreate();
       allow update, delete: if false;
     }
 
     match /audit_logs/{logId} {
       allow read: if isOwnerOrAdmin();
-      allow create: if signedIn();
+      allow create: if validAuditCreate();
       allow update, delete: if false;
     }
 
     match /leads/{leadId} {
       allow read: if signedIn();
-      allow create, update, delete: if isManagerPlus();
+      allow create, update: if isManagerPlus();
+      allow delete: if isOwnerOrAdmin();
 
       match /activities/{activityId} {
         allow read: if signedIn();
@@ -140,27 +196,30 @@ service cloud.firestore {
     match /jobs/{jobId} {
       allow read: if signedIn();
       allow create: if isManagerPlus();
-      allow update: if isOwnerOrAdmin() || companyClaimUpdate() || staffClaimUpdate() || isManagerPlus();
+      allow update: if isOwnerOrAdmin() || operationsJobUpdate() || companyClaimUpdate() || staffClaimUpdate();
       allow delete: if isOwnerOrAdmin();
     }
 
     match /customer_services/{serviceId} {
       allow read: if signedIn();
-      allow create, update, delete: if isManagerPlus();
+      allow create, update: if isOperationsPlus();
+      allow delete: if isOwnerOrAdmin();
     }
 
     match /services/{serviceId} {
       allow read: if signedIn();
-      allow create, update, delete: if isManagerPlus();
+      allow create, update: if isOperationsPlus();
+      allow delete: if isOwnerOrAdmin();
     }
 
     match /subscriptions/{subscriptionId} {
       allow read: if signedIn();
-      allow create, update, delete: if isManagerPlus();
+      allow create, update: if isOperationsPlus();
+      allow delete: if isOwnerOrAdmin();
     }
 
     match /payments/{paymentId} {
-      allow read: if signedIn();
+      allow read: if isOwnerOrAdmin();
       allow create, update, delete: if isOwnerOrAdmin();
     }
 
