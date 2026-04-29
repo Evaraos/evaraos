@@ -156,11 +156,11 @@ function cloneAppearance(value) {
   return JSON.parse(JSON.stringify(normalizeAppearance(value || getStoredAppearance())));
 }
 
-function getStoredTheme() {
+function getStoredBaseFamily() {
   try {
-    return normalizeTheme(localStorage.getItem(STORAGE_KEY) || "dark");
+    return normalizeBaseFamily(localStorage.getItem(BASE_FAMILY_KEY) || "light");
   } catch {
-    return "dark";
+    return "light";
   }
 }
 
