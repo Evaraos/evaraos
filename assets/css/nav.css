@@ -799,7 +799,7 @@ html[data-theme="galaxy"] .eva-quick-bubble {
 
 @media (max-width: 480px) {
   .eva-nav-shell {
-    top: max(16px, env(safe-area-inset-top));
+    top: max(6px, calc(env(safe-area-inset-top) - 10px));
   }
 
   .eva-nav-pill {
