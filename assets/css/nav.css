@@ -45,7 +45,7 @@ body.eva-no-select,
   --brand-max-width: calc(38px + 192px * var(--nav-progress));
 
   position: fixed;
-  top: max(14px, env(safe-area-inset-top));
+  top: max(6px, calc(env(safe-area-inset-top) - 10px));
   left: 0;
   right: 0;
   transform: none;
