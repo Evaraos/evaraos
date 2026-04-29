@@ -24,7 +24,8 @@ export const NAV_STATE = {
 
 export const NAV_PAGES = {
   common: [
-    { page: "index.html", label: "Home", icon: "home", bubble: "home" }
+    { page: "index.html", label: "Home", icon: "home", bubble: "home" },
+    { page: "staff_application.html", label: "Apply as Staff", icon: "users", bubble: "apply" }
   ],
 
   guestMain: [
@@ -41,6 +42,7 @@ export const NAV_PAGES = {
   ownerOnly: [
     { page: "companies.html", label: "Companies", icon: "companies", bubble: "companies" },
     { page: "users.html", label: "Users", icon: "users", bubble: "users" },
+    { page: "applications.html", label: "Applications", icon: "users", bubble: "applications" },
     { page: "leads.html", label: "Leads", icon: "leads", bubble: "leads" },
     { page: "jobs.html", label: "Jobs", icon: "jobs", bubble: "jobs" },
     { page: "qa.html", label: "QA", icon: "qa", bubble: "qa" }
