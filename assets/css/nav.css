@@ -744,7 +744,7 @@ html[data-theme="galaxy"] .eva-quick-bubble {
 
 @media (max-width: 640px) {
   .eva-nav-shell {
-    top: max(16px, env(safe-area-inset-top));
+    top: max(6px, calc(env(safe-area-inset-top) - 10px));
     padding-inline: max(7px, env(safe-area-inset-left)) max(7px, env(safe-area-inset-right));
     --pill-min-width: 152px;
     --pill-max-width: calc(100vw - 18px);
