@@ -17,6 +17,7 @@
 /* Components */
 @import url("./components/glass.css");
 @import url("./components/buttons.css");
+@import url("./components/application-polish.css?v=1");
 
 /* Effects */
 @import url("./effects/beam.css");
