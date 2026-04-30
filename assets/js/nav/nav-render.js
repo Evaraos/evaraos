@@ -126,7 +126,14 @@ export function renderNav() {
 
         <div class="eva-divider"></div>
 
-        <div class="eva-quick">
+        <div class="eva-quick eva-utility-row">
+          <button type="button" class="eva-chip eva-install-chip" id="installBtn" aria-label="Install Evaraos app" title="Install app">
+            <span class="eva-chip-row">
+              <span class="eva-chip-icon">${iconSvg("install")}</span>
+              <span class="eva-install-label">Install</span>
+            </span>
+          </button>
+
           <button type="button" class="eva-chip" id="evaThemeToggle">
             <span class="eva-chip-row">
               <span class="eva-chip-dot"></span>
