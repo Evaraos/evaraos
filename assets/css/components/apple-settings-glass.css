@@ -1,65 +1,62 @@
-/* ===============================
-   EVARAOS APPLE SETTINGS GLASS FINAL
-   Plain Apple Settings direction. Dynamic clouds and loud beams removed.
-   Liquid Glass surfaces stay. Text inside glass/buttons uses subtle engraved background-colored lettering.
-   =============================== */
+/* EVARAOS APPLE SETTINGS GLASS
+   Current source for the Apple Settings inspired visual system.
+   Plain backgrounds, Liquid Glass cards, softer headings, visible pills.
+*/
 
 :root {
-  --evara-page-light: #f2f2f7;
-  --evara-page-light-soft: #f7f7fb;
-  --evara-card-light: rgba(255, 255, 255, 0.82);
-  --evara-card-light-strong: rgba(255, 255, 255, 0.94);
-  --evara-line-light: rgba(60, 60, 67, 0.14);
-  --evara-text-light: #111111;
-  --evara-subtext-light: rgba(60, 60, 67, 0.62);
-  --evara-cut-light: #f2f2f7;
+  --ios-light-bg: #f2f2f7;
+  --ios-light-card: rgba(255,255,255,0.92);
+  --ios-light-card-2: rgba(255,255,255,0.76);
+  --ios-light-line: rgba(60,60,67,0.14);
+  --ios-light-title: #505654;
+  --ios-light-heading: #626866;
+  --ios-light-body: rgba(60,60,67,0.66);
+  --ios-light-muted: rgba(60,60,67,0.52);
+  --ios-light-engrave: #e8e8ee;
+  --ios-light-pill: #747b79;
 
-  --evara-page-dark: #000000;
-  --evara-card-dark: rgba(28, 28, 30, 0.80);
-  --evara-card-dark-strong: rgba(44, 44, 46, 0.92);
-  --evara-line-dark: rgba(255, 255, 255, 0.12);
-  --evara-text-dark: #f5f5f7;
-  --evara-subtext-dark: rgba(235, 235, 245, 0.62);
-  --evara-cut-dark: #000000;
+  --ios-dark-bg: #000000;
+  --ios-dark-card: rgba(28,28,30,0.94);
+  --ios-dark-card-2: rgba(36,36,38,0.74);
+  --ios-dark-line: rgba(84,84,88,0.54);
+  --ios-dark-title: #f5f5f7;
+  --ios-dark-heading: rgba(245,245,247,0.92);
+  --ios-dark-body: rgba(235,235,245,0.62);
+  --ios-dark-muted: rgba(235,235,245,0.48);
+  --ios-dark-pill: rgba(235,235,245,0.72);
 }
 
 html[data-theme="light"],
 html[data-theme$="-light"] {
-  color-scheme: light;
-  background: var(--evara-page-light) !important;
+  color-scheme: light !important;
+  background: var(--ios-light-bg) !important;
 }
 
 html[data-theme="light"] body,
 html[data-theme$="-light"] body {
-  background: var(--evara-page-light) !important;
-  color: var(--evara-text-light) !important;
+  background: var(--ios-light-bg) !important;
+  color: var(--ios-light-title) !important;
 }
 
 html[data-theme="dark"],
 html[data-theme="galaxy"],
 html[data-theme$="-dark"] {
-  color-scheme: dark;
-  background: var(--evara-page-dark) !important;
+  color-scheme: dark !important;
+  background: var(--ios-dark-bg) !important;
 }
 
 html[data-theme="dark"] body,
 html[data-theme="galaxy"] body,
 html[data-theme$="-dark"] body {
-  background: var(--evara-page-dark) !important;
-  color: var(--evara-text-dark) !important;
+  background: var(--ios-dark-bg) !important;
+  color: var(--ios-dark-title) !important;
 }
 
 body::before,
 body::after,
 .page-aurora,
 .page-grid-overlay,
-.galaxy-engine {
-  display: none !important;
-  opacity: 0 !important;
-  animation: none !important;
-  background: none !important;
-}
-
+.galaxy-engine,
 html[data-theme] .glass-card::after,
 html[data-theme] .glass-shell::after,
 html[data-theme] .aurora-card::after,
@@ -72,6 +69,158 @@ html[data-theme] .active-glow::after {
   background: none !important;
 }
 
+.eva-nav-shell {
+  top: max(8px, calc(env(safe-area-inset-top) - 38px)) !important;
+  --pill-height: calc(34px + 26px * var(--nav-progress)) !important;
+  --compact-logo: 56px !important;
+  --full-logo: 44px !important;
+  --menu-size: calc(0px + 44px * var(--nav-progress)) !important;
+  --side-balance: calc(0px + 44px * var(--nav-progress)) !important;
+}
+
+.eva-nav-pill {
+  min-height: var(--pill-height) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(255,255,255,0.62)) !important;
+  border: 1px solid rgba(255,255,255,0.88) !important;
+  box-shadow: 0 14px 32px rgba(60,60,67,0.13), inset 0 1px 0 rgba(255,255,255,0.96), inset 0 -1px 0 rgba(60,60,67,0.05) !important;
+  backdrop-filter: blur(28px) saturate(185%) brightness(1.02) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(185%) brightness(1.02) !important;
+}
+
+html[data-theme="dark"] .eva-nav-pill,
+html[data-theme="galaxy"] .eva-nav-pill,
+html[data-theme$="-dark"] .eva-nav-pill {
+  background: linear-gradient(180deg, rgba(44,44,46,0.86), rgba(28,28,30,0.72)) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  box-shadow: 0 16px 34px rgba(0,0,0,0.48), inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -1px 0 rgba(0,0,0,0.55) !important;
+}
+
+.eva-menu-btn {
+  background: rgba(255,255,255,0.74) !important;
+  border-color: rgba(255,255,255,0.90) !important;
+  box-shadow: 0 10px 24px rgba(60,60,67,0.12), inset 0 1px 0 rgba(255,255,255,0.95) !important;
+  backdrop-filter: blur(22px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(180%) !important;
+}
+
+html[data-theme="dark"] .eva-menu-btn,
+html[data-theme="galaxy"] .eva-menu-btn,
+html[data-theme$="-dark"] .eva-menu-btn {
+  background: rgba(44,44,46,0.78) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+}
+
+.eva-brand-copy strong {
+  color: #222826 !important;
+  -webkit-text-fill-color: #222826 !important;
+  font-weight: 720 !important;
+}
+
+.eva-brand-copy span {
+  color: var(--ios-light-muted) !important;
+  -webkit-text-fill-color: var(--ios-light-muted) !important;
+  font-weight: 500 !important;
+}
+
+html[data-theme="dark"] .eva-brand-copy strong,
+html[data-theme="galaxy"] .eva-brand-copy strong,
+html[data-theme$="-dark"] .eva-brand-copy strong {
+  color: var(--ios-dark-title) !important;
+  -webkit-text-fill-color: var(--ios-dark-title) !important;
+}
+
+html[data-theme="dark"] .eva-brand-copy span,
+html[data-theme="galaxy"] .eva-brand-copy span,
+html[data-theme$="-dark"] .eva-brand-copy span {
+  color: var(--ios-dark-muted) !important;
+  -webkit-text-fill-color: var(--ios-dark-muted) !important;
+}
+
+.home-shell {
+  padding-top: clamp(108px, 13vw, 126px) !important;
+}
+
+.hero-home::before {
+  display: none !important;
+}
+
+.hero-kicker {
+  color: var(--ios-light-muted) !important;
+  -webkit-text-fill-color: var(--ios-light-muted) !important;
+  font-weight: 640 !important;
+  letter-spacing: 0.24em !important;
+}
+
+.hero-title,
+.page-title,
+.applications-title,
+.application-title {
+  color: var(--ios-light-title) !important;
+  -webkit-text-fill-color: var(--ios-light-title) !important;
+  font-weight: 720 !important;
+  letter-spacing: -0.062em !important;
+  text-shadow: none !important;
+  background: none !important;
+}
+
+html[data-theme="dark"] .hero-title,
+html[data-theme="dark"] .page-title,
+html[data-theme="dark"] .applications-title,
+html[data-theme="dark"] .application-title,
+html[data-theme="galaxy"] .hero-title,
+html[data-theme="galaxy"] .page-title,
+html[data-theme="galaxy"] .applications-title,
+html[data-theme="galaxy"] .application-title,
+html[data-theme$="-dark"] .hero-title,
+html[data-theme$="-dark"] .page-title,
+html[data-theme$="-dark"] .applications-title,
+html[data-theme$="-dark"] .application-title {
+  color: var(--ios-dark-title) !important;
+  -webkit-text-fill-color: var(--ios-dark-title) !important;
+}
+
+.hero-subtitle,
+.section-head p,
+.application-copy,
+.applications-copy {
+  color: var(--ios-light-body) !important;
+  -webkit-text-fill-color: var(--ios-light-body) !important;
+  font-weight: 430 !important;
+}
+
+html[data-theme="dark"] .hero-subtitle,
+html[data-theme="dark"] .section-head p,
+html[data-theme="dark"] .application-copy,
+html[data-theme="dark"] .applications-copy,
+html[data-theme="galaxy"] .hero-subtitle,
+html[data-theme="galaxy"] .section-head p,
+html[data-theme="galaxy"] .application-copy,
+html[data-theme="galaxy"] .applications-copy,
+html[data-theme$="-dark"] .hero-subtitle,
+html[data-theme$="-dark"] .section-head p,
+html[data-theme$="-dark"] .application-copy,
+html[data-theme$="-dark"] .applications-copy {
+  color: var(--ios-dark-body) !important;
+  -webkit-text-fill-color: var(--ios-dark-body) !important;
+}
+
+.glass-card,
+.glass-shell,
+.aurora-card,
+.glass,
+.section-panel,
+.stats-card,
+.feature-card,
+.service-card,
+.category-card,
+.info-card,
+.cta-panel,
+.site-footer-inner {
+  border-radius: clamp(28px, 4.5vw, 40px) !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+}
+
 html[data-theme="light"] .glass-card,
 html[data-theme="light"] .glass-shell,
 html[data-theme="light"] .aurora-card,
@@ -80,16 +229,11 @@ html[data-theme$="-light"] .glass-card,
 html[data-theme$="-light"] .glass-shell,
 html[data-theme$="-light"] .aurora-card,
 html[data-theme$="-light"] .glass {
-  background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.78)) !important;
-  border: 1px solid rgba(255,255,255,0.88) !important;
-  border-radius: clamp(28px, 4.5vw, 40px) !important;
-  color: var(--evara-text-light) !important;
-  box-shadow:
-    0 18px 44px rgba(60, 60, 67, 0.10),
-    inset 0 1px 0 rgba(255,255,255,0.95),
-    inset 0 -1px 0 rgba(60,60,67,0.05) !important;
-  backdrop-filter: blur(26px) saturate(180%) brightness(1.03) !important;
-  -webkit-backdrop-filter: blur(26px) saturate(180%) brightness(1.03) !important;
+  background: linear-gradient(180deg, var(--ios-light-card), var(--ios-light-card-2)) !important;
+  border: 1px solid rgba(255,255,255,0.90) !important;
+  box-shadow: 0 18px 44px rgba(60,60,67,0.10), inset 0 1px 0 rgba(255,255,255,0.96), inset 0 -1px 0 rgba(60,60,67,0.06) !important;
+  backdrop-filter: blur(28px) saturate(180%) brightness(1.03) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) brightness(1.03) !important;
 }
 
 html[data-theme="dark"] .glass-card,
@@ -104,233 +248,95 @@ html[data-theme$="-dark"] .glass-card,
 html[data-theme$="-dark"] .glass-shell,
 html[data-theme$="-dark"] .aurora-card,
 html[data-theme$="-dark"] .glass {
-  background: linear-gradient(180deg, rgba(36,36,38,0.92), rgba(28,28,30,0.76)) !important;
-  border: 1px solid var(--evara-line-dark) !important;
-  border-radius: clamp(28px, 4.5vw, 40px) !important;
-  color: var(--evara-text-dark) !important;
-  box-shadow:
-    0 20px 52px rgba(0,0,0,0.48),
-    inset 0 1px 0 rgba(255,255,255,0.12),
-    inset 0 -1px 0 rgba(0,0,0,0.55) !important;
-  backdrop-filter: blur(26px) saturate(150%) brightness(1.02) !important;
-  -webkit-backdrop-filter: blur(26px) saturate(150%) brightness(1.02) !important;
+  background: linear-gradient(180deg, var(--ios-dark-card), var(--ios-dark-card-2)) !important;
+  border: 1px solid var(--ios-dark-line) !important;
+  box-shadow: 0 20px 52px rgba(0,0,0,0.48), inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -1px 0 rgba(0,0,0,0.60) !important;
+  backdrop-filter: blur(28px) saturate(150%) brightness(1.02) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(150%) brightness(1.02) !important;
 }
 
-html[data-theme="light"] .btn,
-html[data-theme="light"] .btn-apple,
-html[data-theme="light"] .btn-theme-primary,
-html[data-theme="light"] .btn-theme-secondary,
-html[data-theme="light"] .settings-chip,
+.card-tag,
+.service-meta,
+.pill,
+.settings-chip,
+.eva-chip,
+.role-pill,
+.role-pill-option {
+  min-height: 36px !important;
+  padding-inline: 14px !important;
+  border-radius: 999px !important;
+  font-weight: 680 !important;
+}
+
+html[data-theme="light"] .card-tag,
+html[data-theme="light"] .service-meta,
 html[data-theme="light"] .pill,
+html[data-theme="light"] .settings-chip,
 html[data-theme="light"] .eva-chip,
 html[data-theme="light"] .role-pill,
 html[data-theme="light"] .role-pill-option,
-html[data-theme="light"] .settings-section-link,
-html[data-theme="light"] button:not(.plain-btn):not(.unstyled),
-html[data-theme$="-light"] .btn,
-html[data-theme$="-light"] .btn-apple,
-html[data-theme$="-light"] .btn-theme-primary,
-html[data-theme$="-light"] .btn-theme-secondary,
-html[data-theme$="-light"] .settings-chip,
+html[data-theme$="-light"] .card-tag,
+html[data-theme$="-light"] .service-meta,
 html[data-theme$="-light"] .pill,
+html[data-theme$="-light"] .settings-chip,
 html[data-theme$="-light"] .eva-chip,
 html[data-theme$="-light"] .role-pill,
-html[data-theme$="-light"] .role-pill-option,
-html[data-theme$="-light"] .settings-section-link,
-html[data-theme$="-light"] button:not(.plain-btn):not(.unstyled) {
-  background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.66)) !important;
-  border: 1px solid rgba(255,255,255,0.90) !important;
-  border-radius: 999px !important;
-  color: var(--evara-cut-light) !important;
-  -webkit-text-fill-color: var(--evara-cut-light) !important;
-  text-shadow:
-    0 1px 1px rgba(255,255,255,0.98),
-    0 -1px 1px rgba(60,60,67,0.24),
-    0 0 1px rgba(60,60,67,0.12) !important;
-  box-shadow:
-    0 12px 28px rgba(60,60,67,0.10),
-    inset 0 1px 0 rgba(255,255,255,0.96),
-    inset 0 -1px 0 rgba(60,60,67,0.06) !important;
-  backdrop-filter: blur(24px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+html[data-theme$="-light"] .role-pill-option {
+  background: linear-gradient(180deg, rgba(255,255,255,0.86), rgba(255,255,255,0.58)) !important;
+  border: 1px solid rgba(60,60,67,0.13) !important;
+  color: var(--ios-light-pill) !important;
+  -webkit-text-fill-color: var(--ios-light-pill) !important;
+  text-shadow: none !important;
+  box-shadow: 0 8px 20px rgba(60,60,67,0.08), inset 0 1px 0 rgba(255,255,255,0.94) !important;
+  backdrop-filter: blur(20px) saturate(170%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(170%) !important;
 }
 
-html[data-theme="dark"] .btn,
-html[data-theme="dark"] .btn-apple,
-html[data-theme="dark"] .btn-theme-primary,
-html[data-theme="dark"] .btn-theme-secondary,
-html[data-theme="dark"] .settings-chip,
+html[data-theme="dark"] .card-tag,
+html[data-theme="dark"] .service-meta,
 html[data-theme="dark"] .pill,
+html[data-theme="dark"] .settings-chip,
 html[data-theme="dark"] .eva-chip,
 html[data-theme="dark"] .role-pill,
 html[data-theme="dark"] .role-pill-option,
-html[data-theme="dark"] .settings-section-link,
-html[data-theme="dark"] button:not(.plain-btn):not(.unstyled),
-html[data-theme="galaxy"] .btn,
-html[data-theme="galaxy"] .btn-apple,
-html[data-theme="galaxy"] .btn-theme-primary,
-html[data-theme="galaxy"] .btn-theme-secondary,
-html[data-theme="galaxy"] .settings-chip,
+html[data-theme="galaxy"] .card-tag,
+html[data-theme="galaxy"] .service-meta,
 html[data-theme="galaxy"] .pill,
+html[data-theme="galaxy"] .settings-chip,
 html[data-theme="galaxy"] .eva-chip,
 html[data-theme="galaxy"] .role-pill,
 html[data-theme="galaxy"] .role-pill-option,
-html[data-theme="galaxy"] .settings-section-link,
-html[data-theme="galaxy"] button:not(.plain-btn):not(.unstyled),
-html[data-theme$="-dark"] .btn,
-html[data-theme$="-dark"] .btn-apple,
-html[data-theme$="-dark"] .btn-theme-primary,
-html[data-theme$="-dark"] .btn-theme-secondary,
-html[data-theme$="-dark"] .settings-chip,
+html[data-theme$="-dark"] .card-tag,
+html[data-theme$="-dark"] .service-meta,
 html[data-theme$="-dark"] .pill,
+html[data-theme$="-dark"] .settings-chip,
 html[data-theme$="-dark"] .eva-chip,
 html[data-theme$="-dark"] .role-pill,
-html[data-theme$="-dark"] .role-pill-option,
-html[data-theme$="-dark"] .settings-section-link,
-html[data-theme$="-dark"] button:not(.plain-btn):not(.unstyled) {
-  background: linear-gradient(180deg, rgba(44,44,46,0.92), rgba(28,28,30,0.72)) !important;
-  border: 1px solid rgba(255,255,255,0.12) !important;
-  border-radius: 999px !important;
-  color: var(--evara-cut-dark) !important;
-  -webkit-text-fill-color: var(--evara-cut-dark) !important;
-  text-shadow:
-    0 1px 1px rgba(255,255,255,0.14),
-    0 -1px 1px rgba(0,0,0,0.90) !important;
-  box-shadow:
-    0 12px 28px rgba(0,0,0,0.38),
-    inset 0 1px 0 rgba(255,255,255,0.10),
-    inset 0 -1px 0 rgba(0,0,0,0.70) !important;
-}
-
-html[data-theme="light"] .glass-card h1,
-html[data-theme="light"] .glass-card h2,
-html[data-theme="light"] .glass-card h3,
-html[data-theme="light"] .glass-card h4,
-html[data-theme="light"] .glass-card strong,
-html[data-theme="light"] .glass-card .card-tag,
-html[data-theme="light"] .glass-card .service-meta,
-html[data-theme="light"] .glass-card .hero-kicker,
-html[data-theme="light"] .glass-card .applications-kicker,
-html[data-theme="light"] .glass-card .application-kicker,
-html[data-theme="light"] .glass-card .metric-label,
-html[data-theme="light"] .glass-card .stat-mini span,
-html[data-theme="light"] .aurora-card h1,
-html[data-theme="light"] .aurora-card h2,
-html[data-theme="light"] .aurora-card h3,
-html[data-theme="light"] .aurora-card h4,
-html[data-theme="light"] .aurora-card strong,
-html[data-theme="light"] .aurora-card .card-tag,
-html[data-theme="light"] .aurora-card .service-meta,
-html[data-theme="light"] .aurora-card .stat-mini span,
-html[data-theme$="-light"] .glass-card h1,
-html[data-theme$="-light"] .glass-card h2,
-html[data-theme$="-light"] .glass-card h3,
-html[data-theme$="-light"] .glass-card h4,
-html[data-theme$="-light"] .glass-card strong,
-html[data-theme$="-light"] .glass-card .card-tag,
-html[data-theme$="-light"] .glass-card .service-meta,
-html[data-theme$="-light"] .glass-card .stat-mini span,
-html[data-theme$="-light"] .aurora-card h1,
-html[data-theme$="-light"] .aurora-card h2,
-html[data-theme$="-light"] .aurora-card h3,
-html[data-theme$="-light"] .aurora-card h4,
-html[data-theme$="-light"] .aurora-card strong,
-html[data-theme$="-light"] .aurora-card .stat-mini span {
-  color: var(--evara-cut-light) !important;
-  -webkit-text-fill-color: var(--evara-cut-light) !important;
-  background: none !important;
-  text-shadow:
-    0 1px 1px rgba(255,255,255,0.98),
-    0 -1px 1px rgba(60,60,67,0.26),
-    0 0 1px rgba(60,60,67,0.12) !important;
-  filter: none !important;
-  animation: none !important;
-}
-
-html[data-theme="light"] .glass-card p,
-html[data-theme="light"] .glass-card span,
-html[data-theme="light"] .aurora-card p,
-html[data-theme="light"] .aurora-card span,
-html[data-theme$="-light"] .glass-card p,
-html[data-theme$="-light"] .glass-card span,
-html[data-theme$="-light"] .aurora-card p,
-html[data-theme$="-light"] .aurora-card span {
-  color: var(--evara-subtext-light) !important;
-  -webkit-text-fill-color: var(--evara-subtext-light) !important;
-  background: none !important;
+html[data-theme$="-dark"] .role-pill-option {
+  background: linear-gradient(180deg, rgba(58,58,60,0.72), rgba(44,44,46,0.52)) !important;
+  border: 1px solid rgba(255,255,255,0.13) !important;
+  color: var(--ios-dark-pill) !important;
+  -webkit-text-fill-color: var(--ios-dark-pill) !important;
   text-shadow: none !important;
-  animation: none !important;
-  filter: none !important;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.08) !important;
 }
 
-html[data-theme="dark"] .glass-card h1,
-html[data-theme="dark"] .glass-card h2,
-html[data-theme="dark"] .glass-card h3,
-html[data-theme="dark"] .glass-card h4,
-html[data-theme="dark"] .glass-card strong,
-html[data-theme="dark"] .aurora-card h1,
-html[data-theme="dark"] .aurora-card h2,
-html[data-theme="dark"] .aurora-card h3,
-html[data-theme="dark"] .aurora-card h4,
-html[data-theme="dark"] .aurora-card strong,
-html[data-theme="galaxy"] .glass-card h1,
-html[data-theme="galaxy"] .glass-card h2,
-html[data-theme="galaxy"] .glass-card h3,
-html[data-theme="galaxy"] .glass-card h4,
-html[data-theme="galaxy"] .glass-card strong,
-html[data-theme$="-dark"] .glass-card h1,
-html[data-theme$="-dark"] .glass-card h2,
-html[data-theme$="-dark"] .glass-card h3,
-html[data-theme$="-dark"] .glass-card h4,
-html[data-theme$="-dark"] .glass-card strong {
-  color: var(--evara-cut-dark) !important;
-  -webkit-text-fill-color: var(--evara-cut-dark) !important;
-  background: none !important;
-  text-shadow:
-    0 1px 1px rgba(255,255,255,0.14),
-    0 -1px 1px rgba(0,0,0,0.95),
-    0 0 1px rgba(255,255,255,0.08) !important;
-  filter: none !important;
-  animation: none !important;
-}
+@media (max-width: 680px) {
+  .eva-nav-shell {
+    top: max(8px, calc(env(safe-area-inset-top) - 40px)) !important;
+    --pill-height: calc(34px + 24px * var(--nav-progress)) !important;
+    --compact-logo: 54px !important;
+    --full-logo: 42px !important;
+    --menu-size: calc(0px + 42px * var(--nav-progress)) !important;
+    --side-balance: calc(0px + 42px * var(--nav-progress)) !important;
+  }
 
-html[data-theme="dark"] .glass-card p,
-html[data-theme="dark"] .glass-card span,
-html[data-theme="dark"] .aurora-card p,
-html[data-theme="dark"] .aurora-card span,
-html[data-theme="galaxy"] .glass-card p,
-html[data-theme="galaxy"] .glass-card span,
-html[data-theme="galaxy"] .aurora-card p,
-html[data-theme="galaxy"] .aurora-card span,
-html[data-theme$="-dark"] .glass-card p,
-html[data-theme$="-dark"] .glass-card span,
-html[data-theme$="-dark"] .aurora-card p,
-html[data-theme$="-dark"] .aurora-card span {
-  color: var(--evara-subtext-dark) !important;
-  -webkit-text-fill-color: var(--evara-subtext-dark) !important;
-  background: none !important;
-  text-shadow: none !important;
-}
+  .home-shell {
+    padding-top: 102px !important;
+  }
 
-html[data-theme] input,
-html[data-theme] select,
-html[data-theme] textarea,
-html[data-theme] .no-relief,
-html[data-theme] .no-relief *,
-html[data-theme] .no-window-text,
-html[data-theme] .no-window-text * {
-  -webkit-text-fill-color: currentColor !important;
-  background-image: none !important;
-  text-shadow: none !important;
-  animation: none !important;
-  filter: none !important;
-}
-
-@media (max-width: 760px) {
-  html[data-theme="light"] .glass-card,
-  html[data-theme="light"] .glass-shell,
-  html[data-theme="light"] .aurora-card,
-  html[data-theme="light"] .glass {
-    border-radius: 32px !important;
+  .hero-title {
+    font-size: clamp(2.65rem, 13vw, 4.65rem) !important;
+    font-weight: 700 !important;
   }
 }
