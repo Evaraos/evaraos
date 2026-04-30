@@ -32,7 +32,7 @@
   function showPill() {
     if (!pill || isStandalone()) return;
     pill.hidden = false;
-    pill.style.display = "inline-flex";
+    pill.style.display = "flex";
     pill.dataset.platform = isIOS() ? "ios" : isAndroid() ? "android" : "desktop";
     pill.dataset.installReady = deferredPrompt ? "true" : "false";
   }
@@ -62,6 +62,20 @@
     return true;
   }
 
+  async function attemptShareSheet() {
+    if (!navigator.share) return false;
+    try {
+      await navigator.share({
+        title: "Evaraos Inc",
+        text: "Install Evaraos by adding it to your Home Screen.",
+        url: window.location.origin + "/evaraos/"
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   function createGuide() {
     const existing = document.getElementById("evaraIOSInstallGuide");
     if (existing) return existing;
@@ -79,43 +93,34 @@
           <img src="/evaraos/assets/img/evaraos_logo.png" alt="" class="evara-ios-install-logo">
           <div>
             <strong>Install Evaraos</strong>
-            <span>iPhone Home Screen app</span>
+            <span>Get the iPhone app experience</span>
           </div>
         </div>
 
-        <div class="evara-ios-target-preview" aria-hidden="true">
-          <div class="evara-ios-target-top">
+        <div class="evara-ios-system-message">
+          <strong>Tap Add to Home Screen</strong>
+          <p>On iPhone, Apple requires the Safari Share menu. Tap the Share icon, then choose <b>Add to Home Screen</b>, then tap <b>Add</b>.</p>
+        </div>
+
+        <div class="evara-ios-arrow-note" aria-hidden="true">
+          <span class="evara-ios-arrow">↗</span>
+          <span>Share icon is in Safari’s bar</span>
+        </div>
+
+        <div class="evara-ios-mini-final" aria-hidden="true">
+          <div class="evara-ios-mini-top">
             <span>Cancel</span>
             <strong>Add to Home Screen</strong>
             <span>Add</span>
           </div>
-          <div class="evara-ios-target-row">
+          <div class="evara-ios-mini-row">
             <img src="/evaraos/assets/img/evaraos_logo.png" alt="">
-            <div>
-              <b>Evaraos</b>
-              <small>evaraos.github.io/evaraos/</small>
-            </div>
-          </div>
-          <p>This is the final iPhone install screen.</p>
-        </div>
-
-        <div class="evara-ios-install-steps">
-          <div class="evara-ios-step">
-            <span class="evara-ios-step-icon">1</span>
-            <div><strong>Use the browser share control</strong><p>Choose the Home Screen option from the browser action list.</p></div>
-          </div>
-          <div class="evara-ios-step">
-            <span class="evara-ios-step-icon">2</span>
-            <div><strong>Confirm the Evaraos icon</strong><p>The screen will show the red Evaraos app icon and name.</p></div>
-          </div>
-          <div class="evara-ios-step">
-            <span class="evara-ios-step-icon">3</span>
-            <div><strong>Finish</strong><p>Evaraos will launch full screen from the Home Screen.</p></div>
+            <div><b>Evaraos</b><small>evaraos.github.io/evaraos/</small></div>
           </div>
         </div>
 
         <div class="evara-ios-install-actions">
-          <button type="button" class="evara-ios-install-copy" id="evaraCopyInstallUrl">Copy App Link</button>
+          <button type="button" class="evara-ios-install-copy" id="evaraOpenShareSheet">Open Share</button>
           <button type="button" class="evara-ios-install-done" data-install-guide-close>Got it</button>
         </div>
       </section>
@@ -124,13 +129,8 @@
     document.body.appendChild(overlay);
     overlay.addEventListener("click", async (event) => {
       if (event.target.closest("[data-install-guide-close]")) return closeGuide();
-      if (event.target.closest("#evaraCopyInstallUrl")) {
-        try {
-          await navigator.clipboard.writeText(window.location.origin + "/evaraos/");
-          notify("Copied", "Evaraos app link copied.", "success");
-        } catch {
-          notify("Copy failed", "Copy the app link from the address bar.", "warning");
-        }
+      if (event.target.closest("#evaraOpenShareSheet")) {
+        await attemptShareSheet();
       }
     });
     return overlay;
@@ -154,10 +154,12 @@
   function bindClicks() {
     if (!pill || pill.dataset.installBound === "true") return;
     pill.dataset.installBound = "true";
-    appleBtn?.addEventListener("click", () => {
+
+    appleBtn?.addEventListener("click", async () => {
       if (isStandalone()) return hidePill();
       openGuide();
     });
+
     androidBtn?.addEventListener("click", () => {
       if (isStandalone()) return hidePill();
       if (deferredPrompt) return runPrompt();
@@ -174,6 +176,7 @@
         showPill();
       });
     }
+
     if (!installedBound) {
       installedBound = true;
       window.addEventListener("appinstalled", function () {
