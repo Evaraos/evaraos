@@ -19,6 +19,7 @@
 
 /* Components */
 @import url("./components/glass.css");
+@import url("./components/glass-cloud-transparency.css?v=1");
 @import url("./components/buttons.css");
 @import url("./components/application-polish.css?v=1");
 @import url("./components/glass-relief-text.css?v=1");
