@@ -3,6 +3,7 @@
   let pill = null;
   let appleBtn = null;
   let androidBtn = null;
+  let noticeTimer = null;
 
   function isIOS() {
     return /iphone|ipad|ipod/i.test(navigator.userAgent || "");
@@ -16,33 +17,10 @@
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
   }
 
-  function notify(title, message, tone) {
-    window.dispatchEvent(new CustomEvent("evara:notify", { detail: { title, message, tone: tone || "info" } }));
-  }
-
-  function applyAndroidInstallLook() {
-    if (!androidBtn) return;
-
-    const title = androidBtn.querySelector(".eva-install-copy strong");
-    const sub = androidBtn.querySelector(".eva-install-copy small");
-    const mark = androidBtn.querySelector(".eva-install-android-mark");
-
-    androidBtn.classList.add("eva-install-android-pro");
-    androidBtn.setAttribute("aria-label", "Install Evaraos on Android");
-
-    if (title) title.textContent = "Android";
-    if (sub) sub.textContent = "Install";
-
-    if (mark) {
-      mark.innerHTML = '<svg viewBox="0 0 48 48" focusable="false" aria-hidden="true"><path fill="currentColor" d="M14.8 18.2h18.4c1.9 0 3.4 1.5 3.4 3.4v10.8c0 1.9-1.5 3.4-3.4 3.4H14.8c-1.9 0-3.4-1.5-3.4-3.4V21.6c0-1.9 1.5-3.4 3.4-3.4Z"/><path fill="currentColor" d="M9 21.7c1 0 1.8.8 1.8 1.8v8.3c0 1-.8 1.8-1.8 1.8s-1.8-.8-1.8-1.8v-8.3c0-1 .8-1.8 1.8-1.8Zm30 0c1 0 1.8.8 1.8 1.8v8.3c0 1-.8 1.8-1.8 1.8s-1.8-.8-1.8-1.8v-8.3c0-1 .8-1.8 1.8-1.8ZM17 35.3c1 0 1.8.8 1.8 1.8v4.2c0 1-.8 1.8-1.8 1.8s-1.8-.8-1.8-1.8v-4.2c0-1 .8-1.8 1.8-1.8Zm14 0c1 0 1.8.8 1.8 1.8v4.2c0 1-.8 1.8-1.8 1.8s-1.8-.8-1.8-1.8v-4.2c0-1 .8-1.8 1.8-1.8Z"/><path fill="currentColor" d="M14.1 16.5c.9-4.1 4.9-7.2 9.9-7.2s9 3.1 9.9 7.2H14.1Z"/><path stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M18 9.8 15.7 5.7M30 9.8l2.3-4.1"/><circle cx="19.2" cy="13.7" r="1.15" fill="#fff"/><circle cx="28.8" cy="13.7" r="1.15" fill="#fff"/></svg>';
-    }
-  }
-
   function findTargets() {
     pill = document.getElementById("evaInstallPill");
     appleBtn = document.getElementById("evaInstallApple");
     androidBtn = document.getElementById("evaInstallAndroid");
-    applyAndroidInstallLook();
     return !!pill;
   }
 
@@ -64,8 +42,14 @@
     document.body.classList.remove("nav-menu-open");
     const zone = document.getElementById("evaMenuZone");
     const button = document.getElementById("evaMenuBtn");
+    const panel = document.getElementById("evaMenuPanel");
+    const backdrop = document.getElementById("evaBackdrop");
+
     zone && zone.classList.remove("open");
+    panel && panel.classList.remove("open");
+    backdrop && backdrop.classList.remove("open");
     button && button.setAttribute("aria-expanded", "false");
+
     document.body.style.position = "";
     document.body.style.top = "";
     document.body.style.left = "";
@@ -84,17 +68,119 @@
     }
   }
 
+  function getNotice() {
+    let notice = document.getElementById("evaraInstallNotice");
+    if (notice) return notice;
+
+    notice = document.createElement("div");
+    notice.id = "evaraInstallNotice";
+    notice.className = "evara-install-notice";
+    notice.setAttribute("role", "status");
+    notice.setAttribute("aria-live", "polite");
+    notice.innerHTML = [
+      '<div class="evara-install-notice-card">',
+      '  <span class="evara-install-notice-icon" aria-hidden="true"></span>',
+      '  <span class="evara-install-notice-copy">',
+      '    <strong></strong>',
+      '    <small></small>',
+      '  </span>',
+      '  <button type="button" class="evara-install-notice-close" aria-label="Close">×</button>',
+      '</div>'
+    ].join("");
+
+    notice.querySelector(".evara-install-notice-close")?.addEventListener("click", function () {
+      notice.classList.remove("show");
+    });
+
+    document.body.appendChild(notice);
+    return notice;
+  }
+
+  function showInstallNotice(title, message, tone) {
+    const notice = getNotice();
+    notice.dataset.tone = tone || "android";
+    const titleNode = notice.querySelector("strong");
+    const messageNode = notice.querySelector("small");
+    if (titleNode) titleNode.textContent = title;
+    if (messageNode) messageNode.textContent = message;
+
+    clearTimeout(noticeTimer);
+    requestAnimationFrame(function () {
+      notice.classList.add("show");
+    });
+    noticeTimer = setTimeout(function () {
+      notice.classList.remove("show");
+    }, 5200);
+  }
+
   async function runPrompt() {
     if (!deferredPrompt) return false;
+    closeMenu();
+    showInstallNotice("Installing Evaraos", "Follow the Android install prompt to add the app.", "android");
+
     try {
       deferredPrompt.prompt();
       await deferredPrompt.userChoice;
     } catch (error) {
       console.warn("Evaraos install prompt skipped:", error);
     }
+
     deferredPrompt = null;
     showPill();
     return true;
+  }
+
+  function closeGuide() {
+    const overlay = document.getElementById("evaraIOSInstallGuide");
+    if (!overlay) return;
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden", "true");
+    document.documentElement.classList.remove("evara-install-guide-open");
+    setTimeout(function () {
+      if (overlay.getAttribute("aria-hidden") === "true") overlay.remove();
+    }, 180);
+  }
+
+  function createAppleGuide() {
+    const existing = document.getElementById("evaraIOSInstallGuide");
+    if (existing) return existing;
+
+    const overlay = document.createElement("div");
+    overlay.id = "evaraIOSInstallGuide";
+    overlay.className = "evara-ios-install-guide";
+    overlay.setAttribute("aria-hidden", "true");
+    overlay.innerHTML = [
+      '<div class="evara-ios-install-backdrop" data-install-guide-close></div>',
+      '<section class="evara-ios-install-card" role="dialog" aria-modal="true" aria-label="Install Evaraos on iPhone">',
+      '  <button type="button" class="evara-ios-install-close" data-install-guide-close aria-label="Close">×</button>',
+      '  <div class="evara-ios-install-app">',
+      '    <img src="/evaraos/assets/img/evaraos_logo.png" alt="" class="evara-ios-install-logo">',
+      '    <div><strong>Install Evaraos</strong><span>iPhone web app</span></div>',
+      '  </div>',
+      '  <div class="evara-ios-system-message">',
+      '    <strong>Tap Share</strong>',
+      '    <p>Then choose <b>Add to Home Screen</b>.</p>',
+      '  </div>',
+      '</section>'
+    ].join("");
+
+    overlay.addEventListener("click", function (event) {
+      if (event.target.closest("[data-install-guide-close]")) closeGuide();
+    });
+
+    document.body.appendChild(overlay);
+    return overlay;
+  }
+
+  function openAppleGuide() {
+    if (isStandalone()) return hidePill();
+    closeMenu();
+    const overlay = createAppleGuide();
+    document.documentElement.classList.add("evara-install-guide-open");
+    overlay.setAttribute("aria-hidden", "false");
+    requestAnimationFrame(function () {
+      overlay.classList.add("open");
+    });
   }
 
   function bindClicks() {
@@ -103,15 +189,15 @@
 
     appleBtn && appleBtn.addEventListener("click", function (event) {
       event.preventDefault();
-      closeMenu();
-      notify("iPhone App Coming Soon", "Evaraos will use a proper Apple App Store or TestFlight install when the native iPhone app is ready.", "info");
+      openAppleGuide();
     });
 
     androidBtn && androidBtn.addEventListener("click", function (event) {
       event.preventDefault();
       if (isStandalone()) return hidePill();
       if (deferredPrompt) return runPrompt();
-      notify("Install Evaraos", "On Android, open Chrome menu and choose Install app if the prompt is not visible yet.", "info");
+      closeMenu();
+      showInstallNotice("Android Install", "Open Chrome menu and tap Install app.", "android");
     });
   }
 
@@ -125,7 +211,7 @@
     window.addEventListener("appinstalled", function () {
       deferredPrompt = null;
       hidePill();
-      notify("Installed", "Evaraos has been installed on this device.", "success");
+      showInstallNotice("Installed", "Evaraos has been added to this device.", "success");
     });
   }
 
@@ -152,6 +238,8 @@
   }
 
   window.EvaraInstall = {
+    openIOSInstallGuide: openAppleGuide,
+    closeIOSInstallGuide: closeGuide,
     runNativeInstallPrompt: runPrompt,
     isIOS: isIOS,
     isAndroid: isAndroid,
