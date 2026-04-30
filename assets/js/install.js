@@ -155,11 +155,15 @@
       '  <button type="button" class="evara-ios-install-close" data-install-guide-close aria-label="Close">×</button>',
       '  <div class="evara-ios-install-app">',
       '    <img src="/evaraos/assets/img/evaraos_logo.png" alt="" class="evara-ios-install-logo">',
-      '    <div><strong>Install Evaraos</strong><span>iPhone web app</span></div>',
+      '    <div><strong>Install Evaraos</strong><span>iPhone Home Screen app</span></div>',
       '  </div>',
       '  <div class="evara-ios-system-message">',
       '    <strong>Tap Share</strong>',
-      '    <p>Then choose <b>Add to Home Screen</b>.</p>',
+      '    <p>Use the browser share button, then select <b>Add to Home Screen</b>.</p>',
+      '  </div>',
+      '  <div class="evara-ios-step-list">',
+      '    <div class="evara-ios-step"><span class="evara-ios-step-number">1</span><div><strong>Tap Share</strong><span>Use the share icon in the browser bar.</span></div></div>',
+      '    <div class="evara-ios-step"><span class="evara-ios-step-number">2</span><div><strong>Add to Home Screen</strong><span>Confirm the Evaraos icon, then tap Add.</span></div></div>',
       '  </div>',
       '</section>'
     ].join("");
