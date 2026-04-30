@@ -1,14 +1,20 @@
 (function () {
   let deferredPrompt = null;
-  let installBtn = null;
-  let promptListenerBound = false;
-  let installedListenerBound = false;
+  let pill = null;
+  let appleBtn = null;
+  let androidBtn = null;
+  let promptBound = false;
+  let installedBound = false;
 
   function isIOS() {
     return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
   }
 
-  function isInStandaloneMode() {
+  function isAndroid() {
+    return /android/i.test(window.navigator.userAgent);
+  }
+
+  function isStandalone() {
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
   }
 
@@ -16,76 +22,47 @@
     window.dispatchEvent(new CustomEvent("evara:notify", { detail: { title, message, tone } }));
   }
 
-  function findInstallButton() {
-    return document.querySelector("#evaMenuPanel #installBtn") || document.querySelector(".eva-install-chip");
+  function findTargets() {
+    pill = document.getElementById("evaInstallPill") || document.querySelector(".eva-install-pill");
+    appleBtn = document.getElementById("evaInstallApple") || document.querySelector(".eva-install-ios");
+    androidBtn = document.getElementById("evaInstallAndroid") || document.querySelector(".eva-install-android");
+    return !!pill;
   }
 
-  function setInstallState(state, label) {
-    if (!installBtn) return;
-    installBtn.dataset.installState = state;
-    const labelNode = installBtn.querySelector(".eva-install-label") || installBtn;
-    if (labelNode) labelNode.textContent = label;
+  function showPill() {
+    if (!pill || isStandalone()) return;
+    pill.hidden = false;
+    pill.style.display = "inline-flex";
+    pill.dataset.platform = isIOS() ? "ios" : isAndroid() ? "android" : "desktop";
+    pill.dataset.installReady = deferredPrompt ? "true" : "false";
   }
 
-  function showButton() {
-    if (!installBtn || isInStandaloneMode()) return;
-    installBtn.hidden = false;
-    installBtn.style.display = "inline-flex";
-  }
-
-  function hideButton() {
-    if (!installBtn) return;
-    installBtn.hidden = true;
-    installBtn.style.display = "none";
+  function hidePill() {
+    if (!pill) return;
+    pill.hidden = true;
+    pill.style.display = "none";
   }
 
   async function registerServiceWorker() {
     if (!("serviceWorker" in navigator)) return;
-
     try {
-      const registration = await navigator.serviceWorker.register("/evaraos/sw.js", {
-        scope: "/evaraos/"
-      });
-
-      if (registration.waiting) {
-        registration.waiting.postMessage({ type: "SKIP_WAITING" });
-      }
-
-      registration.addEventListener("updatefound", () => {
-        const worker = registration.installing;
-        if (!worker) return;
-
-        worker.addEventListener("statechange", () => {
-          if (worker.state === "installed" && navigator.serviceWorker.controller) {
-            worker.postMessage({ type: "SKIP_WAITING" });
-          }
-        });
-      });
+      const registration = await navigator.serviceWorker.register("/evaraos/sw.js", { scope: "/evaraos/" });
+      if (registration.waiting) registration.waiting.postMessage({ type: "SKIP_WAITING" });
     } catch (error) {
       console.warn("Evaraos service worker registration skipped:", error);
     }
   }
 
-  async function runNativeInstallPrompt() {
+  async function runPrompt() {
     if (!deferredPrompt) return false;
-
     deferredPrompt.prompt();
-    try {
-      await deferredPrompt.userChoice;
-    } catch {}
+    try { await deferredPrompt.userChoice; } catch {}
     deferredPrompt = null;
-    hideButton();
+    showPill();
     return true;
   }
 
-  function getShareIconHint() {
-    const isSafari = /^((?!chrome|android|crios|fxios).)*safari/i.test(navigator.userAgent);
-    return isSafari
-      ? "Tap the Safari share icon, then choose Add to Home Screen."
-      : "Open this page in Safari, tap Share, then choose Add to Home Screen.";
-  }
-
-  function createIOSInstallGuide() {
+  function createGuide() {
     const existing = document.getElementById("evaraIOSInstallGuide");
     if (existing) return existing;
 
@@ -95,39 +72,45 @@
     overlay.setAttribute("aria-hidden", "true");
     overlay.innerHTML = `
       <div class="evara-ios-install-backdrop" data-install-guide-close></div>
-      <section class="evara-ios-install-card" role="dialog" aria-modal="true" aria-label="Install Evaraos on iPhone">
-        <button type="button" class="evara-ios-install-close" data-install-guide-close aria-label="Close install guide">×</button>
+      <section class="evara-ios-install-card" role="dialog" aria-modal="true" aria-label="Install Evaraos">
+        <button type="button" class="evara-ios-install-close" data-install-guide-close aria-label="Close">×</button>
+
         <div class="evara-ios-install-app">
           <img src="/evaraos/assets/img/evaraos_logo.png" alt="" class="evara-ios-install-logo">
           <div>
-            <strong>Evaraos Inc</strong>
-            <span>Install as a Home Screen app</span>
+            <strong>Install Evaraos</strong>
+            <span>iPhone Home Screen app</span>
           </div>
+        </div>
+
+        <div class="evara-ios-target-preview" aria-hidden="true">
+          <div class="evara-ios-target-top">
+            <span>Cancel</span>
+            <strong>Add to Home Screen</strong>
+            <span>Add</span>
+          </div>
+          <div class="evara-ios-target-row">
+            <img src="/evaraos/assets/img/evaraos_logo.png" alt="">
+            <div>
+              <b>Evaraos</b>
+              <small>evaraos.github.io/evaraos/</small>
+            </div>
+          </div>
+          <p>This is the final iPhone install screen.</p>
         </div>
 
         <div class="evara-ios-install-steps">
           <div class="evara-ios-step">
-            <span class="evara-ios-step-icon">⇧</span>
-            <div>
-              <strong>1. Tap Share</strong>
-              <p>${getShareIconHint()}</p>
-            </div>
+            <span class="evara-ios-step-icon">1</span>
+            <div><strong>Use the browser share control</strong><p>Choose the Home Screen option from the browser action list.</p></div>
           </div>
-
           <div class="evara-ios-step">
-            <span class="evara-ios-step-icon">＋</span>
-            <div>
-              <strong>2. Add to Home Screen</strong>
-              <p>Scroll the share sheet options until you see Add to Home Screen.</p>
-            </div>
+            <span class="evara-ios-step-icon">2</span>
+            <div><strong>Confirm the Evaraos icon</strong><p>The screen will show the red Evaraos app icon and name.</p></div>
           </div>
-
           <div class="evara-ios-step">
-            <span class="evara-ios-step-icon">✓</span>
-            <div>
-              <strong>3. Tap Add</strong>
-              <p>Evaraos will open like an app with full-screen navigation and offline caching.</p>
-            </div>
+            <span class="evara-ios-step-icon">3</span>
+            <div><strong>Finish</strong><p>Evaraos will launch full screen from the Home Screen.</p></div>
           </div>
         </div>
 
@@ -139,34 +122,28 @@
     `;
 
     document.body.appendChild(overlay);
-
     overlay.addEventListener("click", async (event) => {
-      if (event.target.closest("[data-install-guide-close]")) {
-        closeIOSInstallGuide();
-        return;
-      }
-
+      if (event.target.closest("[data-install-guide-close]")) return closeGuide();
       if (event.target.closest("#evaraCopyInstallUrl")) {
         try {
           await navigator.clipboard.writeText(window.location.origin + "/evaraos/");
           notify("Copied", "Evaraos app link copied.", "success");
         } catch {
-          notify("Copy failed", "Copy this link manually from the address bar.", "warning");
+          notify("Copy failed", "Copy the app link from the address bar.", "warning");
         }
       }
     });
-
     return overlay;
   }
 
-  function openIOSInstallGuide() {
-    const overlay = createIOSInstallGuide();
+  function openGuide() {
+    const overlay = createGuide();
     overlay.setAttribute("aria-hidden", "false");
     document.documentElement.classList.add("evara-install-guide-open");
     requestAnimationFrame(() => overlay.classList.add("open"));
   }
 
-  function closeIOSInstallGuide() {
+  function closeGuide() {
     const overlay = document.getElementById("evaraIOSInstallGuide");
     if (!overlay) return;
     overlay.classList.remove("open");
@@ -174,84 +151,50 @@
     document.documentElement.classList.remove("evara-install-guide-open");
   }
 
-  async function runIOSInstallFlow() {
-    openIOSInstallGuide();
-  }
-
-  function bindClick() {
-    if (!installBtn || installBtn.dataset.installBound === "true") return;
-    installBtn.dataset.installBound = "true";
-
-    installBtn.addEventListener("click", async function () {
-      if (isInStandaloneMode()) {
-        hideButton();
-        return;
-      }
-
-      if (deferredPrompt) {
-        await runNativeInstallPrompt();
-        return;
-      }
-
-      if (isIOS()) {
-        await runIOSInstallFlow();
-        return;
-      }
-
-      notify("Install unavailable", "Your browser is not offering the install prompt yet. Try Chrome, Edge, or reopen after the app finishes caching.", "warning");
+  function bindClicks() {
+    if (!pill || pill.dataset.installBound === "true") return;
+    pill.dataset.installBound = "true";
+    appleBtn?.addEventListener("click", () => {
+      if (isStandalone()) return hidePill();
+      openGuide();
+    });
+    androidBtn?.addEventListener("click", () => {
+      if (isStandalone()) return hidePill();
+      if (deferredPrompt) return runPrompt();
+      notify("Install Evaraos", "On Android, use Chrome and choose Install app from the browser menu if a prompt is not visible yet.", "info");
     });
   }
 
-  function bindPromptListeners() {
-    if (!promptListenerBound) {
-      promptListenerBound = true;
+  function bindPromptEvents() {
+    if (!promptBound) {
+      promptBound = true;
       window.addEventListener("beforeinstallprompt", function (event) {
         event.preventDefault();
         deferredPrompt = event;
-        setInstallState("ready", "Install");
-        showButton();
+        showPill();
       });
     }
-
-    if (!installedListenerBound) {
-      installedListenerBound = true;
+    if (!installedBound) {
+      installedBound = true;
       window.addEventListener("appinstalled", function () {
         deferredPrompt = null;
         notify("Installed", "Evaraos has been installed on this device.", "success");
-        hideButton();
+        hidePill();
       });
     }
   }
 
   function initInstallPrompt() {
-    installBtn = findInstallButton();
-    if (!installBtn) return false;
-
-    bindClick();
-    bindPromptListeners();
-
-    if (isInStandaloneMode()) {
-      hideButton();
-      return true;
-    }
-
-    if (isIOS()) {
-      setInstallState("ios", "Install");
-      showButton();
-    } else if (deferredPrompt) {
-      setInstallState("ready", "Install");
-      showButton();
-    } else {
-      setInstallState("waiting", "Install");
-      hideButton();
-    }
-
+    if (!findTargets()) return false;
+    bindClicks();
+    bindPromptEvents();
+    if (isStandalone()) hidePill();
+    else showPill();
     return true;
   }
 
-  function waitForNavButton() {
+  function waitForTargets() {
     if (initInstallPrompt()) return;
-
     const observer = new MutationObserver(() => {
       if (initInstallPrompt()) observer.disconnect();
     });
@@ -260,19 +203,18 @@
 
   function init() {
     registerServiceWorker();
-    waitForNavButton();
+    waitForTargets();
   }
 
   window.EvaraInstall = {
-    openIOSInstallGuide,
-    closeIOSInstallGuide,
+    openIOSInstallGuide: openGuide,
+    closeIOSInstallGuide: closeGuide,
+    runNativeInstallPrompt: runPrompt,
     isIOS,
-    isInStandaloneMode
+    isAndroid,
+    isInStandaloneMode: isStandalone
   };
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init, { once: true });
-  } else {
-    init();
-  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });
+  else init();
 })();
