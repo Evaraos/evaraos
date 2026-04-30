@@ -1,4 +1,4 @@
-const CACHE_VERSION = "evaraos-apple-stack-v1";
+const CACHE_VERSION = "evaraos-offline-stats-v1";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 
 const CORE_ASSETS = [
@@ -17,8 +17,10 @@ const CORE_ASSETS = [
   "/evaraos/assets/js/theme-css-loader.js?v=1",
   "/evaraos/assets/js/nav.js?v=37",
   "/evaraos/assets/js/install.js?v=2",
-  "/evaraos/assets/js/offline-db.js?v=1",
+  "/evaraos/assets/js/leads.js?v=3",
+  "/evaraos/assets/js/offline-lead-queue.js?v=1",
   "/evaraos/assets/js/offline-leads.js?v=1",
+  "/evaraos/assets/js/dashboard-stats.js?v=1",
   "/evaraos/assets/img/evaraos_logo.png",
   "/evaraos/assets/img/icon-192.png",
   "/evaraos/assets/img/icon-512.png"
