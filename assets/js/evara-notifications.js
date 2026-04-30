@@ -9,8 +9,9 @@ function ensureStyles() {
     #${NOTIFICATION_ROOT_ID} {
       position: fixed;
       left: 50%;
-      bottom: max(18px, env(safe-area-inset-bottom));
-      z-index: 2147483000;
+      top: max(92px, calc(env(safe-area-inset-top) + 78px));
+      bottom: auto;
+      z-index: 2147483647;
       width: min(92vw, 440px);
       display: grid;
       gap: 10px;
@@ -26,9 +27,9 @@ function ensureStyles() {
       align-items: center;
       padding: 14px 16px;
       border-radius: 22px;
-      background: rgba(255,255,255,0.82);
-      border: 1px solid rgba(255,255,255,0.72);
-      box-shadow: 0 18px 42px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.88);
+      border: 1px solid rgba(255,255,255,0.78);
+      box-shadow: 0 18px 42px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.9);
       backdrop-filter: blur(24px) saturate(180%);
       -webkit-backdrop-filter: blur(24px) saturate(180%);
       color: #1c1c1e;
@@ -39,7 +40,7 @@ function ensureStyles() {
     html[data-theme="dark"] .evara-toast,
     html[data-theme="galaxy"] .evara-toast,
     html[data-theme$="-dark"] .evara-toast {
-      background: rgba(28,28,30,0.88);
+      background: rgba(28,28,30,0.90);
       border-color: rgba(255,255,255,0.12);
       color: #f5f5f7;
       box-shadow: 0 18px 42px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.1);
@@ -83,8 +84,15 @@ function ensureStyles() {
     .evara-toast[data-tone="error"] { border-color: rgba(255,59,48,0.38); }
 
     @keyframes evaraToastIn {
-      from { opacity: 0; transform: translateY(12px) scale(0.98); }
+      from { opacity: 0; transform: translateY(-12px) scale(0.98); }
       to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @media (max-width: 480px) {
+      #${NOTIFICATION_ROOT_ID} {
+        top: max(88px, calc(env(safe-area-inset-top) + 72px));
+        width: min(94vw, 440px);
+      }
     }
   `;
 
@@ -104,6 +112,16 @@ function ensureRoot() {
   return root;
 }
 
+function escapeText(value) {
+  return String(value).replace(/</g, "&lt;");
+}
+
+function shouldSuppressAppleInstallToast(detail = {}) {
+  const title = String(detail.title || "");
+  const message = String(detail.message || "");
+  return /iphone app coming soon/i.test(title) || /proper apple app store|testflight/i.test(message);
+}
+
 export function notify({ title = "Evaraos", message = "", tone = "info", timeout = 4200 } = {}) {
   const root = ensureRoot();
   const toast = document.createElement("div");
@@ -111,8 +129,8 @@ export function notify({ title = "Evaraos", message = "", tone = "info", timeout
   toast.dataset.tone = tone;
   toast.innerHTML = `
     <div>
-      <strong>${String(title).replace(/</g, "&lt;")}</strong>
-      <span>${String(message).replace(/</g, "&lt;")}</span>
+      <strong>${escapeText(title)}</strong>
+      <span>${escapeText(message)}</span>
     </div>
     <button type="button" aria-label="Dismiss notification">×</button>
   `;
@@ -128,5 +146,12 @@ export function notify({ title = "Evaraos", message = "", tone = "info", timeout
 window.EvaraNotify = notify;
 
 window.addEventListener("evara:notify", (event) => {
-  notify(event.detail || {});
+  const detail = event.detail || {};
+
+  if (shouldSuppressAppleInstallToast(detail)) {
+    if (window.EvaraInstall?.openIOSInstallGuide) window.EvaraInstall.openIOSInstallGuide();
+    return;
+  }
+
+  notify(detail);
 });
