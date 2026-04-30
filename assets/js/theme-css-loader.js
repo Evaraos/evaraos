@@ -1,5 +1,6 @@
 (function () {
   const loadedModules = new Set();
+  const loadedStylesheets = new Set();
   let swRegistrationStarted = false;
 
   function markThemeHydrated() {
@@ -21,6 +22,16 @@
   function syncCss() {
     removeOldVisualModes();
     markThemeHydrated();
+  }
+
+  function loadStylesheetOnce(href, id) {
+    if (loadedStylesheets.has(href) || document.getElementById(id)) return;
+    loadedStylesheets.add(href);
+    const link = document.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    link.href = href;
+    document.head.appendChild(link);
   }
 
   function loadModuleOnce(src) {
@@ -51,12 +62,14 @@
     bootGlobalModules();
 
     if (path.endsWith("/leads.html")) {
+      loadStylesheetOnce("/evaraos/assets/css/premium-leads.css?v=1", "evaraPremiumLeadsCss");
       loadModuleOnce("/evaraos/assets/js/leads.js?v=3");
       loadModuleOnce("/evaraos/assets/js/offline-leads.js?v=2");
       loadModuleOnce("/evaraos/assets/js/premium-leads.js?v=1");
     }
 
     if (path.endsWith("/customer_dashboard.html")) {
+      loadStylesheetOnce("/evaraos/assets/css/premium-leads.css?v=1", "evaraPremiumLeadsCss");
       loadModuleOnce("/evaraos/assets/js/customer-lead-request.js?v=1");
     }
 
@@ -98,6 +111,7 @@
           hydrated: document.documentElement.getAttribute("data-evara-theme-ready") === "true",
           visualStack: "apple-settings-glass",
           loadedModules: Array.from(loadedModules),
+          loadedStylesheets: Array.from(loadedStylesheets),
           swRegistrationStarted
         };
       }
