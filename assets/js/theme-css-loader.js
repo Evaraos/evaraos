@@ -53,6 +53,11 @@
     if (path.endsWith("/leads.html")) {
       loadModuleOnce("/evaraos/assets/js/leads.js?v=3");
       loadModuleOnce("/evaraos/assets/js/offline-leads.js?v=2");
+      loadModuleOnce("/evaraos/assets/js/premium-leads.js?v=1");
+    }
+
+    if (path.endsWith("/customer_dashboard.html")) {
+      loadModuleOnce("/evaraos/assets/js/customer-lead-request.js?v=1");
     }
 
     if (path.endsWith("/dashboard.html")) {
