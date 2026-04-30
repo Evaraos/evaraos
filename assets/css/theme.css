@@ -14,15 +14,18 @@
 /* Light-first boot safety net for pages still carrying old dark inline defaults */
 @import url("./themes/first-paint-light.css?v=1");
 
-/* Ambient theme motion */
-@import url("./effects/ambient-clouds.css?v=1");
+/* Plain Apple Settings background */
+@import url("./effects/ambient-clouds.css?v=4");
 
 /* Components */
 @import url("./components/glass.css");
-@import url("./components/glass-cloud-transparency.css?v=1");
+@import url("./components/glass-cloud-transparency.css?v=3");
 @import url("./components/buttons.css");
 @import url("./components/application-polish.css?v=1");
 @import url("./components/glass-relief-text.css?v=1");
+
+/* Final Apple Settings liquid-glass override */
+@import url("./components/apple-settings-glass.css?v=1");
 
 /* Effects */
 @import url("./effects/beam.css");
