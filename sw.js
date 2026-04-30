@@ -1,4 +1,4 @@
-const CACHE_VERSION = "evaraos-install-layerfix-v3";
+const CACHE_VERSION = "evaraos-install-polish-v4";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 
 const CORE_ASSETS = [
@@ -21,7 +21,7 @@ const CORE_ASSETS = [
   "/evaraos/assets/js/loader.js?v=35",
   "/evaraos/assets/js/theme-css-loader.js?v=1",
   "/evaraos/assets/js/nav.js?v=38",
-  "/evaraos/assets/js/install.js?v=5",
+  "/evaraos/assets/js/install.js?v=6",
   "/evaraos/assets/js/leads.js?v=3",
   "/evaraos/assets/js/premium-leads.js?v=1",
   "/evaraos/assets/js/customer-lead-request.js?v=1",
