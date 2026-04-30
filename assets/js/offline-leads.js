@@ -15,6 +15,9 @@ import {
   getLeadQueueCounts
 } from "./offline-lead-queue.js";
 
+import { canUseOfflineStaffTools } from "./device-trust.js";
+import { notify } from "./evara-notifications.js";
+
 let syncing = false;
 let formInterceptorBound = false;
 
@@ -23,8 +26,28 @@ function actor() {
   return {
     uid: profile.uid || "",
     email: profile.email || "",
-    name: profile.displayName || profile.fullName || profile.name || profile.email || "Staff"
+    name: profile.displayName || profile.fullName || profile.name || profile.email || "Staff",
+    role: profile.role || "",
+    companyId: profile.companyId || ""
   };
+}
+
+function offlineAllowed() {
+  const profile = getSavedUserProfile?.() || {};
+  return canUseOfflineStaffTools(profile);
+}
+
+function guardOfflineTools({ notifyUser = false } = {}) {
+  const allowed = offlineAllowed();
+  document.documentElement.toggleAttribute("data-offline-staff-ready", allowed);
+  if (!allowed && notifyUser) {
+    notify({
+      title: "Offline locked",
+      message: "Staff must log in and check Remember this device before using offline lead capture.",
+      tone: "warning"
+    });
+  }
+  return allowed;
 }
 
 function value(id) {
@@ -78,7 +101,7 @@ export function buildOfflineLeadPayload() {
     customerName: fullName,
     email: value("leadEmailInput"),
     phone: value("leadPhoneInput"),
-    companyId: value("leadCompanyInput"),
+    companyId: value("leadCompanyInput") || user.companyId || "",
     companyName: currentCompanyName(),
     status: value("leadStatusInput") || "new",
     priority: value("leadPriorityInput") || "normal",
@@ -98,6 +121,7 @@ export function buildOfflineLeadPayload() {
     createdBy: user.uid,
     createdByEmail: user.email,
     createdByName: user.name,
+    createdByRole: user.role,
     updatedBy: user.uid,
     updatedByEmail: user.email,
     updatedByName: user.name,
@@ -126,12 +150,18 @@ export async function saveLeadOfflineCapable(payload = buildOfflineLeadPayload()
   const finalPayload = { ...payload, clientLeadId, id: clientLeadId };
 
   if (!navigator.onLine) {
+    if (!guardOfflineTools({ notifyUser: true })) {
+      return { queued: false, blocked: true, clientLeadId };
+    }
+
     const record = await queueLead({
       ...finalPayload,
       syncStatus: "pending_offline",
       createdOfflineAt: new Date().toISOString()
     });
+
     await refreshLeadQueueUi();
+    notify({ title: "Lead saved offline", message: "It will upload automatically when WiFi returns.", tone: "success" });
     return { queued: true, clientLeadId, record };
   }
 
@@ -140,25 +170,35 @@ export async function saveLeadOfflineCapable(payload = buildOfflineLeadPayload()
     await refreshLeadQueueUi();
     return { queued: false, clientLeadId };
   } catch (error) {
+    if (!guardOfflineTools({ notifyUser: true })) {
+      throw error;
+    }
+
     const record = await queueLead({
       ...finalPayload,
       syncStatus: "pending_retry",
       createdOfflineAt: new Date().toISOString(),
       lastOnlineError: error.message || String(error)
     });
+
     await refreshLeadQueueUi();
+    notify({ title: "Lead queued", message: "Connection failed, so this lead is waiting in offline queue.", tone: "warning" });
     return { queued: true, clientLeadId, record, error };
   }
 }
 
 export async function syncLeadQueue() {
   if (syncing || !navigator.onLine) return { synced: 0, failed: 0 };
+  if (!guardOfflineTools()) return { synced: 0, failed: 0, blocked: true };
+
   syncing = true;
   let synced = 0;
   let failed = 0;
 
   try {
     const rows = await getQueuedLeads();
+    if (rows.length) notify({ title: "Syncing leads", message: `${rows.length} queued lead${rows.length === 1 ? "" : "s"} uploading now.`, tone: "info" });
+
     for (const row of rows) {
       try {
         await markLeadSyncing(row.clientLeadId, Number(row.attempts || 0));
@@ -176,6 +216,14 @@ export async function syncLeadQueue() {
   } finally {
     syncing = false;
     await refreshLeadQueueUi();
+  }
+
+  if (synced || failed) {
+    notify({
+      title: failed ? "Lead sync finished with issues" : "Lead sync complete",
+      message: `Synced: ${synced}. Failed: ${failed}.`,
+      tone: failed ? "warning" : "success"
+    });
   }
 
   return { synced, failed };
@@ -196,7 +244,9 @@ function ensureLeadQueueUi() {
 
   document.getElementById("leadQueueSyncBtn")?.addEventListener("click", async () => {
     const result = await syncLeadQueue();
-    alert(`Lead queue sync finished. Synced: ${result.synced}. Failed: ${result.failed}.`);
+    if (result.blocked) {
+      notify({ title: "Offline locked", message: "Log in with Remember this device checked to sync offline leads.", tone: "warning" });
+    }
   });
 }
 
@@ -204,15 +254,22 @@ export async function refreshLeadQueueUi() {
   ensureLeadQueueUi();
   const status = document.getElementById("leadOfflineStatus");
   const queueBtn = document.getElementById("leadQueueSyncBtn");
+  const allowed = guardOfflineTools();
   const counts = await getLeadQueueCounts().catch(() => ({ total: 0, failed: 0 }));
 
   if (status) {
-    status.textContent = navigator.onLine ? "Online" : "Offline";
-    status.className = `dashboard-status-pill ${navigator.onLine ? "success" : "warning"}`;
+    if (!allowed) {
+      status.textContent = navigator.onLine ? "Offline Locked" : "Offline Locked";
+      status.className = "dashboard-status-pill warning";
+    } else {
+      status.textContent = navigator.onLine ? "Online" : "Offline Ready";
+      status.className = `dashboard-status-pill ${navigator.onLine ? "success" : "warning"}`;
+    }
   }
 
   if (queueBtn) {
     queueBtn.textContent = counts.total ? `Queued: ${counts.total}${counts.failed ? ` • Failed: ${counts.failed}` : ""}` : "Queue Clear";
+    queueBtn.disabled = !allowed && !counts.total;
   }
 }
 
@@ -223,12 +280,16 @@ function bindOfflineFormInterceptor() {
   document.addEventListener("submit", async (event) => {
     const form = event.target?.closest?.("#leadCrudForm");
     if (!form) return;
-
     if (navigator.onLine) return;
 
     event.preventDefault();
     event.stopPropagation();
     if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
+
+    if (!guardOfflineTools({ notifyUser: true })) {
+      setLeadCrudMessage("Offline is locked. Log in and check Remember this device first.", "error");
+      return;
+    }
 
     const payload = buildOfflineLeadPayload();
     if (!payload.fullName) {
@@ -254,13 +315,15 @@ function init() {
   window.addEventListener("online", () => { refreshLeadQueueUi(); syncLeadQueue(); });
   window.addEventListener("offline", refreshLeadQueueUi);
   window.addEventListener("evara:lead-queue-changed", refreshLeadQueueUi);
+  window.addEventListener("evara:session-ready", refreshLeadQueueUi);
 }
 
 window.EvaraOfflineLeads = {
   buildOfflineLeadPayload,
   saveLeadOfflineCapable,
   syncLeadQueue,
-  refreshLeadQueueUi
+  refreshLeadQueueUi,
+  guardOfflineTools
 };
 
 if (document.readyState === "loading") {
