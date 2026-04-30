@@ -56,10 +56,7 @@
   white-space: nowrap;
 }
 
-.eva-install-chip[data-install-state="ios"] {
-  display: inline-flex;
-}
-
+.eva-install-chip[data-install-state="ios"],
 .eva-install-chip[data-install-state="ready"] {
   display: inline-flex;
 }
@@ -68,6 +65,213 @@
 .eva-install-chip:focus-visible {
   transform: translateY(-1px);
   outline: none;
+}
+
+.evara-install-guide-open {
+  overflow: hidden;
+}
+
+.evara-ios-install-guide {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: grid;
+  place-items: end center;
+  padding: max(16px, env(safe-area-inset-top)) 14px max(18px, env(safe-area-inset-bottom));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.evara-ios-install-guide.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.evara-ios-install-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+}
+
+.evara-ios-install-card {
+  position: relative;
+  width: min(100%, 430px);
+  border-radius: 34px;
+  padding: 18px;
+  color: #101917;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255,255,255,0.96);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  transform: translateY(18px) scale(0.98);
+  transition: transform 210ms ease;
+}
+
+.evara-ios-install-guide.open .evara-ios-install-card {
+  transform: translateY(0) scale(1);
+}
+
+html[data-theme="dark"] .evara-ios-install-card,
+html[data-theme="galaxy"] .evara-ios-install-card,
+html[data-theme$="-dark"] .evara-ios-install-card {
+  color: #f5f5f7;
+  background: rgba(28, 28, 30, 0.86);
+  border-color: rgba(255,255,255,0.13);
+  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255,255,255,0.10);
+}
+
+.evara-ios-install-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(120, 120, 128, 0.16);
+  color: currentColor;
+  font-size: 1.65rem;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+
+.evara-ios-install-app {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 12px;
+  padding-right: 42px;
+  margin-bottom: 18px;
+}
+
+.evara-ios-install-logo {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.62);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.86), 0 8px 22px rgba(0,0,0,0.08);
+}
+
+.evara-ios-install-app strong {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+}
+
+.evara-ios-install-app span {
+  display: block;
+  margin-top: 2px;
+  color: rgba(60, 60, 67, 0.70);
+  font-size: .82rem;
+  font-weight: 740;
+}
+
+html[data-theme="dark"] .evara-ios-install-app span,
+html[data-theme="galaxy"] .evara-ios-install-app span,
+html[data-theme$="-dark"] .evara-ios-install-app span {
+  color: rgba(235,235,245,0.62);
+}
+
+.evara-ios-install-steps {
+  display: grid;
+  gap: 10px;
+}
+
+.evara-ios-step {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 13px;
+  border-radius: 24px;
+  background: rgba(255,255,255,0.52);
+  border: 1px solid rgba(255,255,255,0.78);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.72);
+}
+
+html[data-theme="dark"] .evara-ios-step,
+html[data-theme="galaxy"] .evara-ios-step,
+html[data-theme$="-dark"] .evara-ios-step {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.10);
+}
+
+.evara-ios-step-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #10231d;
+  background: rgba(255,255,255,0.78);
+  border: 1px solid rgba(255,255,255,0.88);
+}
+
+html[data-theme="dark"] .evara-ios-step-icon,
+html[data-theme="galaxy"] .evara-ios-step-icon,
+html[data-theme$="-dark"] .evara-ios-step-icon {
+  color: #f5f5f7;
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(255,255,255,0.12);
+}
+
+.evara-ios-step strong {
+  display: block;
+  font-size: .94rem;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+}
+
+.evara-ios-step p {
+  margin: 4px 0 0;
+  color: rgba(60, 60, 67, 0.72);
+  font-size: .78rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+html[data-theme="dark"] .evara-ios-step p,
+html[data-theme="galaxy"] .evara-ios-step p,
+html[data-theme$="-dark"] .evara-ios-step p {
+  color: rgba(235,235,245,0.62);
+}
+
+.evara-ios-install-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.evara-ios-install-copy,
+.evara-ios-install-done {
+  min-height: 48px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: .88rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.evara-ios-install-copy {
+  color: currentColor;
+  background: rgba(120, 120, 128, 0.14);
+}
+
+.evara-ios-install-done {
+  color: #fff;
+  background: linear-gradient(135deg, #ff2f57, #111917);
+  box-shadow: 0 14px 26px rgba(255, 47, 87, 0.18);
 }
 
 @media (max-width: 480px) {
@@ -81,5 +285,10 @@
   .eva-chip-icon {
     width: 18px;
     height: 18px;
+  }
+
+  .evara-ios-install-card {
+    border-radius: 30px;
+    padding: 16px;
   }
 }
