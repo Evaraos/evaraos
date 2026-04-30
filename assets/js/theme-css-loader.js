@@ -66,7 +66,7 @@
     loadModuleOnce("/evaraos/assets/js/evara-notifications.js?v=1");
     loadModuleOnce("/evaraos/assets/js/offline-staff-gate.js?v=1");
     loadScriptOnce("/evaraos/assets/js/install.js?v=6", "evaraInstallScript");
-    loadScriptOnce("/evaraos/assets/js/install-click-hotfix.js?v=2", "evaraInstallClickHotfixScript");
+    loadScriptOnce("/evaraos/assets/js/install-click-hotfix.js?v=3", "evaraInstallClickHotfixScript");
   }
 
   function bootPageModules() {
