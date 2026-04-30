@@ -1,46 +1,60 @@
 /* EVARAOS GLASS RELIEF TEXT
-   Light-mode text effect for premium inset lettering on liquid glass cards.
+   Light-mode inset lettering for transparent liquid glass cards.
+   Dark mode keeps text readable with subtle red-black depth.
 */
 
 html[data-theme="light"] .glass-relief,
 html[data-theme$="-light"] .glass-relief {
   color: transparent !important;
-  background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(16,35,29,0.14));
+  background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(16,35,29,0.24));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow:
-    0 1px 0 rgba(255,255,255,0.92),
-    0 2px 10px rgba(255,255,255,0.16),
-    0 -1px 0 rgba(16,35,29,0.18),
-    0 -2px 6px rgba(16,35,29,0.10);
-  filter: saturate(0.94) contrast(1.02);
+    0 1px 0 rgba(255,255,255,0.96),
+    0 2px 12px rgba(255,255,255,0.18),
+    0 -1px 0 rgba(16,35,29,0.26),
+    0 -2px 8px rgba(16,35,29,0.16);
+  filter: saturate(0.96) contrast(1.08);
 }
 
 html[data-theme="light"] .glass-relief-soft,
 html[data-theme$="-light"] .glass-relief-soft {
   color: transparent !important;
-  background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(16,35,29,0.12));
+  background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(16,35,29,0.16));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow:
-    0 1px 0 rgba(255,255,255,0.82),
-    0 -1px 0 rgba(16,35,29,0.15);
+    0 1px 0 rgba(255,255,255,0.86),
+    0 -1px 0 rgba(16,35,29,0.18);
 }
 
 html[data-theme="light"] .glass-relief-deep,
 html[data-theme$="-light"] .glass-relief-deep {
   color: transparent !important;
-  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(16,35,29,0.22));
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(16,35,29,0.32));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow:
-    0 1px 0 rgba(255,255,255,0.92),
-    0 2px 0 rgba(255,255,255,0.28),
-    0 -1px 0 rgba(16,35,29,0.22),
-    0 -2px 6px rgba(16,35,29,0.14);
+    0 1px 0 rgba(255,255,255,0.96),
+    0 2px 0 rgba(255,255,255,0.32),
+    0 -1px 0 rgba(16,35,29,0.30),
+    0 -2px 8px rgba(16,35,29,0.18);
+  filter: contrast(1.12);
+}
+
+html[data-theme="dark"] .glass-relief,
+html[data-theme="galaxy"] .glass-relief,
+html[data-theme$="-dark"] .glass-relief {
+  color: #fff5f6 !important;
+  -webkit-text-fill-color: currentColor;
+  background: none;
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.10),
+    0 -1px 0 rgba(0,0,0,0.64),
+    0 0 18px rgba(255,35,76,0.18);
 }
 
 html[data-theme="light"] .glass-card .hero-title,
@@ -66,15 +80,16 @@ html[data-theme$="-light"] .aurora-card .application-title,
 html[data-theme$="-light"] .glass-card h1:not(.no-relief),
 html[data-theme$="-light"] .aurora-card h1:not(.no-relief) {
   color: transparent !important;
-  background: linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.035) 27%, rgba(16,35,29,0.18));
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02) 24%, rgba(16,35,29,0.28));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow:
-    0 1px 0 rgba(255,255,255,0.94),
-    0 2px 12px rgba(255,255,255,0.14),
-    0 -1px 0 rgba(16,35,29,0.19),
-    0 -2px 8px rgba(16,35,29,0.08);
+    0 1px 0 rgba(255,255,255,0.96),
+    0 2px 14px rgba(255,255,255,0.18),
+    0 -1px 0 rgba(16,35,29,0.24),
+    0 -3px 10px rgba(16,35,29,0.12);
+  filter: contrast(1.08);
 }
 
 html[data-theme="light"] .glass-card .card-kicker,
@@ -98,20 +113,20 @@ html[data-theme$="-light"] .aurora-card .applications-kicker,
 html[data-theme$="-light"] .aurora-card .application-kicker,
 html[data-theme$="-light"] .aurora-card .stat-mini span {
   color: transparent !important;
-  background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(16,35,29,0.14));
+  background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(16,35,29,0.18));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow:
-    0 1px 0 rgba(255,255,255,0.84),
-    0 -1px 0 rgba(16,35,29,0.14);
+    0 1px 0 rgba(255,255,255,0.88),
+    0 -1px 0 rgba(16,35,29,0.17);
 }
 
 html[data-theme="light"] .glass-card p:not(.glass-relief):not(.glass-relief-soft):not(.glass-relief-deep),
 html[data-theme="light"] .aurora-card p:not(.glass-relief):not(.glass-relief-soft):not(.glass-relief-deep),
 html[data-theme$="-light"] .glass-card p:not(.glass-relief):not(.glass-relief-soft):not(.glass-relief-deep),
 html[data-theme$="-light"] .aurora-card p:not(.glass-relief):not(.glass-relief-soft):not(.glass-relief-deep) {
-  color: rgba(16,35,29,0.72) !important;
+  color: rgba(16,35,29,0.76) !important;
   -webkit-text-fill-color: currentColor;
   background: none;
 }
