@@ -5,6 +5,7 @@
 
   let galaxyLoaded = false;
   let pending = false;
+  let isSyncing = false;
 
   function currentTheme() {
     return document.documentElement.getAttribute("data-theme") || "light";
@@ -28,34 +29,44 @@
 
   function normalizeBeamStyle(value = "") {
     const safe = String(value || "").trim().toLowerCase();
-    if (["off", "glass", "rainbow", "nebula"].includes(safe)) return safe;
-    if (safe === "default") return "glass";
+    if (safe === "rainbow") return "rainbow";
+    if (safe === "nebula") return "nebula";
+    if (safe === "off") return "off";
     return "glass";
+  }
+
+  function setRootAttribute(name, value) {
+    if (document.documentElement.getAttribute(name) === value) return;
+    document.documentElement.setAttribute(name, value);
+  }
+
+  function removeRootAttribute(name) {
+    if (!document.documentElement.hasAttribute(name)) return;
+    document.documentElement.removeAttribute(name);
   }
 
   function syncBeamPreferences() {
     const appearance = getAppearance();
     const theme = currentTheme();
     const enabled = appearance.beamEnabled !== false;
-    let mode = normalizeBeamStyle(appearance.beamStyle || appearance.beamMode || "");
-
-    if (!enabled || mode === "off") {
-      document.documentElement.setAttribute("data-beam-mode", "off");
-      document.documentElement.setAttribute("data-user-beam-off", "true");
-      return;
-    }
-
-    document.documentElement.removeAttribute("data-user-beam-off");
+    let mode = normalizeBeamStyle(appearance.beamStyle || appearance.beamMode || "glass");
 
     if (appearance.rainbowBeam === true && !appearance.beamStyle) {
       mode = "rainbow";
     }
 
-    if (theme === "galaxy" && !appearance.beamStyle) {
+    if (theme === "galaxy" && !appearance.beamStyle && mode !== "rainbow") {
       mode = "nebula";
     }
 
-    document.documentElement.setAttribute("data-beam-mode", mode || "glass");
+    if (!enabled || mode === "off") {
+      setRootAttribute("data-beam-mode", "off");
+      setRootAttribute("data-user-beam-off", "true");
+      return;
+    }
+
+    removeRootAttribute("data-user-beam-off");
+    setRootAttribute("data-beam-mode", mode || "glass");
   }
 
   function shouldUseGalaxy() {
@@ -63,7 +74,7 @@
   }
 
   function markThemeHydrated() {
-    document.documentElement.setAttribute("data-evara-theme-ready", "true");
+    setRootAttribute("data-evara-theme-ready", "true");
   }
 
   function getGalaxyLink() {
@@ -103,7 +114,6 @@
     }
 
     if (pending) return;
-
     pending = true;
 
     if (!link) {
@@ -118,7 +128,6 @@
         galaxyLoaded = true;
         pending = false;
         link.disabled = false;
-
         emitGalaxyReady();
         syncGalaxyEngine();
       };
@@ -149,14 +158,22 @@
   }
 
   function syncCss() {
-    syncBeamPreferences();
+    if (isSyncing) return;
+    isSyncing = true;
 
-    if (shouldUseGalaxy()) {
-      loadGalaxyCss();
-      return;
+    try {
+      syncBeamPreferences();
+
+      if (shouldUseGalaxy()) {
+        loadGalaxyCss();
+      } else {
+        disableGalaxyCss();
+      }
+    } finally {
+      window.setTimeout(() => {
+        isSyncing = false;
+      }, 0);
     }
-
-    disableGalaxyCss();
   }
 
   function syncAfterThemeReady() {
@@ -178,7 +195,7 @@
 
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ["data-theme", "data-beam-mode"]
+      attributeFilter: ["data-theme"]
     });
 
     window.EvaraThemeCssLoader = {
