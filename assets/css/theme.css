@@ -1,6 +1,6 @@
 /* ===============================
    EVARAOS THEME CORE
-   Scalable import hub
+   Clean Apple Settings / Liquid Glass stack
    =============================== */
 
 /* Base */
@@ -11,30 +11,25 @@
 @import url("./themes/theme-dark.css");
 @import url("./themes/theme-light.css");
 
-/* Light-first boot safety net for pages still carrying old dark inline defaults */
+/* Light-first boot safety net */
 @import url("./themes/first-paint-light.css?v=1");
 
 /* Plain Apple Settings background */
 @import url("./effects/ambient-clouds.css?v=4");
 
-/* Components */
+/* Core Components */
 @import url("./components/glass.css");
-@import url("./components/glass-cloud-transparency.css?v=3");
 @import url("./components/buttons.css");
 @import url("./components/application-polish.css?v=1");
-@import url("./components/glass-relief-text.css?v=1");
 
-/* Final Apple Settings liquid-glass override */
-@import url("./components/apple-settings-glass.css?v=1");
+/* Current source of truth for the visual system */
+@import url("./components/apple-settings-glass.css?v=2");
 
-/* Effects */
-@import url("./effects/beam.css");
+/* Motion only, no beam/cloud visual overrides */
 @import url("./effects/animations.css");
 
 /* Loader */
 @import url("./loaders/loader.css");
-
-/* Loader viewport safety override */
 @import url("./loaders/loader-viewport.css");
 
-/* Galaxy is loaded dynamically by theme-css-loader.js */
+/* Galaxy is disabled visually unless intentionally loaded by JS */
