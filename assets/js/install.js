@@ -20,6 +20,33 @@
     installBtn.style.display = "none";
   }
 
+  async function registerServiceWorker() {
+    if (!("serviceWorker" in navigator)) return;
+
+    try {
+      const registration = await navigator.serviceWorker.register("/evaraos/sw.js", {
+        scope: "/evaraos/"
+      });
+
+      if (registration.waiting) {
+        registration.waiting.postMessage({ type: "SKIP_WAITING" });
+      }
+
+      registration.addEventListener("updatefound", () => {
+        const worker = registration.installing;
+        if (!worker) return;
+
+        worker.addEventListener("statechange", () => {
+          if (worker.state === "installed" && navigator.serviceWorker.controller) {
+            worker.postMessage({ type: "SKIP_WAITING" });
+          }
+        });
+      });
+    } catch (error) {
+      console.warn("Evaraos service worker registration skipped:", error);
+    }
+  }
+
   function bindClick() {
     if (!installBtn) return;
 
@@ -40,7 +67,7 @@
     });
   }
 
-  function init() {
+  function initInstallPrompt() {
     installBtn = document.getElementById("installBtn");
     if (!installBtn) return;
 
@@ -60,6 +87,11 @@
     if (isIOS() && !isInStandaloneMode()) {
       showButton();
     }
+  }
+
+  function init() {
+    registerServiceWorker();
+    initInstallPrompt();
   }
 
   if (document.readyState === "loading") {
