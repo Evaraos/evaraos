@@ -129,7 +129,7 @@ export function renderNav() {
         <div class="eva-quick eva-utility-row">
           <div class="eva-install-pill" id="evaInstallPill" hidden aria-label="Install Evaraos app">
             <button type="button" class="eva-install-segment eva-install-ios" id="evaInstallApple" aria-label="Install Evaraos on iPhone">
-              <span class="eva-install-os-icon eva-install-phone-icon" aria-hidden="true"></span>
+              <span class="eva-install-os-icon eva-install-apple-icon" aria-hidden="true"></span>
               <span class="eva-install-copy">
                 <strong>iPhone</strong>
                 <small>Install</small>
