@@ -1,4 +1,4 @@
-const CACHE_VERSION = "evaraos-install-leadfix-v1";
+const CACHE_VERSION = "evaraos-install-layerfix-v3";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 
 const CORE_ASSETS = [
@@ -12,7 +12,7 @@ const CORE_ASSETS = [
   "/evaraos/assets/css/base.css?v=34",
   "/evaraos/assets/css/theme.css?v=36",
   "/evaraos/assets/css/nav.css?v=35",
-  "/evaraos/assets/css/install-nav.css?v=1",
+  "/evaraos/assets/css/install-nav.css?v=4",
   "/evaraos/assets/css/home.css?v=34",
   "/evaraos/assets/css/dashboard.css?v=34",
   "/evaraos/assets/css/mobile-polish.css?v=1",
@@ -20,15 +20,15 @@ const CORE_ASSETS = [
   "/evaraos/assets/css/lead-visibility-fix.css?v=1",
   "/evaraos/assets/js/loader.js?v=35",
   "/evaraos/assets/js/theme-css-loader.js?v=1",
-  "/evaraos/assets/js/nav.js?v=37",
-  "/evaraos/assets/js/install.js?v=2",
+  "/evaraos/assets/js/nav.js?v=38",
+  "/evaraos/assets/js/install.js?v=5",
   "/evaraos/assets/js/leads.js?v=3",
   "/evaraos/assets/js/premium-leads.js?v=1",
   "/evaraos/assets/js/customer-lead-request.js?v=1",
   "/evaraos/assets/js/offline-lead-queue.js?v=1",
   "/evaraos/assets/js/offline-leads.js?v=2",
   "/evaraos/assets/js/device-trust.js?v=1",
-  "/evaraos/assets/js/evara-notifications.js?v=1",
+  "/evaraos/assets/js/evara-notifications.js?v=2",
   "/evaraos/assets/js/offline-staff-gate.js?v=1",
   "/evaraos/assets/js/dashboard-stats.js?v=1",
   "/evaraos/assets/img/evaraos_logo.png",
