@@ -78,18 +78,104 @@
     return true;
   }
 
-  async function runIOSInstallFlow() {
-    notify("Install Evaraos", "Tap Share, then Add to Home Screen. Apple does not allow one-tap web app installs from Safari yet.", "info");
+  function getShareIconHint() {
+    const isSafari = /^((?!chrome|android|crios|fxios).)*safari/i.test(navigator.userAgent);
+    return isSafari
+      ? "Tap the Safari share icon, then choose Add to Home Screen."
+      : "Open this page in Safari, tap Share, then choose Add to Home Screen.";
+  }
 
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: "Evaraos Inc",
-          text: "Add Evaraos to your iPhone Home Screen.",
-          url: window.location.origin + "/evaraos/"
-        });
-      } catch {}
-    }
+  function createIOSInstallGuide() {
+    const existing = document.getElementById("evaraIOSInstallGuide");
+    if (existing) return existing;
+
+    const overlay = document.createElement("div");
+    overlay.id = "evaraIOSInstallGuide";
+    overlay.className = "evara-ios-install-guide";
+    overlay.setAttribute("aria-hidden", "true");
+    overlay.innerHTML = `
+      <div class="evara-ios-install-backdrop" data-install-guide-close></div>
+      <section class="evara-ios-install-card" role="dialog" aria-modal="true" aria-label="Install Evaraos on iPhone">
+        <button type="button" class="evara-ios-install-close" data-install-guide-close aria-label="Close install guide">×</button>
+        <div class="evara-ios-install-app">
+          <img src="/evaraos/assets/img/evaraos_logo.png" alt="" class="evara-ios-install-logo">
+          <div>
+            <strong>Evaraos Inc</strong>
+            <span>Install as a Home Screen app</span>
+          </div>
+        </div>
+
+        <div class="evara-ios-install-steps">
+          <div class="evara-ios-step">
+            <span class="evara-ios-step-icon">⇧</span>
+            <div>
+              <strong>1. Tap Share</strong>
+              <p>${getShareIconHint()}</p>
+            </div>
+          </div>
+
+          <div class="evara-ios-step">
+            <span class="evara-ios-step-icon">＋</span>
+            <div>
+              <strong>2. Add to Home Screen</strong>
+              <p>Scroll the share sheet options until you see Add to Home Screen.</p>
+            </div>
+          </div>
+
+          <div class="evara-ios-step">
+            <span class="evara-ios-step-icon">✓</span>
+            <div>
+              <strong>3. Tap Add</strong>
+              <p>Evaraos will open like an app with full-screen navigation and offline caching.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="evara-ios-install-actions">
+          <button type="button" class="evara-ios-install-copy" id="evaraCopyInstallUrl">Copy App Link</button>
+          <button type="button" class="evara-ios-install-done" data-install-guide-close>Got it</button>
+        </div>
+      </section>
+    `;
+
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener("click", async (event) => {
+      if (event.target.closest("[data-install-guide-close]")) {
+        closeIOSInstallGuide();
+        return;
+      }
+
+      if (event.target.closest("#evaraCopyInstallUrl")) {
+        try {
+          await navigator.clipboard.writeText(window.location.origin + "/evaraos/");
+          notify("Copied", "Evaraos app link copied.", "success");
+        } catch {
+          notify("Copy failed", "Copy this link manually from the address bar.", "warning");
+        }
+      }
+    });
+
+    return overlay;
+  }
+
+  function openIOSInstallGuide() {
+    const overlay = createIOSInstallGuide();
+    overlay.setAttribute("aria-hidden", "false");
+    document.documentElement.classList.add("evara-install-guide-open");
+    requestAnimationFrame(() => overlay.classList.add("open"));
+  }
+
+  function closeIOSInstallGuide() {
+    const overlay = document.getElementById("evaraIOSInstallGuide");
+    if (!overlay) return;
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden", "true");
+    document.documentElement.classList.remove("evara-install-guide-open");
+  }
+
+  async function runIOSInstallFlow() {
+    openIOSInstallGuide();
   }
 
   function bindClick() {
@@ -176,6 +262,13 @@
     registerServiceWorker();
     waitForNavButton();
   }
+
+  window.EvaraInstall = {
+    openIOSInstallGuide,
+    closeIOSInstallGuide,
+    isIOS,
+    isInStandaloneMode
+  };
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init, { once: true });
