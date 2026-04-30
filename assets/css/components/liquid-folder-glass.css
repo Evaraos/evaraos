@@ -1,132 +1,19 @@
 /* ===============================
-   EVARAOS LIQUID FOLDER GLASS
-   Final pass inspired by iOS folder glass: visible pill surfaces, strong beam, readable transparent cards.
+   EVARAOS APPLE SETTINGS LIQUID GLASS
+   Plain Apple Settings-style surfaces. No dynamic clouds. No loud beams.
+   Text inside glass surfaces uses a subtle background-colored engraved effect.
    =============================== */
 
-html[data-theme="light"] .settings-chip,
-html[data-theme="light"] .pill,
-html[data-theme="light"] .eva-chip,
-html[data-theme="light"] .settings-section-link,
-html[data-theme="light"] .btn,
-html[data-theme="light"] button:not(.plain-btn):not(.unstyled),
-html[data-theme$="-light"] .settings-chip,
-html[data-theme$="-light"] .pill,
-html[data-theme$="-light"] .eva-chip,
-html[data-theme$="-light"] .settings-section-link,
-html[data-theme$="-light"] .btn,
-html[data-theme$="-light"] button:not(.plain-btn):not(.unstyled) {
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.58), rgba(255,255,255,0.28)) !important;
-  border: 1px solid rgba(255,255,255,0.70) !important;
-  color: rgba(8, 26, 24, 0.92) !important;
-  -webkit-text-fill-color: currentColor !important;
-  text-shadow: 0 1px 0 rgba(255,255,255,0.72) !important;
-  box-shadow:
-    0 14px 34px rgba(73, 100, 110, 0.16),
-    0 0 0 1px rgba(255,255,255,0.62),
-    inset 0 1px 0 rgba(255,255,255,0.92),
-    inset 0 -1px 0 rgba(10, 20, 25, 0.08) !important;
-  backdrop-filter: blur(18px) saturate(210%) brightness(1.05) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(210%) brightness(1.05) !important;
-}
-
-html[data-theme="light"] .settings-chip.is-active,
-html[data-theme="light"] .settings-chip.active,
-html[data-theme="light"] .pill.success,
-html[data-theme="light"] .role-pill.active,
-html[data-theme="light"] .role-pill-option.active,
-html[data-theme$="-light"] .settings-chip.is-active,
-html[data-theme$="-light"] .settings-chip.active,
-html[data-theme$="-light"] .pill.success,
-html[data-theme$="-light"] .role-pill.active,
-html[data-theme$="-light"] .role-pill-option.active {
-  background:
-    radial-gradient(circle at 18% 0%, rgba(255,255,255,0.92), transparent 34%),
-    linear-gradient(180deg, rgba(205,255,255,0.66), rgba(255,255,255,0.24)) !important;
-  border-color: rgba(205,255,255,0.94) !important;
-  color: #08211f !important;
-  -webkit-text-fill-color: currentColor !important;
-  box-shadow:
-    0 16px 38px rgba(79, 190, 204, 0.20),
-    0 0 0 1px rgba(255,255,255,0.78),
-    inset 0 1px 0 rgba(255,255,255,0.96),
-    inset 0 -1px 0 rgba(8,26,24,0.07) !important;
-}
-
-html[data-beam-mode="off"][data-user-beam-off="true"] .glass-card::after,
-html[data-beam-mode="off"][data-user-beam-off="true"] .glass-shell::after,
-html[data-beam-mode="off"][data-user-beam-off="true"] .aurora-card::after,
-html[data-beam-mode="off"][data-user-beam-off="true"] .glass::after,
-html[data-beam-mode="off"][data-user-beam-off="true"] .beam-target::after,
-html[data-beam-mode="off"][data-user-beam-off="true"] .active-glow::after {
-  opacity: 0 !important;
-  animation: none !important;
-}
-
-html[data-beam-mode="glass"] .glass-card::after,
-html[data-beam-mode="glass"] .glass-shell::after,
-html[data-beam-mode="glass"] .aurora-card::after,
-html[data-beam-mode="glass"] .glass::after,
-html[data-beam-mode="off"]:not([data-user-beam-off="true"]) .glass-card::after,
-html[data-beam-mode="off"]:not([data-user-beam-off="true"]) .glass-shell::after,
-html[data-beam-mode="off"]:not([data-user-beam-off="true"]) .aurora-card::after,
-html[data-beam-mode="off"]:not([data-user-beam-off="true"]) .glass::after,
-html:not([data-beam-mode]) .glass-card::after,
-html:not([data-beam-mode]) .glass-shell::after,
-html:not([data-beam-mode]) .aurora-card::after,
-html:not([data-beam-mode]) .glass::after {
-  opacity: 0.96 !important;
-  background:
-    linear-gradient(104deg, transparent 0 18%, rgba(255,255,255,0.10) 28%, rgba(255,255,255,0.88) 45%, rgba(202,255,255,0.62) 50%, rgba(255,255,255,0.16) 61%, transparent 78% 100%) !important;
-  animation: evaraFolderGlassBeam 3.8s ease-in-out infinite !important;
-  mix-blend-mode: screen;
-}
-
-html[data-theme="dark"][data-beam-mode="glass"] .glass-card::after,
-html[data-theme="dark"][data-beam-mode="glass"] .glass-shell::after,
-html[data-theme="dark"][data-beam-mode="glass"] .aurora-card::after,
-html[data-theme="dark"][data-beam-mode="glass"] .glass::after,
-html[data-theme="dark"][data-beam-mode="off"]:not([data-user-beam-off="true"]) .glass-card::after,
-html[data-theme="dark"][data-beam-mode="off"]:not([data-user-beam-off="true"]) .glass-shell::after,
-html[data-theme="dark"][data-beam-mode="off"]:not([data-user-beam-off="true"]) .aurora-card::after,
-html[data-theme="dark"][data-beam-mode="off"]:not([data-user-beam-off="true"]) .glass::after,
-html[data-theme="galaxy"][data-beam-mode="glass"] .glass-card::after,
-html[data-theme="galaxy"][data-beam-mode="glass"] .glass-shell::after,
-html[data-theme="galaxy"][data-beam-mode="glass"] .aurora-card::after,
-html[data-theme="galaxy"][data-beam-mode="glass"] .glass::after,
-html[data-theme$="-dark"][data-beam-mode="glass"] .glass-card::after,
-html[data-theme$="-dark"][data-beam-mode="glass"] .glass-shell::after,
-html[data-theme$="-dark"][data-beam-mode="glass"] .aurora-card::after,
-html[data-theme$="-dark"][data-beam-mode="glass"] .glass::after {
-  opacity: 0.72 !important;
-  background:
-    linear-gradient(104deg, transparent 0 18%, rgba(255,255,255,0.05) 30%, rgba(255,60,94,0.52) 46%, rgba(255,255,255,0.10) 58%, transparent 78% 100%) !important;
-}
-
-html[data-beam-mode="nebula"] .glass-card::after,
-html[data-beam-mode="nebula"] .glass-shell::after,
-html[data-beam-mode="nebula"] .aurora-card::after,
-html[data-beam-mode="nebula"] .glass::after {
-  opacity: 0.88 !important;
-  background:
-    linear-gradient(104deg, transparent 0 18%, rgba(255,255,255,0.07) 28%, rgba(255,47,87,0.46) 42%, rgba(148,92,255,0.40) 52%, rgba(255,255,255,0.10) 62%, transparent 80% 100%) !important;
-  animation: evaraFolderGlassBeam 4.6s ease-in-out infinite !important;
-}
-
-.glass-card:active::after,
-.glass-shell:active::after,
-.aurora-card:active::after,
-.glass:active::after,
-.glass-card.is-active::after,
-.glass-shell.is-active::after,
-.aurora-card.is-active::after,
-.glass.is-active::after,
-.glass-card.active::after,
-.glass-shell.active::after,
-.aurora-card.active::after,
-.glass.active::after {
-  animation: evaraFolderBeamSpin 1s cubic-bezier(.2,.8,.2,1) 1 !important;
-  opacity: 1 !important;
+:root {
+  --evara-page-light: #f2f2f7;
+  --evara-card-light: rgba(255,255,255,0.78);
+  --evara-card-light-strong: rgba(255,255,255,0.92);
+  --evara-line-light: rgba(60,60,67,0.16);
+  --evara-text-cut-light: #f2f2f7;
+  --evara-page-dark: #000000;
+  --evara-card-dark: rgba(28,28,30,0.76);
+  --evara-line-dark: rgba(255,255,255,0.12);
+  --evara-text-cut-dark: #000000;
 }
 
 html[data-theme="light"] .glass-card,
@@ -138,33 +25,274 @@ html[data-theme$="-light"] .glass-shell,
 html[data-theme$="-light"] .aurora-card,
 html[data-theme$="-light"] .glass {
   background:
-    radial-gradient(circle at 18% 0%, rgba(255,255,255,0.34), rgba(255,255,255,0.08) 36%, transparent 64%),
-    linear-gradient(180deg, rgba(255,255,255,0.20), rgba(255,255,255,0.08) 68%, rgba(255,255,255,0.045)) !important;
-  border-color: rgba(255,255,255,0.60) !important;
+    linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.74)) !important;
+  border: 1px solid rgba(255,255,255,0.82) !important;
+  color: #111111;
+  border-radius: clamp(26px, 4vw, 38px) !important;
   box-shadow:
-    0 24px 60px rgba(80, 104, 112, 0.14),
-    0 0 0 1px rgba(255,255,255,0.64),
-    inset 0 1px 0 rgba(255,255,255,0.92),
-    inset 0 -1px 0 rgba(7,22,24,0.06) !important;
-  backdrop-filter: blur(18px) saturate(215%) brightness(1.06) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(215%) brightness(1.06) !important;
+    0 18px 44px rgba(60, 60, 67, 0.10),
+    0 1px 0 rgba(255,255,255,0.78) inset,
+    0 -1px 0 rgba(60,60,67,0.05) inset !important;
+  backdrop-filter: blur(28px) saturate(180%) brightness(1.04) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) brightness(1.04) !important;
 }
 
-html[data-theme="dark"] body,
-html[data-theme="galaxy"] body,
-html[data-theme$="-dark"] body {
-  background-color: #000 !important;
+html[data-theme="dark"] .glass-card,
+html[data-theme="dark"] .glass-shell,
+html[data-theme="dark"] .aurora-card,
+html[data-theme="dark"] .glass,
+html[data-theme="galaxy"] .glass-card,
+html[data-theme="galaxy"] .glass-shell,
+html[data-theme="galaxy"] .aurora-card,
+html[data-theme="galaxy"] .glass,
+html[data-theme$="-dark"] .glass-card,
+html[data-theme$="-dark"] .glass-shell,
+html[data-theme$="-dark"] .aurora-card,
+html[data-theme$="-dark"] .glass {
+  background:
+    linear-gradient(180deg, rgba(32,32,34,0.84), rgba(20,20,22,0.72)) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  color: #f5f5f7;
+  border-radius: clamp(26px, 4vw, 38px) !important;
+  box-shadow:
+    0 20px 50px rgba(0,0,0,0.45),
+    0 1px 0 rgba(255,255,255,0.10) inset,
+    0 -1px 0 rgba(0,0,0,0.55) inset !important;
+  backdrop-filter: blur(28px) saturate(150%) brightness(1.02) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(150%) brightness(1.02) !important;
 }
 
-@keyframes evaraFolderGlassBeam {
-  0% { transform: translateX(-105%) rotate(10deg) scaleY(1.18); opacity: 0.22; }
-  18% { opacity: 1; }
-  48% { transform: translateX(70%) rotate(10deg) scaleY(1.18); opacity: 0.94; }
-  100% { transform: translateX(125%) rotate(10deg) scaleY(1.18); opacity: 0.18; }
+html[data-theme] .glass-card::after,
+html[data-theme] .glass-shell::after,
+html[data-theme] .aurora-card::after,
+html[data-theme] .glass::after,
+html[data-theme] .beam-target::after,
+html[data-theme] .active-glow::after {
+  opacity: 0 !important;
+  display: none !important;
+  animation: none !important;
+  background: none !important;
 }
 
-@keyframes evaraFolderBeamSpin {
-  0% { transform: rotate(0deg) scale(1.05); opacity: 0.58; }
-  36% { transform: rotate(190deg) scale(1.22); opacity: 1; }
-  100% { transform: rotate(360deg) scale(1.08); opacity: 0.80; }
+html[data-theme="light"] .glass-card::before,
+html[data-theme="light"] .glass-shell::before,
+html[data-theme="light"] .aurora-card::before,
+html[data-theme="light"] .glass::before,
+html[data-theme$="-light"] .glass-card::before,
+html[data-theme$="-light"] .glass-shell::before,
+html[data-theme$="-light"] .aurora-card::before,
+html[data-theme$="-light"] .glass::before {
+  opacity: 1 !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.18)) !important;
+}
+
+html[data-theme="light"] .btn,
+html[data-theme="light"] .btn-apple,
+html[data-theme="light"] .btn-theme-primary,
+html[data-theme="light"] .btn-theme-secondary,
+html[data-theme="light"] .settings-chip,
+html[data-theme="light"] .pill,
+html[data-theme="light"] .eva-chip,
+html[data-theme="light"] .role-pill,
+html[data-theme="light"] .role-pill-option,
+html[data-theme="light"] .settings-section-link,
+html[data-theme="light"] button:not(.plain-btn):not(.unstyled),
+html[data-theme$="-light"] .btn,
+html[data-theme$="-light"] .btn-apple,
+html[data-theme$="-light"] .btn-theme-primary,
+html[data-theme$="-light"] .btn-theme-secondary,
+html[data-theme$="-light"] .settings-chip,
+html[data-theme$="-light"] .pill,
+html[data-theme$="-light"] .eva-chip,
+html[data-theme$="-light"] .role-pill,
+html[data-theme$="-light"] .role-pill-option,
+html[data-theme$="-light"] .settings-section-link,
+html[data-theme$="-light"] button:not(.plain-btn):not(.unstyled) {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.88), rgba(255,255,255,0.62)) !important;
+  border: 1px solid rgba(255,255,255,0.86) !important;
+  border-radius: 999px !important;
+  color: var(--evara-text-cut-light) !important;
+  -webkit-text-fill-color: var(--evara-text-cut-light) !important;
+  text-shadow:
+    0 1px 1px rgba(255,255,255,0.96),
+    0 -1px 1px rgba(60,60,67,0.18) !important;
+  box-shadow:
+    0 12px 28px rgba(60,60,67,0.10),
+    0 1px 0 rgba(255,255,255,0.92) inset,
+    0 -1px 0 rgba(60,60,67,0.06) inset !important;
+  backdrop-filter: blur(24px) saturate(175%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(175%) !important;
+}
+
+html[data-theme="dark"] .btn,
+html[data-theme="dark"] .btn-apple,
+html[data-theme="dark"] .btn-theme-primary,
+html[data-theme="dark"] .btn-theme-secondary,
+html[data-theme="dark"] .settings-chip,
+html[data-theme="dark"] .pill,
+html[data-theme="dark"] .eva-chip,
+html[data-theme="dark"] .role-pill,
+html[data-theme="dark"] .role-pill-option,
+html[data-theme="dark"] .settings-section-link,
+html[data-theme="dark"] button:not(.plain-btn):not(.unstyled),
+html[data-theme="galaxy"] .btn,
+html[data-theme="galaxy"] .btn-apple,
+html[data-theme="galaxy"] .btn-theme-primary,
+html[data-theme="galaxy"] .btn-theme-secondary,
+html[data-theme="galaxy"] .settings-chip,
+html[data-theme="galaxy"] .pill,
+html[data-theme="galaxy"] .eva-chip,
+html[data-theme="galaxy"] .role-pill,
+html[data-theme="galaxy"] .role-pill-option,
+html[data-theme="galaxy"] .settings-section-link,
+html[data-theme="galaxy"] button:not(.plain-btn):not(.unstyled),
+html[data-theme$="-dark"] .btn,
+html[data-theme$="-dark"] .btn-apple,
+html[data-theme$="-dark"] .btn-theme-primary,
+html[data-theme$="-dark"] .btn-theme-secondary,
+html[data-theme$="-dark"] .settings-chip,
+html[data-theme$="-dark"] .pill,
+html[data-theme$="-dark"] .eva-chip,
+html[data-theme$="-dark"] .role-pill,
+html[data-theme$="-dark"] .role-pill-option,
+html[data-theme$="-dark"] .settings-section-link,
+html[data-theme$="-dark"] button:not(.plain-btn):not(.unstyled) {
+  background:
+    linear-gradient(180deg, rgba(38,38,40,0.86), rgba(24,24,26,0.66)) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  border-radius: 999px !important;
+  color: var(--evara-text-cut-dark) !important;
+  -webkit-text-fill-color: var(--evara-text-cut-dark) !important;
+  text-shadow:
+    0 1px 1px rgba(255,255,255,0.12),
+    0 -1px 1px rgba(0,0,0,0.85) !important;
+  box-shadow:
+    0 12px 28px rgba(0,0,0,0.38),
+    0 1px 0 rgba(255,255,255,0.10) inset,
+    0 -1px 0 rgba(0,0,0,0.70) inset !important;
+}
+
+html[data-theme="light"] .glass-card h1,
+html[data-theme="light"] .glass-card h2,
+html[data-theme="light"] .glass-card h3,
+html[data-theme="light"] .glass-card h4,
+html[data-theme="light"] .glass-card strong,
+html[data-theme="light"] .glass-card .card-tag,
+html[data-theme="light"] .glass-card .service-meta,
+html[data-theme="light"] .glass-card .hero-kicker,
+html[data-theme="light"] .glass-card .applications-kicker,
+html[data-theme="light"] .glass-card .application-kicker,
+html[data-theme="light"] .glass-card .metric-label,
+html[data-theme="light"] .aurora-card h1,
+html[data-theme="light"] .aurora-card h2,
+html[data-theme="light"] .aurora-card h3,
+html[data-theme="light"] .aurora-card h4,
+html[data-theme="light"] .aurora-card strong,
+html[data-theme="light"] .aurora-card .card-tag,
+html[data-theme="light"] .aurora-card .service-meta,
+html[data-theme$="-light"] .glass-card h1,
+html[data-theme$="-light"] .glass-card h2,
+html[data-theme$="-light"] .glass-card h3,
+html[data-theme$="-light"] .glass-card h4,
+html[data-theme$="-light"] .glass-card strong,
+html[data-theme$="-light"] .glass-card .card-tag,
+html[data-theme$="-light"] .glass-card .service-meta,
+html[data-theme$="-light"] .aurora-card h1,
+html[data-theme$="-light"] .aurora-card h2,
+html[data-theme$="-light"] .aurora-card h3,
+html[data-theme$="-light"] .aurora-card h4,
+html[data-theme$="-light"] .aurora-card strong {
+  color: var(--evara-text-cut-light) !important;
+  -webkit-text-fill-color: var(--evara-text-cut-light) !important;
+  background: none !important;
+  text-shadow:
+    0 1px 1px rgba(255,255,255,0.98),
+    0 -1px 1px rgba(60,60,67,0.24),
+    0 0 1px rgba(60,60,67,0.12) !important;
+  filter: none !important;
+  animation: none !important;
+}
+
+html[data-theme="light"] .glass-card p,
+html[data-theme="light"] .glass-card span,
+html[data-theme="light"] .aurora-card p,
+html[data-theme="light"] .aurora-card span,
+html[data-theme$="-light"] .glass-card p,
+html[data-theme$="-light"] .glass-card span,
+html[data-theme$="-light"] .aurora-card p,
+html[data-theme$="-light"] .aurora-card span {
+  color: rgba(60,60,67,0.62) !important;
+  -webkit-text-fill-color: rgba(60,60,67,0.62) !important;
+  background: none !important;
+  text-shadow: none !important;
+  animation: none !important;
+}
+
+html[data-theme="dark"] .glass-card h1,
+html[data-theme="dark"] .glass-card h2,
+html[data-theme="dark"] .glass-card h3,
+html[data-theme="dark"] .glass-card h4,
+html[data-theme="dark"] .glass-card strong,
+html[data-theme="dark"] .aurora-card h1,
+html[data-theme="dark"] .aurora-card h2,
+html[data-theme="dark"] .aurora-card h3,
+html[data-theme="dark"] .aurora-card h4,
+html[data-theme="dark"] .aurora-card strong,
+html[data-theme="galaxy"] .glass-card h1,
+html[data-theme="galaxy"] .glass-card h2,
+html[data-theme="galaxy"] .glass-card h3,
+html[data-theme="galaxy"] .glass-card h4,
+html[data-theme="galaxy"] .glass-card strong,
+html[data-theme$="-dark"] .glass-card h1,
+html[data-theme$="-dark"] .glass-card h2,
+html[data-theme$="-dark"] .glass-card h3,
+html[data-theme$="-dark"] .glass-card h4,
+html[data-theme$="-dark"] .glass-card strong {
+  color: var(--evara-text-cut-dark) !important;
+  -webkit-text-fill-color: var(--evara-text-cut-dark) !important;
+  background: none !important;
+  text-shadow:
+    0 1px 1px rgba(255,255,255,0.12),
+    0 -1px 1px rgba(0,0,0,0.95),
+    0 0 1px rgba(255,255,255,0.08) !important;
+  filter: none !important;
+  animation: none !important;
+}
+
+html[data-theme="light"] input,
+html[data-theme="light"] select,
+html[data-theme="light"] textarea,
+html[data-theme$="-light"] input,
+html[data-theme$="-light"] select,
+html[data-theme$="-light"] textarea {
+  background: rgba(255,255,255,0.74) !important;
+  border-color: rgba(60,60,67,0.13) !important;
+  color: #111 !important;
+  -webkit-text-fill-color: #111 !important;
+}
+
+html[data-theme="light"] .no-relief,
+html[data-theme="light"] .no-window-text,
+html[data-theme="light"] input,
+html[data-theme="light"] textarea,
+html[data-theme="light"] select,
+html[data-theme$="-light"] .no-relief,
+html[data-theme$="-light"] .no-window-text,
+html[data-theme$="-light"] input,
+html[data-theme$="-light"] textarea,
+html[data-theme$="-light"] select {
+  text-shadow: none !important;
+  animation: none !important;
+  filter: none !important;
+}
+
+@media (max-width: 760px) {
+  html[data-theme="light"] .glass-card,
+  html[data-theme="light"] .glass-shell,
+  html[data-theme="light"] .aurora-card,
+  html[data-theme="light"] .glass {
+    border-radius: 32px !important;
+  }
 }
