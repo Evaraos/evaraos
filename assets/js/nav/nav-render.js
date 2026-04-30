@@ -129,17 +129,21 @@ export function renderNav() {
         <div class="eva-quick eva-utility-row">
           <div class="eva-install-pill" id="evaInstallPill" hidden aria-label="Install Evaraos app">
             <button type="button" class="eva-install-segment eva-install-ios" id="evaInstallApple" aria-label="Install Evaraos on iPhone">
-              <span class="eva-install-os-icon eva-install-apple-icon" aria-hidden="true"></span>
+              <span class="eva-install-os-mark eva-install-apple-mark" aria-hidden="true"></span>
               <span class="eva-install-copy">
                 <strong>iPhone</strong>
-                <small>Install</small>
+                <small>Add to Home Screen</small>
               </span>
             </button>
             <button type="button" class="eva-install-segment eva-install-android" id="evaInstallAndroid" aria-label="Install Evaraos on Android">
-              <span class="eva-install-os-icon eva-install-android-icon" aria-hidden="true"></span>
+              <span class="eva-install-os-mark eva-install-android-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M7.4 8.2 6.2 6.1a.5.5 0 0 1 .18-.68.5.5 0 0 1 .68.18l1.24 2.15A7.3 7.3 0 0 1 12 6.8c1.33 0 2.6.34 3.7.95l1.24-2.15a.5.5 0 0 1 .86.5l-1.2 2.1A6.62 6.62 0 0 1 19 13H5a6.62 6.62 0 0 1 2.4-4.8ZM8.75 11a.7.7 0 1 0 0-1.4.7.7 0 0 0 0 1.4Zm6.5 0a.7.7 0 1 0 0-1.4.7.7 0 0 0 0 1.4ZM5.6 13.7h12.8v4.8c0 .83-.67 1.5-1.5 1.5H15v1.25a.75.75 0 0 1-1.5 0V20h-3v1.25a.75.75 0 0 1-1.5 0V20H7.1c-.83 0-1.5-.67-1.5-1.5v-4.8Z" fill="currentColor"/>
+                </svg>
+              </span>
               <span class="eva-install-copy">
                 <strong>Android</strong>
-                <small>Install</small>
+                <small>Native install</small>
               </span>
             </button>
           </div>
