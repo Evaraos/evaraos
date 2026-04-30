@@ -1,14 +1,14 @@
 /* ===============================
    EVARAOS AMBIENT CLOUDS
    Light mode: white + ultra-light aqua motion.
-   Dark mode: black + deep red motion.
-   Works behind transparent liquid-glass cards.
+   Dark mode: true black + deep red motion.
+   Designed to stay visible behind transparent liquid-glass cards.
    =============================== */
 
 :root {
-  --ambient-motion-speed: 28s;
+  --ambient-motion-speed: 24s;
   --ambient-cloud-opacity: 1;
-  --ambient-cloud-blur: 28px;
+  --ambient-cloud-blur: 30px;
 }
 
 html,
@@ -26,21 +26,21 @@ body::before,
 body::after {
   content: "";
   position: fixed;
-  inset: -18vmax;
+  inset: -22vmax;
   pointer-events: none;
   z-index: 0;
   opacity: var(--ambient-cloud-opacity);
   transform: translate3d(0, 0, 0);
-  will-change: transform, filter, opacity;
+  will-change: transform, filter, opacity, background-position;
 }
 
 body::before {
-  filter: blur(var(--ambient-cloud-blur)) saturate(145%);
+  filter: blur(var(--ambient-cloud-blur)) saturate(155%);
   animation: evaraAmbientDrift var(--ambient-motion-speed) ease-in-out infinite alternate;
 }
 
 body::after {
-  filter: blur(calc(var(--ambient-cloud-blur) * 1.35)) saturate(135%);
+  filter: blur(calc(var(--ambient-cloud-blur) * 1.45)) saturate(148%);
   animation: evaraAmbientFloat calc(var(--ambient-motion-speed) * 1.35) ease-in-out infinite alternate-reverse;
 }
 
@@ -52,9 +52,11 @@ body > :not(script):not(style) {
 html[data-theme="light"] body,
 html[data-theme$="-light"] body {
   background:
-    radial-gradient(circle at 18% 0%, rgba(180, 250, 255, 0.26), transparent 32%),
-    radial-gradient(circle at 86% 10%, rgba(255, 255, 255, 0.92), transparent 34%),
-    linear-gradient(180deg, #f8fbfc 0%, #eef6f6 48%, #f8fafc 100%) !important;
+    radial-gradient(circle at 8% 0%, rgba(255, 255, 255, 0.98), transparent 26%),
+    radial-gradient(circle at 18% 10%, rgba(181, 250, 255, 0.34), transparent 33%),
+    radial-gradient(circle at 82% 8%, rgba(255, 255, 255, 0.94), transparent 31%),
+    radial-gradient(circle at 92% 42%, rgba(198, 255, 255, 0.28), transparent 30%),
+    linear-gradient(180deg, #fbfeff 0%, #effafa 45%, #f7fbfc 100%) !important;
   color: #10231d;
 }
 
@@ -62,53 +64,66 @@ html[data-theme="light"] body::before,
 html[data-theme$="-light"] body::before {
   background:
     radial-gradient(circle at 8% 18%, rgba(255, 255, 255, 0.98) 0 11%, transparent 28%),
-    radial-gradient(circle at 24% 24%, rgba(205, 255, 255, 0.54) 0 12%, transparent 32%),
-    radial-gradient(circle at 65% 14%, rgba(255, 255, 255, 0.86) 0 12%, transparent 30%),
-    radial-gradient(circle at 83% 30%, rgba(186, 250, 255, 0.44) 0 12%, transparent 32%),
-    radial-gradient(circle at 46% 66%, rgba(255, 255, 255, 0.74) 0 13%, transparent 32%),
-    radial-gradient(circle at 18% 82%, rgba(210, 255, 255, 0.36) 0 12%, transparent 34%);
-  opacity: 0.96;
+    radial-gradient(circle at 19% 29%, rgba(209, 255, 255, 0.62) 0 11%, transparent 30%),
+    radial-gradient(circle at 30% 12%, rgba(255, 255, 255, 0.72) 0 9%, transparent 26%),
+    radial-gradient(circle at 46% 38%, rgba(187, 250, 255, 0.42) 0 10%, transparent 31%),
+    radial-gradient(circle at 65% 14%, rgba(255, 255, 255, 0.88) 0 12%, transparent 30%),
+    radial-gradient(circle at 83% 30%, rgba(186, 250, 255, 0.48) 0 12%, transparent 32%),
+    radial-gradient(circle at 73% 62%, rgba(255, 255, 255, 0.58) 0 12%, transparent 34%),
+    radial-gradient(circle at 46% 77%, rgba(255, 255, 255, 0.74) 0 13%, transparent 32%),
+    radial-gradient(circle at 18% 86%, rgba(210, 255, 255, 0.42) 0 12%, transparent 34%);
+  opacity: 0.98;
+  background-size: 120% 120%;
 }
 
 html[data-theme="light"] body::after,
 html[data-theme$="-light"] body::after {
   background:
-    conic-gradient(from 190deg at 42% 42%, transparent 0 16%, rgba(255, 255, 255, 0.58) 22%, transparent 36%, rgba(189, 250, 255, 0.34) 52%, transparent 70%, rgba(255,255,255,0.42) 82%, transparent 100%),
-    radial-gradient(circle at 70% 72%, rgba(198, 252, 255, 0.32), transparent 34%),
-    radial-gradient(circle at 30% 76%, rgba(255, 255, 255, 0.44), transparent 34%);
-  opacity: 0.78;
+    conic-gradient(from 190deg at 42% 42%, transparent 0 12%, rgba(255, 255, 255, 0.62) 20%, transparent 34%, rgba(189, 250, 255, 0.40) 47%, transparent 63%, rgba(255,255,255,0.52) 78%, transparent 100%),
+    radial-gradient(circle at 10% 52%, rgba(255, 255, 255, 0.36), transparent 30%),
+    radial-gradient(circle at 70% 72%, rgba(198, 252, 255, 0.38), transparent 34%),
+    radial-gradient(circle at 30% 76%, rgba(255, 255, 255, 0.48), transparent 34%),
+    radial-gradient(circle at 92% 86%, rgba(206, 255, 255, 0.28), transparent 32%);
+  opacity: 0.86;
+  background-size: 135% 135%;
 }
 
 html[data-theme="dark"] body,
 html[data-theme="galaxy"] body,
 html[data-theme$="-dark"] body {
   background:
-    radial-gradient(circle at 18% 0%, rgba(160, 0, 32, 0.18), transparent 34%),
-    radial-gradient(circle at 86% 12%, rgba(75, 0, 20, 0.16), transparent 38%),
-    linear-gradient(180deg, #030305 0%, #070408 48%, #0b0508 100%) !important;
-  color: #f7f1f2;
+    radial-gradient(circle at 12% 0%, rgba(92, 0, 19, 0.22), transparent 30%),
+    radial-gradient(circle at 82% 10%, rgba(64, 0, 15, 0.20), transparent 34%),
+    radial-gradient(circle at 92% 60%, rgba(22, 0, 7, 0.54), transparent 34%),
+    linear-gradient(180deg, #000000 0%, #030104 36%, #080205 70%, #000000 100%) !important;
+  color: #f8f1f2;
 }
 
 html[data-theme="dark"] body::before,
 html[data-theme="galaxy"] body::before,
 html[data-theme$="-dark"] body::before {
   background:
-    radial-gradient(circle at 10% 16%, rgba(255, 40, 76, 0.22) 0 10%, transparent 30%),
-    radial-gradient(circle at 32% 28%, rgba(80, 0, 22, 0.38) 0 14%, transparent 34%),
+    radial-gradient(circle at 9% 16%, rgba(255, 40, 76, 0.20) 0 10%, transparent 30%),
+    radial-gradient(circle at 24% 30%, rgba(80, 0, 22, 0.42) 0 14%, transparent 34%),
+    radial-gradient(circle at 40% 12%, rgba(12, 0, 4, 0.78) 0 13%, transparent 35%),
     radial-gradient(circle at 72% 20%, rgba(190, 12, 48, 0.18) 0 12%, transparent 34%),
-    radial-gradient(circle at 86% 62%, rgba(52, 0, 14, 0.52) 0 14%, transparent 36%),
-    radial-gradient(circle at 24% 82%, rgba(145, 0, 32, 0.16) 0 12%, transparent 34%);
-  opacity: 0.88;
+    radial-gradient(circle at 88% 46%, rgba(56, 0, 15, 0.58) 0 15%, transparent 38%),
+    radial-gradient(circle at 72% 78%, rgba(8, 0, 3, 0.80) 0 13%, transparent 35%),
+    radial-gradient(circle at 24% 84%, rgba(145, 0, 32, 0.16) 0 12%, transparent 34%);
+  opacity: 0.90;
+  background-size: 125% 125%;
 }
 
 html[data-theme="dark"] body::after,
 html[data-theme="galaxy"] body::after,
 html[data-theme$="-dark"] body::after {
   background:
-    conic-gradient(from 210deg at 48% 44%, transparent 0 18%, rgba(145, 0, 36, 0.22) 26%, transparent 44%, rgba(255, 35, 76, 0.10) 58%, transparent 72%, rgba(68, 0, 18, 0.28) 86%, transparent 100%),
-    radial-gradient(circle at 72% 70%, rgba(110, 0, 26, 0.22), transparent 38%),
-    radial-gradient(circle at 28% 72%, rgba(0, 0, 0, 0.56), transparent 40%);
-  opacity: 0.74;
+    conic-gradient(from 210deg at 48% 44%, transparent 0 16%, rgba(145, 0, 36, 0.22) 25%, transparent 42%, rgba(255, 35, 76, 0.11) 56%, transparent 70%, rgba(68, 0, 18, 0.30) 86%, transparent 100%),
+    radial-gradient(circle at 72% 70%, rgba(110, 0, 26, 0.24), transparent 38%),
+    radial-gradient(circle at 28% 72%, rgba(0, 0, 0, 0.68), transparent 40%),
+    radial-gradient(circle at 56% 38%, rgba(25, 0, 8, 0.60), transparent 34%);
+  opacity: 0.78;
+  background-size: 145% 145%;
 }
 
 .page-aurora,
@@ -119,37 +134,47 @@ html[data-theme$="-dark"] body::after {
 
 html[data-theme="light"] .page-aurora,
 html[data-theme$="-light"] .page-aurora {
-  opacity: 0.18 !important;
+  opacity: 0.14 !important;
   filter: blur(1px) saturate(120%);
 }
 
 html[data-theme="dark"] .page-aurora,
 html[data-theme="galaxy"] .page-aurora,
 html[data-theme$="-dark"] .page-aurora {
-  opacity: 0.34 !important;
+  opacity: 0.26 !important;
 }
 
 @keyframes evaraAmbientDrift {
   0% {
-    transform: translate3d(-3.5%, -2%, 0) scale(1) rotate(0deg);
+    transform: translate3d(-4.5%, -2.5%, 0) scale(1) rotate(0deg);
+    background-position: 0% 40%;
   }
-  50% {
-    transform: translate3d(2%, 2.5%, 0) scale(1.04) rotate(3deg);
+  35% {
+    transform: translate3d(1.5%, 2.5%, 0) scale(1.045) rotate(2.5deg);
+    background-position: 55% 62%;
+  }
+  70% {
+    transform: translate3d(4.5%, -1%, 0) scale(1.085) rotate(-2deg);
+    background-position: 92% 38%;
   }
   100% {
-    transform: translate3d(4%, -1%, 0) scale(1.08) rotate(-2deg);
+    transform: translate3d(2%, 3%, 0) scale(1.04) rotate(1.5deg);
+    background-position: 100% 70%;
   }
 }
 
 @keyframes evaraAmbientFloat {
   0% {
-    transform: translate3d(3%, 2%, 0) scale(1.04) rotate(2deg);
+    transform: translate3d(4%, 2%, 0) scale(1.04) rotate(2deg);
+    background-position: 100% 50%;
   }
-  50% {
-    transform: translate3d(-2%, -2%, 0) scale(1.08) rotate(-3deg);
+  45% {
+    transform: translate3d(-2.5%, -2.5%, 0) scale(1.09) rotate(-3deg);
+    background-position: 42% 22%;
   }
   100% {
-    transform: translate3d(-4%, 1%, 0) scale(1.02) rotate(2deg);
+    transform: translate3d(-4.5%, 1%, 0) scale(1.025) rotate(2deg);
+    background-position: 0% 70%;
   }
 }
 
