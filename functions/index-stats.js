@@ -150,3 +150,4 @@ function attachStats(type) {
 ["companies", "users", "leads", "jobs"].forEach(attachStats);
 exports.rebuildStats = require("./stats-rebuild").rebuildStats;
 exports.sanitizeLeadIdentity = require("./lead-privacy").sanitizeLeadIdentity;
+exports.notifyLeadAssignment = require("./lead-notifications").notifyLeadAssignment;
