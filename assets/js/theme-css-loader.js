@@ -1,5 +1,6 @@
 (function () {
   const loadedModules = new Set();
+  let swRegistrationStarted = false;
 
   function markThemeHydrated() {
     document.documentElement.setAttribute("data-evara-theme-ready", "true");
@@ -28,6 +29,17 @@
     import(src).catch((error) => console.warn("Evaraos module load skipped:", src, error));
   }
 
+  function registerServiceWorker() {
+    if (swRegistrationStarted || !("serviceWorker" in navigator)) return;
+    swRegistrationStarted = true;
+
+    navigator.serviceWorker.register("/evaraos/sw.js", { scope: "/evaraos/" })
+      .then((registration) => {
+        if (registration.waiting) registration.waiting.postMessage({ type: "SKIP_WAITING" });
+      })
+      .catch((error) => console.warn("Evaraos service worker registration skipped:", error));
+  }
+
   function bootPageModules() {
     const path = window.location.pathname;
 
@@ -43,12 +55,14 @@
 
   function init() {
     syncCss();
+    registerServiceWorker();
     bootPageModules();
 
     window.addEventListener("evara:theme-ready", syncCss);
     window.addEventListener("evara:theme-changed", syncCss);
     window.addEventListener("pageshow", () => {
       syncCss();
+      registerServiceWorker();
       bootPageModules();
     });
 
@@ -62,6 +76,7 @@
       syncCss,
       markThemeHydrated,
       bootPageModules,
+      registerServiceWorker,
       syncBeamPreferences: syncCss,
       loadGalaxyCss: syncCss,
       disableGalaxyCss: syncCss,
@@ -70,7 +85,8 @@
           theme: document.documentElement.getAttribute("data-theme") || "light",
           hydrated: document.documentElement.getAttribute("data-evara-theme-ready") === "true",
           visualStack: "apple-settings-glass",
-          loadedModules: Array.from(loadedModules)
+          loadedModules: Array.from(loadedModules),
+          swRegistrationStarted
         };
       }
     };
