@@ -1,6 +1,8 @@
 (function () {
   let deferredPrompt = null;
   let installBtn = null;
+  let promptListenerBound = false;
+  let installedListenerBound = false;
 
   function isIOS() {
     return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
@@ -12,6 +14,10 @@
 
   function notify(title, message, tone = "info") {
     window.dispatchEvent(new CustomEvent("evara:notify", { detail: { title, message, tone } }));
+  }
+
+  function findInstallButton() {
+    return document.querySelector("#evaMenuPanel #installBtn") || document.querySelector(".eva-install-chip");
   }
 
   function setInstallState(state, label) {
@@ -73,13 +79,13 @@
   }
 
   async function runIOSInstallFlow() {
-    notify("Install Evaraos", "On iPhone, tap Share, then Add to Home Screen. Apple does not allow one-tap web app installs yet.", "info");
+    notify("Install Evaraos", "Tap Share, then Add to Home Screen. Apple does not allow one-tap web app installs from Safari yet.", "info");
 
     if (navigator.share) {
       try {
         await navigator.share({
           title: "Evaraos Inc",
-          text: "Install Evaraos by adding it to your iPhone Home Screen.",
+          text: "Add Evaraos to your iPhone Home Screen.",
           url: window.location.origin + "/evaraos/"
         });
       } catch {}
@@ -110,45 +116,58 @@
     });
   }
 
+  function bindPromptListeners() {
+    if (!promptListenerBound) {
+      promptListenerBound = true;
+      window.addEventListener("beforeinstallprompt", function (event) {
+        event.preventDefault();
+        deferredPrompt = event;
+        setInstallState("ready", "Install");
+        showButton();
+      });
+    }
+
+    if (!installedListenerBound) {
+      installedListenerBound = true;
+      window.addEventListener("appinstalled", function () {
+        deferredPrompt = null;
+        notify("Installed", "Evaraos has been installed on this device.", "success");
+        hideButton();
+      });
+    }
+  }
+
   function initInstallPrompt() {
-    installBtn = document.getElementById("installBtn");
-    if (!installBtn) return;
+    installBtn = findInstallButton();
+    if (!installBtn) return false;
 
     bindClick();
+    bindPromptListeners();
 
     if (isInStandaloneMode()) {
       hideButton();
-      return;
+      return true;
     }
 
     if (isIOS()) {
       setInstallState("ios", "Install");
       showButton();
-    } else {
-      setInstallState("waiting", "Install");
-    }
-
-    window.addEventListener("beforeinstallprompt", function (event) {
-      event.preventDefault();
-      deferredPrompt = event;
+    } else if (deferredPrompt) {
       setInstallState("ready", "Install");
       showButton();
-    });
-
-    window.addEventListener("appinstalled", function () {
-      deferredPrompt = null;
-      notify("Installed", "Evaraos has been installed on this device.", "success");
+    } else {
+      setInstallState("waiting", "Install");
       hideButton();
-    });
+    }
+
+    return true;
   }
 
   function waitForNavButton() {
-    initInstallPrompt();
-    if (installBtn) return;
+    if (initInstallPrompt()) return;
 
     const observer = new MutationObserver(() => {
-      initInstallPrompt();
-      if (installBtn) observer.disconnect();
+      if (initInstallPrompt()) observer.disconnect();
     });
     observer.observe(document.body, { childList: true, subtree: true });
   }
