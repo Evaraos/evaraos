@@ -65,6 +65,7 @@
     loadStylesheetOnce("/evaraos/assets/css/install-apple-hotfix.css?v=1", "evaraInstallAppleHotfixCss");
     loadModuleOnce("/evaraos/assets/js/evara-notifications.js?v=1");
     loadModuleOnce("/evaraos/assets/js/offline-staff-gate.js?v=1");
+    loadScriptOnce("/evaraos/assets/js/performance-hotfix.js?v=1", "evaraPerformanceHotfixScript");
     loadScriptOnce("/evaraos/assets/js/install.js?v=6", "evaraInstallScript");
     loadScriptOnce("/evaraos/assets/js/install-click-hotfix.js?v=3", "evaraInstallClickHotfixScript");
   }
