@@ -4,7 +4,7 @@ const admin = require("firebase-admin");
 const db = admin.firestore();
 
 function env(name) {
-  return process.env[name] || functions.config()?.evaraos?.[name.toLowerCase()] || "";
+  return process.env[name] || "";
 }
 
 function norm(value = "") {
