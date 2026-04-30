@@ -34,6 +34,15 @@
     document.head.appendChild(link);
   }
 
+  function loadScriptOnce(src, id) {
+    if (document.getElementById(id)) return;
+    const script = document.createElement("script");
+    script.id = id;
+    script.src = src;
+    script.defer = true;
+    document.body.appendChild(script);
+  }
+
   function loadModuleOnce(src) {
     if (loadedModules.has(src)) return;
     loadedModules.add(src);
@@ -54,6 +63,7 @@
   function bootGlobalModules() {
     loadModuleOnce("/evaraos/assets/js/evara-notifications.js?v=1");
     loadModuleOnce("/evaraos/assets/js/offline-staff-gate.js?v=1");
+    loadScriptOnce("/evaraos/assets/js/install.js?v=2", "evaraInstallScript");
   }
 
   function bootPageModules() {
@@ -63,6 +73,7 @@
 
     if (path.endsWith("/leads.html")) {
       loadStylesheetOnce("/evaraos/assets/css/premium-leads.css?v=1", "evaraPremiumLeadsCss");
+      loadStylesheetOnce("/evaraos/assets/css/lead-visibility-fix.css?v=1", "evaraLeadVisibilityFixCss");
       loadModuleOnce("/evaraos/assets/js/leads.js?v=3");
       loadModuleOnce("/evaraos/assets/js/offline-leads.js?v=2");
       loadModuleOnce("/evaraos/assets/js/premium-leads.js?v=1");
