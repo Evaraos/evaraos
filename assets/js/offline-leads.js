@@ -16,6 +16,7 @@ import {
 } from "./offline-lead-queue.js";
 
 let syncing = false;
+let formInterceptorBound = false;
 
 function actor() {
   const profile = getSavedUserProfile?.() || {};
@@ -47,6 +48,18 @@ function currentCompanyName() {
   const select = document.getElementById("leadCompanyInput");
   const selected = select?.selectedOptions?.[0];
   return selected?.value ? selected.textContent.trim() : "";
+}
+
+function setLeadCrudMessage(message, tone = "") {
+  const el = document.getElementById("leadCrudMessage");
+  if (!el) return;
+  el.textContent = message;
+  el.dataset.tone = tone;
+}
+
+function closeLeadModal() {
+  const modal = document.getElementById("leadCrudModal");
+  modal?.classList.remove("open");
 }
 
 export function buildOfflineLeadPayload() {
@@ -203,8 +216,39 @@ export async function refreshLeadQueueUi() {
   }
 }
 
+function bindOfflineFormInterceptor() {
+  if (formInterceptorBound) return;
+  formInterceptorBound = true;
+
+  document.addEventListener("submit", async (event) => {
+    const form = event.target?.closest?.("#leadCrudForm");
+    if (!form) return;
+
+    if (navigator.onLine) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
+
+    const payload = buildOfflineLeadPayload();
+    if (!payload.fullName) {
+      setLeadCrudMessage("Lead name is required before saving offline.", "error");
+      return;
+    }
+
+    await saveLeadOfflineCapable(payload);
+    setLeadCrudMessage("Saved offline. This lead will upload automatically when WiFi returns.", "success");
+
+    setTimeout(() => {
+      closeLeadModal();
+      window.dispatchEvent(new CustomEvent("evara:lead-saved-offline", { detail: { clientLeadId: payload.clientLeadId } }));
+    }, 450);
+  }, true);
+}
+
 function init() {
   ensureLeadQueueUi();
+  bindOfflineFormInterceptor();
   refreshLeadQueueUi();
   if (navigator.onLine) syncLeadQueue();
   window.addEventListener("online", () => { refreshLeadQueueUi(); syncLeadQueue(); });
