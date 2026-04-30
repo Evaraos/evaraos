@@ -40,12 +40,19 @@
       .catch((error) => console.warn("Evaraos service worker registration skipped:", error));
   }
 
+  function bootGlobalModules() {
+    loadModuleOnce("/evaraos/assets/js/evara-notifications.js?v=1");
+    loadModuleOnce("/evaraos/assets/js/offline-staff-gate.js?v=1");
+  }
+
   function bootPageModules() {
     const path = window.location.pathname;
 
+    bootGlobalModules();
+
     if (path.endsWith("/leads.html")) {
       loadModuleOnce("/evaraos/assets/js/leads.js?v=3");
-      loadModuleOnce("/evaraos/assets/js/offline-leads.js?v=1");
+      loadModuleOnce("/evaraos/assets/js/offline-leads.js?v=2");
     }
 
     if (path.endsWith("/dashboard.html")) {
