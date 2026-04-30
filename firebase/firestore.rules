@@ -273,6 +273,16 @@ service cloud.firestore {
       allow create, update, delete: if isOwnerOrAdmin();
     }
 
+    match /dashboard_stats/{statsId} {
+      allow read: if isManagerPlus();
+      allow create, update, delete: if false;
+    }
+
+    match /company_stats/{companyId} {
+      allow read: if isManagerPlus() && sameCompanyOrPlatform(companyId);
+      allow create, update, delete: if false;
+    }
+
     match /staff_applications/{applicationId} {
       allow create: if safeStaffApplicationCreate(applicationId);
       allow read: if signedIn() && (isOperationsPlus() || applicationId == request.auth.uid);
