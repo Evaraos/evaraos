@@ -78,59 +78,14 @@
     return true;
   }
 
-  function closeGuide() {
-    const overlay = document.getElementById("evaraIOSInstallGuide");
-    if (!overlay) return;
-    overlay.classList.remove("open");
-    overlay.setAttribute("aria-hidden", "true");
-    document.documentElement.classList.remove("evara-install-guide-open");
-    setTimeout(function () {
-      if (overlay.getAttribute("aria-hidden") === "true") overlay.remove();
-    }, 180);
-  }
-
-  function createGuide() {
-    const existing = document.getElementById("evaraIOSInstallGuide");
-    if (existing) return existing;
-
-    const overlay = document.createElement("div");
-    overlay.id = "evaraIOSInstallGuide";
-    overlay.className = "evara-ios-install-guide";
-    overlay.setAttribute("aria-hidden", "true");
-    overlay.innerHTML = [
-      '<div class="evara-ios-install-backdrop" data-install-guide-close></div>',
-      '<div class="evara-ios-share-target" aria-hidden="true"><span class="evara-ios-share-icon">^</span></div>',
-      '<section class="evara-ios-install-card" role="dialog" aria-modal="true" aria-label="Install Evaraos on iPhone">',
-      '<button type="button" class="evara-ios-install-close" data-install-guide-close aria-label="Close">x</button>',
-      '<div class="evara-ios-install-app"><img src="/evaraos/assets/img/evaraos_logo.png" alt="" class="evara-ios-install-logo"><div><strong>Install Evaraos</strong><span>iPhone web app</span></div></div>',
-      '<div class="evara-ios-system-message"><strong>Tap Safari Share</strong><p>Then choose <b>Add to Home Screen</b>.</p></div>',
-      '</section>'
-    ].join("");
-
-    overlay.addEventListener("click", function (event) {
-      if (event.target.closest("[data-install-guide-close]")) closeGuide();
-    });
-
-    document.body.appendChild(overlay);
-    return overlay;
-  }
-
-  function openGuide() {
-    if (isStandalone()) return hidePill();
-    closeMenu();
-    const overlay = createGuide();
-    document.documentElement.classList.add("evara-install-guide-open");
-    overlay.setAttribute("aria-hidden", "false");
-    requestAnimationFrame(function () { overlay.classList.add("open"); });
-  }
-
   function bindClicks() {
     if (!pill || pill.dataset.installBound === "true") return;
     pill.dataset.installBound = "true";
 
     appleBtn && appleBtn.addEventListener("click", function (event) {
       event.preventDefault();
-      openGuide();
+      closeMenu();
+      notify("iPhone App Coming Soon", "Evaraos will use a proper Apple App Store or TestFlight install when the native iPhone app is ready.", "info");
     });
 
     androidBtn && androidBtn.addEventListener("click", function (event) {
@@ -178,8 +133,6 @@
   }
 
   window.EvaraInstall = {
-    openIOSInstallGuide: openGuide,
-    closeIOSInstallGuide: closeGuide,
     runNativeInstallPrompt: runPrompt,
     isIOS: isIOS,
     isAndroid: isAndroid,
