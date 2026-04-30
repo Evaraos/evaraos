@@ -196,7 +196,6 @@
       event.preventDefault();
       if (isStandalone()) return hidePill();
       if (deferredPrompt) return runPrompt();
-      closeMenu();
       showInstallNotice("Android Install", "Open Chrome menu and tap Install app.", "android");
     });
   }
