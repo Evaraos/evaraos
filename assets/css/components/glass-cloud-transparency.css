@@ -1,7 +1,7 @@
 /* ===============================
    EVARAOS CLOUD VISIBLE GLASS CARDS
    Makes animated ambient clouds visible through liquid glass cards.
-   Imported after glass.css so it safely overrides the base card engine.
+   Adds moving shimmer beams and active/click highlight rings.
    =============================== */
 
 html[data-theme="light"] .glass-card,
@@ -13,17 +13,17 @@ html[data-theme$="-light"] .glass-shell,
 html[data-theme$="-light"] .aurora-card,
 html[data-theme$="-light"] .glass {
   background:
-    radial-gradient(circle at 16% 0%, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.10) 38%, transparent 64%),
-    linear-gradient(180deg, rgba(255,255,255,0.36), rgba(255,255,255,0.17) 58%, rgba(255,255,255,0.10)) !important;
-  border-color: rgba(255, 255, 255, 0.62) !important;
+    radial-gradient(circle at 16% 0%, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.06) 38%, transparent 64%),
+    linear-gradient(180deg, rgba(255,255,255,0.24), rgba(255,255,255,0.105) 58%, rgba(255,255,255,0.055)) !important;
+  border-color: rgba(255, 255, 255, 0.54) !important;
   color: #10231d;
   box-shadow:
-    0 24px 58px rgba(92, 114, 124, 0.12),
-    0 0 0 1px rgba(255, 255, 255, 0.72),
-    inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    inset 0 -1px 0 rgba(15, 23, 42, 0.045) !important;
-  backdrop-filter: blur(18px) saturate(185%) brightness(1.04) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(185%) brightness(1.04) !important;
+    0 24px 58px rgba(92, 114, 124, 0.11),
+    0 0 0 1px rgba(255, 255, 255, 0.66),
+    inset 0 1px 0 rgba(255, 255, 255, 0.84),
+    inset 0 -1px 0 rgba(15, 23, 42, 0.035) !important;
+  backdrop-filter: blur(14px) saturate(205%) brightness(1.05) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(205%) brightness(1.05) !important;
 }
 
 html[data-theme="light"] .glass-card::before,
@@ -37,10 +37,10 @@ html[data-theme$="-light"] .glass::before {
   background:
     linear-gradient(
       135deg,
-      rgba(255,255,255,0.98),
-      rgba(255,255,255,0.26) 30%,
-      rgba(203, 250, 255, 0.32) 54%,
-      rgba(255,255,255,0.78)
+      rgba(255,255,255,0.96),
+      rgba(255,255,255,0.20) 28%,
+      rgba(203, 250, 255, 0.36) 54%,
+      rgba(255,255,255,0.70)
     ) !important;
   opacity: 1 !important;
 }
@@ -53,16 +53,21 @@ html[data-theme$="-light"] .glass-card::after,
 html[data-theme$="-light"] .glass-shell::after,
 html[data-theme$="-light"] .aurora-card::after,
 html[data-theme$="-light"] .glass::after {
-  opacity: 0.72 !important;
+  opacity: 0.86 !important;
   background:
     linear-gradient(
-      112deg,
-      transparent 22%,
-      rgba(255,255,255,0.16) 36%,
-      rgba(255,255,255,0.64) 50%,
-      rgba(210,255,255,0.18) 64%,
-      transparent 78%
+      106deg,
+      transparent 0%,
+      transparent 23%,
+      rgba(255,255,255,0.08) 32%,
+      rgba(255,255,255,0.72) 46%,
+      rgba(207,255,255,0.46) 51%,
+      rgba(255,255,255,0.12) 62%,
+      transparent 76%,
+      transparent 100%
     ) !important;
+  animation: evaraGlassLaserSweep 4.8s cubic-bezier(.4, 0, .2, 1) infinite !important;
+  mix-blend-mode: screen;
 }
 
 html[data-theme="dark"] .glass-card,
@@ -78,27 +83,83 @@ html[data-theme$="-dark"] .glass-shell,
 html[data-theme$="-dark"] .aurora-card,
 html[data-theme$="-dark"] .glass {
   background:
-    radial-gradient(circle at 18% 0%, rgba(255, 44, 86, 0.10), transparent 44%),
-    linear-gradient(180deg, rgba(20, 8, 12, 0.52), rgba(6, 4, 7, 0.30) 66%, rgba(5, 3, 6, 0.22)) !important;
+    radial-gradient(circle at 18% 0%, rgba(255, 44, 86, 0.09), transparent 44%),
+    linear-gradient(180deg, rgba(16, 4, 8, 0.48), rgba(4, 2, 4, 0.30) 66%, rgba(0, 0, 0, 0.22)) !important;
   border-color: rgba(255, 80, 112, 0.18) !important;
   box-shadow:
-    0 28px 68px rgba(0, 0, 0, 0.36),
-    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 28px 68px rgba(0, 0, 0, 0.40),
+    0 0 0 1px rgba(255, 255, 255, 0.035),
     0 0 24px rgba(255, 40, 76, 0.08),
     inset 0 1px 0 rgba(255,255,255,0.10) !important;
-  backdrop-filter: blur(22px) saturate(155%) !important;
-  -webkit-backdrop-filter: blur(22px) saturate(155%) !important;
+  backdrop-filter: blur(20px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+}
+
+html[data-theme="dark"] .glass-card::after,
+html[data-theme="dark"] .glass-shell::after,
+html[data-theme="dark"] .aurora-card::after,
+html[data-theme="dark"] .glass::after,
+html[data-theme="galaxy"] .glass-card::after,
+html[data-theme="galaxy"] .glass-shell::after,
+html[data-theme="galaxy"] .aurora-card::after,
+html[data-theme="galaxy"] .glass::after,
+html[data-theme$="-dark"] .glass-card::after,
+html[data-theme$="-dark"] .glass-shell::after,
+html[data-theme$="-dark"] .aurora-card::after,
+html[data-theme$="-dark"] .glass::after {
+  opacity: 0.42 !important;
+  background:
+    linear-gradient(108deg, transparent 20%, rgba(255,255,255,0.04) 36%, rgba(255,72,104,0.20) 50%, rgba(255,255,255,0.05) 62%, transparent 78%) !important;
+  animation: evaraGlassLaserSweep 6.2s cubic-bezier(.4, 0, .2, 1) infinite !important;
 }
 
 html[data-theme="light"] .glass-card:hover,
 html[data-theme="light"] .glass-shell:hover,
 html[data-theme="light"] .aurora-card:hover,
-html[data-theme="light"] .glass:hover {
+html[data-theme="light"] .glass:hover,
+html[data-theme="light"] .glass-card:focus-within,
+html[data-theme="light"] .glass-shell:focus-within,
+html[data-theme="light"] .aurora-card:focus-within,
+html[data-theme="light"] .glass:focus-within {
   transform: translateY(-1px);
   box-shadow:
     0 28px 64px rgba(92, 114, 124, 0.16),
     0 0 0 1px rgba(255, 255, 255, 0.84),
+    0 0 36px rgba(203, 250, 255, 0.42),
     inset 0 1px 0 rgba(255, 255, 255, 0.98) !important;
+}
+
+.glass-card:active::after,
+.glass-shell:active::after,
+.aurora-card:active::after,
+.glass:active::after,
+.glass-card.is-active::after,
+.glass-shell.is-active::after,
+.aurora-card.is-active::after,
+.glass.is-active::after,
+.glass-card.active::after,
+.glass-shell.active::after,
+.aurora-card.active::after,
+.glass.active::after {
+  animation: evaraGlassBeamSpin 1.15s cubic-bezier(.2, .8, .2, 1) 1 !important;
+  opacity: 0.98 !important;
+}
+
+.applications-hero:has(.glass-card:hover) .glass-card,
+.applications-hero:has(.aurora-card:hover) .aurora-card,
+.application-hero:has(.glass-card:hover) .glass-card,
+.application-hero:has(.aurora-card:hover) .aurora-card,
+.dashboard-grid:has(.glass-card:hover) .glass-card,
+.dashboard-grid:has(.aurora-card:hover) .aurora-card,
+.cards-grid:has(.glass-card:hover) .glass-card,
+.cards-grid:has(.aurora-card:hover) .aurora-card,
+.settings-grid:has(.glass-card:hover) .glass-card,
+.settings-grid:has(.aurora-card:hover) .aurora-card {
+  box-shadow:
+    0 22px 52px rgba(92, 114, 124, 0.12),
+    0 0 0 1px rgba(255,255,255,0.66),
+    0 0 26px rgba(203, 250, 255, 0.22),
+    inset 0 1px 0 rgba(255,255,255,0.90) !important;
 }
 
 html[data-theme="light"] .glass-card p,
@@ -106,4 +167,40 @@ html[data-theme="light"] .glass-card span,
 html[data-theme="light"] .aurora-card p,
 html[data-theme="light"] .aurora-card span {
   text-shadow: none;
+}
+
+@keyframes evaraGlassLaserSweep {
+  0% {
+    transform: translateX(-86%) rotate(11deg) scaleY(1.08);
+  }
+  45% {
+    transform: translateX(82%) rotate(11deg) scaleY(1.08);
+  }
+  100% {
+    transform: translateX(118%) rotate(11deg) scaleY(1.08);
+  }
+}
+
+@keyframes evaraGlassBeamSpin {
+  0% {
+    transform: rotate(0deg) scale(1.05);
+    opacity: 0.54;
+  }
+  35% {
+    transform: rotate(190deg) scale(1.16);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(360deg) scale(1.05);
+    opacity: 0.72;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .glass-card::after,
+  html[data-theme] .glass-shell::after,
+  html[data-theme] .aurora-card::after,
+  html[data-theme] .glass::after {
+    animation: none !important;
+  }
 }
