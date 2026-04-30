@@ -22,6 +22,10 @@ service cloud.firestore {
       return currentUserExists() ? currentUser().data.companyId : null;
     }
 
+    function isCustomer() {
+      return signedIn() && userRole() in ['customer', 'Customer', 'CUSTOMER'];
+    }
+
     function isOwnerOrAdmin() {
       return signedIn() && userRole() in [
         'owner', 'Owner', 'OWNER',
@@ -91,6 +95,87 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == userId;
     }
 
+    function sameCompanyOrPlatform(recordCompanyId) {
+      return recordCompanyId == null ||
+        recordCompanyId == '' ||
+        userCompanyId() == null ||
+        userCompanyId() == '' ||
+        recordCompanyId == userCompanyId();
+    }
+
+    function assignedToMe(data) {
+      return signedIn() && (
+        (data.keys().hasAny(['assignedTo']) && request.auth.uid in data.assignedTo) ||
+        (data.keys().hasAny(['assignedTeamIds']) && request.auth.uid in data.assignedTeamIds) ||
+        (data.keys().hasAny(['assignedToUid']) && data.assignedToUid == request.auth.uid) ||
+        (data.keys().hasAny(['assignedRep']) && data.assignedRep == request.auth.uid) ||
+        (data.keys().hasAny(['staffClaimedBy']) && data.staffClaimedBy == request.auth.uid)
+      );
+    }
+
+    function leadBelongsToMe(data) {
+      return signedIn() && (
+        data.createdBy == request.auth.uid ||
+        data.createdByUid == request.auth.uid ||
+        data.customerUid == request.auth.uid ||
+        assignedToMe(data)
+      );
+    }
+
+    function safeCustomerLeadCreate() {
+      return isCustomer()
+        && request.resource.data.customerSubmitted == true
+        && request.resource.data.customerUid == request.auth.uid
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdByUid == request.auth.uid
+        && request.resource.data.createdByRole == 'customer'
+        && request.resource.data.source == 'customer_portal'
+        && request.resource.data.leadSource == 'customer_portal'
+        && request.resource.data.status in ['new', 'dispatch_review']
+        && request.resource.data.automationStatus in ['company_routed', 'needs_dispatch_review'];
+    }
+
+    function safeAssignedStaffLeadUpdate() {
+      return isStaffDispatcher()
+        && assignedToMe(resource.data)
+        && sameCompanyOrPlatform(resource.data.companyId)
+        && request.resource.data.companyId == resource.data.companyId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status',
+          'notes',
+          'description',
+          'nextStep',
+          'updatedAt',
+          'updatedBy',
+          'updatedByUid',
+          'updatedByName',
+          'staffClaimed',
+          'staffClaimedBy',
+          'staffClaimedAt',
+          'syncStatus'
+        ]);
+    }
+
+    function canReadLead() {
+      return signedIn() && (
+        isManagerPlus() ||
+        leadBelongsToMe(resource.data) ||
+        sameCompanyOrPlatform(resource.data.companyId)
+      );
+    }
+
+    function canCreateLead() {
+      return isManagerPlus() || safeCustomerLeadCreate();
+    }
+
+    function canUpdateLead() {
+      return isManagerPlus() || safeAssignedStaffLeadUpdate();
+    }
+
+    function canDeleteLead() {
+      return isOwnerOrAdmin() || (isOperationsPlus() && sameCompanyOrPlatform(resource.data.companyId));
+    }
+
     function safeSelfUserCreate(userId) {
       return ownsUserDoc(userId)
         && request.resource.data.uid == request.auth.uid
@@ -154,14 +239,6 @@ service cloud.firestore {
       return signedIn()
         && request.resource.data.actorUserId == request.auth.uid
         && request.resource.data.createdAt == request.time;
-    }
-
-    function sameCompanyOrPlatform(recordCompanyId) {
-      return recordCompanyId == null ||
-        recordCompanyId == '' ||
-        userCompanyId() == null ||
-        userCompanyId() == '' ||
-        recordCompanyId == userCompanyId();
     }
 
     function companyClaimUpdate() {
@@ -296,6 +373,19 @@ service cloud.firestore {
       allow update, delete: if isOwnerOrAdmin();
     }
 
+    match /notifications/{notificationId} {
+      allow read: if signedIn() && (
+        isOwnerOrAdmin() ||
+        resource.data.userId == request.auth.uid ||
+        sameCompanyOrPlatform(resource.data.companyId)
+      );
+      allow update: if signedIn() && (
+        resource.data.userId == request.auth.uid ||
+        isOwnerOrAdmin()
+      ) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'readAt', 'updatedAt']);
+      allow create, delete: if false;
+    }
+
     match /history_timeline/{logId} {
       allow read: if isOwnerOrAdmin();
       allow create: if validAuditCreate();
@@ -309,20 +399,21 @@ service cloud.firestore {
     }
 
     match /leads/{leadId} {
-      allow read: if signedIn();
-      allow create, update: if isManagerPlus();
-      allow delete: if isOwnerOrAdmin();
+      allow read: if canReadLead();
+      allow create: if canCreateLead();
+      allow update: if canUpdateLead();
+      allow delete: if canDeleteLead();
 
       match /activities/{activityId} {
-        allow read: if signedIn();
-        allow create: if isManagerPlus();
+        allow read: if canReadLead();
+        allow create: if isManagerPlus() || (isStaffDispatcher() && assignedToMe(get(/databases/$(database)/documents/leads/$(leadId)).data));
         allow update, delete: if isOwnerOrAdmin();
       }
     }
 
     match /lead_activities/{activityId} {
       allow read: if signedIn();
-      allow create: if isManagerPlus();
+      allow create: if isManagerPlus() || isStaffDispatcher();
       allow update, delete: if isOwnerOrAdmin();
     }
 
