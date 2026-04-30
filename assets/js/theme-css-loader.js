@@ -1,12 +1,61 @@
 (function () {
   const GALAXY_CSS_ID = "evaraGalaxyCss";
   const GALAXY_CSS_HREF = "/evaraos/assets/css/effects/galaxy.css?v=1";
+  const APPEARANCE_KEY = "evaraos-appearance";
 
   let galaxyLoaded = false;
   let pending = false;
 
   function currentTheme() {
     return document.documentElement.getAttribute("data-theme") || "light";
+  }
+
+  function safeJsonParse(value, fallback = {}) {
+    try {
+      return value ? JSON.parse(value) : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
+  function getAppearance() {
+    try {
+      return safeJsonParse(localStorage.getItem(APPEARANCE_KEY), {});
+    } catch {
+      return {};
+    }
+  }
+
+  function normalizeBeamStyle(value = "") {
+    const safe = String(value || "").trim().toLowerCase();
+    if (["off", "glass", "rainbow", "nebula"].includes(safe)) return safe;
+    if (safe === "default") return "glass";
+    return "glass";
+  }
+
+  function syncBeamPreferences() {
+    const appearance = getAppearance();
+    const theme = currentTheme();
+    const enabled = appearance.beamEnabled !== false;
+    let mode = normalizeBeamStyle(appearance.beamStyle || appearance.beamMode || "");
+
+    if (!enabled || mode === "off") {
+      document.documentElement.setAttribute("data-beam-mode", "off");
+      document.documentElement.setAttribute("data-user-beam-off", "true");
+      return;
+    }
+
+    document.documentElement.removeAttribute("data-user-beam-off");
+
+    if (appearance.rainbowBeam === true && !appearance.beamStyle) {
+      mode = "rainbow";
+    }
+
+    if (theme === "galaxy" && !appearance.beamStyle) {
+      mode = "nebula";
+    }
+
+    document.documentElement.setAttribute("data-beam-mode", mode || "glass");
   }
 
   function shouldUseGalaxy() {
@@ -100,6 +149,8 @@
   }
 
   function syncCss() {
+    syncBeamPreferences();
+
     if (shouldUseGalaxy()) {
       loadGalaxyCss();
       return;
@@ -119,16 +170,20 @@
     window.addEventListener("evara:theme-ready", syncAfterThemeReady);
     window.addEventListener("evara:theme-changed", syncAfterThemeReady);
     window.addEventListener("pageshow", syncCss);
+    window.addEventListener("storage", (event) => {
+      if (event.key === APPEARANCE_KEY) syncCss();
+    });
 
     const observer = new MutationObserver(syncCss);
 
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ["data-theme"]
+      attributeFilter: ["data-theme", "data-beam-mode"]
     });
 
     window.EvaraThemeCssLoader = {
       syncCss,
+      syncBeamPreferences,
       loadGalaxyCss,
       disableGalaxyCss,
       markThemeHydrated,
@@ -137,6 +192,8 @@
 
         return {
           theme: currentTheme(),
+          beamMode: document.documentElement.getAttribute("data-beam-mode") || "glass",
+          userBeamOff: document.documentElement.getAttribute("data-user-beam-off") === "true",
           galaxyLoaded,
           pending,
           hasGalaxyLink: Boolean(link),
