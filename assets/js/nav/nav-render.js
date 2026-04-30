@@ -132,18 +132,23 @@ export function renderNav() {
               <span class="eva-install-os-mark eva-install-apple-mark" aria-hidden="true"></span>
               <span class="eva-install-copy">
                 <strong>iPhone</strong>
-                <small>Add to Home Screen</small>
+                <small>Tap Share</small>
               </span>
             </button>
             <button type="button" class="eva-install-segment eva-install-android" id="evaInstallAndroid" aria-label="Install Evaraos on Android">
               <span class="eva-install-os-mark eva-install-android-mark" aria-hidden="true">
-                <svg viewBox="0 0 24 24" focusable="false">
-                  <path d="M7.4 8.2 6.2 6.1a.5.5 0 0 1 .18-.68.5.5 0 0 1 .68.18l1.24 2.15A7.3 7.3 0 0 1 12 6.8c1.33 0 2.6.34 3.7.95l1.24-2.15a.5.5 0 0 1 .86.5l-1.2 2.1A6.62 6.62 0 0 1 19 13H5a6.62 6.62 0 0 1 2.4-4.8ZM8.75 11a.7.7 0 1 0 0-1.4.7.7 0 0 0 0 1.4Zm6.5 0a.7.7 0 1 0 0-1.4.7.7 0 0 0 0 1.4ZM5.6 13.7h12.8v4.8c0 .83-.67 1.5-1.5 1.5H15v1.25a.75.75 0 0 1-1.5 0V20h-3v1.25a.75.75 0 0 1-1.5 0V20H7.1c-.83 0-1.5-.67-1.5-1.5v-4.8Z" fill="currentColor"/>
+                <svg viewBox="0 0 48 48" focusable="false">
+                  <path fill="currentColor" d="M14.8 18.2h18.4c1.9 0 3.4 1.5 3.4 3.4v10.8c0 1.9-1.5 3.4-3.4 3.4H14.8c-1.9 0-3.4-1.5-3.4-3.4V21.6c0-1.9 1.5-3.4 3.4-3.4Z"/>
+                  <path fill="currentColor" d="M9 21.7c1 0 1.8.8 1.8 1.8v8.3c0 1-.8 1.8-1.8 1.8s-1.8-.8-1.8-1.8v-8.3c0-1 .8-1.8 1.8-1.8Zm30 0c1 0 1.8.8 1.8 1.8v8.3c0 1-.8 1.8-1.8 1.8s-1.8-.8-1.8-1.8v-8.3c0-1 .8-1.8 1.8-1.8ZM17 35.3c1 0 1.8.8 1.8 1.8v4.2c0 1-.8 1.8-1.8 1.8s-1.8-.8-1.8-1.8v-4.2c0-1 .8-1.8 1.8-1.8Zm14 0c1 0 1.8.8 1.8 1.8v4.2c0 1-.8 1.8-1.8 1.8s-1.8-.8-1.8-1.8v-4.2c0-1 .8-1.8 1.8-1.8Z"/>
+                  <path fill="currentColor" d="M14.1 16.5c.9-4.1 4.9-7.2 9.9-7.2s9 3.1 9.9 7.2H14.1Z"/>
+                  <path stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M18 9.8 15.7 5.7M30 9.8l2.3-4.1"/>
+                  <circle cx="19.2" cy="13.7" r="1.15" fill="#fff"/>
+                  <circle cx="28.8" cy="13.7" r="1.15" fill="#fff"/>
                 </svg>
               </span>
               <span class="eva-install-copy">
                 <strong>Android</strong>
-                <small>Native install</small>
+                <small>Install</small>
               </span>
             </button>
           </div>
