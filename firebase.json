@@ -12,6 +12,23 @@
       "README.md",
       "LICENSE"
     ],
+    "redirects": [
+      {
+        "source": "/evaraos",
+        "destination": "/",
+        "type": 301
+      },
+      {
+        "source": "/evaraos/",
+        "destination": "/",
+        "type": 301
+      },
+      {
+        "source": "/evaraos/:path*",
+        "destination": "/:path",
+        "type": 301
+      }
+    ],
     "headers": [
       {
         "source": "/sw.js",
