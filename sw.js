@@ -1,4 +1,4 @@
-const CACHE_VERSION = "evaraos-install-float-v9";
+const CACHE_VERSION = "evaraos-stable-v10";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 
 const CORE_ASSETS = [
@@ -13,15 +13,14 @@ const CORE_ASSETS = [
   "/assets/css/theme.css?v=36",
   "/assets/css/nav.css?v=35",
   "/assets/css/install-nav.css?v=5",
-  "/assets/css/install-apple-hotfix.css?v=3",
   "/assets/css/home.css?v=34",
   "/assets/css/dashboard.css?v=34",
   "/assets/css/mobile-polish.css?v=1",
   "/assets/css/premium-leads.css?v=1",
   "/assets/css/lead-visibility-fix.css?v=1",
   "/assets/js/loader.js?v=35",
-  "/assets/js/theme-css-loader.js?v=3",
-  "/assets/js/nav.js?v=38",
+  "/assets/js/theme-css-loader.js?v=2",
+  "/assets/js/nav.js?v=37",
   "/assets/js/performance-hotfix.js?v=1",
   "/assets/js/install.js?v=8",
   "/assets/js/leads.js?v=3",
