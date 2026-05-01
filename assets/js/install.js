@@ -121,6 +121,10 @@
     }, 220);
   }
 
+  function stopInstallCardEvent(event) {
+    event.stopPropagation();
+  }
+
   function createAppleGuide() {
     const existing = document.getElementById("evaraIOSInstallGuide");
     if (existing) return existing;
@@ -142,11 +146,16 @@
       '    <p>Use the browser share button, then select <b>Add to Home Screen</b>.</p>',
       '  </div>',
       '  <div class="evara-ios-step-list">',
-      '    <div class="evara-ios-step"><span class="evara-ios-step-number">1</span><div><strong>Tap the Share button</strong><span>Use Safari or your browser share icon.</span></div></div>',
-      '    <div class="evara-ios-step"><span class="evara-ios-step-number">2</span><div><strong>Add to Home Screen</strong><span>Confirm the Evaraos icon, then tap Add.</span></div></div>',
+      '    <div class="evara-ios-step"><span class="evara-ios-step-number" data-step="1" aria-label="Step 1">1</span><div><strong>Tap the Share button</strong><span>Use Safari or your browser share icon.</span></div></div>',
+      '    <div class="evara-ios-step"><span class="evara-ios-step-number" data-step="2" aria-label="Step 2">2</span><div><strong>Add to Home Screen</strong><span>Confirm the Evaraos icon, then tap Add.</span></div></div>',
       '  </div>',
       '</section>'
     ].join("");
+
+    const card = overlay.querySelector(".evara-ios-install-card");
+    card?.addEventListener("click", stopInstallCardEvent, true);
+    card?.addEventListener("pointerdown", stopInstallCardEvent, true);
+    card?.addEventListener("touchstart", stopInstallCardEvent, { capture: true, passive: true });
 
     overlay.addEventListener("click", function (event) {
       if (!event.target.closest("[data-install-guide-close]")) return;
