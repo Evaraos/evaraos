@@ -60,7 +60,9 @@
       '</div>'
     ].join("");
 
-    notice.querySelector(".evara-install-notice-close")?.addEventListener("click", function () {
+    notice.querySelector(".evara-install-notice-close")?.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
       notice.classList.remove("show");
     });
 
@@ -114,7 +116,7 @@
 
     setTimeout(function () {
       if (overlay.getAttribute("aria-hidden") === "true") overlay.remove();
-    }, 180);
+    }, 220);
   }
 
   function createAppleGuide() {
@@ -145,8 +147,11 @@
     ].join("");
 
     overlay.addEventListener("click", function (event) {
-      if (event.target.closest("[data-install-guide-close]")) closeGuide();
-    });
+      if (!event.target.closest("[data-install-guide-close]")) return;
+      event.preventDefault();
+      event.stopPropagation();
+      closeGuide();
+    }, true);
 
     document.body.appendChild(overlay);
     return overlay;
