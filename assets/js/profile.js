@@ -288,7 +288,7 @@ profileResetBtn?.addEventListener("click", () => {
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    window.location.href = "/evaraos/login.html";
+    window.location.href = "/login.html";
     return;
   }
 

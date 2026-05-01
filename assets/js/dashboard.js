@@ -5,11 +5,11 @@
 import "./dashboard-stats.js?v=1";
 
 const ROUTES = {
-  companies: "/evaraos/companies.html?analytics=companies&from=dashboard",
-  users: "/evaraos/users.html?analytics=users&from=dashboard",
-  leads: "/evaraos/leads.html?analytics=leads&from=dashboard",
-  jobs: "/evaraos/jobs.html?analytics=jobs&from=dashboard",
-  settings: "/evaraos/settings.html?from=dashboard"
+  companies: "/companies.html?analytics=companies&from=dashboard",
+  users: "/users.html?analytics=users&from=dashboard",
+  leads: "/leads.html?analytics=leads&from=dashboard",
+  jobs: "/jobs.html?analytics=jobs&from=dashboard",
+  settings: "/settings.html?from=dashboard"
 };
 
 function routeTo(url) {

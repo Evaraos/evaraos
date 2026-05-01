@@ -5,7 +5,7 @@
   let androidBtn = null;
   let noticeTimer = null;
 
-  const APP_ICON = "/evaraos/assets/img/icon-192.png";
+  const APP_ICON = "/assets/img/icon-192.png";
 
   function isIOS() {
     return /iphone|ipad|ipod/i.test(navigator.userAgent || "") ||

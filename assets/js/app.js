@@ -65,17 +65,17 @@ export function renderSidebar(role, active = "") {
   const normalizedRole = normalizeRole(role);
 
   const links = [
-    { key: "dashboard", href: "/evaraos/dashboard.html", label: "Dashboard", roles: ["owner", "super_admin", "admin", "manager", "sales_rep", "technician", "operations_coordinator", "hr"] },
-    { key: "companies", href: "/evaraos/companies.html", label: "Companies", roles: ["owner", "super_admin", "admin"] },
-    { key: "users", href: "/evaraos/users.html", label: "Users", roles: ["owner", "super_admin", "admin", "manager", "operations_coordinator", "hr"] },
-    { key: "applications", href: "/evaraos/applications.html", label: "Applications", roles: ["owner", "super_admin", "admin", "manager", "operations_coordinator", "hr"] },
-    { key: "sales_reps", href: "/evaraos/sales_reps.html", label: "Sales Reps", roles: ["owner", "super_admin", "admin", "manager"] },
-    { key: "leads", href: "/evaraos/leads.html", label: "Leads", roles: ["owner", "super_admin", "admin", "manager", "sales_rep"] },
-    { key: "jobs", href: "/evaraos/jobs.html", label: "Jobs", roles: ["owner", "super_admin", "admin", "manager", "technician", "operations_coordinator"] },
-    { key: "audit", href: "/evaraos/audit.html", label: "Audit", roles: ["owner", "super_admin", "admin"] },
-    { key: "org", href: "/evaraos/org.html", label: "Organization", roles: ["owner", "super_admin", "admin"] },
-    { key: "performance", href: "/evaraos/performance.html", label: "Performance", roles: ["owner", "super_admin", "admin", "manager", "operations_coordinator"] },
-    { key: "customer_dashboard", href: "/evaraos/customer_dashboard.html", label: "Customer Portal", roles: ["customer", "owner", "super_admin", "admin"] }
+    { key: "dashboard", href: "/dashboard.html", label: "Dashboard", roles: ["owner", "super_admin", "admin", "manager", "sales_rep", "technician", "operations_coordinator", "hr"] },
+    { key: "companies", href: "/companies.html", label: "Companies", roles: ["owner", "super_admin", "admin"] },
+    { key: "users", href: "/users.html", label: "Users", roles: ["owner", "super_admin", "admin", "manager", "operations_coordinator", "hr"] },
+    { key: "applications", href: "/applications.html", label: "Applications", roles: ["owner", "super_admin", "admin", "manager", "operations_coordinator", "hr"] },
+    { key: "sales_reps", href: "/sales_reps.html", label: "Sales Reps", roles: ["owner", "super_admin", "admin", "manager"] },
+    { key: "leads", href: "/leads.html", label: "Leads", roles: ["owner", "super_admin", "admin", "manager", "sales_rep"] },
+    { key: "jobs", href: "/jobs.html", label: "Jobs", roles: ["owner", "super_admin", "admin", "manager", "technician", "operations_coordinator"] },
+    { key: "audit", href: "/audit.html", label: "Audit", roles: ["owner", "super_admin", "admin"] },
+    { key: "org", href: "/org.html", label: "Organization", roles: ["owner", "super_admin", "admin"] },
+    { key: "performance", href: "/performance.html", label: "Performance", roles: ["owner", "super_admin", "admin", "manager", "operations_coordinator"] },
+    { key: "customer_dashboard", href: "/customer_dashboard.html", label: "Customer Portal", roles: ["customer", "owner", "super_admin", "admin"] }
   ];
 
   const filtered = links.filter(link => link.roles.includes(normalizedRole));
@@ -140,7 +140,7 @@ export async function hydrateCurrentUser(firebaseUser) {
 }
 
 export async function requireAuth(callback, options = {}) {
-  const { allowRoles = null, redirectTo = "/evaraos/login.html" } = options;
+  const { allowRoles = null, redirectTo = "/login.html" } = options;
 
   onAuthStateChanged(auth, async (firebaseUser) => {
     if (!firebaseUser) {
@@ -155,9 +155,9 @@ export async function requireAuth(callback, options = {}) {
       const allowed = allowRoles.map(normalizeRole);
       if (!allowed.includes(normalizeRole(user.role))) {
         if (normalizeRole(user.role) === "customer") {
-          window.location.href = "/evaraos/customer_dashboard.html";
+          window.location.href = "/customer_dashboard.html";
         } else {
-          window.location.href = "/evaraos/dashboard.html";
+          window.location.href = "/dashboard.html";
         }
         return;
       }
@@ -169,7 +169,7 @@ export async function requireAuth(callback, options = {}) {
 
 export async function logoutUser() {
   await signOut(auth);
-  window.location.href = "/evaraos/index.html";
+  window.location.href = "/index.html";
 }
 
 export async function bindTopbar(user, title = "Dashboard") {
@@ -179,8 +179,8 @@ export async function bindTopbar(user, title = "Dashboard") {
   topbar.innerHTML = `
     <div class="topbar-inner">
       <div class="topbar-left">
-        <a class="brand-link" href="/evaraos/index.html">
-          <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos Logo" class="brand-logo" />
+        <a class="brand-link" href="/index.html">
+          <img src="/assets/img/evaraos_logo.png" alt="Evaraos Logo" class="brand-logo" />
           <span class="brand-text">Evaraos</span>
         </a>
       </div>

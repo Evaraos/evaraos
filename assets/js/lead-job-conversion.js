@@ -421,7 +421,7 @@ async function convertActiveLeadToJob() {
 
     setTimeout(() => {
       const openJobs = window.confirm("Job created. Open Jobs page now?");
-      if (openJobs) window.location.assign("/evaraos/jobs.html");
+      if (openJobs) window.location.assign("/jobs.html");
     }, 350);
   } catch (error) {
     console.error("Lead to job conversion failed:", error);

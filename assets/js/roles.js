@@ -134,16 +134,16 @@ export function protectPage(section = "", options = {}) {
   }
 
   if (role === "customer") {
-    window.location.href = "/evaraos/customer_dashboard.html";
+    window.location.href = "/customer_dashboard.html";
     return false;
   }
 
   if (role === "guest") {
-    window.location.href = "/evaraos/login.html";
+    window.location.href = "/login.html";
     return false;
   }
 
-  window.location.href = "/evaraos/dashboard.html";
+  window.location.href = "/dashboard.html";
   return false;
 }
 

@@ -54,7 +54,7 @@ function bindAlwaysHomeLogo() {
   brand.addEventListener(
     "click",
     (event) => {
-      const href = brand.getAttribute("data-home-link") || "/evaraos/index.html";
+      const href = brand.getAttribute("data-home-link") || "/index.html";
 
       event.preventDefault();
       event.stopPropagation();

@@ -394,7 +394,7 @@ function init() {
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
-      window.location.assign("/evaraos/login.html");
+      window.location.assign("/login.html");
       return;
     }
 

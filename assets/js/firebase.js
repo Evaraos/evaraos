@@ -492,7 +492,7 @@ export function clearUserSession() {
   clearSavedUserProfile();
 }
 
-export async function logoutAndRedirect(path = "/evaraos/login.html") {
+export async function logoutAndRedirect(path = "/login.html") {
   showGlobalLoader();
   await signOut(auth);
   clearUserSession();
@@ -502,7 +502,7 @@ export async function logoutAndRedirect(path = "/evaraos/login.html") {
 }
 
 export async function logout() {
-  await logoutAndRedirect("/evaraos/login.html");
+  await logoutAndRedirect("/login.html");
 }
 
 export function markProtectedPagePending() {
@@ -517,7 +517,7 @@ export function resolveProtectedPage() {
 let protectRouteActivePromise = null;
 let protectRouteUnsubscribe = null;
 
-export function protectRoute({ requireAuth = true, redirectGuestTo = "/evaraos/login.html", redirectAuthedTo = "/evaraos/dashboard.html" } = {}) {
+export function protectRoute({ requireAuth = true, redirectGuestTo = "/login.html", redirectAuthedTo = "/dashboard.html" } = {}) {
   if (protectRouteActivePromise) return protectRouteActivePromise;
   const savedProfile = getSavedUserProfile();
   if (!savedProfile?.uid) markProtectedPagePending();

@@ -2,9 +2,9 @@
   "name": "Evaraos Inc",
   "short_name": "Evaraos",
   "description": "Subsidiaries Allocation SaaS operating system.",
-  "id": "/evaraos/",
-  "start_url": "/evaraos/",
-  "scope": "/evaraos/",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui", "browser"],
   "orientation": "portrait",
@@ -15,43 +15,43 @@
   "dir": "ltr",
   "icons": [
     {
-      "src": "/evaraos/assets/img/favicon-16.png",
+      "src": "/assets/img/favicon-16.png",
       "sizes": "16x16",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/evaraos/assets/img/favicon-32.png",
+      "src": "/assets/img/favicon-32.png",
       "sizes": "32x32",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/evaraos/assets/img/apple-touch-icon.png",
+      "src": "/assets/img/apple-touch-icon.png",
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/evaraos/assets/img/icon-192.png",
+      "src": "/assets/img/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/evaraos/assets/img/icon-192-maskable.png",
+      "src": "/assets/img/icon-192-maskable.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/evaraos/assets/img/icon-512.png",
+      "src": "/assets/img/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/evaraos/assets/img/icon-512-maskable.png",
+      "src": "/assets/img/icon-512-maskable.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -62,10 +62,10 @@
       "name": "Dashboard",
       "short_name": "Dashboard",
       "description": "Open the Evaraos dashboard.",
-      "url": "/evaraos/dashboard.html",
+      "url": "/dashboard.html",
       "icons": [
         {
-          "src": "/evaraos/assets/img/icon-192.png",
+          "src": "/assets/img/icon-192.png",
           "sizes": "192x192",
           "type": "image/png"
         }
@@ -75,10 +75,10 @@
       "name": "Settings",
       "short_name": "Settings",
       "description": "Open Evaraos settings.",
-      "url": "/evaraos/settings.html",
+      "url": "/settings.html",
       "icons": [
         {
-          "src": "/evaraos/assets/img/icon-192.png",
+          "src": "/assets/img/icon-192.png",
           "sizes": "192x192",
           "type": "image/png"
         }

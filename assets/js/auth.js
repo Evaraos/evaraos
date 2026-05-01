@@ -283,7 +283,7 @@ async function handleLoginSubmit(event) {
     });
 
     setMessage(messageEl, "Login successful. Redirecting...", "success");
-    navigateWithLoader(role === "customer" ? "/evaraos/customer_dashboard.html" : "/evaraos/dashboard.html", {
+    navigateWithLoader(role === "customer" ? "/customer_dashboard.html" : "/dashboard.html", {
       title: role === "customer" ? "Opening portal" : "Opening dashboard",
       subtitle: role === "customer" ? "Loading your customer portal." : "Loading your Evaraos workspace."
     });
@@ -394,7 +394,7 @@ async function handleSignupSubmit(event) {
     });
 
     setMessage(messageEl, "Account created. Your customer portal is opening while approval stays pending.", "success");
-    navigateWithLoader("/evaraos/customer_dashboard.html", {
+    navigateWithLoader("/customer_dashboard.html", {
       title: "Opening portal",
       subtitle: "Loading your customer account."
     });

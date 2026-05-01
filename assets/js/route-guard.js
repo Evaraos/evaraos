@@ -125,7 +125,7 @@ async function handlePrivateRoute() {
 
   if (!verifiedUser) {
     clearUserSession?.();
-    beginGuardRedirect("/evaraos/login.html", {
+    beginGuardRedirect("/login.html", {
       title: "Returning to login",
       subtitle: "Please sign in to continue."
     });
@@ -134,8 +134,8 @@ async function handlePrivateRoute() {
 
   await protectRoute({
     requireAuth: true,
-    redirectGuestTo: "/evaraos/login.html",
-    redirectAuthedTo: "/evaraos/dashboard.html"
+    redirectGuestTo: "/login.html",
+    redirectAuthedTo: "/dashboard.html"
   });
 
   showAppReady({
@@ -149,7 +149,7 @@ async function handleAuthRoute() {
   const verifiedUser = await waitForVerifiedFirebaseUser();
 
   if (verifiedUser) {
-    beginGuardRedirect("/evaraos/dashboard.html", {
+    beginGuardRedirect("/dashboard.html", {
       title: "Opening dashboard",
       subtitle: "Your Firebase session is active."
     });
@@ -208,7 +208,7 @@ async function initRouteGuard() {
 
     if (mode === "private") {
       clearUserSession?.();
-      beginGuardRedirect("/evaraos/login.html", {
+      beginGuardRedirect("/login.html", {
         title: "Returning to login",
         subtitle: "Unable to verify your Firebase session."
       });

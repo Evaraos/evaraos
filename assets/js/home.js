@@ -287,8 +287,8 @@ function setupLoginForm() {
 
       window.location.href =
         role === "customer"
-          ? "/evaraos/customer_dashboard.html"
-          : "/evaraos/dashboard.html";
+          ? "/customer_dashboard.html"
+          : "/dashboard.html";
     } catch (error) {
       console.error("Login failed:", error);
       setText("loginMessage", formatLoginError(error), true);

@@ -4,8 +4,8 @@ import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase
 
 function dashboardPath(role) {
   return role === "customer"
-    ? "/evaraos/customer_dashboard.html"
-    : "/evaraos/dashboard.html";
+    ? "/customer_dashboard.html"
+    : "/dashboard.html";
 }
 
 async function getCurrentUserDoc(user) {
@@ -100,7 +100,7 @@ function bindLogoutButtons() {
     } catch (error) {
       console.error("Logout failed:", error);
     } finally {
-      window.location.href = "/evaraos/index.html";
+      window.location.href = "/index.html";
     }
   };
 
@@ -133,12 +133,12 @@ function applyGuestState() {
   setHidden(homeMenuLogoutBtn, true);
 
   if (heroEnterLink) {
-    heroEnterLink.href = "/evaraos/login.html";
+    heroEnterLink.href = "/login.html";
     heroEnterLink.textContent = "Enter Platform";
   }
 
   if (heroSecondaryLink) {
-    heroSecondaryLink.href = "/evaraos/signup.html";
+    heroSecondaryLink.href = "/signup.html";
     heroSecondaryLink.textContent = "Get Started";
   }
 }

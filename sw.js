@@ -2,41 +2,41 @@ const CACHE_VERSION = "evaraos-install-float-v9";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 
 const CORE_ASSETS = [
-  "/evaraos/",
-  "/evaraos/index.html",
-  "/evaraos/login.html",
-  "/evaraos/dashboard.html",
-  "/evaraos/customer_dashboard.html",
-  "/evaraos/leads.html",
-  "/evaraos/manifest.json",
-  "/evaraos/assets/css/base.css?v=34",
-  "/evaraos/assets/css/theme.css?v=36",
-  "/evaraos/assets/css/nav.css?v=35",
-  "/evaraos/assets/css/install-nav.css?v=5",
-  "/evaraos/assets/css/install-apple-hotfix.css?v=3",
-  "/evaraos/assets/css/home.css?v=34",
-  "/evaraos/assets/css/dashboard.css?v=34",
-  "/evaraos/assets/css/mobile-polish.css?v=1",
-  "/evaraos/assets/css/premium-leads.css?v=1",
-  "/evaraos/assets/css/lead-visibility-fix.css?v=1",
-  "/evaraos/assets/js/loader.js?v=35",
-  "/evaraos/assets/js/theme-css-loader.js?v=3",
-  "/evaraos/assets/js/nav.js?v=38",
-  "/evaraos/assets/js/performance-hotfix.js?v=1",
-  "/evaraos/assets/js/install.js?v=8",
-  "/evaraos/assets/js/leads.js?v=3",
-  "/evaraos/assets/js/premium-leads.js?v=1",
-  "/evaraos/assets/js/customer-lead-request.js?v=1",
-  "/evaraos/assets/js/offline-lead-queue.js?v=1",
-  "/evaraos/assets/js/offline-leads.js?v=2",
-  "/evaraos/assets/js/device-trust.js?v=1",
-  "/evaraos/assets/js/evara-notifications.js?v=2",
-  "/evaraos/assets/js/offline-staff-gate.js?v=1",
-  "/evaraos/assets/js/dashboard-stats.js?v=1",
-  "/evaraos/assets/img/evaraos_logo.png",
-  "/evaraos/assets/img/apple-touch-icon.png",
-  "/evaraos/assets/img/icon-192.png",
-  "/evaraos/assets/img/icon-512.png"
+  "/",
+  "/index.html",
+  "/login.html",
+  "/dashboard.html",
+  "/customer_dashboard.html",
+  "/leads.html",
+  "/manifest.json",
+  "/assets/css/base.css?v=34",
+  "/assets/css/theme.css?v=36",
+  "/assets/css/nav.css?v=35",
+  "/assets/css/install-nav.css?v=5",
+  "/assets/css/install-apple-hotfix.css?v=3",
+  "/assets/css/home.css?v=34",
+  "/assets/css/dashboard.css?v=34",
+  "/assets/css/mobile-polish.css?v=1",
+  "/assets/css/premium-leads.css?v=1",
+  "/assets/css/lead-visibility-fix.css?v=1",
+  "/assets/js/loader.js?v=35",
+  "/assets/js/theme-css-loader.js?v=3",
+  "/assets/js/nav.js?v=38",
+  "/assets/js/performance-hotfix.js?v=1",
+  "/assets/js/install.js?v=8",
+  "/assets/js/leads.js?v=3",
+  "/assets/js/premium-leads.js?v=1",
+  "/assets/js/customer-lead-request.js?v=1",
+  "/assets/js/offline-lead-queue.js?v=1",
+  "/assets/js/offline-leads.js?v=2",
+  "/assets/js/device-trust.js?v=1",
+  "/assets/js/evara-notifications.js?v=2",
+  "/assets/js/offline-staff-gate.js?v=1",
+  "/assets/js/dashboard-stats.js?v=1",
+  "/assets/img/evaraos_logo.png",
+  "/assets/img/apple-touch-icon.png",
+  "/assets/img/icon-192.png",
+  "/assets/img/icon-512.png"
 ];
 
 self.addEventListener("install", (event) => {
@@ -61,7 +61,7 @@ function isNavigationRequest(request) {
 }
 
 function isCoreStaticRequest(url) {
-  return url.origin === self.location.origin && url.pathname.startsWith("/evaraos/");
+  return url.origin === self.location.origin && url.pathname.startsWith("/");
 }
 
 async function staleWhileRevalidate(request) {
@@ -90,7 +90,7 @@ async function navigationFallback(request) {
     const cache = await caches.open(STATIC_CACHE);
     return (
       await cache.match(request) ||
-      await cache.match("/evaraos/index.html") ||
+      await cache.match("/index.html") ||
       new Response("Evaraos is offline. Reconnect to continue.", {
         status: 503,
         headers: { "Content-Type": "text/plain" }

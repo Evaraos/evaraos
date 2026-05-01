@@ -79,7 +79,7 @@
     if (swRegistrationStarted || !("serviceWorker" in navigator)) return;
     swRegistrationStarted = true;
 
-    navigator.serviceWorker.register("/evaraos/sw.js", { scope: "/evaraos/" })
+    navigator.serviceWorker.register("/sw.js", { scope: "/" })
       .then((registration) => {
         if (registration.waiting) registration.waiting.postMessage({ type: "SKIP_WAITING" });
       })
@@ -87,11 +87,11 @@
   }
 
   function bootGlobalModules() {
-    loadStylesheetOnce("/evaraos/assets/css/install-nav.css?v=6", "evaraInstallNavCss");
-    loadModuleOnce("/evaraos/assets/js/evara-notifications.js?v=1");
-    loadModuleOnce("/evaraos/assets/js/offline-staff-gate.js?v=1");
-    loadScriptOnce("/evaraos/assets/js/performance-hotfix.js?v=1", "evaraPerformanceHotfixScript");
-    loadScriptOnce("/evaraos/assets/js/install.js?v=9", "evaraInstallScript");
+    loadStylesheetOnce("/assets/css/install-nav.css?v=6", "evaraInstallNavCss");
+    loadModuleOnce("/assets/js/evara-notifications.js?v=1");
+    loadModuleOnce("/assets/js/offline-staff-gate.js?v=1");
+    loadScriptOnce("/assets/js/performance-hotfix.js?v=1", "evaraPerformanceHotfixScript");
+    loadScriptOnce("/assets/js/install.js?v=9", "evaraInstallScript");
   }
 
   function bootPageModules() {
@@ -100,20 +100,20 @@
     bootGlobalModules();
 
     if (path.endsWith("/leads.html")) {
-      loadStylesheetOnce("/evaraos/assets/css/premium-leads.css?v=1", "evaraPremiumLeadsCss");
-      loadStylesheetOnce("/evaraos/assets/css/lead-visibility-fix.css?v=1", "evaraLeadVisibilityFixCss");
-      loadModuleOnce("/evaraos/assets/js/leads.js?v=3");
-      loadModuleOnce("/evaraos/assets/js/offline-leads.js?v=2");
-      loadModuleOnce("/evaraos/assets/js/premium-leads.js?v=1");
+      loadStylesheetOnce("/assets/css/premium-leads.css?v=1", "evaraPremiumLeadsCss");
+      loadStylesheetOnce("/assets/css/lead-visibility-fix.css?v=1", "evaraLeadVisibilityFixCss");
+      loadModuleOnce("/assets/js/leads.js?v=3");
+      loadModuleOnce("/assets/js/offline-leads.js?v=2");
+      loadModuleOnce("/assets/js/premium-leads.js?v=1");
     }
 
     if (path.endsWith("/customer_dashboard.html")) {
-      loadStylesheetOnce("/evaraos/assets/css/premium-leads.css?v=1", "evaraPremiumLeadsCss");
-      loadModuleOnce("/evaraos/assets/js/customer-lead-request.js?v=1");
+      loadStylesheetOnce("/assets/css/premium-leads.css?v=1", "evaraPremiumLeadsCss");
+      loadModuleOnce("/assets/js/customer-lead-request.js?v=1");
     }
 
     if (path.endsWith("/dashboard.html")) {
-      loadModuleOnce("/evaraos/assets/js/dashboard-stats.js?v=1");
+      loadModuleOnce("/assets/js/dashboard-stats.js?v=1");
     }
   }
 

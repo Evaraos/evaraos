@@ -319,7 +319,7 @@ async function handleSubmit(event) {
     document.querySelectorAll(".role-pill").forEach((pill) => pill.classList.remove("active"));
 
     setTimeout(() => {
-      window.location.assign("/evaraos/customer_dashboard.html");
+      window.location.assign("/customer_dashboard.html");
     }, 900);
   } catch (error) {
     console.error("Staff application failed:", error);

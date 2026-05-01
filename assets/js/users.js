@@ -968,7 +968,7 @@ function initUsersPage() {
 
   onAuthStateChanged(auth, (user) => {
     if (!user) {
-      navigateWithLoader("/evaraos/login.html", {
+      navigateWithLoader("/login.html", {
         title: "Returning to login",
         subtitle: "Your session is not active."
       });

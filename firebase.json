@@ -19,12 +19,12 @@
         "type": 301
       },
       {
-        "source": "/evaraos/",
+        "source": "/",
         "destination": "/",
         "type": 301
       },
       {
-        "source": "/evaraos/:path*",
+        "source": "/:path*",
         "destination": "/:path",
         "type": 301
       }

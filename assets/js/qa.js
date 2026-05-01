@@ -1,5 +1,5 @@
 const QA_STATE_KEY = "evaraos-qa-automation-v3";
-const AUDIT_JSON_URL = "/evaraos/tools/reports/repo-audit-ui.json";
+const AUDIT_JSON_URL = "/tools/reports/repo-audit-ui.json";
 const TARGET_VERSION = "34";
 
 let auditSummary = null;
@@ -358,7 +358,7 @@ async function loadAuditReport() {
         <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
           <strong>Audit report not loaded</strong>
           <span>
-            Could not read <code>/evaraos/tools/reports/repo-audit-ui.json</code>.
+            Could not read <code>/tools/reports/repo-audit-ui.json</code>.
             Run the audit script, make sure the JSON file exists in that path, then reload this page.
           </span>
         </article>

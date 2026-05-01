@@ -6,7 +6,7 @@ export function getMount() {
 
 export function getBasePath() {
   const path = window.location.pathname;
-  const marker = "/evaraos/";
+  const marker = "/";
   const index = path.indexOf(marker);
   return index >= 0 ? path.slice(0, index + marker.length - 1) : "/evaraos";
 }
