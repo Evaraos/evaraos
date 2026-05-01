@@ -1,4 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  initializeAppCheck,
+  ReCaptchaEnterpriseProvider
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-check.js";
 
 import {
   getAuth,
@@ -45,6 +49,26 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+const appCheckSiteKey = "6LczbtQsAAAAAOHLSS25b38mXh1uTMAWvDjPIiOy";
+
+export let appCheck = null;
+
+try {
+  const host = window.location.hostname;
+  const isLocalDev = host === "localhost" || host === "127.0.0.1";
+  const debugToken = isLocalDev ? window.localStorage.getItem("evaraos-app-check-debug-token") : "";
+
+  if (debugToken) {
+    self.FIREBASE_APPCHECK_DEBUG_TOKEN = debugToken;
+  }
+
+  appCheck = initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey),
+    isTokenAutoRefreshEnabled: true
+  });
+} catch (error) {
+  console.warn("Evaraos App Check initialization skipped:", error);
+}
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
