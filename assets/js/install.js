@@ -5,6 +5,8 @@
   let androidBtn = null;
   let noticeTimer = null;
 
+  const APP_ICON = "/evaraos/assets/img/icon-192.png";
+
   function isIOS() {
     return /iphone|ipad|ipod/i.test(navigator.userAgent || "") ||
       (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
@@ -129,10 +131,10 @@
     overlay.setAttribute("aria-hidden", "true");
     overlay.innerHTML = [
       '<div class="evara-ios-install-backdrop" data-install-guide-close></div>',
-      '<section class="evara-ios-install-card" role="dialog" aria-modal="true" aria-label="Install Evaraos on iPhone">',
+      '<section class="evara-ios-install-card" role="dialog" aria-modal="false" aria-label="Install Evaraos on iPhone">',
       '  <button type="button" class="evara-ios-install-close" data-install-guide-close aria-label="Close"><span aria-hidden="true">×</span></button>',
       '  <div class="evara-ios-install-app">',
-      '    <img src="/evaraos/assets/img/evaraos_logo.png" alt="Evaraos" class="evara-ios-install-logo">',
+      '    <img src="' + APP_ICON + '" alt="Evaraos" class="evara-ios-install-logo">',
       '    <div class="evara-ios-install-title"><strong>Install Evaraos</strong><span>iPhone Home Screen app</span></div>',
       '  </div>',
       '  <div class="evara-ios-system-message">',
