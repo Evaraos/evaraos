@@ -7,6 +7,7 @@
     "rules": "storage.rules"
   },
   "hosting": {
+  "target": "production",
     "public": "../",
     "ignore": [
       "firebase.json",
