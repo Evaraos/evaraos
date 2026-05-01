@@ -1,0 +1,38 @@
+name: Deploy Evaraos Firebase Hosting
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - evaraos
+    paths:
+      - "**/*.html"
+      - "assets/**"
+      - "manifest.json"
+      - "sw.js"
+      - "firebase.json"
+      - ".firebaserc"
+      - ".github/workflows/firebase-hosting-production.yml"
+
+concurrency:
+  group: firebase-hosting-production
+  cancel-in-progress: true
+
+jobs:
+  deploy-hosting:
+    name: Deploy production hosting
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Deploy to Firebase Hosting
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: firebase deploy --only hosting:production --project evaraos-web --non-interactive
