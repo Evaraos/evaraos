@@ -117,28 +117,33 @@ async function backfillLegacyUserDoc(user) {
   const username = String(data.username || "").trim();
   const patch = {};
 
-  if (!data.id) patch.id = user.uid;
-  if (!data.uid) patch.uid = user.uid;
   if (!data.displayName && data.fullName) patch.displayName = data.fullName;
   if (!data.fullName && data.displayName) patch.fullName = data.displayName;
   if (!data.name && (data.displayName || data.fullName)) patch.name = data.displayName || data.fullName;
   if (username && !data.usernameLower) patch.usernameLower = normalizeUsername(username);
-  if (!data.role) patch.role = DEFAULT_PUBLIC_ROLE;
-  if (!data.status) patch.status = DEFAULT_PUBLIC_STATUS;
-  if (!data.approvalStatus) patch.approvalStatus = DEFAULT_PUBLIC_APPROVAL;
-  if (typeof data.companyId !== "string") patch.companyId = "";
-  if (typeof data.companyName !== "string") patch.companyName = "";
-  if (typeof data.companySlug !== "string") patch.companySlug = "";
-  if (typeof data.companyCategory !== "string") patch.companyCategory = "";
-  patch.updatedAt = serverTimestamp();
 
   if (Object.keys(patch).length) {
-    await setDoc(userRef, patch, { merge: true });
+    patch.updatedAt = serverTimestamp();
+    try {
+      await setDoc(userRef, patch, { merge: true });
+    } catch (error) {
+      console.warn("Legacy profile cleanup skipped by security rules:", error);
+    }
   }
 
   return {
     ...data,
-    ...patch
+    ...patch,
+    uid: data.uid || user.uid,
+    id: data.id || user.uid,
+    email: data.email || user.email || "",
+    role: data.role || DEFAULT_PUBLIC_ROLE,
+    status: data.status || DEFAULT_PUBLIC_STATUS,
+    approvalStatus: data.approvalStatus || DEFAULT_PUBLIC_APPROVAL,
+    companyId: typeof data.companyId === "string" ? data.companyId : "",
+    companyName: typeof data.companyName === "string" ? data.companyName : "",
+    companySlug: typeof data.companySlug === "string" ? data.companySlug : "",
+    companyCategory: typeof data.companyCategory === "string" ? data.companyCategory : ""
   };
 }
 
@@ -190,16 +195,12 @@ async function handleLoginSubmit(event) {
     setMessage(messageEl, "Signing you in...", "info");
     await setAuthPersistence(rememberDevice);
 
-    let resolvedEmail = loginValue;
     if (!loginValue.includes("@")) {
-      resolvedEmail = await findEmailFromLogin(loginValue);
-      if (!resolvedEmail) {
-        setMessage(messageEl, "Username not found.", "error");
-        return;
-      }
+      setMessage(messageEl, "For security, use your email address to sign in.", "error");
+      return;
     }
 
-    const result = await signInWithEmailAndPassword(auth, resolvedEmail, passwordValue);
+    const result = await signInWithEmailAndPassword(auth, loginValue, passwordValue);
     const user = result.user;
     const userData = await backfillLegacyUserDoc(user);
     const role = String(userData.role || DEFAULT_PUBLIC_ROLE).toLowerCase();
@@ -267,13 +268,6 @@ async function handleSignupSubmit(event) {
     setFormBusy(form, true, "Creating Account...", "Create Account");
     setMessage(messageEl, "Creating your customer account...", "info");
     await setAuthPersistence(rememberDevice);
-
-    const existingUsernameQuery = query(collection(db, "users"), where("usernameLower", "==", usernameLower), limit(1));
-    const existingUsernameSnap = await getDocs(existingUsernameQuery);
-    if (!existingUsernameSnap.empty) {
-      setMessage(messageEl, "That username is already taken.", "error");
-      return;
-    }
 
     const result = await createUserWithEmailAndPassword(auth, email, password);
     const user = result.user;
@@ -354,6 +348,23 @@ async function handleResetSubmit(event) {
   }
 }
 
+function injectProtectionNote(form, anchorSelector = ".auth-actions") {
+  if (!form || form.querySelector(".evaraos-app-check-note")) return;
+
+  const note = document.createElement("p");
+  note.className = "evaraos-app-check-note";
+  note.textContent = "Protected by Evaraos App Check and reCAPTCHA Enterprise.";
+  note.style.margin = "12px 0 0";
+  note.style.fontSize = "12px";
+  note.style.fontWeight = "800";
+  note.style.opacity = "0.68";
+  note.style.lineHeight = "1.4";
+
+  const anchor = form.querySelector(anchorSelector) || form.lastElementChild;
+  if (anchor?.parentElement) anchor.parentElement.insertBefore(note, anchor.nextSibling);
+  else form.appendChild(note);
+}
+
 function initLoginPage() {
   const form = byId("loginForm");
   if (!form) return;
@@ -368,6 +379,7 @@ function initSignupPage() {
 
   bindPasswordToggle("signupPasswordToggle", "signupPassword");
   bindPasswordToggle("signupPasswordConfirmToggle", "signupPasswordConfirm");
+  injectProtectionNote(form);
   form.addEventListener("submit", handleSignupSubmit);
 }
 

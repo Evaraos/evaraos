@@ -32,8 +32,7 @@ const AVAILABLE_STAFF_ROLES = [
   { value: "sales_rep", label: "Sales Rep" },
   { value: "technician", label: "Technician" },
   { value: "cleaner", label: "Cleaner" },
-  { value: "field_staff", label: "Field Staff" },
-  { value: "crew_lead", label: "Crew Lead" }
+  { value: "staff", label: "General Staff" }
 ];
 
 const form = document.getElementById("staffApplicationForm");
@@ -124,6 +123,14 @@ function validateForm() {
     throw new Error("Password must be at least 6 characters.");
   }
 
+  if (!value("appPasswordConfirm")) {
+    throw new Error("Confirm your password before submitting.");
+  }
+
+  if (value("appPassword") !== value("appPasswordConfirm")) {
+    throw new Error("Passwords do not match.");
+  }
+
   if (!checkboxValue("appConsentAccurate")) {
     throw new Error("Confirm that the application information is accurate before submitting.");
   }
@@ -134,10 +141,8 @@ function validateForm() {
   validateAttachment(fileValue("appProfilePhoto"), "Profile photo", false);
 }
 
-async function usernameAvailable(usernameLower) {
-  const q = query(collection(db, "users"), where("usernameLower", "==", usernameLower), limit(1));
-  const snap = await getDocs(q);
-  return snap.empty;
+async function usernameAvailable() {
+  return true;
 }
 
 function fileExtension(file = {}) {
@@ -247,12 +252,6 @@ async function handleSubmit(event) {
 
     const email = value("appEmail").toLowerCase();
     const usernameLower = normalizeUsername(email);
-    const usernameIsFree = await usernameAvailable(usernameLower);
-
-    if (!usernameIsFree) {
-      throw new Error("This email username is already connected to an account. Please sign in or use another email.");
-    }
-
     await setAuthPersistence(true);
     const result = await createUserWithEmailAndPassword(auth, email, value("appPassword"));
     const user = result.user;
@@ -327,6 +326,35 @@ async function handleSubmit(event) {
   } finally {
     setBusy(false);
   }
+}
+
+function injectConfirmPasswordField() {
+  if (document.getElementById("appPasswordConfirm")) return;
+
+  const passwordField = byId("appPassword")?.closest(".application-field");
+  if (!passwordField?.parentElement) return;
+
+  const confirmField = document.createElement("div");
+  confirmField.className = "application-field";
+  confirmField.innerHTML = `
+    <label for="appPasswordConfirm">Confirm password</label>
+    <input id="appPasswordConfirm" type="password" autocomplete="new-password" minlength="6" required />
+  `;
+
+  passwordField.parentElement.insertBefore(confirmField, passwordField.nextSibling);
+}
+
+function injectAppCheckNotice() {
+  if (!form || document.getElementById("staffAppCheckNotice")) return;
+
+  const notice = document.createElement("p");
+  notice.id = "staffAppCheckNotice";
+  notice.className = "application-notice";
+  notice.textContent = "Protected by Evaraos App Check and reCAPTCHA Enterprise. Submit only accurate information for review.";
+
+  const actions = document.querySelector(".application-actions");
+  if (actions?.parentElement) actions.parentElement.insertBefore(notice, actions);
+  else form.appendChild(notice);
 }
 
 function removeStaffInviteField() {
@@ -436,8 +464,10 @@ function injectDetailedApplicationFields() {
 function init() {
   if (!form) return;
   removeStaffInviteField();
+  injectConfirmPasswordField();
   upgradeRolePicker();
   injectDetailedApplicationFields();
+  injectAppCheckNotice();
   form.addEventListener("submit", handleSubmit);
 
   if (window.EvaraLoader?.markAppReady) {
