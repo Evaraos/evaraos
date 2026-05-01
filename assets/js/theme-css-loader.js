@@ -3,6 +3,14 @@
   const loadedStylesheets = new Set();
   let swRegistrationStarted = false;
 
+  function getAssetPath(value) {
+    try {
+      return new URL(value, window.location.origin).pathname;
+    } catch {
+      return String(value || "").split("?")[0];
+    }
+  }
+
   function markThemeHydrated() {
     document.documentElement.setAttribute("data-evara-theme-ready", "true");
   }
@@ -25,8 +33,17 @@
   }
 
   function loadStylesheetOnce(href, id) {
-    if (loadedStylesheets.has(href) || document.getElementById(id)) return;
-    loadedStylesheets.add(href);
+    const targetPath = getAssetPath(href);
+    const alreadyLoaded =
+      document.getElementById(id) ||
+      Array.from(document.querySelectorAll('link[rel="stylesheet"]')).some((link) => {
+        const current = link.getAttribute("href") || link.href || "";
+        return getAssetPath(current) === targetPath;
+      });
+
+    if (loadedStylesheets.has(targetPath) || alreadyLoaded) return;
+
+    loadedStylesheets.add(targetPath);
     const link = document.createElement("link");
     link.id = id;
     link.rel = "stylesheet";
@@ -35,7 +52,16 @@
   }
 
   function loadScriptOnce(src, id) {
-    if (document.getElementById(id)) return;
+    const targetPath = getAssetPath(src);
+    const alreadyLoaded =
+      document.getElementById(id) ||
+      Array.from(document.scripts).some((script) => {
+        const current = script.getAttribute("src") || script.src || "";
+        return getAssetPath(current) === targetPath;
+      });
+
+    if (alreadyLoaded) return;
+
     const script = document.createElement("script");
     script.id = id;
     script.src = src;
@@ -61,12 +87,11 @@
   }
 
   function bootGlobalModules() {
-    loadStylesheetOnce("/evaraos/assets/css/install-nav.css?v=5", "evaraInstallNavCss");
-    loadStylesheetOnce("/evaraos/assets/css/install-apple-hotfix.css?v=4", "evaraInstallAppleHotfixCss");
+    loadStylesheetOnce("/evaraos/assets/css/install-nav.css?v=6", "evaraInstallNavCss");
     loadModuleOnce("/evaraos/assets/js/evara-notifications.js?v=1");
     loadModuleOnce("/evaraos/assets/js/offline-staff-gate.js?v=1");
     loadScriptOnce("/evaraos/assets/js/performance-hotfix.js?v=1", "evaraPerformanceHotfixScript");
-    loadScriptOnce("/evaraos/assets/js/install.js?v=8", "evaraInstallScript");
+    loadScriptOnce("/evaraos/assets/js/install.js?v=9", "evaraInstallScript");
   }
 
   function bootPageModules() {
@@ -111,7 +136,7 @@
       attributeFilter: ["data-theme"]
     });
 
-    window.EvaraThemeCssLoader = {
+    const bootstrapApi = {
       syncCss,
       markThemeHydrated,
       bootPageModules,
@@ -130,6 +155,9 @@
         };
       }
     };
+
+    window.EvaraThemeCssLoader = bootstrapApi;
+    window.EvaraAppBootstrap = bootstrapApi;
   }
 
   if (document.readyState === "loading") {
