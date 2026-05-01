@@ -1,5 +1,6 @@
 const admin = require("firebase-admin");
 const { onDocumentCreated, onDocumentDeleted, onDocumentWritten } = require("firebase-functions/v2/firestore");
+const { onCall, HttpsError } = require("firebase-functions/v2/https");
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -17,6 +18,10 @@ function norm(value = "") {
 
 function safeKey(value = "unknown") {
   return norm(value).replace(/[^a-z0-9_]/g, "_") || "unknown";
+}
+
+function normalizeUsername(value = "") {
+  return norm(value).replace(/^@+/, "").replace(/\s+/g, "");
 }
 
 function getCompanyId(data = {}) {
@@ -146,6 +151,44 @@ function attachStats(type) {
     if (writes.length) await Promise.all(writes);
   });
 }
+
+exports.resolveUsernameLogin = onCall(
+  {
+    region: "us-central1",
+    enforceAppCheck: true,
+    cors: true
+  },
+  async (request) => {
+    const username = normalizeUsername(request.data?.username || "");
+
+    if (!username || username.length < 3 || username.length > 32) {
+      throw new HttpsError("invalid-argument", "Enter a valid username.");
+    }
+
+    if (!/^[a-z0-9._-]+$/.test(username)) {
+      throw new HttpsError("invalid-argument", "Enter a valid username.");
+    }
+
+    const usersSnap = await db
+      .collection("users")
+      .where("usernameLower", "==", username)
+      .limit(1)
+      .get();
+
+    if (usersSnap.empty) {
+      throw new HttpsError("not-found", "Account not found.");
+    }
+
+    const userData = usersSnap.docs[0].data() || {};
+    const email = String(userData.email || "").trim().toLowerCase();
+
+    if (!email || !email.includes("@")) {
+      throw new HttpsError("failed-precondition", "This account needs an email login first.");
+    }
+
+    return { email };
+  }
+);
 
 ["companies", "users", "leads", "jobs"].forEach(attachStats);
 exports.rebuildStats = require("./stats-rebuild").rebuildStats;
