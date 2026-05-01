@@ -2,6 +2,14 @@
   "projects": {
     "default": "evaraos-web"
   },
-  "targets": {},
+  "targets": {
+    "evaraos-web": {
+      "hosting": {
+        "production": [
+          "evaraos"
+        ]
+      }
+    }
+  },
   "etags": {}
 }
