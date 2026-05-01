@@ -1,11 +1,13 @@
 import {
   auth,
   db,
+  functions,
   setAuthPersistence,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
   updateProfile,
+  httpsCallable,
   syncUserSession,
   doc,
   getDoc,
@@ -290,6 +292,25 @@ async function findEmailFromLogin(loginValue) {
   return null;
 }
 
+
+async function resolveLoginEmail(loginValue) {
+  const raw = String(loginValue || "").trim();
+
+  if (!raw) return "";
+  if (raw.includes("@")) return raw;
+
+  const username = normalizeUsername(raw);
+  const resolveUsernameLogin = httpsCallable(functions, "resolveUsernameLogin");
+  const response = await resolveUsernameLogin({ username });
+  const email = String(response?.data?.email || "").trim();
+
+  if (!email || !email.includes("@")) {
+    throw new Error("Username not found. Use your email or check the spelling.");
+  }
+
+  return email;
+}
+
 async function handleLoginSubmit(event) {
   event.preventDefault();
 
@@ -308,22 +329,18 @@ async function handleLoginSubmit(event) {
     return;
   }
 
-  if (!email.includes("@")) {
-    setMessage(messageEl, "Use your email address to sign in.", "error");
-    return;
-  }
-
   try {
     setFormBusy(form, true, "Signing In...", "Login");
-    setMessage(messageEl, "Signing you in securely...", "info");
+    setMessage(messageEl, email.includes("@") ? "Signing you in securely..." : "Finding your username securely...", "info");
 
     await setAuthPersistence(rememberDevice);
 
-    const result = await signInWithEmailAndPassword(auth, email, password);
+    const resolvedEmail = await resolveLoginEmail(email);
+    const result = await signInWithEmailAndPassword(auth, resolvedEmail, password);
     const user = result.user;
 
     let profile = syncSafeSession(user, {
-      email: user.email || email,
+      email: user.email || resolvedEmail,
       displayName: user.displayName || user.email || email,
       status: DEFAULT_PUBLIC_STATUS,
       approvalStatus: DEFAULT_PUBLIC_APPROVAL
@@ -340,7 +357,7 @@ async function handleLoginSubmit(event) {
     redirectForRole(profile.role);
   } catch (error) {
     console.error("Login failed:", error);
-    setMessage(messageEl, authErrorMessage(error, "Login failed. Check your email/password and try again."), "error");
+    setMessage(messageEl, authErrorMessage(error, "Login failed. Check your username/email and password."), "error");
   } finally {
     setFormBusy(form, false, "Signing In...", "Login");
   }

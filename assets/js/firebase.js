@@ -18,6 +18,11 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 import {
+  getFunctions,
+  httpsCallable
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
+
+import {
   getFirestore,
   doc,
   collection,
@@ -72,6 +77,7 @@ try {
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const functions = getFunctions(app, "us-central1");
 
 const HISTORY_SKIP_COLLECTIONS = new Set(["audit_logs", "history_timeline"]);
 
@@ -85,6 +91,8 @@ export {
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
   updateProfile,
+  getFunctions,
+  httpsCallable,
   doc,
   collection,
   query,
