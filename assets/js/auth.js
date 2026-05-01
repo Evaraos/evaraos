@@ -68,63 +68,8 @@ function normalizeUsername(value) {
   return String(value || "").trim().toLowerCase();
 }
 
-function companyName(company = {}) {
-  return company.name || company.companyName || company.brand || company.title || "Untitled Company";
-}
-
-function companyStatus(company = {}) {
-  return String(company.status || company.health || company.state || "active").trim().toLowerCase();
-}
-
-async function loadCompaniesForSignup() {
-  try {
-    const snap = await getDocs(collection(db, "companies"));
-    return snap.docs
-      .map((companyDoc) => ({ id: companyDoc.id, ...companyDoc.data() }))
-      .sort((a, b) => companyName(a).localeCompare(companyName(b)));
-  } catch (error) {
-    console.warn("Could not load companies for signup:", error);
-    return [];
-  }
-}
-
-function injectSignupCompanySelector(companies = []) {
-  const form = byId("signupForm");
-  const usernameInput = byId("signupUsername");
-
-  if (!form || !usernameInput || byId("signupCompanyId")) return;
-
-  const wrapper = document.createElement("div");
-  wrapper.className = "form-group";
-  wrapper.innerHTML = `
-    <label class="field-label" for="signupCompanyId">Company / Workspace</label>
-    <div class="input-shell aurora-card beam-target">
-      <select id="signupCompanyId" name="companyId" class="input">
-        <option value="">No company yet / customer portal</option>
-        ${companies.map((company) => {
-          const id = String(company.id || "").replace(/"/g, "&quot;");
-          const name = String(companyName(company)).replace(/</g, "&lt;").replace(/>/g, "&gt;");
-          const status = companyStatus(company);
-          return `<option value="${id}">${name}${status ? ` • ${status}` : ""}</option>`;
-        }).join("")}
-      </select>
-    </div>
-  `;
-
-  const usernameGroup = usernameInput.closest(".form-group");
-  const parentGrid = usernameGroup?.parentElement;
-
-  if (parentGrid?.classList.contains("form-grid-2")) {
-    parentGrid.appendChild(wrapper);
-  } else {
-    form.insertBefore(wrapper, form.querySelector(".login-actions-row"));
-  }
-}
-
-function getSelectedSignupCompany(companies = []) {
-  const companyId = String(byId("signupCompanyId")?.value || "").trim();
-  if (!companyId) return null;
-  return companies.find((company) => String(company.id) === companyId) || null;
+function safeProfileName(user) {
+  return user?.displayName || user?.email || "User";
 }
 
 async function backfillLegacyUserDoc(user) {
@@ -133,7 +78,8 @@ async function backfillLegacyUserDoc(user) {
       role: DEFAULT_PUBLIC_ROLE,
       username: "",
       status: DEFAULT_PUBLIC_STATUS,
-      approvalStatus: DEFAULT_PUBLIC_APPROVAL
+      approvalStatus: DEFAULT_PUBLIC_APPROVAL,
+      companyId: ""
     };
   }
 
@@ -141,7 +87,7 @@ async function backfillLegacyUserDoc(user) {
   const snap = await getDoc(userRef);
 
   if (!snap.exists()) {
-    const fallbackName = user.displayName || user.email || "User";
+    const fallbackName = safeProfileName(user);
     const userDoc = {
       uid: user.uid,
       id: user.uid,
@@ -158,6 +104,8 @@ async function backfillLegacyUserDoc(user) {
       approvalStatus: DEFAULT_PUBLIC_APPROVAL,
       companyId: "",
       companyName: "",
+      companySlug: "",
+      companyCategory: "",
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
@@ -171,30 +119,18 @@ async function backfillLegacyUserDoc(user) {
 
   if (!data.id) patch.id = user.uid;
   if (!data.uid) patch.uid = user.uid;
-
-  if (!data.displayName && data.fullName) {
-    patch.displayName = data.fullName;
-  }
-
-  if (!data.fullName && data.displayName) {
-    patch.fullName = data.displayName;
-  }
-
-  if (!data.name && (data.displayName || data.fullName)) {
-    patch.name = data.displayName || data.fullName;
-  }
-
-  if (username && !data.usernameLower) {
-    patch.usernameLower = normalizeUsername(username);
-  }
-
-  if (!data.role) {
-    patch.role = DEFAULT_PUBLIC_ROLE;
-  }
-
+  if (!data.displayName && data.fullName) patch.displayName = data.fullName;
+  if (!data.fullName && data.displayName) patch.fullName = data.displayName;
+  if (!data.name && (data.displayName || data.fullName)) patch.name = data.displayName || data.fullName;
+  if (username && !data.usernameLower) patch.usernameLower = normalizeUsername(username);
+  if (!data.role) patch.role = DEFAULT_PUBLIC_ROLE;
   if (!data.status) patch.status = DEFAULT_PUBLIC_STATUS;
   if (!data.approvalStatus) patch.approvalStatus = DEFAULT_PUBLIC_APPROVAL;
-  if (!data.updatedAt) patch.updatedAt = serverTimestamp();
+  if (typeof data.companyId !== "string") patch.companyId = "";
+  if (typeof data.companyName !== "string") patch.companyName = "";
+  if (typeof data.companySlug !== "string") patch.companySlug = "";
+  if (typeof data.companyCategory !== "string") patch.companyCategory = "";
+  patch.updatedAt = serverTimestamp();
 
   if (Object.keys(patch).length) {
     await setDoc(userRef, patch, { merge: true });
@@ -209,25 +145,22 @@ async function backfillLegacyUserDoc(user) {
 async function findEmailFromLogin(loginValue) {
   const raw = String(loginValue || "").trim();
   if (!raw) return null;
-
-  if (raw.includes("@")) {
-    return raw;
-  }
+  if (raw.includes("@")) return raw;
 
   const normalized = normalizeUsername(raw);
   const usersRef = collection(db, "users");
 
-  const q1 = query(usersRef, where("username", "==", raw), limit(1));
-  const s1 = await getDocs(q1);
-  if (!s1.empty) {
-    const data = s1.docs[0].data() || {};
+  const exactUsernameQuery = query(usersRef, where("username", "==", raw), limit(1));
+  const exactUsernameSnap = await getDocs(exactUsernameQuery);
+  if (!exactUsernameSnap.empty) {
+    const data = exactUsernameSnap.docs[0].data() || {};
     if (data.email) return data.email;
   }
 
-  const q2 = query(usersRef, where("usernameLower", "==", normalized), limit(1));
-  const s2 = await getDocs(q2);
-  if (!s2.empty) {
-    const data = s2.docs[0].data() || {};
+  const normalizedUsernameQuery = query(usersRef, where("usernameLower", "==", normalized), limit(1));
+  const normalizedUsernameSnap = await getDocs(normalizedUsernameQuery);
+  if (!normalizedUsernameSnap.empty) {
+    const data = normalizedUsernameSnap.docs[0].data() || {};
     if (data.email) return data.email;
   }
 
@@ -268,7 +201,6 @@ async function handleLoginSubmit(event) {
 
     const result = await signInWithEmailAndPassword(auth, resolvedEmail, passwordValue);
     const user = result.user;
-
     const userData = await backfillLegacyUserDoc(user);
     const role = String(userData.role || DEFAULT_PUBLIC_ROLE).toLowerCase();
 
@@ -278,6 +210,7 @@ async function handleLoginSubmit(event) {
       name: userData.name || userData.fullName || userData.displayName || user.displayName || "",
       username: userData.username || "",
       companyId: userData.companyId || "",
+      companyName: userData.companyName || "",
       approvalStatus: userData.approvalStatus || DEFAULT_PUBLIC_APPROVAL,
       status: userData.status || DEFAULT_PUBLIC_STATUS
     });
@@ -332,32 +265,20 @@ async function handleSignupSubmit(event) {
 
   try {
     setFormBusy(form, true, "Creating Account...", "Create Account");
-    setMessage(messageEl, "Creating your account...", "info");
+    setMessage(messageEl, "Creating your customer account...", "info");
     await setAuthPersistence(rememberDevice);
 
-    const existingUsernameQuery = query(
-      collection(db, "users"),
-      where("usernameLower", "==", usernameLower),
-      limit(1)
-    );
+    const existingUsernameQuery = query(collection(db, "users"), where("usernameLower", "==", usernameLower), limit(1));
     const existingUsernameSnap = await getDocs(existingUsernameQuery);
-
     if (!existingUsernameSnap.empty) {
       setMessage(messageEl, "That username is already taken.", "error");
       return;
     }
 
-    const companies = window.EvaraSignupCompanies || [];
-    const selectedCompany = getSelectedSignupCompany(companies);
-    const selectedCompanyId = selectedCompany?.id || "";
-    const selectedCompanyName = selectedCompany ? companyName(selectedCompany) : "";
-
     const result = await createUserWithEmailAndPassword(auth, email, password);
     const user = result.user;
 
-    await updateProfile(user, {
-      displayName: fullName
-    });
+    await updateProfile(user, { displayName: fullName });
 
     const userDoc = {
       uid: user.uid,
@@ -373,10 +294,10 @@ async function handleSignupSubmit(event) {
       bio: "",
       status: DEFAULT_PUBLIC_STATUS,
       approvalStatus: DEFAULT_PUBLIC_APPROVAL,
-      companyId: selectedCompanyId,
-      companyName: selectedCompanyName,
-      companySlug: selectedCompany?.slug || "",
-      companyCategory: selectedCompany?.category || selectedCompany?.industry || "",
+      companyId: "",
+      companyName: "",
+      companySlug: "",
+      companyCategory: "",
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
@@ -388,7 +309,8 @@ async function handleSignupSubmit(event) {
       fullName,
       name: fullName,
       username,
-      companyId: selectedCompanyId,
+      companyId: "",
+      companyName: "",
       approvalStatus: DEFAULT_PUBLIC_APPROVAL,
       status: DEFAULT_PUBLIC_STATUS
     });
@@ -440,17 +362,12 @@ function initLoginPage() {
   form.addEventListener("submit", handleLoginSubmit);
 }
 
-async function initSignupPage() {
+function initSignupPage() {
   const form = byId("signupForm");
   if (!form) return;
 
   bindPasswordToggle("signupPasswordToggle", "signupPassword");
   bindPasswordToggle("signupPasswordConfirmToggle", "signupPasswordConfirm");
-
-  const companies = await loadCompaniesForSignup();
-  window.EvaraSignupCompanies = companies;
-  injectSignupCompanySelector(companies);
-
   form.addEventListener("submit", handleSignupSubmit);
 }
 
