@@ -147,6 +147,124 @@ async function backfillLegacyUserDoc(user) {
   };
 }
 
+
+function authErrorMessage(error, fallback = "Something went wrong. Try again.") {
+  const code = String(error?.code || "");
+
+  if (code.includes("invalid-credential") || code.includes("wrong-password") || code.includes("user-not-found")) {
+    return "Login failed. Check your email and password.";
+  }
+
+  if (code.includes("too-many-requests")) {
+    return "Too many attempts. Wait a moment, then try again.";
+  }
+
+  if (code.includes("email-already-in-use")) {
+    return "That email already has an account. Use login or reset password.";
+  }
+
+  if (code.includes("weak-password")) {
+    return "Password must be at least 6 characters.";
+  }
+
+  if (code.includes("permission-denied")) {
+    return "You signed in, but profile access was blocked. Refresh and try again.";
+  }
+
+  return error?.message || fallback;
+}
+
+function normalizeUserData(data = {}, user = {}) {
+  const displayName = data.displayName || data.fullName || data.name || safeProfileName(user);
+
+  return {
+    uid: data.uid || user.uid || "",
+    id: data.id || user.uid || "",
+    email: data.email || user.email || "",
+    username: data.username || "",
+    usernameLower: data.usernameLower || normalizeUsername(data.username || ""),
+    displayName,
+    fullName: data.fullName || displayName,
+    name: data.name || displayName,
+    role: data.role || DEFAULT_PUBLIC_ROLE,
+    status: data.status || DEFAULT_PUBLIC_STATUS,
+    approvalStatus: data.approvalStatus || DEFAULT_PUBLIC_APPROVAL,
+    companyId: typeof data.companyId === "string" ? data.companyId : "",
+    companyName: typeof data.companyName === "string" ? data.companyName : "",
+    companySlug: typeof data.companySlug === "string" ? data.companySlug : "",
+    companyCategory: typeof data.companyCategory === "string" ? data.companyCategory : ""
+  };
+}
+
+async function loadOrCreateUserProfile(user, preferredProfile = {}) {
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
+
+  if (snap.exists()) {
+    return normalizeUserData(snap.data() || {}, user);
+  }
+
+  const fallbackName = preferredProfile.displayName || safeProfileName(user);
+  const newProfile = {
+    uid: user.uid,
+    id: user.uid,
+    email: user.email || "",
+    username: preferredProfile.username || "",
+    usernameLower: normalizeUsername(preferredProfile.username || ""),
+    displayName: fallbackName,
+    fullName: fallbackName,
+    name: fallbackName,
+    role: DEFAULT_PUBLIC_ROLE,
+    phone: "",
+    bio: "",
+    status: DEFAULT_PUBLIC_STATUS,
+    approvalStatus: DEFAULT_PUBLIC_APPROVAL,
+    companyId: "",
+    companyName: "",
+    companySlug: "",
+    companyCategory: "",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  };
+
+  await setDoc(userRef, newProfile, { merge: true });
+  return newProfile;
+}
+
+function syncSafeSession(user, extras = {}) {
+  const profile = normalizeUserData(extras, user);
+
+  syncUserSession(user, profile.role || DEFAULT_PUBLIC_ROLE, {
+    displayName: profile.displayName,
+    fullName: profile.fullName,
+    name: profile.name,
+    username: profile.username,
+    companyId: profile.companyId,
+    companyName: profile.companyName,
+    approvalStatus: profile.approvalStatus,
+    status: profile.status
+  });
+
+  return profile;
+}
+
+function redirectForRole(role = DEFAULT_PUBLIC_ROLE) {
+  const normalized = String(role || DEFAULT_PUBLIC_ROLE).toLowerCase();
+
+  if (normalized === "customer") {
+    navigateWithLoader("/customer_dashboard.html", {
+      title: "Opening portal",
+      subtitle: "Loading your customer portal."
+    });
+    return;
+  }
+
+  navigateWithLoader("/dashboard.html", {
+    title: "Opening dashboard",
+    subtitle: "Loading your Evaraos workspace."
+  });
+}
+
 async function findEmailFromLogin(loginValue) {
   const raw = String(loginValue || "").trim();
   if (!raw) return null;
@@ -181,49 +299,48 @@ async function handleLoginSubmit(event) {
   const rememberInput = byId("rememberDevice");
   const messageEl = byId("loginMessage");
 
-  const loginValue = emailInput?.value?.trim() || "";
-  const passwordValue = passwordInput?.value || "";
+  const email = emailInput?.value?.trim() || "";
+  const password = passwordInput?.value || "";
   const rememberDevice = !!rememberInput?.checked;
 
-  if (!loginValue || !passwordValue) {
-    setMessage(messageEl, "Enter your email or username and password.", "error");
+  if (!email || !password) {
+    setMessage(messageEl, "Enter your email and password.", "error");
+    return;
+  }
+
+  if (!email.includes("@")) {
+    setMessage(messageEl, "Use your email address to sign in.", "error");
     return;
   }
 
   try {
     setFormBusy(form, true, "Signing In...", "Login");
-    setMessage(messageEl, "Signing you in...", "info");
+    setMessage(messageEl, "Signing you in securely...", "info");
+
     await setAuthPersistence(rememberDevice);
 
-    if (!loginValue.includes("@")) {
-      setMessage(messageEl, "For security, use your email address to sign in.", "error");
-      return;
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    const user = result.user;
+
+    let profile = syncSafeSession(user, {
+      email: user.email || email,
+      displayName: user.displayName || user.email || email,
+      status: DEFAULT_PUBLIC_STATUS,
+      approvalStatus: DEFAULT_PUBLIC_APPROVAL
+    });
+
+    try {
+      profile = await loadOrCreateUserProfile(user);
+      syncSafeSession(user, profile);
+    } catch (profileError) {
+      console.warn("Profile sync skipped after login:", profileError);
     }
 
-    const result = await signInWithEmailAndPassword(auth, loginValue, passwordValue);
-    const user = result.user;
-    const userData = await backfillLegacyUserDoc(user);
-    const role = String(userData.role || DEFAULT_PUBLIC_ROLE).toLowerCase();
-
-    syncUserSession(user, role, {
-      displayName: userData.displayName || userData.fullName || userData.name || user.displayName || user.email || "User",
-      fullName: userData.fullName || userData.displayName || userData.name || user.displayName || "",
-      name: userData.name || userData.fullName || userData.displayName || user.displayName || "",
-      username: userData.username || "",
-      companyId: userData.companyId || "",
-      companyName: userData.companyName || "",
-      approvalStatus: userData.approvalStatus || DEFAULT_PUBLIC_APPROVAL,
-      status: userData.status || DEFAULT_PUBLIC_STATUS
-    });
-
     setMessage(messageEl, "Login successful. Redirecting...", "success");
-    navigateWithLoader(role === "customer" ? "/customer_dashboard.html" : "/dashboard.html", {
-      title: role === "customer" ? "Opening portal" : "Opening dashboard",
-      subtitle: role === "customer" ? "Loading your customer portal." : "Loading your Evaraos workspace."
-    });
+    redirectForRole(profile.role);
   } catch (error) {
     console.error("Login failed:", error);
-    setMessage(messageEl, "Login failed. Check your credentials and try again.", "error");
+    setMessage(messageEl, authErrorMessage(error, "Login failed. Check your email/password and try again."), "error");
   } finally {
     setFormBusy(form, false, "Signing In...", "Login");
   }
@@ -316,7 +433,7 @@ async function handleSignupSubmit(event) {
     });
   } catch (error) {
     console.error("Signup failed:", error);
-    setMessage(messageEl, error.message || "Could not create account. Try again.", "error");
+    setMessage(messageEl, authErrorMessage(error, "Could not create account. Try again."), "error");
   } finally {
     setFormBusy(form, false, "Creating Account...", "Create Account");
   }
@@ -342,7 +459,7 @@ async function handleResetSubmit(event) {
     setMessage(messageEl, "Password reset email sent. Check your inbox.", "success");
   } catch (error) {
     console.error("Reset failed:", error);
-    setMessage(messageEl, "Could not send reset email. Try again.", "error");
+    setMessage(messageEl, authErrorMessage(error, "Could not send reset email. Try again."), "error");
   } finally {
     setFormBusy(form, false, "Sending Reset Link...", "Send Reset Link");
   }
