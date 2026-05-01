@@ -1,0 +1,30 @@
+# Secrets / local environment
+.env
+.env.*
+!.env.example
+functions/.env
+functions/.env.*
+
+# Dependencies
+node_modules/
+functions/node_modules/
+
+# Firebase / local debug files
+.firebase/
+firebase-debug.log
+firestore-debug.log
+database-debug.log
+pubsub-debug.log
+storage-debug.log
+ui-debug.log
+
+# OS / editor files
+.DS_Store
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
