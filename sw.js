@@ -1,4 +1,4 @@
-const CACHE_VERSION = "evaraos-stable-v19";
+const CACHE_VERSION = "evaraos-stable-v20";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 
 const CORE_ASSETS = [
@@ -11,9 +11,9 @@ const CORE_ASSETS = [
   "/manifest.json",
   "/assets/css/base.css?v=34",
   "/assets/css/theme.css?v=36",
-  "/assets/css/nav.css?v=42",
+  "/assets/css/nav.css?v=43",
   "/assets/css/install-nav.css?v=5",
-  "/assets/css/home.css?v=37",
+  "/assets/css/home.css?v=38",
   "/assets/css/dashboard.css?v=34",
   "/assets/css/mobile-polish.css?v=1",
   "/assets/css/premium-leads.css?v=1",

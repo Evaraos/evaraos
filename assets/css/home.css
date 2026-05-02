@@ -574,3 +574,47 @@ html[data-theme="galaxy"] .hero-home::before {
     margin-top: -16px !important;
   }
 }
+
+/* =========================================================
+   FINAL HOME BALANCE
+   Moves homepage content down slightly so the nav has
+   breathing room while keeping the hero tight.
+   ========================================================= */
+
+@media (max-width: 680px) {
+  .home-shell {
+    padding-top: 18px !important;
+  }
+
+  .hero-home {
+    margin-top: -6px !important;
+  }
+
+  .hero-kicker {
+    margin-top: 4px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .home-shell {
+    padding-top: 16px !important;
+  }
+
+  .hero-home {
+    margin-top: -4px !important;
+  }
+
+  .hero-kicker {
+    margin-top: 4px !important;
+  }
+}
+
+@media (display-mode: standalone) and (max-width: 680px) {
+  .home-shell {
+    padding-top: 16px !important;
+  }
+
+  .hero-home {
+    margin-top: -4px !important;
+  }
+}

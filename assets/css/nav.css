@@ -1247,3 +1247,69 @@ body.login-page #appRoot {
     transform: translateY(-3px) !important;
   }
 }
+
+/* =========================================================
+   FINAL BALANCE: Nav + Page Breathing Room
+   Slightly lowers the Dynamic Island pill and gives pages
+   clean space below it without creating the huge gap again.
+   ========================================================= */
+
+@media (max-width: 680px) {
+  .eva-nav-shell,
+  .eva-nav-shell.expanded,
+  .eva-nav-shell.compact {
+    transform: translateY(2px) !important;
+  }
+
+  .page-shell,
+  .app-shell,
+  .dashboard-shell,
+  .settings-shell,
+  .profile-shell,
+  .security-shell,
+  .applications-shell,
+  .users-shell,
+  .companies-shell,
+  .leads-shell,
+  .jobs-shell,
+  .qa-shell,
+  .audit-shell,
+  main.container,
+  main.page-container {
+    padding-top: 124px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .eva-nav-shell,
+  .eva-nav-shell.expanded,
+  .eva-nav-shell.compact {
+    transform: translateY(2px) !important;
+  }
+
+  .page-shell,
+  .app-shell,
+  .dashboard-shell,
+  .settings-shell,
+  .profile-shell,
+  .security-shell,
+  .applications-shell,
+  .users-shell,
+  .companies-shell,
+  .leads-shell,
+  .jobs-shell,
+  .qa-shell,
+  .audit-shell,
+  main.container,
+  main.page-container {
+    padding-top: 118px !important;
+  }
+}
+
+@media (display-mode: standalone) and (max-width: 680px) {
+  .eva-nav-shell,
+  .eva-nav-shell.expanded,
+  .eva-nav-shell.compact {
+    transform: translateY(2px) !important;
+  }
+}
