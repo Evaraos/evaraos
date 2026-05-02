@@ -5,14 +5,18 @@ export function getMount() {
 }
 
 export function getBasePath() {
-  const path = window.location.pathname;
-  const marker = "/";
-  const index = path.indexOf(marker);
-  return index >= 0 ? path.slice(0, index + marker.length - 1) : "/evaraos";
+  const path = window.location.pathname || "/";
+  const segments = path.split("/").filter(Boolean);
+  const last = segments[segments.length - 1] || "";
+  const isFile = /\.[a-z0-9]+$/i.test(last);
+
+  if (!segments.length || isFile) return "";
+  return `/${segments.join("/")}`;
 }
 
 export function buildHref(page) {
-  return `${getBasePath()}/${page}`;
+  const base = getBasePath();
+  return `${base}/${page}`;
 }
 
 export function normalizePage(path) {
