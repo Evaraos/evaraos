@@ -218,7 +218,13 @@ export function renderNav() {
             <p>EVARAOS</p>
             <h2>${groups.authed ? "Executive Control" : "Control Center"}</h2>
           </div>
-          <span class="eva-menu-badge">${groups.authed ? groups.role : "Guest"}</span>
+          <div class="eva-menu-actions">
+            <span class="eva-menu-badge">${groups.authed ? groups.role : "Guest"}</span>
+            <button type="button" class="eva-menu-close-btn" id="evaMenuCloseBtn" aria-label="Close Control Center">
+              <span></span>
+              <span></span>
+            </button>
+          </div>
         </div>
 
         <label class="eva-search">
