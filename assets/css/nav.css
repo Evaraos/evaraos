@@ -1218,3 +1218,32 @@ body.login-page #appRoot {
     transform: translateY(-7px) !important;
   }
 }
+
+/* =========================================================
+   FINAL: Lower Compact Dynamic Island Pill Slightly
+   Fixes top clipping while keeping the pill high and clean.
+   ========================================================= */
+
+@media (max-width: 680px) {
+  .eva-nav-shell,
+  .eva-nav-shell.expanded,
+  .eva-nav-shell.compact {
+    transform: translateY(-3px) !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .eva-nav-shell,
+  .eva-nav-shell.expanded,
+  .eva-nav-shell.compact {
+    transform: translateY(-4px) !important;
+  }
+}
+
+@media (display-mode: standalone) and (max-width: 680px) {
+  .eva-nav-shell,
+  .eva-nav-shell.expanded,
+  .eva-nav-shell.compact {
+    transform: translateY(-3px) !important;
+  }
+}
