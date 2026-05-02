@@ -1472,5 +1472,267 @@
 </script>
 <!-- /EVARAOS DOT PWA HIT + POSITION TUNE -->
 
+
+<!-- EVARAOS DOT HITPAD + AUTO CLOSE TUNE -->
+<style id="evaDotHitPadAutoCloseTune">
+  :root {
+    /* dot hair smaller + hair right from last tune */
+    --eva-hard-dot-size-final: 36px !important;
+    --eva-hard-dot-logo-final: 28px !important;
+    --eva-hard-dot-left-final: calc(50% - 82px) !important;
+  }
+
+  /* Kill default button/card look on the tap pad */
+  #evaHardDotTapPad {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+
+    color: transparent !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+
+    /*
+      This is the invisible vertical pill hit area:
+      same width as the dot, taller length so the PWA can tap it
+      below the Dynamic Island blocked zone.
+    */
+    width: var(--eva-hard-dot-size-final) !important;
+    height: 92px !important;
+
+    left: var(--eva-hard-dot-left-final) !important;
+    top: var(--eva-hard-dot-top-final) !important;
+
+    transform: translate(-50%, -6px) !important;
+    border-radius: 999px !important;
+
+    background: rgba(0, 0, 0, 0.001) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+
+    opacity: 1 !important;
+    overflow: hidden !important;
+
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  #evaHardDotTapPad::before,
+  #evaHardDotTapPad::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  body.eva-hard-compact #evaHardDotTapPad {
+    display: block !important;
+    pointer-events: auto !important;
+  }
+
+  body.eva-hard-expanded #evaHardDotTapPad,
+  body.eva-hard-menu-open #evaHardDotTapPad {
+    display: none !important;
+    pointer-events: none !important;
+  }
+
+  /* PWA standalone gets a little more touch length, still invisible */
+  @media (display-mode: standalone) {
+    #evaHardDotTapPad {
+      height: 104px !important;
+      transform: translate(-50%, -4px) !important;
+      background: rgba(0, 0, 0, 0.001) !important;
+    }
+  }
+
+  @media (max-width: 430px) {
+    :root {
+      --eva-hard-dot-size-final: 36px !important;
+      --eva-hard-dot-logo-final: 28px !important;
+      --eva-hard-dot-left-final: calc(50% - 82px) !important;
+    }
+  }
+
+  @media (max-width: 390px) {
+    :root {
+      --eva-hard-dot-size-final: 35px !important;
+      --eva-hard-dot-logo-final: 27px !important;
+      --eva-hard-dot-left-final: calc(50% - 77px) !important;
+    }
+  }
+</style>
+
+<script id="evaDotHitPadAutoCloseTuneScript">
+(function () {
+  var evaHardAutoCloseTimer = null;
+  var evaHardLastScrollY = window.scrollY || 0;
+
+  function isExpandedOnly() {
+    return document.body.classList.contains("eva-hard-expanded") &&
+      !document.body.classList.contains("eva-hard-menu-open");
+  }
+
+  function hardCompact() {
+    clearTimeout(evaHardAutoCloseTimer);
+    evaHardAutoCloseTimer = null;
+
+    document.body.classList.remove("eva-hard-expanded", "eva-hard-menu-open");
+    document.body.classList.add("eva-hard-compact");
+  }
+
+  function hardExpand() {
+    document.body.classList.remove("eva-hard-compact", "eva-hard-menu-open");
+    document.body.classList.add("eva-hard-expanded");
+    startAutoCloseTimer();
+  }
+
+  function hardMenuOpen() {
+    clearTimeout(evaHardAutoCloseTimer);
+    evaHardAutoCloseTimer = null;
+
+    document.body.classList.remove("eva-hard-compact");
+    document.body.classList.add("eva-hard-expanded", "eva-hard-menu-open");
+  }
+
+  function startAutoCloseTimer() {
+    clearTimeout(evaHardAutoCloseTimer);
+
+    if (!isExpandedOnly()) return;
+
+    evaHardAutoCloseTimer = setTimeout(function () {
+      if (isExpandedOnly()) hardCompact();
+    }, 4000);
+  }
+
+  function resetAutoCloseTimer() {
+    if (isExpandedOnly()) startAutoCloseTimer();
+  }
+
+  function installFinalBehavior() {
+    var nav = document.getElementById("evaHardNav");
+    var menuBtn = document.querySelector(".eva-hard-menu-btn");
+    var backdrop = document.querySelector(".eva-hard-backdrop");
+    var tapPad = document.getElementById("evaHardDotTapPad");
+
+    if (!nav) return;
+
+    /* Replace previous click behavior with stronger final behavior */
+    if (nav.dataset.autoCloseFinalBound !== "true") {
+      nav.dataset.autoCloseFinalBound = "true";
+
+      nav.addEventListener("click", function (event) {
+        if (event.target.closest(".eva-hard-menu-btn, .eva-hard-theme")) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (document.body.classList.contains("eva-hard-compact")) {
+          hardExpand();
+        } else {
+          hardCompact();
+        }
+      }, true);
+
+      nav.addEventListener("pointerdown", resetAutoCloseTimer, true);
+      nav.addEventListener("touchstart", resetAutoCloseTimer, { passive: true, capture: true });
+      nav.addEventListener("mousemove", resetAutoCloseTimer, true);
+    }
+
+    if (tapPad && tapPad.dataset.autoCloseTapPadBound !== "true") {
+      tapPad.dataset.autoCloseTapPadBound = "true";
+
+      tapPad.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        hardExpand();
+      }, true);
+
+      tapPad.addEventListener("touchstart", function (event) {
+        event.stopPropagation();
+      }, { passive: true, capture: true });
+    }
+
+    if (menuBtn && menuBtn.dataset.autoCloseMenuFinalBound !== "true") {
+      menuBtn.dataset.autoCloseMenuFinalBound = "true";
+
+      menuBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (document.body.classList.contains("eva-hard-menu-open")) {
+          hardCompact();
+        } else {
+          hardMenuOpen();
+        }
+      }, true);
+    }
+
+    if (backdrop && backdrop.dataset.autoCloseBackdropFinalBound !== "true") {
+      backdrop.dataset.autoCloseBackdropFinalBound = "true";
+
+      backdrop.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        hardCompact();
+      }, true);
+    }
+  }
+
+  function bindScrollClose() {
+    if (window.evaHardScrollCloseBound === true) return;
+    window.evaHardScrollCloseBound = true;
+
+    window.addEventListener("scroll", function () {
+      var y = window.scrollY || 0;
+      var delta = Math.abs(y - evaHardLastScrollY);
+      evaHardLastScrollY = y;
+
+      if (delta < 2) return;
+
+      if (
+        document.body.classList.contains("eva-hard-expanded") ||
+        document.body.classList.contains("eva-hard-menu-open")
+      ) {
+        hardCompact();
+      }
+    }, { passive: true });
+
+    window.addEventListener("wheel", function () {
+      if (
+        document.body.classList.contains("eva-hard-expanded") ||
+        document.body.classList.contains("eva-hard-menu-open")
+      ) {
+        hardCompact();
+      }
+    }, { passive: true });
+
+    window.addEventListener("touchmove", function () {
+      if (
+        document.body.classList.contains("eva-hard-expanded") ||
+        document.body.classList.contains("eva-hard-menu-open")
+      ) {
+        hardCompact();
+      }
+    }, { passive: true });
+  }
+
+  function boot() {
+    installFinalBehavior();
+    bindScrollClose();
+
+    setTimeout(installFinalBehavior, 300);
+    setTimeout(installFinalBehavior, 1000);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot, { once: true });
+  } else {
+    boot();
+  }
+})();
+</script>
+<!-- /EVARAOS DOT HITPAD + AUTO CLOSE TUNE -->
+
 </body>
 </html>
