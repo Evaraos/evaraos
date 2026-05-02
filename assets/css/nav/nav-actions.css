@@ -1,0 +1,56 @@
+/* NAV ACTIONS: theme toggle + hamburger */
+
+.eva-menu-zone {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 2147483647;
+  pointer-events: auto;
+}
+
+#evaThemePillToggle {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+}
+
+.eva-theme-nav-icon::before {
+  content: "☾";
+  font-size: 20px;
+}
+
+html[data-theme="dark"] .eva-theme-nav-icon::before {
+  content: "☀";
+}
+
+#evaMenuBtn {
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.eva-burger-line {
+  position: absolute;
+  width: 25px;
+  height: 3px;
+  background: #10231e;
+}
+
+body.nav-menu-open .eva-burger-line.top {
+  transform: rotate(45deg);
+}
+
+body.nav-menu-open .eva-burger-line.bot {
+  transform: rotate(-45deg);
+}
