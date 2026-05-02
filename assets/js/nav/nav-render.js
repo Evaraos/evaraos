@@ -21,7 +21,7 @@ function appTile(page, label, icon, tone = "") {
       data-label="${safeLabel}"
       aria-label="${label}"
     >
-      <span class="eva-link-icon eva-app-icon">${iconSvg(icon)}</span>
+      <span class="eva-link-icon eva-liquid-app-icon">${iconSvg(icon)}</span>
       <span class="eva-link-label eva-app-label">${label}</span>
     </a>
   `;
@@ -96,7 +96,7 @@ export function renderNav() {
 
         <div class="eva-app-grid eva-account-grid">
           <button type="button" class="eva-link eva-app-tile eva-account-tile tile-logout" id="evaLogoutBtn" data-label="logout" aria-label="Logout">
-            <span class="eva-link-icon eva-app-icon">
+            <span class="eva-link-icon eva-liquid-app-icon">
               <svg viewBox="0 0 24 24" focusable="false">
                 <path d="M10 7V5.5A2.5 2.5 0 0 1 12.5 3h5A2.5 2.5 0 0 1 20 5.5v13A2.5 2.5 0 0 1 17.5 21h-5A2.5 2.5 0 0 1 10 18.5V17"/>
                 <path d="M4 12h10"/>
@@ -107,7 +107,7 @@ export function renderNav() {
           </button>
 
           <button type="button" class="eva-link eva-app-tile eva-account-tile tile-theme" id="evaThemeToggle" data-label="theme mode" aria-label="Toggle theme">
-            <span class="eva-link-icon eva-app-icon">
+            <span class="eva-link-icon eva-liquid-app-icon">
               <svg viewBox="0 0 24 24" focusable="false">
                 <path d="M12 3v2"/>
                 <path d="M12 19v2"/>
