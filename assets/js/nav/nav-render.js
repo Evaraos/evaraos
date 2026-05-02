@@ -71,7 +71,7 @@ export function renderNav() {
   if (!mount) return false;
 
   const groups = getVisibleLinks();
-  const quickBubbles = groups.quick.map((item) => bubbleLink(item.page, item.label, item.icon, item.bubble)).join("");
+  const quickBubbles = "";
 
   const publicNavigation = groups.main.filter((item) =>
     ["index.html"].includes(item.page)

@@ -1,4 +1,5 @@
 import { NAV_STATE } from "./nav-config.js";
+
 import {
   getMenuZone,
   getMenuBtn,
@@ -8,7 +9,6 @@ import {
 import {
   expandNav,
   setTarget,
-  atTopOfPage,
   hideQuickBubbles
 } from "./nav-scroll.js";
 
@@ -64,14 +64,13 @@ export function openMenu() {
   if (!zone || !btn) return;
 
   hideQuickBubbles();
+  expandNav(true, "tap");
   updateMenuViewportFit();
   lockBodyScroll();
 
   document.body.classList.add("nav-menu-open");
   zone.classList.add("open");
   btn.setAttribute("aria-expanded", "true");
-
-  expandNav(true, "tap");
 }
 
 export function closeMenu(shouldCompact = true) {
@@ -88,12 +87,7 @@ export function closeMenu(shouldCompact = true) {
 
   if (shouldCompact) {
     NAV_STATE.navPinnedOpen = false;
-
-    if (atTopOfPage()) {
-      setTarget(1, "tap");
-    } else {
-      setTarget(0, "tap");
-    }
+    setTarget(0, "tap");
   }
 }
 
@@ -104,6 +98,9 @@ export function bindMenu() {
   const backdrop = document.getElementById("evaBackdrop");
 
   if (!zone || !btn || !panel || !backdrop) return;
+  if (btn.dataset.menuBound === "true") return;
+
+  btn.dataset.menuBound = "true";
 
   btn.addEventListener("click", (event) => {
     event.preventDefault();
@@ -133,9 +130,7 @@ export function bindMenu() {
         closeMenu(true);
       }
 
-      if (!event.target.closest("#evaQuickBubbles")) {
-        hideQuickBubbles();
-      }
+      hideQuickBubbles();
     }
   });
 

@@ -12,7 +12,8 @@ export function atBottomOfPage() {
 }
 
 export function isCompact() {
-  return false;
+  const shell = getNavShell();
+  return !shell || shell.classList.contains("compact");
 }
 
 export function clearCompactTimer() {
@@ -29,22 +30,51 @@ export function clearScrollSettleTimer() {
   }
 }
 
-export function applyProgress(value = 1) {
+export function hideQuickBubbles() {
+  const shell = getNavShell();
+  const bubbles = document.getElementById("evaQuickBubbles");
+
+  if (shell) shell.classList.remove("quick-pressing");
+
+  if (bubbles) {
+    bubbles.classList.remove("show");
+    bubbles.setAttribute("aria-hidden", "true");
+  }
+
+  document.body.classList.remove("eva-pressing-nav");
+}
+
+export function showQuickBubbles() {
+  hideQuickBubbles();
+}
+
+export function applyProgress(value = 0) {
   const shell = getNavShell();
   if (!shell) return;
 
-  NAV_STATE.progress = 1;
-  NAV_STATE.targetProgress = 1;
+  const next = value >= 0.5 ? 1 : 0;
 
-  shell.style.setProperty("--nav-progress", "1.0000");
-  shell.classList.remove("compact", "is-compact", "island", "is-island");
-  shell.classList.add("expanded");
+  NAV_STATE.progress = next;
+  NAV_STATE.targetProgress = next;
+
+  shell.style.setProperty("--nav-progress", next.toFixed(4));
+
+  document.body.classList.toggle("eva-nav-expanded-mode", next === 1);
+  document.body.classList.toggle("eva-nav-compact-mode", next === 0);
+
+  if (next === 1) {
+    shell.classList.add("expanded");
+    shell.classList.remove("compact", "is-compact", "island", "is-island");
+  } else {
+    shell.classList.add("compact", "is-compact", "island", "is-island");
+    shell.classList.remove("expanded");
+  }
 }
 
-export function setTarget(value = 1, mode = "tap") {
-  NAV_STATE.targetProgress = 1;
+export function setTarget(value = 0, mode = "tap") {
+  NAV_STATE.targetProgress = value >= 0.5 ? 1 : 0;
   NAV_STATE.motionMode = mode;
-  applyProgress(1);
+  applyProgress(NAV_STATE.targetProgress);
 }
 
 export function expandNav(pin = false, mode = "tap") {
@@ -54,30 +84,15 @@ export function expandNav(pin = false, mode = "tap") {
 
 export function compactNav(unpin = false, mode = "tap") {
   if (unpin) NAV_STATE.navPinnedOpen = false;
-  setTarget(1, mode);
+  setTarget(0, mode);
 }
 
 export function scheduleCompact() {
   clearCompactTimer();
 }
 
-export function hideQuickBubbles() {
-  const shell = getNavShell();
-  if (shell) shell.classList.remove("quick-pressing");
-
-  const bubbles = document.getElementById("evaQuickBubbles");
-  if (bubbles) {
-    bubbles.classList.remove("show");
-    bubbles.setAttribute("aria-hidden", "true");
-  }
-}
-
-export function showQuickBubbles() {
-  return;
-}
-
 export function settleAfterScroll() {
-  setTarget(1, "scroll");
+  hideQuickBubbles();
 }
 
 export function bindScrollBehavior() {
@@ -85,7 +100,6 @@ export function bindScrollBehavior() {
     "scroll",
     () => {
       NAV_STATE.lastY = window.scrollY || 0;
-      setTarget(1, "scroll");
       hideQuickBubbles();
     },
     { passive: true }
@@ -93,6 +107,5 @@ export function bindScrollBehavior() {
 }
 
 export function animateNav() {
-  applyProgress(1);
-  NAV_STATE.rafId = requestAnimationFrame(animateNav);
+  applyProgress(NAV_STATE.targetProgress || 0);
 }

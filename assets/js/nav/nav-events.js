@@ -1,36 +1,74 @@
+import { NAV_STATE } from "./nav-config.js";
+
 import {
   buildHref,
   getAppearanceTheme,
   setTheme,
   syncThemeLabel,
+  getNavPill,
   getBrandBlock
 } from "./nav-utils.js";
 
-import { expandNav } from "./nav-scroll.js";
+import {
+  isCompact,
+  expandNav,
+  setTarget,
+  hideQuickBubbles
+} from "./nav-scroll.js";
+
 import { closeMenu } from "./nav-menu.js";
 import { navigateWithLoader } from "./nav-navigation.js";
 
-export function bindBrandHome() {
-  const brand = getBrandBlock();
-  if (!brand || brand.dataset.homeBound === "true") return;
-
-  brand.dataset.homeBound = "true";
-
-  brand.addEventListener("click", (event) => {
+export function togglePill(event) {
+  if (event) {
     event.preventDefault();
     event.stopPropagation();
+  }
 
-    const href = brand.getAttribute("data-home-link") || buildHref("index.html");
+  if (document.body.classList.contains("nav-menu-open")) return;
 
-    navigateWithLoader(href, {
-      title: "Opening Home",
-      subtitle: "Loading the Evaraos home experience."
-    });
+  hideQuickBubbles();
+
+  if (isCompact()) {
+    NAV_STATE.navPinnedOpen = true;
+    expandNav(true, "tap");
+  } else {
+    NAV_STATE.navPinnedOpen = false;
+    setTarget(0, "tap");
+  }
+}
+
+export function bindTapToggle() {
+  const pill = getNavPill();
+  if (!pill || pill.dataset.tapToggleBound === "true") return;
+
+  pill.dataset.tapToggleBound = "true";
+
+  pill.addEventListener("click", (event) => {
+    if (event.target.closest("#evaMenuBtn, #evaThemePillToggle")) return;
+    togglePill(event);
+  });
+
+  pill.addEventListener("dragstart", (event) => event.preventDefault());
+  pill.addEventListener("selectstart", (event) => event.preventDefault());
+}
+
+export function bindBrandHome() {
+  const brand = getBrandBlock();
+  if (!brand || brand.dataset.brandToggleBound === "true") return;
+
+  brand.dataset.brandToggleBound = "true";
+
+  brand.addEventListener("click", (event) => {
+    togglePill(event);
   });
 }
 
 export function bindLinks() {
   document.querySelectorAll("[data-menu-link]").forEach((link) => {
+    if (link.dataset.menuLinkBound === "true") return;
+    link.dataset.menuLinkBound = "true";
+
     link.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -49,7 +87,9 @@ export function bindLinks() {
 
   const logoutBtn = document.getElementById("evaLogoutBtn");
 
-  if (logoutBtn) {
+  if (logoutBtn && logoutBtn.dataset.logoutBound !== "true") {
+    logoutBtn.dataset.logoutBound = "true";
+
     logoutBtn.addEventListener("click", () => {
       try {
         localStorage.removeItem("evaraos-user");
@@ -73,6 +113,9 @@ export function bindThemeToggle() {
   if (!toggles.length) return;
 
   toggles.forEach((toggle) => {
+    if (toggle.dataset.themeBound === "true") return;
+    toggle.dataset.themeBound = "true";
+
     toggle.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -106,7 +149,9 @@ export function bindSearch() {
   const input = document.getElementById("evaSearchInput");
   const links = Array.from(document.querySelectorAll("#evaLinks .eva-link, #evaAuthLinks .eva-link"));
 
-  if (!input) return;
+  if (!input || input.dataset.searchBound === "true") return;
+
+  input.dataset.searchBound = "true";
 
   input.addEventListener("input", () => {
     const value = input.value.trim().toLowerCase();
@@ -120,7 +165,9 @@ export function bindSearch() {
 
 function bindMenuCloseButton() {
   const closeBtn = document.getElementById("evaMenuCloseBtn");
-  if (!closeBtn) return;
+  if (!closeBtn || closeBtn.dataset.closeBound === "true") return;
+
+  closeBtn.dataset.closeBound = "true";
 
   closeBtn.addEventListener("click", (event) => {
     event.preventDefault();
@@ -130,7 +177,7 @@ function bindMenuCloseButton() {
 }
 
 export function bindAllNavEvents() {
-  expandNav(true, "tap");
+  bindTapToggle();
   bindBrandHome();
   bindLinks();
   bindThemeToggle();

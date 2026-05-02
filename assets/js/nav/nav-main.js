@@ -42,6 +42,7 @@ export function initNav() {
   setTheme(getAppearanceTheme());
 
   const rendered = renderNav();
+
   if (!rendered) {
     bootReadySignal();
     return;
@@ -49,17 +50,17 @@ export function initNav() {
 
   const shell = getNavShell();
 
-  NAV_STATE.progress = 1;
-  NAV_STATE.targetProgress = 1;
-  NAV_STATE.navPinnedOpen = true;
+  NAV_STATE.progress = 0;
+  NAV_STATE.targetProgress = 0;
+  NAV_STATE.navPinnedOpen = false;
 
   if (shell) {
-    shell.style.setProperty("--nav-progress", "1.0000");
-    shell.classList.remove("compact", "is-compact", "island", "is-island");
-    shell.classList.add("expanded");
+    shell.style.setProperty("--nav-progress", "0.0000");
+    shell.classList.add("compact", "is-compact", "island", "is-island");
+    shell.classList.remove("expanded");
   }
 
-  applyProgress(1);
+  applyProgress(0);
 
   bindAllNavEvents();
   bindMenu();
