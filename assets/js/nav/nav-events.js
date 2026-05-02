@@ -12,10 +12,7 @@ import {
 import {
   isCompact,
   expandNav,
-  compactNav,
-  scheduleCompact,
-  showQuickBubbles,
-  hideQuickBubbles
+  setTarget
 } from "./nav-scroll.js";
 
 import {
@@ -26,24 +23,14 @@ import {
   navigateWithLoader
 } from "./nav-navigation.js";
 
-export function clearPressTimer() {
-  if (NAV_STATE.pressTimer) {
-    clearTimeout(NAV_STATE.pressTimer);
-    NAV_STATE.pressTimer = null;
-  }
-}
-
-export function endCompactPress() {
-  const pill = getNavPill();
-
-  clearPressTimer();
-
-  if (pill) {
-    pill.classList.remove("is-pressing");
-  }
-
-  document.body.classList.remove("eva-pressing-nav");
-}
+/*
+  Long-press shortcuts removed.
+  New behavior:
+  - Dot is default.
+  - Tap dot/pill once = expand full nav.
+  - Tap full nav once = shrink back to dot.
+  - No long press. No shortcut bubbles.
+*/
 
 export function togglePill(event) {
   if (event) {
@@ -54,122 +41,28 @@ export function togglePill(event) {
   if (document.body.classList.contains("nav-menu-open")) return;
 
   if (isCompact()) {
+    NAV_STATE.navPinnedOpen = true;
     expandNav(true, "tap");
-    scheduleCompact(2200);
     return;
   }
 
-  if (window.scrollY > 4) {
-    NAV_STATE.navPinnedOpen = false;
-    compactNav(true, "tap");
-  }
-}
-
-export function startCompactPress(event) {
-  const pill = getNavPill();
-
-  if (!pill || !isCompact()) return;
-  if (event.target.closest("#evaMenuBtn, #evaThemePillToggle")) return;
-  if (event.target.closest("#evaBrandBlock")) return;
-
-  clearPressTimer();
-
-  NAV_STATE.longPressTriggered = false;
-
-  pill.classList.add("is-pressing");
-  document.body.classList.add("eva-pressing-nav");
-
-  NAV_STATE.pressTimer = setTimeout(() => {
-    NAV_STATE.longPressTriggered = true;
-    showQuickBubbles();
-  }, 220);
+  NAV_STATE.navPinnedOpen = false;
+  setTarget(0, "tap");
 }
 
 export function bindTapToggle() {
   const pill = getNavPill();
   if (!pill) return;
 
-  function onTouchStart(event) {
-    if (event.target.closest("#evaMenuBtn, #evaThemePillToggle")) return;
-    if (event.target.closest("#evaBrandBlock")) return;
-
-    const touch = event.touches ? event.touches[0] : event;
-
-    NAV_STATE.tapStartX = touch.clientX;
-    NAV_STATE.tapStartY = touch.clientY;
-    NAV_STATE.tapMoved = false;
-    NAV_STATE.tapHandled = false;
-
-    startCompactPress(event);
-  }
-
-  function onTouchMove(event) {
-    if (event.target.closest("#evaMenuBtn, #evaThemePillToggle")) return;
-    if (event.target.closest("#evaBrandBlock")) return;
-
-    const touch = event.touches ? event.touches[0] : event;
-    const dx = Math.abs(touch.clientX - NAV_STATE.tapStartX);
-    const dy = Math.abs(touch.clientY - NAV_STATE.tapStartY);
-
-    if (dx > 10 || dy > 10) {
-      NAV_STATE.tapMoved = true;
-      endCompactPress();
-    }
-  }
-
-  function onTouchEnd(event) {
-    if (event.target.closest("#evaMenuBtn, #evaThemePillToggle")) return;
-    if (event.target.closest("#evaBrandBlock")) return;
-
-    const wasLongPress = NAV_STATE.longPressTriggered;
-
-    endCompactPress();
-
-    if (NAV_STATE.tapMoved || NAV_STATE.tapHandled || wasLongPress) return;
-
-    NAV_STATE.tapHandled = true;
-    togglePill(event);
-  }
-
-  pill.addEventListener("touchstart", onTouchStart, { passive: false });
-  pill.addEventListener("touchmove", onTouchMove, { passive: false });
-  pill.addEventListener("touchend", onTouchEnd);
-  pill.addEventListener("touchcancel", endCompactPress);
-
-  pill.addEventListener("mousedown", (event) => {
-    if (event.target.closest("#evaMenuBtn, #evaThemePillToggle")) return;
-    if (event.target.closest("#evaBrandBlock")) return;
-    startCompactPress(event);
-  });
-
-  pill.addEventListener("mouseup", () => {
-    const wasLongPress = NAV_STATE.longPressTriggered;
-    endCompactPress();
-    if (wasLongPress) return;
-  });
-
-  pill.addEventListener("mouseleave", endCompactPress);
-  pill.addEventListener("dragstart", (event) => event.preventDefault());
-  pill.addEventListener("selectstart", (event) => event.preventDefault());
-
   pill.addEventListener("click", (event) => {
     if (event.target.closest("#evaMenuBtn, #evaThemePillToggle")) return;
-    if (event.target.closest("#evaBrandBlock")) return;
-
-    if (NAV_STATE.longPressTriggered) {
-      NAV_STATE.longPressTriggered = false;
-      event.preventDefault();
-      event.stopPropagation();
-      return;
-    }
-
-    if (NAV_STATE.tapHandled) {
-      NAV_STATE.tapHandled = false;
-      return;
-    }
+    if (event.target.closest("#evaBrandBlock") && !isCompact()) return;
 
     togglePill(event);
   });
+
+  pill.addEventListener("dragstart", (event) => event.preventDefault());
+  pill.addEventListener("selectstart", (event) => event.preventDefault());
 }
 
 export function bindBrandHome() {
@@ -180,6 +73,7 @@ export function bindBrandHome() {
     if (isCompact()) {
       event.preventDefault();
       event.stopPropagation();
+      togglePill(event);
       return;
     }
 
@@ -227,22 +121,6 @@ export function bindLinks() {
       navigateWithLoader(href, {
         title: "Loading page",
         subtitle: "Preparing your next screen."
-      });
-    });
-  });
-
-  document.querySelectorAll("[data-quick-link]").forEach((btn) => {
-    btn.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-
-      const href = btn.getAttribute("data-quick-link");
-
-      hideQuickBubbles();
-
-      navigateWithLoader(href, {
-        title: "Opening shortcut",
-        subtitle: "Launching your quick action."
       });
     });
   });

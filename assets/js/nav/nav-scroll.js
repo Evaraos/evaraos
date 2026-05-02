@@ -80,11 +80,6 @@ export function compactNav(unpin = false, mode = "scroll") {
     NAV_STATE.navPinnedOpen = false;
   }
 
-  if (atTopOfPage() && !document.body.classList.contains("nav-menu-open")) {
-    setTarget(1, mode);
-    return;
-  }
-
   setTarget(0, mode);
 }
 
@@ -133,9 +128,13 @@ export function settleAfterScroll() {
   NAV_STATE.scrollSettleTimer = setTimeout(() => {
     if (document.body.classList.contains("nav-menu-open")) return;
 
+    if (NAV_STATE.navPinnedOpen) {
+      setTarget(1, "tap");
+      return;
+    }
+
     if (atTopOfPage()) {
-      NAV_STATE.navPinnedOpen = false;
-      setTarget(1, "scroll");
+      setTarget(0, "scroll");
       return;
     }
 
@@ -145,14 +144,6 @@ export function settleAfterScroll() {
       return;
     }
 
-    if (NAV_STATE.lastScrollDirection < 0) {
-      NAV_STATE.navPinnedOpen = true;
-      setTarget(1, "scroll");
-      scheduleCompact(1800);
-      return;
-    }
-
-    NAV_STATE.navPinnedOpen = false;
     setTarget(0, "scroll");
   }, 42);
 }
@@ -171,9 +162,10 @@ export function bindScrollBehavior() {
           NAV_STATE.lastScrollDirection = dy < 0 ? -1 : 1;
         }
 
-        if (atTopOfPage()) {
-          NAV_STATE.navPinnedOpen = false;
-          setTarget(1, "scroll");
+        if (NAV_STATE.navPinnedOpen) {
+          setTarget(1, "tap");
+        } else if (atTopOfPage()) {
+          setTarget(0, "scroll");
         } else if (atBottomOfPage()) {
           NAV_STATE.navPinnedOpen = false;
           setTarget(0, "scroll");

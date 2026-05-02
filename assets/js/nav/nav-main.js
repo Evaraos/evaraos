@@ -13,7 +13,6 @@ import {
 
 import {
   applyProgress,
-  atTopOfPage,
   bindScrollBehavior,
   animateNav
 } from "./nav-scroll.js";
@@ -91,7 +90,7 @@ export function initNav() {
   bindAlwaysHomeLogo();
 
   const shell = getNavShell();
-  const immediate = atTopOfPage() ? 1 : 0;
+  const immediate = 0;
 
   NAV_STATE.progress = immediate;
   NAV_STATE.targetProgress = immediate;
