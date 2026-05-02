@@ -5977,3 +5977,223 @@ body.nav-menu-open #evaMenuPanel .eva-account-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
 }
 
+
+/* =========================================================
+   EVARAOS NAV FINAL TOGGLE FIX
+   Theme toggle = icon only.
+   Hamburger = normal 3-line menu again.
+   No bubble/card around moon/sun.
+   ========================================================= */
+
+/* Keep menu zone clean */
+.eva-menu-zone {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+}
+
+/* Theme toggle beside hamburger: icon only, no button/card/bubble */
+#evaThemePillToggle,
+.eva-theme-nav-btn,
+body.nav-menu-open #evaThemePillToggle {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  padding: 0 !important;
+  margin: 0 2px 0 0 !important;
+
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+
+  display: grid !important;
+  place-items: center !important;
+  cursor: pointer !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  overflow: visible !important;
+}
+
+/* Remove all possible circular/bubble decoration from theme toggle */
+#evaThemePillToggle::before,
+#evaThemePillToggle::after,
+.eva-theme-nav-btn::before,
+.eva-theme-nav-btn::after {
+  display: none !important;
+  content: none !important;
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Luxury small moon/sun icon only */
+.eva-theme-nav-icon {
+  width: 20px !important;
+  height: 20px !important;
+  display: block !important;
+  position: relative !important;
+}
+
+.eva-theme-nav-icon::before {
+  content: "☾" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+
+  color: #111318 !important;
+  font-size: 20px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.72),
+    0 3px 8px rgba(0,0,0,0.20) !important;
+}
+
+html[data-theme="dark"] .eva-theme-nav-icon::before,
+html[data-theme$="-dark"] .eva-theme-nav-icon::before {
+  content: "☀" !important;
+  font-size: 17px !important;
+}
+
+/* Hide theme icon only when nav is truly compact/shrunk */
+body.eva-nav-compact:not(.nav-menu-open) #evaThemePillToggle,
+body.nav-compact:not(.nav-menu-open) #evaThemePillToggle,
+body.is-compact:not(.nav-menu-open) #evaThemePillToggle,
+body.is-nav-compact:not(.nav-menu-open) #evaThemePillToggle,
+.eva-nav-shell.is-compact #evaThemePillToggle,
+.eva-nav-shell.compact #evaThemePillToggle,
+.eva-nav-pill.is-compact #evaThemePillToggle,
+.eva-nav-pill.compact #evaThemePillToggle,
+.eva-nav-pill.is-island #evaThemePillToggle {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  transform: scale(0.72) !important;
+  overflow: hidden !important;
+}
+
+/* Bring hamburger back to normal 3-line menu */
+#evaMenuBtn,
+.eva-menu-btn {
+  width: 54px !important;
+  height: 54px !important;
+  min-width: 54px !important;
+  border-radius: 999px !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+/* Normal hamburger line container */
+#evaMenuBtn .eva-burger,
+.eva-menu-btn .eva-burger {
+  width: 24px !important;
+  height: 18px !important;
+  position: relative !important;
+  display: block !important;
+}
+
+/* Force hamburger lines back to 3 clean lines */
+#evaMenuBtn .eva-burger-line,
+.eva-menu-btn .eva-burger-line,
+body.nav-menu-open .eva-menu-btn .eva-burger-line {
+  position: absolute !important;
+  left: 50% !important;
+  width: 24px !important;
+  height: 2.8px !important;
+  border-radius: 999px !important;
+  background: #10221d !important;
+  transform-origin: center !important;
+  opacity: 1 !important;
+}
+
+#evaMenuBtn .eva-burger-line.top,
+.eva-menu-btn .eva-burger-line.top,
+body.nav-menu-open .eva-burger-line.top {
+  top: 0 !important;
+  transform: translateX(-50%) rotate(0deg) !important;
+}
+
+#evaMenuBtn .eva-burger-line.mid,
+.eva-menu-btn .eva-burger-line.mid,
+body.nav-menu-open .eva-burger-line.mid {
+  top: 7.5px !important;
+  transform: translateX(-50%) scaleX(1) !important;
+  opacity: 1 !important;
+}
+
+#evaMenuBtn .eva-burger-line.bot,
+.eva-menu-btn .eva-burger-line.bot,
+body.nav-menu-open .eva-burger-line.bot {
+  top: 15px !important;
+  transform: translateX(-50%) rotate(0deg) !important;
+}
+
+/* Keep the actual X close inside the dropdown available instead */
+body.nav-menu-open #evaMenuPanel .eva-menu-close-btn {
+  display: grid !important;
+}
+
+/* Make panel X clean and not oversized */
+#evaMenuPanel .eva-menu-close-btn {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  border-radius: 999px !important;
+}
+
+#evaMenuPanel .eva-menu-close-btn span {
+  width: 13px !important;
+  height: 2.2px !important;
+  background: #111318 !important;
+}
+
+/* Slightly tighten brand area so toggle + hamburger fit clean */
+.eva-right-spacer {
+  width: 88px !important;
+}
+
+@media (max-width: 430px) {
+  .eva-menu-zone {
+    gap: 10px !important;
+  }
+
+  #evaThemePillToggle,
+  .eva-theme-nav-btn,
+  body.nav-menu-open #evaThemePillToggle {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+  }
+
+  .eva-theme-nav-icon::before {
+    font-size: 19px !important;
+  }
+
+  html[data-theme="dark"] .eva-theme-nav-icon::before,
+  html[data-theme$="-dark"] .eva-theme-nav-icon::before {
+    font-size: 16px !important;
+  }
+
+  #evaMenuBtn,
+  .eva-menu-btn {
+    width: 52px !important;
+    height: 52px !important;
+    min-width: 52px !important;
+  }
+
+  .eva-right-spacer {
+    width: 82px !important;
+  }
+}
