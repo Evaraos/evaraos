@@ -31,3 +31,6 @@
 /* Loader */
 @import url("./loaders/loader.css");
 @import url("./loaders/loader-viewport.css");
+
+/* Final nav polish override */
+@import url("./nav-final-polish.css?v=1");
