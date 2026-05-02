@@ -1632,5 +1632,549 @@
 </script>
 <!-- /EVARAOS DOT HITPAD + AUTO CLOSE TUNE -->
 
+
+<!-- EVARAOS BOTTOM DOT NAV + ABOVE DROPDOWN TUNE -->
+<style id="evaBottomDotNavTune">
+  :root {
+    --eva-bottom-dot-size: 38px;
+    --eva-bottom-dot-logo: 29px;
+
+    /* Bottom-left floating dot */
+    --eva-bottom-dot-left: max(18px, env(safe-area-inset-left, 0px) + 18px);
+    --eva-bottom-dot-bottom: max(18px, calc(env(safe-area-inset-bottom, 0px) + 18px));
+
+    /* Full bottom pill */
+    --eva-bottom-pill-bottom: max(14px, calc(env(safe-area-inset-bottom, 0px) + 14px));
+    --eva-bottom-pill-height: 58px;
+
+    /* Menu panel opens ABOVE bottom nav */
+    --eva-bottom-panel-bottom: max(86px, calc(env(safe-area-inset-bottom, 0px) + 86px));
+  }
+
+  /* =========================================================
+     COMPACT MODE = BOTTOM-LEFT LIQUID DOT
+     ========================================================= */
+
+  body.eva-hard-compact .eva-hard-nav {
+    top: auto !important;
+    bottom: var(--eva-bottom-dot-bottom) !important;
+    left: var(--eva-bottom-dot-left) !important;
+
+    width: var(--eva-bottom-dot-size) !important;
+    height: var(--eva-bottom-dot-size) !important;
+    min-width: var(--eva-bottom-dot-size) !important;
+    min-height: var(--eva-bottom-dot-size) !important;
+    max-width: var(--eva-bottom-dot-size) !important;
+    max-height: var(--eva-bottom-dot-size) !important;
+
+    transform: translate(0, 0) scale(1) !important;
+    border-radius: 999px !important;
+
+    display: grid !important;
+    place-items: center !important;
+
+    background:
+      radial-gradient(circle at 28% 16%, rgba(255,255,255,.42), transparent 24%),
+      radial-gradient(circle at 72% 78%, rgba(216,0,32,.28), transparent 36%),
+      linear-gradient(180deg, rgba(18,19,22,.98), rgba(0,0,0,.98)) !important;
+
+    border: 1px solid rgba(255,255,255,.20) !important;
+
+    box-shadow:
+      0 16px 34px rgba(0,0,0,.34),
+      0 6px 14px rgba(0,0,0,.24),
+      0 0 22px rgba(216,0,32,.12),
+      inset 0 1px 0 rgba(255,255,255,.20),
+      inset 0 -1px 0 rgba(0,0,0,.76) !important;
+
+    backdrop-filter: blur(26px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(26px) saturate(180%) !important;
+
+    overflow: hidden !important;
+
+    animation: evaBottomDotSnapIn .42s cubic-bezier(.2,.95,.2,1) both !important;
+
+    transition:
+      bottom .48s cubic-bezier(.2,.92,.2,1),
+      left .48s cubic-bezier(.2,.92,.2,1),
+      width .48s cubic-bezier(.2,.92,.2,1),
+      height .48s cubic-bezier(.2,.92,.2,1),
+      transform .48s cubic-bezier(.2,.92,.2,1),
+      border-radius .48s cubic-bezier(.2,.92,.2,1),
+      background .48s cubic-bezier(.2,.92,.2,1),
+      box-shadow .48s cubic-bezier(.2,.92,.2,1) !important;
+  }
+
+  body.eva-hard-compact .eva-hard-brand {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+
+    display: grid !important;
+    place-items: center !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+
+  body.eva-hard-compact .eva-hard-logo {
+    width: var(--eva-bottom-dot-logo) !important;
+    height: var(--eva-bottom-dot-logo) !important;
+    min-width: var(--eva-bottom-dot-logo) !important;
+    max-width: var(--eva-bottom-dot-logo) !important;
+
+    object-fit: contain !important;
+    object-position: center !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+
+    filter:
+      drop-shadow(0 0 9px rgba(216,0,32,.76))
+      drop-shadow(0 2px 6px rgba(0,0,0,.72)) !important;
+  }
+
+  body.eva-hard-compact .eva-hard-copy,
+  body.eva-hard-compact .eva-hard-actions {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  body.eva-hard-compact .eva-hard-nav::before {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 2;
+
+    background:
+      radial-gradient(circle at 28% 18%, rgba(255,255,255,.38), transparent 23%),
+      radial-gradient(circle at 72% 84%, rgba(255,255,255,.10), transparent 32%),
+      linear-gradient(135deg, rgba(255,255,255,.13), transparent 42%, rgba(255,255,255,.05));
+  }
+
+  body.eva-hard-compact .eva-hard-nav::after {
+    content: "";
+    position: absolute;
+    left: -78%;
+    top: 6px;
+    width: 88%;
+    height: 13px;
+    border-radius: 999px;
+    pointer-events: none;
+    z-index: 3;
+
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,.16),
+        rgba(255,255,255,.38),
+        rgba(255,255,255,.12),
+        transparent
+      );
+
+    transform: rotate(-18deg);
+    animation: evaBottomDotSweep 4.2s ease-in-out infinite;
+  }
+
+  @keyframes evaBottomDotSweep {
+    0%, 28% { left: -78%; opacity: 0; }
+    40% { opacity: .72; }
+    58% { left: 92%; opacity: .18; }
+    100% { left: 92%; opacity: 0; }
+  }
+
+  @keyframes evaBottomDotSnapIn {
+    0% {
+      transform: translate(0, 8px) scale(.82);
+      filter: blur(.2px);
+    }
+    65% {
+      transform: translate(0, -2px) scale(1.06);
+    }
+    100% {
+      transform: translate(0, 0) scale(1);
+      filter: blur(0);
+    }
+  }
+
+  /* Tap pad becomes a thin invisible vertical pill over the bottom dot */
+  #evaHardDotTapPad {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+
+    position: fixed !important;
+    z-index: 2147483646 !important;
+
+    left: calc(var(--eva-bottom-dot-left) + (var(--eva-bottom-dot-size) / 2)) !important;
+    top: auto !important;
+    bottom: max(8px, calc(env(safe-area-inset-bottom, 0px) + 8px)) !important;
+
+    width: var(--eva-bottom-dot-size) !important;
+    height: 92px !important;
+
+    transform: translateX(-50%) !important;
+
+    border: 0 !important;
+    outline: 0 !important;
+    border-radius: 999px !important;
+
+    color: transparent !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+
+    background: rgba(0,0,0,.001) !important;
+    box-shadow: none !important;
+
+    display: none !important;
+    pointer-events: none !important;
+
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  body.eva-hard-compact #evaHardDotTapPad {
+    display: block !important;
+    pointer-events: auto !important;
+  }
+
+  body.eva-hard-expanded #evaHardDotTapPad,
+  body.eva-hard-menu-open #evaHardDotTapPad {
+    display: none !important;
+    pointer-events: none !important;
+  }
+
+  @media (display-mode: standalone) {
+    #evaHardDotTapPad {
+      height: 104px !important;
+      bottom: max(6px, calc(env(safe-area-inset-bottom, 0px) + 6px)) !important;
+    }
+  }
+
+  /* =========================================================
+     EXPANDED MODE = SAFARI SEARCH BAR / BOTTOM PILL
+     ========================================================= */
+
+  body.eva-hard-expanded .eva-hard-nav,
+  body.eva-hard-menu-open .eva-hard-nav {
+    top: auto !important;
+    bottom: var(--eva-bottom-pill-bottom) !important;
+    left: 50% !important;
+
+    width: min(calc(100vw - 18px), 1080px) !important;
+    height: var(--eva-bottom-pill-height) !important;
+    min-height: var(--eva-bottom-pill-height) !important;
+    max-height: var(--eva-bottom-pill-height) !important;
+
+    transform: translateX(-50%) scale(1) !important;
+    border-radius: 999px !important;
+
+    background:
+      radial-gradient(circle at 20% 10%, rgba(255,255,255,.98), transparent 35%),
+      radial-gradient(circle at 82% 105%, rgba(216,0,32,.10), transparent 35%),
+      linear-gradient(180deg, rgba(255,255,255,.92), rgba(244,247,249,.76)) !important;
+
+    border: 1px solid rgba(255,255,255,.96) !important;
+
+    box-shadow:
+      0 18px 42px rgba(0,0,0,.20),
+      0 7px 18px rgba(0,0,0,.12),
+      inset 0 1px 0 rgba(255,255,255,1),
+      inset 0 -1px 0 rgba(0,0,0,.06) !important;
+
+    overflow: hidden !important;
+
+    backdrop-filter: blur(28px) saturate(190%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+
+    animation: evaBottomPillSnapOpen .46s cubic-bezier(.2,.95,.2,1) both !important;
+  }
+
+  @keyframes evaBottomPillSnapOpen {
+    0% {
+      transform: translateX(-50%) translateY(12px) scale(.90);
+      border-radius: 999px;
+    }
+    68% {
+      transform: translateX(-50%) translateY(-2px) scale(1.012);
+    }
+    100% {
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+  }
+
+  body.eva-hard-expanded .eva-hard-nav::before,
+  body.eva-hard-menu-open .eva-hard-nav::before {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 1;
+
+    background:
+      linear-gradient(135deg, rgba(255,255,255,.74), transparent 34%, rgba(255,255,255,.18)),
+      radial-gradient(circle at 78% 92%, rgba(0,0,0,.07), transparent 40%) !important;
+  }
+
+  body.eva-hard-expanded .eva-hard-nav::after,
+  body.eva-hard-menu-open .eva-hard-nav::after {
+    content: "";
+    position: absolute;
+    left: -30%;
+    top: 4px;
+    width: 35%;
+    height: 18px;
+    border-radius: 999px;
+    pointer-events: none;
+    z-index: 2;
+
+    background:
+      linear-gradient(90deg, transparent, rgba(255,255,255,.52), transparent);
+
+    transform: rotate(-12deg);
+    animation: evaSafariBarSheen 5s ease-in-out infinite;
+  }
+
+  @keyframes evaSafariBarSheen {
+    0%, 30% { left: -35%; opacity: 0; }
+    42% { opacity: .62; }
+    62% { left: 96%; opacity: .14; }
+    100% { left: 96%; opacity: 0; }
+  }
+
+  body.eva-hard-expanded .eva-hard-brand,
+  body.eva-hard-menu-open .eva-hard-brand {
+    z-index: 5 !important;
+  }
+
+  body.eva-hard-expanded .eva-hard-actions,
+  body.eva-hard-menu-open .eva-hard-actions {
+    z-index: 6 !important;
+  }
+
+  /* =========================================================
+     MENU PANEL NOW OPENS ABOVE THE BOTTOM NAV
+     ========================================================= */
+
+  .eva-hard-panel {
+    top: auto !important;
+    bottom: var(--eva-bottom-panel-bottom) !important;
+
+    max-height: min(64vh, calc(100dvh - 170px)) !important;
+
+    transform: translateX(-50%) translateY(10px) scale(.985) !important;
+    transform-origin: bottom center !important;
+
+    border-radius: 34px !important;
+  }
+
+  body.eva-hard-menu-open .eva-hard-panel {
+    transform: translateX(-50%) translateY(0) scale(1) !important;
+  }
+
+  /* Keep backdrop clean behind bottom menu */
+  body.eva-hard-menu-open .eva-hard-backdrop {
+    background:
+      radial-gradient(circle at 18% 100%, rgba(216,0,32,.10), transparent 30%),
+      rgba(0,0,0,.28) !important;
+  }
+
+  /* Mobile tuning */
+  @media (max-width: 430px) {
+    :root {
+      --eva-bottom-dot-size: 38px;
+      --eva-bottom-dot-logo: 29px;
+      --eva-bottom-dot-left: max(17px, env(safe-area-inset-left, 0px) + 17px);
+      --eva-bottom-dot-bottom: max(16px, calc(env(safe-area-inset-bottom, 0px) + 16px));
+      --eva-bottom-pill-bottom: max(12px, calc(env(safe-area-inset-bottom, 0px) + 12px));
+      --eva-bottom-panel-bottom: max(82px, calc(env(safe-area-inset-bottom, 0px) + 82px));
+    }
+  }
+
+  @media (max-width: 390px) {
+    :root {
+      --eva-bottom-dot-size: 36px;
+      --eva-bottom-dot-logo: 27px;
+      --eva-bottom-dot-left: max(15px, env(safe-area-inset-left, 0px) + 15px);
+      --eva-bottom-panel-bottom: max(80px, calc(env(safe-area-inset-bottom, 0px) + 80px));
+    }
+  }
+</style>
+
+<script id="evaBottomDotNavTuneScript">
+(function () {
+  var autoCloseTimer = null;
+  var lastScrollY = window.scrollY || 0;
+
+  function compact() {
+    clearTimeout(autoCloseTimer);
+    autoCloseTimer = null;
+    document.body.classList.remove("eva-hard-expanded", "eva-hard-menu-open");
+    document.body.classList.add("eva-hard-compact");
+  }
+
+  function expand() {
+    document.body.classList.remove("eva-hard-compact", "eva-hard-menu-open");
+    document.body.classList.add("eva-hard-expanded");
+    startAutoClose();
+  }
+
+  function openMenu() {
+    clearTimeout(autoCloseTimer);
+    autoCloseTimer = null;
+    document.body.classList.remove("eva-hard-compact");
+    document.body.classList.add("eva-hard-expanded", "eva-hard-menu-open");
+  }
+
+  function isExpandedOnly() {
+    return document.body.classList.contains("eva-hard-expanded") &&
+      !document.body.classList.contains("eva-hard-menu-open");
+  }
+
+  function startAutoClose() {
+    clearTimeout(autoCloseTimer);
+    if (!isExpandedOnly()) return;
+
+    autoCloseTimer = setTimeout(function () {
+      if (isExpandedOnly()) compact();
+    }, 4000);
+  }
+
+  function resetAutoClose() {
+    if (isExpandedOnly()) startAutoClose();
+  }
+
+  function bindBottomNav() {
+    var nav = document.getElementById("evaHardNav");
+    var menuBtn = document.querySelector(".eva-hard-menu-btn");
+    var backdrop = document.querySelector(".eva-hard-backdrop");
+    var tapPad = document.getElementById("evaHardDotTapPad");
+
+    if (!nav) return;
+
+    if (nav.dataset.bottomDotBound !== "true") {
+      nav.dataset.bottomDotBound = "true";
+
+      nav.addEventListener("click", function (event) {
+        if (event.target.closest(".eva-hard-menu-btn, .eva-hard-theme")) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (document.body.classList.contains("eva-hard-compact")) {
+          expand();
+        } else {
+          compact();
+        }
+      }, true);
+
+      nav.addEventListener("pointerdown", resetAutoClose, true);
+      nav.addEventListener("mousemove", resetAutoClose, true);
+      nav.addEventListener("touchstart", resetAutoClose, { passive: true, capture: true });
+    }
+
+    if (tapPad && tapPad.dataset.bottomDotPadBound !== "true") {
+      tapPad.dataset.bottomDotPadBound = "true";
+
+      tapPad.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        expand();
+      }, true);
+
+      tapPad.addEventListener("touchstart", function (event) {
+        event.stopPropagation();
+      }, { passive: true, capture: true });
+    }
+
+    if (menuBtn && menuBtn.dataset.bottomDotMenuBound !== "true") {
+      menuBtn.dataset.bottomDotMenuBound = "true";
+
+      menuBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (document.body.classList.contains("eva-hard-menu-open")) {
+          compact();
+        } else {
+          openMenu();
+        }
+      }, true);
+    }
+
+    if (backdrop && backdrop.dataset.bottomDotBackdropBound !== "true") {
+      backdrop.dataset.bottomDotBackdropBound = "true";
+
+      backdrop.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        compact();
+      }, true);
+    }
+  }
+
+  function bindScrollClose() {
+    if (window.evaBottomDotScrollCloseBound === true) return;
+    window.evaBottomDotScrollCloseBound = true;
+
+    window.addEventListener("scroll", function () {
+      var y = window.scrollY || 0;
+      var delta = Math.abs(y - lastScrollY);
+      lastScrollY = y;
+
+      if (delta < 2) return;
+
+      if (
+        document.body.classList.contains("eva-hard-expanded") ||
+        document.body.classList.contains("eva-hard-menu-open")
+      ) {
+        compact();
+      }
+    }, { passive: true });
+
+    window.addEventListener("touchmove", function () {
+      if (
+        document.body.classList.contains("eva-hard-expanded") ||
+        document.body.classList.contains("eva-hard-menu-open")
+      ) {
+        compact();
+      }
+    }, { passive: true });
+
+    window.addEventListener("wheel", function () {
+      if (
+        document.body.classList.contains("eva-hard-expanded") ||
+        document.body.classList.contains("eva-hard-menu-open")
+      ) {
+        compact();
+      }
+    }, { passive: true });
+  }
+
+  function boot() {
+    bindBottomNav();
+    bindScrollClose();
+
+    setTimeout(bindBottomNav, 300);
+    setTimeout(bindBottomNav, 1000);
+    setTimeout(bindBottomNav, 1800);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot, { once: true });
+  } else {
+    boot();
+  }
+})();
+</script>
+<!-- /EVARAOS BOTTOM DOT NAV + ABOVE DROPDOWN TUNE -->
+
 </body>
 </html>
