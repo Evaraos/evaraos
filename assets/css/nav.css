@@ -6944,3 +6944,453 @@ body.nav-menu-open #evaMenuPanel .eva-app-tile:active .eva-app-icon {
     border-radius: 20px !important;
   }
 }
+
+/* =========================================================
+   EVARAOS NAV ALIGNMENT + LUXURY APP ICON POLISH
+   Shifts nav contents left, fixes menu button, upgrades
+   app icons with premium red glow/shimmer.
+   ========================================================= */
+
+/* ---------- NAV BAR ALIGNMENT ---------- */
+
+/* Shift the brand/logo/title slightly left so the moon + menu don't crowd it */
+.eva-brand {
+  left: calc(50% - 18px) !important;
+}
+
+/* Keep compact island centered when shrunk */
+.eva-nav-shell.compact .eva-brand,
+.eva-nav-pill.is-compact .eva-brand,
+.eva-nav-pill.compact .eva-brand,
+.eva-nav-pill.is-island .eva-brand {
+  left: 50% !important;
+}
+
+/* Right action zone: cleaner spacing */
+.eva-menu-zone {
+  right: 12px !important;
+  width: auto !important;
+  height: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+}
+
+/* Give the right side enough balance without pushing brand too far */
+.eva-right-spacer {
+  width: 104px !important;
+}
+
+/* Theme icon stays icon-only */
+#evaThemePillToggle,
+.eva-theme-nav-btn,
+body.nav-menu-open #evaThemePillToggle {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+/* Make moon/sun cleaner and more premium */
+.eva-theme-nav-icon::before {
+  color: #071714 !important;
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.85),
+    0 3px 8px rgba(0,0,0,0.22) !important;
+}
+
+/* ---------- MENU BUTTON: ORIGINAL ROUND STYLE ---------- */
+
+#evaMenuBtn,
+.eva-menu-btn {
+  width: 54px !important;
+  height: 54px !important;
+  min-width: 54px !important;
+  border-radius: 999px !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+
+  background:
+    radial-gradient(circle at 30% 15%, rgba(255,255,255,1), transparent 36%),
+    linear-gradient(180deg, rgba(255,255,255,0.95), rgba(244,247,249,0.84)) !important;
+
+  border: 1px solid rgba(255,255,255,0.96) !important;
+
+  box-shadow:
+    0 16px 26px rgba(0,0,0,0.16),
+    0 5px 13px rgba(0,0,0,0.09),
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(0,0,0,0.055) !important;
+
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+}
+
+/* Line holder */
+#evaMenuBtn .eva-burger,
+.eva-menu-btn .eva-burger {
+  width: 25px !important;
+  height: 19px !important;
+  position: relative !important;
+  display: block !important;
+}
+
+/* Normal hamburger lines */
+#evaMenuBtn .eva-burger-line,
+.eva-menu-btn .eva-burger-line {
+  position: absolute !important;
+  left: 50% !important;
+  width: 25px !important;
+  height: 2.9px !important;
+  border-radius: 999px !important;
+  background: #10231e !important;
+  opacity: 1 !important;
+  transform-origin: center !important;
+  transition:
+    top .18s ease,
+    transform .18s ease,
+    opacity .14s ease !important;
+}
+
+#evaMenuBtn .eva-burger-line.top,
+.eva-menu-btn .eva-burger-line.top {
+  top: 0 !important;
+  transform: translateX(-50%) rotate(0deg) !important;
+}
+
+#evaMenuBtn .eva-burger-line.mid,
+.eva-menu-btn .eva-burger-line.mid {
+  top: 8px !important;
+  transform: translateX(-50%) scaleX(1) !important;
+}
+
+#evaMenuBtn .eva-burger-line.bot,
+.eva-menu-btn .eva-burger-line.bot {
+  top: 16px !important;
+  transform: translateX(-50%) rotate(0deg) !important;
+}
+
+/* When menu opens, same button becomes clean X */
+body.nav-menu-open #evaMenuBtn .eva-burger-line.top,
+body.nav-menu-open .eva-menu-btn .eva-burger-line.top {
+  top: 8px !important;
+  transform: translateX(-50%) rotate(45deg) !important;
+}
+
+body.nav-menu-open #evaMenuBtn .eva-burger-line.mid,
+body.nav-menu-open .eva-menu-btn .eva-burger-line.mid {
+  top: 8px !important;
+  transform: translateX(-50%) scaleX(0) !important;
+  opacity: 0 !important;
+}
+
+body.nav-menu-open #evaMenuBtn .eva-burger-line.bot,
+body.nav-menu-open .eva-menu-btn .eva-burger-line.bot {
+  top: 8px !important;
+  transform: translateX(-50%) rotate(-45deg) !important;
+}
+
+/* Hide any extra internal panel X */
+body.nav-menu-open #evaMenuPanel .eva-menu-close-btn {
+  display: none !important;
+}
+
+/* ---------- CONTROL CENTER BACKGROUND ---------- */
+
+body.nav-menu-open #evaMenuPanel.eva-control-center-panel {
+  background:
+    radial-gradient(circle at 16% 0%, rgba(255,255,255,0.94), transparent 34%),
+    radial-gradient(circle at 90% 7%, rgba(216,0,32,0.16), transparent 31%),
+    radial-gradient(circle at 45% 112%, rgba(0,0,0,0.24), transparent 44%),
+    linear-gradient(180deg, rgba(251,252,253,0.88), rgba(229,233,238,0.76)) !important;
+
+  border: 1px solid rgba(255,255,255,0.92) !important;
+
+  box-shadow:
+    0 40px 100px rgba(0,0,0,0.38),
+    0 18px 44px rgba(0,0,0,0.23),
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(0,0,0,0.07) !important;
+}
+
+/* Folder cards: cleaner luxury glass */
+body.nav-menu-open #evaMenuPanel .eva-menu-section {
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255,255,255,0.86), transparent 36%),
+    radial-gradient(circle at 94% 10%, rgba(216,0,32,0.075), transparent 36%),
+    radial-gradient(circle at 35% 110%, rgba(0,0,0,0.10), transparent 42%),
+    linear-gradient(180deg, rgba(255,255,255,0.52), rgba(255,255,255,0.18)) !important;
+
+  border: 1px solid rgba(255,255,255,0.86) !important;
+  border-radius: 34px !important;
+
+  box-shadow:
+    0 26px 52px rgba(0,0,0,0.16),
+    0 9px 22px rgba(0,0,0,0.09),
+    inset 0 1px 0 rgba(255,255,255,0.96),
+    inset 0 -1px 0 rgba(0,0,0,0.05) !important;
+}
+
+/* ---------- APP MENU BUTTONS ---------- */
+
+/* Remove any invisible cheap cards behind icons */
+body.nav-menu-open #evaMenuPanel .eva-app-grid > *,
+body.nav-menu-open #evaMenuPanel .eva-link.eva-app-tile,
+body.nav-menu-open #evaMenuPanel .eva-app-tile,
+body.nav-menu-open #evaMenuPanel .eva-account-tile {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+  clip-path: none !important;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-app-grid > *::before,
+body.nav-menu-open #evaMenuPanel .eva-app-grid > *::after,
+body.nav-menu-open #evaMenuPanel .eva-app-tile::before,
+body.nav-menu-open #evaMenuPanel .eva-app-tile::after,
+body.nav-menu-open #evaMenuPanel .eva-link.eva-app-tile::before,
+body.nav-menu-open #evaMenuPanel .eva-link.eva-app-tile::after {
+  display: none !important;
+  content: none !important;
+  background: none !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+/* Luxury updated icon base */
+body.nav-menu-open #evaMenuPanel .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-liquid-app-icon {
+  width: 66px !important;
+  height: 66px !important;
+  min-width: 66px !important;
+  border-radius: 22px !important;
+
+  position: relative !important;
+  isolation: isolate !important;
+  overflow: hidden !important;
+  display: grid !important;
+  place-items: center !important;
+  color: #fff !important;
+
+  background:
+    radial-gradient(circle at 28% 15%, rgba(255,255,255,0.96), transparent 22%),
+    radial-gradient(circle at 72% 84%, rgba(255,255,255,0.18), transparent 38%),
+    linear-gradient(145deg, #ff3249 0%, #d80020 43%, #090b0f 138%) !important;
+
+  border: 1.55px solid rgba(255,255,255,0.86) !important;
+
+  box-shadow:
+    0 26px 36px rgba(0,0,0,0.30),
+    0 15px 30px rgba(216,0,32,0.24),
+    0 0 26px rgba(216,0,32,0.18),
+    0 6px 12px rgba(0,0,0,0.20),
+    0 0 0 1px rgba(0,0,0,0.10),
+    inset 0 1px 0 rgba(255,255,255,0.80),
+    inset 0 -2px 5px rgba(0,0,0,0.32) !important;
+
+  transform: translateY(-3px);
+}
+
+/* Inner premium glass edge */
+body.nav-menu-open #evaMenuPanel .eva-app-icon::before,
+body.nav-menu-open #evaMenuPanel .eva-liquid-app-icon::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: 21px;
+  display: block !important;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,0.62),
+      transparent 30%,
+      rgba(255,255,255,0.08) 68%,
+      rgba(255,255,255,0.24)
+    ),
+    radial-gradient(circle at 75% 92%, rgba(0,0,0,0.26), transparent 36%) !important;
+}
+
+/* Red 3D glow imprint under every app icon */
+body.nav-menu-open #evaMenuPanel .eva-app-tile {
+  position: relative !important;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-app-tile .eva-app-icon {
+  z-index: 2 !important;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-app-tile .eva-app-label {
+  z-index: 2 !important;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-app-tile > .eva-app-icon + .eva-app-label::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -76px;
+  width: 82px;
+  height: 82px;
+  transform: translateX(-50%);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 50% 46%, rgba(216,0,32,0.24), transparent 62%),
+    radial-gradient(circle at 50% 50%, rgba(255,48,71,0.14), transparent 72%);
+  filter: blur(9px);
+  opacity: 0.96;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Shimmer sweep over all icons */
+body.nav-menu-open #evaMenuPanel .eva-app-icon::after,
+body.nav-menu-open #evaMenuPanel .eva-liquid-app-icon::after {
+  content: "";
+  position: absolute;
+  width: 120% !important;
+  height: 42% !important;
+  left: -72% !important;
+  top: 4px !important;
+  border-radius: 999px;
+  display: block !important;
+  pointer-events: none;
+  z-index: 2;
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,0.18),
+      rgba(255,255,255,0.82),
+      rgba(255,255,255,0.12),
+      transparent
+    ) !important;
+  transform: rotate(-18deg);
+  opacity: 0;
+  animation: evaLuxIconShimmerV2 4.4s ease-in-out infinite;
+}
+
+@keyframes evaLuxIconShimmerV2 {
+  0%, 24% {
+    left: -78%;
+    opacity: 0;
+  }
+  34% {
+    opacity: 0.92;
+  }
+  52% {
+    left: 56%;
+    opacity: 0.38;
+  }
+  100% {
+    left: 56%;
+    opacity: 0;
+  }
+}
+
+/* White glyph with black outline/depth */
+body.nav-menu-open #evaMenuPanel .eva-app-icon svg,
+body.nav-menu-open #evaMenuPanel .eva-liquid-app-icon svg {
+  width: 28px !important;
+  height: 28px !important;
+  position: relative !important;
+  z-index: 3 !important;
+  stroke: #fff !important;
+  fill: none !important;
+  stroke-width: 2.35 !important;
+
+  filter:
+    drop-shadow(0 1px 0 rgba(0,0,0,1))
+    drop-shadow(0 -1px 0 rgba(0,0,0,0.78))
+    drop-shadow(1px 0 0 rgba(0,0,0,0.78))
+    drop-shadow(-1px 0 0 rgba(0,0,0,0.78))
+    drop-shadow(0 3px 5px rgba(0,0,0,0.38))
+    drop-shadow(0 0 10px rgba(255,255,255,0.18)) !important;
+}
+
+/* Labels need room for glow pseudo element */
+body.nav-menu-open #evaMenuPanel .eva-app-label {
+  position: relative !important;
+  color: rgba(8,18,16,0.96) !important;
+  font-weight: 950 !important;
+  letter-spacing: -0.025em !important;
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.66),
+    0 5px 10px rgba(0,0,0,0.08) !important;
+}
+
+/* Press effect */
+body.nav-menu-open #evaMenuPanel .eva-app-tile:active .eva-app-icon {
+  transform: translateY(0) scale(0.94) !important;
+}
+
+/* Mobile tuning */
+@media (max-width: 430px) {
+  .eva-brand {
+    left: calc(50% - 16px) !important;
+  }
+
+  .eva-nav-shell.compact .eva-brand,
+  .eva-nav-pill.is-compact .eva-brand,
+  .eva-nav-pill.compact .eva-brand,
+  .eva-nav-pill.is-island .eva-brand {
+    left: 50% !important;
+  }
+
+  .eva-menu-zone {
+    right: 10px !important;
+    gap: 9px !important;
+  }
+
+  .eva-right-spacer {
+    width: 96px !important;
+  }
+
+  #evaThemePillToggle,
+  .eva-theme-nav-btn,
+  body.nav-menu-open #evaThemePillToggle {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+  }
+
+  #evaMenuBtn,
+  .eva-menu-btn {
+    width: 52px !important;
+    height: 52px !important;
+    min-width: 52px !important;
+  }
+
+  body.nav-menu-open #evaMenuPanel .eva-app-icon,
+  body.nav-menu-open #evaMenuPanel .eva-liquid-app-icon {
+    width: 63px !important;
+    height: 63px !important;
+    min-width: 63px !important;
+    border-radius: 21px !important;
+  }
+
+  body.nav-menu-open #evaMenuPanel .eva-app-icon::before,
+  body.nav-menu-open #evaMenuPanel .eva-liquid-app-icon::before {
+    border-radius: 20px !important;
+  }
+}
