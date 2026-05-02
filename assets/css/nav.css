@@ -3655,3 +3655,312 @@ html[data-theme$="-light"] .eva-menu-close-btn span {
     max-width: 78px !important;
   }
 }
+
+/* =========================================================
+   FINAL CONNECTED CONTROL CENTER
+   Keeps the closest app launcher layout, removes the ugly top tab,
+   connects the dropdown to the nav pill, and makes the nav button
+   become the close control.
+   ========================================================= */
+
+/* Keep nav above the dropdown so it feels connected, not replaced */
+body.nav-menu-open .eva-nav-shell {
+  z-index: 10050 !important;
+}
+
+body.nav-menu-open .eva-backdrop {
+  z-index: 10020 !important;
+  backdrop-filter: blur(18px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
+}
+
+body.nav-menu-open #evaMenuPanel.eva-control-center-panel {
+  z-index: 10035 !important;
+}
+
+/* Make the dropdown tuck under the nav pill */
+body.nav-menu-open #evaMenuPanel.eva-control-center-panel {
+  position: fixed !important;
+  left: 50% !important;
+  top: calc(var(--eva-island-offset, 10px) + 58px) !important;
+  width: min(430px, calc(100vw - 18px)) !important;
+  max-height: calc(100vh - 112px - env(safe-area-inset-bottom, 0px)) !important;
+  transform: translateX(-50%) translateY(0) scale(1) !important;
+  transform-origin: top center !important;
+  padding-top: 28px !important;
+  border-radius: 28px 28px 34px 34px !important;
+  overflow: auto !important;
+  background:
+    radial-gradient(circle at 50% -8%, rgba(255,255,255,0.42), transparent 24%),
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,0.22), transparent 30%),
+    radial-gradient(circle at 88% 6%, rgba(255,59,92,0.12), transparent 28%),
+    linear-gradient(180deg, rgba(248,249,252,0.86), rgba(235,238,243,0.74)) !important;
+  border: 1px solid rgba(255,255,255,0.72) !important;
+  box-shadow:
+    0 26px 72px rgba(0,0,0,0.28),
+    0 10px 26px rgba(0,0,0,0.16),
+    inset 0 1px 0 rgba(255,255,255,0.90),
+    inset 0 -1px 0 rgba(255,255,255,0.22) !important;
+  backdrop-filter: blur(34px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(34px) saturate(190%) !important;
+}
+
+/* REMOVE the ugly black bridge/tab from older versions */
+body.nav-menu-open #evaMenuPanel.eva-control-center-panel::before {
+  display: none !important;
+  content: none !important;
+}
+
+/* Add a soft liquid shine instead of the ugly black tab */
+body.nav-menu-open #evaMenuPanel.eva-control-center-panel::after {
+  content: "";
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  top: 10px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,0.88),
+    transparent
+  );
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+/* Make nav pill visually sit on top of the dropdown */
+body.nav-menu-open .eva-nav-pill {
+  box-shadow:
+    0 16px 34px rgba(0,0,0,0.14),
+    0 6px 16px rgba(0,0,0,0.10),
+    inset 0 1px 0 rgba(255,255,255,0.94),
+    inset 0 -1px 0 rgba(255,255,255,0.36) !important;
+}
+
+/* Liquid seam under the nav pill so the dropdown feels attached */
+body.nav-menu-open .eva-nav-pill::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -14px;
+  width: min(240px, 62vw);
+  height: 28px;
+  transform: translateX(-50%);
+  border-radius: 0 0 999px 999px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255,255,255,0.62), transparent 56%),
+    linear-gradient(180deg, rgba(255,255,255,0.72), rgba(245,247,251,0.20));
+  border: 1px solid rgba(255,255,255,0.40);
+  border-top: 0;
+  filter: blur(0.1px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Turn the nav hamburger into the close X when menu is open */
+body.nav-menu-open .eva-menu-btn {
+  transform: scale(0.98) !important;
+}
+
+body.nav-menu-open .eva-burger-line.top {
+  transform: translateY(7px) rotate(45deg) !important;
+}
+
+body.nav-menu-open .eva-burger-line.mid {
+  opacity: 0 !important;
+  transform: scaleX(0.2) !important;
+}
+
+body.nav-menu-open .eva-burger-line.bot {
+  transform: translateY(-7px) rotate(-45deg) !important;
+}
+
+/* Hide the extra X inside the panel because the nav button is now the connected close */
+body.nav-menu-open #evaMenuPanel .eva-menu-close-btn {
+  display: none !important;
+}
+
+/* Keep badge clean in header */
+body.nav-menu-open #evaMenuPanel .eva-menu-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+/* Better panel header spacing now that nav is the close control */
+body.nav-menu-open #evaMenuPanel .eva-menu-titlebar {
+  padding-top: 0 !important;
+}
+
+/* Preserve app launcher tiles and make them feel like app squares */
+body.nav-menu-open #evaMenuPanel .eva-app-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 12px 10px !important;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-link.eva-app-tile,
+body.nav-menu-open #evaMenuPanel .eva-app-tile {
+  min-height: 98px !important;
+  padding: 10px 7px 9px !important;
+  border-radius: 24px !important;
+  display: grid !important;
+  grid-template-rows: 56px auto !important;
+  place-items: center !important;
+  align-content: center !important;
+  gap: 7px !important;
+  text-align: center !important;
+  background:
+    radial-gradient(circle at 26% 18%, rgba(255,255,255,0.54), transparent 32%),
+    linear-gradient(180deg, rgba(255,255,255,0.70), rgba(255,255,255,0.34)) !important;
+  border: 1px solid rgba(255,255,255,0.80) !important;
+  box-shadow:
+    0 14px 28px rgba(85,95,110,0.14),
+    0 4px 12px rgba(85,95,110,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.94),
+    inset 0 -1px 0 rgba(255,255,255,0.30) !important;
+}
+
+/* Liquid Glass app icons */
+body.nav-menu-open #evaMenuPanel .eva-app-icon {
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 18px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  display: grid !important;
+  place-items: center !important;
+  color: #fff !important;
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,0.66), transparent 25%),
+    radial-gradient(circle at 76% 82%, rgba(255,255,255,0.22), transparent 34%),
+    linear-gradient(145deg, rgba(255,59,92,1), rgba(151,55,255,0.92) 52%, rgba(50,122,255,0.82)) !important;
+  box-shadow:
+    0 14px 24px rgba(0,0,0,0.22),
+    0 0 22px rgba(255,59,92,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.52),
+    inset 0 -1px 0 rgba(0,0,0,0.12) !important;
+  backdrop-filter: blur(18px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-app-icon::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: 17px;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.36), transparent 36%, rgba(255,255,255,0.10));
+  pointer-events: none;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-app-icon::after {
+  content: "";
+  position: absolute;
+  width: 40px;
+  height: 14px;
+  left: 9px;
+  top: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.52), rgba(255,255,255,0.06));
+  transform: rotate(-18deg);
+  pointer-events: none;
+  opacity: 0.76;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-app-icon svg {
+  width: 25px !important;
+  height: 25px !important;
+  position: relative !important;
+  z-index: 2 !important;
+  stroke: currentColor !important;
+  fill: none !important;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.30)) !important;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-app-label {
+  font-size: 0.64rem !important;
+  font-weight: 900 !important;
+  line-height: 1.05 !important;
+  color: rgba(18,35,30,0.86) !important;
+  text-align: center !important;
+  text-shadow: none !important;
+}
+
+/* Category icon colors */
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-dashboard .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-settings .eva-app-icon {
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,0.66), transparent 25%),
+    linear-gradient(145deg, rgba(54,132,255,1), rgba(116,69,255,0.94)) !important;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-companies .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-users .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-applications .eva-app-icon {
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,0.66), transparent 25%),
+    linear-gradient(145deg, rgba(255,59,92,1), rgba(255,138,52,0.94)) !important;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-leads .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-jobs .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-qa .eva-app-icon {
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,0.66), transparent 25%),
+    linear-gradient(145deg, rgba(20,200,140,1), rgba(30,110,255,0.92)) !important;
+}
+
+/* Dark mode keeps Liquid Glass but avoids the black ugly tab */
+html[data-theme="dark"] body.nav-menu-open #evaMenuPanel.eva-control-center-panel,
+html[data-theme$="-dark"] body.nav-menu-open #evaMenuPanel.eva-control-center-panel {
+  background:
+    radial-gradient(circle at 50% -8%, rgba(255,255,255,0.18), transparent 24%),
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,0.12), transparent 30%),
+    radial-gradient(circle at 88% 6%, rgba(255,59,92,0.12), transparent 28%),
+    linear-gradient(180deg, rgba(20,22,30,0.88), rgba(5,6,10,0.94)) !important;
+  border-color: rgba(255,255,255,0.16) !important;
+}
+
+html[data-theme="dark"] body.nav-menu-open #evaMenuPanel .eva-app-label,
+html[data-theme$="-dark"] body.nav-menu-open #evaMenuPanel .eva-app-label {
+  color: rgba(255,255,255,0.90) !important;
+  text-shadow: 0 2px 7px rgba(0,0,0,0.25) !important;
+}
+
+@media (max-width: 430px) {
+  body.nav-menu-open #evaMenuPanel.eva-control-center-panel {
+    top: calc(var(--eva-island-offset, 10px) + 56px) !important;
+    width: calc(100vw - 14px) !important;
+    padding-top: 28px !important;
+    border-radius: 26px 26px 30px 30px !important;
+  }
+
+  body.nav-menu-open .eva-nav-pill::after {
+    width: min(210px, 58vw);
+    bottom: -13px;
+  }
+
+  body.nav-menu-open #evaMenuPanel .eva-app-grid {
+    gap: 10px 8px !important;
+  }
+
+  body.nav-menu-open #evaMenuPanel .eva-link.eva-app-tile,
+  body.nav-menu-open #evaMenuPanel .eva-app-tile {
+    min-height: 92px !important;
+    grid-template-rows: 52px auto !important;
+  }
+
+  body.nav-menu-open #evaMenuPanel .eva-app-icon {
+    width: 52px !important;
+    height: 52px !important;
+    border-radius: 17px !important;
+  }
+
+  body.nav-menu-open #evaMenuPanel .eva-app-label {
+    font-size: 0.61rem !important;
+    max-width: 78px !important;
+  }
+}
