@@ -525,3 +525,52 @@ html[data-theme="galaxy"] .hero-home::before {
     padding-top: 54px !important;
   }
 }
+
+/* =========================================================
+   Home Hero Final Position
+   Matches the tighter screenshot target under the nav.
+   ========================================================= */
+
+@media (max-width: 680px) {
+  .home-shell {
+    padding-top: 0px !important;
+  }
+
+  .hero-home {
+    margin-top: -18px !important;
+    padding-top: 0 !important;
+    min-height: auto !important;
+    display: block !important;
+  }
+
+  .hero-grid {
+    margin-top: 0 !important;
+    display: block !important;
+  }
+
+  .hero-content {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+    gap: 18px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .home-shell {
+    padding-top: 0px !important;
+  }
+
+  .hero-home {
+    margin-top: -22px !important;
+  }
+}
+
+@media (display-mode: standalone) and (max-width: 680px) {
+  .home-shell {
+    padding-top: 2px !important;
+  }
+
+  .hero-home {
+    margin-top: -16px !important;
+  }
+}
