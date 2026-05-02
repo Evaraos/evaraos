@@ -26,6 +26,33 @@ import {
   navigateWithLoader
 } from "./nav-navigation.js";
 
+import {
+  logoutAndRedirect
+} from "../firebase.js";
+
+const NAV_ACTION_SELECTOR = "#evaMenuBtn, #evaThemePillToggle";
+const BRAND_SELECTOR = "#evaBrandBlock";
+
+function isNavActionTarget(event) {
+  const target = event?.target;
+  return !!target?.closest?.(NAV_ACTION_SELECTOR);
+}
+
+function isBrandTarget(event) {
+  const target = event?.target;
+  return !!target?.closest?.(BRAND_SELECTOR);
+}
+
+function shouldIgnorePillTarget(event) {
+  return isNavActionTarget(event) || isBrandTarget(event);
+}
+
+function stopEvent(event) {
+  if (!event) return;
+  event.preventDefault();
+  event.stopPropagation();
+}
+
 export function clearPressTimer() {
   if (NAV_STATE.pressTimer) {
     clearTimeout(NAV_STATE.pressTimer);
@@ -37,43 +64,34 @@ export function endCompactPress() {
   const pill = getNavPill();
 
   clearPressTimer();
-
-  if (pill) {
-    pill.classList.remove("is-pressing");
-  }
-
+  pill?.classList.remove("is-pressing");
   document.body.classList.remove("eva-pressing-nav");
 }
 
 export function togglePill(event) {
-  if (event) {
-    event.preventDefault();
-    event.stopPropagation();
-  }
+  stopEvent(event);
 
   if (document.body.classList.contains("nav-menu-open")) return;
 
   if (isCompact()) {
     expandNav(true, "tap");
-    scheduleCompact(2200);
+    scheduleCompact();
     return;
   }
 
   if (window.scrollY > 4) {
-    NAV_STATE.navPinnedOpen = false;
     compactNav(true, "tap");
+  } else {
+    scheduleCompact();
   }
 }
 
 export function startCompactPress(event) {
   const pill = getNavPill();
 
-  if (!pill || !isCompact()) return;
-  if (event.target.closest("#evaMenuBtn, #evaThemePillToggle")) return;
-  if (event.target.closest("#evaBrandBlock")) return;
+  if (!pill || !isCompact() || shouldIgnorePillTarget(event)) return;
 
   clearPressTimer();
-
   NAV_STATE.longPressTriggered = false;
 
   pill.classList.add("is-pressing");
@@ -90,8 +108,7 @@ export function bindTapToggle() {
   if (!pill) return;
 
   function onTouchStart(event) {
-    if (event.target.closest("#evaMenuBtn, #evaThemePillToggle")) return;
-    if (event.target.closest("#evaBrandBlock")) return;
+    if (shouldIgnorePillTarget(event)) return;
 
     const touch = event.touches ? event.touches[0] : event;
 
@@ -104,8 +121,7 @@ export function bindTapToggle() {
   }
 
   function onTouchMove(event) {
-    if (event.target.closest("#evaMenuBtn, #evaThemePillToggle")) return;
-    if (event.target.closest("#evaBrandBlock")) return;
+    if (shouldIgnorePillTarget(event)) return;
 
     const touch = event.touches ? event.touches[0] : event;
     const dx = Math.abs(touch.clientX - NAV_STATE.tapStartX);
@@ -118,8 +134,7 @@ export function bindTapToggle() {
   }
 
   function onTouchEnd(event) {
-    if (event.target.closest("#evaMenuBtn, #evaThemePillToggle")) return;
-    if (event.target.closest("#evaBrandBlock")) return;
+    if (shouldIgnorePillTarget(event)) return;
 
     const wasLongPress = NAV_STATE.longPressTriggered;
 
@@ -137,15 +152,14 @@ export function bindTapToggle() {
   pill.addEventListener("touchcancel", endCompactPress);
 
   pill.addEventListener("mousedown", (event) => {
-    if (event.target.closest("#evaMenuBtn, #evaThemePillToggle")) return;
-    if (event.target.closest("#evaBrandBlock")) return;
+    if (shouldIgnorePillTarget(event)) return;
     startCompactPress(event);
   });
 
   pill.addEventListener("mouseup", () => {
     const wasLongPress = NAV_STATE.longPressTriggered;
     endCompactPress();
-    if (wasLongPress) return;
+    if (wasLongPress) NAV_STATE.longPressTriggered = false;
   });
 
   pill.addEventListener("mouseleave", endCompactPress);
@@ -153,13 +167,11 @@ export function bindTapToggle() {
   pill.addEventListener("selectstart", (event) => event.preventDefault());
 
   pill.addEventListener("click", (event) => {
-    if (event.target.closest("#evaMenuBtn, #evaThemePillToggle")) return;
-    if (event.target.closest("#evaBrandBlock")) return;
+    if (shouldIgnorePillTarget(event)) return;
 
     if (NAV_STATE.longPressTriggered) {
       NAV_STATE.longPressTriggered = false;
-      event.preventDefault();
-      event.stopPropagation();
+      stopEvent(event);
       return;
     }
 
@@ -176,48 +188,31 @@ export function bindBrandHome() {
   const brand = getBrandBlock();
   if (!brand) return;
 
-  brand.addEventListener("click", (event) => {
-    if (isCompact()) {
-      event.preventDefault();
-      event.stopPropagation();
-      return;
-    }
+  function openHome(event) {
+    stopEvent(event);
 
-    event.preventDefault();
-    event.stopPropagation();
+    if (isCompact()) return;
 
-    const href = brand.getAttribute("data-home-link");
+    const href = brand.getAttribute("data-home-link") || buildHref("index.html");
 
     navigateWithLoader(href, {
       title: "Opening Home",
       subtitle: "Loading the Evaraos home experience."
     });
-  });
+  }
+
+  brand.addEventListener("click", openHome);
 
   brand.addEventListener("keydown", (event) => {
-    if (isCompact()) {
-      event.preventDefault();
-      return;
-    }
-
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-
-      const href = brand.getAttribute("data-home-link");
-
-      navigateWithLoader(href, {
-        title: "Opening Home",
-        subtitle: "Loading the Evaraos home experience."
-      });
-    }
+    if (event.key !== "Enter" && event.key !== " ") return;
+    openHome(event);
   });
 }
 
 export function bindLinks() {
   document.querySelectorAll("[data-menu-link]").forEach((link) => {
     link.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
+      stopEvent(event);
 
       const href = link.getAttribute("data-menu-link");
       if (!href) return;
@@ -233,10 +228,10 @@ export function bindLinks() {
 
   document.querySelectorAll("[data-quick-link]").forEach((btn) => {
     btn.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
+      stopEvent(event);
 
       const href = btn.getAttribute("data-quick-link");
+      if (!href) return;
 
       hideQuickBubbles();
 
@@ -250,20 +245,10 @@ export function bindLinks() {
   const logoutBtn = document.getElementById("evaLogoutBtn");
 
   if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      try {
-        localStorage.removeItem("evaraos-user");
-        localStorage.removeItem("evaraos-role");
-        sessionStorage.removeItem("evaraos-user");
-        sessionStorage.removeItem("evaraos-role");
-      } catch {}
-
+    logoutBtn.addEventListener("click", async (event) => {
+      stopEvent(event);
       closeMenu(false);
-
-      navigateWithLoader(buildHref("login.html"), {
-        title: "Signing out",
-        subtitle: "Clearing local session and returning to login."
-      });
+      await logoutAndRedirect(buildHref("login.html"));
     });
   }
 }
@@ -274,26 +259,19 @@ export function bindThemeToggle() {
 
   toggles.forEach((toggle) => {
     toggle.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
+      stopEvent(event);
 
       const current = getAppearanceTheme();
       const next = current === "light" ? "dark" : "light";
 
       try {
         const raw = localStorage.getItem("evaraos-appearance");
+        const appearance = raw ? JSON.parse(raw) : {};
 
-        if (raw) {
-          const appearance = JSON.parse(raw);
-          appearance.mode = next;
-          appearance.baseFamily = next;
-          localStorage.setItem("evaraos-appearance", JSON.stringify(appearance));
-        } else {
-          localStorage.setItem("evaraos-appearance", JSON.stringify({
-            mode: next,
-            baseFamily: next
-          }));
-        }
+        appearance.mode = next;
+        appearance.baseFamily = next;
+
+        localStorage.setItem("evaraos-appearance", JSON.stringify(appearance));
       } catch {}
 
       setTheme(next);
@@ -323,8 +301,7 @@ function bindMenuCloseButton() {
   if (!closeBtn) return;
 
   closeBtn.addEventListener("click", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
+    stopEvent(event);
     closeMenu(true);
   });
 }
