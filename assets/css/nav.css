@@ -9779,3 +9779,88 @@ body.nav-menu-open .eva-nav-shell.is-island .eva-nav-pill {
     --eva-compact-dot-logo-size: 26px;
   }
 }
+
+/* =========================================================
+   EMERGENCY NAV RESTORE PATCH
+   Full nav is visible at top again.
+   Compact dot stays available when scrolled, but won't hide nav on load.
+   ========================================================= */
+
+/* Make sure the nav layer cannot disappear behind page/browser UI */
+.eva-nav-layer,
+.eva-nav-shell,
+#evaNavShell {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 99999 !important;
+  pointer-events: auto !important;
+}
+
+/* Full expanded nav must be visible at top */
+body:not(.nav-menu-open) .eva-nav-shell.expanded,
+body:not(.nav-menu-open) .eva-nav-shell:not(.compact) {
+  top: var(--eva-island-offset, max(10px, calc(env(safe-area-inset-top, 0px) + 8px))) !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100vw !important;
+  height: auto !important;
+  padding-inline: max(7px, env(safe-area-inset-left)) max(7px, env(safe-area-inset-right)) !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: flex-start !important;
+  transform: none !important;
+}
+
+body:not(.nav-menu-open) .eva-nav-shell.expanded .eva-nav-pill,
+body:not(.nav-menu-open) .eva-nav-shell:not(.compact) .eva-nav-pill {
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+
+  width: min(calc(100vw - 18px), 1080px) !important;
+  max-width: min(calc(100vw - 18px), 1080px) !important;
+  min-width: 0 !important;
+
+  height: auto !important;
+  min-height: 58px !important;
+  max-height: none !important;
+
+  transform: none !important;
+  border-radius: 999px !important;
+
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Restore full-nav content */
+body:not(.nav-menu-open) .eva-nav-shell.expanded .eva-brand-copy,
+body:not(.nav-menu-open) .eva-nav-shell:not(.compact) .eva-brand-copy,
+body:not(.nav-menu-open) .eva-nav-shell.expanded #evaMenuZone,
+body:not(.nav-menu-open) .eva-nav-shell:not(.compact) #evaMenuZone,
+body:not(.nav-menu-open) .eva-nav-shell.expanded #evaThemePillToggle,
+body:not(.nav-menu-open) .eva-nav-shell:not(.compact) #evaThemePillToggle {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Keep compact dot visible when it is active */
+body:not(.nav-menu-open) .eva-nav-shell.compact {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: none !important;
+}
+
+body:not(.nav-menu-open) .eva-nav-shell.compact .eva-nav-pill {
+  display: grid !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}

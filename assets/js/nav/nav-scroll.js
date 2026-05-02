@@ -80,6 +80,11 @@ export function compactNav(unpin = false, mode = "scroll") {
     NAV_STATE.navPinnedOpen = false;
   }
 
+  if (atTopOfPage() && !document.body.classList.contains("nav-menu-open")) {
+    setTarget(1, mode);
+    return;
+  }
+
   setTarget(0, mode);
 }
 
@@ -134,7 +139,8 @@ export function settleAfterScroll() {
     }
 
     if (atTopOfPage()) {
-      setTarget(0, "scroll");
+      NAV_STATE.navPinnedOpen = false;
+      setTarget(1, "scroll");
       return;
     }
 
@@ -165,7 +171,8 @@ export function bindScrollBehavior() {
         if (NAV_STATE.navPinnedOpen) {
           setTarget(1, "tap");
         } else if (atTopOfPage()) {
-          setTarget(0, "scroll");
+          NAV_STATE.navPinnedOpen = false;
+          setTarget(1, "scroll");
         } else if (atBottomOfPage()) {
           NAV_STATE.navPinnedOpen = false;
           setTarget(0, "scroll");

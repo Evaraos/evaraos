@@ -8,6 +8,7 @@ import {
 import {
   expandNav,
   setTarget,
+  atTopOfPage,
   hideQuickBubbles
 } from "./nav-scroll.js";
 
@@ -87,7 +88,12 @@ export function closeMenu(shouldCompact = true) {
 
   if (shouldCompact) {
     NAV_STATE.navPinnedOpen = false;
-    setTarget(0, "tap");
+
+    if (atTopOfPage()) {
+      setTarget(1, "tap");
+    } else {
+      setTarget(0, "tap");
+    }
   }
 }
 
