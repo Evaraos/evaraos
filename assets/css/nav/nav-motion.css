@@ -1,0 +1,234 @@
+/* NAV MOTION / BOTTOM DYNAMIC ISLAND POLISH */
+
+:root {
+  --eva-page-nav-clearance: 0px;
+  --eva-page-nav-bottom-clearance: calc(112px + env(safe-area-inset-bottom, 0px));
+  --eva-island-offset: max(12px, calc(env(safe-area-inset-bottom, 0px) + 14px));
+}
+
+.eva-nav-shell {
+  top: auto !important;
+  bottom: var(--eva-island-offset) !important;
+  align-items: flex-end !important;
+  --pill-min-width: 162px;
+  --pill-height: calc(46px + 28px * var(--nav-progress));
+  --compact-logo: 82px;
+  --full-logo: 104px;
+  --menu-size: calc(0px + 44px * var(--nav-progress));
+  --side-balance: calc(0px + 104px * var(--nav-progress));
+  --brand-max-width: calc(82px + 260px * var(--nav-progress));
+}
+
+.eva-nav-shell.compact .eva-nav-pill,
+.eva-nav-pill.is-compact,
+.eva-nav-pill.compact,
+.eva-nav-pill.is-island {
+  width: min(172px, calc(100vw - 20px)) !important;
+  max-width: min(172px, calc(100vw - 20px)) !important;
+  min-height: 48px !important;
+  height: 48px !important;
+  padding: 3px 12px !important;
+  border-radius: 999px !important;
+}
+
+.eva-nav-shell.expanded .eva-nav-pill {
+  min-height: 74px !important;
+}
+
+.eva-nav-pill {
+  overflow: visible !important;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,0.24), transparent 30%),
+    radial-gradient(circle at 86% 12%, rgba(216,0,32,0.12), transparent 34%),
+    linear-gradient(180deg, rgba(18, 20, 29, 0.90), rgba(6, 7, 11, 0.95)) !important;
+  border: 1px solid rgba(255,255,255,0.17) !important;
+  box-shadow:
+    0 20px 44px rgba(0,0,0,0.30),
+    0 8px 20px rgba(0,0,0,0.18),
+    0 0 18px rgba(216,0,32,0.10),
+    inset 0 1px 0 rgba(255,255,255,0.24),
+    inset 0 -1px 0 rgba(255,255,255,0.05) !important;
+}
+
+.eva-nav-pill::before {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.22), transparent 36%, rgba(255,255,255,0.06) 70%, rgba(255,255,255,0.13)),
+    linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.11),
+    inset 0 10px 26px rgba(255,255,255,0.07) !important;
+}
+
+.eva-nav-pill::after {
+  content: "";
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  top: 6px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.74), rgba(255,255,255,0.30), transparent) !important;
+  opacity: 0.66;
+  pointer-events: none;
+  z-index: 1;
+  box-shadow: none !important;
+}
+
+html[data-theme="light"] .eva-nav-pill,
+html[data-theme$="-light"] .eva-nav-pill {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,0.98), transparent 34%),
+    radial-gradient(circle at 86% 12%, rgba(216,0,32,0.10), transparent 34%),
+    linear-gradient(180deg, rgba(255,255,255,0.92), rgba(245,247,250,0.84)) !important;
+  border: 1px solid rgba(255,255,255,0.94) !important;
+  box-shadow:
+    0 18px 40px rgba(80,95,110,0.18),
+    0 8px 20px rgba(80,95,110,0.10),
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(0,0,0,0.04) !important;
+}
+
+.eva-nav-shell.compact .eva-brand,
+.eva-nav-pill.is-compact .eva-brand,
+.eva-nav-pill.compact .eva-brand,
+.eva-nav-pill.is-island .eva-brand {
+  inset: 0 !important;
+  left: 0 !important;
+  top: 0 !important;
+  transform: none !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  padding: 0 11px !important;
+  gap: 7px !important;
+  justify-content: center !important;
+}
+
+.eva-nav-shell.compact .eva-logo {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  filter: drop-shadow(0 0 8px rgba(255,255,255,0.18)) drop-shadow(0 0 12px rgba(216,0,32,0.18)) !important;
+}
+
+.eva-nav-shell.expanded .eva-logo {
+  width: 100px !important;
+  height: 100px !important;
+  min-width: 100px !important;
+}
+
+.eva-nav-shell.expanded .eva-brand {
+  gap: 10px !important;
+}
+
+.eva-nav-shell.compact .eva-brand-copy {
+  opacity: 1 !important;
+  max-width: 94px !important;
+  display: grid !important;
+  justify-items: start !important;
+}
+
+.eva-nav-shell.compact .eva-brand-copy strong {
+  color: #fff !important;
+  font-size: 0.70rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.035em !important;
+  max-width: 94px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.62) !important;
+}
+
+.eva-nav-shell.compact .eva-brand-copy span {
+  display: none !important;
+}
+
+.eva-nav-shell.expanded .eva-brand-copy strong {
+  font-size: 1.12rem !important;
+  font-weight: 950 !important;
+}
+
+.eva-nav-shell.expanded .eva-brand-copy span {
+  font-size: 0.78rem !important;
+}
+
+html[data-theme="light"] .eva-nav-shell.compact .eva-brand-copy strong,
+html[data-theme$="-light"] .eva-nav-shell.compact .eva-brand-copy strong {
+  color: #10231d !important;
+  text-shadow: none !important;
+}
+
+body:not(.login-page) #appRoot {
+  padding-top: 0 !important;
+  padding-bottom: var(--eva-page-nav-bottom-clearance) !important;
+  box-sizing: border-box;
+}
+
+body.login-page #appRoot {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+html {
+  scroll-padding-top: 0 !important;
+  scroll-padding-bottom: var(--eva-page-nav-bottom-clearance) !important;
+}
+
+.page-shell,
+.app-shell,
+.dashboard-shell,
+.settings-shell,
+.profile-shell,
+.security-shell,
+.applications-shell,
+.users-shell,
+.companies-shell,
+.leads-shell,
+.jobs-shell,
+.qa-shell,
+.audit-shell,
+main.container,
+main.page-container,
+.home-shell {
+  padding-top: initial;
+  padding-bottom: var(--eva-page-nav-bottom-clearance) !important;
+}
+
+@media (max-width: 680px) {
+  :root {
+    --eva-page-nav-bottom-clearance: calc(118px + env(safe-area-inset-bottom, 0px));
+    --eva-island-offset: max(10px, calc(env(safe-area-inset-bottom, 0px) + 10px));
+  }
+
+  .eva-nav-shell {
+    --compact-logo: 78px;
+    --full-logo: 92px;
+    --pill-min-width: 156px;
+    --menu-size: calc(0px + 40px * var(--nav-progress));
+    --side-balance: calc(0px + 96px * var(--nav-progress));
+  }
+
+  .eva-nav-shell.expanded .eva-logo {
+    width: 88px !important;
+    height: 88px !important;
+    min-width: 88px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .eva-nav-shell.compact .eva-nav-pill,
+  .eva-nav-pill.is-compact,
+  .eva-nav-pill.compact,
+  .eva-nav-pill.is-island {
+    width: min(164px, calc(100vw - 18px)) !important;
+    max-width: min(164px, calc(100vw - 18px)) !important;
+  }
+
+  .eva-nav-shell.compact .eva-logo {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+  }
+}
