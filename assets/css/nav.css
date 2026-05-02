@@ -1130,3 +1130,24 @@ body.login-page #appRoot {
     --eva-mobile-page-top-space: 110px;
   }
 }
+
+/* =========================================================
+   Dynamic Island Nav Micro Lift
+   Moves the pill slightly upward without touching page content.
+   ========================================================= */
+
+@media (max-width: 680px) {
+  :root {
+    --eva-island-offset: max(4px, calc(env(safe-area-inset-top, 0px) + 4px)) !important;
+  }
+
+  .eva-nav-shell {
+    top: var(--eva-island-offset) !important;
+  }
+}
+
+@media (display-mode: standalone) and (max-width: 680px) {
+  :root {
+    --eva-island-offset: max(6px, calc(env(safe-area-inset-top, 0px) + 4px)) !important;
+  }
+}
