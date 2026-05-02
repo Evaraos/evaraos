@@ -7,50 +7,161 @@
   transform: translateY(-50%);
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 9px;
   z-index: 2147483647;
   pointer-events: auto;
 }
 
-#evaThemePillToggle {
-  width: 22px;
-  height: 22px;
+#evaThemePillToggle,
+.eva-theme-nav-btn {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  padding: 0;
+  margin: 0;
   display: grid;
   place-items: center;
   cursor: pointer;
   background: transparent;
-  border: none;
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.eva-theme-nav-icon {
+  width: 22px;
+  height: 22px;
+  display: block;
+  position: relative;
 }
 
 .eva-theme-nav-icon::before {
   content: "☾";
-  font-size: 20px;
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #071714;
+  font-size: 21px;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.85), 0 3px 8px rgba(0,0,0,0.22);
 }
 
-html[data-theme="dark"] .eva-theme-nav-icon::before {
+html[data-theme="dark"] .eva-theme-nav-icon::before,
+html[data-theme$="-dark"] .eva-theme-nav-icon::before,
+html[data-theme="galaxy"] .eva-theme-nav-icon::before {
   content: "☀";
+  color: #ffffff;
+  font-size: 18px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.45), 0 0 12px rgba(255,255,255,0.16);
 }
 
-#evaMenuBtn {
-  width: 54px;
-  height: 54px;
+#evaMenuBtn,
+.eva-menu-btn {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  min-height: 52px;
+  padding: 0;
   border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.92);
   display: grid;
   place-items: center;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 30% 15%, rgba(255,255,255,1), transparent 36%),
+    linear-gradient(180deg, rgba(255,255,255,0.96), rgba(244,247,249,0.86));
+  box-shadow:
+    0 16px 26px rgba(0,0,0,0.16),
+    0 5px 13px rgba(0,0,0,0.09),
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(0,0,0,0.055);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  -webkit-tap-highlight-color: transparent;
 }
 
+html[data-theme="dark"] #evaMenuBtn,
+html[data-theme="dark"] .eva-menu-btn,
+html[data-theme="galaxy"] #evaMenuBtn,
+html[data-theme="galaxy"] .eva-menu-btn {
+  border-color: rgba(255,255,255,0.18);
+  background:
+    radial-gradient(circle at 30% 15%, rgba(255,255,255,0.18), transparent 36%),
+    linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.045));
+  box-shadow:
+    0 16px 26px rgba(0,0,0,0.24),
+    inset 0 1px 0 rgba(255,255,255,0.22),
+    inset 0 -1px 0 rgba(0,0,0,0.25);
+}
+
+#evaMenuBtn:active,
+.eva-menu-btn:active {
+  transform: scale(0.97);
+}
+
+#evaMenuBtn .eva-burger,
+.eva-menu-btn .eva-burger {
+  width: 25px;
+  height: 19px;
+  position: relative;
+  display: block;
+}
+
+#evaMenuBtn .eva-burger-line,
+.eva-menu-btn .eva-burger-line,
 .eva-burger-line {
   position: absolute;
+  left: 50%;
   width: 25px;
-  height: 3px;
+  height: 2.8px;
+  border-radius: 999px;
   background: #10231e;
+  transform-origin: center;
+  transition: top 0.18s ease, transform 0.18s ease, opacity 0.14s ease, background 0.18s ease;
 }
 
-body.nav-menu-open .eva-burger-line.top {
-  transform: rotate(45deg);
+html[data-theme="dark"] .eva-burger-line,
+html[data-theme="galaxy"] .eva-burger-line {
+  background: #ffffff;
 }
 
-body.nav-menu-open .eva-burger-line.bot {
-  transform: rotate(-45deg);
+.eva-burger-line.top {
+  top: 0;
+  transform: translateX(-50%) rotate(0deg);
+}
+
+.eva-burger-line.mid {
+  top: 8px;
+  transform: translateX(-50%) scaleX(1);
+}
+
+.eva-burger-line.bot {
+  top: 16px;
+  transform: translateX(-50%) rotate(0deg);
+}
+
+body.nav-menu-open .eva-burger-line.top,
+.eva-menu-zone.open .eva-burger-line.top {
+  top: 8px;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+body.nav-menu-open .eva-burger-line.mid,
+.eva-menu-zone.open .eva-burger-line.mid {
+  top: 8px;
+  opacity: 0;
+  transform: translateX(-50%) scaleX(0);
+}
+
+body.nav-menu-open .eva-burger-line.bot,
+.eva-menu-zone.open .eva-burger-line.bot {
+  top: 8px;
+  transform: translateX(-50%) rotate(-45deg);
 }
