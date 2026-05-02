@@ -4143,3 +4143,265 @@ body.nav-menu-open #evaMenuPanel .eva-app-label {
     bottom: -17px;
   }
 }
+
+/* =========================================================
+   EVARAOS CONTROL CENTER FINAL APP-ICON PASS
+   Moves panel down, fixes nav X, removes app cards,
+   and makes icons Liquid Glass with Apple-style labels.
+   ========================================================= */
+
+/* Move the open control center down slightly while keeping it attached */
+body.nav-menu-open #evaMenuPanel.eva-control-center-panel {
+  top: calc(var(--eva-island-offset, 10px) + 82px) !important;
+  padding-top: 24px !important;
+  border-radius: 32px 32px 36px 36px !important;
+}
+
+/* Longer soft connector so it still feels tied to nav after moving down */
+body.nav-menu-open .eva-nav-pill::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -32px !important;
+  width: min(320px, 78vw) !important;
+  height: 46px !important;
+  transform: translateX(-50%);
+  border-radius: 0 0 999px 999px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255,255,255,0.72), transparent 58%),
+    linear-gradient(180deg, rgba(255,255,255,0.54), rgba(255,255,255,0.04));
+  filter: blur(0.2px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Fix the nav close X: clean, centered, not crooked */
+body.nav-menu-open .eva-menu-btn .eva-burger {
+  width: 26px !important;
+  height: 26px !important;
+  position: relative !important;
+  display: block !important;
+}
+
+body.nav-menu-open .eva-menu-btn .eva-burger-line {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  width: 20px !important;
+  height: 2.4px !important;
+  border-radius: 999px !important;
+  transform-origin: center !important;
+  background: rgba(13, 31, 27, 0.86) !important;
+}
+
+body.nav-menu-open .eva-burger-line.top {
+  transform: translate(-50%, -50%) rotate(45deg) !important;
+}
+
+body.nav-menu-open .eva-burger-line.mid {
+  opacity: 0 !important;
+  transform: translate(-50%, -50%) scaleX(0) !important;
+}
+
+body.nav-menu-open .eva-burger-line.bot {
+  transform: translate(-50%, -50%) rotate(-45deg) !important;
+}
+
+/* Make app grid feel like Apple home screen, not card rows */
+body.nav-menu-open #evaMenuPanel .eva-app-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 22px 10px !important;
+  align-items: start !important;
+}
+
+/* Remove cards behind apps */
+body.nav-menu-open #evaMenuPanel .eva-link.eva-app-tile,
+body.nav-menu-open #evaMenuPanel .eva-app-tile {
+  min-height: 86px !important;
+  height: 86px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  display: grid !important;
+  grid-template-rows: 62px 18px !important;
+  place-items: center !important;
+  gap: 6px !important;
+  overflow: visible !important;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-app-tile::before,
+body.nav-menu-open #evaMenuPanel .eva-app-tile::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Liquid Glass icon itself becomes the app square */
+body.nav-menu-open #evaMenuPanel .eva-app-icon {
+  width: 62px !important;
+  height: 62px !important;
+  border-radius: 20px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  display: grid !important;
+  place-items: center !important;
+  color: #fff !important;
+  background:
+    radial-gradient(circle at 28% 17%, rgba(255,255,255,0.78), transparent 23%),
+    radial-gradient(circle at 76% 82%, rgba(255,255,255,0.28), transparent 34%),
+    linear-gradient(145deg, #ff3148 0%, #d80020 52%, #ffffff 155%) !important;
+  border: 1.2px solid rgba(255,255,255,0.72) !important;
+  box-shadow:
+    0 16px 25px rgba(120,0,20,0.20),
+    0 6px 16px rgba(0,0,0,0.10),
+    inset 0 1px 0 rgba(255,255,255,0.64),
+    inset 0 -1px 0 rgba(90,0,15,0.14) !important;
+  backdrop-filter: blur(18px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(190%) !important;
+}
+
+/* Glass edge */
+body.nav-menu-open #evaMenuPanel .eva-app-icon::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: 19px;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.48), transparent 34%, rgba(255,255,255,0.10) 70%, rgba(255,255,255,0.22));
+}
+
+/* Apple-style glossy highlight */
+body.nav-menu-open #evaMenuPanel .eva-app-icon::after {
+  content: "";
+  position: absolute;
+  width: 46px !important;
+  height: 17px !important;
+  left: 8px !important;
+  top: 7px !important;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.62), rgba(255,255,255,0.08)) !important;
+  transform: rotate(-18deg);
+  opacity: 0.88 !important;
+  pointer-events: none;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-app-icon svg {
+  width: 27px !important;
+  height: 27px !important;
+  position: relative !important;
+  z-index: 2 !important;
+  stroke: currentColor !important;
+  fill: none !important;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.30)) !important;
+}
+
+/* Small Apple-style label */
+body.nav-menu-open #evaMenuPanel .eva-app-label {
+  max-width: 86px !important;
+  font-size: 0.62rem !important;
+  font-weight: 850 !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.015em !important;
+  color: rgba(12,33,27,0.88) !important;
+  text-align: center !important;
+  text-shadow: none !important;
+}
+
+/* Evaraos function-coded icon families */
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-dashboard .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-settings .eva-app-icon {
+  background:
+    radial-gradient(circle at 28% 17%, rgba(255,255,255,0.78), transparent 23%),
+    linear-gradient(145deg, #ffffff -18%, #d80020 44%, #171b24 125%) !important;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-companies .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-users .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-applications .eva-app-icon {
+  background:
+    radial-gradient(circle at 28% 17%, rgba(255,255,255,0.78), transparent 23%),
+    linear-gradient(145deg, #ff4055 0%, #d80020 48%, #ff8a50 120%) !important;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-leads .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-jobs .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-qa .eva-app-icon {
+  background:
+    radial-gradient(circle at 28% 17%, rgba(255,255,255,0.78), transparent 23%),
+    linear-gradient(145deg, #ffffff -18%, #d80020 38%, #009b9b 120%) !important;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-home .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-apply .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-login .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-signup .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-reset .eva-app-icon {
+  background:
+    radial-gradient(circle at 28% 17%, rgba(255,255,255,0.82), transparent 23%),
+    linear-gradient(145deg, #ffffff -18%, #ff3047 42%, #d80020 112%) !important;
+}
+
+/* Active app icon ring, not a card */
+body.nav-menu-open #evaMenuPanel .eva-app-tile.active {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-app-tile.active .eva-app-icon {
+  box-shadow:
+    0 16px 28px rgba(216,0,32,0.24),
+    0 0 0 2px rgba(216,0,32,0.20),
+    0 0 0 5px rgba(255,255,255,0.34),
+    inset 0 1px 0 rgba(255,255,255,0.66),
+    inset 0 -1px 0 rgba(90,0,15,0.14) !important;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-app-tile:active .eva-app-icon {
+  transform: scale(0.94) !important;
+}
+
+/* Section cards stay as glass folders, but app cards are gone */
+body.nav-menu-open #evaMenuPanel .eva-menu-section {
+  padding: 18px 14px 20px !important;
+}
+
+/* Mobile tuning */
+@media (max-width: 430px) {
+  body.nav-menu-open #evaMenuPanel.eva-control-center-panel {
+    top: calc(var(--eva-island-offset, 10px) + 78px) !important;
+  }
+
+  body.nav-menu-open #evaMenuPanel .eva-app-grid {
+    gap: 20px 6px !important;
+  }
+
+  body.nav-menu-open #evaMenuPanel .eva-link.eva-app-tile,
+  body.nav-menu-open #evaMenuPanel .eva-app-tile {
+    height: 82px !important;
+    min-height: 82px !important;
+    grid-template-rows: 58px 18px !important;
+  }
+
+  body.nav-menu-open #evaMenuPanel .eva-app-icon {
+    width: 58px !important;
+    height: 58px !important;
+    border-radius: 19px !important;
+  }
+
+  body.nav-menu-open #evaMenuPanel .eva-app-icon::before {
+    border-radius: 18px !important;
+  }
+
+  body.nav-menu-open #evaMenuPanel .eva-app-icon svg {
+    width: 25px !important;
+    height: 25px !important;
+  }
+
+  body.nav-menu-open #evaMenuPanel .eva-app-label {
+    font-size: 0.60rem !important;
+    max-width: 78px !important;
+  }
+}
