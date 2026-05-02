@@ -1021,3 +1021,62 @@ body.nav-menu-open .eva-menu-panel {
     max-width: 68px !important;
   }
 }
+
+
+/* =========================================================
+   Evaraos Nav Page Clearance
+   Matches the lowered Dynamic Island nav so page headers
+   do not get blocked by the fixed pill.
+   ========================================================= */
+
+:root {
+  --eva-page-nav-clearance: 96px;
+}
+
+/* Push normal app pages below the floating nav */
+body:not(.login-page) #appRoot {
+  padding-top: var(--eva-page-nav-clearance);
+  box-sizing: border-box;
+}
+
+/* Keep in-page anchors from scrolling underneath the island nav */
+html {
+  scroll-padding-top: var(--eva-page-nav-clearance);
+}
+
+/* Pages that already have large hero spacing should still breathe correctly */
+body:not(.login-page) .page-shell,
+body:not(.login-page) .dashboard-shell,
+body:not(.login-page) .customer-dashboard-shell,
+body:not(.login-page) .settings-shell,
+body:not(.login-page) .profile-shell,
+body:not(.login-page) .admin-shell,
+body:not(.login-page) main.container,
+body:not(.login-page) main.dashboard-main {
+  scroll-margin-top: var(--eva-page-nav-clearance);
+}
+
+/* iPhone / PWA safe-area clearance */
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 640px) {
+    :root {
+      --eva-page-nav-clearance: calc(env(safe-area-inset-top, 0px) + 92px);
+    }
+
+    body:not(.login-page) #appRoot {
+      padding-top: var(--eva-page-nav-clearance);
+    }
+  }
+}
+
+/* Standalone installed iPhone app needs a little more room */
+@media (display-mode: standalone) and (max-width: 640px) {
+  :root {
+    --eva-page-nav-clearance: calc(env(safe-area-inset-top, 0px) + 98px);
+  }
+}
+
+/* Auth pages should stay centered and not get pushed weird */
+body.login-page #appRoot {
+  padding-top: 0 !important;
+}
