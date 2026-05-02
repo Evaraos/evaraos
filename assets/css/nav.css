@@ -3964,3 +3964,182 @@ html[data-theme$="-dark"] body.nav-menu-open #evaMenuPanel .eva-app-label {
     max-width: 78px !important;
   }
 }
+
+/* =========================================================
+   EVARAOS CONTROL CENTER POLISH
+   Fixes nav/dropdown connection and themes app icons
+   around Evaraos red, white, silver, and dark glass.
+   ========================================================= */
+
+/* Give the connected panel cleaner breathing room under the nav */
+body.nav-menu-open #evaMenuPanel.eva-control-center-panel {
+  top: calc(var(--eva-island-offset, 10px) + 68px) !important;
+  width: min(414px, calc(100vw - 18px)) !important;
+  border-radius: 30px 30px 34px 34px !important;
+  padding-top: 22px !important;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,0.72), transparent 32%),
+    radial-gradient(circle at 88% 10%, rgba(220,0,32,0.14), transparent 30%),
+    radial-gradient(circle at 50% 105%, rgba(255,255,255,0.36), transparent 40%),
+    linear-gradient(180deg, rgba(255,255,255,0.78), rgba(239,242,246,0.76)) !important;
+  border: 1px solid rgba(255,255,255,0.86) !important;
+  box-shadow:
+    0 26px 70px rgba(0,0,0,0.24),
+    0 10px 26px rgba(0,0,0,0.13),
+    inset 0 1px 0 rgba(255,255,255,0.96),
+    inset 0 -1px 0 rgba(255,255,255,0.34) !important;
+}
+
+/* Remove any hard seam / tab look between pill and panel */
+body.nav-menu-open #evaMenuPanel.eva-control-center-panel::before {
+  display: none !important;
+  content: none !important;
+}
+
+/* Soft liquid glow under the nav instead of a visible bridge */
+body.nav-menu-open .eva-nav-pill::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -18px;
+  width: min(300px, 76vw);
+  height: 34px;
+  transform: translateX(-50%);
+  border-radius: 0 0 999px 999px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255,255,255,0.78), transparent 58%),
+    linear-gradient(180deg, rgba(255,255,255,0.60), rgba(255,255,255,0.06));
+  border: 0 !important;
+  filter: blur(0.2px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Make the nav pill feel like the header of the open menu */
+body.nav-menu-open .eva-nav-pill {
+  border-bottom-left-radius: 28px !important;
+  border-bottom-right-radius: 28px !important;
+  box-shadow:
+    0 18px 34px rgba(0,0,0,0.14),
+    0 6px 14px rgba(0,0,0,0.10),
+    inset 0 1px 0 rgba(255,255,255,0.96),
+    inset 0 -1px 0 rgba(255,255,255,0.40) !important;
+}
+
+/* Keep sections premium but softer */
+body.nav-menu-open #evaMenuPanel .eva-menu-section {
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255,255,255,0.74), transparent 34%),
+    linear-gradient(180deg, rgba(255,255,255,0.48), rgba(255,255,255,0.20)) !important;
+  border: 1px solid rgba(255,255,255,0.72) !important;
+  box-shadow:
+    0 14px 28px rgba(75,85,100,0.10),
+    inset 0 1px 0 rgba(255,255,255,0.82) !important;
+}
+
+/* Softer app cards, less “separate window” */
+body.nav-menu-open #evaMenuPanel .eva-link.eva-app-tile,
+body.nav-menu-open #evaMenuPanel .eva-app-tile {
+  background:
+    radial-gradient(circle at 26% 18%, rgba(255,255,255,0.78), transparent 32%),
+    linear-gradient(180deg, rgba(255,255,255,0.66), rgba(255,255,255,0.34)) !important;
+  border: 1px solid rgba(255,255,255,0.82) !important;
+  box-shadow:
+    0 12px 24px rgba(70,80,95,0.12),
+    0 4px 10px rgba(70,80,95,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.96) !important;
+}
+
+/* Base Evaraos Liquid Glass app icon: red + white + silver */
+body.nav-menu-open #evaMenuPanel .eva-app-icon {
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,0.72), transparent 25%),
+    radial-gradient(circle at 78% 84%, rgba(255,255,255,0.28), transparent 34%),
+    linear-gradient(145deg, #ff2a3f 0%, #d80020 48%, #ffffff 155%) !important;
+  color: #fff !important;
+  box-shadow:
+    0 14px 24px rgba(140,0,24,0.20),
+    0 0 22px rgba(220,0,32,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.56),
+    inset 0 -1px 0 rgba(90,0,15,0.15) !important;
+}
+
+/* Dashboard / Settings: executive blue-red glass */
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-dashboard .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-settings .eva-app-icon {
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,0.70), transparent 25%),
+    linear-gradient(145deg, #ffffff -18%, #d90020 42%, #1b1f2b 120%) !important;
+}
+
+/* Companies / Users / Applications: Evaraos red-orange ops */
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-companies .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-users .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-applications .eva-app-icon {
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,0.70), transparent 25%),
+    linear-gradient(145deg, #ff3b4f 0%, #d80020 48%, #ff8a50 120%) !important;
+}
+
+/* Leads / Jobs / QA: field operations teal but Evaraos-tinted */
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-leads .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-jobs .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-qa .eva-app-icon {
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,0.70), transparent 25%),
+    linear-gradient(145deg, #ffffff -20%, #d80020 34%, #00a6a6 118%) !important;
+}
+
+/* Home / Apply / Account: lighter red-white app icons */
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-home .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-apply .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-login .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-signup .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-app-tile.tile-reset .eva-app-icon {
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,0.78), transparent 25%),
+    linear-gradient(145deg, #ffffff -16%, #ff2a3f 42%, #d80020 110%) !important;
+  color: #fff !important;
+}
+
+/* Better icon shine */
+body.nav-menu-open #evaMenuPanel .eva-app-icon::before {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.44), transparent 34%, rgba(255,255,255,0.10)) !important;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-app-icon::after {
+  width: 42px !important;
+  height: 15px !important;
+  background: linear-gradient(90deg, rgba(255,255,255,0.58), rgba(255,255,255,0.08)) !important;
+  opacity: 0.82 !important;
+}
+
+/* Text contrast polish */
+body.nav-menu-open #evaMenuPanel .eva-menu-titlebar h2,
+body.nav-menu-open #evaMenuPanel .eva-section-head h3 {
+  color: #0c211b !important;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-menu-titlebar p,
+body.nav-menu-open #evaMenuPanel .eva-section-head p {
+  color: rgba(12,33,27,0.45) !important;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-app-label {
+  color: rgba(12,33,27,0.86) !important;
+}
+
+/* Mobile alignment */
+@media (max-width: 430px) {
+  body.nav-menu-open #evaMenuPanel.eva-control-center-panel {
+    top: calc(var(--eva-island-offset, 10px) + 66px) !important;
+    width: calc(100vw - 14px) !important;
+    padding-top: 22px !important;
+  }
+
+  body.nav-menu-open .eva-nav-pill::after {
+    width: min(270px, 72vw);
+    bottom: -17px;
+  }
+}
