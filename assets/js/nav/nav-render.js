@@ -74,11 +74,11 @@ export function renderNav() {
   const quickBubbles = groups.quick.map((item) => bubbleLink(item.page, item.label, item.icon, item.bubble)).join("");
 
   const publicNavigation = groups.main.filter((item) =>
-    ["index.html", "staff_application.html"].includes(item.page)
+    ["index.html"].includes(item.page)
   );
 
   const accountAccess = groups.main.filter((item) =>
-    ["login.html", "signup.html", "reset.html"].includes(item.page)
+    ["login.html", "signup.html", "staff_application.html"].includes(item.page)
   );
 
   const executiveControl = groups.main.filter((item) =>
