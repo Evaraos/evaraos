@@ -69,7 +69,7 @@ export function startCompactPress(event) {
   const pill = getNavPill();
 
   if (!pill || !isCompact()) return;
-  if (event.target.closest("#evaMenuBtn")) return;
+  if (event.target.closest("#evaMenuBtn, #evaThemePillToggle")) return;
   if (event.target.closest("#evaBrandBlock")) return;
 
   clearPressTimer();
@@ -90,7 +90,7 @@ export function bindTapToggle() {
   if (!pill) return;
 
   function onTouchStart(event) {
-    if (event.target.closest("#evaMenuBtn")) return;
+    if (event.target.closest("#evaMenuBtn, #evaThemePillToggle")) return;
     if (event.target.closest("#evaBrandBlock")) return;
 
     const touch = event.touches ? event.touches[0] : event;
@@ -104,7 +104,7 @@ export function bindTapToggle() {
   }
 
   function onTouchMove(event) {
-    if (event.target.closest("#evaMenuBtn")) return;
+    if (event.target.closest("#evaMenuBtn, #evaThemePillToggle")) return;
     if (event.target.closest("#evaBrandBlock")) return;
 
     const touch = event.touches ? event.touches[0] : event;
@@ -118,7 +118,7 @@ export function bindTapToggle() {
   }
 
   function onTouchEnd(event) {
-    if (event.target.closest("#evaMenuBtn")) return;
+    if (event.target.closest("#evaMenuBtn, #evaThemePillToggle")) return;
     if (event.target.closest("#evaBrandBlock")) return;
 
     const wasLongPress = NAV_STATE.longPressTriggered;
@@ -137,7 +137,7 @@ export function bindTapToggle() {
   pill.addEventListener("touchcancel", endCompactPress);
 
   pill.addEventListener("mousedown", (event) => {
-    if (event.target.closest("#evaMenuBtn")) return;
+    if (event.target.closest("#evaMenuBtn, #evaThemePillToggle")) return;
     if (event.target.closest("#evaBrandBlock")) return;
     startCompactPress(event);
   });
@@ -153,7 +153,7 @@ export function bindTapToggle() {
   pill.addEventListener("selectstart", (event) => event.preventDefault());
 
   pill.addEventListener("click", (event) => {
-    if (event.target.closest("#evaMenuBtn")) return;
+    if (event.target.closest("#evaMenuBtn, #evaThemePillToggle")) return;
     if (event.target.closest("#evaBrandBlock")) return;
 
     if (NAV_STATE.longPressTriggered) {
@@ -269,28 +269,36 @@ export function bindLinks() {
 }
 
 export function bindThemeToggle() {
-  const toggle = document.getElementById("evaThemeToggle");
-  if (!toggle) return;
+  const toggles = Array.from(document.querySelectorAll("#evaThemeToggle, #evaThemePillToggle"));
+  if (!toggles.length) return;
 
-  toggle.addEventListener("click", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
+  toggles.forEach((toggle) => {
+    toggle.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
 
-    const current = getAppearanceTheme();
-    const next = current === "light" ? "dark" : "light";
+      const current = getAppearanceTheme();
+      const next = current === "light" ? "dark" : "light";
 
-    try {
-      const raw = localStorage.getItem("evaraos-appearance");
+      try {
+        const raw = localStorage.getItem("evaraos-appearance");
 
-      if (raw) {
-        const appearance = JSON.parse(raw);
-        appearance.mode = next;
-        appearance.baseFamily = next;
-        localStorage.setItem("evaraos-appearance", JSON.stringify(appearance));
-      }
-    } catch {}
+        if (raw) {
+          const appearance = JSON.parse(raw);
+          appearance.mode = next;
+          appearance.baseFamily = next;
+          localStorage.setItem("evaraos-appearance", JSON.stringify(appearance));
+        } else {
+          localStorage.setItem("evaraos-appearance", JSON.stringify({
+            mode: next,
+            baseFamily: next
+          }));
+        }
+      } catch {}
 
-    setTheme(next);
+      setTheme(next);
+      syncThemeLabel();
+    });
   });
 }
 
