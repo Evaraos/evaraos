@@ -7897,3 +7897,213 @@ body.nav-menu-open #evaMenuPanel .eva-app-tile:active .eva-app-icon {
     animation: none !important;
   }
 }
+
+/* =========================================================
+   EVARAOS MENU SIZE + 4-GRID PATCH
+   Smaller hamburger, moon/sun moved left, app menu 4 across.
+   ========================================================= */
+
+/* Give right controls breathing room */
+.eva-menu-zone {
+  right: 10px !important;
+  gap: 10px !important;
+}
+
+/* Move moon/sun left a bit so it doesn't crowd hamburger */
+#evaThemePillToggle,
+.eva-theme-nav-btn,
+body.nav-menu-open #evaThemePillToggle {
+  transform: translateX(-6px) !important;
+  margin-right: 2px !important;
+}
+
+/* Smaller Liquid Glass hamburger button */
+#evaMenuBtn,
+.eva-menu-btn {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  border-radius: 999px !important;
+
+  background:
+    radial-gradient(circle at 28% 14%, rgba(255,255,255,1), transparent 34%),
+    linear-gradient(180deg, rgba(255,255,255,0.92), rgba(244,247,249,0.74)) !important;
+
+  border: 1px solid rgba(255,255,255,0.94) !important;
+
+  box-shadow:
+    0 9px 15px rgba(0,0,0,0.12),
+    0 3px 8px rgba(0,0,0,0.07),
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(0,0,0,0.055) !important;
+}
+
+/* Smaller hamburger lines inside smaller button */
+#evaMenuBtn .eva-burger,
+.eva-menu-btn .eva-burger {
+  width: 17px !important;
+  height: 13px !important;
+}
+
+#evaMenuBtn .eva-burger-line,
+.eva-menu-btn .eva-burger-line {
+  width: 17px !important;
+  height: 2.25px !important;
+}
+
+#evaMenuBtn .eva-burger-line.top,
+.eva-menu-btn .eva-burger-line.top {
+  top: 0 !important;
+}
+
+#evaMenuBtn .eva-burger-line.mid,
+.eva-menu-btn .eva-burger-line.mid {
+  top: 5.4px !important;
+}
+
+#evaMenuBtn .eva-burger-line.bot,
+.eva-menu-btn .eva-burger-line.bot {
+  top: 10.8px !important;
+}
+
+/* Open state X stays centered */
+body.nav-menu-open #evaMenuBtn .eva-burger-line.top,
+body.nav-menu-open .eva-menu-btn .eva-burger-line.top {
+  top: 5.4px !important;
+  transform: translateX(-50%) rotate(45deg) !important;
+}
+
+body.nav-menu-open #evaMenuBtn .eva-burger-line.mid,
+body.nav-menu-open .eva-menu-btn .eva-burger-line.mid {
+  top: 5.4px !important;
+  opacity: 0 !important;
+  transform: translateX(-50%) scaleX(0) !important;
+}
+
+body.nav-menu-open #evaMenuBtn .eva-burger-line.bot,
+body.nav-menu-open .eva-menu-btn .eva-burger-line.bot {
+  top: 5.4px !important;
+  transform: translateX(-50%) rotate(-45deg) !important;
+}
+
+/* Make room for moon + smaller hamburger */
+.eva-right-spacer {
+  width: 90px !important;
+}
+
+/* 4 app icons across instead of 3 */
+body.nav-menu-open #evaMenuPanel .eva-app-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 14px 4px !important;
+}
+
+/* Smaller app tiles for 4-across layout */
+body.nav-menu-open #evaMenuPanel .eva-link.eva-app-tile,
+body.nav-menu-open #evaMenuPanel .eva-app-tile,
+body.nav-menu-open #evaMenuPanel .eva-account-tile {
+  min-height: 74px !important;
+  height: 74px !important;
+  grid-template-rows: 50px 17px !important;
+  gap: 4px !important;
+}
+
+/* Slightly smaller app icons so 4 across fits clean */
+body.nav-menu-open #evaMenuPanel .eva-app-icon,
+body.nav-menu-open #evaMenuPanel .eva-liquid-app-icon {
+  width: 50px !important;
+  height: 50px !important;
+  min-width: 50px !important;
+  border-radius: 17px !important;
+}
+
+/* Match inner glass radius */
+body.nav-menu-open #evaMenuPanel .eva-app-icon::before,
+body.nav-menu-open #evaMenuPanel .eva-liquid-app-icon::before {
+  border-radius: 16px !important;
+}
+
+/* Smaller glyphs for 4-grid */
+body.nav-menu-open #evaMenuPanel .eva-app-icon svg,
+body.nav-menu-open #evaMenuPanel .eva-liquid-app-icon svg {
+  width: 23px !important;
+  height: 23px !important;
+}
+
+/* Labels tighter */
+body.nav-menu-open #evaMenuPanel .eva-app-label {
+  font-size: 0.52rem !important;
+  max-width: 68px !important;
+  line-height: 1.02 !important;
+}
+
+/* Red glow imprint adjusted to smaller icons */
+body.nav-menu-open #evaMenuPanel .eva-app-label::before {
+  top: -61px !important;
+  width: 64px !important;
+  height: 64px !important;
+  border-radius: 22px !important;
+  filter: blur(7px) !important;
+}
+
+/* Shorten dropdown more now that grid is tighter */
+body.nav-menu-open #evaMenuPanel.eva-control-center-panel {
+  max-height: min(66vh, calc(100dvh - 205px)) !important;
+}
+
+/* Mobile exact tuning */
+@media (max-width: 430px) {
+  .eva-menu-zone {
+    right: 9px !important;
+    gap: 9px !important;
+  }
+
+  #evaThemePillToggle,
+  .eva-theme-nav-btn,
+  body.nav-menu-open #evaThemePillToggle {
+    transform: translateX(-7px) !important;
+  }
+
+  #evaMenuBtn,
+  .eva-menu-btn {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+  }
+
+  .eva-right-spacer {
+    width: 86px !important;
+  }
+
+  body.nav-menu-open #evaMenuPanel .eva-app-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 13px 3px !important;
+  }
+
+  body.nav-menu-open #evaMenuPanel .eva-app-icon,
+  body.nav-menu-open #evaMenuPanel .eva-liquid-app-icon {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    border-radius: 16px !important;
+  }
+
+  body.nav-menu-open #evaMenuPanel .eva-app-icon::before,
+  body.nav-menu-open #evaMenuPanel .eva-liquid-app-icon::before {
+    border-radius: 15px !important;
+  }
+
+  body.nav-menu-open #evaMenuPanel .eva-app-icon svg,
+  body.nav-menu-open #evaMenuPanel .eva-liquid-app-icon svg {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  body.nav-menu-open #evaMenuPanel .eva-app-label {
+    font-size: 0.50rem !important;
+    max-width: 64px !important;
+  }
+
+  body.nav-menu-open #evaMenuPanel.eva-control-center-panel {
+    max-height: min(64vh, calc(100dvh - 210px)) !important;
+  }
+}
