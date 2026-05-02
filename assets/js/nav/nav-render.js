@@ -103,7 +103,26 @@ export function renderNav() {
               </svg>
             </span>
             <span class="eva-link-label eva-app-label">Logout</span>
-          </button>        </div>
+          </button>
+
+          <button type="button" class="eva-link eva-app-tile eva-account-tile" id="evaThemeToggle" data-label="theme mode" aria-label="Toggle theme">
+            <span class="eva-link-icon eva-app-icon">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M12 3v2"/>
+                <path d="M12 19v2"/>
+                <path d="M4.22 4.22l1.42 1.42"/>
+                <path d="M18.36 18.36l1.42 1.42"/>
+                <path d="M3 12h2"/>
+                <path d="M19 12h2"/>
+                <path d="M4.22 19.78l1.42-1.42"/>
+                <path d="M18.36 5.64l1.42-1.42"/>
+                <circle cx="12" cy="12" r="4"/>
+              </svg>
+            </span>
+            <span class="eva-link-label eva-app-label" data-theme-label>Dark mode</span>
+          </button>
+
+        </div>
 
         <div class="eva-install-pill" id="evaInstallPill" hidden aria-label="Install Evaraos app">
           <button type="button" class="eva-install-segment eva-install-ios" id="evaInstallApple" aria-label="Install Evaraos on iPhone">

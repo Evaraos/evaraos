@@ -5870,3 +5870,110 @@ body.nav-menu-open #evaMenuPanel .eva-app-tile:active .eva-app-icon {
     height: 27px !important;
   }
 }
+
+/* =========================================================
+   FIX THEME TOGGLE POSITION + RESTORE MENU TILE
+   Theme beside hamburger = icon only, smaller, no bubble.
+   Account Tools theme tile returns inside dropdown.
+   ========================================================= */
+
+/* Nav zone spacing */
+.eva-menu-zone {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+/* Theme toggle beside hamburger: icon only, no bubble */
+.eva-theme-nav-btn,
+body.nav-menu-open #evaThemePillToggle {
+  width: 26px !important;
+  height: 26px !important;
+  min-width: 26px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  display: grid !important;
+  place-items: center !important;
+  cursor: pointer !important;
+}
+
+/* Smaller moon/sun icon */
+.eva-theme-nav-icon {
+  width: 20px !important;
+  height: 20px !important;
+  display: block !important;
+  position: relative !important;
+}
+
+.eva-theme-nav-icon::before {
+  content: "☾" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  color: #111318 !important;
+  font-size: 20px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.70),
+    0 2px 5px rgba(0,0,0,0.18) !important;
+}
+
+html[data-theme="dark"] .eva-theme-nav-icon::before,
+html[data-theme$="-dark"] .eva-theme-nav-icon::before {
+  content: "☀" !important;
+  font-size: 17px !important;
+}
+
+/* Hide theme icon when nav shrinks */
+body.eva-nav-compact #evaThemePillToggle,
+body.nav-compact #evaThemePillToggle,
+body.is-compact #evaThemePillToggle,
+body.is-nav-compact #evaThemePillToggle,
+.eva-nav-shell.is-compact #evaThemePillToggle,
+.eva-nav-shell.compact #evaThemePillToggle,
+.eva-nav-pill.is-compact #evaThemePillToggle,
+.eva-nav-pill.compact #evaThemePillToggle,
+.eva-nav-pill.is-island #evaThemePillToggle {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  transform: scale(0.72) !important;
+  overflow: hidden !important;
+}
+
+/* But keep it visible when menu/nav is full */
+body.nav-menu-open #evaThemePillToggle {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  width: 26px !important;
+  min-width: 26px !important;
+  transform: scale(1) !important;
+}
+
+/* Bring Light/Dark tile back inside Account Tools */
+body.nav-menu-open #evaMenuPanel #evaThemeToggle,
+body.nav-menu-open #evaMenuPanel [data-label="theme mode"] {
+  display: grid !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Make the Account Tools grid back to two tiles */
+body.nav-menu-open #evaMenuPanel .eva-account-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
