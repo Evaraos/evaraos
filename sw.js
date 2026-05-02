@@ -1,4 +1,4 @@
-const CACHE_VERSION = "evaraos-no-cache-v2";
+const CACHE_VERSION = "evaraos-no-cache-v3";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
