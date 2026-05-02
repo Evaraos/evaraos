@@ -478,3 +478,50 @@ html[data-theme="galaxy"] .hero-home::before {
     padding-top: var(--eva-mobile-page-top-space, 112px) !important;
   }
 }
+
+/* =========================================================
+   Home Hero Tighten v2
+   Pulls homepage content closer under the Dynamic Island nav.
+   ========================================================= */
+
+@media (max-width: 680px) {
+  .home-shell {
+    padding-top: 58px !important;
+  }
+
+  .hero-home {
+    min-height: auto !important;
+    display: block !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  .hero-grid {
+    display: block !important;
+    margin-top: 0 !important;
+  }
+
+  .hero-content {
+    display: grid !important;
+    align-content: start !important;
+    gap: 18px !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  .hero-kicker {
+    margin-top: 0 !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .home-shell {
+    padding-top: 52px !important;
+  }
+}
+
+@media (display-mode: standalone) and (max-width: 680px) {
+  .home-shell {
+    padding-top: 54px !important;
+  }
+}
