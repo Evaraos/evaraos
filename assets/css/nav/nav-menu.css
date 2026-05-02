@@ -1,0 +1,158 @@
+/* NAV MENU / CONTROL CENTER */
+.eva-menu-panel {
+  position: fixed;
+  z-index: 2147483647;
+  left: 50%;
+  top: calc(var(--eva-island-offset, 10px) + 86px);
+  width: min(414px, calc(100vw - 18px));
+  max-height: calc(100vh - 126px - env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%) translateY(-8px) scale(0.992);
+  transform-origin: top center;
+  padding: 22px 14px max(18px, env(safe-area-inset-bottom, 0px));
+  border-radius: 32px 32px 36px 36px;
+  overflow: auto;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 16% 0%, rgba(255,255,255,0.94), transparent 34%),
+    radial-gradient(circle at 90% 7%, rgba(216,0,32,0.16), transparent 31%),
+    radial-gradient(circle at 45% 112%, rgba(0,0,0,0.24), transparent 44%),
+    linear-gradient(180deg, rgba(251,252,253,0.88), rgba(229,233,238,0.76));
+  border: 1px solid rgba(255,255,255,0.92);
+  box-shadow:
+    0 40px 100px rgba(0,0,0,0.38),
+    0 18px 44px rgba(0,0,0,0.23),
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(0,0,0,0.07);
+  backdrop-filter: blur(34px) saturate(190%);
+  -webkit-backdrop-filter: blur(34px) saturate(190%);
+  transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s ease;
+}
+
+body.nav-menu-open .eva-menu-panel {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+html[data-theme="dark"] body.nav-menu-open #evaMenuPanel.eva-control-center-panel,
+html[data-theme="galaxy"] body.nav-menu-open #evaMenuPanel.eva-control-center-panel {
+  background:
+    radial-gradient(circle at 50% -8%, rgba(255,255,255,0.18), transparent 24%),
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,0.12), transparent 30%),
+    radial-gradient(circle at 88% 6%, rgba(255,59,92,0.12), transparent 28%),
+    linear-gradient(180deg, rgba(20,22,30,0.88), rgba(5,6,10,0.94));
+  border-color: rgba(255,255,255,0.16);
+}
+
+body.nav-menu-open #evaMenuPanel .eva-menu-close-btn { display: none; }
+
+body.nav-menu-open #evaMenuPanel .eva-menu-titlebar,
+body.nav-menu-open #evaMenuPanel .eva-search,
+body.nav-menu-open #evaMenuPanel .eva-menu-section,
+body.nav-menu-open #evaMenuPanel .eva-install-pill {
+  position: relative;
+  z-index: 2;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-menu-titlebar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 0 4px;
+}
+
+.eva-menu-actions { display: flex; align-items: center; gap: 8px; }
+
+body.nav-menu-open #evaMenuPanel .eva-menu-titlebar p,
+body.nav-menu-open #evaMenuPanel .eva-section-head p {
+  margin: 0 0 3px;
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  color: rgba(12,33,27,0.45);
+}
+
+body.nav-menu-open #evaMenuPanel .eva-menu-titlebar h2,
+body.nav-menu-open #evaMenuPanel .eva-section-head h3 {
+  margin: 0;
+  font-weight: 950;
+  letter-spacing: -0.045em;
+  color: #0c211b;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-menu-titlebar h2 { font-size: 1.30rem; line-height: 1; }
+body.nav-menu-open #evaMenuPanel .eva-section-head h3 { font-size: 0.94rem; }
+
+html[data-theme="dark"] body.nav-menu-open #evaMenuPanel .eva-menu-titlebar h2,
+html[data-theme="dark"] body.nav-menu-open #evaMenuPanel .eva-section-head h3,
+html[data-theme="galaxy"] body.nav-menu-open #evaMenuPanel .eva-menu-titlebar h2,
+html[data-theme="galaxy"] body.nav-menu-open #evaMenuPanel .eva-section-head h3 { color: #f8fbff; }
+
+html[data-theme="dark"] body.nav-menu-open #evaMenuPanel .eva-menu-titlebar p,
+html[data-theme="dark"] body.nav-menu-open #evaMenuPanel .eva-section-head p,
+html[data-theme="galaxy"] body.nav-menu-open #evaMenuPanel .eva-menu-titlebar p,
+html[data-theme="galaxy"] body.nav-menu-open #evaMenuPanel .eva-section-head p { color: rgba(230,236,255,0.50); }
+
+body.nav-menu-open #evaMenuPanel .eva-menu-badge {
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  display: inline-grid;
+  place-items: center;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: capitalize;
+  color: rgba(18,35,30,0.78);
+  background: rgba(255,255,255,0.82);
+  border: 1px solid rgba(255,255,255,0.92);
+}
+
+.eva-search {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0.38));
+  border: 1px solid rgba(255,255,255,0.84);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.92), inset 0 -1px 0 rgba(0,0,0,0.035);
+}
+
+.eva-search input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 0.98rem;
+}
+
+.eva-search input::placeholder { opacity: 0.56; }
+
+body.nav-menu-open #evaMenuPanel .eva-menu-section {
+  display: grid;
+  gap: 9px;
+  padding: 18px 14px 20px;
+  border-radius: 34px;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255,255,255,0.86), transparent 36%),
+    radial-gradient(circle at 94% 10%, rgba(216,0,32,0.075), transparent 36%),
+    radial-gradient(circle at 35% 110%, rgba(0,0,0,0.10), transparent 42%),
+    linear-gradient(180deg, rgba(255,255,255,0.52), rgba(255,255,255,0.18));
+  border: 1px solid rgba(255,255,255,0.86);
+  box-shadow: 0 26px 52px rgba(0,0,0,0.16), 0 9px 22px rgba(0,0,0,0.09), inset 0 1px 0 rgba(255,255,255,0.96), inset 0 -1px 0 rgba(0,0,0,0.05);
+}
+
+html[data-theme="dark"] body.nav-menu-open #evaMenuPanel .eva-menu-section,
+html[data-theme="galaxy"] body.nav-menu-open #evaMenuPanel .eva-menu-section {
+  background: radial-gradient(circle at 18% 0%, rgba(255,255,255,0.14), transparent 34%), radial-gradient(circle at 92% 12%, rgba(216,0,32,0.08), transparent 36%), linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.025));
+  border: 1px solid rgba(255,255,255,0.09);
+}
+
+body.nav-menu-open #evaMenuPanel .eva-section-head { padding: 0 5px 7px; }
