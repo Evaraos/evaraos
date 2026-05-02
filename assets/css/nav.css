@@ -6197,3 +6197,298 @@ body.nav-menu-open #evaMenuPanel .eva-menu-close-btn {
     width: 82px !important;
   }
 }
+
+/* =========================================================
+   EVARAOS NAV BUTTON ALIGNMENT + NO PAGE JUMP FIX
+   - Theme icon stays left of hamburger
+   - Hamburger stays normal 3 lines
+   - X stays inside dropdown only
+   - Background page no longer shifts on menu open/close
+   ========================================================= */
+
+/* Do not let menu open/close shift the page */
+html.eva-menu-layer-open,
+body.nav-menu-open {
+  overflow: auto !important;
+  position: static !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  width: auto !important;
+}
+
+/* Keep nav pill stable */
+body.nav-menu-open .eva-nav-shell,
+.eva-nav-shell {
+  transform: none !important;
+}
+
+/* Fix the right-side menu zone so moon + hamburger fit inside the pill */
+.eva-menu-zone,
+body.nav-menu-open .eva-menu-zone {
+  position: absolute !important;
+  right: 10px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+
+  width: 88px !important;
+  height: 54px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+
+  opacity: var(--nav-progress) !important;
+  pointer-events: auto !important;
+  z-index: 2147483647 !important;
+}
+
+/* Give the brand enough room so it does not fight the right controls */
+.eva-right-spacer {
+  width: 104px !important;
+}
+
+.eva-brand {
+  max-width: min(var(--brand-max-width), calc(100% - 210px)) !important;
+}
+
+/* Theme toggle: icon only, no bubble/card/button shell */
+#evaThemePillToggle,
+.eva-theme-nav-btn,
+body.nav-menu-open #evaThemePillToggle {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+
+  display: grid !important;
+  place-items: center !important;
+  cursor: pointer !important;
+  overflow: visible !important;
+}
+
+#evaThemePillToggle::before,
+#evaThemePillToggle::after,
+.eva-theme-nav-btn::before,
+.eva-theme-nav-btn::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Luxury small moon/sun */
+.eva-theme-nav-icon {
+  width: 20px !important;
+  height: 20px !important;
+  display: block !important;
+  position: relative !important;
+}
+
+.eva-theme-nav-icon::before {
+  content: "☾" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  color: #111318 !important;
+  font-size: 20px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.72),
+    0 3px 8px rgba(0,0,0,0.20) !important;
+}
+
+html[data-theme="dark"] .eva-theme-nav-icon::before,
+html[data-theme$="-dark"] .eva-theme-nav-icon::before {
+  content: "☀" !important;
+  font-size: 17px !important;
+}
+
+/* Hamburger button back to normal size and position */
+#evaMenuBtn,
+.eva-menu-btn,
+body.nav-menu-open #evaMenuBtn,
+body.nav-menu-open .eva-menu-btn {
+  width: 50px !important;
+  height: 50px !important;
+  min-width: 50px !important;
+  border-radius: 999px !important;
+  display: grid !important;
+  place-items: center !important;
+  overflow: hidden !important;
+}
+
+/* Hamburger line container */
+#evaMenuBtn .eva-burger,
+.eva-menu-btn .eva-burger,
+body.nav-menu-open .eva-menu-btn .eva-burger {
+  width: 25px !important;
+  height: 19px !important;
+  position: relative !important;
+  display: block !important;
+  transform: none !important;
+}
+
+/* Force hamburger to stay 3 lines even when menu is open */
+#evaMenuBtn .eva-burger-line,
+.eva-menu-btn .eva-burger-line,
+.eva-menu-zone.open .eva-burger-line,
+body.nav-menu-open .eva-menu-zone.open .eva-burger-line,
+body.nav-menu-open .eva-menu-btn .eva-burger-line {
+  position: absolute !important;
+  left: 50% !important;
+  width: 25px !important;
+  height: 2.8px !important;
+  border-radius: 999px !important;
+  background: #10221d !important;
+  opacity: 1 !important;
+  transform-origin: center !important;
+}
+
+#evaMenuBtn .eva-burger-line.top,
+.eva-menu-btn .eva-burger-line.top,
+.eva-menu-zone.open .eva-burger-line.top,
+body.nav-menu-open .eva-menu-zone.open .eva-burger-line.top,
+body.nav-menu-open .eva-burger-line.top {
+  top: 0 !important;
+  transform: translateX(-50%) rotate(0deg) !important;
+}
+
+#evaMenuBtn .eva-burger-line.mid,
+.eva-menu-btn .eva-burger-line.mid,
+.eva-menu-zone.open .eva-burger-line.mid,
+body.nav-menu-open .eva-menu-zone.open .eva-burger-line.mid,
+body.nav-menu-open .eva-burger-line.mid {
+  top: 8px !important;
+  transform: translateX(-50%) scaleX(1) !important;
+  opacity: 1 !important;
+}
+
+#evaMenuBtn .eva-burger-line.bot,
+.eva-menu-btn .eva-burger-line.bot,
+.eva-menu-zone.open .eva-burger-line.bot,
+body.nav-menu-open .eva-menu-zone.open .eva-burger-line.bot,
+body.nav-menu-open .eva-burger-line.bot {
+  top: 16px !important;
+  transform: translateX(-50%) rotate(0deg) !important;
+}
+
+/* Keep the X only inside the dropdown */
+body.nav-menu-open #evaMenuPanel .eva-menu-close-btn {
+  display: grid !important;
+}
+
+#evaMenuPanel .eva-menu-close-btn {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  border-radius: 999px !important;
+}
+
+#evaMenuPanel .eva-menu-close-btn span {
+  width: 14px !important;
+  height: 2.3px !important;
+  background: #111318 !important;
+}
+
+/* Prevent the nav controls from clipping on smaller iPhones */
+.eva-nav-pill {
+  overflow: hidden !important;
+}
+
+@media (max-width: 430px) {
+  .eva-menu-zone,
+  body.nav-menu-open .eva-menu-zone {
+    right: 8px !important;
+    width: 82px !important;
+    height: 52px !important;
+    gap: 8px !important;
+  }
+
+  .eva-right-spacer {
+    width: 96px !important;
+  }
+
+  .eva-brand {
+    max-width: min(var(--brand-max-width), calc(100% - 194px)) !important;
+  }
+
+  #evaThemePillToggle,
+  .eva-theme-nav-btn,
+  body.nav-menu-open #evaThemePillToggle {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+  }
+
+  .eva-theme-nav-icon::before {
+    font-size: 19px !important;
+  }
+
+  html[data-theme="dark"] .eva-theme-nav-icon::before,
+  html[data-theme$="-dark"] .eva-theme-nav-icon::before {
+    font-size: 16px !important;
+  }
+
+  #evaMenuBtn,
+  .eva-menu-btn,
+  body.nav-menu-open #evaMenuBtn,
+  body.nav-menu-open .eva-menu-btn {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+  }
+
+  #evaMenuBtn .eva-burger,
+  .eva-menu-btn .eva-burger,
+  body.nav-menu-open .eva-menu-btn .eva-burger {
+    width: 24px !important;
+    height: 18px !important;
+  }
+
+  #evaMenuBtn .eva-burger-line,
+  .eva-menu-btn .eva-burger-line,
+  .eva-menu-zone.open .eva-burger-line,
+  body.nav-menu-open .eva-menu-zone.open .eva-burger-line,
+  body.nav-menu-open .eva-menu-btn .eva-burger-line {
+    width: 24px !important;
+    height: 2.7px !important;
+  }
+
+  #evaMenuBtn .eva-burger-line.top,
+  .eva-menu-btn .eva-burger-line.top,
+  .eva-menu-zone.open .eva-burger-line.top,
+  body.nav-menu-open .eva-menu-zone.open .eva-burger-line.top,
+  body.nav-menu-open .eva-burger-line.top {
+    top: 0 !important;
+  }
+
+  #evaMenuBtn .eva-burger-line.mid,
+  .eva-menu-btn .eva-burger-line.mid,
+  .eva-menu-zone.open .eva-burger-line.mid,
+  body.nav-menu-open .eva-menu-zone.open .eva-burger-line.mid,
+  body.nav-menu-open .eva-burger-line.mid {
+    top: 7.5px !important;
+  }
+
+  #evaMenuBtn .eva-burger-line.bot,
+  .eva-menu-btn .eva-burger-line.bot,
+  .eva-menu-zone.open .eva-burger-line.bot,
+  body.nav-menu-open .eva-menu-zone.open .eva-burger-line.bot,
+  body.nav-menu-open .eva-burger-line.bot {
+    top: 15px !important;
+  }
+}

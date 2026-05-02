@@ -28,25 +28,22 @@ export function updateMenuViewportFit() {
 }
 
 export function lockBodyScroll() {
+  // Do not lock the body with position: fixed on iPhone.
+  // That caused the background page to jump/move when opening and closing the menu.
   NAV_STATE.lockedScrollY = window.scrollY || window.pageYOffset || 0;
-
-  document.body.style.position = "fixed";
-  document.body.style.top = `-${NAV_STATE.lockedScrollY}px`;
-  document.body.style.left = "0";
-  document.body.style.right = "0";
-  document.body.style.width = "100%";
-  document.body.style.overflow = "hidden";
+  document.documentElement.classList.add("eva-menu-layer-open");
 }
 
 export function unlockBodyScroll() {
+  document.documentElement.classList.remove("eva-menu-layer-open");
+
+  // Cleanup only if an older cached version left inline styles behind.
   document.body.style.position = "";
   document.body.style.top = "";
   document.body.style.left = "";
   document.body.style.right = "";
   document.body.style.width = "";
   document.body.style.overflow = "";
-
-  window.scrollTo(0, NAV_STATE.lockedScrollY);
 }
 
 export function openMenu() {
