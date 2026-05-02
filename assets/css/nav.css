@@ -462,3 +462,100 @@ body.nav-menu-open .eva-menu-panel {
     --full-logo: 74px;
   }
 }
+
+/* =========================================================
+   Evaraos Nav Action Buttons Restore
+   Restores visible theme toggle + dropdown button after nav reset.
+   ========================================================= */
+
+.eva-menu-zone {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: auto;
+  min-width: calc((var(--menu-size) * 2) + 7px);
+  height: var(--menu-size);
+}
+
+.eva-theme-nav-btn,
+.eva-menu-btn {
+  width: var(--menu-size);
+  height: var(--menu-size);
+  min-width: var(--menu-size);
+  min-height: var(--menu-size);
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.08);
+  color: inherit;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+  opacity: var(--nav-progress);
+  transform: scale(var(--nav-progress));
+  transform-origin: center;
+  pointer-events: auto;
+  box-shadow:
+    0 8px 18px rgba(0,0,0,.10),
+    inset 0 1px 0 rgba(255,255,255,.22);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.eva-nav-shell.compact .eva-theme-nav-btn,
+.eva-nav-shell.compact .eva-menu-btn {
+  pointer-events: none;
+}
+
+.eva-theme-nav-icon {
+  width: 15px;
+  height: 15px;
+  border-radius: 999px;
+  display: block;
+  position: relative;
+  background: currentColor;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.18);
+}
+
+html[data-theme="light"] .eva-theme-nav-icon,
+html[data-theme$="-light"] .eva-theme-nav-icon {
+  background: #172721;
+}
+
+html[data-theme="dark"] .eva-theme-nav-icon,
+html[data-theme="galaxy"] .eva-theme-nav-icon {
+  background: #f5f7ff;
+}
+
+.eva-theme-nav-icon::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  border: 1px solid rgba(255,255,255,.20);
+}
+
+html[data-theme="light"] .eva-theme-nav-btn,
+html[data-theme$="-light"] .eva-theme-nav-btn,
+html[data-theme="light"] .eva-menu-btn,
+html[data-theme$="-light"] .eva-menu-btn {
+  background: rgba(255,255,255,.84);
+  border: 1px solid rgba(255,255,255,.92);
+  color: #14251f;
+}
+
+html[data-theme="galaxy"] .eva-theme-nav-btn,
+html[data-theme="galaxy"] .eva-menu-btn,
+html[data-theme="dark"] .eva-theme-nav-btn,
+html[data-theme="dark"] .eva-menu-btn {
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.18);
+  color: #f5f7ff;
+}
+
+@media (max-width: 640px) {
+  .eva-menu-zone {
+    gap: 6px;
+    min-width: calc((var(--menu-size) * 2) + 6px);
+  }
+}
