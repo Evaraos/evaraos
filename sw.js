@@ -1,4 +1,4 @@
-const CACHE_VERSION = "evaraos-stable-v48";
+const CACHE_VERSION = "evaraos-stable-v49";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 
 const CORE_ASSETS = [
