@@ -8530,3 +8530,421 @@ body.nav-menu-open #evaThemePillToggle {
     min-width: 21px !important;
   }
 }
+
+/* =========================================================
+   EVARAOS COMPACT ISLAND TARGET FIX
+   Full nav stays the same. Only compact/shrunk pill changes:
+   - moves up toward Dynamic Island
+   - centers logo inside black pill
+   - makes compact pill rounder
+   - keeps liquid/water-drop animation
+   - makes full menu button smaller
+   ========================================================= */
+
+:root {
+  --eva-compact-island-top: max(2px, calc(env(safe-area-inset-top, 0px) - 52px));
+  --eva-compact-island-width: 124px;
+  --eva-compact-island-height: 34px;
+}
+
+/* Smaller full-nav menu button */
+#evaMenuBtn,
+.eva-menu-btn {
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  border-radius: 999px !important;
+}
+
+#evaMenuBtn .eva-burger,
+.eva-menu-btn .eva-burger {
+  width: 14px !important;
+  height: 11px !important;
+}
+
+#evaMenuBtn .eva-burger-line,
+.eva-menu-btn .eva-burger-line {
+  width: 14px !important;
+  height: 2px !important;
+}
+
+#evaMenuBtn .eva-burger-line.top,
+.eva-menu-btn .eva-burger-line.top {
+  top: 0 !important;
+}
+
+#evaMenuBtn .eva-burger-line.mid,
+.eva-menu-btn .eva-burger-line.mid {
+  top: 4.5px !important;
+}
+
+#evaMenuBtn .eva-burger-line.bot,
+.eva-menu-btn .eva-burger-line.bot {
+  top: 9px !important;
+}
+
+body.nav-menu-open #evaMenuBtn .eva-burger-line.top,
+body.nav-menu-open .eva-menu-btn .eva-burger-line.top {
+  top: 4.5px !important;
+  transform: translateX(-50%) rotate(45deg) !important;
+}
+
+body.nav-menu-open #evaMenuBtn .eva-burger-line.mid,
+body.nav-menu-open .eva-menu-btn .eva-burger-line.mid {
+  top: 4.5px !important;
+  opacity: 0 !important;
+  transform: translateX(-50%) scaleX(0) !important;
+}
+
+body.nav-menu-open #evaMenuBtn .eva-burger-line.bot,
+body.nav-menu-open .eva-menu-btn .eva-burger-line.bot {
+  top: 4.5px !important;
+  transform: translateX(-50%) rotate(-45deg) !important;
+}
+
+/* Give right side room after smaller menu button */
+.eva-menu-zone {
+  right: 18px !important;
+  gap: 8px !important;
+}
+
+#evaThemePillToggle,
+.eva-theme-nav-btn {
+  transform: translateX(-10px) !important;
+}
+
+/* =========================================================
+   COMPACT / SHRUNK STATE ONLY
+   This is the black Dynamic-Island-style pill.
+   Full nav is untouched.
+   ========================================================= */
+
+body:not(.nav-menu-open) .eva-nav-shell.compact,
+body:not(.nav-menu-open) .eva-nav-shell.is-compact,
+body:not(.nav-menu-open) .eva-nav-shell.island,
+body:not(.nav-menu-open) .eva-nav-shell.is-island {
+  top: var(--eva-compact-island-top) !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: flex-start !important;
+  transform: none !important;
+}
+
+/* Compact pill itself: centered black dot/pill */
+body:not(.nav-menu-open) .eva-nav-shell.compact .eva-nav-pill,
+body:not(.nav-menu-open) .eva-nav-shell.is-compact .eva-nav-pill,
+body:not(.nav-menu-open) .eva-nav-shell.island .eva-nav-pill,
+body:not(.nav-menu-open) .eva-nav-shell.is-island .eva-nav-pill,
+body:not(.nav-menu-open) .eva-nav-pill.compact,
+body:not(.nav-menu-open) .eva-nav-pill.is-compact,
+body:not(.nav-menu-open) .eva-nav-pill.is-island {
+  width: var(--eva-compact-island-width) !important;
+  max-width: var(--eva-compact-island-width) !important;
+  min-width: var(--eva-compact-island-width) !important;
+
+  height: var(--eva-compact-island-height) !important;
+  min-height: var(--eva-compact-island-height) !important;
+  max-height: var(--eva-compact-island-height) !important;
+
+  padding: 0 !important;
+  margin: 0 auto !important;
+
+  left: auto !important;
+  right: auto !important;
+  top: auto !important;
+  transform: none !important;
+
+  border-radius: 999px !important;
+
+  background:
+    radial-gradient(circle at 30% 16%, rgba(255,255,255,0.18), transparent 24%),
+    radial-gradient(circle at 74% 76%, rgba(216,0,32,0.18), transparent 32%),
+    linear-gradient(180deg, rgba(14,15,18,0.98), rgba(0,0,0,0.96)) !important;
+
+  border: 1px solid rgba(255,255,255,0.15) !important;
+
+  box-shadow:
+    0 14px 28px rgba(0,0,0,0.34),
+    0 5px 12px rgba(0,0,0,0.24),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 -1px 0 rgba(0,0,0,0.70) !important;
+
+  overflow: hidden !important;
+  backdrop-filter: blur(24px) saturate(170%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(170%) !important;
+}
+
+/* Hide full-nav controls while shrunk */
+body:not(.nav-menu-open) .eva-nav-shell.compact #evaMenuZone,
+body:not(.nav-menu-open) .eva-nav-shell.is-compact #evaMenuZone,
+body:not(.nav-menu-open) .eva-nav-shell.island #evaMenuZone,
+body:not(.nav-menu-open) .eva-nav-shell.is-island #evaMenuZone,
+body:not(.nav-menu-open) .eva-nav-shell.compact #evaThemePillToggle,
+body:not(.nav-menu-open) .eva-nav-shell.is-compact #evaThemePillToggle,
+body:not(.nav-menu-open) .eva-nav-shell.island #evaThemePillToggle,
+body:not(.nav-menu-open) .eva-nav-shell.is-island #evaThemePillToggle {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Center the brand/logo inside compact black pill */
+body:not(.nav-menu-open) .eva-nav-shell.compact .eva-brand,
+body:not(.nav-menu-open) .eva-nav-shell.is-compact .eva-brand,
+body:not(.nav-menu-open) .eva-nav-shell.island .eva-brand,
+body:not(.nav-menu-open) .eva-nav-shell.is-island .eva-brand,
+body:not(.nav-menu-open) .eva-nav-pill.compact .eva-brand,
+body:not(.nav-menu-open) .eva-nav-pill.is-compact .eva-brand,
+body:not(.nav-menu-open) .eva-nav-pill.is-island .eva-brand {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0 !important;
+
+  height: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
+
+  transform: translate(-50%, -50%) !important;
+
+  display: grid !important;
+  place-items: center !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 0 !important;
+
+  z-index: 5 !important;
+}
+
+/* Compact state = logo only, no text */
+body:not(.nav-menu-open) .eva-nav-shell.compact .eva-brand-copy,
+body:not(.nav-menu-open) .eva-nav-shell.is-compact .eva-brand-copy,
+body:not(.nav-menu-open) .eva-nav-shell.island .eva-brand-copy,
+body:not(.nav-menu-open) .eva-nav-shell.is-island .eva-brand-copy,
+body:not(.nav-menu-open) .eva-nav-pill.compact .eva-brand-copy,
+body:not(.nav-menu-open) .eva-nav-pill.is-compact .eva-brand-copy,
+body:not(.nav-menu-open) .eva-nav-pill.is-island .eva-brand-copy {
+  display: none !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  max-width: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Logo centered in black pill */
+body:not(.nav-menu-open) .eva-nav-shell.compact .eva-logo,
+body:not(.nav-menu-open) .eva-nav-shell.is-compact .eva-logo,
+body:not(.nav-menu-open) .eva-nav-shell.island .eva-logo,
+body:not(.nav-menu-open) .eva-nav-shell.is-island .eva-logo,
+body:not(.nav-menu-open) .eva-nav-pill.compact .eva-logo,
+body:not(.nav-menu-open) .eva-nav-pill.is-compact .eva-logo,
+body:not(.nav-menu-open) .eva-nav-pill.is-island .eva-logo {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  max-width: 18px !important;
+  object-fit: contain !important;
+  margin: 0 !important;
+
+  filter:
+    drop-shadow(0 0 7px rgba(216,0,32,0.55))
+    drop-shadow(0 2px 5px rgba(0,0,0,0.65)) !important;
+}
+
+/* Liquid lens on compact pill */
+body:not(.nav-menu-open) .eva-nav-shell.compact .eva-nav-pill::before,
+body:not(.nav-menu-open) .eva-nav-shell.is-compact .eva-nav-pill::before,
+body:not(.nav-menu-open) .eva-nav-shell.island .eva-nav-pill::before,
+body:not(.nav-menu-open) .eva-nav-shell.is-island .eva-nav-pill::before,
+body:not(.nav-menu-open) .eva-nav-pill.compact::before,
+body:not(.nav-menu-open) .eva-nav-pill.is-compact::before,
+body:not(.nav-menu-open) .eva-nav-pill.is-island::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 2;
+
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,0.32), transparent 19%),
+    radial-gradient(circle at 72% 82%, rgba(255,255,255,0.08), transparent 30%),
+    linear-gradient(135deg, rgba(255,255,255,0.11), transparent 42%, rgba(255,255,255,0.04)) !important;
+
+  opacity: 0.76;
+}
+
+/* Water drop sheen keeps animation feeling alive */
+body:not(.nav-menu-open) .eva-nav-shell.compact .eva-nav-pill::after,
+body:not(.nav-menu-open) .eva-nav-shell.is-compact .eva-nav-pill::after,
+body:not(.nav-menu-open) .eva-nav-shell.island .eva-nav-pill::after,
+body:not(.nav-menu-open) .eva-nav-shell.is-island .eva-nav-pill::after,
+body:not(.nav-menu-open) .eva-nav-pill.compact::after,
+body:not(.nav-menu-open) .eva-nav-pill.is-compact::after,
+body:not(.nav-menu-open) .eva-nav-pill.is-island::after {
+  content: "";
+  position: absolute;
+  left: -42%;
+  top: 4px;
+  width: 58%;
+  height: 13px;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 3;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,0.10),
+      rgba(255,255,255,0.30),
+      rgba(255,255,255,0.08),
+      transparent
+    );
+
+  transform: rotate(-12deg);
+  opacity: 0;
+  animation: evaCompactIslandWaterDropFinal 4.2s ease-in-out infinite;
+}
+
+@keyframes evaCompactIslandWaterDropFinal {
+  0%, 28% {
+    left: -44%;
+    opacity: 0;
+    transform: rotate(-12deg) scaleX(0.88);
+  }
+
+  40% {
+    opacity: 0.68;
+  }
+
+  58% {
+    left: 82%;
+    opacity: 0.22;
+    transform: rotate(-12deg) scaleX(1.05);
+  }
+
+  100% {
+    left: 82%;
+    opacity: 0;
+  }
+}
+
+/* Remove old fake droplet below compact island if previous patch created one */
+body:not(.nav-menu-open) .eva-nav-shell.compact::after,
+body:not(.nav-menu-open) .eva-nav-shell.is-compact::after,
+body:not(.nav-menu-open) .eva-nav-shell.island::after,
+body:not(.nav-menu-open) .eva-nav-shell.is-island::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Full menu open must stay full nav, not compact */
+body.nav-menu-open .eva-nav-shell,
+body.nav-menu-open .eva-nav-shell.compact,
+body.nav-menu-open .eva-nav-shell.is-compact,
+body.nav-menu-open .eva-nav-shell.island,
+body.nav-menu-open .eva-nav-shell.is-island {
+  top: var(--eva-island-offset, max(10px, calc(env(safe-area-inset-top, 0px) + 8px))) !important;
+  padding-inline: max(7px, env(safe-area-inset-left)) max(7px, env(safe-area-inset-right)) !important;
+  justify-content: center !important;
+}
+
+body.nav-menu-open .eva-nav-shell .eva-nav-pill,
+body.nav-menu-open .eva-nav-shell.compact .eva-nav-pill,
+body.nav-menu-open .eva-nav-shell.is-compact .eva-nav-pill,
+body.nav-menu-open .eva-nav-shell.island .eva-nav-pill,
+body.nav-menu-open .eva-nav-shell.is-island .eva-nav-pill {
+  width: min(calc(100vw - 18px), 1080px) !important;
+  max-width: min(calc(100vw - 18px), 1080px) !important;
+  min-width: 0 !important;
+  min-height: 58px !important;
+  height: auto !important;
+  max-height: none !important;
+  border-radius: 999px !important;
+}
+
+/* Mobile exact tuning */
+@media (max-width: 430px) {
+  :root {
+    --eva-compact-island-top: max(2px, calc(env(safe-area-inset-top, 0px) - 54px));
+    --eva-compact-island-width: 116px;
+    --eva-compact-island-height: 32px;
+  }
+
+  #evaMenuBtn,
+  .eva-menu-btn {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+  }
+
+  #evaMenuBtn .eva-burger,
+  .eva-menu-btn .eva-burger {
+    width: 13px !important;
+    height: 10px !important;
+  }
+
+  #evaMenuBtn .eva-burger-line,
+  .eva-menu-btn .eva-burger-line {
+    width: 13px !important;
+    height: 1.9px !important;
+  }
+
+  #evaMenuBtn .eva-burger-line.mid,
+  .eva-menu-btn .eva-burger-line.mid {
+    top: 4.2px !important;
+  }
+
+  #evaMenuBtn .eva-burger-line.bot,
+  .eva-menu-btn .eva-burger-line.bot {
+    top: 8.4px !important;
+  }
+
+  body.nav-menu-open #evaMenuBtn .eva-burger-line.top,
+  body.nav-menu-open .eva-menu-btn .eva-burger-line.top,
+  body.nav-menu-open #evaMenuBtn .eva-burger-line.mid,
+  body.nav-menu-open .eva-menu-btn .eva-burger-line.mid,
+  body.nav-menu-open #evaMenuBtn .eva-burger-line.bot,
+  body.nav-menu-open .eva-menu-btn .eva-burger-line.bot {
+    top: 4.2px !important;
+  }
+
+  body:not(.nav-menu-open) .eva-nav-shell.compact .eva-logo,
+  body:not(.nav-menu-open) .eva-nav-shell.is-compact .eva-logo,
+  body:not(.nav-menu-open) .eva-nav-shell.island .eva-logo,
+  body:not(.nav-menu-open) .eva-nav-shell.is-island .eva-logo,
+  body:not(.nav-menu-open) .eva-nav-pill.compact .eva-logo,
+  body:not(.nav-menu-open) .eva-nav-pill.is-compact .eva-logo,
+  body:not(.nav-menu-open) .eva-nav-pill.is-island .eva-logo {
+    width: 17px !important;
+    height: 17px !important;
+    min-width: 17px !important;
+    max-width: 17px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:not(.nav-menu-open) .eva-nav-shell.compact .eva-nav-pill::after,
+  body:not(.nav-menu-open) .eva-nav-shell.is-compact .eva-nav-pill::after,
+  body:not(.nav-menu-open) .eva-nav-pill.compact::after,
+  body:not(.nav-menu-open) .eva-nav-pill.is-compact::after,
+  body:not(.nav-menu-open) .eva-nav-pill.is-island::after {
+    animation: none !important;
+  }
+}
