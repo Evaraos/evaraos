@@ -71,7 +71,7 @@ export function renderNav() {
   if (!mount) return false;
 
   const groups = getVisibleLinks();
-  const quickBubbles = "";
+  const quickBubbles = groups.quick.map((item) => bubbleLink(item.page, item.label, item.icon, item.bubble)).join("");
 
   const publicNavigation = groups.main.filter((item) =>
     ["index.html"].includes(item.page)
@@ -239,12 +239,7 @@ export function renderNav() {
         </div>
 
         <label class="eva-search">
-          <span class="eva-search-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" focusable="false">
-              <circle cx="10.8" cy="10.8" r="6.6"></circle>
-              <path d="M16 16l4.2 4.2"></path>
-            </svg>
-          </span>
+          <span>🔎</span>
           <input type="text" id="evaSearchInput" placeholder="Search apps" />
         </label>
 

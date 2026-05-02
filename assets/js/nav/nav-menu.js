@@ -1,5 +1,4 @@
 import { NAV_STATE } from "./nav-config.js";
-
 import {
   getMenuZone,
   getMenuBtn,
@@ -9,6 +8,7 @@ import {
 import {
   expandNav,
   setTarget,
+  atTopOfPage,
   hideQuickBubbles
 } from "./nav-scroll.js";
 
@@ -28,33 +28,22 @@ export function updateMenuViewportFit() {
 }
 
 export function lockBodyScroll() {
+  // Do not lock the body with position: fixed on iPhone.
+  // That caused the background page to jump/move when opening and closing the menu.
   NAV_STATE.lockedScrollY = window.scrollY || window.pageYOffset || 0;
-
   document.documentElement.classList.add("eva-menu-layer-open");
-  document.body.classList.add("eva-menu-body-locked");
-
-  document.body.style.position = "fixed";
-  document.body.style.top = `-${NAV_STATE.lockedScrollY}px`;
-  document.body.style.left = "0";
-  document.body.style.right = "0";
-  document.body.style.width = "100%";
-  document.body.style.overflow = "hidden";
 }
 
 export function unlockBodyScroll() {
-  const y = NAV_STATE.lockedScrollY || 0;
-
   document.documentElement.classList.remove("eva-menu-layer-open");
-  document.body.classList.remove("eva-menu-body-locked");
 
+  // Cleanup only if an older cached version left inline styles behind.
   document.body.style.position = "";
   document.body.style.top = "";
   document.body.style.left = "";
   document.body.style.right = "";
   document.body.style.width = "";
   document.body.style.overflow = "";
-
-  window.scrollTo(0, y);
 }
 
 export function openMenu() {
@@ -64,13 +53,14 @@ export function openMenu() {
   if (!zone || !btn) return;
 
   hideQuickBubbles();
-  expandNav(true, "tap");
   updateMenuViewportFit();
   lockBodyScroll();
 
   document.body.classList.add("nav-menu-open");
   zone.classList.add("open");
   btn.setAttribute("aria-expanded", "true");
+
+  expandNav(true, "tap");
 }
 
 export function closeMenu(shouldCompact = true) {
@@ -87,7 +77,12 @@ export function closeMenu(shouldCompact = true) {
 
   if (shouldCompact) {
     NAV_STATE.navPinnedOpen = false;
-    setTarget(0, "tap");
+
+    if (atTopOfPage()) {
+      setTarget(1, "tap");
+    } else {
+      setTarget(0, "tap");
+    }
   }
 }
 
@@ -98,9 +93,6 @@ export function bindMenu() {
   const backdrop = document.getElementById("evaBackdrop");
 
   if (!zone || !btn || !panel || !backdrop) return;
-  if (btn.dataset.menuBound === "true") return;
-
-  btn.dataset.menuBound = "true";
 
   btn.addEventListener("click", (event) => {
     event.preventDefault();
@@ -130,7 +122,9 @@ export function bindMenu() {
         closeMenu(true);
       }
 
-      hideQuickBubbles();
+      if (!event.target.closest("#evaQuickBubbles")) {
+        hideQuickBubbles();
+      }
     }
   });
 
