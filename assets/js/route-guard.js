@@ -5,22 +5,17 @@ import {
   clearUserSession
 } from "./firebase.js";
 
+const ROUTES = {
+  login: "/login.html",
+  dashboard: "/dashboard.html"
+};
+
 let hasFinishedRouteGuard = false;
 let hasPaintedOptimistically = false;
 
-function clearAuthPending() {
-  document.documentElement.classList.remove("auth-pending");
-  document.body?.classList.remove("auth-pending");
-}
-
-function markBodyReady() {
-  document.body?.classList.remove("app-loading");
-  document.body?.classList.add("app-ready");
-}
-
-function dispatchSessionReady(detail = {}) {
+function emit(name, detail = {}) {
   window.dispatchEvent(
-    new CustomEvent("evara:session-ready", {
+    new CustomEvent(name, {
       detail: {
         at: Date.now(),
         ...detail
@@ -29,43 +24,42 @@ function dispatchSessionReady(detail = {}) {
   );
 }
 
-function safeMarkReady(detail = {}) {
-  clearAuthPending();
-  markBodyReady();
-  dispatchSessionReady(detail);
+function setReadyState() {
+  document.documentElement.classList.remove("auth-pending");
+  document.body?.classList.remove("auth-pending", "app-loading");
+  document.body?.classList.add("app-ready");
+}
 
-  if (window.EvaraLoader && typeof window.EvaraLoader.markAppReady === "function") {
+function markLoaderReady() {
+  if (window.EvaraLoader?.markAppReady) {
     window.EvaraLoader.markAppReady();
   }
+}
+
+function safeMarkReady(detail = {}) {
+  setReadyState();
+  markLoaderReady();
+  emit("evara:session-ready", detail);
 }
 
 function paintOptimistically(detail = {}) {
   if (hasPaintedOptimistically) return;
   hasPaintedOptimistically = true;
 
-  clearAuthPending();
-  markBodyReady();
+  setReadyState();
 
-  if (window.EvaraLoader && typeof window.EvaraLoader.hideAllLoaders === "function") {
+  if (window.EvaraLoader?.hideAllLoaders) {
     window.EvaraLoader.hideAllLoaders(true);
   }
 
-  window.dispatchEvent(
-    new CustomEvent("evara:optimistic-paint", {
-      detail: {
-        at: Date.now(),
-        ...detail
-      }
-    })
-  );
+  emit("evara:optimistic-paint", detail);
 }
 
 function beginGuardRedirect(url, options = {}) {
   hasFinishedRouteGuard = true;
+  setReadyState();
 
-  clearAuthPending();
-
-  if (window.EvaraLoader && typeof window.EvaraLoader.beginNavigationLoad === "function") {
+  if (window.EvaraLoader?.beginNavigationLoad) {
     window.EvaraLoader.beginNavigationLoad({
       title: options.title || "Redirecting",
       subtitle: options.subtitle || "Taking you to the right page."
@@ -80,16 +74,12 @@ function beginGuardRedirect(url, options = {}) {
 function showAppReady(detail = {}) {
   if (hasFinishedRouteGuard) return;
   hasFinishedRouteGuard = true;
-
   safeMarkReady(detail);
 }
 
 function getStoredUser() {
   try {
-    const raw =
-      localStorage.getItem("evaraos-user") ||
-      sessionStorage.getItem("evaraos-user");
-
+    const raw = localStorage.getItem("evaraos-user") || sessionStorage.getItem("evaraos-user");
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -106,18 +96,10 @@ function waitForVerifiedFirebaseUser() {
 
   return new Promise((resolve) => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (unsubscribe) unsubscribe();
+      unsubscribe?.();
       resolve(user || null);
     });
   });
-}
-
-function isPrivateMode(mode) {
-  return mode === "private";
-}
-
-function isAuthMode(mode) {
-  return mode === "auth";
 }
 
 async function handlePrivateRoute() {
@@ -125,7 +107,7 @@ async function handlePrivateRoute() {
 
   if (!verifiedUser) {
     clearUserSession?.();
-    beginGuardRedirect("/login.html", {
+    beginGuardRedirect(ROUTES.login, {
       title: "Returning to login",
       subtitle: "Please sign in to continue."
     });
@@ -134,8 +116,8 @@ async function handlePrivateRoute() {
 
   await protectRoute({
     requireAuth: true,
-    redirectGuestTo: "/login.html",
-    redirectAuthedTo: "/dashboard.html"
+    redirectGuestTo: ROUTES.login,
+    redirectAuthedTo: ROUTES.dashboard
   });
 
   showAppReady({
@@ -149,7 +131,7 @@ async function handleAuthRoute() {
   const verifiedUser = await waitForVerifiedFirebaseUser();
 
   if (verifiedUser) {
-    beginGuardRedirect("/dashboard.html", {
+    beginGuardRedirect(ROUTES.dashboard, {
       title: "Opening dashboard",
       subtitle: "Your Firebase session is active."
     });
@@ -158,44 +140,39 @@ async function handleAuthRoute() {
 
   clearUserSession?.();
 
-  paintOptimistically({
+  const detail = {
     mode: "auth",
     authenticated: false,
     source: "verified-guest"
-  });
+  };
 
-  showAppReady({
-    mode: "auth",
-    authenticated: false,
-    source: "verified-guest"
-  });
+  paintOptimistically(detail);
+  showAppReady(detail);
 }
 
-async function handlePublicRoute(mode) {
-  paintOptimistically({
+function handlePublicRoute(mode) {
+  const detail = {
     mode: mode || "public",
     authenticated: hasLocalSession(),
     source: "public-fast-paint"
-  });
+  };
 
-  showAppReady({
-    mode: mode || "public",
-    authenticated: hasLocalSession()
-  });
+  paintOptimistically(detail);
+  showAppReady(detail);
 }
 
 async function handleProtectedRoute(mode) {
-  if (isPrivateMode(mode)) {
+  if (mode === "private") {
     await handlePrivateRoute();
     return;
   }
 
-  if (isAuthMode(mode)) {
+  if (mode === "auth") {
     await handleAuthRoute();
     return;
   }
 
-  await handlePublicRoute(mode);
+  handlePublicRoute(mode);
 }
 
 async function initRouteGuard() {
@@ -208,7 +185,7 @@ async function initRouteGuard() {
 
     if (mode === "private") {
       clearUserSession?.();
-      beginGuardRedirect("/login.html", {
+      beginGuardRedirect(ROUTES.login, {
         title: "Returning to login",
         subtitle: "Unable to verify your Firebase session."
       });
