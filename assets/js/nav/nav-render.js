@@ -8,39 +8,21 @@ import {
 
 import { iconSvg } from "./nav-icons.js";
 
-const TILE_DETAILS = {
-  "index.html": "Home base",
-  "staff_application.html": "Join team",
-  "login.html": "Access",
-  "signup.html": "Create ID",
-  "reset.html": "Recovery",
-  "dashboard.html": "Command hub",
-  "settings.html": "System",
-  "companies.html": "Brands",
-  "users.html": "People",
-  "applications.html": "Applicants",
-  "leads.html": "Pipeline",
-  "jobs.html": "Operations",
-  "qa.html": "Quality"
-};
-
 function appTile(page, label, icon, tone = "") {
   const href = buildHref(page);
   const active = isCurrentPage(page) ? " active" : "";
   const safeLabel = String(label || "").toLowerCase();
-  const detail = TILE_DETAILS[page] || "Open";
 
   return `
     <a
       href="${href}"
       class="eva-link eva-app-tile${active} ${tone ? `tile-${tone}` : ""}"
       data-menu-link="${href}"
-      data-label="${safeLabel} ${detail.toLowerCase()}"
-      data-detail="${detail}"
+      data-label="${safeLabel}"
       aria-label="${label}"
     >
       <span class="eva-link-icon eva-app-icon">${iconSvg(icon)}</span>
-      <span class="eva-link-label eva-app-label">${label}</span>\n      <small class="eva-app-detail">${detail}</small>
+      <span class="eva-link-label eva-app-label">${label}</span>
     </a>
   `;
 }
@@ -54,6 +36,7 @@ function menuSection(title, subtitle, items, className = "") {
         <p>${subtitle}</p>
         <h3>${title}</h3>
       </div>
+
       <div class="eva-app-grid">
         ${items.map((item) => appTile(item.page, item.label, item.icon, item.bubble || "")).join("")}
       </div>
@@ -112,7 +95,7 @@ export function renderNav() {
         </div>
 
         <div class="eva-app-grid eva-account-grid">
-          <button type="button" class="eva-link eva-app-tile eva-account-tile" id="evaLogoutBtn" data-label="logout" aria-label="Logout">
+          <button type="button" class="eva-link eva-app-tile eva-account-tile tile-logout" id="evaLogoutBtn" data-label="logout" aria-label="Logout">
             <span class="eva-link-icon eva-app-icon">
               <svg viewBox="0 0 24 24" focusable="false">
                 <path d="M10 7V5.5A2.5 2.5 0 0 1 12.5 3h5A2.5 2.5 0 0 1 20 5.5v13A2.5 2.5 0 0 1 17.5 21h-5A2.5 2.5 0 0 1 10 18.5V17"/>
@@ -123,7 +106,7 @@ export function renderNav() {
             <span class="eva-link-label eva-app-label">Logout</span>
           </button>
 
-          <button type="button" class="eva-link eva-app-tile eva-account-tile" id="evaThemeToggle" data-label="theme mode" aria-label="Toggle theme">
+          <button type="button" class="eva-link eva-app-tile eva-account-tile tile-theme" id="evaThemeToggle" data-label="theme mode" aria-label="Toggle theme">
             <span class="eva-link-icon eva-app-icon">
               <svg viewBox="0 0 24 24" focusable="false">
                 <path d="M12 3v2"/>
@@ -149,17 +132,9 @@ export function renderNav() {
               <small>Tap Share</small>
             </span>
           </button>
+
           <button type="button" class="eva-install-segment eva-install-android" id="evaInstallAndroid" aria-label="Install Evaraos on Android">
-            <span class="eva-install-os-mark eva-install-android-mark" aria-hidden="true">
-              <svg viewBox="0 0 48 48" focusable="false">
-                <path fill="currentColor" d="M14.8 18.2h18.4c1.9 0 3.4 1.5 3.4 3.4v10.8c0 1.9-1.5 3.4-3.4 3.4H14.8c-1.9 0-3.4-1.5-3.4-3.4V21.6c0-1.9 1.5-3.4 3.4-3.4Z"/>
-                <path fill="currentColor" d="M9 21.7c1 0 1.8.8 1.8 1.8v8.3c0 1-.8 1.8-1.8 1.8s-1.8-.8-1.8-1.8v-8.3c0-1 .8-1.8 1.8-1.8Zm30 0c1 0 1.8.8 1.8 1.8v8.3c0 1-.8 1.8-1.8 1.8s-1.8-.8-1.8-1.8v-8.3c0-1 .8-1.8 1.8-1.8ZM17 35.3c1 0 1.8.8 1.8 1.8v4.2c0 1-.8 1.8-1.8 1.8s-1.8-.8-1.8-1.8v-4.2c0-1 .8-1.8 1.8-1.8Zm14 0c1 0 1.8.8 1.8 1.8v4.2c0 1-.8 1.8-1.8 1.8s-1.8-.8-1.8-1.8v-4.2c0-1 .8-1.8 1.8-1.8Z"/>
-                <path fill="currentColor" d="M14.1 16.5c.9-4.1 4.9-7.2 9.9-7.2s9 3.1 9.9 7.2H14.1Z"/>
-                <path stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M18 9.8 15.7 5.7M30 9.8l2.3-4.1"/>
-                <circle cx="19.2" cy="13.7" r="1.15" fill="#fff"/>
-                <circle cx="28.8" cy="13.7" r="1.15" fill="#fff"/>
-              </svg>
-            </span>
+            <span class="eva-install-os-mark eva-install-android-mark" aria-hidden="true">⬡</span>
             <span class="eva-install-copy">
               <strong>Android</strong>
               <small>Install</small>
@@ -174,6 +149,7 @@ export function renderNav() {
           <p>Access</p>
           <h3>Account</h3>
         </div>
+
         <div class="eva-app-grid">
           ${accountAccess.map((item) => appTile(item.page, item.label, item.icon, item.bubble || "")).join("")}
         </div>
@@ -236,7 +212,11 @@ export function renderNav() {
             <p>EVARAOS</p>
             <h2>${groups.authed ? "Executive Control" : "Control Center"}</h2>
           </div>
-          <span class="eva-menu-badge">${groups.authed ? groups.role : "Guest"}</span>
+
+          <button type="button" class="eva-menu-close-btn" id="evaMenuCloseBtn" aria-label="Close Control Center">
+            <span></span>
+            <span></span>
+          </button>
         </div>
 
         <label class="eva-search">
@@ -247,7 +227,6 @@ export function renderNav() {
         <nav class="eva-links eva-menu-apps" id="evaLinks" aria-label="Main navigation">
           ${menuSection(groups.authed ? "Executive Control" : "Command Navigation", groups.authed ? "Operate" : "Launch", groups.authed ? executiveControl : [], "eva-exec-section")}
           ${menuSection("Navigation", "Explore", publicNavigation, "eva-nav-section")}
-          ${!groups.authed ? "" : ""}
         </nav>
 
         ${accountTools}

@@ -310,11 +310,23 @@ export function bindSearch() {
   });
 }
 
+function bindMenuCloseButton() {
+  const closeBtn = document.getElementById("evaMenuCloseBtn");
+  if (!closeBtn) return;
+
+  closeBtn.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    closeMenu(true);
+  });
+}
+
 export function bindAllNavEvents() {
   bindTapToggle();
   bindBrandHome();
   bindLinks();
   bindThemeToggle();
   bindSearch();
+  bindMenuCloseButton();
   syncThemeLabel();
 }
