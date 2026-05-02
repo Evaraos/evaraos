@@ -8,21 +8,39 @@ import {
 
 import { iconSvg } from "./nav-icons.js";
 
+const TILE_DETAILS = {
+  "index.html": "Home base",
+  "staff_application.html": "Join team",
+  "login.html": "Access",
+  "signup.html": "Create ID",
+  "reset.html": "Recovery",
+  "dashboard.html": "Command hub",
+  "settings.html": "System",
+  "companies.html": "Brands",
+  "users.html": "People",
+  "applications.html": "Applicants",
+  "leads.html": "Pipeline",
+  "jobs.html": "Operations",
+  "qa.html": "Quality"
+};
+
 function appTile(page, label, icon, tone = "") {
   const href = buildHref(page);
   const active = isCurrentPage(page) ? " active" : "";
   const safeLabel = String(label || "").toLowerCase();
+  const detail = TILE_DETAILS[page] || "Open";
 
   return `
     <a
       href="${href}"
       class="eva-link eva-app-tile${active} ${tone ? `tile-${tone}` : ""}"
       data-menu-link="${href}"
-      data-label="${safeLabel}"
+      data-label="${safeLabel} ${detail.toLowerCase()}"
+      data-detail="${detail}"
       aria-label="${label}"
     >
       <span class="eva-link-icon eva-app-icon">${iconSvg(icon)}</span>
-      <span class="eva-link-label eva-app-label">${label}</span>
+      <span class="eva-link-label eva-app-label">${label}</span>\n      <small class="eva-app-detail">${detail}</small>
     </a>
   `;
 }

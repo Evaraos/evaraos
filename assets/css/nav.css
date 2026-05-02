@@ -1572,3 +1572,385 @@ html[data-theme$="-light"] .eva-app-label {
     max-width: 82px;
   }
 }
+
+
+/* =========================================================
+   Evaraos Liquid Glass App Launcher v2
+   More detailed app tiles, glass depth, app captions,
+   liquid shine, and cleaner scalable grouping.
+   ========================================================= */
+
+.eva-control-center-panel {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,0.22), transparent 30%),
+    radial-gradient(circle at 85% 10%, rgba(255,59,92,0.13), transparent 28%),
+    radial-gradient(circle at 50% 115%, rgba(110,80,255,0.15), transparent 38%),
+    linear-gradient(180deg, rgba(16,18,25,0.76), rgba(5,6,10,0.88)) !important;
+  border: 1px solid rgba(255,255,255,0.16) !important;
+  box-shadow:
+    0 28px 90px rgba(0,0,0,0.36),
+    0 10px 30px rgba(0,0,0,0.22),
+    inset 0 1px 0 rgba(255,255,255,0.24),
+    inset 0 -1px 0 rgba(255,255,255,0.06) !important;
+  backdrop-filter: blur(34px) saturate(190%) contrast(1.05) !important;
+  -webkit-backdrop-filter: blur(34px) saturate(190%) contrast(1.05) !important;
+}
+
+.eva-control-center-panel::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.22), transparent 26%, rgba(255,255,255,0.06) 64%, rgba(255,255,255,0.16));
+  opacity: 0.65;
+}
+
+.eva-control-center-panel::after {
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 8px;
+  height: 1px;
+  border-radius: 999px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.72), transparent);
+  opacity: 0.55;
+}
+
+.eva-menu-titlebar,
+.eva-search,
+.eva-menu-section,
+.eva-install-pill {
+  position: relative;
+  z-index: 2;
+}
+
+.eva-menu-titlebar {
+  padding: 6px 5px 2px;
+}
+
+.eva-menu-titlebar h2 {
+  font-size: clamp(1.28rem, 4vw, 1.62rem) !important;
+  text-shadow: 0 8px 28px rgba(0,0,0,0.32);
+}
+
+.eva-menu-badge {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.20),
+    0 10px 24px rgba(0,0,0,0.13);
+  backdrop-filter: blur(18px) saturate(170%);
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+}
+
+.eva-search {
+  height: 44px;
+  border-radius: 18px !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.065)) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.16),
+    0 10px 24px rgba(0,0,0,0.12);
+}
+
+.eva-menu-section {
+  padding: 10px;
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255,255,255,0.12), transparent 34%),
+    linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.028));
+  border: 1px solid rgba(255,255,255,0.075);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.10),
+    0 14px 28px rgba(0,0,0,0.10);
+}
+
+.eva-exec-section {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255,59,92,0.15), transparent 34%),
+    radial-gradient(circle at 90% 20%, rgba(120,80,255,0.12), transparent 34%),
+    linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.028));
+}
+
+.eva-nav-section {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,0.13), transparent 34%),
+    radial-gradient(circle at 90% 20%, rgba(98,180,255,0.10), transparent 34%),
+    linear-gradient(180deg, rgba(255,255,255,0.060), rgba(255,255,255,0.025));
+}
+
+.eva-section-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 2px 2px;
+}
+
+.eva-section-head p {
+  order: 2;
+  margin-bottom: 1px !important;
+  font-size: 0.56rem !important;
+  letter-spacing: 0.18em !important;
+}
+
+.eva-section-head h3 {
+  order: 1;
+  font-size: 0.98rem !important;
+}
+
+.eva-app-grid {
+  gap: 11px !important;
+}
+
+.eva-link.eva-app-tile,
+.eva-app-tile {
+  min-height: 112px !important;
+  grid-template-rows: 52px auto auto !important;
+  gap: 5px !important;
+  padding: 12px 8px 10px !important;
+  border-radius: 27px !important;
+  background:
+    radial-gradient(circle at 24% 10%, rgba(255,255,255,0.28), transparent 30%),
+    radial-gradient(circle at 78% 82%, rgba(255,255,255,0.055), transparent 32%),
+    linear-gradient(145deg, rgba(255,255,255,0.135), rgba(255,255,255,0.052) 48%, rgba(255,255,255,0.028)) !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  box-shadow:
+    0 16px 30px rgba(0,0,0,0.18),
+    0 3px 10px rgba(0,0,0,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.24),
+    inset 0 -1px 0 rgba(255,255,255,0.055) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.eva-app-tile::before {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.22), transparent 28%, rgba(255,255,255,0.045) 64%, rgba(255,255,255,0.12)) !important;
+  opacity: 0.72 !important;
+}
+
+.eva-app-tile::after {
+  content: "";
+  position: absolute;
+  width: 76%;
+  height: 44%;
+  left: -22%;
+  top: -24%;
+  border-radius: 999px;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(255,255,255,0.30), transparent 66%);
+  transform: rotate(-22deg);
+  opacity: 0.54;
+}
+
+.eva-app-tile:hover,
+.eva-app-tile:focus-visible {
+  transform: translateY(-1px) scale(1.012);
+  border-color: rgba(255,255,255,0.22) !important;
+  box-shadow:
+    0 20px 34px rgba(0,0,0,0.22),
+    0 0 0 1px rgba(255,255,255,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.30) !important;
+}
+
+.eva-app-tile:active {
+  transform: scale(0.955) !important;
+}
+
+.eva-app-tile.active {
+  background:
+    radial-gradient(circle at 24% 10%, rgba(255,255,255,0.34), transparent 30%),
+    radial-gradient(circle at 80% 80%, rgba(255,59,92,0.18), transparent 36%),
+    linear-gradient(145deg, rgba(255,59,92,0.34), rgba(255,255,255,0.075) 54%, rgba(120,38,255,0.10)) !important;
+  border-color: rgba(255,96,124,0.44) !important;
+  box-shadow:
+    0 18px 38px rgba(255,59,92,0.16),
+    inset 0 1px 0 rgba(255,255,255,0.32) !important;
+}
+
+.eva-app-icon {
+  width: 52px !important;
+  height: 52px !important;
+  border-radius: 18px !important;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,0.54), transparent 25%),
+    radial-gradient(circle at 76% 80%, rgba(255,255,255,0.18), transparent 32%),
+    linear-gradient(145deg, rgba(255,62,96,1), rgba(168,45,255,0.88) 52%, rgba(55,120,255,0.78)) !important;
+  box-shadow:
+    0 13px 22px rgba(0,0,0,0.24),
+    0 0 20px rgba(255,59,92,0.10),
+    inset 0 1px 0 rgba(255,255,255,0.42),
+    inset 0 -1px 0 rgba(0,0,0,0.12) !important;
+}
+
+.eva-app-icon::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: 17px;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.28), transparent 36%, rgba(255,255,255,0.08));
+  pointer-events: none;
+}
+
+.eva-app-icon::after {
+  content: "";
+  position: absolute;
+  width: 34px;
+  height: 12px;
+  left: 9px;
+  top: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.42), rgba(255,255,255,0.05));
+  transform: rotate(-18deg);
+  pointer-events: none;
+  opacity: 0.68;
+}
+
+.eva-app-icon svg {
+  position: relative;
+  z-index: 2;
+  width: 24px !important;
+  height: 24px !important;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.28));
+}
+
+.eva-app-label {
+  max-width: 96px !important;
+  font-size: 0.70rem !important;
+  line-height: 1.02 !important;
+  color: rgba(255,255,255,0.94) !important;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.22);
+}
+
+.eva-app-detail {
+  width: 100%;
+  max-width: 92px;
+  margin-top: -1px;
+  display: block;
+  color: rgba(255,255,255,0.52);
+  font-size: 0.54rem;
+  font-weight: 850;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  z-index: 2;
+}
+
+/* Color families for scalable app categories */
+.eva-app-tile.tile-dashboard .eva-app-icon,
+.eva-app-tile.tile-settings .eva-app-icon {
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,0.52), transparent 25%),
+    linear-gradient(145deg, rgba(54,132,255,1), rgba(116,69,255,0.92)) !important;
+}
+
+.eva-app-tile.tile-companies .eva-app-icon,
+.eva-app-tile.tile-users .eva-app-icon,
+.eva-app-tile.tile-applications .eva-app-icon {
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,0.52), transparent 25%),
+    linear-gradient(145deg, rgba(255,59,92,1), rgba(255,138,52,0.90)) !important;
+}
+
+.eva-app-tile.tile-leads .eva-app-icon,
+.eva-app-tile.tile-jobs .eva-app-icon,
+.eva-app-tile.tile-qa .eva-app-icon {
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,0.52), transparent 25%),
+    linear-gradient(145deg, rgba(20,200,140,1), rgba(30,110,255,0.88)) !important;
+}
+
+.eva-app-tile.tile-home .eva-app-icon,
+.eva-app-tile.tile-apply .eva-app-icon {
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,0.52), transparent 25%),
+    linear-gradient(145deg, rgba(255,59,92,1), rgba(128,64,255,0.88)) !important;
+}
+
+.eva-app-tile.tile-login .eva-app-icon,
+.eva-app-tile.tile-signup .eva-app-icon,
+.eva-app-tile.tile-reset .eva-app-icon {
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,0.52), transparent 25%),
+    linear-gradient(145deg, rgba(255,255,255,0.92), rgba(108,122,255,0.86)) !important;
+  color: #121722 !important;
+}
+
+html[data-theme="light"] .eva-control-center-panel,
+html[data-theme$="-light"] .eva-control-center-panel {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,0.98), transparent 30%),
+    radial-gradient(circle at 85% 10%, rgba(255,59,92,0.12), transparent 28%),
+    radial-gradient(circle at 50% 115%, rgba(120,80,255,0.10), transparent 38%),
+    linear-gradient(180deg, rgba(255,255,255,0.78), rgba(246,248,251,0.86)) !important;
+  border-color: rgba(255,255,255,0.92) !important;
+  box-shadow:
+    0 28px 80px rgba(105,120,140,0.20),
+    0 10px 30px rgba(105,120,140,0.12),
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(255,255,255,0.50) !important;
+}
+
+html[data-theme="light"] .eva-menu-section,
+html[data-theme$="-light"] .eva-menu-section {
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255,255,255,0.98), transparent 34%),
+    linear-gradient(180deg, rgba(255,255,255,0.76), rgba(255,255,255,0.42)) !important;
+  border-color: rgba(255,255,255,0.88) !important;
+}
+
+html[data-theme="light"] .eva-link.eva-app-tile,
+html[data-theme$="-light"] .eva-link.eva-app-tile,
+html[data-theme="light"] .eva-app-tile,
+html[data-theme$="-light"] .eva-app-tile {
+  background:
+    radial-gradient(circle at 24% 10%, rgba(255,255,255,1), transparent 30%),
+    radial-gradient(circle at 80% 82%, rgba(255,255,255,0.68), transparent 32%),
+    linear-gradient(145deg, rgba(255,255,255,0.92), rgba(248,250,253,0.78) 52%, rgba(255,255,255,0.56)) !important;
+  border-color: rgba(255,255,255,0.96) !important;
+  box-shadow:
+    0 16px 30px rgba(105,120,140,0.14),
+    0 3px 10px rgba(105,120,140,0.08),
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(255,255,255,0.55) !important;
+}
+
+html[data-theme="light"] .eva-app-detail,
+html[data-theme$="-light"] .eva-app-detail {
+  color: rgba(18,35,30,0.46);
+}
+
+@media (max-width: 430px) {
+  .eva-link.eva-app-tile,
+  .eva-app-tile {
+    min-height: 103px !important;
+    grid-template-rows: 48px auto auto !important;
+    padding: 11px 6px 9px !important;
+  }
+
+  .eva-app-icon {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 17px !important;
+  }
+
+  .eva-app-label {
+    font-size: 0.66rem !important;
+    max-width: 84px !important;
+  }
+
+  .eva-app-detail {
+    font-size: 0.50rem;
+    max-width: 82px;
+  }
+}
