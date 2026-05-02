@@ -843,42 +843,112 @@ html[data-theme="galaxy"] .eva-quick-bubble {
   }
 }
 
+
 /* =========================================================
-   Evaraos Dynamic Island Bridge
-   Keeps the nav from hiding under iPhone Dynamic Island
-   while making compact mode feel like an Apple island control.
+   Evaraos Dynamic Island Bridge v2
+   Smaller island-sized compact pill, centered content,
+   white readable text, clean iPhone safe-area behavior.
    ========================================================= */
 
 :root {
   --eva-island-offset: max(10px, calc(env(safe-area-inset-top, 0px) + 8px));
-  --eva-island-compact-width: 174px;
-  --eva-island-compact-height: 44px;
+  --eva-island-compact-width: 132px;
+  --eva-island-compact-height: 38px;
 }
 
-/* Move the entire nav below the real iPhone island/safe area */
+/* Keep nav below the real hardware island / safe area */
 .eva-nav-shell {
   top: var(--eva-island-offset) !important;
 }
 
-/* Compact mode becomes the app’s own Dynamic Island-style dock */
+/* Compact mode: same family as Apple Dynamic Island, slightly smaller/tighter */
 .eva-nav-shell.compact .eva-nav-pill {
-  width: min(var(--eva-island-compact-width), calc(100vw - 22px)) !important;
+  width: min(var(--eva-island-compact-width), calc(100vw - 24px)) !important;
+  max-width: min(var(--eva-island-compact-width), calc(100vw - 24px)) !important;
   min-height: var(--eva-island-compact-height) !important;
-  padding: 4px 10px !important;
-  border-radius: 999px;
+  height: var(--eva-island-compact-height) !important;
+  padding: 3px 8px !important;
+  border-radius: 999px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
   background:
-    radial-gradient(circle at 24% 18%, rgba(255,255,255,0.14), transparent 28%),
-    linear-gradient(180deg, rgba(7,8,12,0.985), rgba(0,0,0,0.995)) !important;
-  border: 1px solid rgba(255,255,255,0.12) !important;
+    radial-gradient(circle at 24% 16%, rgba(255,255,255,0.16), transparent 28%),
+    linear-gradient(180deg, rgba(8,9,13,0.995), rgba(0,0,0,1)) !important;
+  border: 1px solid rgba(255,255,255,0.13) !important;
   box-shadow:
-    0 14px 28px rgba(0,0,0,0.36),
+    0 12px 24px rgba(0,0,0,0.38),
     0 0 0 1px rgba(255,255,255,0.045),
-    inset 0 1px 0 rgba(255,255,255,0.14),
-    inset 0 -1px 0 rgba(255,255,255,0.035) !important;
-  backdrop-filter: blur(22px) saturate(160%);
-  -webkit-backdrop-filter: blur(22px) saturate(160%);
+    inset 0 1px 0 rgba(255,255,255,0.16),
+    inset 0 -1px 0 rgba(255,255,255,0.04) !important;
+  backdrop-filter: blur(24px) saturate(170%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(170%) !important;
 }
 
+/* Center the brand perfectly inside compact island mode */
+.eva-nav-shell.compact .eva-brand {
+  position: absolute !important;
+  inset: 0 !important;
+  left: 0 !important;
+  top: 0 !important;
+  transform: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  padding: 0 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  color: #fff !important;
+  text-align: center !important;
+  z-index: 2 !important;
+}
+
+/* Logo smaller so the text has breathing room */
+.eva-nav-shell.compact .eva-logo {
+  width: 27px !important;
+  height: 27px !important;
+  min-width: 27px !important;
+  object-fit: contain !important;
+  filter:
+    drop-shadow(0 0 7px rgba(255,255,255,0.18))
+    drop-shadow(0 0 12px rgba(255,0,0,0.08)) !important;
+}
+
+/* White readable compact text */
+.eva-nav-shell.compact .eva-brand-copy {
+  opacity: 1 !important;
+  max-width: 76px !important;
+  min-width: 0 !important;
+  display: grid !important;
+  justify-items: start !important;
+  align-items: center !important;
+  gap: 0 !important;
+  pointer-events: none !important;
+}
+
+.eva-nav-shell.compact .eva-brand-copy strong {
+  color: #fff !important;
+  font-size: 0.64rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.035em !important;
+  max-width: 76px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.7) !important;
+}
+
+/* Hide subtitle only in shrink mode so the island stays clean and readable */
+.eva-nav-shell.compact .eva-brand-copy span {
+  display: none !important;
+}
+
+/* Keep decorative overlay clean */
 .eva-nav-shell.compact .eva-nav-pill::before {
   content: "";
   position: absolute;
@@ -886,45 +956,11 @@ html[data-theme="galaxy"] .eva-quick-bubble {
   border-radius: inherit;
   pointer-events: none;
   background:
-    linear-gradient(120deg, rgba(255,255,255,0.16), transparent 38%, rgba(255,255,255,0.05));
-  opacity: 0.78;
+    linear-gradient(120deg, rgba(255,255,255,0.14), transparent 40%, rgba(255,255,255,0.055));
+  opacity: 0.72;
 }
 
-/* Logo + copy now fit inside the island dock instead of being covered */
-.eva-nav-shell.compact .eva-brand {
-  max-width: 138px !important;
-  min-height: 36px;
-  z-index: 2;
-  color: #fff;
-}
-
-.eva-nav-shell.compact .eva-logo {
-  width: 44px !important;
-  height: 44px !important;
-  filter: drop-shadow(0 0 10px rgba(255,255,255,0.15));
-}
-
-.eva-nav-shell.compact .eva-brand-copy {
-  opacity: 1 !important;
-  max-width: 68px !important;
-  display: grid;
-}
-
-.eva-nav-shell.compact .eva-brand-copy strong {
-  color: #fff;
-  font-size: 0.72rem;
-  letter-spacing: -0.02em;
-}
-
-.eva-nav-shell.compact .eva-brand-copy span {
-  color: rgba(255,255,255,0.56) !important;
-  font-size: 0.48rem;
-  max-width: 64px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Expanded menu sits below the safe-area/island cleanly */
+/* Expanded mode still drops below the island safely */
 .eva-nav-shell.expanded {
   top: max(12px, calc(env(safe-area-inset-top, 0px) + 10px)) !important;
 }
@@ -933,13 +969,13 @@ body.nav-menu-open .eva-menu-panel {
   top: calc(max(76px, env(safe-area-inset-top, 0px) + 68px)) !important;
 }
 
-/* iPhone/PWA polish */
+/* iPhone / PWA tuning */
 @supports (-webkit-touch-callout: none) {
   @media (max-width: 640px) {
     :root {
       --eva-island-offset: max(12px, calc(env(safe-area-inset-top, 0px) + 9px));
-      --eva-island-compact-width: 174px;
-      --eva-island-compact-height: 44px;
+      --eva-island-compact-width: 130px;
+      --eva-island-compact-height: 38px;
     }
 
     .eva-nav-shell {
@@ -947,11 +983,11 @@ body.nav-menu-open .eva-menu-panel {
     }
 
     .eva-nav-shell.expanded .eva-nav-pill {
-      border-radius: 30px;
+      border-radius: 30px !important;
     }
 
     .eva-quick-bubbles {
-      top: calc(100% + 8px);
+      top: calc(100% + 8px) !important;
     }
   }
 }
@@ -959,20 +995,29 @@ body.nav-menu-open .eva-menu-panel {
 @media (display-mode: standalone) and (max-width: 640px) {
   :root {
     --eva-island-offset: max(14px, calc(env(safe-area-inset-top, 0px) + 8px));
+    --eva-island-compact-width: 128px;
+    --eva-island-compact-height: 37px;
   }
 }
 
 @media (max-width: 390px) {
   :root {
-    --eva-island-compact-width: 160px;
+    --eva-island-compact-width: 124px;
+    --eva-island-compact-height: 36px;
   }
 
   .eva-nav-shell.compact .eva-logo {
-    width: 42px !important;
-    height: 42px !important;
+    width: 25px !important;
+    height: 25px !important;
+    min-width: 25px !important;
   }
 
   .eva-nav-shell.compact .eva-brand-copy {
-    max-width: 58px !important;
+    max-width: 68px !important;
+  }
+
+  .eva-nav-shell.compact .eva-brand-copy strong {
+    font-size: 0.60rem !important;
+    max-width: 68px !important;
   }
 }
