@@ -7,28 +7,17 @@ import {
   syncThemeLabel
 } from "./nav-utils.js";
 
-import {
-  renderNav
-} from "./nav-render.js";
+import { renderNav } from "./nav-render.js";
 
 import {
   applyProgress,
-  atTopOfPage,
   bindScrollBehavior,
   animateNav
 } from "./nav-scroll.js";
 
-import {
-  bindMenu
-} from "./nav-menu.js";
-
-import {
-  bindAllNavEvents
-} from "./nav-events.js";
-
-import {
-  bindRuntimeRefresh
-} from "./nav-session.js";
+import { bindMenu } from "./nav-menu.js";
+import { bindAllNavEvents } from "./nav-events.js";
+import { bindRuntimeRefresh } from "./nav-session.js";
 
 function bootReadySignal() {
   if (NAV_STATE.hasBootAnimated) return;
@@ -45,39 +34,6 @@ function bootReadySignal() {
   });
 }
 
-function bindAlwaysHomeLogo() {
-  const brand = document.getElementById("evaBrandBlock");
-  if (!brand || brand.dataset.alwaysHomeBound === "true") return;
-
-  brand.dataset.alwaysHomeBound = "true";
-
-  brand.addEventListener(
-    "click",
-    (event) => {
-      const href = brand.getAttribute("data-home-link") || "/index.html";
-
-      event.preventDefault();
-      event.stopPropagation();
-
-      if (typeof event.stopImmediatePropagation === "function") {
-        event.stopImmediatePropagation();
-      }
-
-      if (window.EvaraLoader && typeof window.EvaraLoader.beginNavigationLoad === "function") {
-        window.EvaraLoader.beginNavigationLoad({
-          title: "Opening Home",
-          subtitle: "Loading the Evaraos home experience."
-        });
-      }
-
-      requestAnimationFrame(() => {
-        window.location.assign(href);
-      });
-    },
-    true
-  );
-}
-
 export function initNav() {
   if (NAV_STATE.hasInitialized) return;
 
@@ -86,23 +42,24 @@ export function initNav() {
   setTheme(getAppearanceTheme());
 
   const rendered = renderNav();
-  if (!rendered) return;
-
-  bindAlwaysHomeLogo();
-
-  const shell = getNavShell();
-  const immediate = atTopOfPage() ? 1 : 0;
-
-  NAV_STATE.progress = immediate;
-  NAV_STATE.targetProgress = immediate;
-
-  if (shell) {
-    shell.style.setProperty("--nav-progress", immediate.toFixed(4));
-    shell.classList.toggle("expanded", immediate === 1);
-    shell.classList.toggle("compact", immediate !== 1);
+  if (!rendered) {
+    bootReadySignal();
+    return;
   }
 
-  applyProgress(immediate);
+  const shell = getNavShell();
+
+  NAV_STATE.progress = 1;
+  NAV_STATE.targetProgress = 1;
+  NAV_STATE.navPinnedOpen = true;
+
+  if (shell) {
+    shell.style.setProperty("--nav-progress", "1.0000");
+    shell.classList.remove("compact", "is-compact", "island", "is-island");
+    shell.classList.add("expanded");
+  }
+
+  applyProgress(1);
 
   bindAllNavEvents();
   bindMenu();
