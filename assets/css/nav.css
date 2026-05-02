@@ -1080,3 +1080,53 @@ body:not(.login-page) main.dashboard-main {
 body.login-page #appRoot {
   padding-top: 0 !important;
 }
+
+
+/* =========================================================
+   Evaraos Page Offset Balance
+   Prevents fixed Dynamic Island nav from covering page titles
+   without creating the huge home-page gap.
+   ========================================================= */
+
+:root {
+  --eva-page-top-space: 116px;
+  --eva-mobile-page-top-space: 112px;
+}
+
+/* Standard page shells should start below the fixed nav */
+@media (max-width: 680px) {
+  .page-shell,
+  .app-shell,
+  .dashboard-shell,
+  .settings-shell,
+  .profile-shell,
+  .security-shell,
+  .applications-shell,
+  .users-shell,
+  .companies-shell,
+  .leads-shell,
+  .jobs-shell,
+  .qa-shell,
+  .audit-shell,
+  main.container,
+  main.page-container {
+    padding-top: var(--eva-mobile-page-top-space, 112px) !important;
+  }
+
+  /* Home manages its own spacing through home.css */
+  .home-shell {
+    padding-top: var(--eva-mobile-page-top-space, 112px) !important;
+  }
+}
+
+@media (max-width: 430px) {
+  :root {
+    --eva-mobile-page-top-space: 106px;
+  }
+}
+
+@media (display-mode: standalone) and (max-width: 680px) {
+  :root {
+    --eva-mobile-page-top-space: 110px;
+  }
+}
