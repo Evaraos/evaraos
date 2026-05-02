@@ -923,5 +923,429 @@
 </script>
 <!-- /EVARAOS HARD INLINE NAV RESTORE -->
 
+
+<!-- EVARAOS DOT / PILL FINAL TUNE -->
+<style id="evaDotPillFinalTune">
+  :root {
+    --eva-hard-dot-size-final: 39px;
+    --eva-hard-dot-logo-final: 31px;
+
+    /* More left = more breathing room from Dynamic Island */
+    --eva-hard-dot-left-final: calc(50% - 88px);
+
+    /* Keep dot aligned in the iPhone status/Dynamic Island row */
+    --eva-hard-dot-top-final: max(5px, calc(env(safe-area-inset-top, 0px) - 50px));
+
+    /* Full pill location */
+    --eva-hard-pill-top-final: max(14px, calc(env(safe-area-inset-top, 0px) + 10px));
+    --eva-hard-pill-height-final: 58px;
+
+    /* Dropdown starts directly under full nav pill */
+    --eva-hard-panel-top-final: max(82px, calc(env(safe-area-inset-top, 0px) + 72px));
+  }
+
+  /* =========================================================
+     SHRUNK MODE = CIRCULAR LOGO DOT LEFT OF DYNAMIC ISLAND
+     ========================================================= */
+
+  body.eva-hard-compact .eva-hard-nav {
+    top: var(--eva-hard-dot-top-final) !important;
+    left: var(--eva-hard-dot-left-final) !important;
+
+    width: var(--eva-hard-dot-size-final) !important;
+    height: var(--eva-hard-dot-size-final) !important;
+    min-width: var(--eva-hard-dot-size-final) !important;
+    min-height: var(--eva-hard-dot-size-final) !important;
+    max-width: var(--eva-hard-dot-size-final) !important;
+    max-height: var(--eva-hard-dot-size-final) !important;
+
+    transform: translateX(-50%) !important;
+    border-radius: 999px !important;
+
+    display: grid !important;
+    place-items: center !important;
+
+    background:
+      radial-gradient(circle at 30% 18%, rgba(255,255,255,.36), transparent 23%),
+      radial-gradient(circle at 70% 76%, rgba(216,0,32,.30), transparent 36%),
+      linear-gradient(180deg, rgba(16,17,20,.99), rgba(0,0,0,.98)) !important;
+
+    border: 1px solid rgba(255,255,255,.20) !important;
+
+    box-shadow:
+      0 11px 19px rgba(0,0,0,.38),
+      0 5px 12px rgba(0,0,0,.26),
+      0 0 20px rgba(216,0,32,.10),
+      inset 0 1px 0 rgba(255,255,255,.18),
+      inset 0 -1px 0 rgba(0,0,0,.76) !important;
+
+    overflow: hidden !important;
+
+    backdrop-filter: blur(26px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(26px) saturate(180%) !important;
+
+    transition:
+      top .48s cubic-bezier(.2,.92,.2,1),
+      left .48s cubic-bezier(.2,.92,.2,1),
+      width .48s cubic-bezier(.2,.92,.2,1),
+      height .48s cubic-bezier(.2,.92,.2,1),
+      transform .48s cubic-bezier(.2,.92,.2,1),
+      border-radius .48s cubic-bezier(.2,.92,.2,1),
+      background .48s cubic-bezier(.2,.92,.2,1),
+      box-shadow .48s cubic-bezier(.2,.92,.2,1) !important;
+  }
+
+  body.eva-hard-compact .eva-hard-brand {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+
+    display: grid !important;
+    place-items: center !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+
+  body.eva-hard-compact .eva-hard-logo {
+    width: var(--eva-hard-dot-logo-final) !important;
+    height: var(--eva-hard-dot-logo-final) !important;
+    min-width: var(--eva-hard-dot-logo-final) !important;
+    max-width: var(--eva-hard-dot-logo-final) !important;
+
+    object-fit: contain !important;
+    object-position: center !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+    transform: translateY(.2px) !important;
+
+    filter:
+      drop-shadow(0 0 9px rgba(216,0,32,.78))
+      drop-shadow(0 2px 6px rgba(0,0,0,.72)) !important;
+  }
+
+  body.eva-hard-compact .eva-hard-copy,
+  body.eva-hard-compact .eva-hard-actions {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  /* Liquid glare on dot */
+  body.eva-hard-compact .eva-hard-nav::before {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 2;
+
+    background:
+      radial-gradient(circle at 28% 18%, rgba(255,255,255,.38), transparent 23%),
+      radial-gradient(circle at 72% 84%, rgba(255,255,255,.09), transparent 32%),
+      linear-gradient(135deg, rgba(255,255,255,.12), transparent 42%, rgba(255,255,255,.045));
+  }
+
+  body.eva-hard-compact .eva-hard-nav::after {
+    content: "";
+    position: absolute;
+    left: -80%;
+    top: 6px;
+    width: 88%;
+    height: 13px;
+    border-radius: 999px;
+    pointer-events: none;
+    z-index: 3;
+
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,.16),
+        rgba(255,255,255,.36),
+        rgba(255,255,255,.12),
+        transparent
+      );
+
+    transform: rotate(-18deg);
+    animation: evaHardDotSweep 4.2s ease-in-out infinite;
+  }
+
+  @keyframes evaHardDotSweep {
+    0%, 28% {
+      left: -80%;
+      opacity: 0;
+    }
+
+    40% {
+      opacity: .70;
+    }
+
+    58% {
+      left: 92%;
+      opacity: .18;
+    }
+
+    100% {
+      left: 92%;
+      opacity: 0;
+    }
+  }
+
+  /* =========================================================
+     EXPANDED MODE = NORMAL FULL PILL
+     ========================================================= */
+
+  body.eva-hard-expanded .eva-hard-nav,
+  body.eva-hard-menu-open .eva-hard-nav {
+    top: var(--eva-hard-pill-top-final) !important;
+    left: 50% !important;
+
+    width: min(calc(100vw - 18px), 1080px) !important;
+    height: var(--eva-hard-pill-height-final) !important;
+    min-height: var(--eva-hard-pill-height-final) !important;
+    max-height: var(--eva-hard-pill-height-final) !important;
+
+    transform: translateX(-50%) !important;
+    border-radius: 999px !important;
+
+    background:
+      radial-gradient(circle at 24% 12%, rgba(255,255,255,.97), transparent 36%),
+      linear-gradient(180deg, rgba(255,255,255,.95), rgba(245,247,249,.86)) !important;
+
+    border: 1px solid rgba(255,255,255,.97) !important;
+
+    box-shadow:
+      0 18px 34px rgba(0,0,0,.14),
+      0 5px 14px rgba(0,0,0,.08),
+      inset 0 1px 0 rgba(255,255,255,1),
+      inset 0 -1px 0 rgba(0,0,0,.055) !important;
+
+    overflow: hidden !important;
+
+    backdrop-filter: blur(23px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(23px) saturate(180%) !important;
+  }
+
+  body.eva-hard-expanded .eva-hard-nav::before,
+  body.eva-hard-expanded .eva-hard-nav::after,
+  body.eva-hard-menu-open .eva-hard-nav::before,
+  body.eva-hard-menu-open .eva-hard-nav::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  body.eva-hard-expanded .eva-hard-brand,
+  body.eva-hard-menu-open .eva-hard-brand {
+    position: absolute !important;
+    left: calc(50% - 12px) !important;
+    top: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+
+    width: auto !important;
+    height: auto !important;
+    max-width: calc(100% - 122px) !important;
+
+    transform: translate(-50%, -50%) !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 9px !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+
+    white-space: nowrap !important;
+  }
+
+  body.eva-hard-expanded .eva-hard-logo,
+  body.eva-hard-menu-open .eva-hard-logo {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    max-width: 28px !important;
+
+    filter:
+      drop-shadow(0 2px 5px rgba(0,0,0,.16))
+      drop-shadow(0 0 5px rgba(216,0,32,.16)) !important;
+  }
+
+  body.eva-hard-expanded .eva-hard-copy,
+  body.eva-hard-menu-open .eva-hard-copy {
+    display: grid !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    text-align: center !important;
+    line-height: 1.02 !important;
+  }
+
+  body.eva-hard-expanded .eva-hard-actions,
+  body.eva-hard-menu-open .eva-hard-actions {
+    position: absolute !important;
+    right: 12px !important;
+    top: 50% !important;
+
+    transform: translateY(-50%) !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+
+  /* Dropdown starts directly under the full navbar */
+  .eva-hard-panel {
+    top: var(--eva-hard-panel-top-final) !important;
+    max-height: min(69vh, calc(100dvh - 176px)) !important;
+    border-top-left-radius: 32px !important;
+    border-top-right-radius: 32px !important;
+  }
+
+  body.eva-hard-menu-open .eva-hard-panel {
+    transform: translateX(-50%) translateY(0) scale(1) !important;
+  }
+
+  /* Menu button stays small / clean */
+  .eva-hard-menu-btn {
+    width: 31px !important;
+    height: 31px !important;
+    min-width: 31px !important;
+    border-radius: 999px !important;
+  }
+
+  .eva-hard-burger {
+    width: 14px !important;
+    height: 10px !important;
+  }
+
+  .eva-hard-burger i {
+    width: 14px !important;
+    height: 2px !important;
+  }
+
+  .eva-hard-burger i:nth-child(1) { top: 0 !important; }
+  .eva-hard-burger i:nth-child(2) { top: 4px !important; }
+  .eva-hard-burger i:nth-child(3) { top: 8px !important; }
+
+  body.eva-hard-menu-open .eva-hard-burger i:nth-child(1),
+  body.eva-hard-menu-open .eva-hard-burger i:nth-child(2),
+  body.eva-hard-menu-open .eva-hard-burger i:nth-child(3) {
+    top: 4px !important;
+  }
+
+  /* Mobile tuning */
+  @media (max-width: 430px) {
+    :root {
+      --eva-hard-dot-size-final: 39px;
+      --eva-hard-dot-logo-final: 31px;
+      --eva-hard-dot-left-final: calc(50% - 88px);
+      --eva-hard-dot-top-final: max(5px, calc(env(safe-area-inset-top, 0px) - 50px));
+      --eva-hard-panel-top-final: max(82px, calc(env(safe-area-inset-top, 0px) + 72px));
+    }
+
+    body.eva-hard-expanded .eva-hard-brand,
+    body.eva-hard-menu-open .eva-hard-brand {
+      left: calc(50% - 13px) !important;
+      max-width: calc(100% - 112px) !important;
+      gap: 8px !important;
+    }
+  }
+
+  @media (max-width: 390px) {
+    :root {
+      --eva-hard-dot-left-final: calc(50% - 82px);
+      --eva-hard-dot-size-final: 37px;
+      --eva-hard-dot-logo-final: 29px;
+    }
+  }
+</style>
+
+<script id="evaDotPillFinalTuneScript">
+(function () {
+  function hardCompact() {
+    document.body.classList.remove("eva-hard-expanded", "eva-hard-menu-open");
+    document.body.classList.add("eva-hard-compact");
+  }
+
+  function hardExpand() {
+    document.body.classList.remove("eva-hard-compact", "eva-hard-menu-open");
+    document.body.classList.add("eva-hard-expanded");
+  }
+
+  function hardMenuOpen() {
+    document.body.classList.remove("eva-hard-compact");
+    document.body.classList.add("eva-hard-expanded", "eva-hard-menu-open");
+  }
+
+  function bindFinalDotPill() {
+    var nav = document.getElementById("evaHardNav");
+    var menuBtn = document.querySelector(".eva-hard-menu-btn");
+    var backdrop = document.querySelector(".eva-hard-backdrop");
+
+    if (!nav || nav.dataset.finalDotPillBound === "true") return;
+    nav.dataset.finalDotPillBound = "true";
+
+    nav.addEventListener("click", function (event) {
+      if (event.target.closest(".eva-hard-menu-btn, .eva-hard-theme")) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (document.body.classList.contains("eva-hard-compact")) {
+        hardExpand();
+      } else {
+        hardCompact();
+      }
+    }, true);
+
+    if (menuBtn && menuBtn.dataset.finalMenuBound !== "true") {
+      menuBtn.dataset.finalMenuBound = "true";
+
+      menuBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (document.body.classList.contains("eva-hard-menu-open")) {
+          hardCompact();
+        } else {
+          hardMenuOpen();
+        }
+      }, true);
+    }
+
+    if (backdrop && backdrop.dataset.finalBackdropBound !== "true") {
+      backdrop.dataset.finalBackdropBound = "true";
+
+      backdrop.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        hardCompact();
+      }, true);
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      setTimeout(bindFinalDotPill, 50);
+      setTimeout(bindFinalDotPill, 500);
+    }, { once: true });
+  } else {
+    setTimeout(bindFinalDotPill, 50);
+    setTimeout(bindFinalDotPill, 500);
+  }
+})();
+</script>
+<!-- /EVARAOS DOT / PILL FINAL TUNE -->
+
 </body>
 </html>
