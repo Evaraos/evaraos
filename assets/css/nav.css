@@ -1189,3 +1189,32 @@ body.login-page #appRoot {
     transform: translateY(-18px) !important;
   }
 }
+
+/* =========================================================
+   FINAL CORRECTION: Safe Dynamic Island Nav Lift
+   Keeps pill higher than before but prevents Safari clipping.
+   ========================================================= */
+
+@media (max-width: 680px) {
+  .eva-nav-shell,
+  .eva-nav-shell.expanded,
+  .eva-nav-shell.compact {
+    transform: translateY(-8px) !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .eva-nav-shell,
+  .eva-nav-shell.expanded,
+  .eva-nav-shell.compact {
+    transform: translateY(-9px) !important;
+  }
+}
+
+@media (display-mode: standalone) and (max-width: 680px) {
+  .eva-nav-shell,
+  .eva-nav-shell.expanded,
+  .eva-nav-shell.compact {
+    transform: translateY(-7px) !important;
+  }
+}
