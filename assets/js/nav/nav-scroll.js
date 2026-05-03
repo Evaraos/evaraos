@@ -2,8 +2,11 @@ import { NAV_STATE } from "./nav-config.js";
 import { getNavShell, getBrandBlock, getQuickBubbles } from "./nav-utils.js";
 
 let lastY = window.scrollY;
+let intentionalScrollDistance = 0;
+
 const QUICK_HIDE_DELAY = 5200;
 const SCROLL_THRESHOLD = 1;
+const INTENTIONAL_SCROLL_UNLOCK = 18;
 
 export function atTopOfPage() {
   return window.scrollY <= 4;
@@ -67,13 +70,17 @@ export function setTarget(value, mode = "tap") {
 
 export function expandNav(pin = false, mode = "tap") {
   clearCompactTimer();
-  if (pin) NAV_STATE.navPinnedOpen = true;
+  if (pin) {
+    NAV_STATE.navPinnedOpen = true;
+    NAV_STATE.lastPinnedAt = Date.now();
+    intentionalScrollDistance = 0;
+  }
   setTarget(1, mode);
 }
 
 export function compactNav(unpin = false, mode = "tap") {
-  if (NAV_STATE.navPinnedOpen && !unpin && mode !== "force") return;
   if (unpin) NAV_STATE.navPinnedOpen = false;
+  if (NAV_STATE.navPinnedOpen && mode !== "force" && mode !== "scroll") return;
   setTarget(0, mode);
 }
 
@@ -127,18 +134,12 @@ export function showQuickBubbles() {
 
 export function settleAfterScroll() {
   clearScrollSettleTimer();
-  NAV_STATE.scrollSettleTimer = setTimeout(() => {
-    if (document.body.classList.contains("nav-menu-open")) return;
-    if (NAV_STATE.quickLocked) return;
-    if (NAV_STATE.navPinnedOpen) return;
-    if (NAV_STATE.lastScrollDirection < 0) expandNav(false, "scroll");
-    else compactNav(false, "scroll");
-  }, 80);
 }
 
 export function bindScrollBehavior() {
   lastY = window.scrollY;
   NAV_STATE.lastY = lastY;
+  intentionalScrollDistance = 0;
 
   window.addEventListener("scroll", () => {
     const y = window.scrollY;
@@ -147,11 +148,27 @@ export function bindScrollBehavior() {
 
     NAV_STATE.lastScrollDirection = dy < 0 ? -1 : 1;
 
-    if (!document.body.classList.contains("nav-menu-open") && !NAV_STATE.quickLocked) {
-      NAV_STATE.navPinnedOpen = false;
-      if (dy > 0 && y > 8) setTarget(0, "scroll");
-      if (dy < 0) setTarget(1, "scroll");
+    if (document.body.classList.contains("nav-menu-open") || NAV_STATE.quickLocked) {
+      lastY = y;
+      NAV_STATE.lastY = y;
+      return;
     }
+
+    intentionalScrollDistance += Math.abs(dy);
+
+    if (NAV_STATE.navPinnedOpen && intentionalScrollDistance < INTENTIONAL_SCROLL_UNLOCK) {
+      setTarget(1, "tap");
+      lastY = y;
+      NAV_STATE.lastY = y;
+      return;
+    }
+
+    if (intentionalScrollDistance >= INTENTIONAL_SCROLL_UNLOCK) {
+      NAV_STATE.navPinnedOpen = false;
+    }
+
+    if (dy > 0 && y > 8) setTarget(0, "scroll");
+    if (dy < 0) setTarget(1, "scroll");
 
     lastY = y;
     NAV_STATE.lastY = y;
@@ -160,7 +177,7 @@ export function bindScrollBehavior() {
 
 export function animateNav() {
   const diff = NAV_STATE.targetProgress - NAV_STATE.progress;
-  const factor = NAV_STATE.motionMode === "scroll" ? 0.72 : NAV_STATE.motionMode === "idle" ? 0.42 : 0.58;
+  const factor = NAV_STATE.motionMode === "scroll" ? 0.74 : NAV_STATE.motionMode === "idle" ? 0.42 : 0.60;
   const next = Math.abs(diff) < 0.001 ? NAV_STATE.targetProgress : NAV_STATE.progress + diff * factor;
   applyProgress(next);
   NAV_STATE.rafId = requestAnimationFrame(animateNav);
