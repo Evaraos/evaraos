@@ -1,6 +1,6 @@
 /* EVARAOS APPLE SETTINGS GLASS
    Current source for the Apple Settings inspired visual system.
-   Plain backgrounds, Liquid Glass cards, softer headings, visible pills.
+   This file must not style the universal nav.
 */
 
 :root {
@@ -67,73 +67,6 @@ html[data-theme] .active-glow::after {
   opacity: 0 !important;
   animation: none !important;
   background: none !important;
-}
-
-.eva-nav-shell {
-  top: max(8px, calc(env(safe-area-inset-top) - 38px)) !important;
-  --pill-height: calc(34px + 26px * var(--nav-progress)) !important;
-  --compact-logo: 56px !important;
-  --full-logo: 44px !important;
-  --menu-size: calc(0px + 44px * var(--nav-progress)) !important;
-  --side-balance: calc(0px + 44px * var(--nav-progress)) !important;
-}
-
-.eva-nav-pill {
-  min-height: var(--pill-height) !important;
-  background: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(255,255,255,0.62)) !important;
-  border: 1px solid rgba(255,255,255,0.88) !important;
-  box-shadow: 0 14px 32px rgba(60,60,67,0.13), inset 0 1px 0 rgba(255,255,255,0.96), inset 0 -1px 0 rgba(60,60,67,0.05) !important;
-  backdrop-filter: blur(28px) saturate(185%) brightness(1.02) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(185%) brightness(1.02) !important;
-}
-
-html[data-theme="dark"] .eva-nav-pill,
-html[data-theme="galaxy"] .eva-nav-pill,
-html[data-theme$="-dark"] .eva-nav-pill {
-  background: linear-gradient(180deg, rgba(44,44,46,0.86), rgba(28,28,30,0.72)) !important;
-  border-color: rgba(255,255,255,0.12) !important;
-  box-shadow: 0 16px 34px rgba(0,0,0,0.48), inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -1px 0 rgba(0,0,0,0.55) !important;
-}
-
-.eva-menu-btn {
-  background: rgba(255,255,255,0.74) !important;
-  border-color: rgba(255,255,255,0.90) !important;
-  box-shadow: 0 10px 24px rgba(60,60,67,0.12), inset 0 1px 0 rgba(255,255,255,0.95) !important;
-  backdrop-filter: blur(22px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(22px) saturate(180%) !important;
-}
-
-html[data-theme="dark"] .eva-menu-btn,
-html[data-theme="galaxy"] .eva-menu-btn,
-html[data-theme$="-dark"] .eva-menu-btn {
-  background: rgba(44,44,46,0.78) !important;
-  border-color: rgba(255,255,255,0.12) !important;
-}
-
-.eva-brand-copy strong {
-  color: #222826 !important;
-  -webkit-text-fill-color: #222826 !important;
-  font-weight: 720 !important;
-}
-
-.eva-brand-copy span {
-  color: var(--ios-light-muted) !important;
-  -webkit-text-fill-color: var(--ios-light-muted) !important;
-  font-weight: 500 !important;
-}
-
-html[data-theme="dark"] .eva-brand-copy strong,
-html[data-theme="galaxy"] .eva-brand-copy strong,
-html[data-theme$="-dark"] .eva-brand-copy strong {
-  color: var(--ios-dark-title) !important;
-  -webkit-text-fill-color: var(--ios-dark-title) !important;
-}
-
-html[data-theme="dark"] .eva-brand-copy span,
-html[data-theme="galaxy"] .eva-brand-copy span,
-html[data-theme$="-dark"] .eva-brand-copy span {
-  color: var(--ios-dark-muted) !important;
-  -webkit-text-fill-color: var(--ios-dark-muted) !important;
 }
 
 .home-shell {
@@ -322,15 +255,6 @@ html[data-theme$="-dark"] .role-pill-option {
 }
 
 @media (max-width: 680px) {
-  .eva-nav-shell {
-    top: max(8px, calc(env(safe-area-inset-top) - 40px)) !important;
-    --pill-height: calc(34px + 24px * var(--nav-progress)) !important;
-    --compact-logo: 54px !important;
-    --full-logo: 42px !important;
-    --menu-size: calc(0px + 42px * var(--nav-progress)) !important;
-    --side-balance: calc(0px + 42px * var(--nav-progress)) !important;
-  }
-
   .home-shell {
     padding-top: 102px !important;
   }
