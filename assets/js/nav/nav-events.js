@@ -30,7 +30,7 @@ import {
   logoutAndRedirect
 } from "../firebase.js";
 
-const NAV_ACTION_SELECTOR = "#evaMenuBtn, #evaThemePillToggle";
+const NAV_ACTION_SELECTOR = "#evaMenuBtn, #evaThemePillToggle, .eva-menu-btn, .eva-theme-nav-btn";
 const BRAND_SELECTOR = "#evaBrandBlock";
 
 function isNavActionTarget(event) {
@@ -79,11 +79,7 @@ export function togglePill(event) {
     return;
   }
 
-  if (window.scrollY > 4) {
-    compactNav(true, "tap");
-  } else {
-    scheduleCompact();
-  }
+  compactNav(true, "tap");
 }
 
 export function startCompactPress(event) {
@@ -100,7 +96,7 @@ export function startCompactPress(event) {
   NAV_STATE.pressTimer = setTimeout(() => {
     NAV_STATE.longPressTriggered = true;
     showQuickBubbles();
-  }, 220);
+  }, 240);
 }
 
 export function bindTapToggle() {
@@ -140,7 +136,10 @@ export function bindTapToggle() {
 
     endCompactPress();
 
-    if (NAV_STATE.tapMoved || NAV_STATE.tapHandled || wasLongPress) return;
+    if (NAV_STATE.tapMoved || NAV_STATE.tapHandled || wasLongPress) {
+      stopEvent(event);
+      return;
+    }
 
     NAV_STATE.tapHandled = true;
     togglePill(event);
@@ -148,7 +147,7 @@ export function bindTapToggle() {
 
   pill.addEventListener("touchstart", onTouchStart, { passive: false });
   pill.addEventListener("touchmove", onTouchMove, { passive: false });
-  pill.addEventListener("touchend", onTouchEnd);
+  pill.addEventListener("touchend", onTouchEnd, { passive: false });
   pill.addEventListener("touchcancel", endCompactPress);
 
   pill.addEventListener("mousedown", (event) => {
@@ -156,10 +155,13 @@ export function bindTapToggle() {
     startCompactPress(event);
   });
 
-  pill.addEventListener("mouseup", () => {
+  pill.addEventListener("mouseup", (event) => {
     const wasLongPress = NAV_STATE.longPressTriggered;
     endCompactPress();
-    if (wasLongPress) NAV_STATE.longPressTriggered = false;
+    if (wasLongPress) {
+      NAV_STATE.longPressTriggered = false;
+      stopEvent(event);
+    }
   });
 
   pill.addEventListener("mouseleave", endCompactPress);
@@ -177,6 +179,7 @@ export function bindTapToggle() {
 
     if (NAV_STATE.tapHandled) {
       NAV_STATE.tapHandled = false;
+      stopEvent(event);
       return;
     }
 
@@ -233,7 +236,7 @@ export function bindLinks() {
       const href = btn.getAttribute("data-quick-link");
       if (!href) return;
 
-      hideQuickBubbles();
+      hideQuickBubbles(true);
 
       navigateWithLoader(href, {
         title: "Opening shortcut",
