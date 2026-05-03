@@ -1,12 +1,9 @@
 import { NAV_STATE } from "./nav-config.js";
-import {
-  getNavShell,
-  getBrandBlock,
-  getQuickBubbles
-} from "./nav-utils.js";
+import { getNavShell, getBrandBlock, getQuickBubbles } from "./nav-utils.js";
 
-const QUICK_HIDE_DELAY = 4200;
-const SCROLL_IDLE_DELAY = 900;
+let lastY = window.scrollY;
+
+const QUICK_HIDE_DELAY = 5200;
 
 export function atTopOfPage() {
   return window.scrollY <= 4;
@@ -57,6 +54,8 @@ export function applyProgress(value) {
 
   shell.classList.toggle("compact", compact);
   shell.classList.toggle("expanded", !compact);
+  document.body.classList.toggle("eva-nav-compact", compact);
+  document.body.classList.toggle("eva-nav-expanded", !compact);
 
   if (brand) {
     brand.removeAttribute("aria-disabled");
@@ -72,15 +71,12 @@ export function setTarget(value, mode = "tap") {
 
 export function expandNav(pin = false, mode = "tap") {
   clearCompactTimer();
-
   if (pin) NAV_STATE.navPinnedOpen = true;
-
   setTarget(1, mode);
 }
 
 export function compactNav(unpin = false, mode = "tap") {
   if (unpin) NAV_STATE.navPinnedOpen = false;
-
   setTarget(0, mode);
 }
 
@@ -88,18 +84,28 @@ export function scheduleCompact(delay = 5000) {
   clearCompactTimer();
 
   if (document.body.classList.contains("nav-menu-open")) return;
+  if (NAV_STATE.quickLocked) return;
 
   NAV_STATE.compactTimer = setTimeout(() => {
-    if (!document.body.classList.contains("nav-menu-open")) {
+    if (!document.body.classList.contains("nav-menu-open") && !NAV_STATE.quickLocked) {
       NAV_STATE.navPinnedOpen = false;
       compactNav(false, "idle");
     }
   }, delay);
 }
 
-export function hideQuickBubbles() {
+export function hideQuickBubbles(force = false) {
+  if (!force && NAV_STATE.quickLocked) return;
+
   const bubbles = getQuickBubbles();
   const shell = getNavShell();
+
+  NAV_STATE.quickLocked = false;
+
+  if (NAV_STATE.quickHideTimer) {
+    clearTimeout(NAV_STATE.quickHideTimer);
+    NAV_STATE.quickHideTimer = null;
+  }
 
   if (bubbles) {
     bubbles.classList.remove("show");
@@ -116,15 +122,16 @@ export function showQuickBubbles() {
   if (!bubbles || !shell || !isCompact()) return;
 
   clearCompactTimer();
-  pulseHaptic(12);
+  pulseHaptic(15);
 
+  NAV_STATE.quickLocked = true;
   shell.classList.add("quick-pressing");
   bubbles.classList.add("show");
   bubbles.setAttribute("aria-hidden", "false");
 
   clearTimeout(NAV_STATE.quickHideTimer);
   NAV_STATE.quickHideTimer = setTimeout(() => {
-    hideQuickBubbles();
+    hideQuickBubbles(true);
   }, QUICK_HIDE_DELAY);
 }
 
@@ -133,60 +140,54 @@ export function settleAfterScroll() {
 
   NAV_STATE.scrollSettleTimer = setTimeout(() => {
     if (document.body.classList.contains("nav-menu-open")) return;
-    scheduleCompact(SCROLL_IDLE_DELAY);
-  }, 120);
+    if (NAV_STATE.quickLocked) return;
+
+    if (NAV_STATE.lastScrollDirection < 0) {
+      expandNav(false, "scroll");
+      scheduleCompact(1200);
+    } else {
+      compactNav(true, "scroll");
+    }
+  }, 75);
 }
 
 export function bindScrollBehavior() {
-  window.addEventListener(
-    "scroll",
-    () => {
-      const y = window.scrollY;
-      const dy = y - NAV_STATE.lastY;
+  lastY = window.scrollY;
+  NAV_STATE.lastY = lastY;
 
-      if (Math.abs(dy) > 1) {
-        NAV_STATE.lastScrollDirection = dy < 0 ? -1 : 1;
-      }
+  window.addEventListener("scroll", () => {
+    const y = window.scrollY;
+    const dy = y - lastY;
 
-      if (!document.body.classList.contains("nav-menu-open")) {
-        hideQuickBubbles();
+    if (Math.abs(dy) < 2) return;
 
-        if (Math.abs(dy) > 2) {
-          if (dy > 0) {
-            compactNav(true, "scroll");
-          } else {
-            expandNav(false, "scroll");
-            scheduleCompact(SCROLL_IDLE_DELAY);
-          }
-        }
-      }
+    NAV_STATE.lastScrollDirection = dy < 0 ? -1 : 1;
 
-      NAV_STATE.lastY = y;
-    },
-    { passive: true }
-  );
+    if (!document.body.classList.contains("nav-menu-open")) {
+      if (NAV_STATE.quickLocked) hideQuickBubbles(true);
 
-  window.addEventListener(
-    "touchend",
-    () => {
-      if (!document.body.classList.contains("nav-menu-open")) settleAfterScroll();
-    },
-    { passive: true }
-  );
+      if (dy > 0 && y > 10) compactNav(true, "scroll");
+      if (dy < 0) expandNav(false, "scroll");
+    }
 
-  window.addEventListener(
-    "wheel",
-    () => {
-      if (!document.body.classList.contains("nav-menu-open")) settleAfterScroll();
-    },
-    { passive: true }
-  );
+    lastY = y;
+    NAV_STATE.lastY = y;
+    settleAfterScroll();
+  }, { passive: true });
+
+  window.addEventListener("touchend", () => {
+    if (!document.body.classList.contains("nav-menu-open")) settleAfterScroll();
+  }, { passive: true });
+
+  window.addEventListener("wheel", () => {
+    if (!document.body.classList.contains("nav-menu-open")) settleAfterScroll();
+  }, { passive: true });
 }
 
 export function animateNav() {
   const diff = NAV_STATE.targetProgress - NAV_STATE.progress;
-  const factor = NAV_STATE.motionMode === "scroll" ? 0.34 : NAV_STATE.motionMode === "idle" ? 0.28 : 0.38;
-  const next = Math.abs(diff) < 0.0008 ? NAV_STATE.targetProgress : NAV_STATE.progress + diff * factor;
+  const factor = NAV_STATE.motionMode === "scroll" ? 0.55 : NAV_STATE.motionMode === "idle" ? 0.38 : 0.50;
+  const next = Math.abs(diff) < 0.001 ? NAV_STATE.targetProgress : NAV_STATE.progress + diff * factor;
 
   applyProgress(next);
   NAV_STATE.rafId = requestAnimationFrame(animateNav);
