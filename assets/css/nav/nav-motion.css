@@ -2,7 +2,7 @@
 
 :root {
   --eva-page-nav-clearance: 0px;
-  --eva-page-nav-bottom-clearance: calc(120px + env(safe-area-inset-bottom, 0px));
+  --eva-page-nav-bottom-clearance: calc(122px + env(safe-area-inset-bottom, 0px));
   --eva-island-offset: max(12px, calc(env(safe-area-inset-bottom, 0px) + 14px));
 }
 
@@ -12,11 +12,12 @@
   align-items: flex-end !important;
   --pill-min-width: 142px !important;
   --pill-max-width: min(calc(100vw - 18px), 720px) !important;
+  --pill-width: calc(var(--pill-min-width) + (var(--pill-max-width) - var(--pill-min-width)) * var(--nav-progress)) !important;
   --pill-height: calc(44px + 34px * var(--nav-progress)) !important;
   --compact-logo: 40px !important;
   --full-logo: 96px !important;
   --logo-size: calc(var(--compact-logo) + (var(--full-logo) - var(--compact-logo)) * var(--nav-progress)) !important;
-  --menu-size: calc(0px + 40px * var(--nav-progress)) !important;
+  --menu-size: calc(0px + 36px * var(--nav-progress)) !important;
   --side-balance: calc(0px + 92px * var(--nav-progress)) !important;
   --brand-max-width: calc(122px + 280px * var(--nav-progress)) !important;
 }
@@ -67,58 +68,16 @@ html[data-theme$="-light"] .eva-nav-pill {
   box-shadow: none !important;
 }
 
-.eva-brand,
-.eva-menu-zone,
-.eva-left-spacer,
-.eva-right-spacer { z-index: 4 !important; }
+.eva-brand,.eva-menu-zone,.eva-left-spacer,.eva-right-spacer { z-index: 4 !important; }
 
-.eva-nav-shell.compact .eva-nav-pill {
-  width: min(142px, calc(100vw - 18px)) !important;
-  max-width: min(142px, calc(100vw - 18px)) !important;
-}
+.eva-nav-shell.compact .eva-nav-pill { width: min(142px, calc(100vw - 18px)) !important; max-width: min(142px, calc(100vw - 18px)) !important; }
+.eva-nav-shell.expanded .eva-nav-pill { width: min(720px, calc(100vw - 18px)) !important; max-width: min(720px, calc(100vw - 18px)) !important; }
 
-.eva-nav-shell.expanded .eva-nav-pill {
-  width: min(720px, calc(100vw - 18px)) !important;
-  max-width: min(720px, calc(100vw - 18px)) !important;
-}
-
-.eva-nav-shell.compact .eva-brand {
-  inset: 0 !important;
-  left: 0 !important;
-  top: 0 !important;
-  transform: none !important;
-  width: 100% !important;
-  height: 100% !important;
-  max-width: 100% !important;
-  padding: 0 10px !important;
-  gap: 7px !important;
-  justify-content: center !important;
-}
-
-.eva-nav-shell.expanded .eva-brand {
-  left: calc(50% - 20px) !important;
-  gap: 10px !important;
-}
-
-.eva-logo {
-  width: var(--logo-size) !important;
-  height: var(--logo-size) !important;
-  min-width: var(--logo-size) !important;
-}
-
-.eva-nav-shell.compact .eva-brand-copy {
-  opacity: 1 !important;
-  max-width: 82px !important;
-}
-
-.eva-nav-shell.compact .eva-brand-copy strong {
-  font-size: 0.68rem !important;
-  max-width: 82px !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
-}
-
+.eva-nav-shell.compact .eva-brand { inset: 0 !important; left: 0 !important; top: 0 !important; transform: none !important; width: 100% !important; height: 100% !important; max-width: 100% !important; padding: 0 10px !important; gap: 7px !important; justify-content: center !important; }
+.eva-nav-shell.expanded .eva-brand { left: calc(50% - 20px) !important; gap: 10px !important; }
+.eva-logo { width: var(--logo-size) !important; height: var(--logo-size) !important; min-width: var(--logo-size) !important; }
+.eva-nav-shell.compact .eva-brand-copy { opacity: 1 !important; max-width: 82px !important; }
+.eva-nav-shell.compact .eva-brand-copy strong { font-size: 0.68rem !important; max-width: 82px !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
 .eva-nav-shell.compact .eva-brand-copy span { display: none !important; }
 .eva-nav-shell.expanded .eva-brand-copy strong { font-size: 1.10rem !important; font-weight: 950 !important; }
 .eva-nav-shell.expanded .eva-brand-copy span { font-size: 0.76rem !important; }
@@ -126,13 +85,10 @@ html[data-theme$="-light"] .eva-nav-pill {
 body:not(.login-page) #appRoot { padding-top: 0 !important; padding-bottom: var(--eva-page-nav-bottom-clearance) !important; box-sizing: border-box; }
 body.login-page #appRoot { padding-top: 0 !important; padding-bottom: 0 !important; }
 html { scroll-padding-top: 0 !important; scroll-padding-bottom: var(--eva-page-nav-bottom-clearance) !important; }
-
-.page-shell,.app-shell,.dashboard-shell,.settings-shell,.profile-shell,.security-shell,.applications-shell,.users-shell,.companies-shell,.leads-shell,.jobs-shell,.qa-shell,.audit-shell,main.container,main.page-container,.home-shell {
-  padding-bottom: var(--eva-page-nav-bottom-clearance) !important;
-}
+.page-shell,.app-shell,.dashboard-shell,.settings-shell,.profile-shell,.security-shell,.applications-shell,.users-shell,.companies-shell,.leads-shell,.jobs-shell,.qa-shell,.audit-shell,main.container,main.page-container,.home-shell { padding-bottom: var(--eva-page-nav-bottom-clearance) !important; }
 
 @media (max-width: 680px) {
-  :root { --eva-page-nav-bottom-clearance: calc(116px + env(safe-area-inset-bottom, 0px)); --eva-island-offset: max(10px, calc(env(safe-area-inset-bottom, 0px) + 10px)); }
+  :root { --eva-page-nav-bottom-clearance: calc(118px + env(safe-area-inset-bottom, 0px)); --eva-island-offset: max(10px, calc(env(safe-area-inset-bottom, 0px) + 10px)); }
   .eva-nav-shell { --full-logo: 84px !important; --pill-max-width: calc(100vw - 14px) !important; --side-balance: calc(0px + 86px * var(--nav-progress)) !important; }
   .eva-nav-shell.expanded .eva-nav-pill { width: calc(100vw - 14px) !important; max-width: calc(100vw - 14px) !important; }
 }
