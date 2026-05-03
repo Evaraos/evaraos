@@ -7,8 +7,6 @@ import {
 
 import {
   expandNav,
-  setTarget,
-  atTopOfPage,
   hideQuickBubbles
 } from "./nav-scroll.js";
 
@@ -55,7 +53,7 @@ export function openMenu() {
   expandNav(true, "tap");
 }
 
-export function closeMenu(shouldCompact = true) {
+export function closeMenu(keepExpanded = true) {
   const zone = getMenuZone();
   const btn = getMenuBtn();
 
@@ -67,9 +65,9 @@ export function closeMenu(shouldCompact = true) {
 
   unlockBodyScroll();
 
-  if (shouldCompact) {
-    NAV_STATE.navPinnedOpen = false;
-    setTarget(atTopOfPage() ? 1 : 0, "tap");
+  if (keepExpanded) {
+    NAV_STATE.navPinnedOpen = true;
+    expandNav(true, "tap");
   }
 }
 
