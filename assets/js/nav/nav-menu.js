@@ -17,27 +17,20 @@ export function updateMenuViewportFit() {
   if (!panel) return;
 
   const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-  const topInset = 8;
-  const menuTop = window.innerWidth <= 480 ? 62 : 66;
-  const bottomInset = 12;
-
-  const maxHeight = Math.max(260, viewportHeight - menuTop - bottomInset);
+  const bottomInset = 14;
+  const menuBottom = Math.max(88, 76 + (window.visualViewport ? window.visualViewport.offsetTop : 0));
+  const maxHeight = Math.max(260, viewportHeight - menuBottom - bottomInset);
 
   panel.style.setProperty("--eva-menu-max-height", `${maxHeight}px`);
-  panel.style.top = `calc(max(${topInset}px, env(safe-area-inset-top)) + ${menuTop}px)`;
 }
 
 export function lockBodyScroll() {
-  // Do not lock the body with position: fixed on iPhone.
-  // That caused the background page to jump/move when opening and closing the menu.
   NAV_STATE.lockedScrollY = window.scrollY || window.pageYOffset || 0;
   document.documentElement.classList.add("eva-menu-layer-open");
 }
 
 export function unlockBodyScroll() {
   document.documentElement.classList.remove("eva-menu-layer-open");
-
-  // Cleanup only if an older cached version left inline styles behind.
   document.body.style.position = "";
   document.body.style.top = "";
   document.body.style.left = "";
@@ -52,14 +45,13 @@ export function openMenu() {
 
   if (!zone || !btn) return;
 
-  hideQuickBubbles();
+  hideQuickBubbles(true);
   updateMenuViewportFit();
   lockBodyScroll();
 
   document.body.classList.add("nav-menu-open");
   zone.classList.add("open");
   btn.setAttribute("aria-expanded", "true");
-
   expandNav(true, "tap");
 }
 
@@ -77,12 +69,7 @@ export function closeMenu(shouldCompact = true) {
 
   if (shouldCompact) {
     NAV_STATE.navPinnedOpen = false;
-
-    if (atTopOfPage()) {
-      setTarget(1, "tap");
-    } else {
-      setTarget(0, "tap");
-    }
+    setTarget(atTopOfPage() ? 1 : 0, "tap");
   }
 }
 
@@ -97,48 +84,44 @@ export function bindMenu() {
   btn.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
+    if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
 
-    hideQuickBubbles();
+    hideQuickBubbles(true);
 
     if (document.body.classList.contains("nav-menu-open")) {
       closeMenu(true);
     } else {
       openMenu();
     }
-  });
+  }, true);
 
-  panel.addEventListener("click", (event) => {
-    event.stopPropagation();
-  });
+  panel.addEventListener("click", (event) => event.stopPropagation());
 
   backdrop.addEventListener("click", () => {
     closeMenu(true);
-    hideQuickBubbles();
+    hideQuickBubbles(true);
   });
 
   document.addEventListener("click", (event) => {
-    if (!zone.contains(event.target) && !panel.contains(event.target)) {
-      if (document.body.classList.contains("nav-menu-open")) {
-        closeMenu(true);
-      }
+    const target = event.target;
+    const clickedMenuButton = btn.contains(target);
+    const clickedMenuPanel = panel.contains(target);
+    const clickedQuickBubbles = target?.closest?.("#evaQuickBubbles");
 
-      if (!event.target.closest("#evaQuickBubbles")) {
-        hideQuickBubbles();
-      }
+    if (!clickedMenuButton && !clickedMenuPanel && document.body.classList.contains("nav-menu-open")) {
+      closeMenu(true);
     }
+
+    if (!clickedQuickBubbles) hideQuickBubbles(true);
   });
 
   window.addEventListener("resize", () => {
-    if (document.body.classList.contains("nav-menu-open")) {
-      updateMenuViewportFit();
-    }
+    if (document.body.classList.contains("nav-menu-open")) updateMenuViewportFit();
   });
 
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", () => {
-      if (document.body.classList.contains("nav-menu-open")) {
-        updateMenuViewportFit();
-      }
+      if (document.body.classList.contains("nav-menu-open")) updateMenuViewportFit();
     });
   }
 }
