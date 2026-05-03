@@ -8,7 +8,7 @@
   max-height: calc(100vh - 126px - env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%) translateY(-8px) scale(0.992);
   transform-origin: bottom center;
-  padding: 22px 14px max(18px, env(safe-area-inset-bottom, 0px));
+  padding: 22px 12px max(18px, env(safe-area-inset-bottom, 0px));
   border-radius: 34px 34px 38px 38px;
   overflow: auto;
   opacity: 0;
@@ -16,15 +16,11 @@
   pointer-events: none;
   background:
     radial-gradient(circle at 16% 0%, rgba(255,255,255,0.94), transparent 34%),
-    radial-gradient(circle at 90% 7%, rgba(216,0,32,0.16), transparent 31%),
-    radial-gradient(circle at 45% 112%, rgba(0,0,0,0.24), transparent 44%),
+    radial-gradient(circle at 90% 7%, rgba(216,0,32,0.13), transparent 31%),
+    radial-gradient(circle at 45% 112%, rgba(0,0,0,0.22), transparent 44%),
     linear-gradient(180deg, rgba(251,252,253,0.88), rgba(229,233,238,0.76));
   border: 1px solid rgba(255,255,255,0.92);
-  box-shadow:
-    0 40px 100px rgba(0,0,0,0.38),
-    0 18px 44px rgba(0,0,0,0.23),
-    inset 0 1px 0 rgba(255,255,255,1),
-    inset 0 -1px 0 rgba(0,0,0,0.07);
+  box-shadow: 0 40px 100px rgba(0,0,0,0.38), 0 18px 44px rgba(0,0,0,0.23), inset 0 1px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.07);
   backdrop-filter: blur(34px) saturate(190%);
   -webkit-backdrop-filter: blur(34px) saturate(190%);
   transition: opacity 0.14s ease, transform 0.16s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.14s ease;
@@ -39,30 +35,22 @@ body.nav-menu-open .eva-menu-panel {
 
 html[data-theme="dark"] body.nav-menu-open #evaMenuPanel.eva-control-center-panel,
 html[data-theme="galaxy"] body.nav-menu-open #evaMenuPanel.eva-control-center-panel {
-  background:
-    radial-gradient(circle at 50% -8%, rgba(255,255,255,0.18), transparent 24%),
-    radial-gradient(circle at 18% 0%, rgba(255,255,255,0.12), transparent 30%),
-    radial-gradient(circle at 88% 6%, rgba(255,59,92,0.12), transparent 28%),
-    linear-gradient(180deg, rgba(20,22,30,0.88), rgba(5,6,10,0.94));
+  background: radial-gradient(circle at 50% -8%, rgba(255,255,255,0.18), transparent 24%), radial-gradient(circle at 18% 0%, rgba(255,255,255,0.12), transparent 30%), radial-gradient(circle at 88% 6%, rgba(255,59,92,0.10), transparent 28%), linear-gradient(180deg, rgba(20,22,30,0.88), rgba(5,6,10,0.94));
   border-color: rgba(255,255,255,0.16);
 }
 
 body.nav-menu-open #evaMenuPanel .eva-menu-close-btn { display: none; }
-
 body.nav-menu-open #evaMenuPanel .eva-menu-titlebar,
 body.nav-menu-open #evaMenuPanel .eva-search,
 body.nav-menu-open #evaMenuPanel .eva-menu-section,
-body.nav-menu-open #evaMenuPanel .eva-install-pill {
-  position: relative;
-  z-index: 2;
-}
+body.nav-menu-open #evaMenuPanel .eva-install-pill { position: relative; z-index: 2; }
 
 body.nav-menu-open #evaMenuPanel .eva-menu-titlebar {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 14px;
-  padding: 0 4px;
+  padding: 0 6px;
 }
 
 .eva-menu-actions { display: flex; align-items: center; gap: 8px; }
@@ -124,166 +112,172 @@ body.nav-menu-open #evaMenuPanel .eva-menu-badge {
   box-shadow: 0 12px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.92), inset 0 -1px 0 rgba(0,0,0,0.035);
 }
 
-.eva-search input {
-  width: 100%;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: inherit;
-  font-size: 0.98rem;
-}
-
+.eva-search input { width: 100%; border: 0; outline: 0; background: transparent; color: inherit; font-size: 0.98rem; }
 .eva-search input::placeholder { opacity: 0.56; }
 
 body.nav-menu-open #evaMenuPanel .eva-menu-section {
   display: grid;
-  gap: 9px;
-  padding: 18px 14px 20px;
+  gap: 10px;
+  padding: 18px 10px 20px;
   border-radius: 34px;
-  background:
-    radial-gradient(circle at 20% 0%, rgba(255,255,255,0.86), transparent 36%),
-    radial-gradient(circle at 94% 10%, rgba(216,0,32,0.075), transparent 36%),
-    radial-gradient(circle at 35% 110%, rgba(0,0,0,0.10), transparent 42%),
-    linear-gradient(180deg, rgba(255,255,255,0.52), rgba(255,255,255,0.18));
-  border: 1px solid rgba(255,255,255,0.86);
-  box-shadow: 0 26px 52px rgba(0,0,0,0.16), 0 9px 22px rgba(0,0,0,0.09), inset 0 1px 0 rgba(255,255,255,0.96), inset 0 -1px 0 rgba(0,0,0,0.05);
+  background: radial-gradient(circle at 20% 0%, rgba(255,255,255,0.78), transparent 36%), radial-gradient(circle at 94% 10%, rgba(216,0,32,0.055), transparent 36%), radial-gradient(circle at 35% 110%, rgba(0,0,0,0.10), transparent 42%), linear-gradient(180deg, rgba(255,255,255,0.48), rgba(255,255,255,0.16));
+  border: 1px solid rgba(255,255,255,0.78);
+  box-shadow: 0 26px 52px rgba(0,0,0,0.14), 0 9px 22px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.88), inset 0 -1px 0 rgba(0,0,0,0.05);
 }
 
 html[data-theme="dark"] body.nav-menu-open #evaMenuPanel .eva-menu-section,
 html[data-theme="galaxy"] body.nav-menu-open #evaMenuPanel .eva-menu-section {
-  background: radial-gradient(circle at 18% 0%, rgba(255,255,255,0.14), transparent 34%), radial-gradient(circle at 92% 12%, rgba(216,0,32,0.08), transparent 36%), linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.025));
+  background: radial-gradient(circle at 18% 0%, rgba(255,255,255,0.12), transparent 34%), radial-gradient(circle at 92% 12%, rgba(216,0,32,0.055), transparent 36%), linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.022));
   border: 1px solid rgba(255,255,255,0.09);
 }
 
-body.nav-menu-open #evaMenuPanel .eva-section-head { padding: 0 5px 7px; }
+body.nav-menu-open #evaMenuPanel .eva-section-head { padding: 0 7px 6px; }
 
-body.nav-menu-open #evaMenuPanel .eva-app-grid {
+#evaMenuPanel .eva-app-grid,
+body.nav-menu-open #evaMenuPanel .eva-app-grid,
+#evaAuthLinks .eva-app-grid,
+.eva-account-grid {
   display: grid !important;
   grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-  gap: 22px 8px !important;
+  gap: 20px 4px !important;
   align-items: start !important;
+  justify-items: center !important;
+  width: 100% !important;
+  min-width: 0 !important;
 }
 
-body.nav-menu-open #evaMenuPanel .eva-link.eva-app-tile,
-body.nav-menu-open #evaMenuPanel .eva-app-tile,
-body.nav-menu-open #evaMenuPanel .eva-account-tile {
+#evaMenuPanel .eva-link.eva-app-tile,
+#evaMenuPanel .eva-app-tile,
+#evaMenuPanel .eva-account-tile {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  min-height: 96px !important;
+  height: 96px !important;
+  padding: 0 !important;
+  display: grid !important;
+  grid-template-rows: 66px 24px !important;
+  place-items: center !important;
+  gap: 6px !important;
   background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
-  min-height: 88px !important;
-  height: 88px !important;
-  padding: 0 !important;
-  display: grid !important;
-  grid-template-rows: 64px 18px !important;
-  place-items: center !important;
-  gap: 6px !important;
   color: inherit !important;
   text-decoration: none !important;
 }
 
-body.nav-menu-open #evaMenuPanel .eva-app-icon,
-body.nav-menu-open #evaMenuPanel .eva-liquid-app-icon {
+#evaMenuPanel .eva-app-icon,
+#evaMenuPanel .eva-liquid-app-icon {
   width: 64px !important;
   height: 64px !important;
   min-width: 64px !important;
-  border-radius: 22px !important;
+  border-radius: 21px !important;
   position: relative !important;
   isolation: isolate !important;
   overflow: hidden !important;
   display: grid !important;
   place-items: center !important;
-  color: #ffffff !important;
-  background:
-    radial-gradient(circle at 24% 16%, rgba(255,255,255,0.92), transparent 22%),
-    radial-gradient(circle at 76% 82%, rgba(255,255,255,0.26), transparent 35%),
-    linear-gradient(135deg, rgba(255,255,255,0.44), rgba(255,255,255,0.10) 32%, rgba(216,0,32,0.68) 62%, rgba(10,12,18,0.82) 118%) !important;
-  border: 1.4px solid rgba(255,255,255,0.72) !important;
-  box-shadow:
-    0 22px 34px rgba(0,0,0,0.24),
-    0 12px 26px rgba(216,0,32,0.16),
-    inset 0 1px 0 rgba(255,255,255,0.78),
-    inset 0 -2px 6px rgba(0,0,0,0.24) !important;
-  backdrop-filter: blur(22px) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(22px) saturate(190%) !important;
+  color: rgba(255,255,255,0.94) !important;
+  background: rgba(255,255,255,0.18) !important;
+  border: 1px solid rgba(255,255,255,0.25) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.42), inset 0 -1px 0 rgba(0,0,0,0.15), 0 10px 25px rgba(0,0,0,0.20) !important;
+  backdrop-filter: blur(22px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(180%) !important;
 }
 
-body.nav-menu-open #evaMenuPanel .eva-app-icon::before,
-body.nav-menu-open #evaMenuPanel .eva-liquid-app-icon::before {
+html[data-theme="light"] #evaMenuPanel .eva-app-icon,
+html[data-theme$="-light"] #evaMenuPanel .eva-app-icon,
+html[data-theme="light"] #evaMenuPanel .eva-liquid-app-icon,
+html[data-theme$="-light"] #evaMenuPanel .eva-liquid-app-icon {
+  background: rgba(255,255,255,0.35) !important;
+  border-color: rgba(255,255,255,0.50) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.90), inset 0 -1px 0 rgba(0,0,0,0.08), 0 10px 20px rgba(0,0,0,0.12) !important;
+}
+
+html[data-theme="dark"] #evaMenuPanel .eva-app-icon,
+html[data-theme="galaxy"] #evaMenuPanel .eva-app-icon,
+html[data-theme="dark"] #evaMenuPanel .eva-liquid-app-icon,
+html[data-theme="galaxy"] #evaMenuPanel .eva-liquid-app-icon {
+  background: rgba(255,255,255,0.12) !important;
+  border-color: rgba(255,255,255,0.18) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.30), inset 0 -1px 0 rgba(0,0,0,0.22), 0 12px 26px rgba(0,0,0,0.26) !important;
+}
+
+#evaMenuPanel .eva-app-icon::before,
+#evaMenuPanel .eva-liquid-app-icon::before {
   content: "";
   position: absolute;
-  inset: 1px;
-  border-radius: 21px;
-  background: linear-gradient(135deg, rgba(255,255,255,0.54), transparent 32%, rgba(255,255,255,0.09) 68%, rgba(255,255,255,0.24));
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.60), transparent 40%);
   pointer-events: none;
   z-index: 1;
 }
 
-body.nav-menu-open #evaMenuPanel .eva-app-icon::after,
-body.nav-menu-open #evaMenuPanel .eva-liquid-app-icon::after {
+#evaMenuPanel .eva-app-icon::after,
+#evaMenuPanel .eva-liquid-app-icon::after {
   content: "";
   position: absolute;
-  width: 120%;
-  height: 42%;
-  left: -76%;
-  top: 5px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), rgba(255,255,255,0.78), rgba(255,255,255,0.12), transparent);
-  transform: rotate(-18deg);
-  animation: evaLiquidGlassSweep 4.6s ease-in-out infinite;
-  z-index: 2;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(to bottom, transparent 58%, rgba(0,0,0,0.25));
+  opacity: 0.30;
   pointer-events: none;
+  z-index: 2;
 }
 
-@keyframes evaLiquidGlassSweep {
-  0%, 25% { left: -78%; opacity: 0; }
-  35% { opacity: 0.95; }
-  52% { left: 56%; opacity: 0.35; }
-  100% { left: 56%; opacity: 0; }
-}
-
-body.nav-menu-open #evaMenuPanel .eva-app-icon svg,
-body.nav-menu-open #evaMenuPanel .eva-liquid-app-icon svg {
-  width: 27px !important;
-  height: 27px !important;
+#evaMenuPanel .eva-app-icon svg,
+#evaMenuPanel .eva-liquid-app-icon svg {
+  width: 29px !important;
+  height: 29px !important;
   position: relative !important;
   z-index: 3 !important;
   stroke: currentColor !important;
-  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.36)) drop-shadow(0 0 10px rgba(255,255,255,0.14)) !important;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.28)) drop-shadow(0 0 8px rgba(255,255,255,0.18)) !important;
 }
 
-body.nav-menu-open #evaMenuPanel .eva-app-label {
-  max-width: 76px !important;
-  font-size: 0.58rem !important;
+#evaMenuPanel .eva-app-label {
+  max-width: 74px !important;
+  padding: 6px 10px !important;
+  border-radius: 999px !important;
+  font-size: 0.60rem !important;
   font-weight: 900 !important;
-  line-height: 1.02 !important;
+  line-height: 1 !important;
   letter-spacing: -0.02em !important;
-  color: rgba(10,24,21,0.90) !important;
+  color: rgba(255,255,255,0.96) !important;
   text-align: center !important;
+  background: rgba(255,255,255,0.18) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 8px 18px rgba(0,0,0,0.10) !important;
+  backdrop-filter: blur(20px) saturate(170%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(170%) !important;
 }
 
-html[data-theme="dark"] body.nav-menu-open #evaMenuPanel .eva-app-label,
-html[data-theme="galaxy"] body.nav-menu-open #evaMenuPanel .eva-app-label {
-  color: rgba(255,255,255,0.90) !important;
-}
-
-body.nav-menu-open #evaMenuPanel .eva-app-detail { display: none !important; }
+#evaMenuPanel .eva-app-detail { display: none !important; }
 
 @media (max-width: 430px) {
+  #evaMenuPanel .eva-app-grid,
   body.nav-menu-open #evaMenuPanel .eva-app-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: 20px 5px !important;
+    gap: 18px 2px !important;
   }
 
-  body.nav-menu-open #evaMenuPanel .eva-app-icon,
-  body.nav-menu-open #evaMenuPanel .eva-liquid-app-icon {
+  #evaMenuPanel .eva-app-icon,
+  #evaMenuPanel .eva-liquid-app-icon {
     width: 58px !important;
     height: 58px !important;
     min-width: 58px !important;
-    border-radius: 20px !important;
+    border-radius: 19px !important;
   }
 
-  body.nav-menu-open #evaMenuPanel .eva-app-label {
-    max-width: 64px !important;
+  #evaMenuPanel .eva-app-icon svg,
+  #evaMenuPanel .eva-liquid-app-icon svg {
+    width: 26px !important;
+    height: 26px !important;
+  }
+
+  #evaMenuPanel .eva-app-label {
+    max-width: 66px !important;
     font-size: 0.54rem !important;
+    padding-inline: 7px !important;
   }
 }
