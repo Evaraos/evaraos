@@ -84,11 +84,14 @@ export function renderNav() {
         <div class="eva-nav-pill glass-shell" id="evaNavPill">
           <div class="eva-left-spacer" aria-hidden="true"></div>
           <div class="eva-right-spacer" aria-hidden="true"></div>
-          <div class="eva-brand" id="evaBrandBlock">
+          <div class="eva-brand" id="evaBrandBlock" aria-label="Evaraos brand">
             <img src="${getBasePath()}/assets/img/evaraos_logo.png" alt="Evaraos logo" class="eva-logo" />
             <div class="eva-brand-copy"><strong>Evaraos Inc</strong><span>Subsidiaries Allocation SaaS</span></div>
           </div>
           <div class="eva-menu-zone" id="evaMenuZone">
+            <button class="eva-theme-nav-btn" type="button" id="evaThemePillToggle" aria-label="Toggle light and dark mode" title="Toggle theme">
+              <span class="eva-theme-nav-icon" aria-hidden="true"></span>
+            </button>
             <button class="eva-menu-btn" type="button" id="evaMenuBtn" aria-expanded="false" aria-label="Open Control Center">
               <span class="eva-burger"><span class="eva-burger-line top"></span><span class="eva-burger-line mid"></span><span class="eva-burger-line bot"></span></span>
             </button>
