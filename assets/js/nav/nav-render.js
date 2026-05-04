@@ -21,7 +21,7 @@ function appTile(page, label, icon, tone = "") {
       data-label="${safeLabel}"
       aria-label="${label}"
     >
-      <span class="eva-link-icon eva-app-icon">${iconSvg(icon)}</span>
+      <span class="eva-app-icon">${iconSvg(icon)}</span>
       <span class="eva-link-label eva-app-label">${label}</span>
     </a>
   `;
@@ -63,7 +63,7 @@ export function renderNav() {
         <div class="eva-section-head"><p>Session</p><h3>Account Tools</h3></div>
         <div class="eva-app-grid eva-account-grid">
           <button type="button" class="eva-link eva-app-tile eva-account-tile" id="evaLogoutBtn" data-label="logout" aria-label="Logout">
-            <span class="eva-link-icon eva-app-icon">${iconSvg("logout")}</span>
+            <span class="eva-app-icon">${iconSvg("logout")}</span>
             <span class="eva-link-label eva-app-label">Logout</span>
           </button>
         </div>
