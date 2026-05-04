@@ -5,7 +5,7 @@ let lastY = window.scrollY || 0;
 let scrollDebt = 0;
 
 const QUICK_HIDE_DELAY = 5200;
-const PIN_UNLOCK_DISTANCE = 28;
+const PIN_UNLOCK_DISTANCE = 36;
 
 export function atTopOfPage() {
   return (window.scrollY || 0) <= 4;
@@ -92,9 +92,7 @@ export function scheduleCompact(delay = 5000) {
   if (NAV_STATE.navPinnedOpen) return;
 
   NAV_STATE.compactTimer = setTimeout(() => {
-    if (!document.body.classList.contains("nav-menu-open") && !NAV_STATE.quickLocked && !NAV_STATE.navPinnedOpen) {
-      compactNav(false, "idle");
-    }
+    if (!document.body.classList.contains("nav-menu-open") && !NAV_STATE.quickLocked && !NAV_STATE.navPinnedOpen) compactNav(false, "idle");
   }, delay);
 }
 
@@ -181,7 +179,7 @@ export function bindScrollBehavior() {
 
 export function animateNav() {
   const diff = NAV_STATE.targetProgress - NAV_STATE.progress;
-  const factor = NAV_STATE.motionMode === "scroll" ? 0.34 : NAV_STATE.motionMode === "idle" ? 0.20 : 0.42;
+  const factor = NAV_STATE.motionMode === "scroll" ? 0.22 : NAV_STATE.motionMode === "idle" ? 0.16 : 0.30;
   const next = Math.abs(diff) < 0.001 ? NAV_STATE.targetProgress : NAV_STATE.progress + diff * factor;
   applyProgress(next);
   NAV_STATE.rafId = requestAnimationFrame(animateNav);
