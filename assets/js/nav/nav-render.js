@@ -2,7 +2,6 @@ import {
   getMount,
   getBasePath,
   buildHref,
-  isCurrentPage,
   getVisibleLinks
 } from "./nav-utils.js";
 
@@ -10,13 +9,12 @@ import { iconSvg } from "./nav-icons.js";
 
 function appTile(page, label, icon, tone = "") {
   const href = buildHref(page);
-  const active = isCurrentPage(page) ? " active" : "";
   const safeLabel = String(label || "").toLowerCase();
 
   return `
     <a
       href="${href}"
-      class="eva-link eva-app-tile${active} ${tone ? `tile-${tone}` : ""}"
+      class="eva-link eva-app-tile ${tone ? `tile-${tone}` : ""}"
       data-menu-link="${href}"
       data-label="${safeLabel}"
       aria-label="${label}"
