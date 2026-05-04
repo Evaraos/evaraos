@@ -14,13 +14,13 @@ function appTile(page, label, icon, tone = "") {
   return `
     <a
       href="${href}"
-      class="eva-link eva-app-tile ${tone ? `tile-${tone}` : ""}"
+      class="eva-app-tile ${tone ? `tile-${tone}` : ""}"
       data-menu-link="${href}"
       data-label="${safeLabel}"
       aria-label="${label}"
     >
       <span class="eva-app-icon">${iconSvg(icon)}</span>
-      <span class="eva-link-label eva-app-label">${label}</span>
+      <span class="eva-app-label">${label}</span>
     </a>
   `;
 }
@@ -60,9 +60,9 @@ export function renderNav() {
       <section class="eva-menu-section eva-account-section" id="evaAuthLinks">
         <div class="eva-section-head"><p>Session</p><h3>Account Tools</h3></div>
         <div class="eva-app-grid eva-account-grid">
-          <button type="button" class="eva-link eva-app-tile eva-account-tile" id="evaLogoutBtn" data-label="logout" aria-label="Logout">
+          <button type="button" class="eva-app-tile eva-account-tile" id="evaLogoutBtn" data-label="logout" aria-label="Logout">
             <span class="eva-app-icon">${iconSvg("logout")}</span>
-            <span class="eva-link-label eva-app-label">Logout</span>
+            <span class="eva-app-label">Logout</span>
           </button>
         </div>
       </section>
@@ -102,7 +102,7 @@ export function renderNav() {
           <div><p>EVARAOS</p><h2>${groups.authed ? "Executive Control" : "Control Center"}</h2></div>
           <div class="eva-menu-actions"><span class="eva-menu-badge">${groups.authed ? groups.role : "Guest"}</span></div>
         </div>
-        <nav class="eva-links eva-menu-apps" id="evaLinks" aria-label="Main navigation">
+        <nav class="eva-menu-apps" id="evaLinks" aria-label="Main navigation">
           ${menuSection(groups.authed ? "Executive Control" : "Command Navigation", groups.authed ? "Operate" : "Launch", groups.authed ? executiveControl : [], "eva-exec-section")}
           ${menuSection("Navigation", "Explore", publicNavigation, "eva-nav-section")}
         </nav>
