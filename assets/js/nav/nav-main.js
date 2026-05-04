@@ -1,34 +1,34 @@
-import { NAV_STATE } from "./nav-config.js?v=20260503-final";
+import { NAV_STATE } from "./nav-config.js?v=20260504-final";
 
 import {
   getNavShell,
   setTheme,
   getAppearanceTheme,
   syncThemeLabel
-} from "./nav-utils.js?v=20260503-final";
+} from "./nav-utils.js?v=20260504-final";
 
 import {
   renderNav
-} from "./nav-render.js?v=20260503-final";
+} from "./nav-render.js?v=20260504-final";
 
 import {
   applyProgress,
   atTopOfPage,
   bindScrollBehavior,
   animateNav
-} from "./nav-scroll.js?v=20260503-final";
+} from "./nav-scroll.js?v=20260504-final";
 
 import {
   bindMenu
-} from "./nav-menu.js?v=20260503-final";
+} from "./nav-menu.js?v=20260504-final";
 
 import {
   bindAllNavEvents
-} from "./nav-events.js?v=20260503-final";
+} from "./nav-events.js?v=20260504-final";
 
 import {
   bindRuntimeRefresh
-} from "./nav-session.js?v=20260503-final";
+} from "./nav-session.js?v=20260504-final";
 
 function bootReadySignal() {
   if (NAV_STATE.hasBootAnimated) return;
@@ -45,39 +45,6 @@ function bootReadySignal() {
   });
 }
 
-function bindAlwaysHomeLogo() {
-  const brand = document.getElementById("evaBrandBlock");
-  if (!brand || brand.dataset.alwaysHomeBound === "true") return;
-
-  brand.dataset.alwaysHomeBound = "true";
-
-  brand.addEventListener(
-    "click",
-    (event) => {
-      const href = brand.getAttribute("data-home-link") || "/index.html";
-
-      event.preventDefault();
-      event.stopPropagation();
-
-      if (typeof event.stopImmediatePropagation === "function") {
-        event.stopImmediatePropagation();
-      }
-
-      if (window.EvaraLoader && typeof window.EvaraLoader.beginNavigationLoad === "function") {
-        window.EvaraLoader.beginNavigationLoad({
-          title: "Opening Home",
-          subtitle: "Loading the Evaraos home experience."
-        });
-      }
-
-      requestAnimationFrame(() => {
-        window.location.assign(href);
-      });
-    },
-    true
-  );
-}
-
 export function initNav() {
   if (NAV_STATE.hasInitialized) return;
 
@@ -87,8 +54,6 @@ export function initNav() {
 
   const rendered = renderNav();
   if (!rendered) return;
-
-  bindAlwaysHomeLogo();
 
   const shell = getNavShell();
   const immediate = atTopOfPage() ? 1 : 0;
@@ -100,7 +65,7 @@ export function initNav() {
     shell.style.setProperty("--nav-progress", immediate.toFixed(4));
     shell.classList.toggle("expanded", immediate === 1);
     shell.classList.toggle("compact", immediate !== 1);
-    shell.dataset.navBuild = "20260503-final";
+    shell.dataset.navBuild = "20260504-final";
   }
 
   applyProgress(immediate);
