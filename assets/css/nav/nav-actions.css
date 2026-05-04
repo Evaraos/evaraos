@@ -14,7 +14,6 @@
   transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
 }
 
-/* Compact / shrink mode: controls are fully gone */
 .eva-nav-shell.compact .eva-menu-zone,
 body.eva-nav-compact .eva-menu-zone {
   opacity: 0 !important;
@@ -23,7 +22,6 @@ body.eva-nav-compact .eva-menu-zone {
   transform: translateY(-50%) scale(0.72) !important;
 }
 
-/* Theme toggle: icon only, no card/button surface */
 #evaThemePillToggle,
 .eva-theme-nav-btn {
   width: 22px !important;
@@ -86,25 +84,25 @@ html[data-theme="galaxy"] .eva-theme-nav-icon::before {
   text-shadow: 0 2px 8px rgba(0,0,0,0.42), 0 0 16px rgba(255,255,255,0.22);
 }
 
-/* Smaller premium hamburger */
+/* Slightly larger rounded-oval menu control */
 #evaMenuBtn,
 .eva-menu-btn {
-  width: 30px;
-  height: 30px;
-  min-width: 30px;
-  min-height: 30px;
+  width: 36px;
+  height: 32px;
+  min-width: 36px;
+  min-height: 32px;
   padding: 0;
-  border-radius: 999px;
-  border: 0;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.26);
   display: grid;
   place-items: center;
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  background: rgba(255,255,255,0.12);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
-  backdrop-filter: blur(10px) saturate(145%);
-  -webkit-backdrop-filter: blur(10px) saturate(145%);
+  background: linear-gradient(145deg, rgba(255,255,255,0.20), rgba(255,255,255,0.08));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.26), 0 6px 14px rgba(0,0,0,0.10);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -112,16 +110,17 @@ html[data-theme="dark"] #evaMenuBtn,
 html[data-theme="dark"] .eva-menu-btn,
 html[data-theme="galaxy"] #evaMenuBtn,
 html[data-theme="galaxy"] .eva-menu-btn {
-  background: rgba(255,255,255,0.09);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.14);
+  border-color: rgba(255,255,255,0.16);
+  background: linear-gradient(145deg, rgba(255,255,255,0.15), rgba(255,255,255,0.07));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), 0 7px 16px rgba(0,0,0,0.24);
 }
 
 #evaMenuBtn:active,
-.eva-menu-btn:active { transform: scale(0.94); }
+.eva-menu-btn:active { transform: scale(0.95); }
 
 #evaMenuBtn .eva-burger,
 .eva-menu-btn .eva-burger {
-  width: 15px;
+  width: 16px;
   height: 12px;
   position: relative;
   display: block;
@@ -132,10 +131,10 @@ html[data-theme="galaxy"] .eva-menu-btn {
 .eva-burger-line {
   position: absolute;
   left: 50%;
-  width: 15px;
+  width: 16px;
   height: 2px;
   border-radius: 999px;
-  background: #10231e;
+  background: #0b1d18;
   transform-origin: center;
   transition: top 0.18s ease, transform 0.18s ease, opacity 0.14s ease, background 0.18s ease;
 }
@@ -146,12 +145,9 @@ html[data-theme="galaxy"] .eva-burger-line { background: #ffffff; }
 .eva-burger-line.top { top: 0; transform: translateX(-50%) rotate(0deg); }
 .eva-burger-line.mid { top: 5px; transform: translateX(-50%) scaleX(1); }
 .eva-burger-line.bot { top: 10px; transform: translateX(-50%) rotate(0deg); }
-
 body.nav-menu-open .eva-burger-line.top,
 .eva-menu-zone.open .eva-burger-line.top { top: 5px; transform: translateX(-50%) rotate(45deg); }
-
 body.nav-menu-open .eva-burger-line.mid,
 .eva-menu-zone.open .eva-burger-line.mid { top: 5px; opacity: 0; transform: translateX(-50%) scaleX(0); }
-
 body.nav-menu-open .eva-burger-line.bot,
 .eva-menu-zone.open .eva-burger-line.bot { top: 5px; transform: translateX(-50%) rotate(-45deg); }
