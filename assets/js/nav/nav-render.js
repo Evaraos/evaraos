@@ -51,7 +51,13 @@ export function bubbleLink(page, label, icon, tone = "") {
   const href = buildHref(page);
 
   return `
-    <button type="button" class="eva-quick-bubble beam-target ${tone ? `bubble-${tone}` : ""}" data-quick-link="${href}" aria-label="${label}" title="${label}">
+    <button
+      type="button"
+      class="eva-quick-bubble beam-target ${tone ? `bubble-${tone}` : ""}"
+      data-quick-link="${href}"
+      aria-label="${label}"
+      title="${label}"
+    >
       <span class="eva-quick-bubble-orbit"></span>
       <span class="eva-quick-bubble-core"></span>
       <span class="eva-quick-bubble-icon">${iconSvg(icon)}</span>
@@ -108,35 +114,85 @@ export function renderNav() {
         <div class="eva-nav-pill glass-shell" id="evaNavPill">
           <div class="eva-left-spacer" aria-hidden="true"></div>
           <div class="eva-right-spacer" aria-hidden="true"></div>
-          <a href="${buildHref("index.html")}" class="eva-brand" id="evaBrandBlock" data-home-link="${buildHref("index.html")}" aria-label="Go to Home">
-            <img src="${getBasePath()}/assets/img/evaraos_logo.png" alt="Evaraos logo" class="eva-logo" onerror="this.onerror=null;this.src='${getBasePath()}/assets/logo.png';" />
+
+          <a
+            href="${buildHref("index.html")}"
+            class="eva-brand"
+            id="evaBrandBlock"
+            data-home-link="${buildHref("index.html")}"
+            aria-label="Go to Home"
+          >
+            <img
+              src="${getBasePath()}/assets/img/evaraos_logo.png"
+              alt="Evaraos logo"
+              class="eva-logo"
+              onerror="this.onerror=null;this.src='${getBasePath()}/assets/logo.png';"
+            />
             <div class="eva-brand-copy">
               <strong>Evaraos Inc</strong>
               <span>Subsidiaries Allocation SaaS</span>
             </div>
           </a>
+
           <div class="eva-menu-zone" id="evaMenuZone">
-            <span class="eva-theme-nav-btn" id="evaThemePillToggle" role="button" tabindex="0" aria-label="Toggle light and dark mode" title="Toggle theme">
+            <button
+              class="eva-theme-nav-btn"
+              type="button"
+              id="evaThemePillToggle"
+              aria-label="Toggle light and dark mode"
+              title="Toggle theme"
+            >
               <span class="eva-theme-nav-icon" aria-hidden="true"></span>
-            </span>
-            <button class="eva-menu-btn" type="button" id="evaMenuBtn" aria-expanded="false" aria-label="Open Control Center">
-              <span class="eva-burger"><span class="eva-burger-line top"></span><span class="eva-burger-line mid"></span><span class="eva-burger-line bot"></span></span>
+            </button>
+
+            <button
+              class="eva-menu-btn"
+              type="button"
+              id="evaMenuBtn"
+              aria-expanded="false"
+              aria-label="Open Control Center"
+            >
+              <span class="eva-burger">
+                <span class="eva-burger-line top"></span>
+                <span class="eva-burger-line mid"></span>
+                <span class="eva-burger-line bot"></span>
+              </span>
             </button>
           </div>
         </div>
-        <div class="eva-quick-bubbles" id="evaQuickBubbles" aria-hidden="true">${quickBubbles}</div>
+
+        <div class="eva-quick-bubbles" id="evaQuickBubbles" aria-hidden="true">
+          ${quickBubbles}
+        </div>
       </header>
+
       <div class="eva-backdrop" id="evaBackdrop"></div>
+
       <div class="eva-menu-panel eva-control-center-panel" id="evaMenuPanel">
         <div class="eva-menu-titlebar">
-          <div><p>EVARAOS</p><h2>${groups.authed ? "Executive Control" : "Control Center"}</h2></div>
-          <div class="eva-menu-actions"><span class="eva-menu-badge">${groups.authed ? groups.role : "Guest"}</span><button type="button" class="eva-menu-close-btn" id="evaMenuCloseBtn" aria-label="Close Control Center"><span></span><span></span></button></div>
+          <div>
+            <p>EVARAOS</p>
+            <h2>${groups.authed ? "Executive Control" : "Control Center"}</h2>
+          </div>
+          <div class="eva-menu-actions">
+            <span class="eva-menu-badge">${groups.authed ? groups.role : "Guest"}</span>
+            <button type="button" class="eva-menu-close-btn" id="evaMenuCloseBtn" aria-label="Close Control Center">
+              <span></span>
+              <span></span>
+            </button>
+          </div>
         </div>
-        <label class="eva-search"><span>🔎</span><input type="text" id="evaSearchInput" placeholder="Search apps" /></label>
+
+        <label class="eva-search">
+          <span>🔎</span>
+          <input type="text" id="evaSearchInput" placeholder="Search apps" />
+        </label>
+
         <nav class="eva-links eva-menu-apps" id="evaLinks" aria-label="Main navigation">
           ${menuSection(groups.authed ? "Executive Control" : "Command Navigation", groups.authed ? "Operate" : "Launch", groups.authed ? executiveControl : [], "eva-exec-section")}
           ${menuSection("Navigation", "Explore", publicNavigation, "eva-nav-section")}
         </nav>
+
         ${accountTools}
       </div>
     </div>
