@@ -7,14 +7,14 @@ import {
 
 import { iconSvg } from "./nav-icons.js";
 
-function appTile(page, label, icon, tone = "") {
+function appTile(page, label, icon) {
   const href = buildHref(page);
   const safeLabel = String(label || "").toLowerCase();
 
   return `
     <a
       href="${href}"
-      class="eva-menu-app-launcher ${tone ? `tile-${tone}` : ""}"
+      class="eva-menu-app-launcher"
       data-menu-link="${href}"
       data-label="${safeLabel}"
       aria-label="${label}"
@@ -35,7 +35,7 @@ function menuSection(title, subtitle, items, className = "") {
         <h3>${title}</h3>
       </div>
       <div class="eva-app-grid">
-        ${items.map((item) => appTile(item.page, item.label, item.icon, item.bubble || "")).join("")}
+        ${items.map((item) => appTile(item.page, item.label, item.icon)).join("")}
       </div>
     </section>
   `;
@@ -60,7 +60,7 @@ export function renderNav() {
       <section class="eva-menu-section eva-account-section" id="evaAuthLinks">
         <div class="eva-section-head"><p>Session</p><h3>Account Tools</h3></div>
         <div class="eva-app-grid eva-account-grid">
-          <button type="button" class="eva-menu-app-launcher eva-account-tile" id="evaLogoutBtn" data-label="logout" aria-label="Logout">
+          <button type="button" class="eva-menu-app-launcher" id="evaLogoutBtn" data-label="logout" aria-label="Logout">
             <span class="eva-menu-app-square">${iconSvg("logout")}</span>
             <span class="eva-menu-app-name">Logout</span>
           </button>
@@ -71,7 +71,7 @@ export function renderNav() {
       <section class="eva-menu-section eva-account-section" id="evaAuthLinks">
         <div class="eva-section-head"><p>Access</p><h3>Account</h3></div>
         <div class="eva-app-grid">
-          ${accountAccess.map((item) => appTile(item.page, item.label, item.icon, item.bubble || "")).join("")}
+          ${accountAccess.map((item) => appTile(item.page, item.label, item.icon)).join("")}
         </div>
       </section>
     `;
