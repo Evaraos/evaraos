@@ -14,13 +14,13 @@ function appTile(page, label, icon, tone = "") {
   return `
     <a
       href="${href}"
-      class="eva-app-tile ${tone ? `tile-${tone}` : ""}"
+      class="eva-menu-app-launcher ${tone ? `tile-${tone}` : ""}"
       data-menu-link="${href}"
       data-label="${safeLabel}"
       aria-label="${label}"
     >
-      <span class="eva-app-icon">${iconSvg(icon)}</span>
-      <span class="eva-app-label">${label}</span>
+      <span class="eva-menu-app-square">${iconSvg(icon)}</span>
+      <span class="eva-menu-app-name">${label}</span>
     </a>
   `;
 }
@@ -60,9 +60,9 @@ export function renderNav() {
       <section class="eva-menu-section eva-account-section" id="evaAuthLinks">
         <div class="eva-section-head"><p>Session</p><h3>Account Tools</h3></div>
         <div class="eva-app-grid eva-account-grid">
-          <button type="button" class="eva-app-tile eva-account-tile" id="evaLogoutBtn" data-label="logout" aria-label="Logout">
-            <span class="eva-app-icon">${iconSvg("logout")}</span>
-            <span class="eva-app-label">Logout</span>
+          <button type="button" class="eva-menu-app-launcher eva-account-tile" id="evaLogoutBtn" data-label="logout" aria-label="Logout">
+            <span class="eva-menu-app-square">${iconSvg("logout")}</span>
+            <span class="eva-menu-app-name">Logout</span>
           </button>
         </div>
       </section>
