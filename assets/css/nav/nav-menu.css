@@ -104,7 +104,6 @@ html[data-theme="dark"] .eva-menu-titlebar h2,
 html[data-theme="dark"] .eva-section-head h3,
 html[data-theme="galaxy"] .eva-menu-titlebar h2,
 html[data-theme="galaxy"] .eva-section-head h3 { color: #f8fbff; }
-
 html[data-theme="dark"] .eva-menu-titlebar p,
 html[data-theme="dark"] .eva-section-head p,
 html[data-theme="galaxy"] .eva-menu-titlebar p,
@@ -122,7 +121,6 @@ html[data-theme="galaxy"] .eva-section-head p { color: rgba(230,236,255,0.52); }
   background: rgba(255,255,255,0.54);
   border: 1px solid rgba(255,255,255,0.64);
 }
-
 html[data-theme="dark"] .eva-menu-badge,
 html[data-theme="galaxy"] .eva-menu-badge {
   color: rgba(255,255,255,0.84);
@@ -140,7 +138,6 @@ html[data-theme="galaxy"] .eva-menu-badge {
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.44), 0 8px 20px rgba(0,0,0,0.055);
   margin-top: 8px;
 }
-
 html[data-theme="dark"] .eva-menu-section,
 html[data-theme="galaxy"] .eva-menu-section {
   background: rgba(255,255,255,0.055);
@@ -181,22 +178,43 @@ html[data-theme="galaxy"] .eva-menu-section {
   text-decoration: none !important;
 }
 
+#evaMenuPanel .eva-link.eva-app-tile::before,
+#evaMenuPanel .eva-link.eva-app-tile::after,
+#evaMenuPanel .eva-app-tile::before,
+#evaMenuPanel .eva-app-tile::after,
+#evaMenuPanel .eva-account-tile::before,
+#evaMenuPanel .eva-account-tile::after {
+  display: none !important;
+  content: none !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+
 #evaMenuPanel .eva-app-icon,
 #evaMenuPanel .eva-liquid-app-icon {
   width: 50px !important;
   height: 50px !important;
   min-width: 50px !important;
-  border-radius: 17px !important;
+  border-radius: 16px !important;
   position: relative !important;
   overflow: hidden !important;
   display: grid !important;
   place-items: center !important;
-  color: rgba(8,18,16,0.88) !important;
-  background: linear-gradient(145deg, rgba(255,255,255,0.72), rgba(255,255,255,0.24) 48%, rgba(255,255,255,0.12)) !important;
-  border: 1px solid rgba(255,255,255,0.58) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.78), inset 0 -1px 0 rgba(0,0,0,0.08), 0 8px 18px rgba(0,0,0,0.10) !important;
+  color: rgba(255,255,255,0.94) !important;
+  background: linear-gradient(145deg, rgba(255,255,255,0.46), rgba(255,255,255,0.20) 48%, rgba(255,255,255,0.10)) !important;
+  border: 1px solid rgba(255,255,255,0.46) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.62), inset 0 -1px 0 rgba(0,0,0,0.10), 0 8px 18px rgba(0,0,0,0.10) !important;
   backdrop-filter: blur(18px) saturate(160%) !important;
   -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
+}
+
+html[data-theme="light"] #evaMenuPanel .eva-app-icon,
+html[data-theme$="-light"] #evaMenuPanel .eva-app-icon,
+html[data-theme="light"] #evaMenuPanel .eva-liquid-app-icon,
+html[data-theme$="-light"] #evaMenuPanel .eva-liquid-app-icon {
+  color: rgba(255,255,255,0.96) !important;
+  background: linear-gradient(145deg, rgba(255,255,255,0.48), rgba(255,255,255,0.22) 48%, rgba(255,255,255,0.10)) !important;
+  border-color: rgba(255,255,255,0.44) !important;
 }
 
 html[data-theme="dark"] #evaMenuPanel .eva-app-icon,
@@ -204,9 +222,9 @@ html[data-theme="dark"] #evaMenuPanel .eva-liquid-app-icon,
 html[data-theme="galaxy"] #evaMenuPanel .eva-app-icon,
 html[data-theme="galaxy"] #evaMenuPanel .eva-liquid-app-icon {
   color: rgba(255,255,255,0.92) !important;
-  background: linear-gradient(145deg, rgba(255,255,255,0.18), rgba(255,255,255,0.08) 48%, rgba(0,0,0,0.12)) !important;
-  border-color: rgba(255,255,255,0.18) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.22), 0 10px 20px rgba(0,0,0,0.22) !important;
+  background: linear-gradient(145deg, rgba(25,25,25,0.88), rgba(12,12,12,0.78) 52%, rgba(0,0,0,0.64)) !important;
+  border-color: rgba(255,255,255,0.16) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.32), 0 10px 20px rgba(0,0,0,0.24) !important;
 }
 
 #evaMenuPanel .eva-app-icon::before,
@@ -215,9 +233,16 @@ html[data-theme="galaxy"] #evaMenuPanel .eva-liquid-app-icon {
   position: absolute;
   inset: 1px;
   border-radius: inherit;
-  background: radial-gradient(circle at 30% 18%, rgba(255,255,255,0.72), transparent 42%), linear-gradient(160deg, rgba(255,255,255,0.28), transparent 52%);
+  background: radial-gradient(circle at 30% 18%, rgba(255,255,255,0.44), transparent 39%), linear-gradient(160deg, rgba(255,255,255,0.18), transparent 52%);
   pointer-events: none;
   z-index: 1;
+}
+
+html[data-theme="dark"] #evaMenuPanel .eva-app-icon::before,
+html[data-theme="dark"] #evaMenuPanel .eva-liquid-app-icon::before,
+html[data-theme="galaxy"] #evaMenuPanel .eva-app-icon::before,
+html[data-theme="galaxy"] #evaMenuPanel .eva-liquid-app-icon::before {
+  background: radial-gradient(circle at 28% 18%, rgba(255,255,255,0.22), transparent 40%), linear-gradient(160deg, rgba(255,255,255,0.10), transparent 52%);
 }
 
 #evaMenuPanel .eva-app-icon::after,
@@ -229,15 +254,15 @@ html[data-theme="galaxy"] #evaMenuPanel .eva-liquid-app-icon {
   top: 7px;
   height: 1px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.72);
+  background: rgba(255,255,255,0.58);
   pointer-events: none;
   z-index: 2;
 }
 
 #evaMenuPanel .eva-app-icon svg,
 #evaMenuPanel .eva-liquid-app-icon svg {
-  width: 22px !important;
-  height: 22px !important;
+  width: 23px !important;
+  height: 23px !important;
   position: relative !important;
   z-index: 3 !important;
   fill: currentColor !important;
@@ -253,7 +278,6 @@ html[data-theme="galaxy"] #evaMenuPanel .eva-liquid-app-icon {
   text-align: center !important;
   color: rgba(12,33,27,0.78) !important;
 }
-
 html[data-theme="dark"] #evaMenuPanel .eva-app-label,
 html[data-theme="galaxy"] #evaMenuPanel .eva-app-label { color: rgba(255,255,255,0.84) !important; }
 
