@@ -2,7 +2,6 @@
    Keeps text readable in light mode while preserving white text only on colored pills/avatars. */
 
 html[data-theme="light"],
-html[data-theme$="-light"] {
   --lead-readable: #10231d;
   --lead-readable-soft: rgba(21, 35, 31, 0.74);
   --lead-readable-muted: rgba(60, 60, 67, 0.68);
@@ -11,8 +10,6 @@ html[data-theme$="-light"] {
 }
 
 html[data-theme="dark"],
-html[data-theme="galaxy"],
-html[data-theme$="-dark"] {
   --lead-readable: #f5f5f7;
   --lead-readable-soft: rgba(245, 245, 247, 0.78);
   --lead-readable-muted: rgba(235, 235, 245, 0.62);
@@ -149,11 +146,7 @@ html[data-theme$="-dark"] {
 
 /* On dark theme, keep selected/primary buttons bright but readable. */
 html[data-theme="dark"] .lead-crud-modal .btn,
-html[data-theme="galaxy"] .lead-crud-modal .btn,
-html[data-theme$="-dark"] .lead-crud-modal .btn,
 html[data-theme="dark"] .dashboard-main .btn,
-html[data-theme="galaxy"] .dashboard-main .btn,
-html[data-theme$="-dark"] .dashboard-main .btn {
   color: #f5f5f7 !important;
   -webkit-text-fill-color: #f5f5f7 !important;
 }

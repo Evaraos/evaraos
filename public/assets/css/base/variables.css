@@ -8,10 +8,10 @@
   --bg-light: #f7f9f8;
   --bg-light-2: #eef4f1;
 
-  --bg-galaxy: #050311;
-  --bg-galaxy-2: #120624;
-  --bg-galaxy-3: #23103f;
-  --bg-galaxy-4: #32155a;
+  --bg-dark: #050311;
+  --bg-dark-2: #120624;
+  --bg-dark-3: #23103f;
+  --bg-dark-4: #32155a;
 
   /* ===============================
      TEXT
@@ -22,8 +22,8 @@
   --text-light: #12251f;
   --muted-light: rgba(26, 47, 39, 0.66);
 
-  --text-galaxy: #f9f2ff;
-  --muted-galaxy: rgba(236, 221, 255, 0.74);
+  --text-dark: #f9f2ff;
+  --muted-dark: rgba(236, 221, 255, 0.74);
 
   /* ===============================
      GLOBAL THEME TOKENS
@@ -61,7 +61,6 @@ html[data-theme="light"] {
   --beam-halo-rgb: 139, 92, 246;
 }
 
-html[data-theme="galaxy"] {
   --tint-rgb: 214, 168, 255;
   --theme-glow-rgb: 255, 224, 255;
   --theme-soft-rgb: 221, 196, 255;
@@ -73,7 +72,6 @@ html[data-theme="galaxy"] {
    =============================== */
 
 html[data-theme="light"],
-html[data-theme$="-light"] {
   --liquid-text: #0f1f1a;
   --liquid-bg-top: rgba(255, 255, 255, 0.96);
   --liquid-bg-bottom: rgba(248, 250, 250, 0.78);
@@ -89,7 +87,6 @@ html[data-theme$="-light"] {
    GALAXY OVERRIDES (lightweight only)
    =============================== */
 
-html[data-theme="galaxy"] {
   --liquid-text: #ffffff;
   --liquid-bg-top: rgba(255, 255, 255, 0.18);
   --liquid-bg-bottom: rgba(255, 255, 255, 0.05);

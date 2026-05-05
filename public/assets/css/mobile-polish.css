@@ -5,8 +5,6 @@
 }
 
 html[data-theme="dark"],
-html[data-theme="galaxy"],
-html[data-theme$="-dark"] {
   --eva-ios-text: #f5f5f7;
   --eva-ios-muted: rgba(235,235,245,.64);
 }
@@ -30,8 +28,6 @@ html[data-theme$="-dark"] {
   }
 
   html[data-theme="dark"] .eva-nav-pill,
-  html[data-theme="galaxy"] .eva-nav-pill,
-  html[data-theme$="-dark"] .eva-nav-pill {
     background: rgba(28,28,30,.78) !important;
     border-color: rgba(255,255,255,.14) !important;
     box-shadow: 0 14px 34px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.14), inset 0 -1px 0 rgba(255,255,255,.04) !important;
@@ -53,8 +49,6 @@ html[data-theme$="-dark"] {
 }
 
 html[data-theme="dark"] .lead-crud-modal.open,
-html[data-theme="galaxy"] .lead-crud-modal.open,
-html[data-theme$="-dark"] .lead-crud-modal.open {
   background: rgba(0,0,0,.78) !important;
 }
 
@@ -76,8 +70,6 @@ html[data-theme$="-dark"] .lead-crud-modal.open {
 }
 
 html[data-theme="dark"] .lead-crud-card,
-html[data-theme="galaxy"] .lead-crud-card,
-html[data-theme$="-dark"] .lead-crud-card {
   background: rgba(28,28,30,.88) !important;
   border-color: rgba(255,255,255,.12) !important;
   box-shadow: 0 24px 70px rgba(0,0,0,.48), inset 0 1px 0 rgba(255,255,255,.12) !important;
@@ -95,8 +87,6 @@ html[data-theme$="-dark"] .lead-crud-card {
 }
 
 html[data-theme="dark"] .lead-crud-head,
-html[data-theme="galaxy"] .lead-crud-head,
-html[data-theme$="-dark"] .lead-crud-head {
   background: linear-gradient(180deg, rgba(28,28,30,.94), rgba(28,28,30,0)) !important;
 }
 
@@ -136,16 +126,6 @@ html[data-theme="dark"] .lead-crud-field select,
 html[data-theme="dark"] .lead-crud-field textarea,
 html[data-theme="dark"] .lead-activity-controls input,
 html[data-theme="dark"] .lead-activity-controls select,
-html[data-theme="galaxy"] .lead-crud-field input,
-html[data-theme="galaxy"] .lead-crud-field select,
-html[data-theme="galaxy"] .lead-crud-field textarea,
-html[data-theme="galaxy"] .lead-activity-controls input,
-html[data-theme="galaxy"] .lead-activity-controls select,
-html[data-theme$="-dark"] .lead-crud-field input,
-html[data-theme$="-dark"] .lead-crud-field select,
-html[data-theme$="-dark"] .lead-crud-field textarea,
-html[data-theme$="-dark"] .lead-activity-controls input,
-html[data-theme$="-dark"] .lead-activity-controls select {
   background: rgba(255,255,255,.075) !important;
   border-color: rgba(255,255,255,.11) !important;
   color: #f5f5f7 !important;
@@ -163,8 +143,6 @@ html[data-theme$="-dark"] .lead-activity-controls select {
 }
 
 html[data-theme="dark"] .lead-crud-footer,
-html[data-theme="galaxy"] .lead-crud-footer,
-html[data-theme$="-dark"] .lead-crud-footer {
   background: linear-gradient(0deg, rgba(28,28,30,.94), rgba(28,28,30,0)) !important;
 }
 

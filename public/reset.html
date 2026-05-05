@@ -49,10 +49,8 @@
           var appearance = JSON.parse(raw);
 
           if (appearance.mode === "light") theme = "light";
-          else if (appearance.mode === "galaxy") theme = "galaxy";
           else if (appearance.mode === "custom") {
             if (appearance.baseFamily === "light") theme = "light";
-            else if (appearance.baseFamily === "galaxy") theme = "galaxy";
             else theme = "dark";
           }
         }
@@ -77,8 +75,6 @@
       background: #f4f7f6;
     }
 
-    html[data-theme="galaxy"],
-    html[data-theme="galaxy"] body {
       background: #050311;
     }
 
@@ -177,7 +173,6 @@
   <script type="module" src="/assets/js/firebase.js?v=36"></script>
   <script type="module" src="/assets/js/theme.js?v=37"></script>
   <script src="/assets/js/theme-css-loader.js?v=1"></script>
-  <script src="/assets/js/galaxy.js?v=2"></script>
   <script type="module" src="/assets/js/route-guard.js?v=35"></script>
   <script type="module" src="/assets/js/auth.js?v=35"></script>
   <script type="module" src="/assets/js/nav.js?v=20260503-final"></script>

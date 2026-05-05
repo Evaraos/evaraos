@@ -86,8 +86,6 @@ function injectDashboardClickStyles() {
     }
 
     html[data-theme="dark"] .dashboard-click-card::after,
-    html[data-theme="galaxy"] .dashboard-click-card::after,
-    html[data-theme$="-dark"] .dashboard-click-card::after {
       color: rgba(245,245,247,0.82);
       background: rgba(44,44,46,0.72);
       border-color: rgba(255,255,255,0.13);

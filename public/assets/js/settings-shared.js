@@ -50,11 +50,9 @@ export function getThemeFromAppearance(appearance) {
   };
 
   if (safe.mode === "light") return "light";
-  if (safe.mode === "galaxy") return "galaxy";
 
   if (safe.mode === "custom") {
     if (safe.baseFamily === "light") return "light";
-    if (safe.baseFamily === "galaxy") return "galaxy";
     return "dark";
   }
 
@@ -75,7 +73,7 @@ export function applyAppearance(appearance) {
   document.documentElement.style.setProperty("--user-beam-color", safe.beamColor);
   document.documentElement.style.setProperty("--user-background-glow", safe.backgroundGlow);
 
-  if (safe.rainbowBeam && theme !== "galaxy") {
+  if (safe.rainbowBeam && theme !== "dark") {
     document.documentElement.setAttribute("data-beam-mode", "rainbow");
   } else {
     document.documentElement.setAttribute("data-beam-mode", "default");

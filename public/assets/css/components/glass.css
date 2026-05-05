@@ -41,10 +41,6 @@ html[data-theme="light"] .glass-card,
 html[data-theme="light"] .glass-shell,
 html[data-theme="light"] .aurora-card,
 html[data-theme="light"] .glass,
-html[data-theme$="-light"] .glass-card,
-html[data-theme$="-light"] .glass-shell,
-html[data-theme$="-light"] .aurora-card,
-html[data-theme$="-light"] .glass {
   background: linear-gradient(180deg, rgba(255,255,255,0.86), rgba(248,250,252,0.68)) !important;
   border-color: rgba(15, 23, 42, 0.08) !important;
   color: #10231d;
@@ -57,10 +53,6 @@ html[data-theme="light"] .glass-card::before,
 html[data-theme="light"] .glass-shell::before,
 html[data-theme="light"] .aurora-card::before,
 html[data-theme="light"] .glass::before,
-html[data-theme$="-light"] .glass-card::before,
-html[data-theme$="-light"] .glass-shell::before,
-html[data-theme$="-light"] .aurora-card::before,
-html[data-theme$="-light"] .glass::before {
   background: linear-gradient(135deg, rgba(255,255,255,0.72), transparent 48%, rgba(225,232,236,0.30));
   opacity: 0.8;
 }

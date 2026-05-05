@@ -220,8 +220,6 @@ html[data-theme="light"] .pill.error { color: #a62d24 !important; background: #f
 /* Global light-mode liquid beam correction */
 html[data-theme="light"] .beam-target::after,
 html[data-theme="light"] .active-glow::after,
-html[data-theme$="-light"] .beam-target::after,
-html[data-theme$="-light"] .active-glow::after {
   inset: -8% -5% !important;
   opacity: 0.68 !important;
   filter: blur(18px) !important;
@@ -233,8 +231,6 @@ html[data-theme$="-light"] .active-glow::after {
 
 html[data-theme="light"] .active-card-glow,
 html[data-theme="light"] .active-glow,
-html[data-theme$="-light"] .active-card-glow,
-html[data-theme$="-light"] .active-glow {
   box-shadow:
     0 18px 42px rgba(15, 23, 42, 0.08),
     0 0 0 1px rgba(255,255,255,0.78),

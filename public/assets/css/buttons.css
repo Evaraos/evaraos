@@ -78,11 +78,6 @@ html[data-theme="light"] .btn-theme-primary,
 html[data-theme="light"] .btn-theme-secondary,
 html[data-theme="light"] .premium-red-btn,
 html[data-theme="light"] .btn-glass,
-html[data-theme$="-light"] .btn,
-html[data-theme$="-light"] .btn-theme-primary,
-html[data-theme$="-light"] .btn-theme-secondary,
-html[data-theme$="-light"] .premium-red-btn,
-html[data-theme$="-light"] .btn-glass {
   background: linear-gradient(
     135deg,
     rgba(255,255,255,0.99) 0%,

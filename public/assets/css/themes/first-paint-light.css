@@ -4,13 +4,10 @@
    the real saved theme finishes hydrating.
    =============================== */
 
-html:not([data-evara-theme-ready="true"]):not([data-theme="galaxy"]),
-html:not([data-evara-theme-ready="true"]):not([data-theme="galaxy"]) body {
   background: #f4f7f6 !important;
   color-scheme: light;
 }
 
-html:not([data-evara-theme-ready="true"]):not([data-theme="galaxy"]) body::before {
   background: transparent !important;
 }
 

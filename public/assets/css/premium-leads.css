@@ -9,8 +9,6 @@
 }
 
 html[data-theme="dark"],
-html[data-theme="galaxy"],
-html[data-theme$="-dark"] {
   --premium-ink: #f5f5f7;
   --premium-muted: rgba(235, 235, 245, 0.62);
   --premium-soft: rgba(28, 28, 30, 0.82);
@@ -77,16 +75,6 @@ html[data-theme="dark"] .lead-crud-field select,
 html[data-theme="dark"] .lead-crud-field textarea,
 html[data-theme="dark"] .lead-activity-controls input,
 html[data-theme="dark"] .lead-activity-controls select,
-html[data-theme="galaxy"] .lead-crud-field input,
-html[data-theme="galaxy"] .lead-crud-field select,
-html[data-theme="galaxy"] .lead-crud-field textarea,
-html[data-theme="galaxy"] .lead-activity-controls input,
-html[data-theme="galaxy"] .lead-activity-controls select,
-html[data-theme$="-dark"] .lead-crud-field input,
-html[data-theme$="-dark"] .lead-crud-field select,
-html[data-theme$="-dark"] .lead-crud-field textarea,
-html[data-theme$="-dark"] .lead-activity-controls input,
-html[data-theme$="-dark"] .lead-activity-controls select {
   background: rgba(44, 44, 46, 0.76) !important;
   border-color: rgba(255, 255, 255, 0.13) !important;
   color: #f5f5f7 !important;
@@ -140,8 +128,6 @@ html[data-theme$="-dark"] .lead-activity-controls select {
 }
 
 html[data-theme="dark"] .lead-crud-team-box,
-html[data-theme="galaxy"] .lead-crud-team-box,
-html[data-theme$="-dark"] .lead-crud-team-box {
   background: rgba(255, 255, 255, 0.055) !important;
   border-color: rgba(255, 255, 255, 0.10) !important;
 }
@@ -164,8 +150,6 @@ html[data-theme$="-dark"] .lead-crud-team-box {
 }
 
 html[data-theme="dark"] .lead-crud-check.premium-person-card,
-html[data-theme="galaxy"] .lead-crud-check.premium-person-card,
-html[data-theme$="-dark"] .lead-crud-check.premium-person-card {
   color: #f5f5f7 !important;
   background: rgba(44, 44, 46, 0.76) !important;
   border-color: rgba(255, 255, 255, 0.12) !important;

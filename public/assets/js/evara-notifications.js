@@ -38,8 +38,6 @@ function ensureStyles() {
     }
 
     html[data-theme="dark"] .evara-toast,
-    html[data-theme="galaxy"] .evara-toast,
-    html[data-theme$="-dark"] .evara-toast {
       background: rgba(28,28,30,0.90);
       border-color: rgba(255,255,255,0.12);
       color: #f5f5f7;
@@ -63,8 +61,6 @@ function ensureStyles() {
     }
 
     html[data-theme="dark"] .evara-toast span,
-    html[data-theme="galaxy"] .evara-toast span,
-    html[data-theme$="-dark"] .evara-toast span {
       color: rgba(235,235,245,0.62);
     }
 

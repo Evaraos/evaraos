@@ -71,7 +71,6 @@ body {
 }
 
 html[data-theme="light"] body,
-html[data-theme$="-light"] body {
   color: var(--text-light);
   background:
     radial-gradient(circle at 16% 12%, rgba(205, 237, 221, 0.28), transparent 24%),
@@ -150,7 +149,6 @@ select {
 }
 
 html[data-theme="light"] .page-grid-overlay,
-html[data-theme$="-light"] .page-grid-overlay {
   opacity: 0.12;
   background:
     linear-gradient(rgba(24, 42, 37, 0.03) 1px, transparent 1px),
@@ -174,9 +172,6 @@ html[data-theme$="-light"] .page-grid-overlay {
 html[data-theme="light"] .glass-card,
 html[data-theme="light"] .glass-shell,
 html[data-theme="light"] .aurora-card,
-html[data-theme$="-light"] .glass-card,
-html[data-theme$="-light"] .glass-shell,
-html[data-theme$="-light"] .aurora-card {
   background:
     linear-gradient(180deg, var(--panel-light), var(--panel-light-2));
   border: 1px solid var(--line-light);
@@ -245,7 +240,6 @@ html[data-theme$="-light"] .aurora-card {
 }
 
 html[data-theme="light"] .brand-copy span,
-html[data-theme$="-light"] .brand-copy span {
   color: var(--muted-light);
 }
 
@@ -291,7 +285,6 @@ html[data-theme$="-light"] .brand-copy span {
 }
 
 html[data-theme="light"] .hamburger-line,
-html[data-theme$="-light"] .hamburger-line {
   background: rgba(20, 38, 33, 0.9);
 }
 
@@ -317,7 +310,6 @@ html[data-theme$="-light"] .hamburger-line {
 }
 
 html[data-theme="light"] .nav-dropdown-menu,
-html[data-theme$="-light"] .nav-dropdown-menu {
   background:
     linear-gradient(180deg, rgba(255,255,255,0.95), rgba(247,249,248,0.93));
   border: 1px solid rgba(53, 87, 76, 0.1);
@@ -361,9 +353,6 @@ html[data-theme$="-light"] .nav-dropdown-menu {
 html[data-theme="light"] .menu-link:hover,
 html[data-theme="light"] .menu-link.active,
 html[data-theme="light"] .dashboard-menu-button:hover,
-html[data-theme$="-light"] .menu-link:hover,
-html[data-theme$="-light"] .menu-link.active,
-html[data-theme$="-light"] .dashboard-menu-button:hover {
   color: #163029;
   text-shadow: 0 0 12px rgba(143, 114, 255, 0.16);
 }
@@ -375,7 +364,6 @@ html[data-theme$="-light"] .dashboard-menu-button:hover {
 }
 
 html[data-theme="light"] .menu-divider,
-html[data-theme$="-light"] .menu-divider {
   background: rgba(24, 45, 39, 0.08);
 }
 
@@ -528,7 +516,6 @@ html[data-theme$="-light"] .menu-divider {
 }
 
 html[data-theme="light"] .hero-subtitle,
-html[data-theme$="-light"] .hero-subtitle {
   color: var(--muted-light);
 }
 
@@ -568,7 +555,6 @@ html[data-theme$="-light"] .hero-subtitle {
 }
 
 html[data-theme="light"] .feature-card p,
-html[data-theme$="-light"] .feature-card p {
   color: var(--muted-light);
 }
 
@@ -638,7 +624,6 @@ html[data-theme$="-light"] .feature-card p {
 }
 
 html[data-theme="light"] .login-subtitle,
-html[data-theme$="-light"] .login-subtitle {
   color: var(--muted-light);
 }
 
@@ -692,9 +677,6 @@ html[data-theme$="-light"] .login-subtitle {
 html[data-theme="light"] .input-shell,
 html[data-theme="light"] .password-wrap,
 html[data-theme="light"] .remember-row,
-html[data-theme$="-light"] .input-shell,
-html[data-theme$="-light"] .password-wrap,
-html[data-theme$="-light"] .remember-row {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(246, 248, 247, 0.76));
   border: 1px solid rgba(34, 58, 49, 0.08);
@@ -748,7 +730,6 @@ html[data-theme$="-light"] .remember-row {
 }
 
 html[data-theme="light"] .password-toggle,
-html[data-theme$="-light"] .password-toggle {
   background: rgba(30, 54, 45, 0.06);
 }
 
@@ -855,7 +836,6 @@ html[data-theme$="-light"] .password-toggle {
 }
 
 html[data-theme="light"] .btn-theme-secondary,
-html[data-theme$="-light"] .btn-theme-secondary {
   background:
     linear-gradient(180deg, rgba(255,255,255,0.84), rgba(243,246,245,0.74));
   border: 1px solid rgba(29, 53, 45, 0.08);
@@ -887,7 +867,6 @@ html[data-theme$="-light"] .btn-theme-secondary {
 }
 
 html[data-theme="light"] .inline-card-copy,
-html[data-theme$="-light"] .inline-card-copy {
   color: var(--muted-light);
 }
 
@@ -921,7 +900,6 @@ html[data-theme$="-light"] .inline-card-copy {
 }
 
 html[data-theme="light"] .site-footer-left span,
-html[data-theme$="-light"] .site-footer-left span {
   color: var(--muted-light);
 }
 

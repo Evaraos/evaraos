@@ -15,14 +15,13 @@ function byId(id) {
 }
 
 function normalizeMode(mode) {
-  if (mode === "light" || mode === "galaxy" || mode === "custom") return mode;
   return "dark";
 }
 
 function modeLabel(mode) {
   const safe = normalizeMode(mode);
   if (safe === "light") return "Light";
-  if (safe === "galaxy") return "Galaxy";
+  if (safe === "dark") return "Dark";
   if (safe === "custom") return "Custom";
   return "Dark";
 }

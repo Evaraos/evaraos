@@ -37,7 +37,6 @@ body.nav-menu-open .eva-menu-panel {
 }
 
 html[data-theme="dark"] .eva-menu-panel,
-html[data-theme="galaxy"] .eva-menu-panel {
   background: rgba(16, 18, 25, 0.68);
   border-color: rgba(255, 255, 255, 0.16);
   box-shadow:
@@ -122,15 +121,11 @@ html[data-theme="galaxy"] .eva-menu-panel {
 
 html[data-theme="dark"] .eva-menu-titlebar h2,
 html[data-theme="dark"] .eva-section-head h3,
-html[data-theme="galaxy"] .eva-menu-titlebar h2,
-html[data-theme="galaxy"] .eva-section-head h3 {
   color: #f8fbff;
 }
 
 html[data-theme="dark"] .eva-menu-titlebar p,
 html[data-theme="dark"] .eva-section-head p,
-html[data-theme="galaxy"] .eva-menu-titlebar p,
-html[data-theme="galaxy"] .eva-section-head p {
   color: rgba(230,236,255,0.52);
 }
 
@@ -148,7 +143,6 @@ html[data-theme="galaxy"] .eva-section-head p {
 }
 
 html[data-theme="dark"] .eva-menu-badge,
-html[data-theme="galaxy"] .eva-menu-badge {
   color: rgba(255,255,255,0.84);
   background: rgba(255,255,255,0.11);
   border-color: rgba(255,255,255,0.18);
@@ -168,7 +162,6 @@ html[data-theme="galaxy"] .eva-menu-badge {
 }
 
 html[data-theme="dark"] .eva-menu-section,
-html[data-theme="galaxy"] .eva-menu-section {
   background: rgba(255,255,255,0.055);
   border-color: rgba(255,255,255,0.10);
 }

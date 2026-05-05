@@ -169,8 +169,6 @@
   opacity: 0;
 }
 
-html[data-theme="galaxy"] .evara-loader-bg-stars,
-html[data-theme="galaxy"] .evara-loader-fast-bg-stars {
   opacity: 0.74;
   background-image:
     radial-gradient(circle, rgba(255,255,255,0.88) 1px, transparent 1.8px),
@@ -183,20 +181,15 @@ html[data-theme="galaxy"] .evara-loader-fast-bg-stars {
 
 html[data-theme="light"] .evara-loader-bg-wave.wave-1,
 html[data-theme="light"] .evara-loader-fast-bg-wave.wave-a,
-html[data-theme$="-light"] .evara-loader-bg-wave.wave-1,
-html[data-theme$="-light"] .evara-loader-fast-bg-wave.wave-a {
   background: radial-gradient(circle, rgba(124, 58, 237, 0.12), transparent 64%);
 }
 
 html[data-theme="light"] .evara-loader-bg-wave.wave-2,
 html[data-theme="light"] .evara-loader-fast-bg-wave.wave-b,
-html[data-theme$="-light"] .evara-loader-bg-wave.wave-2,
-html[data-theme$="-light"] .evara-loader-fast-bg-wave.wave-b {
   background: radial-gradient(circle, rgba(79, 124, 255, 0.10), transparent 64%);
 }
 
 html[data-theme="light"] .evara-loader-bg-wave.wave-4,
-html[data-theme$="-light"] .evara-loader-bg-wave.wave-4 {
   background: radial-gradient(circle, rgba(255, 124, 214, 0.08), transparent 64%);
 }
 

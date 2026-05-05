@@ -326,10 +326,6 @@ html[data-theme="light"] .auth-panel,
 html[data-theme="light"] .login-panel,
 html[data-theme="light"] .signup-panel,
 html[data-theme="light"] .reset-panel,
-html[data-theme$="-light"] .auth-panel,
-html[data-theme$="-light"] .login-panel,
-html[data-theme$="-light"] .signup-panel,
-html[data-theme$="-light"] .reset-panel {
   background:
     linear-gradient(135deg, rgba(246, 248, 252, 0.94) 0%, rgba(237, 241, 247, 0.96) 100%);
   border: 1px solid rgba(255,255,255,0.92);
@@ -341,27 +337,18 @@ html[data-theme$="-light"] .reset-panel {
 html[data-theme="light"] .login-subtitle,
 html[data-theme="light"] .signup-subtitle,
 html[data-theme="light"] .reset-subtitle,
-html[data-theme$="-light"] .login-subtitle,
-html[data-theme$="-light"] .signup-subtitle,
-html[data-theme$="-light"] .reset-subtitle {
   color: rgba(17, 32, 24, 0.74);
 }
 
 html[data-theme="light"] .field-label,
 html[data-theme="light"] .remember-check,
 html[data-theme="light"] .auth-footer-links span,
-html[data-theme$="-light"] .field-label,
-html[data-theme$="-light"] .remember-check,
-html[data-theme$="-light"] .auth-footer-links span {
   color: rgba(18, 33, 26, 0.86);
 }
 
 html[data-theme="light"] .input-shell,
 html[data-theme="light"] .password-wrap,
 html[data-theme="light"] .remember-row,
-html[data-theme$="-light"] .input-shell,
-html[data-theme$="-light"] .password-wrap,
-html[data-theme$="-light"] .remember-row {
   background:
     linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248,249,252,0.92));
   border: 1px solid rgba(213, 221, 233, 0.76);
@@ -371,26 +358,20 @@ html[data-theme$="-light"] .remember-row {
 }
 
 html[data-theme="light"] .input,
-html[data-theme$="-light"] .input {
   color: #102019;
 }
 
 html[data-theme="light"] .input::placeholder,
-html[data-theme$="-light"] .input::placeholder {
   color: rgba(16, 32, 25, 0.38);
 }
 
 html[data-theme="light"] .password-toggle,
-html[data-theme$="-light"] .password-toggle {
   background: rgba(240, 243, 248, 0.94);
   color: #14251f;
   border-left: 1px solid rgba(182, 194, 209, 0.62);
 }
 
-html[data-theme="galaxy"] .login-subtitle,
-html[data-theme="galaxy"] .signup-subtitle,
-html[data-theme="galaxy"] .reset-subtitle {
-  color: var(--muted-galaxy);
+  color: var(--muted-dark);
 }
 
 @media (max-width: 640px) {
