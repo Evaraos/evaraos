@@ -1,64 +1,63 @@
-/* EVARAOS APP SYSTEM / UNIFIED LIGHT + DARK THEME ENGINE
-   Replaces removed Galaxy styling with production-safe Apple-level tokens.
-   Scope: public app surfaces, auth, dashboard, nav, reusable cards/buttons/inputs.
+/* EVARAOS APP SYSTEM / LIQUID GLASS THEME ENGINE
+   Simple rule: cards stay the same liquid glass in light and dark.
+   Theme switch changes the page background + text only.
 */
 
 :root {
   color-scheme: light;
   --eva-page-bg: #f4f7f6;
-  --eva-page-bg-2: #e9eef2;
-  --eva-page-bg-3: #d9e4ff;
+  --eva-page-bg-2: #edf2f5;
+  --eva-page-bg-3: #dfeaff;
+
   --eva-text: #08221c;
   --eva-text-strong: #061b16;
   --eva-text-soft: rgba(8, 34, 28, 0.68);
   --eva-text-muted: rgba(8, 34, 28, 0.48);
-  --eva-surface: rgba(255, 255, 255, 0.66);
-  --eva-surface-strong: rgba(255, 255, 255, 0.78);
-  --eva-surface-soft: rgba(255, 255, 255, 0.42);
-  --eva-border: rgba(255, 255, 255, 0.64);
-  --eva-border-soft: rgba(8, 34, 28, 0.08);
-  --eva-shadow: 0 20px 60px rgba(26, 42, 68, 0.14), inset 0 1px 1px rgba(255,255,255,0.72);
-  --eva-shadow-soft: 0 12px 32px rgba(26, 42, 68, 0.10);
+
+  --eva-glass-a: rgba(255, 255, 255, 0.76);
+  --eva-glass-b: rgba(255, 255, 255, 0.56);
+  --eva-glass-c: rgba(255, 255, 255, 0.30);
+  --eva-glass-border: rgba(255, 255, 255, 0.68);
+  --eva-glass-border-soft: rgba(255, 255, 255, 0.34);
+  --eva-glass-highlight: rgba(255, 255, 255, 0.40);
+  --eva-glass-shadow: 0 22px 60px rgba(26, 42, 68, 0.16), inset 0 1px 1px rgba(255,255,255,0.80);
+  --eva-glass-shadow-soft: 0 12px 34px rgba(26, 42, 68, 0.12);
+
   --eva-control: rgba(255, 255, 255, 0.72);
-  --eva-control-hover: rgba(255, 255, 255, 0.86);
+  --eva-control-hover: rgba(255, 255, 255, 0.88);
   --eva-control-text: #0a211b;
-  --eva-glow-a: rgba(152, 183, 255, 0.56);
-  --eva-glow-b: rgba(255, 214, 239, 0.46);
-  --eva-glow-c: rgba(157, 255, 223, 0.30);
-  --eva-blur: 28px;
+
+  --eva-bg-glow-a: rgba(152, 183, 255, 0.50);
+  --eva-bg-glow-b: rgba(255, 214, 239, 0.34);
+  --eva-bg-glow-c: rgba(157, 255, 223, 0.22);
+  --eva-blur: 30px;
 }
 
 html[data-theme="dark"] {
   color-scheme: dark;
-  --eva-page-bg: #080914;
-  --eva-page-bg-2: #11162a;
-  --eva-page-bg-3: #1a2455;
+  --eva-page-bg: #020307;
+  --eva-page-bg-2: #050711;
+  --eva-page-bg-3: #070b18;
+
   --eva-text: rgba(255, 255, 255, 0.92);
   --eva-text-strong: #ffffff;
-  --eva-text-soft: rgba(255, 255, 255, 0.72);
-  --eva-text-muted: rgba(255, 255, 255, 0.48);
-  --eva-surface: rgba(22, 25, 39, 0.66);
-  --eva-surface-strong: rgba(27, 31, 48, 0.78);
-  --eva-surface-soft: rgba(255, 255, 255, 0.08);
-  --eva-border: rgba(255, 255, 255, 0.16);
-  --eva-border-soft: rgba(255, 255, 255, 0.08);
-  --eva-shadow: 0 24px 70px rgba(0, 0, 0, 0.44), inset 0 1px 1px rgba(255,255,255,0.14);
-  --eva-shadow-soft: 0 16px 42px rgba(0, 0, 0, 0.32);
-  --eva-control: rgba(255, 255, 255, 0.10);
-  --eva-control-hover: rgba(255, 255, 255, 0.16);
+  --eva-text-soft: rgba(255, 255, 255, 0.74);
+  --eva-text-muted: rgba(255, 255, 255, 0.50);
+
+  --eva-bg-glow-a: rgba(118, 145, 255, 0.12);
+  --eva-bg-glow-b: rgba(255, 255, 255, 0.04);
+  --eva-bg-glow-c: rgba(95, 167, 255, 0.08);
+
   --eva-control-text: #ffffff;
-  --eva-glow-a: rgba(79, 100, 255, 0.32);
-  --eva-glow-b: rgba(176, 90, 255, 0.24);
-  --eva-glow-c: rgba(0, 219, 255, 0.14);
 }
 
 html,
 body {
   min-height: 100%;
   background:
-    radial-gradient(circle at 18% 12%, var(--eva-glow-b), transparent 34%),
-    radial-gradient(circle at 92% 18%, var(--eva-glow-a), transparent 36%),
-    radial-gradient(circle at 62% 92%, var(--eva-glow-c), transparent 42%),
+    radial-gradient(circle at 18% 12%, var(--eva-bg-glow-b), transparent 34%),
+    radial-gradient(circle at 92% 18%, var(--eva-bg-glow-a), transparent 36%),
+    radial-gradient(circle at 62% 92%, var(--eva-bg-glow-c), transparent 42%),
     linear-gradient(145deg, var(--eva-page-bg), var(--eva-page-bg-2) 56%, var(--eva-page-bg-3)) !important;
   color: var(--eva-text) !important;
 }
@@ -68,17 +67,14 @@ body::before {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.30), transparent 28%, rgba(255,255,255,0.06));
-  opacity: .55;
+  background: linear-gradient(180deg, rgba(255,255,255,0.24), transparent 30%, rgba(255,255,255,0.04));
+  opacity: .48;
   z-index: -2;
 }
 
 html[data-theme="dark"] body::before {
-  background:
-    radial-gradient(circle at 50% -12%, rgba(255,255,255,0.12), transparent 30%),
-    linear-gradient(180deg, rgba(255,255,255,0.04), transparent 42%);
-  opacity: .9;
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), transparent 42%);
+  opacity: .72;
 }
 
 .page-aurora,
@@ -88,14 +84,14 @@ html[data-theme="dark"] body::before {
 
 .page-aurora {
   background:
-    radial-gradient(circle at 20% 20%, var(--eva-glow-b), transparent 34%),
-    radial-gradient(circle at 80% 15%, var(--eva-glow-a), transparent 36%),
-    radial-gradient(circle at 50% 90%, var(--eva-glow-c), transparent 42%) !important;
-  opacity: .75 !important;
+    radial-gradient(circle at 20% 20%, var(--eva-bg-glow-b), transparent 34%),
+    radial-gradient(circle at 80% 15%, var(--eva-bg-glow-a), transparent 36%),
+    radial-gradient(circle at 50% 90%, var(--eva-bg-glow-c), transparent 42%) !important;
+  opacity: .62 !important;
 }
 
 html[data-theme="dark"] .page-aurora {
-  opacity: .58 !important;
+  opacity: .36 !important;
 }
 
 body,
@@ -129,6 +125,7 @@ h3,
 
 p,
 .hero-copy,
+.hero-subtitle,
 .login-subtitle,
 .dashboard-hero-text,
 .dashboard-list-item span,
@@ -144,7 +141,14 @@ p,
 .password-wrap,
 .remember-row,
 .hero-card,
+.stats-card,
 .feature-card,
+.service-card,
+.category-card,
+.info-card,
+.cta-panel,
+.section-panel,
+.site-footer-inner,
 .dashboard-sidebar-inner,
 .dashboard-panel,
 .dashboard-overview,
@@ -165,12 +169,13 @@ p,
 .application-card {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(145deg, var(--eva-surface-strong), var(--eva-surface) 58%, var(--eva-surface-soft)) !important;
-  border: 1px solid var(--eva-border) !important;
-  box-shadow: var(--eva-shadow) !important;
+  background:
+    linear-gradient(145deg, var(--eva-glass-a), var(--eva-glass-b) 56%, var(--eva-glass-c)) !important;
+  border: 1px solid var(--eva-glass-border) !important;
+  box-shadow: var(--eva-glass-shadow) !important;
   color: var(--eva-text) !important;
-  backdrop-filter: blur(var(--eva-blur)) saturate(170%) !important;
-  -webkit-backdrop-filter: blur(var(--eva-blur)) saturate(170%) !important;
+  backdrop-filter: blur(var(--eva-blur)) saturate(175%) !important;
+  -webkit-backdrop-filter: blur(var(--eva-blur)) saturate(175%) !important;
 }
 
 .glass-card::before,
@@ -178,6 +183,14 @@ p,
 .auth-panel::before,
 .login-panel::before,
 .hero-card::before,
+.stats-card::before,
+.feature-card::before,
+.service-card::before,
+.category-card::before,
+.info-card::before,
+.cta-panel::before,
+.section-panel::before,
+.site-footer-inner::before,
 .dashboard-panel::before,
 .dashboard-overview::before,
 .dashboard-hero::before,
@@ -194,28 +207,10 @@ p,
   border-radius: inherit;
   pointer-events: none;
   background:
-    radial-gradient(circle at 16% 0%, rgba(255,255,255,0.34), transparent 38%),
-    linear-gradient(135deg, rgba(255,255,255,0.20), transparent 52%);
-  opacity: .7;
+    radial-gradient(circle at 16% 0%, var(--eva-glass-highlight), transparent 38%),
+    linear-gradient(135deg, rgba(255,255,255,0.22), transparent 52%);
+  opacity: .62;
   z-index: 0;
-}
-
-html[data-theme="dark"] .glass-card::before,
-html[data-theme="dark"] .aurora-card::before,
-html[data-theme="dark"] .auth-panel::before,
-html[data-theme="dark"] .login-panel::before,
-html[data-theme="dark"] .hero-card::before,
-html[data-theme="dark"] .dashboard-panel::before,
-html[data-theme="dark"] .dashboard-overview::before,
-html[data-theme="dark"] .dashboard-hero::before,
-html[data-theme="dark"] .dashboard-hero-panel::before,
-html[data-theme="dark"] .dashboard-stat-card::before,
-html[data-theme="dark"] .dashboard-list-item::before,
-html[data-theme="dark"] .dashboard-feed-item::before,
-html[data-theme="dark"] .dashboard-role-card::before,
-html[data-theme="dark"] .dashboard-progress-row::before,
-html[data-theme="dark"] .dashboard-state-card::before {
-  opacity: .42;
 }
 
 .glass-card > *,
@@ -223,6 +218,14 @@ html[data-theme="dark"] .dashboard-state-card::before {
 .auth-panel > *,
 .login-panel > *,
 .hero-card > *,
+.stats-card > *,
+.feature-card > *,
+.service-card > *,
+.category-card > *,
+.info-card > *,
+.cta-panel > *,
+.section-panel > *,
+.site-footer-inner > *,
 .dashboard-panel > *,
 .dashboard-overview > *,
 .dashboard-hero > *,
@@ -249,9 +252,9 @@ input,
 textarea,
 select {
   color: var(--eva-control-text) !important;
-  border-color: var(--eva-border) !important;
+  border-color: var(--eva-glass-border) !important;
   background: var(--eva-control) !important;
-  box-shadow: var(--eva-shadow-soft);
+  box-shadow: var(--eva-glass-shadow-soft);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -278,12 +281,13 @@ textarea::placeholder {
 .eva-bottom-nav,
 #evaNavShell,
 #evaMenuPanel {
-  background: linear-gradient(145deg, var(--eva-surface-strong), var(--eva-surface)) !important;
-  border-color: var(--eva-border) !important;
-  box-shadow: var(--eva-shadow) !important;
-  color: var(--eva-text) !important;
-  backdrop-filter: blur(var(--eva-blur)) saturate(170%) !important;
-  -webkit-backdrop-filter: blur(var(--eva-blur)) saturate(170%) !important;
+  background:
+    linear-gradient(145deg, rgba(28, 32, 42, 0.84), rgba(20, 24, 32, 0.76)) !important;
+  border-color: rgba(255,255,255,0.20) !important;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.30), inset 0 1px 1px rgba(255,255,255,0.18) !important;
+  color: #ffffff !important;
+  backdrop-filter: blur(var(--eva-blur)) saturate(175%) !important;
+  -webkit-backdrop-filter: blur(var(--eva-blur)) saturate(175%) !important;
 }
 
 .eva-brand-title,
