@@ -31,10 +31,7 @@ export function isCurrentPage(path) {
 
 export function getStoredUser() {
   try {
-    const raw =
-      localStorage.getItem("evaraos-user") ||
-      sessionStorage.getItem("evaraos-user");
-
+    const raw = localStorage.getItem("evaraos-user") || sessionStorage.getItem("evaraos-user");
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -44,23 +41,8 @@ export function getStoredUser() {
 export function isPrivateRoutePending() {
   const mode = document.body?.dataset?.routeGuard || "";
   const path = window.location.pathname || "";
-
-  const privatePage =
-    mode === "private" ||
-    path.includes("/dashboard.html") ||
-    path.includes("/companies.html") ||
-    path.includes("/users.html") ||
-    path.includes("/leads.html") ||
-    path.includes("/jobs.html") ||
-    path.includes("/qa.html") ||
-    path.includes("/settings.html") ||
-    path.includes("/settings/");
-
-  const authResolving =
-    document.documentElement.classList.contains("auth-pending") ||
-    document.body?.classList.contains("auth-pending") ||
-    document.body?.classList.contains("app-loading");
-
+  const privatePage = mode === "private" || path.includes("/dashboard.html") || path.includes("/companies.html") || path.includes("/users.html") || path.includes("/leads.html") || path.includes("/jobs.html") || path.includes("/qa.html") || path.includes("/settings.html") || path.includes("/settings/");
+  const authResolving = document.documentElement.classList.contains("auth-pending") || document.body?.classList.contains("auth-pending") || document.body?.classList.contains("app-loading");
   return privatePage && authResolving;
 }
 
@@ -87,28 +69,20 @@ export function getDisplayName() {
 export function getAppearanceTheme() {
   try {
     const raw = localStorage.getItem("evaraos-appearance");
-
     if (raw) {
       const appearance = JSON.parse(raw);
-
       if (appearance.mode === "light") return "light";
-      if (appearance.mode === "galaxy") return "galaxy";
-
-      if (appearance.mode === "custom") {
-        if (appearance.baseFamily === "light") return "light";
-        if (appearance.baseFamily === "galaxy") return "galaxy";
-        return "dark";
-      }
+      if (appearance.mode === "dark") return "dark";
+      if (appearance.mode === "custom") return appearance.baseFamily === "light" ? "light" : "dark";
     }
   } catch {}
 
   const docTheme = document.documentElement.getAttribute("data-theme");
-  if (docTheme === "light" || docTheme === "galaxy") return docTheme;
-  return "dark";
+  return docTheme === "light" ? "light" : "dark";
 }
 
 export function setTheme(theme) {
-  const safe = theme === "light" || theme === "galaxy" ? theme : "dark";
+  const safe = theme === "light" ? "light" : "dark";
   document.documentElement.setAttribute("data-theme", safe);
   syncThemeLabel();
 }
@@ -116,19 +90,12 @@ export function setTheme(theme) {
 export function syncThemeLabel() {
   const label = document.querySelector("[data-theme-label]");
   if (!label) return;
-
-  const theme = getAppearanceTheme();
-
-  if (theme === "light") label.textContent = "Light mode";
-  else if (theme === "galaxy") label.textContent = "Galaxy mode";
-  else label.textContent = "Dark mode";
+  label.textContent = getAppearanceTheme() === "light" ? "Light mode" : "Dark mode";
 }
 
 export function forcePageVisible() {
-  document.documentElement.classList.remove("auth-pending");
-  document.documentElement.classList.remove("boot-pending");
-  document.body?.classList.remove("auth-pending");
-  document.body?.classList.remove("app-loading");
+  document.documentElement.classList.remove("auth-pending", "boot-pending");
+  document.body?.classList.remove("auth-pending", "app-loading");
   document.body?.classList.add("app-ready");
 }
 
@@ -136,70 +103,28 @@ export function getVisibleLinks() {
   const role = getRole();
   const authed = isAuthenticated();
 
-  const main = authed
-    ? [
-        ...NAV_PAGES.common,
-        ...NAV_PAGES.authedMain,
-        ...(role === "owner" ? NAV_PAGES.ownerOnly : [])
-      ]
-    : [
-        ...NAV_PAGES.common,
-        ...NAV_PAGES.guestMain
-      ];
+  const main = authed ? [...NAV_PAGES.common, ...NAV_PAGES.authedMain, ...(role === "owner" ? NAV_PAGES.ownerOnly : [])] : [...NAV_PAGES.common, ...NAV_PAGES.guestMain];
+  const quick = authed ? [
+    { page: "dashboard.html", label: "Dashboard", icon: "dashboard", bubble: "dashboard" },
+    { page: "settings.html", label: "Settings", icon: "settings", bubble: "settings" },
+    { page: "index.html", label: "Home", icon: "home", bubble: "home" }
+  ] : [
+    { page: "login.html", label: "Login", icon: "login", bubble: "login" },
+    { page: "signup.html", label: "Sign Up", icon: "signup", bubble: "signup" },
+    { page: "index.html", label: "Home", icon: "home", bubble: "home" }
+  ];
 
-  const quick = authed
-    ? [
-        { page: "dashboard.html", label: "Dashboard", icon: "dashboard", bubble: "dashboard" },
-        { page: "settings.html", label: "Settings", icon: "settings", bubble: "settings" },
-        { page: "index.html", label: "Home", icon: "home", bubble: "home" }
-      ]
-    : [
-        { page: "login.html", label: "Login", icon: "login", bubble: "login" },
-        { page: "signup.html", label: "Sign Up", icon: "signup", bubble: "signup" },
-        { page: "index.html", label: "Home", icon: "home", bubble: "home" }
-      ];
-
-  return {
-    main,
-    quick,
-    authed,
-    role,
-    displayName: getDisplayName()
-  };
+  return { main, quick, authed, role, displayName: getDisplayName() };
 }
 
 export function navHaptic(ms = 8) {
-  try {
-    if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
-      navigator.vibrate(ms);
-    }
-  } catch {}
+  try { if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") navigator.vibrate(ms); } catch {}
 }
 
-export function getMenuZone() {
-  return document.getElementById("evaMenuZone");
-}
-
-export function getMenuBtn() {
-  return document.getElementById("evaMenuBtn");
-}
-
-export function getMenuPanel() {
-  return document.getElementById("evaMenuPanel");
-}
-
-export function getNavShell() {
-  return document.getElementById("evaNavShell");
-}
-
-export function getBrandBlock() {
-  return document.getElementById("evaBrandBlock");
-}
-
-export function getNavPill() {
-  return document.getElementById("evaNavPill");
-}
-
-export function getQuickBubbles() {
-  return document.getElementById("evaQuickBubbles");
-}
+export function getMenuZone() { return document.getElementById("evaMenuZone"); }
+export function getMenuBtn() { return document.getElementById("evaMenuBtn"); }
+export function getMenuPanel() { return document.getElementById("evaMenuPanel"); }
+export function getNavShell() { return document.getElementById("evaNavShell"); }
+export function getBrandBlock() { return document.getElementById("evaBrandBlock"); }
+export function getNavPill() { return document.getElementById("evaNavPill"); }
+export function getQuickBubbles() { return document.getElementById("evaQuickBubbles"); }
