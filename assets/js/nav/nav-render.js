@@ -7,6 +7,8 @@ import {
 
 import { iconSvg } from "./nav-icons.js";
 
+const NAV_RENDER_BUILD = "nav-render-no-logout-20260504";
+
 function appTile(page, label, icon) {
   const href = buildHref(page);
   const safeLabel = String(label || "").toLowerCase();
@@ -57,12 +59,12 @@ export function renderNav() {
 
   const accountTools = groups.authed
     ? `
-      <section class="eva-menu-section eva-account-section" id="evaAuthLinks">
+      <section class="eva-menu-section eva-account-section" id="evaAuthLinks" data-render-build="${NAV_RENDER_BUILD}">
         <div class="eva-section-head"><p>Session</p><h3>Account Tools</h3></div>
       </section>
     `
     : `
-      <section class="eva-menu-section eva-account-section" id="evaAuthLinks">
+      <section class="eva-menu-section eva-account-section" id="evaAuthLinks" data-render-build="${NAV_RENDER_BUILD}">
         <div class="eva-section-head"><p>Access</p><h3>Account</h3></div>
         <div class="eva-app-grid">
           ${accountAccess.map((item) => appTile(item.page, item.label, item.icon)).join("")}
@@ -71,7 +73,7 @@ export function renderNav() {
     `;
 
   mount.innerHTML = `
-    <div class="eva-nav-layer">
+    <div class="eva-nav-layer" data-render-build="${NAV_RENDER_BUILD}">
       <header class="eva-nav-shell" id="evaNavShell">
         <div class="eva-nav-pill glass-shell" id="evaNavPill">
           <div class="eva-left-spacer" aria-hidden="true"></div>
