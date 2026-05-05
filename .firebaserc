@@ -6,7 +6,7 @@
     "evaraos-web": {
       "hosting": {
         "production": [
-          "evaraos"
+          "evaraos-web"
         ]
       }
     }
