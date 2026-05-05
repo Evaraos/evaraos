@@ -60,10 +60,10 @@ export function renderNav() {
       <section class="eva-menu-section eva-account-section" id="evaAuthLinks">
         <div class="eva-section-head"><p>Session</p><h3>Account Tools</h3></div>
         <div class="eva-app-grid eva-account-grid">
-          <button type="button" class="eva-menu-app-launcher" id="evaLogoutBtn" data-label="logout" aria-label="Logout">
+          <a href="#logout" class="eva-menu-app-launcher" id="evaLogoutBtn" data-label="logout" data-action="logout" aria-label="Logout" role="button">
             <span class="eva-menu-app-square">${iconSvg("logout")}</span>
             <span class="eva-menu-app-name">Logout</span>
-          </button>
+          </a>
         </div>
       </section>
     `
