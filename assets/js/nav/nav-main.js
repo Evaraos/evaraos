@@ -1,34 +1,34 @@
-import { NAV_STATE } from "./nav-config.js?v=20260504-final";
+import { NAV_STATE } from "./nav-config.js";
 
 import {
   getNavShell,
   setTheme,
   getAppearanceTheme,
   syncThemeLabel
-} from "./nav-utils.js?v=20260504-final";
+} from "./nav-utils.js";
 
 import {
   renderNav
-} from "./nav-render.js?v=20260504-final";
+} from "./nav-render.js";
 
 import {
   applyProgress,
   atTopOfPage,
   bindScrollBehavior,
   animateNav
-} from "./nav-scroll.js?v=20260504-final";
+} from "./nav-scroll.js";
 
 import {
   bindMenu
-} from "./nav-menu.js?v=20260504-final";
+} from "./nav-menu.js";
 
 import {
   bindAllNavEvents
-} from "./nav-events.js?v=20260504-final";
+} from "./nav-events.js";
 
 import {
   bindRuntimeRefresh
-} from "./nav-session.js?v=20260504-final";
+} from "./nav-session.js";
 
 function bootReadySignal() {
   if (NAV_STATE.hasBootAnimated) return;
@@ -65,7 +65,7 @@ export function initNav() {
     shell.style.setProperty("--nav-progress", immediate.toFixed(4));
     shell.classList.toggle("expanded", immediate === 1);
     shell.classList.toggle("compact", immediate !== 1);
-    shell.dataset.navBuild = "20260504-final";
+    shell.dataset.navBuild = "unified-20260504";
   }
 
   applyProgress(immediate);
