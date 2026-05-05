@@ -1,0 +1,211 @@
+/* EVARAOS APP SYSTEM / PHASE A
+   Shared visual language for authenticated app surfaces.
+   Scope: auth + dashboard cards, buttons, inputs, badges.
+*/
+
+:root {
+  --eva-app-glass-radius-xl: 32px;
+  --eva-app-glass-radius-lg: 26px;
+  --eva-app-glass-blur: 26px;
+  --eva-app-glass-saturation: 175%;
+  --eva-app-border-light: rgba(255, 255, 255, 0.56);
+  --eva-app-border-dark: rgba(255, 255, 255, 0.14);
+  --eva-app-shadow-light: 0 16px 38px rgba(15, 23, 42, 0.10), inset 0 1px 1px rgba(255,255,255,0.70);
+  --eva-app-shadow-dark: 0 18px 44px rgba(0, 0, 0, 0.32), inset 0 1px 1px rgba(255,255,255,0.14);
+}
+
+.login-page .glass-card,
+.login-page .aurora-card,
+.login-page .auth-panel,
+.login-page .login-panel,
+.login-page .input-shell,
+.login-page .password-wrap,
+.login-page .remember-row,
+.dashboard-body .glass-card,
+.dashboard-body .aurora-card,
+.dashboard-body .dashboard-sidebar-inner,
+.dashboard-body .dashboard-panel,
+.dashboard-body .dashboard-overview,
+.dashboard-body .dashboard-hero,
+.dashboard-body .dashboard-hero-panel,
+.dashboard-body .dashboard-stat-card,
+.dashboard-body .dashboard-list-item,
+.dashboard-body .dashboard-feed-item,
+.dashboard-body .dashboard-role-card,
+.dashboard-body .dashboard-progress-row,
+.dashboard-body .dashboard-state-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--eva-app-border-light) !important;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,0.60), rgba(255,255,255,0.18) 58%, rgba(255,255,255,0.34)) !important;
+  box-shadow: var(--eva-app-shadow-light) !important;
+  backdrop-filter: blur(var(--eva-app-glass-blur)) saturate(var(--eva-app-glass-saturation)) !important;
+  -webkit-backdrop-filter: blur(var(--eva-app-glass-blur)) saturate(var(--eva-app-glass-saturation)) !important;
+  transform: translateZ(0);
+}
+
+html[data-theme="dark"] .login-page .glass-card,
+html[data-theme="dark"] .login-page .aurora-card,
+html[data-theme="dark"] .login-page .auth-panel,
+html[data-theme="dark"] .login-page .login-panel,
+html[data-theme="dark"] .login-page .input-shell,
+html[data-theme="dark"] .login-page .password-wrap,
+html[data-theme="dark"] .login-page .remember-row,
+html[data-theme="dark"] .dashboard-body .glass-card,
+html[data-theme="dark"] .dashboard-body .aurora-card,
+html[data-theme="dark"] .dashboard-body .dashboard-sidebar-inner,
+html[data-theme="dark"] .dashboard-body .dashboard-panel,
+html[data-theme="dark"] .dashboard-body .dashboard-overview,
+html[data-theme="dark"] .dashboard-body .dashboard-hero,
+html[data-theme="dark"] .dashboard-body .dashboard-hero-panel,
+html[data-theme="dark"] .dashboard-body .dashboard-stat-card,
+html[data-theme="dark"] .dashboard-body .dashboard-list-item,
+html[data-theme="dark"] .dashboard-body .dashboard-feed-item,
+html[data-theme="dark"] .dashboard-body .dashboard-role-card,
+html[data-theme="dark"] .dashboard-body .dashboard-progress-row,
+html[data-theme="dark"] .dashboard-body .dashboard-state-card,
+html[data-theme="galaxy"] .login-page .glass-card,
+html[data-theme="galaxy"] .login-page .aurora-card,
+html[data-theme="galaxy"] .login-page .auth-panel,
+html[data-theme="galaxy"] .login-page .login-panel,
+html[data-theme="galaxy"] .login-page .input-shell,
+html[data-theme="galaxy"] .login-page .password-wrap,
+html[data-theme="galaxy"] .login-page .remember-row,
+html[data-theme="galaxy"] .dashboard-body .glass-card,
+html[data-theme="galaxy"] .dashboard-body .aurora-card,
+html[data-theme="galaxy"] .dashboard-body .dashboard-sidebar-inner,
+html[data-theme="galaxy"] .dashboard-body .dashboard-panel,
+html[data-theme="galaxy"] .dashboard-body .dashboard-overview,
+html[data-theme="galaxy"] .dashboard-body .dashboard-hero,
+html[data-theme="galaxy"] .dashboard-body .dashboard-hero-panel,
+html[data-theme="galaxy"] .dashboard-body .dashboard-stat-card,
+html[data-theme="galaxy"] .dashboard-body .dashboard-list-item,
+html[data-theme="galaxy"] .dashboard-body .dashboard-feed-item,
+html[data-theme="galaxy"] .dashboard-body .dashboard-role-card,
+html[data-theme="galaxy"] .dashboard-body .dashboard-progress-row,
+html[data-theme="galaxy"] .dashboard-body .dashboard-state-card {
+  border-color: var(--eva-app-border-dark) !important;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,0.13), rgba(255,255,255,0.035) 58%, rgba(255,255,255,0.075)) !important;
+  box-shadow: var(--eva-app-shadow-dark) !important;
+}
+
+.login-page .glass-card::before,
+.login-page .aurora-card::before,
+.login-page .auth-panel::before,
+.login-page .login-panel::before,
+.dashboard-body .glass-card::before,
+.dashboard-body .aurora-card::before,
+.dashboard-body .dashboard-sidebar-inner::before,
+.dashboard-body .dashboard-panel::before,
+.dashboard-body .dashboard-overview::before,
+.dashboard-body .dashboard-hero::before,
+.dashboard-body .dashboard-hero-panel::before,
+.dashboard-body .dashboard-stat-card::before,
+.dashboard-body .dashboard-list-item::before,
+.dashboard-body .dashboard-feed-item::before,
+.dashboard-body .dashboard-role-card::before,
+.dashboard-body .dashboard-progress-row::before,
+.dashboard-body .dashboard-state-card::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,0.30), transparent 38%),
+    linear-gradient(135deg, rgba(255,255,255,0.16), transparent 52%);
+  opacity: .62;
+  z-index: 0;
+}
+
+.login-page .glass-card > *,
+.login-page .aurora-card > *,
+.login-page .auth-panel > *,
+.login-page .login-panel > *,
+.dashboard-body .glass-card > *,
+.dashboard-body .aurora-card > *,
+.dashboard-body .dashboard-sidebar-inner > *,
+.dashboard-body .dashboard-panel > *,
+.dashboard-body .dashboard-overview > *,
+.dashboard-body .dashboard-hero > *,
+.dashboard-body .dashboard-hero-panel > *,
+.dashboard-body .dashboard-stat-card > *,
+.dashboard-body .dashboard-list-item > *,
+.dashboard-body .dashboard-feed-item > *,
+.dashboard-body .dashboard-role-card > *,
+.dashboard-body .dashboard-progress-row > *,
+.dashboard-body .dashboard-state-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.login-page .btn,
+.dashboard-body .btn,
+.dashboard-body .dashboard-nav-link,
+.dashboard-body .dashboard-status-pill,
+.dashboard-body .dashboard-mini-badge {
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform .18s cubic-bezier(.19,1,.22,1),
+    box-shadow .18s ease,
+    background .18s ease,
+    border-color .18s ease !important;
+}
+
+.login-page .btn:active,
+.dashboard-body .btn:active,
+.dashboard-body .dashboard-nav-link:active {
+  transform: scale(.985) translateY(1px) !important;
+}
+
+.dashboard-body .dashboard-nav-link,
+.dashboard-body .dashboard-status-pill,
+.dashboard-body .dashboard-mini-badge,
+.dashboard-body .dashboard-avatar,
+.dashboard-body .dashboard-avatar-large {
+  border-color: rgba(255,255,255,0.38) !important;
+  background: rgba(255,255,255,0.22) !important;
+  backdrop-filter: blur(18px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
+}
+
+html[data-theme="dark"] .dashboard-body .dashboard-nav-link,
+html[data-theme="dark"] .dashboard-body .dashboard-status-pill,
+html[data-theme="dark"] .dashboard-body .dashboard-mini-badge,
+html[data-theme="dark"] .dashboard-body .dashboard-avatar,
+html[data-theme="dark"] .dashboard-body .dashboard-avatar-large,
+html[data-theme="galaxy"] .dashboard-body .dashboard-nav-link,
+html[data-theme="galaxy"] .dashboard-body .dashboard-status-pill,
+html[data-theme="galaxy"] .dashboard-body .dashboard-mini-badge,
+html[data-theme="galaxy"] .dashboard-body .dashboard-avatar,
+html[data-theme="galaxy"] .dashboard-body .dashboard-avatar-large {
+  border-color: rgba(255,255,255,0.13) !important;
+  background: rgba(255,255,255,0.07) !important;
+}
+
+.login-page .login-shell,
+.dashboard-body .dashboard-shell,
+.dashboard-body .dashboard-main {
+  animation: evaAppPageRise .38s cubic-bezier(.19,1,.22,1) both;
+}
+
+@keyframes evaAppPageRise {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(.994);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-page .login-shell,
+  .dashboard-body .dashboard-shell,
+  .dashboard-body .dashboard-main {
+    animation: none !important;
+  }
+}
