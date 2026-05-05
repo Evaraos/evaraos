@@ -25,14 +25,8 @@
     radial-gradient(circle at 78% 18%, rgba(255,255,255,0.10), transparent 22%),
     radial-gradient(circle at 14% 82%, rgba(255,255,255,0.06), transparent 24%);
   pointer-events: none;
-  opacity: 0.94;
+  opacity: 0.72;
   z-index: 0;
-}
-
-  background:
-    radial-gradient(circle at 78% 18%, rgba(255, 196, 250, 0.16), transparent 20%),
-    radial-gradient(circle at 12% 84%, rgba(130, 116, 255, 0.14), transparent 22%),
-    radial-gradient(circle at 46% 26%, rgba(255,255,255,0.08), transparent 14%);
 }
 
 .hero-grid {
@@ -59,7 +53,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.18em;
-  opacity: 0.72;
+  color: var(--eva-text-muted, rgba(8, 34, 28, 0.48));
 }
 
 .hero-title {
@@ -69,6 +63,7 @@
   letter-spacing: -0.056em;
   max-width: 11.5ch;
   text-wrap: balance;
+  color: var(--eva-text-strong, #061b16);
 }
 
 .hero-subtitle {
@@ -76,7 +71,7 @@
   font-size: clamp(1.05rem, 2vw, 1.34rem);
   line-height: 1.74;
   max-width: 68ch;
-  opacity: 0.92;
+  color: var(--eva-text-soft, rgba(8, 34, 28, 0.68));
   text-wrap: pretty;
 }
 
@@ -98,7 +93,7 @@
   font-weight: 800;
   font-size: 1rem;
   letter-spacing: -0.02em;
-  color: inherit;
+  color: var(--eva-control-text, #0a211b);
   position: relative;
   overflow: hidden;
   isolation: isolate;
@@ -144,7 +139,7 @@
 
 .stats-card p {
   margin: 0;
-  opacity: 0.72;
+  color: var(--eva-text-soft, rgba(8, 34, 28, 0.68));
   font-weight: 700;
   letter-spacing: 0.02em;
 }
@@ -155,6 +150,7 @@
   line-height: 1.04;
   letter-spacing: -0.03em;
   text-wrap: balance;
+  color: var(--eva-text-strong, #061b16);
 }
 
 .stats-card::before,
@@ -177,7 +173,7 @@
       rgba(255,255,255,0.04) 34%,
       transparent 62%
     );
-  opacity: 0.86;
+  opacity: 0.64;
   z-index: 0;
 }
 
@@ -217,11 +213,12 @@
   line-height: 1;
   letter-spacing: -0.03em;
   text-wrap: balance;
+  color: var(--eva-text-strong, #061b16);
 }
 
 .section-head p {
   margin: 8px 0 0;
-  opacity: 0.76;
+  color: var(--eva-text-soft, rgba(8, 34, 28, 0.68));
   max-width: 70ch;
   line-height: 1.74;
   text-wrap: pretty;
@@ -264,6 +261,7 @@
   font-size: 1.12rem;
   line-height: 1.14;
   letter-spacing: -0.02em;
+  color: var(--eva-text-strong, #061b16);
 }
 
 .feature-card p,
@@ -271,7 +269,7 @@
 .category-card p,
 .info-card p {
   margin: 0;
-  opacity: 0.76;
+  color: var(--eva-text-soft, rgba(8, 34, 28, 0.68));
   line-height: 1.64;
   text-wrap: pretty;
 }
@@ -288,8 +286,8 @@
   font-size: 0.84rem;
   font-weight: 800;
   letter-spacing: 0.02em;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: var(--eva-surface-soft, rgba(255,255,255,0.42));
+  border: 1px solid var(--eva-border, rgba(255,255,255,0.64));
   width: fit-content;
   position: relative;
   overflow: hidden;
@@ -318,11 +316,12 @@
   line-height: 1;
   letter-spacing: -0.03em;
   text-wrap: balance;
+  color: var(--eva-text-strong, #061b16);
 }
 
 .cta-panel p {
   margin: 0;
-  opacity: 0.78;
+  color: var(--eva-text-soft, rgba(8, 34, 28, 0.68));
   max-width: 70ch;
   line-height: 1.74;
   text-wrap: pretty;
@@ -364,7 +363,7 @@
 }
 
 .site-footer-left span {
-  opacity: 0.68;
+  color: var(--eva-text-soft, rgba(8, 34, 28, 0.68));
 }
 
 .site-footer-right a {
@@ -392,7 +391,7 @@
   .home-shell {
     width: min(calc(100% - 16px), 100%);
     margin-bottom: 56px;
-    padding-top: var(--eva-mobile-page-top-space, 118px);
+    padding-top: 16px;
   }
 
   .section-panel,
@@ -404,6 +403,20 @@
   .hero-home {
     padding: 0;
     min-height: auto;
+    display: block;
+    margin-top: -4px;
+  }
+
+  .hero-grid {
+    display: block;
+  }
+
+  .hero-content {
+    display: grid;
+    align-content: start;
+    gap: 18px;
+    padding-top: 0;
+    margin-top: 0;
   }
 
   .features-grid,
@@ -443,177 +456,12 @@
   }
 }
 
-/* =========================================================
-   Evaraos Home Nav Spacing Correction
-   Balances Dynamic Island nav with hero content.
-   ========================================================= */
-
-@media (max-width: 680px) {
-  .home-shell {
-    padding-top: var(--eva-mobile-page-top-space, 118px) !important;
-  }
-
-  .hero-home {
-    min-height: auto !important;
-    align-items: start !important;
-    padding-top: 0 !important;
-  }
-
-  .hero-grid,
-  .hero-content {
-    align-items: start !important;
-    align-content: start !important;
-  }
-}
-
-@media (max-width: 430px) {
-  .home-shell {
-    padding-top: var(--eva-mobile-page-top-space, 112px) !important;
-  }
-}
-
 @media (display-mode: standalone) and (max-width: 680px) {
   .home-shell {
-    padding-top: var(--eva-mobile-page-top-space, 112px) !important;
-  }
-}
-
-/* =========================================================
-   Home Hero Tighten v2
-   Pulls homepage content closer under the Dynamic Island nav.
-   ========================================================= */
-
-@media (max-width: 680px) {
-  .home-shell {
-    padding-top: 58px !important;
+    padding-top: 16px;
   }
 
   .hero-home {
-    min-height: auto !important;
-    display: block !important;
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-  }
-
-  .hero-grid {
-    display: block !important;
-    margin-top: 0 !important;
-  }
-
-  .hero-content {
-    display: grid !important;
-    align-content: start !important;
-    gap: 18px !important;
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-  }
-
-  .hero-kicker {
-    margin-top: 0 !important;
-  }
-}
-
-@media (max-width: 430px) {
-  .home-shell {
-    padding-top: 52px !important;
-  }
-}
-
-@media (display-mode: standalone) and (max-width: 680px) {
-  .home-shell {
-    padding-top: 54px !important;
-  }
-}
-
-/* =========================================================
-   Home Hero Final Position
-   Matches the tighter screenshot target under the nav.
-   ========================================================= */
-
-@media (max-width: 680px) {
-  .home-shell {
-    padding-top: 0px !important;
-  }
-
-  .hero-home {
-    margin-top: -18px !important;
-    padding-top: 0 !important;
-    min-height: auto !important;
-    display: block !important;
-  }
-
-  .hero-grid {
-    margin-top: 0 !important;
-    display: block !important;
-  }
-
-  .hero-content {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-    gap: 18px !important;
-  }
-}
-
-@media (max-width: 430px) {
-  .home-shell {
-    padding-top: 0px !important;
-  }
-
-  .hero-home {
-    margin-top: -22px !important;
-  }
-}
-
-@media (display-mode: standalone) and (max-width: 680px) {
-  .home-shell {
-    padding-top: 2px !important;
-  }
-
-  .hero-home {
-    margin-top: -16px !important;
-  }
-}
-
-/* =========================================================
-   FINAL HOME BALANCE
-   Moves homepage content down slightly so the nav has
-   breathing room while keeping the hero tight.
-   ========================================================= */
-
-@media (max-width: 680px) {
-  .home-shell {
-    padding-top: 18px !important;
-  }
-
-  .hero-home {
-    margin-top: -6px !important;
-  }
-
-  .hero-kicker {
-    margin-top: 4px !important;
-  }
-}
-
-@media (max-width: 430px) {
-  .home-shell {
-    padding-top: 16px !important;
-  }
-
-  .hero-home {
-    margin-top: -4px !important;
-  }
-
-  .hero-kicker {
-    margin-top: 4px !important;
-  }
-}
-
-@media (display-mode: standalone) and (max-width: 680px) {
-  .home-shell {
-    padding-top: 16px !important;
-  }
-
-  .hero-home {
-    margin-top: -4px !important;
+    margin-top: -4px;
   }
 }
