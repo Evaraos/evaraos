@@ -58,10 +58,7 @@ export function renderNav() {
   const accountTools = groups.authed
     ? `
       <section class="eva-menu-section eva-account-section" id="evaAuthLinks">
-        <div class="eva-section-head eva-section-head-row">
-          <div><p>Session</p><h3>Account Tools</h3></div>
-          <button type="button" class="eva-logout-text-action" id="evaLogoutBtn" data-action="logout" aria-label="Logout">Logout</button>
-        </div>
+        <div class="eva-section-head"><p>Session</p><h3>Account Tools</h3></div>
       </section>
     `
     : `
