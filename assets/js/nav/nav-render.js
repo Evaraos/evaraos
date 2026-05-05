@@ -7,17 +7,20 @@ import {
 
 import { iconSvg } from "./nav-icons.js";
 
-const NAV_RENDER_BUILD = "nav-render-no-logout-20260504";
+const NAV_RENDER_BUILD = "nav-render-clean-logout-20260505";
 
-function appTile(page, label, icon) {
-  const href = buildHref(page);
+function appTile(page, label, icon, options = {}) {
+  const href = options.href || buildHref(page);
   const safeLabel = String(label || "").toLowerCase();
+  const attrs = options.action
+    ? `data-action="${options.action}" id="${options.id || ""}" role="button"`
+    : `data-menu-link="${href}"`;
 
   return `
     <a
       href="${href}"
       class="eva-menu-app-launcher"
-      data-menu-link="${href}"
+      ${attrs}
       data-label="${safeLabel}"
       aria-label="${label}"
     >
@@ -43,28 +46,6 @@ function menuSection(title, subtitle, items, className = "") {
   `;
 }
 
-function removeLegacyLogoutArtifacts(scope = document) {
-  const targets = [
-    "#evaLogoutBtn",
-    "[data-action='logout']",
-    "[data-label='logout']",
-    ".eva-logout-text-action"
-  ];
-
-  targets.forEach((selector) => {
-    scope.querySelectorAll?.(selector).forEach((node) => node.remove());
-  });
-
-  scope.querySelectorAll?.("#evaAuthLinks a, #evaAuthLinks button, #evaAuthLinks .eva-menu-app-launcher, #evaAuthLinks .eva-app-tile").forEach((node) => {
-    const text = (node.textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
-    const aria = (node.getAttribute?.("aria-label") || "").trim().toLowerCase();
-
-    if (text === "logout" || text === "sign out" || aria === "logout" || aria === "sign out") {
-      node.remove();
-    }
-  });
-}
-
 export function navLink(page, label, icon) {
   return appTile(page, label, icon);
 }
@@ -72,8 +53,6 @@ export function navLink(page, label, icon) {
 export function renderNav() {
   const mount = getMount();
   if (!mount) return false;
-
-  removeLegacyLogoutArtifacts(document);
 
   const groups = getVisibleLinks();
 
@@ -85,6 +64,13 @@ export function renderNav() {
     ? `
       <section class="eva-menu-section eva-account-section" id="evaAuthLinks" data-render-build="${NAV_RENDER_BUILD}">
         <div class="eva-section-head"><p>Session</p><h3>Account Tools</h3></div>
+        <div class="eva-app-grid eva-account-grid">
+          ${appTile("login.html", "Logout", "logout", {
+            href: "#logout",
+            action: "logout",
+            id: "evaLogoutBtn"
+          })}
+        </div>
       </section>
     `
     : `
@@ -130,8 +116,6 @@ export function renderNav() {
       </div>
     </div>
   `;
-
-  removeLegacyLogoutArtifacts(mount);
 
   return true;
 }
