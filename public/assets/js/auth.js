@@ -75,87 +75,12 @@ function safeProfileName(user) {
 }
 
 function withTimeout(promise, ms, message = "Request timed out.") {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) => {
-      setTimeout(() => reject(new Error(message)), ms);
-    })
-  ]);
-}
+  let timeoutId;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), ms);
+  });
 
-async function backfillLegacyUserDoc(user) {
-  if (!user?.uid) {
-    return {
-      role: DEFAULT_PUBLIC_ROLE,
-      username: "",
-      status: DEFAULT_PUBLIC_STATUS,
-      approvalStatus: DEFAULT_PUBLIC_APPROVAL,
-      companyId: ""
-    };
-  }
-
-  const userRef = doc(db, "users", user.uid);
-  const snap = await getDoc(userRef);
-
-  if (!snap.exists()) {
-    const fallbackName = safeProfileName(user);
-    const userDoc = {
-      uid: user.uid,
-      id: user.uid,
-      email: user.email || "",
-      username: "",
-      usernameLower: "",
-      displayName: fallbackName,
-      fullName: fallbackName,
-      name: fallbackName,
-      role: DEFAULT_PUBLIC_ROLE,
-      phone: "",
-      bio: "",
-      status: DEFAULT_PUBLIC_STATUS,
-      approvalStatus: DEFAULT_PUBLIC_APPROVAL,
-      companyId: "",
-      companyName: "",
-      companySlug: "",
-      companyCategory: "",
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    };
-    await setDoc(userRef, userDoc, { merge: true });
-    return userDoc;
-  }
-
-  const data = snap.data() || {};
-  const username = String(data.username || "").trim();
-  const patch = {};
-
-  if (!data.displayName && data.fullName) patch.displayName = data.fullName;
-  if (!data.fullName && data.displayName) patch.fullName = data.displayName;
-  if (!data.name && (data.displayName || data.fullName)) patch.name = data.displayName || data.fullName;
-  if (username && !data.usernameLower) patch.usernameLower = normalizeUsername(username);
-
-  if (Object.keys(patch).length) {
-    patch.updatedAt = serverTimestamp();
-    try {
-      await setDoc(userRef, patch, { merge: true });
-    } catch (error) {
-      console.warn("Legacy profile cleanup skipped by security rules:", error);
-    }
-  }
-
-  return {
-    ...data,
-    ...patch,
-    uid: data.uid || user.uid,
-    id: data.id || user.uid,
-    email: data.email || user.email || "",
-    role: data.role || DEFAULT_PUBLIC_ROLE,
-    status: data.status || DEFAULT_PUBLIC_STATUS,
-    approvalStatus: data.approvalStatus || DEFAULT_PUBLIC_APPROVAL,
-    companyId: typeof data.companyId === "string" ? data.companyId : "",
-    companyName: typeof data.companyName === "string" ? data.companyName : "",
-    companySlug: typeof data.companySlug === "string" ? data.companySlug : "",
-    companyCategory: typeof data.companyCategory === "string" ? data.companyCategory : ""
-  };
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
 }
 
 function authErrorMessage(error, fallback = "Something went wrong. Try again.") {
@@ -184,6 +109,10 @@ function authErrorMessage(error, fallback = "Something went wrong. Try again.") 
 
   if (message.toLowerCase().includes("username not found")) {
     return "Username not found. Use your email or check the spelling.";
+  }
+
+  if (message.toLowerCase().includes("username login timed out") || message.toLowerCase().includes("lookup timed out")) {
+    return "Username login timed out. Use your email to log in, then confirm your username in Settings.";
   }
 
   return error?.message || fallback;
@@ -287,19 +216,17 @@ async function findEmailFromLogin(loginValue) {
 
   const normalized = normalizeUsername(raw);
   const usersRef = collection(db, "users");
+  const lookups = [
+    query(usersRef, where("usernameLower", "==", normalized), limit(1)),
+    query(usersRef, where("username", "==", raw), limit(1))
+  ];
 
-  const exactUsernameQuery = query(usersRef, where("username", "==", raw), limit(1));
-  const exactUsernameSnap = await getDocs(exactUsernameQuery);
-  if (!exactUsernameSnap.empty) {
-    const data = exactUsernameSnap.docs[0].data() || {};
-    if (data.email) return data.email;
-  }
-
-  const normalizedUsernameQuery = query(usersRef, where("usernameLower", "==", normalized), limit(1));
-  const normalizedUsernameSnap = await getDocs(normalizedUsernameQuery);
-  if (!normalizedUsernameSnap.empty) {
-    const data = normalizedUsernameSnap.docs[0].data() || {};
-    if (data.email) return data.email;
+  for (const lookup of lookups) {
+    const snap = await withTimeout(getDocs(lookup), 3500, "Username lookup timed out.");
+    if (!snap.empty) {
+      const data = snap.docs[0].data() || {};
+      if (data.email) return data.email;
+    }
   }
 
   return null;
@@ -315,15 +242,15 @@ async function resolveLoginEmail(loginValue) {
 
   try {
     const resolveUsernameLogin = httpsCallable(functions, "resolveUsernameLogin");
-    const response = await withTimeout(resolveUsernameLogin({ username }), 6000, "Username lookup timed out.");
+    const response = await withTimeout(resolveUsernameLogin({ username }), 2500, "Username callable lookup timed out.");
     const email = String(response?.data?.email || "").trim();
 
     if (email && email.includes("@")) return email;
   } catch (callableError) {
-    console.warn("Username callable lookup failed, falling back to Firestore:", callableError);
+    console.warn("Username callable lookup failed, trying Firestore:", callableError);
   }
 
-  const fallbackEmail = await withTimeout(findEmailFromLogin(raw), 6000, "Username lookup timed out.");
+  const fallbackEmail = await findEmailFromLogin(raw);
 
   if (!fallbackEmail || !fallbackEmail.includes("@")) {
     throw new Error("Username not found. Use your email or check the spelling.");
