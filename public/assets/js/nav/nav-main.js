@@ -30,6 +30,10 @@ import {
   bindRuntimeRefresh
 } from "./nav-session.js";
 
+import {
+  bindNavInteractions
+} from "./nav-interactions.js";
+
 function bootReadySignal() {
   if (NAV_STATE.hasBootAnimated) return;
 
@@ -72,6 +76,7 @@ export function initNav() {
 
   bindAllNavEvents();
   bindMenu();
+  bindNavInteractions();
   bindScrollBehavior();
   bindRuntimeRefresh();
   syncThemeLabel();
