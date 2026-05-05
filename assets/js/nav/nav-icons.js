@@ -2,6 +2,7 @@ export function iconSvg(name) {
   const icons = {
     home: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 3 3 10v11h6v-6h6v6h6V10z"/></svg>`,
     login: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M10 17v-2h4v-2h-4V9l-5 4 5 4Zm9-12H11v2h8v10h-8v2h8a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z"/></svg>`,
+    logout: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M14 7V5H5v14h9v-2H7V7h7Zm2.8 2.2-1.4 1.4 1.4 1.4H11v2h5.8l-1.4 1.4 1.4 1.4L21 13l-4.2-3.8Z"/></svg>`,
     signup: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm-7 9v-1a7 7 0 0 1 14 0v1H5Z"/></svg>`,
     dashboard: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M3 13h8V3H3v10Zm10 8h8v-6h-8v6ZM3 21h8v-6H3v6Zm10-8h8V3h-8v10Z"/></svg>`,
     settings: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M19.14 12.94a7.49 7.49 0 0 0 .05-.94 7.49 7.49 0 0 0-.05-.94l2.03-1.58a.5.5 0 0 0 .12-.65l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.28 7.28 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 13.9 1h-3.8a.5.5 0 0 0-.49.42l-.36 2.54a7.28 7.28 0 0 0-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 7.48a.5.5 0 0 0 .12.65l2.03 1.58c-.03.31-.05.63-.05.94s.02.63.05.94l-2.03 1.58a.5.5 0 0 0-.12.65l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.5.38 1.04.7 1.63.94l.36 2.54a.5.5 0 0 0 .49.42h3.8a.5.5 0 0 0 .49-.42l.36-2.54c.59-.24 1.13-.56 1.63-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.65l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z"/></svg>`,
