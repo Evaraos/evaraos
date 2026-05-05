@@ -1,31 +1,25 @@
-/* EVARAOS APP SYSTEM / LIQUID GLASS THEME ENGINE
-   Simple rule: cards stay the same liquid glass in light and dark.
-   Theme switch changes the page background + text only.
+/* EVARAOS APP SYSTEM / SIMPLE LIQUID GLASS
+   One universal glass style. Theme only changes page background and text.
 */
 
 :root {
   color-scheme: light;
   --eva-page-bg: #f4f7f6;
-  --eva-page-bg-2: #edf2f5;
-  --eva-page-bg-3: #dfeaff;
   --eva-text: #08221c;
   --eva-text-strong: #061b16;
   --eva-text-soft: rgba(8, 34, 28, 0.68);
   --eva-text-muted: rgba(8, 34, 28, 0.48);
+
   --eva-glass-a: rgba(255, 255, 255, 0.76);
   --eva-glass-b: rgba(255, 255, 255, 0.56);
   --eva-glass-c: rgba(255, 255, 255, 0.30);
   --eva-glass-border: rgba(255, 255, 255, 0.68);
-  --eva-glass-border-soft: rgba(255, 255, 255, 0.34);
-  --eva-glass-highlight: rgba(255, 255, 255, 0.40);
   --eva-glass-shadow: 0 22px 60px rgba(26, 42, 68, 0.16), inset 0 1px 1px rgba(255,255,255,0.80);
   --eva-glass-shadow-soft: 0 12px 34px rgba(26, 42, 68, 0.12);
+
   --eva-control: rgba(255, 255, 255, 0.72);
   --eva-control-hover: rgba(255, 255, 255, 0.88);
   --eva-control-text: #0a211b;
-  --eva-bg-glow-a: rgba(152, 183, 255, 0.50);
-  --eva-bg-glow-b: rgba(255, 214, 239, 0.34);
-  --eva-bg-glow-c: rgba(157, 255, 223, 0.22);
   --eva-blur: 30px;
   --eva-motion: cubic-bezier(.19, 1, .22, 1);
 }
@@ -33,63 +27,64 @@
 html[data-theme="dark"] {
   color-scheme: dark;
   --eva-page-bg: #020307;
-  --eva-page-bg-2: #050711;
-  --eva-page-bg-3: #070b18;
   --eva-text: rgba(255, 255, 255, 0.92);
   --eva-text-strong: #ffffff;
   --eva-text-soft: rgba(255, 255, 255, 0.74);
   --eva-text-muted: rgba(255, 255, 255, 0.50);
-  --eva-bg-glow-a: rgba(118, 145, 255, 0.12);
-  --eva-bg-glow-b: rgba(255, 255, 255, 0.04);
-  --eva-bg-glow-c: rgba(95, 167, 255, 0.08);
   --eva-control-text: #ffffff;
 }
 
 html,
 body {
   min-height: 100%;
-  background:
-    radial-gradient(circle at 18% 12%, var(--eva-bg-glow-b), transparent 34%),
-    radial-gradient(circle at 92% 18%, var(--eva-bg-glow-a), transparent 36%),
-    radial-gradient(circle at 62% 92%, var(--eva-bg-glow-c), transparent 42%),
-    linear-gradient(145deg, var(--eva-page-bg), var(--eva-page-bg-2) 56%, var(--eva-page-bg-3)) !important;
+  background: var(--eva-page-bg) !important;
   color: var(--eva-text) !important;
-  transition: background-color .32s var(--eva-motion), color .24s ease;
-}
-
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(255,255,255,0.24), transparent 30%, rgba(255,255,255,0.04));
-  opacity: .48;
-  z-index: -2;
-}
-
-html[data-theme="dark"] body::before {
-  background: linear-gradient(180deg, rgba(255,255,255,0.06), transparent 42%);
-  opacity: .72;
+  transition: background-color .24s var(--eva-motion), color .18s ease;
 }
 
 .page-aurora,
-.page-grid-overlay { pointer-events: none; }
-
-.page-aurora {
-  background:
-    radial-gradient(circle at 20% 20%, var(--eva-bg-glow-b), transparent 34%),
-    radial-gradient(circle at 80% 15%, var(--eva-bg-glow-a), transparent 36%),
-    radial-gradient(circle at 50% 90%, var(--eva-bg-glow-c), transparent 42%) !important;
-  opacity: .62 !important;
-  transition: opacity .32s ease;
+.page-grid-overlay {
+  display: none !important;
 }
 
-html[data-theme="dark"] .page-aurora { opacity: .36 !important; }
+body,
+main,
+section,
+article,
+p,
+h1,
+h2,
+h3,
+h4,
+a,
+span,
+label,
+input,
+textarea,
+select,
+button {
+  color: inherit;
+}
 
-body, main, section, article, p, h1, h2, h3, h4, a, span, label, input, textarea, select, button { color: inherit; }
+h1,
+h2,
+h3,
+.hero-title,
+.login-title,
+.dashboard-hero h1,
+.dashboard-section-head h2 {
+  color: var(--eva-text-strong) !important;
+}
 
-h1, h2, h3, .hero-title, .login-title, .dashboard-hero h1, .dashboard-section-head h2 { color: var(--eva-text-strong) !important; }
-p, .hero-copy, .hero-subtitle, .login-subtitle, .dashboard-hero-text, .dashboard-list-item span, .dashboard-feed-item span { color: var(--eva-text-soft) !important; }
+p,
+.hero-copy,
+.hero-subtitle,
+.login-subtitle,
+.dashboard-hero-text,
+.dashboard-list-item span,
+.dashboard-feed-item span {
+  color: var(--eva-text-soft) !important;
+}
 
 .glass-card,
 .aurora-card,
@@ -134,11 +129,7 @@ p, .hero-copy, .hero-subtitle, .login-subtitle, .dashboard-hero-text, .dashboard
   backdrop-filter: blur(var(--eva-blur)) saturate(175%) !important;
   -webkit-backdrop-filter: blur(var(--eva-blur)) saturate(175%) !important;
   transform: translateZ(0);
-  transition:
-    transform .22s var(--eva-motion),
-    box-shadow .22s ease,
-    border-color .22s ease,
-    background .22s ease;
+  transition: transform .18s var(--eva-motion), box-shadow .18s ease;
 }
 
 .glass-card::before,
@@ -169,56 +160,73 @@ p, .hero-copy, .hero-subtitle, .login-subtitle, .dashboard-hero-text, .dashboard
   inset: 1px;
   border-radius: inherit;
   pointer-events: none;
-  background:
-    radial-gradient(circle at var(--eva-glass-x, 16%) var(--eva-glass-y, 0%), var(--eva-glass-highlight), transparent 38%),
-    linear-gradient(135deg, rgba(255,255,255,0.22), transparent 52%);
-  opacity: .62;
+  background: linear-gradient(135deg, rgba(255,255,255,0.24), transparent 54%);
+  opacity: .58;
   z-index: 0;
-  transition: opacity .22s ease, background .22s ease;
 }
 
-.glass-card:hover,
-.aurora-card:hover,
-.stats-card:hover,
-.feature-card:hover,
-.service-card:hover,
-.category-card:hover,
-.info-card:hover,
-.dashboard-stat-card:hover,
-.dashboard-list-item:hover,
-.dashboard-feed-item:hover {
-  transform: translateY(-2px) translateZ(0);
-  box-shadow: 0 28px 72px rgba(26, 42, 68, 0.18), inset 0 1px 1px rgba(255,255,255,0.82) !important;
-}
-
-.glass-card:hover::before,
-.aurora-card:hover::before,
-.stats-card:hover::before,
-.feature-card:hover::before,
-.service-card:hover::before,
-.category-card:hover::before,
-.info-card:hover::before,
-.dashboard-stat-card:hover::before,
-.dashboard-list-item:hover::before,
-.dashboard-feed-item:hover::before { opacity: .78; }
-
-.glass-card > *, .aurora-card > *, .auth-panel > *, .login-panel > *, .hero-card > *, .stats-card > *, .feature-card > *, .service-card > *, .category-card > *, .info-card > *, .cta-panel > *, .section-panel > *, .site-footer-inner > *, .dashboard-panel > *, .dashboard-overview > *, .dashboard-hero > *, .dashboard-hero-panel > *, .dashboard-stat-card > *, .dashboard-list-item > *, .dashboard-feed-item > *, .dashboard-role-card > *, .dashboard-progress-row > *, .dashboard-state-card > * {
+.glass-card > *,
+.aurora-card > *,
+.auth-panel > *,
+.login-panel > *,
+.hero-card > *,
+.stats-card > *,
+.feature-card > *,
+.service-card > *,
+.category-card > *,
+.info-card > *,
+.cta-panel > *,
+.section-panel > *,
+.site-footer-inner > *,
+.dashboard-panel > *,
+.dashboard-overview > *,
+.dashboard-hero > *,
+.dashboard-hero-panel > *,
+.dashboard-stat-card > *,
+.dashboard-list-item > *,
+.dashboard-feed-item > *,
+.dashboard-role-card > *,
+.dashboard-progress-row > *,
+.dashboard-state-card > * {
   position: relative;
   z-index: 1;
 }
 
-.btn, button, .eva-menu-btn, .eva-theme-btn, .eva-close-btn, .dashboard-nav-link, .dashboard-status-pill, .dashboard-mini-badge, input, textarea, select {
+.btn,
+button,
+.eva-menu-btn,
+.eva-theme-btn,
+.eva-close-btn,
+.dashboard-nav-link,
+.dashboard-status-pill,
+.dashboard-mini-badge,
+input,
+textarea,
+select {
   color: var(--eva-control-text) !important;
   border-color: var(--eva-glass-border) !important;
   background: var(--eva-control) !important;
   box-shadow: var(--eva-glass-shadow-soft);
   -webkit-tap-highlight-color: transparent;
-  transition: transform .18s var(--eva-motion), box-shadow .18s ease, background .18s ease, border-color .18s ease;
+  transition: transform .16s var(--eva-motion), background .16s ease;
 }
 
-.btn:hover, button:hover, .dashboard-nav-link:hover { background: var(--eva-control-hover) !important; transform: translateY(-1px); }
-.btn:active, button:active, .dashboard-nav-link:active { transform: scale(.985) translateY(1px); }
-input::placeholder, textarea::placeholder { color: var(--eva-text-muted) !important; }
+.btn:hover,
+button:hover,
+.dashboard-nav-link:hover {
+  background: var(--eva-control-hover) !important;
+}
+
+.btn:active,
+button:active,
+.dashboard-nav-link:active {
+  transform: scale(.985) translateY(1px);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--eva-text-muted) !important;
+}
 
 .eva-nav-pill,
 .eva-menu-panel,
@@ -234,33 +242,32 @@ input::placeholder, textarea::placeholder { color: var(--eva-text-muted) !import
   -webkit-backdrop-filter: blur(var(--eva-blur)) saturate(175%) !important;
 }
 
-.eva-brand-title, .eva-menu-app-name, .dashboard-nav-link, .dashboard-status-pill, .dashboard-mini-badge { color: var(--eva-text-strong) !important; }
-.eva-brand-subtitle, .dashboard-eyebrow, .dashboard-section-kicker, .dashboard-sidebar-eyebrow { color: var(--eva-text-soft) !important; }
+.eva-brand-title,
+.eva-menu-app-name,
+.dashboard-nav-link,
+.dashboard-status-pill,
+.dashboard-mini-badge {
+  color: var(--eva-text-strong) !important;
+}
+
+.eva-brand-subtitle,
+.dashboard-eyebrow,
+.dashboard-section-kicker,
+.dashboard-sidebar-eyebrow {
+  color: var(--eva-text-soft) !important;
+}
 
 .login-page .login-shell,
 .dashboard-body .dashboard-shell,
 .dashboard-body .dashboard-main,
 .home-page main,
-body:not(.dashboard-body):not(.login-page) main { animation: evaAppPageRise .38s var(--eva-motion) both; }
-
-@keyframes evaAppPageRise {
-  from { opacity: 0; transform: translateY(10px) scale(.994); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+body:not(.dashboard-body):not(.login-page) main {
+  animation: evaAppPageRise .32s var(--eva-motion) both;
 }
 
-@media (hover: none) {
-  .glass-card:hover,
-  .aurora-card:hover,
-  .stats-card:hover,
-  .feature-card:hover,
-  .service-card:hover,
-  .category-card:hover,
-  .info-card:hover,
-  .dashboard-stat-card:hover,
-  .dashboard-list-item:hover,
-  .dashboard-feed-item:hover {
-    transform: translateZ(0);
-  }
+@keyframes evaAppPageRise {
+  from { opacity: 0; transform: translateY(8px) scale(.996); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @media (prefers-reduced-motion: reduce) {
