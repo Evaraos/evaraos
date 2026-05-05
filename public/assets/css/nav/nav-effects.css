@@ -1,0 +1,98 @@
+/* NAV EFFECTS / APPLE-STYLE POLISH */
+
+#evaMenuPanel .eva-menu-app-square {
+  will-change: transform, box-shadow, background;
+}
+
+#evaMenuPanel .eva-menu-app-square::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 7px;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.62);
+  opacity: 0.58;
+  pointer-events: none;
+}
+
+#evaMenuPanel .eva-menu-app-square::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 28% 12%, rgba(255,255,255,0.42), transparent 34%),
+    linear-gradient(115deg, transparent 0%, transparent 36%, rgba(255,255,255,0.28) 46%, transparent 58%, transparent 100%);
+  transform: translateX(-34%);
+  opacity: 0.48;
+  pointer-events: none;
+  transition: transform .42s cubic-bezier(.2,1,.2,1), opacity .22s ease;
+}
+
+#evaMenuPanel .eva-menu-app-launcher:active .eva-menu-app-square {
+  transform: translateY(1px) scale(.94);
+  box-shadow:
+    inset 0 3px 8px rgba(0,0,0,0.22),
+    inset 0 1px 1px rgba(255,255,255,0.32),
+    0 4px 12px rgba(0,0,0,0.16) !important;
+}
+
+#evaMenuPanel .eva-menu-app-launcher:active .eva-menu-app-square::after {
+  transform: translateX(16%);
+  opacity: 0.72;
+}
+
+body.nav-menu-open .eva-menu-section {
+  animation: evaMenuSectionRise .34s cubic-bezier(.2,1,.2,1) both;
+}
+
+body.nav-menu-open .eva-menu-section:nth-of-type(2) {
+  animation-delay: .035s;
+}
+
+body.nav-menu-open .eva-menu-section:nth-of-type(3) {
+  animation-delay: .07s;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-menu-app-launcher {
+  animation: evaAppTilePop .28s cubic-bezier(.2,1.25,.2,1) both;
+}
+
+body.nav-menu-open #evaMenuPanel .eva-menu-app-launcher:nth-child(2) { animation-delay: .015s; }
+body.nav-menu-open #evaMenuPanel .eva-menu-app-launcher:nth-child(3) { animation-delay: .03s; }
+body.nav-menu-open #evaMenuPanel .eva-menu-app-launcher:nth-child(4) { animation-delay: .045s; }
+body.nav-menu-open #evaMenuPanel .eva-menu-app-launcher:nth-child(5) { animation-delay: .06s; }
+body.nav-menu-open #evaMenuPanel .eva-menu-app-launcher:nth-child(6) { animation-delay: .075s; }
+body.nav-menu-open #evaMenuPanel .eva-menu-app-launcher:nth-child(7) { animation-delay: .09s; }
+body.nav-menu-open #evaMenuPanel .eva-menu-app-launcher:nth-child(8) { animation-delay: .105s; }
+
+@keyframes evaMenuSectionRise {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes evaAppTilePop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.nav-menu-open .eva-menu-section,
+  body.nav-menu-open #evaMenuPanel .eva-menu-app-launcher {
+    animation: none !important;
+  }
+}
