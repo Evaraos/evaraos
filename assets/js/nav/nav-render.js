@@ -43,6 +43,28 @@ function menuSection(title, subtitle, items, className = "") {
   `;
 }
 
+function removeLegacyLogoutArtifacts(scope = document) {
+  const targets = [
+    "#evaLogoutBtn",
+    "[data-action='logout']",
+    "[data-label='logout']",
+    ".eva-logout-text-action"
+  ];
+
+  targets.forEach((selector) => {
+    scope.querySelectorAll?.(selector).forEach((node) => node.remove());
+  });
+
+  scope.querySelectorAll?.("#evaAuthLinks a, #evaAuthLinks button, #evaAuthLinks .eva-menu-app-launcher, #evaAuthLinks .eva-app-tile").forEach((node) => {
+    const text = (node.textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
+    const aria = (node.getAttribute?.("aria-label") || "").trim().toLowerCase();
+
+    if (text === "logout" || text === "sign out" || aria === "logout" || aria === "sign out") {
+      node.remove();
+    }
+  });
+}
+
 export function navLink(page, label, icon) {
   return appTile(page, label, icon);
 }
@@ -50,6 +72,8 @@ export function navLink(page, label, icon) {
 export function renderNav() {
   const mount = getMount();
   if (!mount) return false;
+
+  removeLegacyLogoutArtifacts(document);
 
   const groups = getVisibleLinks();
 
@@ -106,6 +130,8 @@ export function renderNav() {
       </div>
     </div>
   `;
+
+  removeLegacyLogoutArtifacts(mount);
 
   return true;
 }
