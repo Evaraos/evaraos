@@ -74,6 +74,15 @@ function safeProfileName(user) {
   return user?.displayName || user?.email || "User";
 }
 
+function withTimeout(promise, ms, message = "Request timed out.") {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(message)), ms);
+    })
+  ]);
+}
+
 async function backfillLegacyUserDoc(user) {
   if (!user?.uid) {
     return {
@@ -149,9 +158,9 @@ async function backfillLegacyUserDoc(user) {
   };
 }
 
-
 function authErrorMessage(error, fallback = "Something went wrong. Try again.") {
   const code = String(error?.code || "");
+  const message = String(error?.message || "");
 
   if (code.includes("invalid-credential") || code.includes("wrong-password") || code.includes("user-not-found")) {
     return "Login failed. Check your email and password.";
@@ -171,6 +180,10 @@ function authErrorMessage(error, fallback = "Something went wrong. Try again.") 
 
   if (code.includes("permission-denied")) {
     return "You signed in, but profile access was blocked. Refresh and try again.";
+  }
+
+  if (message.toLowerCase().includes("username not found")) {
+    return "Username not found. Use your email or check the spelling.";
   }
 
   return error?.message || fallback;
@@ -292,7 +305,6 @@ async function findEmailFromLogin(loginValue) {
   return null;
 }
 
-
 async function resolveLoginEmail(loginValue) {
   const raw = String(loginValue || "").trim();
 
@@ -300,15 +312,24 @@ async function resolveLoginEmail(loginValue) {
   if (raw.includes("@")) return raw;
 
   const username = normalizeUsername(raw);
-  const resolveUsernameLogin = httpsCallable(functions, "resolveUsernameLogin");
-  const response = await resolveUsernameLogin({ username });
-  const email = String(response?.data?.email || "").trim();
 
-  if (!email || !email.includes("@")) {
+  try {
+    const resolveUsernameLogin = httpsCallable(functions, "resolveUsernameLogin");
+    const response = await withTimeout(resolveUsernameLogin({ username }), 6000, "Username lookup timed out.");
+    const email = String(response?.data?.email || "").trim();
+
+    if (email && email.includes("@")) return email;
+  } catch (callableError) {
+    console.warn("Username callable lookup failed, falling back to Firestore:", callableError);
+  }
+
+  const fallbackEmail = await withTimeout(findEmailFromLogin(raw), 6000, "Username lookup timed out.");
+
+  if (!fallbackEmail || !fallbackEmail.includes("@")) {
     throw new Error("Username not found. Use your email or check the spelling.");
   }
 
-  return email;
+  return fallbackEmail;
 }
 
 async function handleLoginSubmit(event) {
