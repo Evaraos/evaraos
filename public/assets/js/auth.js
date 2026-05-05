@@ -10,11 +10,6 @@ import {
   doc,
   getDoc,
   setDoc,
-  collection,
-  query,
-  where,
-  getDocs,
-  limit,
   serverTimestamp
 } from "./firebase.js";
 
@@ -139,28 +134,11 @@ function redirectForRole(role = DEFAULT_PUBLIC_ROLE) {
   navigateWithLoader("/dashboard.html", { title: "Opening dashboard", subtitle: "Loading your Evaraos workspace." });
 }
 
-async function findEmailFromUsername(usernameValue) {
-  const raw = String(usernameValue || "").trim();
-  const normalized = normalizeUsername(raw);
-  if (!normalized) return null;
-
-  const usersRef = collection(db, "users");
-  const snap = await getDocs(query(usersRef, where("usernameLower", "==", normalized), limit(1)));
-  if (!snap.empty) {
-    const data = snap.docs[0].data() || {};
-    return data.email || null;
-  }
-  return null;
-}
-
-async function resolveLoginEmail(loginValue) {
+function resolveLoginEmail(loginValue) {
   const raw = String(loginValue || "").trim();
   if (!raw) return "";
-  if (raw.includes("@")) return raw;
-
-  const email = await findEmailFromUsername(raw);
-  if (!email || !email.includes("@")) throw new Error("Username not found. Use your email or check the spelling.");
-  return email;
+  if (!raw.includes("@")) throw new Error("Username login is temporarily disabled. Use your email to log in.");
+  return raw;
 }
 
 async function handleLoginSubmit(event) {
@@ -178,9 +156,9 @@ async function handleLoginSubmit(event) {
 
   try {
     setFormBusy(form, true, "Signing In...", "Login");
-    setMessage(messageEl, email.includes("@") ? "Signing you in securely..." : "Finding your username securely...", "info");
+    setMessage(messageEl, "Signing you in securely...", "info");
     await setAuthPersistence(rememberDevice);
-    const resolvedEmail = await resolveLoginEmail(email);
+    const resolvedEmail = resolveLoginEmail(email);
     const result = await signInWithEmailAndPassword(auth, resolvedEmail, password);
     const user = result.user;
     let profile = syncSafeSession(user, { email: user.email || resolvedEmail, displayName: user.displayName || user.email || email, status: DEFAULT_PUBLIC_STATUS, approvalStatus: DEFAULT_PUBLIC_APPROVAL });
@@ -192,7 +170,7 @@ async function handleLoginSubmit(event) {
     redirectForRole(profile.role);
   } catch (error) {
     console.error("Login failed:", error);
-    setMessage(messageEl, authErrorMessage(error, "Login failed. Check your username/email and password."), "error");
+    setMessage(messageEl, authErrorMessage(error, "Login failed. Check your email and password."), "error");
   } finally {
     setFormBusy(form, false, "Signing In...", "Login");
   }
@@ -275,28 +253,8 @@ function injectProtectionNote(form, anchorSelector = ".auth-actions") {
   else form.appendChild(note);
 }
 
-function initLoginPage() {
-  const form = byId("loginForm");
-  if (!form) return;
-  bindPasswordToggle("loginPasswordToggle", "loginPassword");
-  form.addEventListener("submit", handleLoginSubmit);
-}
-function initSignupPage() {
-  const form = byId("signupForm");
-  if (!form) return;
-  bindPasswordToggle("signupPasswordToggle", "signupPassword");
-  bindPasswordToggle("signupPasswordConfirmToggle", "signupPasswordConfirm");
-  injectProtectionNote(form);
-  form.addEventListener("submit", handleSignupSubmit);
-}
-function initResetPage() {
-  const form = byId("resetForm");
-  if (!form) return;
-  form.addEventListener("submit", handleResetSubmit);
-}
+function initLoginPage() { const form = byId("loginForm"); if (!form) return; bindPasswordToggle("loginPasswordToggle", "loginPassword"); form.addEventListener("submit", handleLoginSubmit); }
+function initSignupPage() { const form = byId("signupForm"); if (!form) return; bindPasswordToggle("signupPasswordToggle", "signupPassword"); bindPasswordToggle("signupPasswordConfirmToggle", "signupPasswordConfirm"); injectProtectionNote(form); form.addEventListener("submit", handleSignupSubmit); }
+function initResetPage() { const form = byId("resetForm"); if (!form) return; form.addEventListener("submit", handleResetSubmit); }
 
-document.addEventListener("DOMContentLoaded", () => {
-  initLoginPage();
-  initSignupPage();
-  initResetPage();
-});
+document.addEventListener("DOMContentLoaded", () => { initLoginPage(); initSignupPage(); initResetPage(); });
