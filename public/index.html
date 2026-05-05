@@ -50,11 +50,8 @@
         if (raw) {
           var appearance = JSON.parse(raw);
 
-          if (appearance.mode === "light") theme = "light";
-          else if (appearance.mode === "custom") {
-            if (appearance.baseFamily === "light") theme = "light";
-            else theme = "dark";
-          }
+          if (appearance.mode === "dark") theme = "dark";
+          else theme = "light";
         }
 
         document.documentElement.setAttribute("data-theme", theme);
@@ -72,12 +69,9 @@
       background: #f4f7f6;
     }
 
-    html[data-theme="light"],
-    html[data-theme="light"] body {
-      background: #f4f7f6;
-    }
-
-      background: #050311;
+    html[data-theme="dark"],
+    html[data-theme="dark"] body {
+      background: #080914;
     }
 
     html.boot-pending body {
@@ -114,7 +108,7 @@
   <link rel="stylesheet" href="/assets/css/base.css?v=34" />
   <link rel="stylesheet" href="/assets/css/theme.css?v=36" />
   <link rel="stylesheet" href="/assets/css/nav.css?v=unified-20260504" />
-  <link rel="stylesheet" href="/assets/css/home.css?v=38" />
+  <link rel="stylesheet" href="/assets/css/home.css?v=39" />
 </head>
 <body class="home-page app-loading">
   <div id="universalNavRoot"></div>
