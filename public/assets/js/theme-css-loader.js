@@ -1,80 +1,27 @@
 (function () {
-  const loadedModules = new Set();
-  const loadedStylesheets = new Set();
+  const THEME_LINK_ID = "evaraos-theme-css";
 
-  function markThemeHydrated() {
-    document.documentElement.setAttribute("data-evara-theme-ready", "true");
+  function getMode() {
+    try {
+      const raw = localStorage.getItem("evaraos-appearance");
+      if (!raw) return "light";
+      const appearance = JSON.parse(raw);
+      if (appearance.mode === "dark") return "dark";
+      if (appearance.mode === "light") return "light";
+      if (appearance.mode === "custom") return appearance.baseFamily === "light" ? "light" : "dark";
+    } catch {}
+    return "light";
   }
 
-  function removeOldVisualModes() {
-    document.documentElement.removeAttribute("data-beam-mode");
-    document.documentElement.removeAttribute("data-user-beam-off");
+  function applyTheme() {
+    const mode = getMode();
+    document.documentElement.setAttribute("data-theme", mode);
 
-    const oldGalaxyLink = document.getElementById("evaraGalaxyCss");
-    if (oldGalaxyLink) oldGalaxyLink.disabled = true;
-
-    if (window.EvaraGalaxy && typeof window.EvaraGalaxy.stop === "function") {
-      window.EvaraGalaxy.stop();
-    }
+    const stale = document.getElementById(THEME_LINK_ID);
+    if (stale) stale.remove();
   }
 
-  function syncCss() {
-    removeOldVisualModes();
-    markThemeHydrated();
-  }
-
-  function bootGlobalModules() {
-    // Intentionally empty. Universal nav and install UI are loaded by the page, not injected here.
-  }
-
-  function bootPageModules() {
-    bootGlobalModules();
-  }
-
-  function init() {
-    syncCss();
-    bootPageModules();
-
-    window.addEventListener("evara:theme-ready", syncCss);
-    window.addEventListener("evara:theme-changed", syncCss);
-    window.addEventListener("pageshow", () => {
-      syncCss();
-      bootPageModules();
-    });
-
-    const observer = new MutationObserver(syncCss);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["data-theme"]
-    });
-
-    const bootstrapApi = {
-      syncCss,
-      markThemeHydrated,
-      bootPageModules,
-      registerServiceWorker() {},
-      syncBeamPreferences: syncCss,
-      loadGalaxyCss: syncCss,
-      disableGalaxyCss: syncCss,
-      getState() {
-        return {
-          theme: document.documentElement.getAttribute("data-theme") || "light",
-          hydrated: document.documentElement.getAttribute("data-evara-theme-ready") === "true",
-          visualStack: "apple-settings-glass",
-          loadedModules: Array.from(loadedModules),
-          loadedStylesheets: Array.from(loadedStylesheets),
-          swRegistrationStarted: false
-        };
-      }
-    };
-
-    window.EvaraThemeCssLoader = bootstrapApi;
-    window.EvaraAppBootstrap = bootstrapApi;
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init, { once: true });
-  } else {
-    init();
-  }
+  applyTheme();
+  window.addEventListener("storage", applyTheme);
+  window.addEventListener("evara:appearance-updated", applyTheme);
 })();
