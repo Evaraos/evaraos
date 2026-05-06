@@ -42,6 +42,7 @@ export const NAV_PAGES = {
   ownerOnly: [
     { page: "companies.html", label: "Companies", icon: "companies", bubble: "companies" },
     { page: "users.html", label: "Users", icon: "users", bubble: "users" },
+    { page: "org.html", label: "Organization", icon: "users", bubble: "org" },
     { page: "applications.html", label: "Applications", icon: "users", bubble: "applications" },
     { page: "leads.html", label: "Leads", icon: "leads", bubble: "leads" },
     { page: "jobs.html", label: "Jobs", icon: "jobs", bubble: "jobs" },
