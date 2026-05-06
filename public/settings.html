@@ -37,38 +37,14 @@
 
   <title>Settings Hub • Evaraos Inc</title>
 
-  <script>
-    (function () {
-      try {
-        var raw = localStorage.getItem("evaraos-appearance");
-        var theme = "light";
-
-        if (raw) {
-          var appearance = JSON.parse(raw);
-
-          if (appearance.mode === "light") theme = "light";
-          else if (appearance.mode === "custom") {
-            if (appearance.baseFamily === "light") theme = "light";
-            else theme = "dark";
-          }
-        }
-
-        document.documentElement.setAttribute("data-theme", theme);
-      } catch {
-        document.documentElement.setAttribute("data-theme", "light");
-      }
-
-      document.documentElement.classList.add("boot-pending", "auth-pending");
-    })();
-  </script>
+  <script src="/assets/js/theme-boot.js?v=1"></script>
 
   <style>
     html,
     body { background: #f4f7f6; }
 
-    html[data-theme="light"],
-    html[data-theme="light"] body { background: #f4f7f6; }
-
+    html[data-theme="dark"],
+    html[data-theme="dark"] body { background: #020307; }
 
     html.boot-pending body {
       margin: 0;
@@ -121,7 +97,7 @@
           <span class="settings-card-icon">✦</span>
           <div>
             <p class="settings-kicker">Appearance</p>
-            <h2>Theme, Galaxy, Liquid Glass, and Beam</h2>
+            <h2>Theme, Liquid Glass, and Beam</h2>
             <p>Control light, dark, custom colors, button glass, and beam behavior.</p>
           </div>
         </a>
