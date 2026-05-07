@@ -41,27 +41,7 @@
 
   <title>Evaraos Inc</title>
 
-  <script>
-    (function () {
-      try {
-        var raw = localStorage.getItem("evaraos-appearance");
-        var theme = "light";
-
-        if (raw) {
-          var appearance = JSON.parse(raw);
-
-          if (appearance.mode === "dark") theme = "dark";
-          else theme = "light";
-        }
-
-        document.documentElement.setAttribute("data-theme", theme);
-      } catch {
-        document.documentElement.setAttribute("data-theme", "light");
-      }
-
-      document.documentElement.classList.add("boot-pending");
-    })();
-  </script>
+  <script src="/assets/js/theme-boot.js?v=1"></script>
 
   <style>
     html,
@@ -71,7 +51,7 @@
 
     html[data-theme="dark"],
     html[data-theme="dark"] body {
-      background: #080914;
+      background: #020307;
     }
 
     html.boot-pending body {
