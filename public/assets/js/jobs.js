@@ -32,6 +32,9 @@ const jobsSortBtn = document.getElementById("jobsSortBtn");
 const LIVE_LIMIT = 50;
 const FEED_LIMIT = 6;
 const RENDER_DEBOUNCE_MS = 90;
+const SHARED_CACHE_LIMIT = 80;
+const SHARED_CACHE_TTL_MS = 1000 * 60 * 12;
+const SHARED_CACHE_KEY = "evaraos:dispatch:shared-virtual-cache:v1";
 
 let jobsData = [];
 let sortAsc = true;
@@ -41,12 +44,17 @@ let currentFirebaseUser = null;
 let unsubscribeJobs = null;
 let isLiveFeedConnected = false;
 let renderTimer = null;
+let prefetchTimer = null;
 
 let lastListHtml = "";
 let lastProgressHtml = "";
 let lastFeedHtml = "";
 let lastHeroTitle = "";
 let lastHeroText = "";
+let lastRenderedSignature = "";
+
+const sharedVirtualMemory = new Map();
+const idle = window.requestIdleCallback || ((callback) => setTimeout(() => callback({ timeRemaining: () => 8 }), 1));
 
 function navigateWithLoader(url, options = {}) {
   if (window.EvaraLoader && typeof window.EvaraLoader.beginNavigationLoad === "function") {
@@ -67,6 +75,10 @@ function escapeHtml(value) {
 
 function normalize(value = "") {
   return String(value || "").trim().toLowerCase();
+}
+
+function stableKey(value = "") {
+  return normalize(value).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "default";
 }
 
 function jobName(job = {}) {
@@ -91,6 +103,21 @@ function assignedNames(job = {}) {
   if (job.staffClaimedByName) return [job.staffClaimedByName];
   if (job.assignedToName) return [job.assignedToName];
   return [];
+}
+
+function rowSignature(job = {}) {
+  return [
+    job.id,
+    jobName(job),
+    jobStatus(job),
+    jobDescription(job),
+    jobCompany(job),
+    job.customerPhone,
+    job.customerEmail,
+    job.companyClaimed,
+    job.staffClaimed,
+    assignedNames(job).join("|")
+  ].map((item) => String(item ?? "")).join("~");
 }
 
 function pillClass(status = "") {
@@ -202,17 +229,120 @@ function setFeedConnectedState(isConnected) {
   });
 }
 
+function rememberVirtualRow(job = {}, html = "") {
+  const key = String(job.id || rowSignature(job));
+  sharedVirtualMemory.set(key, {
+    html,
+    signature: rowSignature(job),
+    updatedAt: Date.now()
+  });
+
+  if (sharedVirtualMemory.size > SHARED_CACHE_LIMIT) {
+    const firstKey = sharedVirtualMemory.keys().next().value;
+    sharedVirtualMemory.delete(firstKey);
+  }
+}
+
+function readVirtualRow(job = {}) {
+  const key = String(job.id || rowSignature(job));
+  const cached = sharedVirtualMemory.get(key);
+  if (!cached || cached.signature !== rowSignature(job)) return "";
+  return cached.html;
+}
+
+function saveOfflineVirtualCache() {
+  try {
+    const payload = [...sharedVirtualMemory.entries()].slice(-SHARED_CACHE_LIMIT);
+    localStorage.setItem(SHARED_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), payload }));
+  } catch {
+    // Offline persistence is an optimization only.
+  }
+}
+
+function hydrateOfflineVirtualCache() {
+  try {
+    const raw = localStorage.getItem(SHARED_CACHE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (!parsed?.savedAt || Date.now() - parsed.savedAt > SHARED_CACHE_TTL_MS) return;
+
+    (parsed.payload || []).forEach(([key, value]) => {
+      if (key && value?.html && value?.signature) sharedVirtualMemory.set(key, value);
+    });
+  } catch {
+    // Ignore broken local cache and let realtime data rebuild it.
+  }
+}
+
+function buildJobCard(job = {}) {
+  const cached = readVirtualRow(job);
+  if (cached) return cached;
+
+  const id = escapeHtml(job.id);
+  const name = escapeHtml(jobName(job));
+  const status = escapeHtml(jobStatus(job));
+  const description = escapeHtml(jobDescription(job));
+  const company = escapeHtml(jobCompany(job));
+  const claim = claimPill(job);
+  const team = assignedNames(job).length ? escapeHtml(assignedNames(job).join(", ")) : "Unassigned";
+  const stateKey = stableKey(`${jobStatus(job)} ${claim.label}`);
+
+  const companyButton = canClaimCompany(job)
+    ? `<button type="button" class="btn btn-theme-primary job-company-claim-btn" data-company-claim="${id}">Claim for Company</button>`
+    : "";
+
+  const staffButton = canClaimStaff(job)
+    ? `<button type="button" class="btn btn-theme-primary job-staff-claim-btn" data-staff-claim="${id}">Accept Job</button>`
+    : "";
+
+  const html = `
+    <article class="dashboard-list-item glass-card aurora-card active-glow beam-target job-dispatch-item virtual-paint-card" data-job-id="${id}" data-virtual-state="${stateKey}">
+      <div class="job-dispatch-content">
+        <strong>${name}</strong>
+        <span>${description}</span>
+
+        <div class="job-dispatch-meta">
+          <span>${company}</span>
+          <span>Team: ${team}</span>
+          <span>${escapeHtml(job.customerPhone || job.customerEmail || "No customer contact")}</span>
+        </div>
+      </div>
+
+      <div class="job-dispatch-actions">
+        <span class="dashboard-status-pill ${pillClass(status)}">${status}</span>
+        <span class="dashboard-status-pill ${claim.cls}">${claim.label}</span>
+        ${companyButton}
+        ${staffButton}
+      </div>
+    </article>
+  `;
+
+  rememberVirtualRow(job, html);
+  return html;
+}
+
+function prefetchVirtualRows(rows = []) {
+  if (prefetchTimer) clearTimeout(prefetchTimer);
+
+  prefetchTimer = setTimeout(() => {
+    idle(() => {
+      rows.slice(0, SHARED_CACHE_LIMIT).forEach((job) => buildJobCard(job));
+      saveOfflineVirtualCache();
+    });
+  }, 120);
+}
+
 function renderLoadingState() {
   lastListHtml = setHtmlIfChanged(
     jobsList,
     `
-      <div class="dashboard-skeleton-grid">
-        <div class="dashboard-skeleton-card">
+      <div class="dashboard-skeleton-grid virtual-paint-list">
+        <div class="dashboard-skeleton-card virtual-paint-card">
           <div class="dashboard-skeleton-line line-1"></div>
           <div class="dashboard-skeleton-line line-2"></div>
           <div class="dashboard-skeleton-line line-3"></div>
         </div>
-        <div class="dashboard-skeleton-card">
+        <div class="dashboard-skeleton-card virtual-paint-card">
           <div class="dashboard-skeleton-line line-1"></div>
           <div class="dashboard-skeleton-line line-2"></div>
           <div class="dashboard-skeleton-line line-3"></div>
@@ -224,13 +354,13 @@ function renderLoadingState() {
 
   lastProgressHtml = setHtmlIfChanged(
     jobsProgressStack,
-    `<article class="dashboard-state-card loading"><strong>Connecting live dispatch...</strong><span>Opening optimized Firestore real-time job feed.</span></article>`,
+    `<article class="dashboard-state-card loading virtual-paint-card"><strong>Connecting live dispatch...</strong><span>Opening optimized Firestore real-time job feed.</span></article>`,
     lastProgressHtml
   );
 
   lastFeedHtml = setHtmlIfChanged(
     jobsFeed,
-    `<article class="dashboard-state-card loading"><strong>Live feed starting...</strong><span>Jobs update instantly without full page refresh.</span></article>`,
+    `<article class="dashboard-state-card loading virtual-paint-card"><strong>Live feed starting...</strong><span>Jobs update instantly without full page refresh.</span></article>`,
     lastFeedHtml
   );
 
@@ -294,7 +424,7 @@ function renderStats(rows) {
         ? `${jobsData.length} jobs connected`
         : "No jobs found yet.",
     isLiveFeedConnected
-      ? `Optimized live dispatch connected. Showing up to ${LIVE_LIMIT} jobs for faster mobile performance.`
+      ? `Optimized live dispatch connected. Showing up to ${LIVE_LIMIT} jobs with shared paint virtualization.`
       : jobsData.length
         ? "Dispatch is live: companies claim platform jobs first, then staff claim execution first-come first-served."
         : "Create or convert leads into jobs to populate the dispatch board."
@@ -307,59 +437,24 @@ function renderList(rows) {
   if (!visibleRows.length) {
     lastListHtml = setHtmlIfChanged(
       jobsList,
-      `<article class="dashboard-state-card empty"><strong>No jobs found</strong><span>Try another search or convert a lead into a job.</span></article>`,
+      `<article class="dashboard-state-card empty virtual-paint-card"><strong>No jobs found</strong><span>Try another search or convert a lead into a job.</span></article>`,
       lastListHtml
     );
     return;
   }
 
+  const signature = visibleRows.map(rowSignature).join("|") + `:${sortAsc}:${normalize(jobsSearch?.value || "")}`;
+  if (signature === lastRenderedSignature && lastListHtml) return;
+  lastRenderedSignature = signature;
+
   const html =
-    visibleRows
-      .map((job) => {
-        const id = escapeHtml(job.id);
-        const name = escapeHtml(jobName(job));
-        const status = escapeHtml(jobStatus(job));
-        const description = escapeHtml(jobDescription(job));
-        const company = escapeHtml(jobCompany(job));
-        const claim = claimPill(job);
-        const team = assignedNames(job).length ? escapeHtml(assignedNames(job).join(", ")) : "Unassigned";
-
-        const companyButton = canClaimCompany(job)
-          ? `<button type="button" class="btn btn-theme-primary job-company-claim-btn" data-company-claim="${id}">Claim for Company</button>`
-          : "";
-
-        const staffButton = canClaimStaff(job)
-          ? `<button type="button" class="btn btn-theme-primary job-staff-claim-btn" data-staff-claim="${id}">Accept Job</button>`
-          : "";
-
-        return `
-          <article class="dashboard-list-item glass-card aurora-card active-glow beam-target job-dispatch-item" data-job-id="${id}">
-            <div class="job-dispatch-content">
-              <strong>${name}</strong>
-              <span>${description}</span>
-
-              <div class="job-dispatch-meta">
-                <span>${company}</span>
-                <span>Team: ${team}</span>
-                <span>${escapeHtml(job.customerPhone || job.customerEmail || "No customer contact")}</span>
-              </div>
-            </div>
-
-            <div class="job-dispatch-actions">
-              <span class="dashboard-status-pill ${pillClass(status)}">${status}</span>
-              <span class="dashboard-status-pill ${claim.cls}">${claim.label}</span>
-              ${companyButton}
-              ${staffButton}
-            </div>
-          </article>
-        `;
-      })
-      .join("") +
+    visibleRows.map((job) => buildJobCard(job)).join("") +
     (rows.length > LIVE_LIMIT
-      ? `<article class="dashboard-state-card working"><strong>Showing first ${LIVE_LIMIT}</strong><span>Use search to narrow ${rows.length} live jobs.</span></article>`
+      ? `<article class="dashboard-state-card working virtual-paint-card"><strong>Showing first ${LIVE_LIMIT}</strong><span>Use search to narrow ${rows.length} live jobs.</span></article>`
       : "");
 
   lastListHtml = setHtmlIfChanged(jobsList, html, lastListHtml);
+  prefetchVirtualRows(rows.slice(LIVE_LIMIT));
 }
 
 function renderProgress(rows) {
@@ -385,7 +480,7 @@ function renderProgress(rows) {
       const width = Math.max(6, Math.round((count / total) * 100));
 
       return `
-        <div class="dashboard-progress-row glass-card aurora-card active-glow beam-target">
+        <div class="dashboard-progress-row glass-card aurora-card active-glow beam-target virtual-paint-card">
           <div class="dashboard-progress-copy">
             <strong>${bucket.label}</strong>
             <span>${count} job(s)</span>
@@ -405,7 +500,7 @@ function renderFeed(rows) {
   if (!visibleRows.length) {
     lastFeedHtml = setHtmlIfChanged(
       jobsFeed,
-      `<article class="dashboard-state-card empty"><strong>No job activity</strong><span>Recent execution activity will appear here once records exist.</span></article>`,
+      `<article class="dashboard-state-card empty virtual-paint-card"><strong>No job activity</strong><span>Recent execution activity will appear here once records exist.</span></article>`,
       lastFeedHtml
     );
     return;
@@ -418,7 +513,7 @@ function renderFeed(rows) {
       const claim = claimPill(job);
 
       return `
-        <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
+        <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target virtual-paint-card">
           <strong>${name}</strong>
           <span>Status: ${status} • ${claim.label}</span>
         </article>
@@ -462,13 +557,14 @@ function startLiveJobsFeed() {
       }));
 
       setFeedConnectedState(true);
+      prefetchVirtualRows(jobsData);
       scheduleRenderJobs();
     },
     (error) => {
       console.error("Live jobs feed failed:", error);
       setFeedConnectedState(false);
 
-      const errorCard = `<article class="dashboard-state-card error"><strong>Live feed disconnected</strong><span>${escapeHtml(
+      const errorCard = `<article class="dashboard-state-card error virtual-paint-card"><strong>Live feed disconnected</strong><span>${escapeHtml(
         error.message || "Firestore listener failed."
       )}</span></article>`;
 
@@ -539,6 +635,15 @@ function injectDispatchStyles() {
       align-items: flex-start;
       gap: 14px;
       contain: content;
+      content-visibility: auto;
+      contain-intrinsic-size: 164px;
+    }
+
+    .virtual-paint-card {
+      contain: layout paint style;
+      backface-visibility: hidden;
+      transform: translateZ(0);
+      will-change: auto;
     }
 
     .job-dispatch-content {
@@ -584,6 +689,7 @@ function injectDispatchStyles() {
         display: grid;
         box-shadow: none !important;
         animation: none !important;
+        contain-intrinsic-size: 210px;
       }
 
       .job-dispatch-actions {
@@ -611,6 +717,7 @@ function bindEvents() {
   if (hasBoundEvents) return;
   hasBoundEvents = true;
 
+  hydrateOfflineVirtualCache();
   injectDispatchStyles();
 
   jobsSearch?.addEventListener("input", scheduleRenderJobs);
@@ -632,8 +739,10 @@ function bindEvents() {
   });
 
   window.addEventListener("beforeunload", () => {
+    saveOfflineVirtualCache();
     if (unsubscribeJobs) unsubscribeJobs();
     if (renderTimer) clearTimeout(renderTimer);
+    if (prefetchTimer) clearTimeout(prefetchTimer);
   });
 }
 
