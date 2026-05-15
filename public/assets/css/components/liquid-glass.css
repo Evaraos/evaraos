@@ -1,0 +1,308 @@
+/* =========================================================
+   EVARAOS LIQUID GLASS ENGINE — PHASE 2
+   Universal glass authority for cards, panels, nav surfaces,
+   modals, launchers, controls, and premium light/dark rendering.
+   ========================================================= */
+
+:root {
+  --liquid-radius-sm: 18px;
+  --liquid-radius-md: 24px;
+  --liquid-radius-lg: 32px;
+  --liquid-radius-xl: 42px;
+
+  --liquid-blur-soft: 18px;
+  --liquid-blur: 28px;
+  --liquid-blur-deep: 42px;
+
+  --liquid-edge-light: rgba(255,255,255,0.72);
+  --liquid-edge-dark: rgba(255,255,255,0.16);
+  --liquid-inner-light: rgba(255,255,255,0.22);
+  --liquid-inner-dark: rgba(0,0,0,0.18);
+  --liquid-depth-shadow: 0 24px 68px rgba(0,0,0,0.30);
+  --liquid-soft-shadow: 0 14px 34px rgba(0,0,0,0.16);
+  --liquid-specular: rgba(255,255,255,0.34);
+}
+
+html[data-theme="light"] {
+  --liquid-edge-light: rgba(255,255,255,0.96);
+  --liquid-edge-dark: rgba(15,23,42,0.08);
+  --liquid-inner-light: rgba(255,255,255,0.66);
+  --liquid-inner-dark: rgba(15,23,42,0.045);
+  --liquid-depth-shadow: 0 24px 68px rgba(70,88,104,0.16);
+  --liquid-soft-shadow: 0 12px 32px rgba(70,88,104,0.10);
+  --liquid-specular: rgba(255,255,255,0.78);
+}
+
+.liquid-glass,
+.glass-card,
+.glass-shell,
+.aurora-card,
+.glass,
+.auth-panel,
+.login-panel,
+.input-shell,
+.password-wrap,
+.remember-row,
+.hero-card,
+.stats-card,
+.feature-card,
+.service-card,
+.category-card,
+.info-card,
+.cta-panel,
+.section-panel,
+.site-footer-inner,
+.dashboard-sidebar-inner,
+.dashboard-panel,
+.dashboard-overview,
+.dashboard-hero,
+.dashboard-hero-panel,
+.dashboard-stat-card,
+.dashboard-list-item,
+.dashboard-feed-item,
+.dashboard-role-card,
+.dashboard-progress-row,
+.dashboard-state-card,
+.lead-card,
+.job-card,
+.user-card,
+.company-card,
+.settings-card,
+.qa-card,
+.application-card,
+.eva-nav-pill,
+.eva-menu-panel,
+.eva-menu-card,
+.eva-bottom-nav {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: var(--liquid-radius-lg);
+  color: inherit;
+  background:
+    radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--liquid-specular) 48%, transparent), transparent 36%),
+    linear-gradient(145deg, color-mix(in srgb, var(--card-bg-top, rgba(255,255,255,0.12)) 92%, transparent), color-mix(in srgb, var(--card-bg-bottom, rgba(255,255,255,0.04)) 94%, transparent) 72%);
+  border: 1px solid color-mix(in srgb, var(--card-border, rgba(255,255,255,0.16)) 86%, var(--liquid-edge-light));
+  box-shadow:
+    var(--liquid-depth-shadow),
+    inset 0 1px 0 var(--liquid-edge-light),
+    inset 0 -1px 0 var(--liquid-inner-dark);
+  backdrop-filter: blur(var(--liquid-blur)) saturate(172%) brightness(1.02);
+  -webkit-backdrop-filter: blur(var(--liquid-blur)) saturate(172%) brightness(1.02);
+  transform: translateZ(0);
+  transition:
+    transform 180ms cubic-bezier(.19,1,.22,1),
+    box-shadow 180ms ease,
+    border-color 180ms ease,
+    background 220ms ease,
+    filter 180ms ease;
+}
+
+.liquid-glass::before,
+.glass-card::before,
+.glass-shell::before,
+.aurora-card::before,
+.glass::before,
+.auth-panel::before,
+.login-panel::before,
+.hero-card::before,
+.stats-card::before,
+.feature-card::before,
+.service-card::before,
+.category-card::before,
+.info-card::before,
+.cta-panel::before,
+.section-panel::before,
+.site-footer-inner::before,
+.dashboard-sidebar-inner::before,
+.dashboard-panel::before,
+.dashboard-overview::before,
+.dashboard-hero::before,
+.dashboard-hero-panel::before,
+.dashboard-stat-card::before,
+.dashboard-list-item::before,
+.dashboard-feed-item::before,
+.dashboard-role-card::before,
+.dashboard-progress-row::before,
+.dashboard-state-card::before,
+.lead-card::before,
+.job-card::before,
+.user-card::before,
+.company-card::before,
+.settings-card::before,
+.qa-card::before,
+.application-card::before,
+.eva-nav-pill::before,
+.eva-menu-panel::before,
+.eva-menu-card::before,
+.eva-bottom-nav::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    linear-gradient(135deg, var(--liquid-inner-light), transparent 38%, rgba(255,255,255,0.06) 62%, transparent),
+    radial-gradient(circle at 72% 18%, color-mix(in srgb, var(--user-card-tint, #d61f42) 10%, transparent), transparent 34%);
+  opacity: 0.78;
+}
+
+.liquid-glass::after,
+.glass-card::after,
+.glass-shell::after,
+.aurora-card::after,
+.glass::after,
+.eva-nav-pill::after,
+.eva-menu-panel::after,
+.eva-menu-card::after,
+.eva-bottom-nav::after {
+  content: "";
+  position: absolute;
+  top: -40%;
+  left: -18%;
+  width: 44%;
+  height: 180%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.22;
+  transform: rotate(18deg) translateX(-120%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.46), transparent);
+  filter: blur(6px);
+  transition: transform 520ms cubic-bezier(.19,1,.22,1), opacity 220ms ease;
+}
+
+.liquid-glass:hover,
+.glass-card:hover,
+.glass-shell:hover,
+.aurora-card:hover,
+.glass:hover,
+.dashboard-stat-card:hover,
+.dashboard-list-item:hover,
+.dashboard-feed-item:hover,
+.eva-menu-card:hover {
+  transform: translateY(-1px) translateZ(0);
+  filter: saturate(1.04);
+  box-shadow:
+    0 30px 82px color-mix(in srgb, var(--user-card-tint, #d61f42) 10%, rgba(0,0,0,0.26)),
+    inset 0 1px 0 var(--liquid-edge-light),
+    inset 0 -1px 0 var(--liquid-inner-dark);
+}
+
+.liquid-glass:hover::after,
+.glass-card:hover::after,
+.glass-shell:hover::after,
+.aurora-card:hover::after,
+.glass:hover::after,
+.eva-nav-pill:hover::after,
+.eva-menu-panel:hover::after,
+.eva-menu-card:hover::after,
+.eva-bottom-nav:hover::after {
+  transform: rotate(18deg) translateX(360%);
+  opacity: 0.34;
+}
+
+.liquid-glass > *,
+.glass-card > *,
+.glass-shell > *,
+.aurora-card > *,
+.glass > *,
+.auth-panel > *,
+.login-panel > *,
+.input-shell > *,
+.password-wrap > *,
+.remember-row > *,
+.hero-card > *,
+.stats-card > *,
+.feature-card > *,
+.service-card > *,
+.category-card > *,
+.info-card > *,
+.cta-panel > *,
+.section-panel > *,
+.site-footer-inner > *,
+.dashboard-sidebar-inner > *,
+.dashboard-panel > *,
+.dashboard-overview > *,
+.dashboard-hero > *,
+.dashboard-hero-panel > *,
+.dashboard-stat-card > *,
+.dashboard-list-item > *,
+.dashboard-feed-item > *,
+.dashboard-role-card > *,
+.dashboard-progress-row > *,
+.dashboard-state-card > *,
+.lead-card > *,
+.job-card > *,
+.user-card > *,
+.company-card > *,
+.settings-card > *,
+.qa-card > *,
+.application-card > *,
+.eva-nav-pill > *,
+.eva-menu-panel > *,
+.eva-menu-card > *,
+.eva-bottom-nav > * {
+  position: relative;
+  z-index: 1;
+}
+
+.liquid-control,
+.btn,
+.btn-apple,
+.btn-theme-primary,
+.btn-theme-secondary,
+.dashboard-nav-link,
+.dashboard-status-pill,
+.dashboard-mini-badge,
+input,
+textarea,
+select {
+  backdrop-filter: blur(var(--liquid-blur-soft)) saturate(165%);
+  -webkit-backdrop-filter: blur(var(--liquid-blur-soft)) saturate(165%);
+}
+
+@media (max-width: 760px) {
+  :root {
+    --liquid-blur: 22px;
+    --liquid-blur-deep: 32px;
+  }
+
+  .liquid-glass,
+  .glass-card,
+  .glass-shell,
+  .aurora-card,
+  .glass,
+  .dashboard-panel,
+  .dashboard-stat-card,
+  .dashboard-list-item,
+  .dashboard-feed-item {
+    border-radius: var(--liquid-radius-md);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liquid-glass,
+  .glass-card,
+  .glass-shell,
+  .aurora-card,
+  .glass,
+  .eva-nav-pill,
+  .eva-menu-panel,
+  .eva-menu-card,
+  .eva-bottom-nav {
+    transition: none;
+  }
+
+  .liquid-glass::after,
+  .glass-card::after,
+  .glass-shell::after,
+  .aurora-card::after,
+  .glass::after,
+  .eva-nav-pill::after,
+  .eva-menu-panel::after,
+  .eva-menu-card::after,
+  .eva-bottom-nav::after {
+    display: none;
+  }
+}
