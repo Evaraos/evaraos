@@ -75,7 +75,7 @@ body.eva-nav-compact .eva-menu-zone {
   text-shadow: 0 1px 0 rgba(255,255,255,0.72), 0 6px 14px rgba(0,0,0,0.22);
 }
 
-html[data-theme="dark"] .eva-theme-nav-icon::before,
+html[data-theme="dark"] .eva-theme-nav-icon::before {
   content: "☀";
   color: #ffffff;
   font-size: 18px;
@@ -105,7 +105,7 @@ html[data-theme="dark"] .eva-theme-nav-icon::before,
 }
 
 html[data-theme="dark"] #evaMenuBtn,
-html[data-theme="dark"] .eva-menu-btn,
+html[data-theme="dark"] .eva-menu-btn {
   border-color: rgba(255,255,255,0.16);
   background: linear-gradient(145deg, rgba(255,255,255,0.15), rgba(255,255,255,0.06));
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), 0 7px 16px rgba(0,0,0,0.24);
@@ -135,7 +135,9 @@ html[data-theme="dark"] .eva-menu-btn,
   transition: top 0.18s ease, transform 0.18s ease, opacity 0.14s ease, background 0.18s ease;
 }
 
-html[data-theme="dark"] .eva-burger-line,
+html[data-theme="dark"] .eva-burger-line {
+  background: #ffffff;
+}
 
 .eva-burger-line.top { top: 0; transform: translateX(-50%) rotate(0deg); }
 .eva-burger-line.mid { top: 5px; transform: translateX(-50%) rotate(0deg); }
