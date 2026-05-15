@@ -23,7 +23,7 @@ body {
    LIGHT MODE
    =============================== */
 
-html[data-theme="light"] body,
+html[data-theme="light"] body {
   color: var(--text-light);
   background:
     radial-gradient(circle at 16% 12%, rgba(255, 255, 255, 0.48), transparent 24%),
