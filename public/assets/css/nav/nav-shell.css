@@ -1,13 +1,209 @@
-/* EVARAOS NAV SHELL - clean base */
-:root{--eva-island-offset:max(10px,calc(env(safe-area-inset-bottom,0px) + 10px));--eva-page-nav-clearance:0px}
-#universalNavRoot,#universalNav{position:fixed;inset:0;z-index:2147483647;pointer-events:none}
-.eva-nav-layer{position:fixed;inset:0;width:100vw;max-width:100vw;pointer-events:none}
-.eva-nav-shell{--nav-progress:0;--pill-min-width:142px;--pill-max-width:min(calc(100vw - 18px),720px);--pill-width:calc(var(--pill-min-width) + (var(--pill-max-width) - var(--pill-min-width)) * var(--nav-progress));--pill-height:calc(44px + 34px * var(--nav-progress));--pill-pad-x:calc(8px + 8px * var(--nav-progress));--pill-pad-y:calc(4px + 6px * var(--nav-progress));--brand-gap:calc(0px + 9px * var(--nav-progress));--compact-logo:40px;--full-logo:92px;--logo-size:calc(var(--compact-logo) + (var(--full-logo) - var(--compact-logo)) * var(--nav-progress));--menu-size:calc(0px + 36px * var(--nav-progress));--side-balance:calc(0px + 92px * var(--nav-progress));--burger-scale:var(--nav-progress);--copy-opacity:var(--nav-progress);--brand-max-width:calc(84px + 300px * var(--nav-progress));position:fixed;top:auto;bottom:var(--eva-island-offset);left:0;right:0;width:100vw;max-width:100vw;display:flex;justify-content:center;align-items:flex-end;padding-inline:max(7px,env(safe-area-inset-left)) max(7px,env(safe-area-inset-right));box-sizing:border-box;z-index:2147483647;pointer-events:none;will-change:transform}
-.eva-nav-pill{width:min(var(--pill-width),calc(100vw - 18px));max-width:min(720px,calc(100vw - 18px));min-height:var(--pill-height);height:var(--pill-height);margin:0 auto;padding:var(--pill-pad-y) var(--pill-pad-x);display:flex;align-items:center;justify-content:center;gap:0;border-radius:calc(999px - 22px * var(--nav-progress));pointer-events:auto;position:relative;overflow:visible;isolation:isolate;box-sizing:border-box;border:1px solid rgba(255,255,255,.18);background:linear-gradient(180deg,rgba(28,32,40,.86),rgba(13,16,22,.92));box-shadow:0 14px 32px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -1px 0 rgba(0,0,0,.18);backdrop-filter:blur(22px) saturate(165%);-webkit-backdrop-filter:blur(22px) saturate(165%);transition:background .16s ease,border-color .16s ease,box-shadow .16s ease}
-.eva-nav-pill:before{content:"";position:absolute;inset:1px;border-radius:inherit;pointer-events:none;z-index:0;background:radial-gradient(circle at 24% 5%,rgba(255,255,255,.28),transparent 34%),linear-gradient(135deg,rgba(255,255,255,.14),transparent 48%,rgba(255,255,255,.08));opacity:.7}
-.eva-nav-pill:after{content:"";position:absolute;left:16%;right:16%;top:7px;height:2px;border-radius:999px;pointer-events:none;z-index:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.62),transparent);opacity:calc(.32 + .34 * var(--nav-progress))}
-.eva-nav-pill.is-pressing,.eva-nav-shell.quick-pressing .eva-nav-pill{transform:scale(.982) translateY(1px);filter:saturate(1.04)}
-.eva-left-spacer,.eva-right-spacer{position:absolute;top:50%;transform:translateY(-50%);width:var(--side-balance);height:max(var(--menu-size),1px);pointer-events:none;opacity:var(--nav-progress);z-index:2}.eva-left-spacer{left:calc(8px + 2px * var(--nav-progress))}.eva-right-spacer{right:calc(8px + 2px * var(--nav-progress))}
-.eva-brand{position:absolute;left:calc(50% - 18px * var(--nav-progress));top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;gap:var(--brand-gap);text-decoration:none;min-width:0;max-width:min(var(--brand-max-width),calc(100% - (var(--side-balance) * 2) - 4px));pointer-events:auto;transition:none;will-change:gap,transform,max-width;text-align:center;padding-inline:0;z-index:2}
-.eva-logo{width:var(--logo-size);height:var(--logo-size);object-fit:contain;flex:0 0 auto;will-change:width,height,transform;-webkit-user-drag:none}
-.eva-backdrop{position:fixed;inset:0;z-index:2147483645;background:rgba(0,0,0,.34);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .12s ease,visibility .12s ease}body.nav-menu-open .eva-backdrop{opacity:1;visibility:visible;pointer-events:auto;z-index:10020;backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%)}
+/* EVARAOS NAV SHELL - PHASE 2 LIQUID ISLAND */
+
+:root {
+  --eva-island-offset: max(10px, calc(env(safe-area-inset-bottom, 0px) + 10px));
+  --eva-page-nav-clearance: 0px;
+}
+
+#universalNavRoot,
+#universalNav {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  pointer-events: none;
+}
+
+.eva-nav-layer {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  max-width: 100vw;
+  pointer-events: none;
+}
+
+.eva-nav-shell {
+  --nav-progress: 0;
+  --pill-min-width: 142px;
+  --pill-max-width: min(calc(100vw - 18px), 720px);
+  --pill-width: calc(var(--pill-min-width) + (var(--pill-max-width) - var(--pill-min-width)) * var(--nav-progress));
+  --pill-height: calc(44px + 34px * var(--nav-progress));
+  --pill-pad-x: calc(8px + 8px * var(--nav-progress));
+  --pill-pad-y: calc(4px + 6px * var(--nav-progress));
+  --brand-gap: calc(0px + 9px * var(--nav-progress));
+  --compact-logo: 40px;
+  --full-logo: 92px;
+  --logo-size: calc(var(--compact-logo) + (var(--full-logo) - var(--compact-logo)) * var(--nav-progress));
+  --menu-size: calc(0px + 36px * var(--nav-progress));
+  --side-balance: calc(0px + 92px * var(--nav-progress));
+  --burger-scale: var(--nav-progress);
+  --copy-opacity: var(--nav-progress);
+  --brand-max-width: calc(84px + 300px * var(--nav-progress));
+
+  position: fixed;
+  top: auto;
+  bottom: var(--eva-island-offset);
+  left: 0;
+  right: 0;
+  width: 100vw;
+  max-width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding-inline: max(7px, env(safe-area-inset-left)) max(7px, env(safe-area-inset-right));
+  box-sizing: border-box;
+  z-index: 2147483647;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.eva-nav-pill {
+  width: min(var(--pill-width), calc(100vw - 18px));
+  max-width: min(720px, calc(100vw - 18px));
+  min-height: var(--pill-height);
+  height: var(--pill-height);
+  margin: 0 auto;
+  padding: var(--pill-pad-y) var(--pill-pad-x);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  border-radius: calc(999px - 22px * var(--nav-progress));
+  pointer-events: auto;
+  position: relative;
+  overflow: visible;
+  isolation: isolate;
+  box-sizing: border-box;
+  border: 1px solid rgba(255,255,255,0.84);
+  background:
+    radial-gradient(circle at 22% 0%, rgba(255,255,255,0.72), transparent 38%),
+    linear-gradient(145deg, rgba(255,255,255,0.78), rgba(247,250,252,0.54) 62%, rgba(255,255,255,0.28));
+  box-shadow:
+    0 22px 62px rgba(70,88,104,0.18),
+    inset 0 1px 0 rgba(255,255,255,0.96),
+    inset 0 -1px 0 rgba(15,23,42,0.055);
+  backdrop-filter: blur(34px) saturate(185%) brightness(1.03);
+  -webkit-backdrop-filter: blur(34px) saturate(185%) brightness(1.03);
+  transition:
+    background .18s ease,
+    border-color .18s ease,
+    box-shadow .18s ease,
+    transform .16s cubic-bezier(.19,1,.22,1),
+    filter .16s ease;
+}
+
+html[data-theme="dark"] .eva-nav-pill {
+  border-color: rgba(255,255,255,0.18);
+  background:
+    radial-gradient(circle at 22% 0%, rgba(255,255,255,0.18), transparent 38%),
+    linear-gradient(145deg, rgba(30,34,44,0.88), rgba(12,15,22,0.78) 62%, rgba(255,255,255,0.045));
+  box-shadow:
+    0 24px 66px rgba(0,0,0,0.44),
+    inset 0 1px 0 rgba(255,255,255,0.16),
+    inset 0 -1px 0 rgba(0,0,0,0.56);
+}
+
+.eva-nav-pill::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.34), transparent 42%, rgba(255,255,255,0.08)),
+    radial-gradient(circle at 72% 18%, color-mix(in srgb, var(--user-nav-tint, #d61f42) 13%, transparent), transparent 34%);
+  opacity: 0.82;
+}
+
+.eva-nav-pill::after {
+  content: "";
+  position: absolute;
+  left: 15%;
+  right: 15%;
+  top: 7px;
+  height: 2px;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.82), transparent);
+  opacity: calc(.40 + .28 * var(--nav-progress));
+}
+
+.eva-nav-pill.is-pressing,
+.eva-nav-shell.quick-pressing .eva-nav-pill {
+  transform: scale(.982) translateY(1px);
+  filter: saturate(1.06);
+}
+
+.eva-left-spacer,
+.eva-right-spacer {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: var(--side-balance);
+  height: max(var(--menu-size), 1px);
+  pointer-events: none;
+  opacity: var(--nav-progress);
+  z-index: 2;
+}
+
+.eva-left-spacer { left: calc(8px + 2px * var(--nav-progress)); }
+.eva-right-spacer { right: calc(8px + 2px * var(--nav-progress)); }
+
+.eva-brand {
+  position: absolute;
+  left: calc(50% - 18px * var(--nav-progress));
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--brand-gap);
+  text-decoration: none;
+  min-width: 0;
+  max-width: min(var(--brand-max-width), calc(100% - (var(--side-balance) * 2) - 4px));
+  pointer-events: auto;
+  transition: none;
+  will-change: gap, transform, max-width;
+  text-align: center;
+  padding-inline: 0;
+  z-index: 2;
+}
+
+.eva-logo {
+  width: var(--logo-size);
+  height: var(--logo-size);
+  object-fit: contain;
+  flex: 0 0 auto;
+  will-change: width, height, transform;
+  -webkit-user-drag: none;
+  filter:
+    drop-shadow(0 8px 16px rgba(0,0,0,0.12))
+    drop-shadow(0 0 18px color-mix(in srgb, var(--user-nav-tint, #d61f42) 18%, transparent));
+}
+
+.eva-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483645;
+  background: rgba(0,0,0,.28);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .12s ease, visibility .12s ease;
+}
+
+body.nav-menu-open .eva-backdrop {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  z-index: 10020;
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+}
+
+html[data-theme="light"] body.nav-menu-open .eva-backdrop {
+  background: rgba(240,244,246,0.22);
+}
