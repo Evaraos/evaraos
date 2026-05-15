@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#050814" />
+  <title>Evaraos Governance Dashboard</title>
+
+  <link rel="icon" href="./assets/img/evaraos-emblem.png" />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/theme.css" />
+  <link rel="stylesheet" href="./assets/css/nav.css" />
+  <link rel="stylesheet" href="./assets/css/dashboard.css" />
+  <link rel="stylesheet" href="./assets/css/app-system.css" />
+</head>
+<body data-route-guard="private" class="dashboard-body app-loading">
+  <div class="page-aurora" aria-hidden="true"></div>
+  <div class="page-grid-overlay" aria-hidden="true"></div>
+
+  <main class="dashboard-shell">
+    <aside class="dashboard-sidebar glass-card">
+      <div class="dashboard-sidebar-inner">
+        <div class="dashboard-sidebar-head">
+          <p class="dashboard-sidebar-eyebrow">Evaraos Governance</p>
+          <h2>Company Control</h2>
+        </div>
+
+        <nav class="dashboard-sidebar-nav" aria-label="Governance navigation">
+          <a class="dashboard-nav-link" href="./dashboard.html"><span class="dashboard-nav-icon">⌂</span><span>Dashboard</span></a>
+          <a class="dashboard-nav-link active" href="./governance-dashboard.html"><span class="dashboard-nav-icon">◆</span><span>Governance</span></a>
+          <a class="dashboard-nav-link" href="./revenue.html"><span class="dashboard-nav-icon">$</span><span>Revenue</span></a>
+          <a class="dashboard-nav-link" href="./payroll.html"><span class="dashboard-nav-icon">⇄</span><span>Payroll</span></a>
+        </nav>
+
+        <div class="dashboard-sidebar-foot glass-card">
+          <div class="dashboard-sidebar-foot-copy">
+            <strong>Governance Layer</strong>
+            <span>Manage company type, split model, operators, regions, and territories.</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="dashboard-main">
+      <section class="dashboard-hero glass-card">
+        <div class="dashboard-hero-copy">
+          <p class="dashboard-eyebrow">Platform Governance</p>
+          <h1>Control the company architecture behind Evaraos.</h1>
+          <p class="dashboard-hero-text">Use this layer to classify companies as Platform Vendors or Evaraos Subsidiary Expansion Partners, assign operators, and prepare the financial split engine for every business unit.</p>
+        </div>
+        <div class="dashboard-hero-panel glass-card">
+          <div class="dashboard-hero-panel-top">
+            <span class="dashboard-mini-badge">Governance Ready</span>
+            <span class="dashboard-live-dot" aria-hidden="true"></span>
+          </div>
+          <div class="dashboard-hero-panel-copy">
+            <strong>Current Models</strong>
+            <span>Platform Vendor: 70/30. Subsidiary Expansion Partner: 50/50.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Create / Update</p>
+              <h2>Governance Profile</h2>
+            </div>
+          </div>
+
+          <form id="governanceForm" class="dashboard-list" autocomplete="off">
+            <label class="dashboard-progress-row">
+              <span class="dashboard-progress-copy"><strong>Company</strong><span>Select the business unit.</span></span>
+              <select id="governanceCompany" class="dashboard-search-shell"></select>
+            </label>
+
+            <label class="dashboard-progress-row">
+              <span class="dashboard-progress-copy"><strong>Company Type</strong><span>Choose the governance model.</span></span>
+              <select id="governanceCompanyType" class="dashboard-search-shell"></select>
+            </label>
+
+            <label class="dashboard-progress-row">
+              <span class="dashboard-progress-copy"><strong>Operator UID</strong><span>Optional operator or expansion partner owner.</span></span>
+              <input id="governanceOperatorUid" class="dashboard-search-input dashboard-search-shell" placeholder="Firebase UID" />
+            </label>
+
+            <label class="dashboard-progress-row">
+              <span class="dashboard-progress-copy"><strong>Territory ID</strong><span>Optional territory assignment.</span></span>
+              <input id="governanceTerritoryId" class="dashboard-search-input dashboard-search-shell" placeholder="territory-jax-001" />
+            </label>
+
+            <label class="dashboard-progress-row">
+              <span class="dashboard-progress-copy"><strong>Region ID</strong><span>Optional regional grouping.</span></span>
+              <input id="governanceRegionId" class="dashboard-search-input dashboard-search-shell" placeholder="region-florida" />
+            </label>
+
+            <button id="governanceSave" class="btn btn-theme-primary beam-target" type="submit">Save Governance Profile</button>
+            <p id="governanceStatus" class="dashboard-hero-text">Initializing governance...</p>
+          </form>
+        </section>
+
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Active Profiles</p>
+              <h2>Company Governance</h2>
+            </div>
+          </div>
+
+          <div id="governanceRoot" class="dashboard-list">
+            <div class="dashboard-state-card glass-card">
+              <strong>Loading governance records...</strong>
+              <span>Company governance profiles will appear here.</span>
+            </div>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="./assets/js/loader.js"></script>
+  <script type="module" src="./assets/js/firebase.js"></script>
+  <script type="module" src="./assets/js/theme.js"></script>
+  <script type="module" src="./assets/js/route-guard.js"></script>
+  <script type="module" src="./assets/js/nav.js"></script>
+  <script type="module" src="./assets/js/governance-dashboard.js"></script>
+</body>
+</html>
