@@ -1,5 +1,6 @@
 /* ===============================
    EVARAOS LOADERS
+   Clean loader authority. Viewport locking is handled by loader-viewport.css.
    =============================== */
 
 .evara-global-loader,
@@ -8,52 +9,19 @@
   z-index: 2147483647;
 }
 
-/* Full screen global loader */
-.evara-global-loader {
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100vw !important;
-  height: 100dvh !important;
-  min-height: 100dvh !important;
-  max-height: 100dvh !important;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: max(18px, env(safe-area-inset-top)) 16px max(18px, env(safe-area-inset-bottom));
-  overflow: hidden !important;
-  transform: none !important;
-  pointer-events: auto;
-}
-
-.evara-global-loader.active {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-/* Fast loader */
+.evara-global-loader,
 .evara-loader-fast {
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100vw !important;
-  height: 100dvh !important;
-  min-height: 100dvh !important;
-  max-height: 100dvh !important;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden !important;
-  transform: none !important;
-  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.18s ease, visibility 0.18s ease;
 }
 
+.evara-global-loader.active,
 .evara-loader-fast.active {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  opacity: 1;
+  visibility: visible;
 }
 
-/* Exit/entry helpers */
 .evara-global-loader.is-entering,
 .evara-loader-fast.is-entering {
   opacity: 1;
@@ -62,25 +30,6 @@
 .evara-global-loader.is-exiting,
 .evara-loader-fast.is-exiting {
   opacity: 0;
-  transition: opacity 0.18s ease;
-}
-
-/* Loader content */
-.evara-loader-box {
-  width: min(720px, calc(100vw - 32px));
-  margin: auto !important;
-  position: relative !important;
-  transform: none !important;
-}
-
-.evara-loader-fast-wrap {
-  position: relative !important;
-  width: 112px;
-  height: 112px;
-  display: grid;
-  place-items: center;
-  margin: auto !important;
-  transform: none !important;
 }
 
 .evara-loader-mode-bg,
@@ -90,6 +39,20 @@
   inset: 0;
   overflow: hidden;
   pointer-events: none;
+}
+
+.evara-loader-backdrop {
+  background:
+    radial-gradient(circle at 50% 34%, rgba(255, 255, 255, 0.08), transparent 28%),
+    linear-gradient(180deg, rgba(5, 8, 18, 0.72), rgba(9, 17, 32, 0.92));
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+}
+
+html[data-theme="light"] .evara-loader-backdrop {
+  background:
+    radial-gradient(circle at 50% 34%, rgba(255, 255, 255, 0.56), transparent 28%),
+    linear-gradient(180deg, rgba(244, 247, 251, 0.78), rgba(237, 242, 240, 0.92));
 }
 
 .evara-loader-bg-wave,
@@ -139,58 +102,59 @@
   animation-delay: 3.1s;
 }
 
+html[data-theme="light"] .evara-loader-bg-wave.wave-1,
+html[data-theme="light"] .evara-loader-fast-bg-wave.wave-a {
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.12), transparent 64%);
+}
+
+html[data-theme="light"] .evara-loader-bg-wave.wave-2,
+html[data-theme="light"] .evara-loader-fast-bg-wave.wave-b {
+  background: radial-gradient(circle, rgba(79, 124, 255, 0.10), transparent 64%);
+}
+
+html[data-theme="light"] .evara-loader-bg-wave.wave-4 {
+  background: radial-gradient(circle, rgba(255, 124, 214, 0.08), transparent 64%);
+}
+
 .evara-loader-bg-glow,
-.evara-loader-fast-bg-glow {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.22;
-}
-
-.evara-loader-bg-glow.glow-1,
-.evara-loader-fast-bg-glow.glow-a {
-  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.09), transparent 22%);
-}
-
-.evara-loader-bg-glow.glow-2,
-.evara-loader-fast-bg-glow.glow-b {
-  background: radial-gradient(circle at 50% 100%, rgba(124, 58, 237, 0.12), transparent 28%);
-}
-
-.evara-loader-bg-glow.glow-3 {
-  background: radial-gradient(circle at 50% 0%, rgba(79, 124, 255, 0.10), transparent 24%);
-}
-
+.evara-loader-fast-bg-glow,
 .evara-loader-bg-stars,
 .evara-loader-fast-bg-stars {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0;
 }
 
-  opacity: 0.74;
+.evara-loader-bg-glow,
+.evara-loader-fast-bg-glow {
+  opacity: 0.22;
+}
+
+.evara-loader-bg-stars,
+.evara-loader-fast-bg-stars {
+  opacity: 0.52;
   background-image:
-    radial-gradient(circle, rgba(255,255,255,0.88) 1px, transparent 1.8px),
-    radial-gradient(circle, rgba(255,255,255,0.56) 1px, transparent 1.6px),
-    radial-gradient(circle, rgba(214,122,255,0.42) 1px, transparent 1.8px),
-    radial-gradient(circle, rgba(96,132,255,0.42) 1px, transparent 1.8px);
-  background-size: 90px 90px, 130px 130px, 160px 160px, 200px 200px;
-  background-position: 0 0, 24px 18px, 10px 42px, 38px 12px;
+    radial-gradient(circle, rgba(255,255,255,0.72) 1px, transparent 1.8px),
+    radial-gradient(circle, rgba(255,255,255,0.42) 1px, transparent 1.6px);
+  background-size: 90px 90px, 130px 130px;
+  background-position: 0 0, 24px 18px;
 }
 
-html[data-theme="light"] .evara-loader-bg-wave.wave-1,
-html[data-theme="light"] .evara-loader-fast-bg-wave.wave-a,
-  background: radial-gradient(circle, rgba(124, 58, 237, 0.12), transparent 64%);
+.evara-loader-box {
+  width: min(720px, calc(100vw - 32px));
+  margin: auto !important;
+  position: relative !important;
+  transform: none !important;
 }
 
-html[data-theme="light"] .evara-loader-bg-wave.wave-2,
-html[data-theme="light"] .evara-loader-fast-bg-wave.wave-b,
-  background: radial-gradient(circle, rgba(79, 124, 255, 0.10), transparent 64%);
-}
-
-html[data-theme="light"] .evara-loader-bg-wave.wave-4,
-  background: radial-gradient(circle, rgba(255, 124, 214, 0.08), transparent 64%);
+.evara-loader-fast-wrap {
+  position: relative !important;
+  width: 112px;
+  height: 112px;
+  display: grid;
+  place-items: center;
+  margin: auto !important;
+  transform: none !important;
 }
 
 .evara-loader-fast-logo {
@@ -201,12 +165,14 @@ html[data-theme="light"] .evara-loader-bg-wave.wave-4,
   z-index: 2;
 }
 
+.evara-loader-logo,
 .evara-loader-logo--premium {
   width: 112px;
   height: 112px;
   display: block;
   position: relative;
   z-index: 2;
+  object-fit: contain;
 }
 
 .evara-loader-mark,
@@ -230,52 +196,24 @@ html[data-theme="light"] .evara-loader-bg-wave.wave-4,
   pointer-events: none;
 }
 
-.evara-loader-wave {
-  width: 170px;
-  height: 170px;
+.evara-loader-wave,
+.evara-loader-fast-wave,
+.evara-loader-pulse-ring {
   border: 1px solid rgba(255,255,255,0.10);
   background: radial-gradient(circle, rgba(255,255,255,0.06), transparent 62%);
   animation: loaderWave 2.4s ease-out infinite;
 }
 
-.evara-loader-wave.wave-2 {
-  animation-delay: 0.42s;
-}
-
-.evara-loader-wave.wave-3 {
-  animation-delay: 0.84s;
+.evara-loader-wave,
+.evara-loader-pulse-ring {
+  width: 170px;
+  height: 170px;
 }
 
 .evara-loader-fast-wave {
   width: 108px;
   height: 108px;
-  border: 1px solid rgba(255,255,255,0.10);
-  background: radial-gradient(circle, rgba(255,255,255,0.05), transparent 64%);
-  animation: loaderFastWave 2s ease-out infinite;
-}
-
-.evara-loader-fast-wave.wave-b {
-  animation-delay: 0.34s;
-}
-
-.evara-loader-fast-wave.wave-c {
-  animation-delay: 0.68s;
-}
-
-.evara-loader-pulse-ring {
-  width: 150px;
-  height: 150px;
-  border: 1px solid rgba(255,255,255,0.10);
-  opacity: 0.4;
-  animation: loaderPulseRing 2.6s ease-out infinite;
-}
-
-.evara-loader-pulse-ring.pulse-ring-b {
-  animation-delay: 0.45s;
-}
-
-.evara-loader-pulse-ring.pulse-ring-c {
-  animation-delay: 0.9s;
+  animation-name: loaderFastWave;
 }
 
 .evara-loader-pulse-glow {
@@ -328,53 +266,19 @@ html[data-theme="light"] .evara-loader-bg-wave.wave-4,
 }
 
 @keyframes loaderBgDrift {
-  0% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-
-  50% {
-    transform: translate3d(1.4vw, -1.2vh, 0) scale(1.04);
-  }
-
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(1.4vw, -1.2vh, 0) scale(1.04); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
 }
 
 @keyframes loaderWave {
-  0% {
-    transform: translate(-50%, -50%) scale(0.72);
-    opacity: 0.44;
-  }
-
-  100% {
-    transform: translate(-50%, -50%) scale(1.42);
-    opacity: 0;
-  }
+  0% { transform: translate(-50%, -50%) scale(0.72); opacity: 0.44; }
+  100% { transform: translate(-50%, -50%) scale(1.42); opacity: 0; }
 }
 
 @keyframes loaderFastWave {
-  0% {
-    transform: translate(-50%, -50%) scale(0.7);
-    opacity: 0.38;
-  }
-
-  100% {
-    transform: translate(-50%, -50%) scale(1.34);
-    opacity: 0;
-  }
-}
-
-@keyframes loaderPulseRing {
-  0% {
-    transform: translate(-50%, -50%) scale(0.76);
-    opacity: 0.34;
-  }
-
-  100% {
-    transform: translate(-50%, -50%) scale(1.42);
-    opacity: 0;
-  }
+  0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0.38; }
+  100% { transform: translate(-50%, -50%) scale(1.34); opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
