@@ -11,13 +11,11 @@ import {
   getSavedUserProfile
 } from './firebase.js';
 
+import { calculateSplit } from './split-engine.js';
+
 const list = document.getElementById('billList');
 const totalEl = document.getElementById('billTotal');
 const countEl = document.getElementById('billCount');
-
-const DEFAULT_SPLIT_MODEL = 'platform_vendor';
-const PLATFORM_PERCENT = 30;
-const VENDOR_PERCENT = 70;
 
 let billableRows = [];
 let activeUser = null;
@@ -37,19 +35,13 @@ function invoiceNumber() {
   return 'EVA-' + stamp + '-' + random;
 }
 
-function calculatePlatformVendorSplit(amount) {
-  const safeAmount = Number(amount || 0);
-  const platformAmount = Number((safeAmount * (PLATFORM_PERCENT / 100)).toFixed(2));
-  const companyAmount = Number((safeAmount * (VENDOR_PERCENT / 100)).toFixed(2));
-
-  return {
-    splitModel: DEFAULT_SPLIT_MODEL,
-    platformPercent: PLATFORM_PERCENT,
-    vendorPercent: VENDOR_PERCENT,
-    platformAmount,
-    companyAmount,
-    vendorAmount: companyAmount
-  };
+function splitForJob(row) {
+  return calculateSplit(row.amount, {
+    splitModel: row.splitModel || row.companyType || 'platform_vendor',
+    platformPercent: row.platformPercent,
+    vendorPercent: row.vendorPercent,
+    operatorPercent: row.operatorPercent
+  });
 }
 
 async function createInvoice(jobId) {
@@ -61,7 +53,7 @@ async function createInvoice(jobId) {
     return;
   }
 
-  const split = calculatePlatformVendorSplit(row.amount);
+  const split = splitForJob(row);
   const number = invoiceNumber();
 
   const invoiceRef = await addDoc(collection(db, 'invoices'), {
@@ -72,6 +64,7 @@ async function createInvoice(jobId) {
     customerEmail: row.customerEmail || '',
     companyId: row.companyId || '',
     companyName: row.companyName || '',
+    companyType: row.companyType || '',
     service: row.service,
     status: 'pending',
     paymentStatus: 'unpaid',
@@ -80,9 +73,12 @@ async function createInvoice(jobId) {
     platformAmount: split.platformAmount,
     companyAmount: split.companyAmount,
     vendorAmount: split.vendorAmount,
+    operatorAmount: split.operatorAmount,
     platformPercent: split.platformPercent,
     vendorPercent: split.vendorPercent,
+    operatorPercent: split.operatorPercent,
     splitModel: split.splitModel,
+    splitLabel: split.splitLabel,
     source: 'job_billing',
     createdBy: activeUser?.uid || '',
     createdByName: activeProfile?.fullName || activeProfile?.displayName || activeUser?.email || 'System',
@@ -98,9 +94,12 @@ async function createInvoice(jobId) {
     platformAmount: split.platformAmount,
     companyAmount: split.companyAmount,
     vendorAmount: split.vendorAmount,
+    operatorAmount: split.operatorAmount,
     platformPercent: split.platformPercent,
     vendorPercent: split.vendorPercent,
+    operatorPercent: split.operatorPercent,
     splitModel: split.splitModel,
+    splitLabel: split.splitLabel,
     updatedAt: serverTimestamp()
   });
 
@@ -121,6 +120,11 @@ async function loadBilling() {
       customerEmail: data.customerEmail || '',
       companyId: data.companyId || '',
       companyName: data.companyName || '',
+      companyType: data.companyType || '',
+      splitModel: data.splitModel || '',
+      platformPercent: data.platformPercent,
+      vendorPercent: data.vendorPercent,
+      operatorPercent: data.operatorPercent,
       service: data.service || data.serviceType || 'Service',
       status: String(data.invoiceStatus || data.status || 'pending_invoice').toLowerCase(),
       invoiceId: data.invoiceId || '',
