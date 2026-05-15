@@ -45,6 +45,7 @@ export const NAV_PAGES = {
     { page: "users.html", label: "Users", icon: "users", bubble: "users", group: "Organization" },
     { page: "org.html", label: "Organization", icon: "org", bubble: "org", group: "Organization" },
 
+    { page: "territories.html", label: "Territories", icon: "operations", bubble: "territories", group: "Operations" },
     { page: "leads.html", label: "Leads", icon: "leads", bubble: "leads", group: "Operations" },
     { page: "jobs.html", label: "Jobs", icon: "jobs", bubble: "jobs", group: "Operations" },
     { page: "qa.html", label: "QA", icon: "qa", bubble: "qa", group: "Operations" },
@@ -56,8 +57,8 @@ export const NAV_PAGES = {
 export const NAV_EXEC_GROUPS = [
   {
     title: "Operations",
-    subtitle: "Dispatch",
-    description: "Leads, jobs, QA, and field execution.",
+    subtitle: "Dispatch & Territory",
+    description: "Territories, leads, jobs, QA, and field execution.",
     icon: "operations"
   },
   {
