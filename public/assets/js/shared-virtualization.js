@@ -151,20 +151,41 @@ export function installSharedVirtualStyles() {
     .shared-virtual-card {
       contain: layout paint style;
       content-visibility: auto;
-      contain-intrinsic-size: 168px;
+      contain-intrinsic-size: var(--virtual-card-size, 168px);
       backface-visibility: hidden;
       transform: translateZ(0);
       will-change: auto;
     }
 
+    .virtual-paint-list,
     .shared-virtual-list {
       contain: layout paint;
+    }
+
+    .job-dispatch-item {
+      --virtual-card-size: 164px;
+      align-items: flex-start;
+      gap: 14px;
+      contain: content;
     }
 
     @media (max-width: 760px) {
       .virtual-paint-card,
       .shared-virtual-card {
-        contain-intrinsic-size: 220px;
+        --virtual-card-size: 220px;
+      }
+
+      .job-dispatch-item {
+        --virtual-card-size: 210px;
+        display: grid;
+        box-shadow: none !important;
+        animation: none !important;
+      }
+
+      #jobsList .aurora-card,
+      #jobsFeed .aurora-card,
+      #jobsProgressStack .aurora-card {
+        animation: none !important;
       }
     }
   `;
