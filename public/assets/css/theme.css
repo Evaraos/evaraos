@@ -19,11 +19,12 @@
 
 /* Core Components */
 @import url("./components/glass.css");
+@import url("./components/liquid-glass.css?v=1");
 @import url("./components/buttons.css");
 @import url("./components/application-polish.css?v=1");
 
-/* Current source of truth for the visual system */
-@import url("./components/apple-settings-glass.css?v=2");
+/* Scoped Settings Glass */
+@import url("./components/apple-settings-glass.css?v=3");
 
 /* Motion only */
 @import url("./effects/animations.css");
