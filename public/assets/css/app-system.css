@@ -1,50 +1,11 @@
-/* EVARAOS APP SYSTEM / SIMPLE LIQUID GLASS
-   One universal glass style. Theme only changes page background and text.
-*/
+/* =========================================================
+   EVARAOS APP SYSTEM
+   Layout + app shell only.
+   Glass, buttons, nav, tokens, and page backgrounds are owned by theme modules.
+   ========================================================= */
 
 :root {
-  color-scheme: light;
-  --eva-page-bg: #f4f7f6;
-  --eva-text: #08221c;
-  --eva-text-strong: #061b16;
-  --eva-text-soft: rgba(8, 34, 28, 0.68);
-  --eva-text-muted: rgba(8, 34, 28, 0.48);
-
-  --eva-glass-a: rgba(255, 255, 255, 0.76);
-  --eva-glass-b: rgba(255, 255, 255, 0.56);
-  --eva-glass-c: rgba(255, 255, 255, 0.30);
-  --eva-glass-border: rgba(255, 255, 255, 0.68);
-  --eva-glass-shadow: 0 22px 60px rgba(26, 42, 68, 0.16), inset 0 1px 1px rgba(255,255,255,0.80);
-  --eva-glass-shadow-soft: 0 12px 34px rgba(26, 42, 68, 0.12);
-
-  --eva-control: rgba(255, 255, 255, 0.72);
-  --eva-control-hover: rgba(255, 255, 255, 0.88);
-  --eva-control-text: #0a211b;
-  --eva-blur: 30px;
   --eva-motion: cubic-bezier(.19, 1, .22, 1);
-}
-
-html[data-theme="dark"] {
-  color-scheme: dark;
-  --eva-page-bg: #020307;
-  --eva-text: rgba(255, 255, 255, 0.92);
-  --eva-text-strong: #ffffff;
-  --eva-text-soft: rgba(255, 255, 255, 0.74);
-  --eva-text-muted: rgba(255, 255, 255, 0.50);
-  --eva-control-text: #ffffff;
-}
-
-html,
-body {
-  min-height: 100%;
-  background: var(--eva-page-bg) !important;
-  color: var(--eva-text) !important;
-  transition: background-color .24s var(--eva-motion), color .18s ease;
-}
-
-.page-aurora,
-.page-grid-overlay {
-  display: none !important;
 }
 
 body,
@@ -66,106 +27,8 @@ button {
   color: inherit;
 }
 
-h1,
-h2,
-h3,
-.hero-title,
-.login-title,
-.dashboard-hero h1,
-.dashboard-section-head h2 {
-  color: var(--eva-text-strong) !important;
-}
-
-p,
-.hero-copy,
-.hero-subtitle,
-.login-subtitle,
-.dashboard-hero-text,
-.dashboard-list-item span,
-.dashboard-feed-item span {
-  color: var(--eva-text-soft) !important;
-}
-
-.glass-card,
-.aurora-card,
-.auth-panel,
-.login-panel,
-.input-shell,
-.password-wrap,
-.remember-row,
-.hero-card,
-.stats-card,
-.feature-card,
-.service-card,
-.category-card,
-.info-card,
-.cta-panel,
-.section-panel,
-.site-footer-inner,
-.dashboard-sidebar-inner,
-.dashboard-panel,
-.dashboard-overview,
-.dashboard-hero,
-.dashboard-hero-panel,
-.dashboard-stat-card,
-.dashboard-list-item,
-.dashboard-feed-item,
-.dashboard-role-card,
-.dashboard-progress-row,
-.dashboard-state-card,
-.lead-card,
-.job-card,
-.user-card,
-.company-card,
-.settings-card,
-.qa-card,
-.application-card {
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(145deg, var(--eva-glass-a), var(--eva-glass-b) 56%, var(--eva-glass-c)) !important;
-  border: 1px solid var(--eva-glass-border) !important;
-  box-shadow: var(--eva-glass-shadow) !important;
-  color: var(--eva-text) !important;
-  backdrop-filter: blur(var(--eva-blur)) saturate(175%) !important;
-  -webkit-backdrop-filter: blur(var(--eva-blur)) saturate(175%) !important;
-  transform: translateZ(0);
-  transition: transform .18s var(--eva-motion), box-shadow .18s ease;
-}
-
-.glass-card::before,
-.aurora-card::before,
-.auth-panel::before,
-.login-panel::before,
-.hero-card::before,
-.stats-card::before,
-.feature-card::before,
-.service-card::before,
-.category-card::before,
-.info-card::before,
-.cta-panel::before,
-.section-panel::before,
-.site-footer-inner::before,
-.dashboard-panel::before,
-.dashboard-overview::before,
-.dashboard-hero::before,
-.dashboard-hero-panel::before,
-.dashboard-stat-card::before,
-.dashboard-list-item::before,
-.dashboard-feed-item::before,
-.dashboard-role-card::before,
-.dashboard-progress-row::before,
-.dashboard-state-card::before {
-  content: "";
-  position: absolute;
-  inset: 1px;
-  border-radius: inherit;
-  pointer-events: none;
-  background: linear-gradient(135deg, rgba(255,255,255,0.24), transparent 54%);
-  opacity: .58;
-  z-index: 0;
-}
-
 .glass-card > *,
+.glass-shell > *,
 .aurora-card > *,
 .auth-panel > *,
 .login-panel > *,
@@ -192,77 +55,48 @@ p,
   z-index: 1;
 }
 
-.btn,
-button,
-.eva-menu-btn,
-.eva-theme-btn,
-.eva-close-btn,
-.dashboard-nav-link,
-.dashboard-status-pill,
-.dashboard-mini-badge,
-input,
-textarea,
-select {
-  color: var(--eva-control-text) !important;
-  border-color: var(--eva-glass-border) !important;
-  background: var(--eva-control) !important;
-  box-shadow: var(--eva-glass-shadow-soft);
-  -webkit-tap-highlight-color: transparent;
-  transition: transform .16s var(--eva-motion), background .16s ease;
+.dashboard-shell,
+.dashboard-main,
+.dashboard-grid,
+.dashboard-content,
+.dashboard-section,
+.dashboard-panel,
+.dashboard-overview,
+.dashboard-sidebar-inner,
+.dashboard-list,
+.dashboard-feed,
+.dashboard-progress-stack,
+.dashboard-role-grid {
+  position: relative;
 }
 
-.btn:hover,
-button:hover,
-.dashboard-nav-link:hover {
-  background: var(--eva-control-hover) !important;
+.dashboard-shell,
+.dashboard-main,
+.home-page main,
+.login-page .login-shell,
+body:not(.dashboard-body):not(.login-page) main {
+  animation: evaAppPageRise .32s var(--eva-motion) both;
 }
 
-.btn:active,
-button:active,
-.dashboard-nav-link:active {
-  transform: scale(.985) translateY(1px);
+.dashboard-grid,
+.dashboard-role-grid,
+.dashboard-list,
+.dashboard-feed,
+.dashboard-progress-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.dashboard-section-head,
+.dashboard-hero,
+.dashboard-panel,
+.dashboard-overview {
+  min-width: 0;
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: var(--eva-text-muted) !important;
-}
-
-.eva-nav-pill,
-.eva-menu-panel,
-.eva-menu-card,
-.eva-bottom-nav,
-#evaNavShell,
-#evaMenuPanel {
-  background: linear-gradient(145deg, rgba(28, 32, 42, 0.84), rgba(20, 24, 32, 0.76)) !important;
-  border-color: rgba(255,255,255,0.20) !important;
-  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.30), inset 0 1px 1px rgba(255,255,255,0.18) !important;
-  color: #ffffff !important;
-  backdrop-filter: blur(var(--eva-blur)) saturate(175%) !important;
-  -webkit-backdrop-filter: blur(var(--eva-blur)) saturate(175%) !important;
-}
-
-.eva-brand-title,
-.eva-menu-app-name,
-.dashboard-nav-link,
-.dashboard-status-pill,
-.dashboard-mini-badge {
-  color: var(--eva-text-strong) !important;
-}
-
-.eva-brand-subtitle,
-.dashboard-eyebrow,
-.dashboard-section-kicker,
-.dashboard-sidebar-eyebrow {
-  color: var(--eva-text-soft) !important;
-}
-
-.login-page .login-shell,
-.dashboard-body .dashboard-shell,
-.dashboard-body .dashboard-main,
-.home-page main,
-body:not(.dashboard-body):not(.login-page) main {
-  animation: evaAppPageRise .32s var(--eva-motion) both;
+  opacity: 0.56;
 }
 
 @keyframes evaAppPageRise {
