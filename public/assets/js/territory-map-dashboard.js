@@ -18,6 +18,11 @@ import {
   groupFieldOpsByAssignee
 } from './field-ops-map-layer.js';
 
+import {
+  startFieldOpsRealtime,
+  stopFieldOpsRealtime
+} from './field-ops-realtime.js';
+
 const mapCanvas = document.getElementById('territoryMapCanvas');
 const statusNode = document.getElementById('territoryMapStatus');
 const feedRoot = document.getElementById('territoryMapFeed');
@@ -27,6 +32,8 @@ const regionCountNode = document.getElementById('territoryRegionCount');
 let activeMap = null;
 let activeTerritoryMarkers = [];
 let activeFieldOpsMarkers = [];
+let currentTerritoryData = { regions: [], territories: [] };
+let realtimeStarted = false;
 
 function clean(value = '') {
   return String(value || '').replace(/[<>]/g, '');
@@ -66,17 +73,24 @@ function renderFeed(territories = [], fieldOps = []) {
 }
 
 function renderStats(regions = [], territories = [], fieldOps = []) {
-  if (territoryCountNode) {
-    territoryCountNode.textContent = territories.length + ' Territories';
-  }
-
-  if (regionCountNode) {
-    regionCountNode.textContent = regions.length + ' Regions • ' + fieldOps.length + ' Ops Pins';
-  }
+  if (territoryCountNode) territoryCountNode.textContent = territories.length + ' Territories';
+  if (regionCountNode) regionCountNode.textContent = regions.length + ' Regions • ' + fieldOps.length + ' Live Ops';
 }
 
 function clearMarkers(markers = []) {
   markers.forEach((marker) => marker?.setMap?.(null));
+}
+
+function refreshFieldOpsOverlay(records = []) {
+  clearMarkers(activeFieldOpsMarkers);
+  activeFieldOpsMarkers = [];
+
+  if (activeMap) {
+    activeFieldOpsMarkers = renderFieldOpsMarkers(activeMap, records);
+  }
+
+  renderStats(currentTerritoryData.regions, currentTerritoryData.territories, records);
+  renderFeed(currentTerritoryData.territories, records);
 }
 
 async function initializeMap(territories = [], fieldOps = []) {
@@ -92,11 +106,32 @@ async function initializeMap(territories = [], fieldOps = []) {
     activeTerritoryMarkers = renderTerritoryMarkers(activeMap, territories);
     activeFieldOpsMarkers = renderFieldOpsMarkers(activeMap, fieldOps);
 
-    status('Map layer active with territory and field operations overlays.');
+    status('Map layer active with live field operations overlays.');
   } catch (error) {
     console.error(error);
-    status('Google Maps unavailable. Configure the Maps API key to activate overlays.');
+    status('Google Maps unavailable. Configure the Maps API key to activate overlays. Live feed still loads.');
   }
+}
+
+function startLiveOpsFeed() {
+  if (realtimeStarted) return;
+  realtimeStarted = true;
+
+  startFieldOpsRealtime((payload) => {
+    const opsByTerritory = payload.byTerritory;
+    const opsByAssignee = payload.byAssignee;
+
+    refreshFieldOpsOverlay(payload.records);
+    status('Live field operations synced: ' + payload.records.length + ' records.');
+
+    console.info('Live field ops grouped by territory:', opsByTerritory);
+    console.info('Live field ops grouped by assignee:', opsByAssignee);
+  }, {
+    onError(error) {
+      console.error(error);
+      status('Live field operations listener failed.');
+    }
+  });
 }
 
 async function loadMapDashboard() {
@@ -107,6 +142,8 @@ async function loadMapDashboard() {
     loadFieldOpsMapData()
   ]);
 
+  currentTerritoryData = territoryData;
+
   const territoriesByRegion = groupTerritoriesByRegion(territoryData.territories);
   const opsByTerritory = groupFieldOpsByTerritory(fieldOpsData.records);
   const opsByAssignee = groupFieldOpsByAssignee(fieldOpsData.records);
@@ -115,24 +152,36 @@ async function loadMapDashboard() {
   renderFeed(territoryData.territories, fieldOpsData.records);
 
   await initializeMap(territoryData.territories, fieldOpsData.records);
+  startLiveOpsFeed();
 
   console.info('Territories grouped by region:', territoriesByRegion);
   console.info('Field ops grouped by territory:', opsByTerritory);
   console.info('Field ops grouped by assignee:', opsByAssignee);
 }
 
+function cleanup() {
+  stopFieldOpsRealtime();
+  realtimeStarted = false;
+  clearMarkers(activeTerritoryMarkers);
+  clearMarkers(activeFieldOpsMarkers);
+  activeTerritoryMarkers = [];
+  activeFieldOpsMarkers = [];
+}
+
 function init() {
+  window.EvaraPageLifecycle?.registerCleanup?.(cleanup);
+  window.addEventListener('pagehide', cleanup);
+
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
+      cleanup();
       window.location.assign('/login.html');
       return;
     }
 
     if (!isMapAdmin()) {
       status('Map access requires operational permissions.');
-      if (feedRoot) {
-        feedRoot.innerHTML = '<div class="item muted">You do not have access to territory mapping.</div>';
-      }
+      if (feedRoot) feedRoot.innerHTML = '<div class="item muted">You do not have access to territory mapping.</div>';
       return;
     }
 
