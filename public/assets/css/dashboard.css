@@ -512,12 +512,12 @@ html[data-theme="light"] .dashboard-progress-row,
 html[data-theme="light"] .dashboard-status-pill,
 html[data-theme="light"] .dashboard-mini-badge,
 html[data-theme="light"] .dashboard-avatar,
-html[data-theme="light"] .dashboard-avatar-large,
+html[data-theme="light"] .dashboard-avatar-large {
   background: rgba(255,255,255,0.78);
   border-color: rgba(255,255,255,0.86);
 }
 
-html[data-theme="light"] .dashboard-search-input,
+html[data-theme="light"] .dashboard-search-input {
   color: #13241f;
 }
 
