@@ -123,7 +123,7 @@
   transform: scale(0.96) !important;
 }
 
-html[data-theme="light"] .eva-quick-bubble,
+html[data-theme="light"] .eva-quick-bubble {
   background:
     radial-gradient(circle at 30% 20%, rgba(255,255,255,0.92), transparent 25%),
     linear-gradient(180deg, rgba(255,255,255,0.97), rgba(245,248,247,0.88));
