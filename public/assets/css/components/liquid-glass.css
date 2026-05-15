@@ -247,6 +247,60 @@ html[data-theme="light"] {
   z-index: 1;
 }
 
+html[data-theme="light"] .liquid-glass,
+html[data-theme="light"] .glass-card,
+html[data-theme="light"] .glass-shell,
+html[data-theme="light"] .aurora-card,
+html[data-theme="light"] .glass {
+  color: #10231d;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,0.78), transparent 36%),
+    linear-gradient(145deg, rgba(255,255,255,0.86), rgba(248,250,252,0.68) 72%);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow:
+    0 16px 36px rgba(92,114,124,0.10),
+    inset 0 1px 0 rgba(255,255,255,0.92),
+    inset 0 -1px 0 rgba(15,23,42,0.035);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+}
+
+html[data-theme="light"] .liquid-glass::before,
+html[data-theme="light"] .glass-card::before,
+html[data-theme="light"] .glass-shell::before,
+html[data-theme="light"] .aurora-card::before,
+html[data-theme="light"] .glass::before {
+  background: linear-gradient(135deg, rgba(255,255,255,0.72), transparent 48%, rgba(225,232,236,0.30));
+  opacity: 0.8;
+}
+
+html[data-theme="light"] .liquid-glass:hover,
+html[data-theme="light"] .glass-card:hover,
+html[data-theme="light"] .glass-shell:hover,
+html[data-theme="light"] .aurora-card:hover,
+html[data-theme="light"] .glass:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 20px 42px rgba(92,114,124,0.13),
+    inset 0 1px 0 rgba(255,255,255,0.94);
+}
+
+html[data-theme="light"] .glass-card h1,
+html[data-theme="light"] .glass-card h2,
+html[data-theme="light"] .glass-card h3,
+html[data-theme="light"] .aurora-card h1,
+html[data-theme="light"] .aurora-card h2,
+html[data-theme="light"] .aurora-card h3 {
+  color: #10231d;
+}
+
+html[data-theme="light"] .glass-card p,
+html[data-theme="light"] .glass-card span,
+html[data-theme="light"] .aurora-card p,
+html[data-theme="light"] .aurora-card span {
+  text-shadow: none;
+}
+
 .liquid-control,
 .btn,
 .btn-apple,
