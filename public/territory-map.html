@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#050814" />
+  <title>Evaraos Territory Map</title>
+
+  <link rel="icon" href="./assets/img/evaraos-emblem.png" />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/theme.css" />
+  <link rel="stylesheet" href="./assets/css/nav.css" />
+  <link rel="stylesheet" href="./assets/css/dashboard.css" />
+  <link rel="stylesheet" href="./assets/css/app-system.css" />
+
+  <style>
+    .territory-map-shell {
+      min-height: 560px;
+      border-radius: 28px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #territoryMapCanvas {
+      min-height: 560px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .territory-map-status {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 18px;
+      z-index: 2;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(4, 7, 18, 0.82);
+      border: 1px solid rgba(255,255,255,0.14);
+      color: var(--text-muted, rgba(255,255,255,0.72));
+      font-size: 13px;
+      font-weight: 800;
+      backdrop-filter: blur(18px);
+    }
+  </style>
+</head>
+<body data-route-guard="private" class="dashboard-body app-loading">
+  <div class="page-aurora" aria-hidden="true"></div>
+  <div class="page-grid-overlay" aria-hidden="true"></div>
+
+  <main class="dashboard-shell">
+    <aside class="dashboard-sidebar glass-card">
+      <div class="dashboard-sidebar-inner">
+        <div class="dashboard-sidebar-head">
+          <p class="dashboard-sidebar-eyebrow">Map OS</p>
+          <h2>Territory Map</h2>
+        </div>
+
+        <nav class="dashboard-sidebar-nav" aria-label="Territory map navigation">
+          <a class="dashboard-nav-link" href="./dashboard.html"><span class="dashboard-nav-icon">⌂</span><span>Dashboard</span></a>
+          <a class="dashboard-nav-link" href="./territories.html"><span class="dashboard-nav-icon">◎</span><span>Territories</span></a>
+          <a class="dashboard-nav-link active" href="./territory-map.html"><span class="dashboard-nav-icon">◈</span><span>Map</span></a>
+          <a class="dashboard-nav-link" href="./leads.html"><span class="dashboard-nav-icon">◌</span><span>Leads</span></a>
+        </nav>
+
+        <div class="dashboard-sidebar-foot glass-card">
+          <div class="dashboard-sidebar-foot-copy">
+            <strong>Live Map Layer</strong>
+            <span>Visualize territories, regions, and future field overlays.</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="dashboard-main">
+      <section class="dashboard-hero glass-card">
+        <div class="dashboard-hero-copy">
+          <p class="dashboard-eyebrow">Territory Mapping</p>
+          <h1>Visualize markets and operational coverage.</h1>
+          <p class="dashboard-hero-text">This map layer prepares Evaraos for dispatch zones, canvassing overlays, sales territories, operator markets, and future route intelligence.</p>
+        </div>
+        <div class="dashboard-hero-panel glass-card">
+          <div class="dashboard-hero-panel-top">
+            <span class="dashboard-mini-badge">Map Ready</span>
+            <span class="dashboard-live-dot" aria-hidden="true"></span>
+          </div>
+          <div class="dashboard-hero-panel-copy">
+            <strong id="territoryMapCount">0 Territories</strong>
+            <span id="territoryRegionCount">0 Regions</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Map Canvas</p>
+              <h2>Territory Overlay</h2>
+            </div>
+          </div>
+
+          <div class="territory-map-shell glass-card">
+            <div id="territoryMapCanvas" aria-label="Evaraos territory map"></div>
+            <div id="territoryMapStatus" class="territory-map-status">Initializing map layer...</div>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Territory Data</p>
+              <h2>Map Feed</h2>
+            </div>
+          </div>
+
+          <div id="territoryMapFeed" class="dashboard-list">
+            <div class="item muted">Loading map data...</div>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="./assets/js/loader.js"></script>
+  <script type="module" src="./assets/js/firebase.js"></script>
+  <script type="module" src="./assets/js/theme.js"></script>
+  <script type="module" src="./assets/js/route-guard.js"></script>
+  <script type="module" src="./assets/js/nav.js"></script>
+  <script type="module" src="./assets/js/territory-map-dashboard.js"></script>
+</body>
+</html>
