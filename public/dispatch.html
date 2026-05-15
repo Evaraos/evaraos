@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png" />
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" />
+  <meta name="theme-color" content="#f4f7f6" />
+  <title>Dispatch Board • Evaraos Inc</title>
+  <style>
+    html,body{background:#f4f7f6}html.boot-pending body{margin:0;overflow-x:hidden}html.auth-pending body,body.auth-pending{opacity:0;pointer-events:none}body.dispatch-page{margin:0;min-height:100vh;background:transparent}body.app-loading #appRoot{visibility:hidden}body.app-ready #appRoot{visibility:visible}.dispatch-wrap{width:min(1320px,calc(100% - 32px));margin:0 auto;padding:132px 0 70px;position:relative;z-index:2}.dispatch-hero{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;margin-bottom:18px}.dispatch-hero .glass-card,.dispatch-toolbar,.dispatch-column{border-radius:34px!important;padding:clamp(18px,3vw,32px)!important}.dispatch-kicker{margin:0 0 10px;color:var(--theme-primary,#ff2f57);font-size:12px;font-weight:950;letter-spacing:.2em;text-transform:uppercase}.dispatch-title{margin:0;font-size:clamp(2.3rem,5.8vw,5.25rem);line-height:.9;letter-spacing:-.075em}.dispatch-copy,.muted{color:var(--text-muted,rgba(255,255,255,.68));line-height:1.65}.dispatch-copy{max-width:760px;margin:16px 0 0}.dispatch-stats{display:grid;gap:10px}.dispatch-stat{border-radius:22px;padding:16px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);box-shadow:inset 0 1px 0 rgba(255,255,255,.28)}.dispatch-stat strong{display:block;font-size:30px;letter-spacing:-.055em}.dispatch-stat span{color:var(--text-muted,rgba(255,255,255,.68));font-weight:850}.dispatch-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}.dispatch-toolbar input,.dispatch-toolbar select{min-height:46px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.10);color:var(--text-primary,#fff);padding:0 16px;outline:none;font:inherit;font-weight:800}.dispatch-toolbar select option{color:#111}.dispatch-board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.dispatch-column h2{margin:0 0 12px;font-size:20px;letter-spacing:-.04em}.dispatch-list{display:grid;gap:12px;min-height:120px}.dispatch-card{border-radius:24px;padding:16px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.075);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 14px 32px rgba(0,0,0,.08)}.dispatch-card h3{margin:0;font-size:18px;letter-spacing:-.035em}.dispatch-card p{margin:8px 0 0;color:var(--text-muted,rgba(255,255,255,.68));line-height:1.5;font-weight:760}.dispatch-meta,.dispatch-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.dispatch-pill{border-radius:999px;padding:7px 10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);font-size:12px;font-weight:950;color:var(--text-muted,rgba(255,255,255,.74))}.dispatch-pill.hot{color:#ffd27a;border-color:rgba(255,210,122,.28);background:rgba(255,210,122,.10)}.dispatch-pill.go{color:#70ffbd;border-color:rgba(112,255,189,.26);background:rgba(112,255,189,.10)}.dispatch-pill.stop{color:#ff9b8f;border-color:rgba(255,155,143,.26);background:rgba(255,155,143,.10)}.dispatch-actions button{min-height:38px;border-radius:999px;padding:0 13px;font-size:13px}.empty-card{border-radius:22px;padding:18px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);font-weight:850;color:var(--text-muted,rgba(255,255,255,.7));line-height:1.6}@media(max-width:1040px){.dispatch-hero,.dispatch-board{grid-template-columns:1fr}.dispatch-wrap{width:min(100% - 20px,1320px);padding-top:112px}}
+  </style>
+  <link rel="stylesheet" href="/assets/css/base.css" />
+  <link rel="stylesheet" href="/assets/css/theme.css" />
+  <link rel="stylesheet" href="/assets/css/nav.css" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css" />
+  <link rel="stylesheet" href="/assets/css/app-system.css" />
+</head>
+<body class="dispatch-page auth-pending app-loading" data-route-guard="private">
+  <div id="universalNavRoot"></div><div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
+  <div id="appRoot"><div class="page-grid-overlay"></div><main class="dispatch-wrap">
+    <section class="dispatch-hero"><article class="glass-card aurora-card active-glow beam-target"><p class="dispatch-kicker">LIVE DISPATCH</p><h1 class="dispatch-title">Route jobs, crews, and field work.</h1><p class="dispatch-copy">Track new leads, claimed jobs, in-progress assignments, and completed work across companies and markets.</p></article><aside class="glass-card aurora-card active-glow beam-target dispatch-stats"><div class="dispatch-stat"><strong id="dispatchTotal">—</strong><span>Total records</span></div><div class="dispatch-stat"><strong id="dispatchOpen">—</strong><span>Open queue</span></div><div class="dispatch-stat"><strong id="dispatchActive">—</strong><span>Active work</span></div></aside></section>
+    <section class="glass-card aurora-card active-glow beam-target dispatch-toolbar"><input id="dispatchSearch" type="search" placeholder="Search customer, service, city, company..." /><select id="dispatchCompanyFilter"><option value="all">All companies</option><option value="supreme-true-clean">Supreme True Clean</option><option value="oneofone-cleaning">OneofOne Cleaning</option><option value="evaraos">Evaraos Inc</option></select><button id="dispatchRefresh" type="button" class="btn btn-theme-secondary beam-target">Refresh</button></section>
+    <section class="dispatch-board"><div class="glass-card aurora-card active-glow beam-target dispatch-column"><h2>New / Review</h2><div id="dispatchNew" class="dispatch-list"><div class="empty-card">Loading queue...</div></div></div><div class="glass-card aurora-card active-glow beam-target dispatch-column"><h2>Claimed / Scheduled</h2><div id="dispatchClaimed" class="dispatch-list"><div class="empty-card">Loading claimed work...</div></div></div><div class="glass-card aurora-card active-glow beam-target dispatch-column"><h2>In Progress / Done</h2><div id="dispatchActiveList" class="dispatch-list"><div class="empty-card">Loading active work...</div></div></div></section>
+  </main></div>
+  <script src="/assets/js/loader.js"></script>
+  <script type="module" src="/assets/js/firebase.js"></script>
+  <script type="module" src="/assets/js/route-guard.js"></script>
+  <script type="module" src="/assets/js/nav.js"></script>
+  <script type="module" src="/assets/js/dispatch.js"></script>
+</body>
+</html>
