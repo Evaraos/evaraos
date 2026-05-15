@@ -13,8 +13,8 @@ const SPLIT_MODELS = Object.freeze({
   }),
   internal_subsidiary: Object.freeze({
     label: 'Internal Subsidiary',
-    platformPercent: 100,
-    vendorPercent: 0,
+    platformPercent: 50,
+    vendorPercent: 50,
     operatorPercent: 0
   })
 });
