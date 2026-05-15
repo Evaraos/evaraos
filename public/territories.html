@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#050814" />
+  <title>Evaraos Territories</title>
+
+  <link rel="icon" href="./assets/img/evaraos-emblem.png" />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/theme.css" />
+  <link rel="stylesheet" href="./assets/css/nav.css" />
+  <link rel="stylesheet" href="./assets/css/dashboard.css" />
+  <link rel="stylesheet" href="./assets/css/app-system.css" />
+</head>
+<body data-route-guard="private" class="dashboard-body app-loading">
+  <div class="page-aurora" aria-hidden="true"></div>
+  <div class="page-grid-overlay" aria-hidden="true"></div>
+
+  <main class="dashboard-shell">
+    <aside class="dashboard-sidebar glass-card">
+      <div class="dashboard-sidebar-inner">
+        <div class="dashboard-sidebar-head">
+          <p class="dashboard-sidebar-eyebrow">Territory OS</p>
+          <h2>Regions & Markets</h2>
+        </div>
+
+        <nav class="dashboard-sidebar-nav" aria-label="Territory navigation">
+          <a class="dashboard-nav-link" href="./dashboard.html"><span class="dashboard-nav-icon">⌂</span><span>Dashboard</span></a>
+          <a class="dashboard-nav-link" href="./governance-dashboard.html"><span class="dashboard-nav-icon">◆</span><span>Governance</span></a>
+          <a class="dashboard-nav-link active" href="./territories.html"><span class="dashboard-nav-icon">◎</span><span>Territories</span></a>
+          <a class="dashboard-nav-link" href="./companies.html"><span class="dashboard-nav-icon">◉</span><span>Companies</span></a>
+        </nav>
+
+        <div class="dashboard-sidebar-foot glass-card">
+          <div class="dashboard-sidebar-foot-copy">
+            <strong>Market Control</strong>
+            <span>Build regional structures, assign territories, and prepare dispatch zones.</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="dashboard-main">
+      <section class="dashboard-hero glass-card">
+        <div class="dashboard-hero-copy">
+          <p class="dashboard-eyebrow">Territory Infrastructure</p>
+          <h1>Organize markets, operators, and dispatch zones.</h1>
+          <p class="dashboard-hero-text">Create regions and territories that can connect to governance, dispatch, sales operations, and future map-based routing.</p>
+        </div>
+        <div class="dashboard-hero-panel glass-card">
+          <div class="dashboard-hero-panel-top">
+            <span class="dashboard-mini-badge">Territory Ready</span>
+            <span class="dashboard-live-dot" aria-hidden="true"></span>
+          </div>
+          <div class="dashboard-hero-panel-copy">
+            <strong>Hierarchy Layer</strong>
+            <span>Regions group territories. Territories power dispatch, D2D, and local operations.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Create Region</p>
+              <h2>Regional Control</h2>
+            </div>
+          </div>
+
+          <form id="regionForm" class="dashboard-list" autocomplete="off">
+            <label class="dashboard-progress-row">
+              <span class="dashboard-progress-copy"><strong>Region Name</strong><span>Example: Florida Region</span></span>
+              <input name="name" class="dashboard-search-input dashboard-search-shell" placeholder="Florida Region" required />
+            </label>
+
+            <label class="dashboard-progress-row">
+              <span class="dashboard-progress-copy"><strong>State</strong><span>Primary operating state.</span></span>
+              <input name="state" class="dashboard-search-input dashboard-search-shell" placeholder="FL" />
+            </label>
+
+            <label class="dashboard-progress-row">
+              <span class="dashboard-progress-copy"><strong>Company ID</strong><span>Optional company ownership.</span></span>
+              <input name="companyId" class="dashboard-search-input dashboard-search-shell" placeholder="supreme-true-clean" />
+            </label>
+
+            <label class="dashboard-progress-row">
+              <span class="dashboard-progress-copy"><strong>Owner UID</strong><span>Optional regional owner.</span></span>
+              <input name="ownerUid" class="dashboard-search-input dashboard-search-shell" placeholder="Firebase UID" />
+            </label>
+
+            <label class="dashboard-progress-row">
+              <span class="dashboard-progress-copy"><strong>Operator UID</strong><span>Optional expansion operator.</span></span>
+              <input name="operatorUid" class="dashboard-search-input dashboard-search-shell" placeholder="Firebase UID" />
+            </label>
+
+            <label class="dashboard-progress-row">
+              <span class="dashboard-progress-copy"><strong>Notes</strong><span>Internal regional notes.</span></span>
+              <input name="notes" class="dashboard-search-input dashboard-search-shell" placeholder="Regional launch notes" />
+            </label>
+
+            <button class="btn btn-theme-primary beam-target" type="submit">Save Region</button>
+          </form>
+        </section>
+
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Create Territory</p>
+              <h2>Market Zone</h2>
+            </div>
+          </div>
+
+          <form id="territoryForm" class="dashboard-list" autocomplete="off">
+            <label class="dashboard-progress-row">
+              <span class="dashboard-progress-copy"><strong>Territory Name</strong><span>Example: Jacksonville Southside</span></span>
+              <input name="name" class="dashboard-search-input dashboard-search-shell" placeholder="Jacksonville Southside" required />
+            </label>
+
+            <label class="dashboard-progress-row">
+              <span class="dashboard-progress-copy"><strong>Region</strong><span>Assign territory to a region.</span></span>
+              <select id="territoryRegionId" name="regionId" class="dashboard-search-shell"></select>
+            </label>
+
+            <label class="dashboard-progress-row">
+              <span class="dashboard-progress-copy"><strong>Market</strong><span>Local operating market.</span></span>
+              <input name="market" class="dashboard-search-input dashboard-search-shell" placeholder="Jacksonville" />
+            </label>
+
+            <label class="dashboard-progress-row">
+              <span class="dashboard-progress-copy"><strong>City</strong><span>Primary city.</span></span>
+              <input name="city" class="dashboard-search-input dashboard-search-shell" placeholder="Jacksonville" />
+            </label>
+
+            <label class="dashboard-progress-row">
+              <span class="dashboard-progress-copy"><strong>State</strong><span>Primary state.</span></span>
+              <input name="state" class="dashboard-search-input dashboard-search-shell" placeholder="FL" />
+            </label>
+
+            <label class="dashboard-progress-row">
+              <span class="dashboard-progress-copy"><strong>Company ID</strong><span>Optional assigned company.</span></span>
+              <input name="companyId" class="dashboard-search-input dashboard-search-shell" placeholder="supreme-true-clean" />
+            </label>
+
+            <label class="dashboard-progress-row">
+              <span class="dashboard-progress-copy"><strong>Operator UID</strong><span>Optional territory operator.</span></span>
+              <input name="operatorUid" class="dashboard-search-input dashboard-search-shell" placeholder="Firebase UID" />
+            </label>
+
+            <label class="dashboard-progress-row">
+              <span class="dashboard-progress-copy"><strong>Dispatcher UID</strong><span>Optional dispatch owner.</span></span>
+              <input name="dispatcherUid" class="dashboard-search-input dashboard-search-shell" placeholder="Firebase UID" />
+            </label>
+
+            <label class="dashboard-progress-row">
+              <span class="dashboard-progress-copy"><strong>Boundary Type</strong><span>Market, zip, city, polygon, or custom.</span></span>
+              <select name="boundaryType" class="dashboard-search-shell">
+                <option value="market">Market</option>
+                <option value="city">City</option>
+                <option value="zip">ZIP</option>
+                <option value="polygon">Polygon</option>
+                <option value="custom">Custom</option>
+              </select>
+            </label>
+
+            <label class="dashboard-progress-row">
+              <span class="dashboard-progress-copy"><strong>Boundary Ref</strong><span>ZIP list, map polygon ID, or zone note.</span></span>
+              <input name="boundaryRef" class="dashboard-search-input dashboard-search-shell" placeholder="32256, 32246, southside-zone" />
+            </label>
+
+            <label class="dashboard-progress-row">
+              <span class="dashboard-progress-copy"><strong>Notes</strong><span>Internal territory notes.</span></span>
+              <input name="notes" class="dashboard-search-input dashboard-search-shell" placeholder="Launch route, canvassing notes, coverage details" />
+            </label>
+
+            <button class="btn btn-theme-primary beam-target" type="submit">Save Territory</button>
+          </form>
+        </section>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Regions</p>
+              <h2>Regional Hierarchy</h2>
+            </div>
+          </div>
+          <div id="regionsRoot" class="dashboard-list">
+            <div class="item muted">Loading regions...</div>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Territories</p>
+              <h2>Market Ownership</h2>
+            </div>
+          </div>
+          <div id="territoriesRoot" class="dashboard-list">
+            <div class="item muted">Loading territories...</div>
+          </div>
+        </section>
+      </section>
+
+      <p id="territoryStatus" class="dashboard-hero-text">Initializing territory layer...</p>
+    </section>
+  </main>
+
+  <script type="module" src="./assets/js/loader.js"></script>
+  <script type="module" src="./assets/js/firebase.js"></script>
+  <script type="module" src="./assets/js/theme.js"></script>
+  <script type="module" src="./assets/js/route-guard.js"></script>
+  <script type="module" src="./assets/js/nav.js"></script>
+  <script type="module" src="./assets/js/territory-dashboard.js"></script>
+</body>
+</html>
