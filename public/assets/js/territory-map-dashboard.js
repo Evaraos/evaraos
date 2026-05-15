@@ -11,6 +11,13 @@ import {
   groupTerritoriesByRegion
 } from './territory-map-layer.js';
 
+import {
+  loadFieldOpsMapData,
+  renderFieldOpsMarkers,
+  groupFieldOpsByTerritory,
+  groupFieldOpsByAssignee
+} from './field-ops-map-layer.js';
+
 const mapCanvas = document.getElementById('territoryMapCanvas');
 const statusNode = document.getElementById('territoryMapStatus');
 const feedRoot = document.getElementById('territoryMapFeed');
@@ -18,7 +25,8 @@ const territoryCountNode = document.getElementById('territoryMapCount');
 const regionCountNode = document.getElementById('territoryRegionCount');
 
 let activeMap = null;
-let activeMarkers = [];
+let activeTerritoryMarkers = [];
+let activeFieldOpsMarkers = [];
 
 function clean(value = '') {
   return String(value || '').replace(/[<>]/g, '');
@@ -43,39 +51,48 @@ function isMapAdmin() {
   ].includes(role);
 }
 
-function renderFeed(territories = []) {
+function renderFeed(territories = [], fieldOps = []) {
   if (!feedRoot) return;
 
-  if (!territories.length) {
-    feedRoot.innerHTML = '<div class="item muted">No mapped territories yet. Add territories with coordinates to activate overlays.</div>';
-    return;
-  }
+  const territoryHtml = territories.length
+    ? territories.map((territory) => '<article class="item"><h3>' + clean(territory.name) + '</h3><p class="muted">' + clean(territory.market || territory.city || 'No market assigned') + '</p><div class="row"><span class="pill">Territory</span><span class="pill">' + clean(territory.boundaryType || 'market') + '</span></div></article>').join('')
+    : '<div class="item muted">No mapped territories yet. Add territories with coordinates to activate territory overlays.</div>';
 
-  feedRoot.innerHTML = territories.map((territory) => {
-    return '<article class="item"><h3>' + clean(territory.name) + '</h3><p class="muted">' + clean(territory.market || territory.city || 'No market assigned') + '</p><div class="row"><span class="pill">' + clean(territory.regionId || 'unassigned-region') + '</span><span class="pill">' + clean(territory.boundaryType || 'market') + '</span></div></article>';
-  }).join('');
+  const fieldOpsHtml = fieldOps.length
+    ? fieldOps.slice(0, 12).map((record) => '<article class="item"><h3>' + clean(record.title) + '</h3><p class="muted">' + clean(record.type.toUpperCase()) + ' • ' + clean(record.status) + '</p><div class="row"><span class="pill">' + clean(record.territoryId || 'unassigned') + '</span><span class="pill">' + clean(record.assignedToName || 'Unassigned') + '</span></div></article>').join('')
+    : '<div class="item muted">No mapped leads or jobs yet. Add coordinates to leads/jobs to activate operational overlays.</div>';
+
+  feedRoot.innerHTML = territoryHtml + fieldOpsHtml;
 }
 
-function renderStats(regions = [], territories = []) {
+function renderStats(regions = [], territories = [], fieldOps = []) {
   if (territoryCountNode) {
     territoryCountNode.textContent = territories.length + ' Territories';
   }
 
   if (regionCountNode) {
-    regionCountNode.textContent = regions.length + ' Regions';
+    regionCountNode.textContent = regions.length + ' Regions • ' + fieldOps.length + ' Ops Pins';
   }
 }
 
-async function initializeMap(territories = []) {
+function clearMarkers(markers = []) {
+  markers.forEach((marker) => marker?.setMap?.(null));
+}
+
+async function initializeMap(territories = [], fieldOps = []) {
   try {
     activeMap = await createTerritoryMap(mapCanvas, {
       center: { lat: 30.3322, lng: -81.6557 },
       zoom: 9
     });
 
-    activeMarkers = renderTerritoryMarkers(activeMap, territories);
+    clearMarkers(activeTerritoryMarkers);
+    clearMarkers(activeFieldOpsMarkers);
 
-    status('Map layer active.');
+    activeTerritoryMarkers = renderTerritoryMarkers(activeMap, territories);
+    activeFieldOpsMarkers = renderFieldOpsMarkers(activeMap, fieldOps);
+
+    status('Map layer active with territory and field operations overlays.');
   } catch (error) {
     console.error(error);
     status('Google Maps unavailable. Configure the Maps API key to activate overlays.');
@@ -85,15 +102,23 @@ async function initializeMap(territories = []) {
 async function loadMapDashboard() {
   status('Loading map intelligence...');
 
-  const data = await loadTerritoryMapData();
-  const grouped = groupTerritoriesByRegion(data.territories);
+  const [territoryData, fieldOpsData] = await Promise.all([
+    loadTerritoryMapData(),
+    loadFieldOpsMapData()
+  ]);
 
-  renderStats(data.regions, data.territories);
-  renderFeed(data.territories);
+  const territoriesByRegion = groupTerritoriesByRegion(territoryData.territories);
+  const opsByTerritory = groupFieldOpsByTerritory(fieldOpsData.records);
+  const opsByAssignee = groupFieldOpsByAssignee(fieldOpsData.records);
 
-  await initializeMap(data.territories);
+  renderStats(territoryData.regions, territoryData.territories, fieldOpsData.records);
+  renderFeed(territoryData.territories, fieldOpsData.records);
 
-  console.info('Territories grouped by region:', grouped);
+  await initializeMap(territoryData.territories, fieldOpsData.records);
+
+  console.info('Territories grouped by region:', territoriesByRegion);
+  console.info('Field ops grouped by territory:', opsByTerritory);
+  console.info('Field ops grouped by assignee:', opsByAssignee);
 }
 
 function init() {
