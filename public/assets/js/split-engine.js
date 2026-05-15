@@ -5,14 +5,8 @@ const SPLIT_MODELS = Object.freeze({
     vendorPercent: 70,
     operatorPercent: 0
   }),
-  evara_expansion_partner: Object.freeze({
-    label: 'Evara Expansion Partner',
-    platformPercent: 50,
-    vendorPercent: 0,
-    operatorPercent: 50
-  }),
-  internal_subsidiary: Object.freeze({
-    label: 'Internal Subsidiary',
+  subsidiary_expansion_partner: Object.freeze({
+    label: 'Evaraos Subsidiary Expansion Partner',
     platformPercent: 50,
     vendorPercent: 50,
     operatorPercent: 0
@@ -24,7 +18,15 @@ function roundMoney(value) {
 }
 
 function normalizeModel(model = 'platform_vendor') {
-  return SPLIT_MODELS[model] ? model : 'platform_vendor';
+  const aliases = {
+    evara_expansion_partner: 'subsidiary_expansion_partner',
+    expansion_partner: 'subsidiary_expansion_partner',
+    internal_subsidiary: 'subsidiary_expansion_partner'
+  };
+
+  const normalized = aliases[model] || model;
+
+  return SPLIT_MODELS[normalized] ? normalized : 'platform_vendor';
 }
 
 export function getSplitModels() {
@@ -71,8 +73,14 @@ export function companyTypeToSplitModel(companyType = '') {
   const type = String(companyType || '').trim().toLowerCase();
 
   if (type === 'platform_vendor') return 'platform_vendor';
-  if (type === 'evara_expansion_partner' || type === 'expansion_partner') return 'evara_expansion_partner';
-  if (type === 'internal_subsidiary') return 'internal_subsidiary';
+  if (
+    type === 'subsidiary_expansion_partner' ||
+    type === 'evara_expansion_partner' ||
+    type === 'expansion_partner' ||
+    type === 'internal_subsidiary'
+  ) {
+    return 'subsidiary_expansion_partner';
+  }
 
   return 'platform_vendor';
 }
