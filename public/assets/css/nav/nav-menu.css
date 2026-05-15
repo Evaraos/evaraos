@@ -1,4 +1,4 @@
-/* NAV MENU / CONTROL CENTER - PANEL LAYOUT ONLY */
+/* NAV MENU / CONTROL CENTER - PHASE 2 LIQUID PANEL */
 
 .eva-menu-panel {
   position: fixed;
@@ -6,23 +6,26 @@
   bottom: calc(var(--eva-island-offset, 10px) + 94px);
   top: auto;
   z-index: 2147483646;
-  width: min(414px, calc(100vw - 20px));
-  max-height: min(var(--eva-menu-max-height, 62vh), calc(100vh - 184px));
-  padding: 14px 10px 14px;
-  border-radius: 30px;
+  width: min(440px, calc(100vw - 20px));
+  max-height: min(var(--eva-menu-max-height, 64vh), calc(100vh - 184px));
+  padding: 16px 12px 16px;
+  border-radius: 34px;
   overflow: auto;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
   transform: translateX(-50%) translateY(14px) scale(0.965);
   transform-origin: bottom center;
-  background: rgba(246, 248, 248, 0.62);
-  border: 1px solid rgba(255, 255, 255, 0.72);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,0.72), transparent 38%),
+    linear-gradient(145deg, rgba(255,255,255,0.78), rgba(248,250,252,0.56) 58%, rgba(255,255,255,0.30));
+  border: 1px solid rgba(255,255,255,0.86);
   box-shadow:
-    0 26px 64px rgba(0, 0, 0, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.80);
-  backdrop-filter: blur(30px) saturate(175%);
-  -webkit-backdrop-filter: blur(30px) saturate(175%);
+    0 30px 82px rgba(70,88,104,0.18),
+    inset 0 1px 0 rgba(255,255,255,0.96),
+    inset 0 -1px 0 rgba(15,23,42,0.05);
+  backdrop-filter: blur(38px) saturate(185%) brightness(1.03);
+  -webkit-backdrop-filter: blur(38px) saturate(185%) brightness(1.03);
   transition:
     opacity 0.18s ease,
     visibility 0.18s ease,
@@ -36,12 +39,15 @@ body.nav-menu-open .eva-menu-panel {
   transform: translateX(-50%) translateY(0) scale(1);
 }
 
-html[data-theme="dark"] .eva-menu-panel,
-  background: rgba(16, 18, 25, 0.68);
-  border-color: rgba(255, 255, 255, 0.16);
+html[data-theme="dark"] .eva-menu-panel {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,0.18), transparent 38%),
+    linear-gradient(145deg, rgba(26,30,40,0.86), rgba(13,16,24,0.74) 58%, rgba(255,255,255,0.04));
+  border-color: rgba(255,255,255,0.18);
   box-shadow:
-    0 28px 68px rgba(0, 0, 0, 0.40),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    0 30px 86px rgba(0,0,0,0.46),
+    inset 0 1px 0 rgba(255,255,255,0.16),
+    inset 0 -1px 0 rgba(0,0,0,0.54);
 }
 
 .eva-menu-panel::before {
@@ -50,8 +56,10 @@ html[data-theme="dark"] .eva-menu-panel,
   inset: 1px;
   border-radius: inherit;
   pointer-events: none;
-  background: linear-gradient(135deg, rgba(255,255,255,0.16), transparent 48%, rgba(255,255,255,0.08));
-  opacity: 0.72;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.34), transparent 44%, rgba(255,255,255,0.10)),
+    radial-gradient(circle at 72% 16%, color-mix(in srgb, var(--user-card-tint, #d61f42) 12%, transparent), transparent 34%);
+  opacity: 0.82;
 }
 
 .eva-menu-panel::after {
@@ -59,12 +67,12 @@ html[data-theme="dark"] .eva-menu-panel,
   position: fixed;
   left: 50%;
   bottom: calc(var(--eva-island-offset, 10px) + 74px);
-  width: 122px;
-  height: 20px;
+  width: 150px;
+  height: 24px;
   transform: translateX(-50%);
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(245,247,250,0.34), rgba(245,247,250,0));
-  filter: blur(10px);
+  background: linear-gradient(180deg, rgba(245,247,250,0.42), rgba(245,247,250,0));
+  filter: blur(12px);
 }
 
 .eva-menu-titlebar,
@@ -78,7 +86,7 @@ html[data-theme="dark"] .eva-menu-panel,
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
-  padding: 0 8px 10px;
+  padding: 2px 10px 12px;
 }
 
 .eva-menu-actions {
@@ -94,76 +102,86 @@ html[data-theme="dark"] .eva-menu-panel,
 
 .eva-menu-titlebar p,
 .eva-section-head p {
-  margin: 0 0 3px;
-  font-size: 0.54rem;
-  font-weight: 900;
-  letter-spacing: 0.18em;
+  margin: 0 0 4px;
+  font-size: 0.55rem;
+  font-weight: 950;
+  letter-spacing: 0.20em;
   text-transform: uppercase;
-  color: rgba(12,33,27,0.48);
+  color: rgba(12,33,27,0.50);
 }
 
 .eva-menu-titlebar h2,
 .eva-section-head h3 {
   margin: 0;
   font-weight: 950;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.045em;
   color: #0c211b;
 }
 
 .eva-menu-titlebar h2 {
-  font-size: 1.18rem;
+  font-size: 1.24rem;
   line-height: 1;
 }
 
 .eva-section-head h3 {
-  font-size: 0.86rem;
+  font-size: 0.92rem;
 }
 
 html[data-theme="dark"] .eva-menu-titlebar h2,
-html[data-theme="dark"] .eva-section-head h3,
+html[data-theme="dark"] .eva-section-head h3 {
   color: #f8fbff;
 }
 
 html[data-theme="dark"] .eva-menu-titlebar p,
-html[data-theme="dark"] .eva-section-head p,
-  color: rgba(230,236,255,0.52);
+html[data-theme="dark"] .eva-section-head p {
+  color: rgba(230,236,255,0.54);
 }
 
 .eva-menu-badge {
-  min-height: 24px;
-  padding: 0 10px;
+  min-height: 26px;
+  padding: 0 11px;
   border-radius: 999px;
   display: inline-grid;
   place-items: center;
   font-size: 0.64rem;
-  font-weight: 900;
+  font-weight: 950;
   color: rgba(18,35,30,0.78);
-  background: rgba(255,255,255,0.54);
-  border: 1px solid rgba(255,255,255,0.64);
+  background: rgba(255,255,255,0.62);
+  border: 1px solid rgba(255,255,255,0.72);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.90), 0 8px 18px rgba(70,88,104,0.10);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
 }
 
-html[data-theme="dark"] .eva-menu-badge,
-  color: rgba(255,255,255,0.84);
+html[data-theme="dark"] .eva-menu-badge {
+  color: rgba(255,255,255,0.86);
   background: rgba(255,255,255,0.11);
   border-color: rgba(255,255,255,0.18);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 8px 18px rgba(0,0,0,0.24);
 }
 
 .eva-menu-section {
   display: grid;
-  gap: 8px;
-  padding: 12px 9px 13px;
-  border-radius: 24px;
-  background: rgba(255,255,255,0.18);
-  border: 1px solid rgba(255,255,255,0.40);
+  gap: 9px;
+  padding: 13px 10px 14px;
+  border-radius: 26px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.34), rgba(255,255,255,0.18));
+  border: 1px solid rgba(255,255,255,0.50);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.44),
-    0 8px 20px rgba(0,0,0,0.055);
-  margin-top: 8px;
+    inset 0 1px 0 rgba(255,255,255,0.58),
+    0 10px 24px rgba(70,88,104,0.08);
+  margin-top: 9px;
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
 }
 
-html[data-theme="dark"] .eva-menu-section,
-  background: rgba(255,255,255,0.055);
-  border-color: rgba(255,255,255,0.10);
+html[data-theme="dark"] .eva-menu-section {
+  background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.035));
+  border-color: rgba(255,255,255,0.11);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    0 10px 24px rgba(0,0,0,0.22);
 }
 
 .eva-section-head {
@@ -187,6 +205,7 @@ html[data-theme="dark"] .eva-menu-section,
     bottom: calc(var(--eva-island-offset, 10px) + 92px);
     width: calc(100vw - 16px);
     padding-inline: 9px;
+    border-radius: 30px;
   }
 
   .eva-menu-section {
