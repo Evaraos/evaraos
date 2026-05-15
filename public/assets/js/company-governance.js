@@ -18,23 +18,24 @@ export const COMPANY_TYPES = Object.freeze({
     defaultSplitModel: 'platform_vendor',
     relationshipType: 'software_platform'
   }),
-  evara_expansion_partner: Object.freeze({
-    label: 'Evara Expansion Partner',
-    description: 'Operator developed through the Evara management and expansion program.',
-    defaultSplitModel: 'evara_expansion_partner',
-    relationshipType: 'managed_growth_partner'
-  }),
-  internal_subsidiary: Object.freeze({
-    label: 'Internal Subsidiary',
-    description: 'Company or category directly controlled by Evaraos.',
-    defaultSplitModel: 'internal_subsidiary',
-    relationshipType: 'internal_company'
+  subsidiary_expansion_partner: Object.freeze({
+    label: 'Evaraos Subsidiary Expansion Partner',
+    description: 'Subsidiary, operator, or internal growth partner using Evaraos infrastructure and expansion governance.',
+    defaultSplitModel: 'subsidiary_expansion_partner',
+    relationshipType: 'subsidiary_expansion'
   })
+});
+
+const COMPANY_TYPE_ALIASES = Object.freeze({
+  evara_expansion_partner: 'subsidiary_expansion_partner',
+  expansion_partner: 'subsidiary_expansion_partner',
+  internal_subsidiary: 'subsidiary_expansion_partner'
 });
 
 function normalizeCompanyType(companyType = '') {
   const safeType = String(companyType || '').trim().toLowerCase();
-  return COMPANY_TYPES[safeType] ? safeType : 'platform_vendor';
+  const normalized = COMPANY_TYPE_ALIASES[safeType] || safeType;
+  return COMPANY_TYPES[normalized] ? normalized : 'platform_vendor';
 }
 
 export function getCompanyTypes() {
@@ -48,7 +49,7 @@ export function getCompanyTypeConfig(companyType = 'platform_vendor') {
 export function buildCompanyGovernanceConfig(company = {}, overrides = {}) {
   const companyType = normalizeCompanyType(overrides.companyType || company.companyType || company.type);
   const typeConfig = getCompanyTypeConfig(companyType);
-  const splitModel = overrides.splitModel || company.splitModel || typeConfig.defaultSplitModel || companyTypeToSplitModel(companyType);
+  const splitModel = companyTypeToSplitModel(overrides.splitModel || company.splitModel || typeConfig.defaultSplitModel || companyType);
 
   return {
     companyId: company.id || company.companyId || overrides.companyId || '',
@@ -72,9 +73,18 @@ export async function getCompanyGovernance(companyId) {
   const snap = await getDoc(doc(db, 'company_governance', companyId));
   if (!snap.exists()) return null;
 
+  const data = snap.data();
+  const companyType = normalizeCompanyType(data.companyType || data.type);
+  const typeConfig = getCompanyTypeConfig(companyType);
+  const splitModel = companyTypeToSplitModel(data.splitModel || typeConfig.defaultSplitModel || companyType);
+
   return {
     id: snap.id,
-    ...snap.data()
+    ...data,
+    companyType,
+    companyTypeLabel: data.companyTypeLabel || typeConfig.label,
+    relationshipType: data.relationshipType || typeConfig.relationshipType,
+    splitModel
   };
 }
 
