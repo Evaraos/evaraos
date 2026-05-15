@@ -18,8 +18,7 @@
 @import url("./effects/apple-settings-background.css?v=1");
 
 /* Core Components */
-@import url("./components/glass.css");
-@import url("./components/liquid-glass.css?v=1");
+@import url("./components/liquid-glass.css?v=2");
 @import url("./components/buttons.css");
 @import url("./components/application-polish.css?v=1");
 
