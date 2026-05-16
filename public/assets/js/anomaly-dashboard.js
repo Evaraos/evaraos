@@ -30,6 +30,13 @@ import {
   getGovernanceAnomalyEscalationCount
 } from './governance-anomaly-escalation.js';
 
+import {
+  createDashboardRuntime,
+  startDashboardRuntime,
+  stopDashboardRuntime,
+  registerRuntimeCleanup
+} from './dashboard-runtime.js';
+
 const statusNode = document.getElementById('anomalyStatus');
 const totalNode = document.getElementById('anomalyTotalCount');
 const criticalNode = document.getElementById('anomalyCriticalCount');
@@ -39,6 +46,12 @@ const persistenceNode = document.getElementById('anomalyPersistenceStatus');
 const anomalyRoot = document.getElementById('anomalyRoot');
 const recommendationRoot = document.getElementById('anomalyRecommendationRoot');
 const filterRoot = document.getElementById('anomalyFilters');
+
+const runtime = createDashboardRuntime({
+  id: 'anomaly-dashboard-runtime',
+  name: 'Anomaly Dashboard Runtime',
+  metadata: { page: 'anomaly-dashboard.html' }
+});
 
 let auditListenerId = null;
 let activeFilter = 'all';
@@ -164,16 +177,46 @@ function bindEvents() {
   });
 }
 
-function startAnomalyDashboard() {
+async function startAnomalyDashboard() {
   stopAnomalyDashboard();
-  startAuditLogEngine();
-  startEventPersistence();
-  startGovernanceAnomalyEscalation();
 
-  auditListenerId = subscribeAuditLog(() => {
-    renderAnomalies();
-    syncEscalations();
-  });
+  await startDashboardRuntime(runtime.id, [
+    {
+      label: 'Start audit log engine',
+      run() {
+        startAuditLogEngine();
+        return stopAuditLogEngine;
+      }
+    },
+    {
+      label: 'Start event persistence',
+      run() {
+        startEventPersistence();
+        return stopEventPersistence;
+      }
+    },
+    {
+      label: 'Start anomaly escalation router',
+      run() {
+        startGovernanceAnomalyEscalation();
+        return stopGovernanceAnomalyEscalation;
+      }
+    },
+    {
+      label: 'Subscribe audit anomaly renderer',
+      run() {
+        auditListenerId = subscribeAuditLog(() => {
+          renderAnomalies();
+          syncEscalations();
+        });
+
+        return () => {
+          if (auditListenerId) unsubscribeAuditLog(auditListenerId);
+          auditListenerId = null;
+        };
+      }
+    }
+  ]);
 
   renderAnomalies();
   syncEscalations();
@@ -182,13 +225,12 @@ function startAnomalyDashboard() {
 function stopAnomalyDashboard() {
   if (auditListenerId) unsubscribeAuditLog(auditListenerId);
   auditListenerId = null;
-  stopGovernanceAnomalyEscalation();
-  stopAuditLogEngine();
-  stopEventPersistence();
+  stopDashboardRuntime(runtime.id);
 }
 
 function init() {
   bindEvents();
+  registerRuntimeCleanup(runtime.id, stopAnomalyDashboard);
   window.EvaraPageLifecycle?.registerCleanup?.(stopAnomalyDashboard);
   window.addEventListener('pagehide', stopAnomalyDashboard);
 
@@ -205,12 +247,10 @@ function init() {
       return;
     }
 
-    try {
-      startAnomalyDashboard();
-    } catch (error) {
+    startAnomalyDashboard().catch((error) => {
       console.error(error);
       status('Anomaly dashboard failed to start.');
-    }
+    });
   });
 }
 
