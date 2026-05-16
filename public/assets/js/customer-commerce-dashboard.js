@@ -19,6 +19,39 @@ import {
   getCustomerPortalSubscriptionOptions
 } from './customer-commerce-portal-engine.js';
 
+import {
+  loadCustomerPersistentQuotes,
+  subscribeCustomerPersistentQuotes,
+  stopPersistentQuotesSubscription
+} from './persistent-quotes-adapter.js';
+
+import {
+  loadCustomerPersistentInvoices,
+  subscribeCustomerPersistentInvoices,
+  stopPersistentInvoicesSubscription
+} from './persistent-invoices-adapter.js';
+
+import {
+  loadCustomerPersistentSubscriptions,
+  subscribeCustomerPersistentSubscriptions,
+  stopPersistentSubscriptionsSubscription
+} from './persistent-subscriptions-adapter.js';
+
+import {
+  loadCustomerNotifications,
+  subscribeCustomerNotifications,
+  getLocalCustomerNotifications,
+  summarizeCustomerNotifications,
+  markAllCustomerNotificationsRead,
+  stopPersistentCustomerNotificationsSubscription
+} from './persistent-customer-notifications-adapter.js';
+
+import {
+  getFirestoreSyncHealth,
+  subscribeFirestoreSyncHealth,
+  unsubscribeFirestoreSyncHealth
+} from './firestore-sync-health.js';
+
 const statusNode = document.getElementById('customerCommerceStatus');
 const outstandingNode = document.getElementById('customerOutstanding');
 const paidNode = document.getElementById('customerPaid');
@@ -36,7 +69,11 @@ const runtime = createDashboardRuntime({
 });
 
 let portalListenerId = null;
+let notificationUnsubscribe = null;
+let syncHealthListenerId = null;
 let activeCustomerId = '';
+let latestNotifications = [];
+let latestSyncHealth = null;
 
 function clean(value = '') {
   return String(value || '').replace(/[<>]/g, '');
@@ -74,7 +111,27 @@ function renderStats(snapshot = {}) {
 
 function renderActions(snapshot = {}) {
   if (!actionsRoot) return;
-  const rows = snapshot.actions || [];
+  const notificationsSummary = summarizeCustomerNotifications(latestNotifications);
+  const syncHealth = latestSyncHealth || getFirestoreSyncHealth();
+  const rows = [...(snapshot.actions || [])];
+
+  if (notificationsSummary.unread) {
+    rows.unshift({
+      type: 'notifications',
+      title: 'Unread notifications',
+      detail: `${notificationsSummary.unread} customer notification(s) need review.`,
+      priority: notificationsSummary.urgent ? 'urgent' : 'medium'
+    });
+  }
+
+  if (syncHealth.status === 'offline' || syncHealth.status === 'degraded') {
+    rows.unshift({
+      type: 'sync_health',
+      title: 'Sync status needs attention',
+      detail: `Current sync state is ${syncHealth.status}. Some account data may still be catching up.`,
+      priority: 'medium'
+    });
+  }
 
   actionsRoot.innerHTML = rows.map((action) => {
     return '<article class="item"><h3>' + clean(action.title) + '</h3><p class="muted">' + clean(action.detail) + '</p><div class="row"><span class="pill">' + clean(label(action.priority)) + '</span><span class="pill">' + clean(label(action.type)) + '</span></div></article>';
@@ -116,15 +173,22 @@ function renderSubscriptions(snapshot = {}) {
 function renderQuotes(snapshot = {}) {
   if (!quotesRoot) return;
   const rows = snapshot.quotes || [];
+  const notifications = latestNotifications.slice(0, 3);
 
-  if (!rows.length) {
-    quotesRoot.innerHTML = '<div class="item muted">No quotes yet.</div>';
+  if (!rows.length && !notifications.length) {
+    quotesRoot.innerHTML = '<div class="item muted">No quotes or notifications yet.</div>';
     return;
   }
 
-  quotesRoot.innerHTML = rows.slice(0, 8).map((quote) => {
+  const quoteHtml = rows.slice(0, 6).map((quote) => {
     return '<article class="item"><h3>Quote ' + clean(quote.id) + '</h3><p class="muted">Status: ' + clean(label(quote.status)) + '</p><div class="row"><span class="pill">Total: ' + clean(money(quote.totalCents)) + '</span><span class="pill">Items: ' + clean(String(quote.lineItems?.length || 0)) + '</span></div></article>';
   }).join('');
+
+  const notificationHtml = notifications.map((notification) => {
+    return '<article class="item"><h3>' + clean(notification.title) + '</h3><p class="muted">' + clean(notification.body || 'Customer notification') + '</p><div class="row"><span class="pill">' + clean(label(notification.type)) + '</span><span class="pill">' + clean(label(notification.status)) + '</span></div></article>';
+  }).join('');
+
+  quotesRoot.innerHTML = quoteHtml + notificationHtml;
 }
 
 function renderCustomerCommerce(snapshot = {}) {
@@ -133,7 +197,19 @@ function renderCustomerCommerce(snapshot = {}) {
   renderInvoices(snapshot);
   renderSubscriptions(snapshot);
   renderQuotes(snapshot);
-  status('Customer commerce portal synced.');
+  const syncHealth = latestSyncHealth || getFirestoreSyncHealth();
+  status(`Customer commerce portal synced • ${label(syncHealth.status || 'healthy')}`);
+}
+
+async function hydratePersistentCustomerCommerce() {
+  await Promise.allSettled([
+    loadCustomerPersistentQuotes(activeCustomerId),
+    loadCustomerPersistentInvoices(activeCustomerId),
+    loadCustomerPersistentSubscriptions(activeCustomerId),
+    loadCustomerNotifications(activeCustomerId).then((rows) => { latestNotifications = rows || []; })
+  ]);
+
+  renderCustomerCommerce(refreshCustomerCommerceSnapshot(activeCustomerId));
 }
 
 async function startCustomerCommerceDashboard() {
@@ -144,6 +220,8 @@ async function startCustomerCommerceDashboard() {
     status('Customer profile not ready.');
     return;
   }
+
+  await hydratePersistentCustomerCommerce();
 
   await startDashboardRuntime(runtime.id, [
     {
@@ -159,6 +237,48 @@ async function startCustomerCommerceDashboard() {
           portalListenerId = null;
         };
       }
+    },
+    {
+      label: 'Subscribe persistent customer commerce records',
+      run() {
+        subscribeCustomerPersistentQuotes(activeCustomerId, () => renderCustomerCommerce(refreshCustomerCommerceSnapshot(activeCustomerId)));
+        subscribeCustomerPersistentInvoices(activeCustomerId, () => renderCustomerCommerce(refreshCustomerCommerceSnapshot(activeCustomerId)));
+        subscribeCustomerPersistentSubscriptions(activeCustomerId, () => renderCustomerCommerce(refreshCustomerCommerceSnapshot(activeCustomerId)));
+
+        return () => {
+          stopPersistentQuotesSubscription();
+          stopPersistentInvoicesSubscription();
+          stopPersistentSubscriptionsSubscription();
+        };
+      }
+    },
+    {
+      label: 'Subscribe customer notifications',
+      run() {
+        notificationUnsubscribe = subscribeCustomerNotifications(activeCustomerId, (rows = []) => {
+          latestNotifications = rows || [];
+          renderCustomerCommerce(refreshCustomerCommerceSnapshot(activeCustomerId));
+        });
+
+        return () => {
+          if (notificationUnsubscribe) notificationUnsubscribe();
+          notificationUnsubscribe = null;
+          stopPersistentCustomerNotificationsSubscription();
+        };
+      }
+    },
+    {
+      label: 'Subscribe customer sync health',
+      run() {
+        syncHealthListenerId = subscribeFirestoreSyncHealth((health) => {
+          latestSyncHealth = health;
+          renderCustomerCommerce(refreshCustomerCommerceSnapshot(activeCustomerId));
+        });
+        return () => {
+          if (syncHealthListenerId) unsubscribeFirestoreSyncHealth(syncHealthListenerId);
+          syncHealthListenerId = null;
+        };
+      }
     }
   ]);
 
@@ -167,7 +287,17 @@ async function startCustomerCommerceDashboard() {
 
 function stopCustomerCommerceDashboard() {
   if (portalListenerId) unsubscribeCustomerCommercePortal(portalListenerId);
+  if (notificationUnsubscribe) notificationUnsubscribe();
+  if (syncHealthListenerId) unsubscribeFirestoreSyncHealth(syncHealthListenerId);
+
   portalListenerId = null;
+  notificationUnsubscribe = null;
+  syncHealthListenerId = null;
+
+  stopPersistentQuotesSubscription();
+  stopPersistentInvoicesSubscription();
+  stopPersistentSubscriptionsSubscription();
+  stopPersistentCustomerNotificationsSubscription();
   stopDashboardRuntime(runtime.id);
 }
 
@@ -175,6 +305,10 @@ function init() {
   registerRuntimeCleanup(runtime.id, stopCustomerCommerceDashboard);
   window.EvaraPageLifecycle?.registerCleanup?.(stopCustomerCommerceDashboard);
   window.addEventListener('pagehide', stopCustomerCommerceDashboard);
+
+  window.EvaraCustomerCommerceActions = {
+    markAllNotificationsRead: () => markAllCustomerNotificationsRead(activeCustomerId)
+  };
 
   onAuthStateChanged(auth, (user) => {
     if (!user) {
