@@ -30,7 +30,7 @@ function normalizeSeverity(value = 'info') {
 function normalizeCategory(type = '') {
   const root = String(type || '').split('.')[0];
 
-  if (['lead', 'job', 'worker', 'territory', 'alert', 'automation', 'notification'].includes(root)) {
+  if (['lead', 'job', 'worker', 'territory', 'alert', 'automation', 'notification', 'governance'].includes(root)) {
     return root;
   }
 
