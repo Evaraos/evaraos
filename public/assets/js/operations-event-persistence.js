@@ -17,6 +17,7 @@ const DEFAULT_PERSISTED_EVENTS = Object.freeze([
   'alert.*',
   'automation.*',
   'audit.*',
+  'governance.*',
   'notification.*',
   'job.completed',
   'job.cancelled',
