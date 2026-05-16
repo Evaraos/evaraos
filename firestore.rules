@@ -1,0 +1,267 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function userRole() {
+      return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        ? userDoc().data.role
+        : 'guest';
+    }
+
+    function isOwner() {
+      return signedIn() && userRole() in ['owner', 'super_admin'];
+    }
+
+    function isAdmin() {
+      return signedIn() && userRole() in ['owner', 'super_admin', 'admin'];
+    }
+
+    function isOperationsPlus() {
+      return signedIn() && userRole() in [
+        'owner',
+        'super_admin',
+        'admin',
+        'manager',
+        'operations_manager',
+        'operations_coordinator'
+      ];
+    }
+
+    function isStaff() {
+      return signedIn() && userRole() in [
+        'staff',
+        'technician',
+        'cleaner',
+        'sales_rep',
+        'field_staff',
+        'crew_lead'
+      ];
+    }
+
+    function isCustomer(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function ownsCustomerRecord() {
+      return signedIn()
+        && (
+          resource.data.customerId == request.auth.uid
+          || resource.data.userId == request.auth.uid
+          || resource.data.uid == request.auth.uid
+        );
+    }
+
+    function createsCustomerRecord() {
+      return signedIn()
+        && (
+          request.resource.data.customerId == request.auth.uid
+          || request.resource.data.userId == request.auth.uid
+          || request.resource.data.uid == request.auth.uid
+        );
+    }
+
+    function sameCompanyAsUser(companyId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && userDoc().data.companyId == companyId;
+    }
+
+    function leadershipCompanyAccess(companyId) {
+      return isOwner() || (isOperationsPlus() && sameCompanyAsUser(companyId));
+    }
+
+    function customerReadable() {
+      return signedIn()
+        && (
+          ownsCustomerRecord()
+          || isOperationsPlus()
+          || isAdmin()
+          || isOwner()
+        );
+    }
+
+    function customerCreatable() {
+      return signedIn()
+        && (
+          createsCustomerRecord()
+          || isOperationsPlus()
+          || isAdmin()
+          || isOwner()
+        );
+    }
+
+    function commerceWriteAccess() {
+      return isAdmin() || isOperationsPlus();
+    }
+
+    function safeServiceCatalogWrite() {
+      return commerceWriteAccess()
+        && request.resource.data.keys().hasOnly([
+          'id',
+          'companyId',
+          'companyName',
+          'category',
+          'name',
+          'slug',
+          'description',
+          'status',
+          'pricingType',
+          'basePriceCents',
+          'minimumPriceCents',
+          'unitLabel',
+          'recurringEligible',
+          'subscriptionInterval',
+          'subscriptionTermMonths',
+          'estimatedDurationMinutes',
+          'requiresQuote',
+          'addOns',
+          'fees',
+          'tags',
+          'createdAtMs',
+          'updatedAtMs',
+          'metadata'
+        ]);
+    }
+
+    function validCustomerMessageCreate() {
+      return signedIn()
+        && request.resource.data.customerId is string
+        && request.resource.data.body is string
+        && request.resource.data.body.size() <= 5000
+        && (
+          request.resource.data.customerId == request.auth.uid
+          || isOperationsPlus()
+          || isAdmin()
+        );
+    }
+
+    match /users/{userId} {
+      allow read: if isCustomer(userId) || isOperationsPlus() || isAdmin();
+      allow create: if isCustomer(userId) || isAdmin();
+      allow update: if isCustomer(userId) || isAdmin();
+      allow delete: if isOwner();
+    }
+
+    match /companies/{companyId} {
+      allow read: if signedIn();
+      allow create, update: if isAdmin();
+      allow delete: if isOwner();
+    }
+
+    match /staff_applications/{applicationId} {
+      allow create: if signedIn();
+      allow read: if isOperationsPlus() || ownsCustomerRecord();
+      allow update: if isOperationsPlus();
+      allow delete: if isOwner();
+    }
+
+    match /staff_profiles/{profileId} {
+      allow read: if isOperationsPlus() || isCustomer(profileId);
+      allow create, update: if isOperationsPlus();
+      allow delete: if isOwner();
+    }
+
+    match /service_catalog/{serviceId} {
+      allow read: if signedIn();
+      allow create, update: if safeServiceCatalogWrite();
+      allow delete: if isAdmin();
+    }
+
+    match /service_packages/{packageId} {
+      allow read: if signedIn();
+      allow create, update: if commerceWriteAccess();
+      allow delete: if isAdmin();
+    }
+
+    match /quotes/{quoteId} {
+      allow read: if customerReadable();
+      allow create: if customerCreatable() || commerceWriteAccess();
+      allow update: if commerceWriteAccess();
+      allow delete: if isAdmin();
+    }
+
+    match /subscriptions/{subscriptionId} {
+      allow read: if customerReadable();
+      allow create, update: if commerceWriteAccess();
+      allow delete: if isAdmin();
+    }
+
+    match /invoices/{invoiceId} {
+      allow read: if customerReadable();
+      allow create, update: if commerceWriteAccess();
+      allow delete: if isAdmin();
+    }
+
+    match /stripe_sessions/{sessionId} {
+      allow read: if customerReadable();
+      allow create, update: if commerceWriteAccess();
+      allow delete: if isOwner();
+    }
+
+    match /marketplace_payouts/{payoutId} {
+      allow read: if isOperationsPlus() || isAdmin();
+      allow create, update: if isAdmin();
+      allow delete: if isOwner();
+    }
+
+    match /revenue_analytics/{snapshotId} {
+      allow read: if isOperationsPlus() || isAdmin();
+      allow create, update: if isAdmin();
+      allow delete: if isOwner();
+    }
+
+    match /customer_message_threads/{threadId} {
+      allow read: if customerReadable();
+      allow create: if customerCreatable() || isOperationsPlus();
+      allow update: if isOperationsPlus() || ownsCustomerRecord();
+      allow delete: if isAdmin();
+    }
+
+    match /customer_message_threads/{threadId}/messages/{messageId} {
+      allow read: if signedIn()
+        && (
+          isOperationsPlus()
+          || isAdmin()
+          || get(/databases/$(database)/documents/customer_message_threads/$(threadId)).data.customerId == request.auth.uid
+        );
+      allow create: if validCustomerMessageCreate();
+      allow update, delete: if isAdmin();
+    }
+
+    match /customer_service_history/{historyId} {
+      allow read: if customerReadable();
+      allow create, update: if isOperationsPlus() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /customer_notifications/{notificationId} {
+      allow read: if customerReadable();
+      allow create, update: if isOperationsPlus() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /operation_events/{eventId} {
+      allow read: if isOperationsPlus() || isAdmin();
+      allow create: if signedIn();
+      allow update, delete: if isOwner();
+    }
+
+    match /governance_audit/{auditId} {
+      allow read: if isOperationsPlus() || isAdmin();
+      allow create: if isOperationsPlus() || isAdmin();
+      allow update, delete: if isOwner();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
