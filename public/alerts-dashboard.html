@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#050814" />
+  <title>Evaraos Executive Alerts</title>
+
+  <link rel="icon" href="./assets/img/evaraos-emblem.png" />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/theme.css" />
+  <link rel="stylesheet" href="./assets/css/nav.css" />
+  <link rel="stylesheet" href="./assets/css/dashboard.css" />
+  <link rel="stylesheet" href="./assets/css/app-system.css" />
+</head>
+<body data-route-guard="private" class="dashboard-body app-loading">
+  <div class="page-aurora" aria-hidden="true"></div>
+  <div class="page-grid-overlay" aria-hidden="true"></div>
+
+  <main class="dashboard-shell">
+    <aside class="dashboard-sidebar glass-card">
+      <div class="dashboard-sidebar-inner">
+        <div class="dashboard-sidebar-head">
+          <p class="dashboard-sidebar-eyebrow">Alerts OS</p>
+          <h2>Executive Thresholds</h2>
+        </div>
+
+        <nav class="dashboard-sidebar-nav" aria-label="Alerts navigation">
+          <a class="dashboard-nav-link" href="./dashboard.html"><span class="dashboard-nav-icon">⌂</span><span>Dashboard</span></a>
+          <a class="dashboard-nav-link" href="./analytics-dashboard.html"><span class="dashboard-nav-icon">◉</span><span>Analytics</span></a>
+          <a class="dashboard-nav-link active" href="./alerts-dashboard.html"><span class="dashboard-nav-icon">▲</span><span>Alerts</span></a>
+          <a class="dashboard-nav-link" href="./territory-map.html"><span class="dashboard-nav-icon">◈</span><span>Map</span></a>
+        </nav>
+
+        <div class="dashboard-sidebar-foot glass-card">
+          <div class="dashboard-sidebar-foot-copy">
+            <strong>Executive Oversight</strong>
+            <span>Monitor operational risks, conversion issues, territory performance, and workload pressure.</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="dashboard-main">
+      <section class="dashboard-hero glass-card">
+        <div class="dashboard-hero-copy">
+          <p class="dashboard-eyebrow">Executive Alerts</p>
+          <h1>Realtime operational threshold monitoring.</h1>
+          <p class="dashboard-hero-text">Alerts OS transforms operational intelligence into executive escalation visibility for intervention and optimization.</p>
+        </div>
+
+        <div class="dashboard-hero-panel glass-card">
+          <div class="dashboard-hero-panel-top">
+            <span class="dashboard-mini-badge">Alerts Live</span>
+            <span class="dashboard-live-dot" aria-hidden="true"></span>
+          </div>
+          <div class="dashboard-hero-panel-copy">
+            <strong><span id="alertsTotalCount">0</span> Active Alerts</strong>
+            <span id="alertsStatus">Initializing executive alerts...</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-overview glass-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Threshold Summary</p>
+            <h2>Operational Escalations</h2>
+          </div>
+        </div>
+
+        <div class="dashboard-stats-grid">
+          <article class="dashboard-stat-card glass-card">
+            <p>Critical</p>
+            <h3 id="alertsCriticalCount">0</h3>
+            <span>Immediate attention</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card">
+            <p>Warnings</p>
+            <h3 id="alertsWarningCount">0</h3>
+            <span>Needs review</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card">
+            <p>Info</p>
+            <h3 id="alertsInfoCount">0</h3>
+            <span>Operational insights</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Live Alerts</p>
+              <h2>Executive Escalations</h2>
+            </div>
+          </div>
+
+          <div id="alertsRoot" class="dashboard-list">
+            <div class="item muted">Loading executive alerts...</div>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Operational Feed</p>
+              <h2>Business Intelligence</h2>
+            </div>
+          </div>
+
+          <div id="alertsFeedRoot" class="dashboard-list">
+            <div class="item muted">Loading operational intelligence...</div>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="./assets/js/loader.js"></script>
+  <script type="module" src="./assets/js/firebase.js"></script>
+  <script type="module" src="./assets/js/theme.js"></script>
+  <script type="module" src="./assets/js/route-guard.js"></script>
+  <script type="module" src="./assets/js/nav.js"></script>
+  <script type="module" src="./assets/js/alerts-dashboard.js"></script>
+</body>
+</html>
