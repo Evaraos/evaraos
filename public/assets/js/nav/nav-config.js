@@ -49,6 +49,7 @@ export const NAV_PAGES = {
     { page: "users.html", label: "Users", icon: "users", bubble: "users", group: "Organization" },
     { page: "org.html", label: "Organization", icon: "org", bubble: "org", group: "Organization" },
 
+    { page: "live-operations-command.html", label: "Live Command", icon: "operations", bubble: "live-command", group: "Operations" },
     { page: "notifications.html", label: "Notifications", icon: "operations", bubble: "notifications", group: "Operations" },
     { page: "executive-queue.html", label: "Executive Queue", icon: "operations", bubble: "executive-queue", group: "Operations" },
     { page: "workflow-monitor-dashboard.html", label: "Workflow Monitor", icon: "operations", bubble: "workflow", group: "Operations" },
@@ -68,8 +69,8 @@ export const NAV_PAGES = {
 export const NAV_EXEC_GROUPS = [
   {
     title: "Operations",
-    subtitle: "Inbox, Queue & Workflow",
-    description: "Notifications, executive queue, workflow orchestration, executive alerts, analytics, territories, live maps, presence, leads, jobs, QA, and field execution.",
+    subtitle: "Live Command, Dispatch & Workflow",
+    description: "Live operations command, notifications, executive queue, workflow orchestration, executive alerts, analytics, territories, live maps, presence, leads, jobs, QA, and field execution.",
     icon: "operations"
   },
   {
