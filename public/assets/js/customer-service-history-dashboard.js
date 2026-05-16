@@ -12,12 +12,33 @@ import {
 } from './dashboard-runtime.js';
 
 import {
-  syncCustomerServiceHistory,
   getCustomerServiceHistory,
   summarizeCustomerServiceHistory,
   subscribeCustomerServiceHistory,
   unsubscribeCustomerServiceHistory
 } from './customer-service-history.js';
+
+import {
+  syncPersistentCustomerServiceHistory,
+  loadCustomerPersistentServiceHistory,
+  loadCompanyPersistentServiceHistory,
+  subscribeCustomerPersistentServiceHistory,
+  subscribeCompanyPersistentServiceHistory,
+  stopPersistentCustomerServiceHistorySubscription
+} from './persistent-customer-service-history-adapter.js';
+
+import {
+  loadCustomerNotifications,
+  subscribeCustomerNotifications,
+  summarizeCustomerNotifications,
+  stopPersistentCustomerNotificationsSubscription
+} from './persistent-customer-notifications-adapter.js';
+
+import {
+  getFirestoreSyncHealth,
+  subscribeFirestoreSyncHealth,
+  unsubscribeFirestoreSyncHealth
+} from './firestore-sync-health.js';
 
 const statusNode = document.getElementById('customerHistoryStatus');
 const totalNode = document.getElementById('customerHistoryTotal');
@@ -34,7 +55,13 @@ const runtime = createDashboardRuntime({
 });
 
 let listenerId = null;
+let persistentHistoryUnsubscribe = null;
+let notificationUnsubscribe = null;
+let syncHealthListenerId = null;
 let activeCustomerId = '';
+let activeCompanyId = '';
+let latestNotifications = [];
+let latestSyncHealth = null;
 
 function clean(value = '') {
   return String(value || '').replace(/[<>]/g, '');
@@ -74,8 +101,13 @@ function resolveCustomerId() {
   return isTeamRole() ? (saved.activeCustomerId || '') : (saved.uid || saved.id || auth.currentUser?.uid || '');
 }
 
+function resolveCompanyId() {
+  const saved = profile();
+  return saved.companyId || '';
+}
+
 function visibleHistory() {
-  if (!activeCustomerId && isTeamRole()) return getCustomerServiceHistory();
+  if (!activeCustomerId && isTeamRole()) return getCustomerServiceHistory(activeCompanyId ? { companyId: activeCompanyId } : {});
   return getCustomerServiceHistory({ customerId: activeCustomerId });
 }
 
@@ -90,12 +122,16 @@ function renderStats(rows = visibleHistory()) {
 function renderSummary(rows = visibleHistory()) {
   if (!summaryRoot) return;
   const summary = summarizeCustomerServiceHistory(rows);
+  const notificationSummary = summarizeCustomerNotifications(latestNotifications);
+  const syncHealth = latestSyncHealth || getFirestoreSyncHealth();
 
   const items = [
     ['History Entries', `${summary.total || 0} total timeline entries.`],
     ['Completed Services', `${summary.completed || 0} completed activity records.`],
     ['Media Evidence', `${summary.mediaEntries || 0} entries include before/after media.`],
-    ['Recorded Value', `${money(summary.totalValueCents)} tracked across this customer history.`]
+    ['Recorded Value', `${money(summary.totalValueCents)} tracked across this customer history.`],
+    ['Notifications', `${notificationSummary.unread || 0} unread • ${notificationSummary.urgent || 0} urgent.`],
+    ['Sync Health', `${label(syncHealth.status || 'healthy')} • ${syncHealth.adapterCount || 0} adapters.`]
   ];
 
   summaryRoot.innerHTML = items.map(([title, detail]) => {
@@ -118,11 +154,30 @@ function renderTimeline(rows = visibleHistory()) {
     const mediaCount = Array.isArray(entry.media) ? entry.media.length : 0;
     return '<article class="item"><h3>' + clean(entry.title) + '</h3><p class="muted">' + clean(new Date(entry.serviceDateMs).toLocaleString()) + ' • ' + clean(label(entry.type)) + ' • ' + clean(label(entry.status)) + '</p><p>' + clean(entry.description || 'No description added.') + '</p><div class="row"><span class="pill">Value: ' + clean(money(entry.amountCents)) + '</span><span class="pill">Media: ' + clean(String(mediaCount)) + '</span><span class="pill">' + clean(entry.relatedType || 'history') + '</span></div></article>';
   }).join('');
+
+  const syncHealth = latestSyncHealth || getFirestoreSyncHealth();
+  status(`Customer service history synced • ${label(syncHealth.status || 'healthy')}`);
+}
+
+async function hydratePersistentHistory() {
+  if (activeCustomerId) {
+    await syncPersistentCustomerServiceHistory(activeCustomerId, { companyId: activeCompanyId }).catch(console.warn);
+    await loadCustomerPersistentServiceHistory(activeCustomerId).catch(console.warn);
+    await loadCustomerNotifications(activeCustomerId).then((rows) => { latestNotifications = rows || []; }).catch(console.warn);
+    return;
+  }
+
+  if (isTeamRole() && activeCompanyId) {
+    await loadCompanyPersistentServiceHistory(activeCompanyId).catch(console.warn);
+  }
 }
 
 async function startCustomerServiceHistoryDashboard() {
   stopCustomerServiceHistoryDashboard();
   activeCustomerId = resolveCustomerId();
+  activeCompanyId = resolveCompanyId();
+
+  await hydratePersistentHistory();
 
   await startDashboardRuntime(runtime.id, [
     {
@@ -130,7 +185,6 @@ async function startCustomerServiceHistoryDashboard() {
       run() {
         listenerId = subscribeCustomerServiceHistory(() => {
           renderTimeline();
-          status('Customer service history synced.');
         });
 
         return () => {
@@ -138,16 +192,70 @@ async function startCustomerServiceHistoryDashboard() {
           listenerId = null;
         };
       }
+    },
+    {
+      label: 'Subscribe persistent customer service history',
+      run() {
+        persistentHistoryUnsubscribe = activeCustomerId
+          ? subscribeCustomerPersistentServiceHistory(activeCustomerId, () => renderTimeline())
+          : activeCompanyId
+            ? subscribeCompanyPersistentServiceHistory(activeCompanyId, () => renderTimeline())
+            : null;
+
+        return () => {
+          if (persistentHistoryUnsubscribe) persistentHistoryUnsubscribe();
+          persistentHistoryUnsubscribe = null;
+          stopPersistentCustomerServiceHistorySubscription();
+        };
+      }
+    },
+    {
+      label: 'Subscribe customer history notifications',
+      run() {
+        if (!activeCustomerId) return () => {};
+        notificationUnsubscribe = subscribeCustomerNotifications(activeCustomerId, (rows = []) => {
+          latestNotifications = rows || [];
+          renderTimeline();
+        });
+
+        return () => {
+          if (notificationUnsubscribe) notificationUnsubscribe();
+          notificationUnsubscribe = null;
+          stopPersistentCustomerNotificationsSubscription();
+        };
+      }
+    },
+    {
+      label: 'Subscribe service history sync health',
+      run() {
+        syncHealthListenerId = subscribeFirestoreSyncHealth((health) => {
+          latestSyncHealth = health;
+          renderTimeline();
+        });
+        return () => {
+          if (syncHealthListenerId) unsubscribeFirestoreSyncHealth(syncHealthListenerId);
+          syncHealthListenerId = null;
+        };
+      }
     }
   ]);
 
-  if (activeCustomerId) syncCustomerServiceHistory(activeCustomerId);
   renderTimeline();
 }
 
 function stopCustomerServiceHistoryDashboard() {
   if (listenerId) unsubscribeCustomerServiceHistory(listenerId);
+  if (persistentHistoryUnsubscribe) persistentHistoryUnsubscribe();
+  if (notificationUnsubscribe) notificationUnsubscribe();
+  if (syncHealthListenerId) unsubscribeFirestoreSyncHealth(syncHealthListenerId);
+
   listenerId = null;
+  persistentHistoryUnsubscribe = null;
+  notificationUnsubscribe = null;
+  syncHealthListenerId = null;
+
+  stopPersistentCustomerServiceHistorySubscription();
+  stopPersistentCustomerNotificationsSubscription();
   stopDashboardRuntime(runtime.id);
 }
 
