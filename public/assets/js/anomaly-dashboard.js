@@ -23,6 +23,13 @@ import {
   summarizeGovernanceAnomalies
 } from './governance-anomaly-detection.js';
 
+import {
+  startGovernanceAnomalyEscalation,
+  stopGovernanceAnomalyEscalation,
+  runGovernanceAnomalyEscalation,
+  getGovernanceAnomalyEscalationCount
+} from './governance-anomaly-escalation.js';
+
 const statusNode = document.getElementById('anomalyStatus');
 const totalNode = document.getElementById('anomalyTotalCount');
 const criticalNode = document.getElementById('anomalyCriticalCount');
@@ -140,6 +147,13 @@ function renderRecommendations(anomalies = allAnomalies()) {
   }).join('');
 }
 
+function syncEscalations() {
+  const created = runGovernanceAnomalyEscalation(getAuditEntries());
+  const total = getGovernanceAnomalyEscalationCount();
+  if (created.length) status('Governance anomalies synced. ' + created.length + ' new escalation(s), ' + total + ' total routed.');
+  else status('Governance anomalies synced. ' + total + ' escalation(s) routed.');
+}
+
 function bindEvents() {
   filterRoot?.addEventListener('click', (event) => {
     const button = event.target.closest('[data-anomaly-filter]');
@@ -154,18 +168,21 @@ function startAnomalyDashboard() {
   stopAnomalyDashboard();
   startAuditLogEngine();
   startEventPersistence();
+  startGovernanceAnomalyEscalation();
 
   auditListenerId = subscribeAuditLog(() => {
     renderAnomalies();
-    status('Governance anomalies synced.');
+    syncEscalations();
   });
 
   renderAnomalies();
+  syncEscalations();
 }
 
 function stopAnomalyDashboard() {
   if (auditListenerId) unsubscribeAuditLog(auditListenerId);
   auditListenerId = null;
+  stopGovernanceAnomalyEscalation();
   stopAuditLogEngine();
   stopEventPersistence();
 }
@@ -201,7 +218,8 @@ window.EvaraAnomalyDashboard = {
   startAnomalyDashboard,
   stopAnomalyDashboard,
   renderAnomalies,
-  allAnomalies
+  allAnomalies,
+  syncEscalations
 };
 
 if (document.readyState === 'loading') {
