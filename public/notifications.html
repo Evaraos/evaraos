@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#050814" />
+  <title>Evaraos Notifications Center</title>
+
+  <link rel="icon" href="./assets/img/evaraos-emblem.png" />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/theme.css" />
+  <link rel="stylesheet" href="./assets/css/nav.css" />
+  <link rel="stylesheet" href="./assets/css/dashboard.css" />
+  <link rel="stylesheet" href="./assets/css/app-system.css" />
+</head>
+<body data-route-guard="private" class="dashboard-body app-loading">
+  <div class="page-aurora" aria-hidden="true"></div>
+  <div class="page-grid-overlay" aria-hidden="true"></div>
+
+  <main class="dashboard-shell">
+    <aside class="dashboard-sidebar glass-card">
+      <div class="dashboard-sidebar-inner">
+        <div class="dashboard-sidebar-head">
+          <p class="dashboard-sidebar-eyebrow">Notifications OS</p>
+          <h2>Operational Inbox</h2>
+        </div>
+
+        <nav class="dashboard-sidebar-nav" aria-label="Notifications filters" id="notificationsFilters">
+          <button type="button" class="dashboard-nav-link active" data-notification-filter="all"><span class="dashboard-nav-icon">◎</span><span>All</span></button>
+          <button type="button" class="dashboard-nav-link" data-notification-filter="unread"><span class="dashboard-nav-icon">●</span><span>Unread</span></button>
+          <button type="button" class="dashboard-nav-link" data-notification-filter="executive"><span class="dashboard-nav-icon">▲</span><span>Executive</span></button>
+          <button type="button" class="dashboard-nav-link" data-notification-filter="operations"><span class="dashboard-nav-icon">◆</span><span>Operations</span></button>
+          <button type="button" class="dashboard-nav-link" data-notification-filter="dispatch"><span class="dashboard-nav-icon">◈</span><span>Dispatch</span></button>
+          <button type="button" class="dashboard-nav-link" data-notification-filter="sales"><span class="dashboard-nav-icon">◌</span><span>Sales</span></button>
+          <button type="button" class="dashboard-nav-link" data-notification-filter="system"><span class="dashboard-nav-icon">⚙</span><span>System</span></button>
+        </nav>
+
+        <div class="dashboard-sidebar-foot glass-card">
+          <div class="dashboard-sidebar-foot-copy">
+            <strong>Coordination Inbox</strong>
+            <span>Executive alerts, assignments, dispatch updates, and operational workflow messages.</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="dashboard-main">
+      <section class="dashboard-hero glass-card">
+        <div class="dashboard-hero-copy">
+          <p class="dashboard-eyebrow">Operational Notifications</p>
+          <h1>Coordinate alerts, assignments, and workflow updates from one inbox.</h1>
+          <p class="dashboard-hero-text">Notifications Center turns event-driven orchestration into human operational coordination across executive, dispatch, sales, finance, people, and system workflows.</p>
+        </div>
+
+        <div class="dashboard-hero-panel glass-card">
+          <div class="dashboard-hero-panel-top">
+            <span class="dashboard-mini-badge">Inbox Live</span>
+            <span class="dashboard-live-dot" aria-hidden="true"></span>
+          </div>
+          <div class="dashboard-hero-panel-copy">
+            <strong><span id="noticeCount">0</span> Unread</strong>
+            <span id="noticeStatus">Initializing operational inbox...</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-overview glass-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Inbox Snapshot</p>
+            <h2>Coordination Summary</h2>
+          </div>
+          <button id="notificationsMarkAllRead" class="btn btn-theme-secondary beam-target" type="button">Mark All Read</button>
+        </div>
+
+        <div class="dashboard-stats-grid">
+          <article class="dashboard-stat-card glass-card">
+            <p>Unread</p>
+            <h3 id="notificationsUnread">0</h3>
+            <span>Needs attention</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Total</p>
+            <h3 id="notificationsTotal">0</h3>
+            <span>Inbox messages</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Audience</p>
+            <h3 id="notificationsAudienceCount">0</h3>
+            <span id="notificationsActiveFilter">All</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Live Feed</p>
+              <h2>Notifications</h2>
+            </div>
+          </div>
+
+          <div id="noticeList" class="dashboard-list">
+            <div class="item muted">Loading notifications...</div>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Coordination Context</p>
+              <h2>Operational Detail</h2>
+            </div>
+          </div>
+
+          <div id="notificationDetail" class="dashboard-list">
+            <div class="item muted">Select a notification to view coordination context.</div>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="./assets/js/loader.js"></script>
+  <script type="module" src="./assets/js/firebase.js"></script>
+  <script type="module" src="./assets/js/theme.js"></script>
+  <script type="module" src="./assets/js/route-guard.js"></script>
+  <script type="module" src="./assets/js/nav.js"></script>
+  <script type="module" src="./assets/js/notifications-center.js"></script>
+</body>
+</html>
