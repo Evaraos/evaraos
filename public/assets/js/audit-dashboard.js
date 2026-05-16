@@ -19,6 +19,13 @@ import {
   isEventPersistenceEnabled
 } from './operations-event-persistence.js';
 
+import {
+  createDashboardRuntime,
+  startDashboardRuntime,
+  stopDashboardRuntime,
+  registerRuntimeCleanup
+} from './dashboard-runtime.js';
+
 const statusNode = document.getElementById('auditStatus');
 const auditRoot = document.getElementById('auditRoot');
 const detailRoot = document.getElementById('auditDetail');
@@ -28,6 +35,12 @@ const warningNode = document.getElementById('auditWarningCount');
 const categoryNode = document.getElementById('auditCategoryCount');
 const persistenceNode = document.getElementById('auditPersistenceStatus');
 const filterRoot = document.getElementById('auditFilters');
+
+const runtime = createDashboardRuntime({
+  id: 'audit-dashboard-runtime',
+  name: 'Audit Dashboard Runtime',
+  metadata: { page: 'audit-dashboard.html' }
+});
 
 let auditListenerId = null;
 let activeCategory = 'all';
@@ -145,15 +158,39 @@ function bindEvents() {
   });
 }
 
-function startAuditDashboard() {
+async function startAuditDashboard() {
   stopAuditDashboard();
-  startAuditLogEngine();
-  startEventPersistence();
 
-  auditListenerId = subscribeAuditLog(() => {
-    renderList();
-    status('Audit dashboard synced.');
-  });
+  await startDashboardRuntime(runtime.id, [
+    {
+      label: 'Start audit log engine',
+      run() {
+        startAuditLogEngine();
+        return stopAuditLogEngine;
+      }
+    },
+    {
+      label: 'Start event persistence',
+      run() {
+        startEventPersistence();
+        return stopEventPersistence;
+      }
+    },
+    {
+      label: 'Subscribe audit dashboard renderer',
+      run() {
+        auditListenerId = subscribeAuditLog(() => {
+          renderList();
+          status('Audit dashboard synced.');
+        });
+
+        return () => {
+          if (auditListenerId) unsubscribeAuditLog(auditListenerId);
+          auditListenerId = null;
+        };
+      }
+    }
+  ]);
 
   renderList();
 }
@@ -161,12 +198,12 @@ function startAuditDashboard() {
 function stopAuditDashboard() {
   if (auditListenerId) unsubscribeAuditLog(auditListenerId);
   auditListenerId = null;
-  stopAuditLogEngine();
-  stopEventPersistence();
+  stopDashboardRuntime(runtime.id);
 }
 
 function init() {
   bindEvents();
+  registerRuntimeCleanup(runtime.id, stopAuditDashboard);
   window.EvaraPageLifecycle?.registerCleanup?.(stopAuditDashboard);
   window.addEventListener('pagehide', stopAuditDashboard);
 
@@ -183,12 +220,10 @@ function init() {
       return;
     }
 
-    try {
-      startAuditDashboard();
-    } catch (error) {
+    startAuditDashboard().catch((error) => {
       console.error(error);
       status('Audit dashboard failed to start.');
-    }
+    });
   });
 }
 
