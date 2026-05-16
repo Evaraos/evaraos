@@ -42,6 +42,7 @@ export const NAV_PAGES = {
   ownerOnly: [
     { page: "companies.html", label: "Companies", icon: "companies", bubble: "companies", group: "Organization" },
     { page: "governance-dashboard.html", label: "Governance", icon: "org", bubble: "governance", group: "Organization" },
+    { page: "governance-analytics.html", label: "Governance Analytics", icon: "org", bubble: "governance-analytics", group: "Organization" },
     { page: "audit-dashboard.html", label: "Audit", icon: "org", bubble: "audit", group: "Organization" },
     { page: "replay-dashboard.html", label: "Replay", icon: "org", bubble: "replay", group: "Organization" },
     { page: "users.html", label: "Users", icon: "users", bubble: "users", group: "Organization" },
@@ -72,8 +73,8 @@ export const NAV_EXEC_GROUPS = [
   },
   {
     title: "Organization",
-    subtitle: "Governance, Audit & Replay OS",
-    description: "Companies, users, governance, audit traceability, replay timelines, and ownership structure.",
+    subtitle: "Governance Intelligence OS",
+    description: "Companies, users, governance analytics, audit traceability, replay timelines, and ownership structure.",
     icon: "org"
   },
   {
