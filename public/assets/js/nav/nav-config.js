@@ -45,6 +45,7 @@ export const NAV_PAGES = {
     { page: "users.html", label: "Users", icon: "users", bubble: "users", group: "Organization" },
     { page: "org.html", label: "Organization", icon: "org", bubble: "org", group: "Organization" },
 
+    { page: "alerts-dashboard.html", label: "Executive Alerts", icon: "operations", bubble: "alerts", group: "Operations" },
     { page: "analytics-dashboard.html", label: "Analytics", icon: "operations", bubble: "analytics", group: "Operations" },
     { page: "territories.html", label: "Territories", icon: "operations", bubble: "territories", group: "Operations" },
     { page: "territory-map.html", label: "Territory Map", icon: "operations", bubble: "territory-map", group: "Operations" },
@@ -60,8 +61,8 @@ export const NAV_PAGES = {
 export const NAV_EXEC_GROUPS = [
   {
     title: "Operations",
-    subtitle: "Analytics, Dispatch & Territory",
-    description: "Analytics, territories, live maps, presence, leads, jobs, QA, and field execution.",
+    subtitle: "Alerts, Analytics & Dispatch",
+    description: "Executive alerts, analytics, territories, live maps, presence, leads, jobs, QA, and field execution.",
     icon: "operations"
   },
   {
