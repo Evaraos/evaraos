@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#050814" />
+  <title>Evaraos Replay Dashboard</title>
+
+  <link rel="icon" href="./assets/img/evaraos-emblem.png" />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/theme.css" />
+  <link rel="stylesheet" href="./assets/css/nav.css" />
+  <link rel="stylesheet" href="./assets/css/dashboard.css" />
+  <link rel="stylesheet" href="./assets/css/app-system.css" />
+</head>
+<body data-route-guard="private" class="dashboard-body app-loading">
+  <div class="page-aurora" aria-hidden="true"></div>
+  <div class="page-grid-overlay" aria-hidden="true"></div>
+
+  <main class="dashboard-shell">
+    <aside class="dashboard-sidebar glass-card">
+      <div class="dashboard-sidebar-inner">
+        <div class="dashboard-sidebar-head">
+          <p class="dashboard-sidebar-eyebrow">Replay OS</p>
+          <h2>Compliance Timeline</h2>
+        </div>
+
+        <nav class="dashboard-sidebar-nav" aria-label="Replay filters" id="replayFilters">
+          <button type="button" class="dashboard-nav-link active" data-replay-filter="all"><span class="dashboard-nav-icon">◎</span><span>All Timelines</span></button>
+          <button type="button" class="dashboard-nav-link" data-replay-filter="critical"><span class="dashboard-nav-icon">▲</span><span>Critical</span></button>
+          <button type="button" class="dashboard-nav-link" data-replay-filter="warning"><span class="dashboard-nav-icon">◆</span><span>Warnings</span></button>
+          <button type="button" class="dashboard-nav-link" data-replay-filter="lead"><span class="dashboard-nav-icon">◌</span><span>Leads</span></button>
+          <button type="button" class="dashboard-nav-link" data-replay-filter="job"><span class="dashboard-nav-icon">◈</span><span>Jobs</span></button>
+          <button type="button" class="dashboard-nav-link" data-replay-filter="automation"><span class="dashboard-nav-icon">⚙</span><span>Automation</span></button>
+        </nav>
+
+        <div class="dashboard-sidebar-foot glass-card">
+          <div class="dashboard-sidebar-foot-copy">
+            <strong>Forensic Replay</strong>
+            <span>Reconstruct operational event chains, timeline windows, payload sequences, and workflow correlations.</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="dashboard-main">
+      <section class="dashboard-hero glass-card">
+        <div class="dashboard-hero-copy">
+          <p class="dashboard-eyebrow">Compliance Replay</p>
+          <h1>Reconstruct operational timelines from audit events.</h1>
+          <p class="dashboard-hero-text">Replay Dashboard groups audit events by correlation chain so leadership can review workflow sequence, event payloads, timing, sources, and severity context.</p>
+        </div>
+
+        <div class="dashboard-hero-panel glass-card">
+          <div class="dashboard-hero-panel-top">
+            <span class="dashboard-mini-badge">Replay Live</span>
+            <span class="dashboard-live-dot" aria-hidden="true"></span>
+          </div>
+          <div class="dashboard-hero-panel-copy">
+            <strong id="replayPersistenceStatus">Stopped</strong>
+            <span id="replayStatus">Initializing replay dashboard...</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-overview glass-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Replay Snapshot</p>
+            <h2>Timeline Summary</h2>
+          </div>
+        </div>
+
+        <div class="dashboard-stats-grid">
+          <article class="dashboard-stat-card glass-card">
+            <p>Timelines</p>
+            <h3 id="replayTimelineCount">0</h3>
+            <span>Correlation chains</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Events</p>
+            <h3 id="replayEventCount">0</h3>
+            <span>Replayable records</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Critical</p>
+            <h3 id="replayCriticalCount">0</h3>
+            <span>High severity chains</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Replay Timelines</p>
+              <h2>Correlation Chains</h2>
+            </div>
+          </div>
+
+          <div id="replayTimelineRoot" class="dashboard-list">
+            <div class="item muted">Loading replay timelines...</div>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Forensic Sequence</p>
+              <h2>Timeline Detail</h2>
+            </div>
+          </div>
+
+          <div id="replayDetailRoot" class="dashboard-list">
+            <div class="item muted">Select a timeline to inspect event sequence.</div>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="./assets/js/loader.js"></script>
+  <script type="module" src="./assets/js/firebase.js"></script>
+  <script type="module" src="./assets/js/theme.js"></script>
+  <script type="module" src="./assets/js/route-guard.js"></script>
+  <script type="module" src="./assets/js/nav.js"></script>
+  <script type="module" src="./assets/js/replay-dashboard.js"></script>
+</body>
+</html>
