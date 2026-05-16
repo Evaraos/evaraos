@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#050814" />
+  <title>Evaraos Analytics Dashboard</title>
+
+  <link rel="icon" href="./assets/img/evaraos-emblem.png" />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/theme.css" />
+  <link rel="stylesheet" href="./assets/css/nav.css" />
+  <link rel="stylesheet" href="./assets/css/dashboard.css" />
+  <link rel="stylesheet" href="./assets/css/app-system.css" />
+</head>
+<body data-route-guard="private" class="dashboard-body app-loading">
+  <div class="page-aurora" aria-hidden="true"></div>
+  <div class="page-grid-overlay" aria-hidden="true"></div>
+
+  <main class="dashboard-shell">
+    <aside class="dashboard-sidebar glass-card">
+      <div class="dashboard-sidebar-inner">
+        <div class="dashboard-sidebar-head">
+          <p class="dashboard-sidebar-eyebrow">Analytics OS</p>
+          <h2>Operational Intelligence</h2>
+        </div>
+
+        <nav class="dashboard-sidebar-nav" aria-label="Analytics navigation">
+          <a class="dashboard-nav-link" href="./dashboard.html"><span class="dashboard-nav-icon">⌂</span><span>Dashboard</span></a>
+          <a class="dashboard-nav-link" href="./territory-map.html"><span class="dashboard-nav-icon">◈</span><span>Map</span></a>
+          <a class="dashboard-nav-link" href="./presence.html"><span class="dashboard-nav-icon">●</span><span>Presence</span></a>
+          <a class="dashboard-nav-link active" href="./analytics-dashboard.html"><span class="dashboard-nav-icon">◉</span><span>Analytics</span></a>
+        </nav>
+
+        <div class="dashboard-sidebar-foot glass-card">
+          <div class="dashboard-sidebar-foot-copy">
+            <strong>Operational KPIs</strong>
+            <span>Monitor conversion, revenue, completion rates, and territory performance.</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="dashboard-main">
+      <section class="dashboard-hero glass-card">
+        <div class="dashboard-hero-copy">
+          <p class="dashboard-eyebrow">Operational Analytics</p>
+          <h1>Track operational health across territories and workforce execution.</h1>
+          <p class="dashboard-hero-text">Analytics transforms operational data into leadership intelligence for growth, expansion, and market optimization.</p>
+        </div>
+        <div class="dashboard-hero-panel glass-card">
+          <div class="dashboard-hero-panel-top">
+            <span class="dashboard-mini-badge">Analytics Live</span>
+            <span class="dashboard-live-dot" aria-hidden="true"></span>
+          </div>
+          <div class="dashboard-hero-panel-copy">
+            <strong id="analyticsRevenue">$0.00</strong>
+            <span id="analyticsStatus">Initializing analytics...</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-overview glass-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">KPIs</p>
+            <h2>Operational Snapshot</h2>
+          </div>
+        </div>
+
+        <div class="dashboard-stats-grid">
+          <article class="dashboard-stat-card glass-card">
+            <p>Total Leads</p>
+            <h3 id="analyticsLeadTotal">0</h3>
+            <span id="analyticsLeadConversion">0%</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card">
+            <p>Total Jobs</p>
+            <h3 id="analyticsJobTotal">0</h3>
+            <span id="analyticsJobCompletion">0%</span>
+          </article>
+
+          <article class="dashboard-stat-card glass-card">
+            <p>Revenue</p>
+            <h3 id="analyticsRevenueCard">Live</h3>
+            <span id="analyticsTerritoryCount">0</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Territory Rankings</p>
+              <h2>Market Performance</h2>
+            </div>
+          </div>
+
+          <div id="analyticsTerritoryRoot" class="dashboard-list">
+            <div class="item muted">Loading territory analytics...</div>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Operational Feed</p>
+              <h2>Business Intelligence</h2>
+            </div>
+          </div>
+
+          <div id="analyticsFeedRoot" class="dashboard-list">
+            <div class="item muted">Loading operational intelligence...</div>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="./assets/js/loader.js"></script>
+  <script type="module" src="./assets/js/firebase.js"></script>
+  <script type="module" src="./assets/js/theme.js"></script>
+  <script type="module" src="./assets/js/route-guard.js"></script>
+  <script type="module" src="./assets/js/nav.js"></script>
+  <script type="module" src="./assets/js/analytics-dashboard.js"></script>
+</body>
+</html>
