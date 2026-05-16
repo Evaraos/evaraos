@@ -5,6 +5,10 @@ import {
 } from './firebase.js';
 
 import { loadOperationsAnalytics } from './operations-analytics.js';
+import {
+  startOperationsAnalyticsRealtime,
+  stopOperationsAnalyticsRealtime
+} from './operations-analytics-realtime.js';
 
 const statusNode = document.getElementById('analyticsStatus');
 const leadTotalNode = document.getElementById('analyticsLeadTotal');
@@ -15,6 +19,8 @@ const revenueNode = document.getElementById('analyticsRevenue');
 const territoryCountNode = document.getElementById('analyticsTerritoryCount');
 const territoryRoot = document.getElementById('analyticsTerritoryRoot');
 const feedRoot = document.getElementById('analyticsFeedRoot');
+
+let realtimeStarted = false;
 
 function clean(value = '') {
   return String(value || '').replace(/[<>]/g, '');
@@ -73,18 +79,48 @@ function renderFeed(data) {
   }).join('');
 }
 
-async function loadDashboard() {
-  status('Loading operational analytics...');
-  const data = await loadOperationsAnalytics();
+function renderAll(data) {
   renderKpis(data);
   renderTerritories(data.territoryAnalytics);
   renderFeed(data);
+}
+
+async function loadDashboard() {
+  status('Loading operational analytics...');
+
+  const data = await loadOperationsAnalytics();
+  renderAll(data);
+
   status('Analytics synced.');
 }
 
+function startRealtime() {
+  if (realtimeStarted) return;
+  realtimeStarted = true;
+
+  startOperationsAnalyticsRealtime((data) => {
+    renderAll(data);
+    status('Realtime analytics synced.');
+  }, {
+    onError(error) {
+      console.error(error);
+      status('Realtime analytics listener failed.');
+    }
+  });
+}
+
+function cleanup() {
+  stopOperationsAnalyticsRealtime();
+  realtimeStarted = false;
+}
+
 function init() {
+  window.EvaraPageLifecycle?.registerCleanup?.(cleanup);
+  window.addEventListener('pagehide', cleanup);
+
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
+      cleanup();
       window.location.assign('/login.html');
       return;
     }
@@ -98,6 +134,7 @@ function init() {
 
     try {
       await loadDashboard();
+      startRealtime();
     } catch (error) {
       console.error(error);
       status('Analytics failed to load.');
