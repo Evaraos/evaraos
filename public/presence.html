@@ -1,23 +1,141 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Workforce Presence • Evaraos Inc</title>
-  <link rel="stylesheet" href="/assets/css/base.css" />
-  <link rel="stylesheet" href="/assets/css/theme.css" />
-  <link rel="stylesheet" href="/assets/css/nav.css" />
-  <link rel="stylesheet" href="/assets/css/app-system.css" />
-  <style>
-    body{margin:0;background:#f4f7f6}.wrap{width:min(1180px,calc(100% - 28px));margin:0 auto;padding:128px 0 70px}.panel{border-radius:32px;padding:24px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);margin-bottom:18px}h1{font-size:clamp(2rem,5vw,5rem);line-height:.9;letter-spacing:-.08em;margin:0}.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.stat{border-radius:24px;padding:18px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07)}.stat strong{display:block;font-size:30px}.list{display:grid;gap:12px}.item{border-radius:22px;padding:16px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07)}.muted{color:rgba(255,255,255,.68);line-height:1.6}.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.pill{border-radius:999px;padding:7px 10px;border:1px solid rgba(255,255,255,.18);font-size:12px;font-weight:900;color:rgba(255,255,255,.74)}.online{color:#70ffbd}.idle{color:#ffd27a}.offline{color:#ff9b8f}@media(max-width:900px){.wrap{padding-top:112px}.stats{grid-template-columns:1fr}}
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#050814" />
+  <title>Evaraos Workforce Presence</title>
+
+  <link rel="icon" href="./assets/img/evaraos-emblem.png" />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/theme.css" />
+  <link rel="stylesheet" href="./assets/css/nav.css" />
+  <link rel="stylesheet" href="./assets/css/dashboard.css" />
+  <link rel="stylesheet" href="./assets/css/app-system.css" />
 </head>
-<body class="auth-pending app-loading" data-route-guard="private">
-  <div id="universalNavRoot"></div><div id="appRoot"><main class="wrap"><section class="panel glass-card aurora-card"><p class="muted">WORKFORCE PRESENCE</p><h1>See who is active right now.</h1><p class="muted">Track online staff, recent activity, and workforce availability for dispatch and operations.</p></section><section class="stats"><div class="stat"><strong id="presenceOnline">0</strong><span class="muted">Online</span></div><div class="stat"><strong id="presenceIdle">0</strong><span class="muted">Recently active</span></div><div class="stat"><strong id="presenceTotal">0</strong><span class="muted">Tracked staff</span></div></section><section class="panel glass-card aurora-card" style="margin-top:18px"><h2>Team Presence</h2><div id="presenceList" class="list"><div class="item muted">Loading presence...</div></div></section></main></div>
-  <script src="/assets/js/loader.js"></script>
-  <script type="module" src="/assets/js/firebase.js"></script>
-  <script type="module" src="/assets/js/route-guard.js"></script>
-  <script type="module" src="/assets/js/nav.js"></script>
-  <script type="module" src="/assets/js/presence.js"></script>
+<body data-route-guard="private" class="dashboard-body app-loading">
+  <div class="page-aurora" aria-hidden="true"></div>
+  <div class="page-grid-overlay" aria-hidden="true"></div>
+
+  <main class="dashboard-shell">
+    <aside class="dashboard-sidebar glass-card">
+      <div class="dashboard-sidebar-inner">
+        <div class="dashboard-sidebar-head">
+          <p class="dashboard-sidebar-eyebrow">Presence OS</p>
+          <h2>Workforce Status</h2>
+        </div>
+
+        <nav class="dashboard-sidebar-nav" aria-label="Presence navigation">
+          <a class="dashboard-nav-link" href="./dashboard.html"><span class="dashboard-nav-icon">⌂</span><span>Dashboard</span></a>
+          <a class="dashboard-nav-link" href="./territory-map.html"><span class="dashboard-nav-icon">◈</span><span>Map</span></a>
+          <a class="dashboard-nav-link active" href="./presence.html"><span class="dashboard-nav-icon">●</span><span>Presence</span></a>
+          <a class="dashboard-nav-link" href="./jobs.html"><span class="dashboard-nav-icon">◆</span><span>Jobs</span></a>
+        </nav>
+
+        <div class="dashboard-sidebar-foot glass-card">
+          <div class="dashboard-sidebar-foot-copy">
+            <strong>Live Workforce</strong>
+            <span>See who is available, busy, on break, or offline without GPS tracking.</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="dashboard-main">
+      <section class="dashboard-hero glass-card">
+        <div class="dashboard-hero-copy">
+          <p class="dashboard-eyebrow">Workforce Presence</p>
+          <h1>Monitor operational availability in real time.</h1>
+          <p class="dashboard-hero-text">Presence gives dispatch and leadership a safe live view of team readiness, company assignment, territory assignment, and last heartbeat.</p>
+        </div>
+        <div class="dashboard-hero-panel glass-card">
+          <div class="dashboard-hero-panel-top">
+            <span class="dashboard-mini-badge">Presence Live</span>
+            <span class="dashboard-live-dot" aria-hidden="true"></span>
+          </div>
+          <div class="dashboard-hero-panel-copy">
+            <strong><span id="presenceCount">0</span> Team Members</strong>
+            <span id="presenceStatus">Initializing presence...</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-overview glass-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Snapshot</p>
+            <h2>Operational Readiness</h2>
+          </div>
+        </div>
+
+        <div class="dashboard-stats-grid">
+          <article class="dashboard-stat-card glass-card">
+            <p>Available</p>
+            <h3 id="presenceAvailable">0</h3>
+            <span>Ready for assignment</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Busy</p>
+            <h3 id="presenceBusy">0</h3>
+            <span>Currently working</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Break</p>
+            <h3 id="presenceBreak">0</h3>
+            <span>Paused temporarily</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Offline</p>
+            <h3 id="presenceOffline">0</h3>
+            <span>No active heartbeat</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">My Status</p>
+              <h2>Update Presence</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-list">
+            <label class="dashboard-progress-row">
+              <span class="dashboard-progress-copy"><strong>Status</strong><span>Set your current operational availability.</span></span>
+              <select id="myPresenceStatus" class="dashboard-search-shell">
+                <option value="available">Available</option>
+                <option value="busy">Busy</option>
+                <option value="break">Break</option>
+                <option value="offline">Offline</option>
+              </select>
+            </label>
+            <button id="saveMyPresenceStatus" class="btn btn-theme-primary beam-target" type="button">Save My Status</button>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Live Workforce</p>
+              <h2>Team Presence</h2>
+            </div>
+          </div>
+
+          <div id="presenceRoot" class="dashboard-list">
+            <div class="item muted">Loading workforce presence...</div>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="./assets/js/loader.js"></script>
+  <script type="module" src="./assets/js/firebase.js"></script>
+  <script type="module" src="./assets/js/theme.js"></script>
+  <script type="module" src="./assets/js/route-guard.js"></script>
+  <script type="module" src="./assets/js/nav.js"></script>
+  <script type="module" src="./assets/js/presence-dashboard.js"></script>
 </body>
 </html>
