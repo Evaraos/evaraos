@@ -46,6 +46,7 @@ export const NAV_PAGES = {
     { page: "org.html", label: "Organization", icon: "org", bubble: "org", group: "Organization" },
 
     { page: "notifications.html", label: "Notifications", icon: "operations", bubble: "notifications", group: "Operations" },
+    { page: "executive-queue.html", label: "Executive Queue", icon: "operations", bubble: "executive-queue", group: "Operations" },
     { page: "workflow-monitor-dashboard.html", label: "Workflow Monitor", icon: "operations", bubble: "workflow", group: "Operations" },
     { page: "alerts-dashboard.html", label: "Executive Alerts", icon: "operations", bubble: "alerts", group: "Operations" },
     { page: "analytics-dashboard.html", label: "Analytics", icon: "operations", bubble: "analytics", group: "Operations" },
@@ -63,8 +64,8 @@ export const NAV_PAGES = {
 export const NAV_EXEC_GROUPS = [
   {
     title: "Operations",
-    subtitle: "Inbox, Workflow & Alerts",
-    description: "Notifications, workflow orchestration, executive alerts, analytics, territories, live maps, presence, leads, jobs, QA, and field execution.",
+    subtitle: "Inbox, Queue & Workflow",
+    description: "Notifications, executive queue, workflow orchestration, executive alerts, analytics, territories, live maps, presence, leads, jobs, QA, and field execution.",
     icon: "operations"
   },
   {
