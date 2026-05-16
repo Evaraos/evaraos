@@ -20,6 +20,13 @@ import {
 
 import { buildGovernanceAnalytics } from './governance-analytics.js';
 
+import {
+  createDashboardRuntime,
+  startDashboardRuntime,
+  stopDashboardRuntime,
+  registerRuntimeCleanup
+} from './dashboard-runtime.js';
+
 const statusNode = document.getElementById('governanceAnalyticsStatus');
 const riskScoreNode = document.getElementById('governanceRiskScore');
 const riskLevelNode = document.getElementById('governanceRiskLevel');
@@ -31,6 +38,12 @@ const persistenceNode = document.getElementById('governancePersistenceStatus');
 const hotspotRoot = document.getElementById('governanceHotspotRoot');
 const intelligenceRoot = document.getElementById('governanceIntelligenceRoot');
 const replayRoot = document.getElementById('governanceReplayMetricsRoot');
+
+const runtime = createDashboardRuntime({
+  id: 'governance-analytics-dashboard-runtime',
+  name: 'Governance Analytics Dashboard Runtime',
+  metadata: { page: 'governance-analytics.html' }
+});
 
 let auditListenerId = null;
 
@@ -125,14 +138,38 @@ function renderDashboard() {
   status('Governance analytics synced.');
 }
 
-function startGovernanceAnalyticsDashboard() {
+async function startGovernanceAnalyticsDashboard() {
   stopGovernanceAnalyticsDashboard();
-  startAuditLogEngine();
-  startEventPersistence();
 
-  auditListenerId = subscribeAuditLog(() => {
-    renderDashboard();
-  });
+  await startDashboardRuntime(runtime.id, [
+    {
+      label: 'Start audit log engine',
+      run() {
+        startAuditLogEngine();
+        return stopAuditLogEngine;
+      }
+    },
+    {
+      label: 'Start event persistence',
+      run() {
+        startEventPersistence();
+        return stopEventPersistence;
+      }
+    },
+    {
+      label: 'Subscribe governance analytics renderer',
+      run() {
+        auditListenerId = subscribeAuditLog(() => {
+          renderDashboard();
+        });
+
+        return () => {
+          if (auditListenerId) unsubscribeAuditLog(auditListenerId);
+          auditListenerId = null;
+        };
+      }
+    }
+  ]);
 
   renderDashboard();
 }
@@ -140,11 +177,11 @@ function startGovernanceAnalyticsDashboard() {
 function stopGovernanceAnalyticsDashboard() {
   if (auditListenerId) unsubscribeAuditLog(auditListenerId);
   auditListenerId = null;
-  stopAuditLogEngine();
-  stopEventPersistence();
+  stopDashboardRuntime(runtime.id);
 }
 
 function init() {
+  registerRuntimeCleanup(runtime.id, stopGovernanceAnalyticsDashboard);
   window.EvaraPageLifecycle?.registerCleanup?.(stopGovernanceAnalyticsDashboard);
   window.addEventListener('pagehide', stopGovernanceAnalyticsDashboard);
 
@@ -161,12 +198,10 @@ function init() {
       return;
     }
 
-    try {
-      startGovernanceAnalyticsDashboard();
-    } catch (error) {
+    startGovernanceAnalyticsDashboard().catch((error) => {
       console.error(error);
       status('Governance analytics failed to start.');
-    }
+    });
   });
 }
 
