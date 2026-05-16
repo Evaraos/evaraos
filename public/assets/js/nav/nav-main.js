@@ -34,6 +34,11 @@ import {
   bindNavInteractions
 } from "./nav-interactions.js";
 
+import {
+  startNotificationsDropdown,
+  stopNotificationsDropdown
+} from "../notifications-dropdown.js";
+
 function bootReadySignal() {
   if (NAV_STATE.hasBootAnimated) return;
 
@@ -47,6 +52,22 @@ function bootReadySignal() {
       document.body.classList.add("app-ready");
     }
   });
+}
+
+function shouldStartGlobalNotifications() {
+  return document.body?.dataset?.routeGuard === "private";
+}
+
+function bindGlobalNotifications() {
+  if (!shouldStartGlobalNotifications()) return;
+
+  try {
+    startNotificationsDropdown();
+    window.EvaraPageLifecycle?.registerCleanup?.(stopNotificationsDropdown);
+    window.addEventListener("pagehide", stopNotificationsDropdown);
+  } catch (error) {
+    console.warn("Global notifications dropdown failed to start:", error);
+  }
 }
 
 export function initNav() {
@@ -80,6 +101,7 @@ export function initNav() {
   bindScrollBehavior();
   bindRuntimeRefresh();
   syncThemeLabel();
+  bindGlobalNotifications();
 
   animateNav();
   bootReadySignal();
