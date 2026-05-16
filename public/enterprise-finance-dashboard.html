@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#050814" />
+  <title>Evaraos Enterprise Finance Dashboard</title>
+
+  <link rel="icon" href="./assets/img/evaraos-emblem.png" />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/theme.css" />
+  <link rel="stylesheet" href="./assets/css/nav.css" />
+  <link rel="stylesheet" href="./assets/css/dashboard.css" />
+  <link rel="stylesheet" href="./assets/css/app-system.css" />
+</head>
+<body data-route-guard="private" class="dashboard-body app-loading">
+  <div class="page-aurora" aria-hidden="true"></div>
+  <div class="page-grid-overlay" aria-hidden="true"></div>
+
+  <main class="dashboard-shell">
+    <aside class="dashboard-sidebar glass-card">
+      <div class="dashboard-sidebar-inner">
+        <div class="dashboard-sidebar-head">
+          <p class="dashboard-sidebar-eyebrow">Finance OS</p>
+          <h2>Revenue Command</h2>
+        </div>
+
+        <nav class="dashboard-sidebar-nav" aria-label="Finance dashboard navigation">
+          <a class="dashboard-nav-link active" href="./enterprise-finance-dashboard.html"><span class="dashboard-nav-icon">◎</span><span>Finance</span></a>
+          <a class="dashboard-nav-link" href="./analytics-dashboard.html"><span class="dashboard-nav-icon">◈</span><span>Analytics</span></a>
+          <a class="dashboard-nav-link" href="./live-operations-command.html"><span class="dashboard-nav-icon">▲</span><span>Live Command</span></a>
+          <a class="dashboard-nav-link" href="./executive-queue.html"><span class="dashboard-nav-icon">◆</span><span>Queue</span></a>
+          <a class="dashboard-nav-link" href="./companies.html"><span class="dashboard-nav-icon">●</span><span>Companies</span></a>
+        </nav>
+
+        <div class="dashboard-sidebar-foot glass-card">
+          <div class="dashboard-sidebar-foot-copy">
+            <strong>Revenue Intelligence</strong>
+            <span>Monitor MRR, invoices, payments, outstanding balances, platform revenue, and marketplace payouts.</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="dashboard-main">
+      <section class="dashboard-hero glass-card">
+        <div class="dashboard-hero-copy">
+          <p class="dashboard-eyebrow">Executive Finance Dashboard</p>
+          <h1>Track revenue, recurring billing, invoices, payments, and marketplace settlement from one finance command center.</h1>
+          <p class="dashboard-hero-text">Enterprise Finance Dashboard unifies quotes, subscriptions, invoices, Stripe sessions, marketplace payouts, and revenue risk intelligence.</p>
+        </div>
+
+        <div class="dashboard-hero-panel glass-card">
+          <div class="dashboard-hero-panel-top">
+            <span class="dashboard-mini-badge">Finance Live</span>
+            <span class="dashboard-live-dot" aria-hidden="true"></span>
+          </div>
+          <div class="dashboard-hero-panel-copy">
+            <strong><span id="financeRiskScore">0</span> Risk Score</strong>
+            <span id="financeDashboardStatus">Initializing enterprise finance dashboard...</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-overview glass-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Finance Snapshot</p>
+            <h2>Executive Revenue Overview</h2>
+          </div>
+          <span class="dashboard-mini-badge" id="financeRiskLevel">Stable</span>
+        </div>
+
+        <div class="dashboard-stats-grid">
+          <article class="dashboard-stat-card glass-card">
+            <p>MRR</p>
+            <h3 id="financeMrr">$0.00</h3>
+            <span>Monthly recurring</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Billed</p>
+            <h3 id="financeBilled">$0.00</h3>
+            <span>Total invoices</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Collected</p>
+            <h3 id="financeCollected">$0.00</h3>
+            <span>Paid revenue</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Outstanding</p>
+            <h3 id="financeOutstanding">$0.00</h3>
+            <span>Balance due</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Platform Share</p>
+            <h3 id="financePlatformRevenue">$0.00</h3>
+            <span>Evaraos revenue</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Vendor Payouts</p>
+            <h3 id="financeVendorPayouts">$0.00</h3>
+            <span>Lead/service vendors</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Revenue Systems</p>
+              <h2>Finance Summary</h2>
+            </div>
+          </div>
+          <div id="financeSummaryRoot" class="dashboard-list">
+            <div class="item muted">Loading finance summary...</div>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Finance Guidance</p>
+              <h2>Recommended Actions</h2>
+            </div>
+          </div>
+          <div id="financeRecommendationRoot" class="dashboard-list">
+            <div class="item muted">Loading finance recommendations...</div>
+          </div>
+        </section>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Billing</p>
+              <h2>Invoices</h2>
+            </div>
+          </div>
+          <div id="financeInvoiceRoot" class="dashboard-list">
+            <div class="item muted">Loading invoices...</div>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Marketplace</p>
+              <h2>Payouts</h2>
+            </div>
+          </div>
+          <div id="financePayoutRoot" class="dashboard-list">
+            <div class="item muted">Loading marketplace payouts...</div>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="./assets/js/loader.js"></script>
+  <script type="module" src="./assets/js/firebase.js"></script>
+  <script type="module" src="./assets/js/theme.js"></script>
+  <script type="module" src="./assets/js/route-guard.js"></script>
+  <script type="module" src="./assets/js/nav.js"></script>
+  <script type="module" src="./assets/js/enterprise-finance-dashboard.js"></script>
+</body>
+</html>
