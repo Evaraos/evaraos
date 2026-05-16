@@ -16,10 +16,32 @@ import {
   getCustomerThreadMessages,
   summarizeCustomerMessages,
   subscribeCustomerMessages,
-  unsubscribeCustomerMessages,
-  markCustomerThreadRead,
-  addCustomerMessage
+  unsubscribeCustomerMessages
 } from './customer-messaging-center.js';
+
+import {
+  loadPersistentCustomerThreads,
+  loadPersistentCustomerMessages,
+  subscribePersistentCustomerThreads,
+  subscribePersistentCustomerMessages,
+  subscribeCustomerPersistentThreads,
+  addPersistentCustomerMessage,
+  markPersistentCustomerThreadRead,
+  stopPersistentCustomerMessagingSubscriptions
+} from './persistent-customer-messaging-adapter.js';
+
+import {
+  loadCustomerNotifications,
+  subscribeCustomerNotifications,
+  summarizeCustomerNotifications,
+  stopPersistentCustomerNotificationsSubscription
+} from './persistent-customer-notifications-adapter.js';
+
+import {
+  getFirestoreSyncHealth,
+  subscribeFirestoreSyncHealth,
+  unsubscribeFirestoreSyncHealth
+} from './firestore-sync-health.js';
 
 const statusNode = document.getElementById('customerMessagingStatus');
 const totalNode = document.getElementById('messageThreadTotal');
@@ -38,8 +60,13 @@ const runtime = createDashboardRuntime({
 });
 
 let listenerId = null;
+let notificationUnsubscribe = null;
+let syncHealthListenerId = null;
+let messageUnsubscribe = null;
 let activeThreadId = '';
 let activeCustomerId = '';
+let latestNotifications = [];
+let latestSyncHealth = null;
 
 function clean(value = '') {
   return String(value || '').replace(/[<>]/g, '');
@@ -79,10 +106,11 @@ function visibleThreads() {
 
 function renderStats(rows = visibleThreads()) {
   const summary = summarizeCustomerMessages(rows);
+  const notificationSummary = summarizeCustomerNotifications(latestNotifications);
   if (totalNode) totalNode.textContent = String(summary.total || 0);
   if (openNode) openNode.textContent = String(summary.open || 0);
-  if (urgentNode) urgentNode.textContent = String(summary.urgent || 0);
-  if (unreadNode) unreadNode.textContent = String(isTeamRole() ? summary.unreadForTeam : summary.unreadForCustomer);
+  if (urgentNode) urgentNode.textContent = String((summary.urgent || 0) + (notificationSummary.urgent || 0));
+  if (unreadNode) unreadNode.textContent = String((isTeamRole() ? summary.unreadForTeam : summary.unreadForCustomer) + (notificationSummary.unread || 0));
 }
 
 function renderThreads() {
@@ -99,6 +127,7 @@ function renderThreads() {
 
   if (!activeThreadId || !rows.some((thread) => thread.id === activeThreadId)) {
     activeThreadId = rows[0].id;
+    hydrateActiveMessages();
   }
 
   threadRoot.innerHTML = rows.map((thread) => {
@@ -109,6 +138,8 @@ function renderThreads() {
   }).join('');
 
   renderMessages(activeThreadId);
+  const syncHealth = latestSyncHealth || getFirestoreSyncHealth();
+  status(`Customer messaging synced • ${label(syncHealth.status || 'healthy')}`);
 }
 
 function renderMessages(threadId) {
@@ -131,25 +162,36 @@ function renderMessages(threadId) {
   }).join('');
 }
 
+async function hydrateActiveMessages() {
+  if (!activeThreadId) return;
+  await loadPersistentCustomerMessages(activeThreadId).catch(console.warn);
+  if (messageUnsubscribe) messageUnsubscribe();
+  messageUnsubscribe = subscribePersistentCustomerMessages(activeThreadId, () => renderMessages(activeThreadId));
+}
+
 function bindEvents() {
-  threadRoot?.addEventListener('click', (event) => {
+  threadRoot?.addEventListener('click', async (event) => {
     const item = event.target.closest('[data-thread-id]');
     if (!item) return;
     activeThreadId = item.getAttribute('data-thread-id') || '';
-    markCustomerThreadRead(activeThreadId, isTeamRole() ? 'team' : 'customer');
+    await markPersistentCustomerThreadRead(activeThreadId, isTeamRole() ? 'team' : 'customer').catch(console.warn);
+    await hydrateActiveMessages();
     renderThreads();
   });
 
-  composerForm?.addEventListener('submit', (event) => {
+  composerForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!activeThreadId || !composerInput?.value?.trim()) return;
 
     const saved = profile();
-    addCustomerMessage(activeThreadId, {
+    await addPersistentCustomerMessage(activeThreadId, {
       senderId: saved.uid || saved.id || auth.currentUser?.uid || '',
       senderName: saved.displayName || saved.fullName || saved.name || auth.currentUser?.email || 'User',
       senderRole: currentRole(),
       body: composerInput.value.trim()
+    }).catch((error) => {
+      console.error(error);
+      status('Message failed to send.');
     });
 
     composerInput.value = '';
@@ -157,9 +199,26 @@ function bindEvents() {
   });
 }
 
+async function hydratePersistentMessaging() {
+  if (isTeamRole()) {
+    await loadPersistentCustomerThreads({ orderBy: [['lastMessageAtMs', 'desc']] }).catch(console.warn);
+  } else {
+    await loadPersistentCustomerThreads({
+      where: [['customerId', '==', activeCustomerId]],
+      orderBy: [['lastMessageAtMs', 'desc']]
+    }).catch(console.warn);
+    await loadCustomerNotifications(activeCustomerId).then((rows) => { latestNotifications = rows || []; }).catch(console.warn);
+  }
+
+  if (!activeThreadId && visibleThreads()[0]) activeThreadId = visibleThreads()[0].id;
+  await hydrateActiveMessages();
+}
+
 async function startCustomerMessagingDashboard() {
   stopCustomerMessagingDashboard();
   activeCustomerId = resolveCustomerId();
+
+  await hydratePersistentMessaging();
 
   await startDashboardRuntime(runtime.id, [
     {
@@ -167,12 +226,53 @@ async function startCustomerMessagingDashboard() {
       run() {
         listenerId = subscribeCustomerMessages(() => {
           renderThreads();
-          status('Customer messaging synced.');
         });
 
         return () => {
           if (listenerId) unsubscribeCustomerMessages(listenerId);
           listenerId = null;
+        };
+      }
+    },
+    {
+      label: 'Subscribe persistent customer messaging records',
+      run() {
+        const unsubscribe = isTeamRole()
+          ? subscribePersistentCustomerThreads({ orderBy: [['lastMessageAtMs', 'desc']] }, () => renderThreads())
+          : subscribeCustomerPersistentThreads(activeCustomerId, () => renderThreads());
+
+        return () => {
+          if (unsubscribe) unsubscribe();
+          stopPersistentCustomerMessagingSubscriptions();
+        };
+      }
+    },
+    {
+      label: 'Subscribe customer notification signal',
+      run() {
+        if (isTeamRole()) return () => {};
+        notificationUnsubscribe = subscribeCustomerNotifications(activeCustomerId, (rows = []) => {
+          latestNotifications = rows || [];
+          renderThreads();
+        });
+
+        return () => {
+          if (notificationUnsubscribe) notificationUnsubscribe();
+          notificationUnsubscribe = null;
+          stopPersistentCustomerNotificationsSubscription();
+        };
+      }
+    },
+    {
+      label: 'Subscribe messaging sync health',
+      run() {
+        syncHealthListenerId = subscribeFirestoreSyncHealth((health) => {
+          latestSyncHealth = health;
+          renderThreads();
+        });
+        return () => {
+          if (syncHealthListenerId) unsubscribeFirestoreSyncHealth(syncHealthListenerId);
+          syncHealthListenerId = null;
         };
       }
     }
@@ -183,7 +283,17 @@ async function startCustomerMessagingDashboard() {
 
 function stopCustomerMessagingDashboard() {
   if (listenerId) unsubscribeCustomerMessages(listenerId);
+  if (notificationUnsubscribe) notificationUnsubscribe();
+  if (syncHealthListenerId) unsubscribeFirestoreSyncHealth(syncHealthListenerId);
+  if (messageUnsubscribe) messageUnsubscribe();
+
   listenerId = null;
+  notificationUnsubscribe = null;
+  syncHealthListenerId = null;
+  messageUnsubscribe = null;
+
+  stopPersistentCustomerMessagingSubscriptions();
+  stopPersistentCustomerNotificationsSubscription();
   stopDashboardRuntime(runtime.id);
 }
 
