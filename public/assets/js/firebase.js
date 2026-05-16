@@ -79,7 +79,7 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const functions = getFunctions(app, "us-central1");
 
-const HISTORY_SKIP_COLLECTIONS = new Set(["audit_logs", "history_timeline"]);
+const HISTORY_SKIP_COLLECTIONS = new Set(["audit_logs", "history_timeline", "operation_events"]);
 
 export {
   onAuthStateChanged,
@@ -451,6 +451,7 @@ export function normalizeRole(role = "") {
   if (value === "tech") return "technician";
   if (value === "sales_rep") return "sales";
   if (value === "super_admin") return "owner";
+  if (value === "operations_manager") return "manager";
   if (value === "operations_coordinator") return "manager";
   return value || "customer";
 }
@@ -461,6 +462,7 @@ export function roleLabelFromRole(role = "") {
   if (value === "super_admin") return "Executive Access";
   if (value === "admin") return "Admin Access";
   if (value === "manager") return "Manager Access";
+  if (value === "operations_manager") return "Operations Manager Access";
   if (value === "operations_coordinator") return "Operations Access";
   if (value === "sales") return "Sales Access";
   if (value === "sales_rep") return "Sales Access";
@@ -519,191 +521,89 @@ export function syncUserSession(user, role = "customer", extras = {}) {
   dispatchSessionReady({ authenticated: true, role: profile.role });
 }
 
-export function clearUserSession() {
-  clearSavedUserRole();
-  clearSavedUserProfile();
-}
+export function requireRole(allowedRoles = [], fallbackPath = "./login.html") {
+  const allowed = allowedRoles.map((role) => normalizeRole(role));
 
-export async function logoutAndRedirect(path = "/login.html") {
-  showGlobalLoader();
-  await signOut(auth);
-  clearUserSession();
-  try { sessionStorage.clear(); } catch {}
-  try { localStorage.removeItem("evaraos-last-private-page"); } catch {}
-  navigateWithLoader(path, { title: "Signed out", subtitle: "Returning to login." }, true);
-}
-
-export async function logout() {
-  await logoutAndRedirect("/login.html");
-}
-
-export function markProtectedPagePending() {
-  document.documentElement.classList.add("auth-pending");
-  document.body?.classList.add("auth-pending");
-}
-
-export function resolveProtectedPage() {
-  hideGlobalLoader();
-}
-
-let protectRouteActivePromise = null;
-let protectRouteUnsubscribe = null;
-
-export function protectRoute({ requireAuth = true, redirectGuestTo = "/login.html", redirectAuthedTo = "/dashboard.html" } = {}) {
-  if (protectRouteActivePromise) return protectRouteActivePromise;
-  const savedProfile = getSavedUserProfile();
-  if (!savedProfile?.uid) markProtectedPagePending();
-
-  const path = window.location.pathname;
-  const isAuthPage = path.endsWith("/login.html") || path.endsWith("/signup.html") || path.endsWith("/reset.html");
-
-  if (requireAuth && savedProfile?.uid) {
-    applyUserToUi(savedProfile);
-    resolveProtectedPage();
-    protectRouteActivePromise = Promise.resolve(true);
-    setTimeout(() => { protectRouteActivePromise = null; }, 0);
-    return protectRouteActivePromise;
-  }
-
-  protectRouteActivePromise = new Promise((resolve) => {
-    if (protectRouteUnsubscribe) {
-      protectRouteUnsubscribe();
-      protectRouteUnsubscribe = null;
-    }
-
-    protectRouteUnsubscribe = onAuthStateChanged(auth, (user) => {
-      if (protectRouteUnsubscribe) {
-        protectRouteUnsubscribe();
-        protectRouteUnsubscribe = null;
-      }
-
-      if (user) {
-        currentUser = user;
-        if (!requireAuth && isAuthPage) {
-          navigateWithLoader(redirectAuthedTo, { title: "Opening dashboard", subtitle: "Your session is active." }, true);
-          resolve(true);
-          protectRouteActivePromise = null;
-          return;
-        }
-
-        syncUserSession(user, getSavedUserRole() || "customer", { displayName: user.displayName || user.email || "User" });
-        resolveProtectedPage();
-        resolve(true);
-        protectRouteActivePromise = null;
-        return;
-      }
-
-      currentUser = null;
-      if (requireAuth) {
-        clearUserSession();
-        navigateWithLoader(redirectGuestTo, { title: "Returning to login", subtitle: "Please sign in to continue." }, true);
-        resolve(false);
-        protectRouteActivePromise = null;
-        return;
-      }
-
-      resolveProtectedPage();
-      resolve(true);
-      protectRouteActivePromise = null;
-    });
-  });
-
-  return protectRouteActivePromise;
-}
-
-export async function saveUserThemePreferences(themePreferences = {}) {
-  const user = auth.currentUser;
-  if (!user?.uid) return false;
-  try {
-    await setDoc(doc(db, "users", user.uid), { themePreferences: themePreferences || {}, themePreferencesUpdatedAt: new Date().toISOString() }, { merge: true });
-    return true;
-  } catch (error) {
-    console.error("Failed to save theme preferences:", error);
-    return false;
-  }
-}
-
-export async function getUserThemePreferences() {
-  const user = auth.currentUser;
-  if (!user?.uid) return null;
-  try {
-    const snap = await getDoc(doc(db, "users", user.uid));
-    if (!snap.exists()) return null;
-    return snap.data()?.themePreferences || null;
-  } catch (error) {
-    console.error("Failed to load theme preferences:", error);
-    return null;
-  }
-}
-
-function getDisplayNameFromFirestoreData(data = {}, user = {}) {
-  return data.displayName || data.fullName || data.name || data.username || user.displayName || user.email || "User";
-}
-
-async function ensureUserDocument(user) {
-  const userRef = doc(db, "users", user.uid);
-  const snap = await getDoc(userRef);
-
-  if (!snap.exists()) {
-    await setDoc(userRef, {
-      uid: user.uid,
-      id: user.uid,
-      email: user.email || "",
-      displayName: user.displayName || "",
-      fullName: user.displayName || "",
-      name: user.displayName || "",
-      username: "",
-      usernameLower: "",
-      role: getSavedUserRole() || "customer",
-      status: "active",
-      approvalStatus: "approved",
-      companyId: "",
-      companyName: "",
-      themePreferences: null,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    }, { merge: true });
-  }
-
-  const freshSnap = await getDoc(userRef);
-  return freshSnap.exists() ? freshSnap.data() || {} : {};
-}
-
-function startGlobalAuthSync() {
-  if (globalAuthSyncStarted) return;
-  globalAuthSyncStarted = true;
-
-  onAuthStateChanged(auth, async (user) => {
+  onAuthStateChanged(auth, (user) => {
     if (!user) {
-      currentUser = null;
+      navigateWithLoader(fallbackPath, {
+        title: "Secure Area",
+        subtitle: "Please sign in to continue."
+      }, true);
       return;
     }
 
     currentUser = user;
-    const savedProfile = getSavedUserProfile();
+    const savedRole = normalizeRole(getSavedUserRole());
 
-    if (savedProfile?.uid) applyUserToUi(savedProfile);
-    else syncUserSession(user, getSavedUserRole() || "customer", { displayName: user.displayName || user.email || "User" });
-
-    try {
-      const data = await ensureUserDocument(user);
-      const role = data.role || getSavedUserRole() || "customer";
-      const displayName = getDisplayNameFromFirestoreData(data, user);
-
-      syncUserSession(user, role, {
-        displayName,
-        fullName: data.fullName || data.displayName || data.name || user.displayName || "",
-        name: data.name || data.fullName || data.displayName || user.displayName || "",
-        username: data.username || "",
-        companyId: data.companyId || "",
-        companyName: data.companyName || "",
-        approvalStatus: data.approvalStatus || "",
-        status: data.status || "active"
-      });
-    } catch (error) {
-      console.warn("Background auth sync delayed:", error);
+    if (allowed.length && !allowed.includes(savedRole)) {
+      navigateWithLoader("./dashboard.html", {
+        title: "Redirecting",
+        subtitle: "Opening your dashboard."
+      }, true);
     }
   });
+}
+
+export async function hydrateUserProfile(user = auth.currentUser) {
+  if (!user) return null;
+
+  const cached = getSavedUserProfile();
+
+  try {
+    const snap = await getDoc(doc(db, "users", user.uid));
+    const data = snap.exists() ? snap.data() : {};
+    const role = data.role || cached?.role || getSavedUserRole() || "customer";
+
+    const profile = {
+      uid: user.uid,
+      id: user.uid,
+      email: user.email || data.email || cached?.email || "",
+      displayName: data.displayName || data.fullName || cached?.displayName || user.displayName || user.email || "",
+      fullName: data.fullName || data.displayName || cached?.fullName || cached?.displayName || user.displayName || "",
+      name: data.name || data.fullName || data.displayName || cached?.name || cached?.fullName || cached?.displayName || user.displayName || "",
+      username: data.username || cached?.username || "",
+      role,
+      companyId: data.companyId || cached?.companyId || "",
+      companyName: data.companyName || cached?.companyName || "",
+      approvalStatus: data.approvalStatus || cached?.approvalStatus || "",
+      status: data.status || cached?.status || "active"
+    };
+
+    saveUserRole(role);
+    saveUserProfile(profile);
+    applyUserToUi(profile);
+    dispatchSessionReady({ authenticated: true, role });
+    return profile;
+  } catch (error) {
+    console.warn("User profile hydration skipped:", error);
+    if (cached) applyUserToUi(cached);
+    dispatchSessionReady({ authenticated: true, role: cached?.role || getSavedUserRole() });
+    return cached;
+  }
+}
+
+export function startGlobalAuthSync() {
+    if (globalAuthSyncStarted) return;
+    globalAuthSyncStarted = true;
+
+    document.documentElement.classList.add("auth-pending");
+    document.body?.classList.add("auth-pending", "app-loading");
+
+    onAuthStateChanged(auth, async (user) => {
+      currentUser = user;
+
+      if (!user) {
+        clearSavedUserRole();
+        clearSavedUserProfile();
+        hideGlobalLoader();
+        dispatchSessionReady({ authenticated: false });
+        return;
+      }
+
+      await hydrateUserProfile(user);
+      hideGlobalLoader();
+    });
 }
 
 startGlobalAuthSync();
