@@ -34,12 +34,24 @@ service cloud.firestore {
       ];
     }
 
+    function isGovernancePlus() {
+      return signedIn() && userRole() in [
+        'owner', 'Owner', 'OWNER',
+        'super_admin', 'Super Admin', 'SUPER_ADMIN',
+        'admin', 'Admin', 'ADMIN',
+        'manager', 'Manager', 'MANAGER',
+        'operations_manager', 'Operations Manager', 'OPERATIONS_MANAGER',
+        'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR'
+      ];
+    }
+
     function isOperationsPlus() {
       return signedIn() && userRole() in [
         'owner', 'Owner', 'OWNER',
         'super_admin', 'Super Admin', 'SUPER_ADMIN',
         'admin', 'Admin', 'ADMIN',
         'manager', 'Manager', 'MANAGER',
+        'operations_manager', 'Operations Manager', 'OPERATIONS_MANAGER',
         'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR'
       ];
     }
@@ -50,6 +62,7 @@ service cloud.firestore {
         'super_admin', 'Super Admin', 'SUPER_ADMIN',
         'admin', 'Admin', 'ADMIN',
         'manager', 'Manager', 'MANAGER',
+        'operations_manager', 'Operations Manager', 'OPERATIONS_MANAGER',
         'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR',
         'sales', 'Sales', 'SALES',
         'sales_rep', 'Sales Rep', 'SALES_REP'
@@ -61,6 +74,7 @@ service cloud.firestore {
         'owner', 'Owner', 'OWNER',
         'admin', 'Admin', 'ADMIN',
         'manager', 'Manager', 'MANAGER',
+        'operations_manager', 'Operations Manager', 'OPERATIONS_MANAGER',
         'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR',
         'sales', 'Sales', 'SALES',
         'sales_rep', 'Sales Rep', 'SALES_REP'
@@ -72,6 +86,7 @@ service cloud.firestore {
         'owner', 'Owner', 'OWNER',
         'admin', 'Admin', 'ADMIN',
         'manager', 'Manager', 'MANAGER',
+        'operations_manager', 'Operations Manager', 'OPERATIONS_MANAGER',
         'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR',
         'technician', 'Technician', 'TECHNICIAN',
         'cleaner', 'Cleaner', 'CLEANER',
@@ -241,6 +256,29 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time;
     }
 
+    function validOperationEventCreate() {
+      return isGovernancePlus()
+        && request.resource.data.keys().hasOnly([
+          'eventId',
+          'eventType',
+          'timestamp',
+          'source',
+          'actor',
+          'severity',
+          'correlationId',
+          'payload',
+          'metadata',
+          'persistedAt'
+        ])
+        && request.resource.data.eventType is string
+        && request.resource.data.timestamp is number
+        && request.resource.data.source is string
+        && request.resource.data.severity in ['critical', 'warning', 'info', 'success']
+        && request.resource.data.payload is map
+        && request.resource.data.metadata is map
+        && request.resource.data.persistedAt == request.time;
+    }
+
     function companyClaimUpdate() {
       return isCompanyDispatcher()
         && resource.data.companyClaimed != true
@@ -387,14 +425,20 @@ service cloud.firestore {
     }
 
     match /history_timeline/{logId} {
-      allow read: if isOwnerOrAdmin();
+      allow read: if isGovernancePlus();
       allow create: if validAuditCreate();
       allow update, delete: if false;
     }
 
     match /audit_logs/{logId} {
-      allow read: if isOwnerOrAdmin();
+      allow read: if isGovernancePlus();
       allow create: if validAuditCreate();
+      allow update, delete: if false;
+    }
+
+    match /operation_events/{eventDocId} {
+      allow read: if isGovernancePlus();
+      allow create: if validOperationEventCreate();
       allow update, delete: if false;
     }
 
