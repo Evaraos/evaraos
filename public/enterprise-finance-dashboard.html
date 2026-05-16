@@ -27,9 +27,9 @@
 
         <nav class="dashboard-sidebar-nav" aria-label="Finance dashboard navigation">
           <a class="dashboard-nav-link active" href="./enterprise-finance-dashboard.html"><span class="dashboard-nav-icon">◎</span><span>Finance</span></a>
-          <a class="dashboard-nav-link" href="./analytics-dashboard.html"><span class="dashboard-nav-icon">◈</span><span>Analytics</span></a>
-          <a class="dashboard-nav-link" href="./live-operations-command.html"><span class="dashboard-nav-icon">▲</span><span>Live Command</span></a>
-          <a class="dashboard-nav-link" href="./executive-queue.html"><span class="dashboard-nav-icon">◆</span><span>Queue</span></a>
+          <a class="dashboard-nav-link" href="./operations-visibility.html"><span class="dashboard-nav-icon">◈</span><span>Visibility</span></a>
+          <a class="dashboard-nav-link" href="./analytics-dashboard.html"><span class="dashboard-nav-icon">▲</span><span>Analytics</span></a>
+          <a class="dashboard-nav-link" href="./live-operations-command.html"><span class="dashboard-nav-icon">◆</span><span>Live Command</span></a>
           <a class="dashboard-nav-link" href="./companies.html"><span class="dashboard-nav-icon">●</span><span>Companies</span></a>
         </nav>
 
@@ -72,88 +72,61 @@
         </div>
 
         <div class="dashboard-stats-grid">
-          <article class="dashboard-stat-card glass-card">
-            <p>MRR</p>
-            <h3 id="financeMrr">$0.00</h3>
-            <span>Monthly recurring</span>
-          </article>
-          <article class="dashboard-stat-card glass-card">
-            <p>Billed</p>
-            <h3 id="financeBilled">$0.00</h3>
-            <span>Total invoices</span>
-          </article>
-          <article class="dashboard-stat-card glass-card">
-            <p>Collected</p>
-            <h3 id="financeCollected">$0.00</h3>
-            <span>Paid revenue</span>
-          </article>
-          <article class="dashboard-stat-card glass-card">
-            <p>Outstanding</p>
-            <h3 id="financeOutstanding">$0.00</h3>
-            <span>Balance due</span>
-          </article>
-          <article class="dashboard-stat-card glass-card">
-            <p>Platform Share</p>
-            <h3 id="financePlatformRevenue">$0.00</h3>
-            <span>Evaraos revenue</span>
-          </article>
-          <article class="dashboard-stat-card glass-card">
-            <p>Vendor Payouts</p>
-            <h3 id="financeVendorPayouts">$0.00</h3>
-            <span>Lead/service vendors</span>
-          </article>
+          <article class="dashboard-stat-card glass-card"><p>MRR</p><h3 id="financeMrr">$0.00</h3><span>Monthly recurring</span></article>
+          <article class="dashboard-stat-card glass-card"><p>Billed</p><h3 id="financeBilled">$0.00</h3><span>Total invoices</span></article>
+          <article class="dashboard-stat-card glass-card"><p>Collected</p><h3 id="financeCollected">$0.00</h3><span>Paid revenue</span></article>
+          <article class="dashboard-stat-card glass-card"><p>Outstanding</p><h3 id="financeOutstanding">$0.00</h3><span>Balance due</span></article>
+          <article class="dashboard-stat-card glass-card"><p>Platform Share</p><h3 id="financePlatformRevenue">$0.00</h3><span>Evaraos revenue</span></article>
+          <article class="dashboard-stat-card glass-card"><p>Vendor Payouts</p><h3 id="financeVendorPayouts">$0.00</h3><span>Lead/service vendors</span></article>
+        </div>
+      </section>
+
+      <section class="dashboard-panel glass-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Executive Visuals</p>
+            <h2>Telemetry Intelligence Cards</h2>
+          </div>
+          <span class="dashboard-mini-badge">Visual OS</span>
+        </div>
+        <div id="financeTelemetryCardsRoot" class="dashboard-stats-grid">
+          <div class="item muted">Loading executive telemetry cards...</div>
+        </div>
+      </section>
+
+      <section class="dashboard-panel glass-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Continuity Rails</p>
+            <h2>Finance & Operations Integrity</h2>
+          </div>
+        </div>
+        <div id="financeTelemetryBarsRoot" class="dashboard-list">
+          <div class="item muted">Loading telemetry progress rails...</div>
         </div>
       </section>
 
       <section class="dashboard-grid-2">
         <section class="dashboard-panel glass-card">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Revenue Systems</p>
-              <h2>Finance Summary</h2>
-            </div>
-          </div>
-          <div id="financeSummaryRoot" class="dashboard-list">
-            <div class="item muted">Loading finance summary...</div>
-          </div>
+          <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Revenue Systems</p><h2>Finance Summary</h2></div></div>
+          <div id="financeSummaryRoot" class="dashboard-list"><div class="item muted">Loading finance summary...</div></div>
         </section>
 
         <section class="dashboard-panel glass-card">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Finance Guidance</p>
-              <h2>Recommended Actions</h2>
-            </div>
-          </div>
-          <div id="financeRecommendationRoot" class="dashboard-list">
-            <div class="item muted">Loading finance recommendations...</div>
-          </div>
+          <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Finance Guidance</p><h2>Recommended Actions</h2></div></div>
+          <div id="financeRecommendationRoot" class="dashboard-list"><div class="item muted">Loading finance recommendations...</div></div>
         </section>
       </section>
 
       <section class="dashboard-grid-2">
         <section class="dashboard-panel glass-card">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Billing</p>
-              <h2>Invoices</h2>
-            </div>
-          </div>
-          <div id="financeInvoiceRoot" class="dashboard-list">
-            <div class="item muted">Loading invoices...</div>
-          </div>
+          <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Billing</p><h2>Invoices</h2></div></div>
+          <div id="financeInvoiceRoot" class="dashboard-list"><div class="item muted">Loading invoices...</div></div>
         </section>
 
         <section class="dashboard-panel glass-card">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Marketplace</p>
-              <h2>Payouts</h2>
-            </div>
-          </div>
-          <div id="financePayoutRoot" class="dashboard-list">
-            <div class="item muted">Loading marketplace payouts...</div>
-          </div>
+          <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Marketplace</p><h2>Payouts</h2></div></div>
+          <div id="financePayoutRoot" class="dashboard-list"><div class="item muted">Loading marketplace payouts...</div></div>
         </section>
       </section>
     </section>
