@@ -1,93 +1,175 @@
-import { auth, db, onAuthStateChanged, collection, onSnapshot } from './firebase.js';
+import {
+  auth,
+  onAuthStateChanged,
+  getSavedUserProfile
+} from './firebase.js';
+
+import {
+  startNotificationEventBridge,
+  stopNotificationEventBridge,
+  subscribeNotifications,
+  unsubscribeNotifications,
+  getNotifications,
+  getNotificationSummary,
+  markNotificationRead,
+  markNotificationUnread,
+  markAllNotificationsRead,
+  archiveNotification,
+  resolveNotification,
+  NOTIFICATION_AUDIENCES
+} from './operations-notifications.js';
 
 const countEl = document.getElementById('noticeCount');
 const list = document.getElementById('noticeList');
+const statusNode = document.getElementById('noticeStatus');
 
-let jobRows = [];
-let invoiceRows = [];
-let unsubscribeJobs = null;
-let unsubscribeInvoices = null;
+let notificationListenerId = null;
+let activeFilter = 'all';
 
-function clean(v) {
+function clean(v = '') {
   return String(v || '').replace(/[<>]/g, '');
 }
 
-function card(title, detail, type) {
-  return '<article class="item"><h3>' + clean(title) + '</h3><p class="muted">' + clean(detail) + '</p><div class="row"><span class="pill">' + clean(type) + '</span></div></article>';
+function status(message = '') {
+  if (statusNode) statusNode.textContent = message;
+}
+
+function allowedRole() {
+  const profile = getSavedUserProfile() || {};
+  const role = String(profile.role || '').toLowerCase();
+
+  return [
+    'owner',
+    'super_admin',
+    'admin',
+    'manager',
+    'operations_manager',
+    'dispatcher',
+    'sales_manager',
+    'field_manager',
+    'staff',
+    'sales_rep',
+    'technician',
+    'cleaner'
+  ].includes(role);
+}
+
+function label(value = '') {
+  return String(value || '')
+    .replaceAll('_', ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function rows() {
+  if (activeFilter === 'all') return getNotifications();
+  if (activeFilter === 'unread') return getNotifications({ unreadOnly: true });
+  return getNotifications({ audience: activeFilter });
+}
+
+function card(notification = {}) {
+  const unread = !notification.read && notification.state === 'unread'
+    ? ' unread'
+    : '';
+
+  return '<article class="item notification-item' + unread + '" data-id="' + clean(notification.id) + '"><h3>' + clean(notification.title) + '</h3><p class="muted">' + clean(notification.detail || 'No details.') + '</p><div class="row"><span class="pill">' + clean(label(notification.level)) + '</span><span class="pill">' + clean(label(notification.priority)) + '</span><span class="pill">' + clean(label(notification.audience)) + '</span></div><div class="row" style="margin-top:10px"><button class="btn btn-theme-secondary beam-target" data-action="read" data-id="' + clean(notification.id) + '">Read</button><button class="btn btn-theme-secondary beam-target" data-action="unread" data-id="' + clean(notification.id) + '">Unread</button><button class="btn btn-theme-secondary beam-target" data-action="resolve" data-id="' + clean(notification.id) + '">Resolve</button><button class="btn btn-theme-secondary beam-target" data-action="archive" data-id="' + clean(notification.id) + '">Archive</button></div></article>';
 }
 
 function renderFeed() {
-  const items = [];
+  const notifications = rows();
+  const summary = getNotificationSummary();
 
-  jobRows.slice(0, 8).forEach((row) => {
-    items.push({
-      title: 'Job Update',
-      detail: (row.customerName || 'Customer') + ' • ' + (row.status || 'active'),
-      type: 'operations'
-    });
-  });
+  if (countEl) {
+    countEl.textContent = String(summary.unread || notifications.length || 0);
+  }
 
-  invoiceRows.slice(0, 8).forEach((row) => {
-    items.push({
-      title: 'Invoice Update',
-      detail: (row.invoiceNumber || 'Invoice') + ' • ' + (row.paymentStatus || row.status || 'pending'),
-      type: 'finance'
-    });
-  });
+  if (!list) return;
 
-  countEl.textContent = String(items.length);
-
-  if (!items.length) {
-    list.innerHTML = '<div class="item muted">No operational updates.</div>';
+  if (!notifications.length) {
+    list.innerHTML = '<div class="item muted">No operational notifications.</div>';
     return;
   }
 
-  list.innerHTML = items.map((row) => card(row.title, row.detail, row.type)).join('');
+  list.innerHTML = notifications.slice(0, 20).map(card).join('');
 }
 
-function stopRealtimeFeed() {
-  if (unsubscribeJobs) unsubscribeJobs();
-  if (unsubscribeInvoices) unsubscribeInvoices();
-  unsubscribeJobs = null;
-  unsubscribeInvoices = null;
+function bindEvents() {
+  list?.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-action]');
+    if (!button) return;
+
+    const id = button.getAttribute('data-id');
+    const action = button.getAttribute('data-action');
+
+    if (action === 'read') markNotificationRead(id);
+    if (action === 'unread') markNotificationUnread(id);
+    if (action === 'resolve') resolveNotification(id);
+    if (action === 'archive') archiveNotification(id);
+
+    renderFeed();
+  });
+
+  document.addEventListener('click', (event) => {
+    const filter = event.target.closest('[data-notification-filter]');
+    if (!filter) return;
+
+    activeFilter = filter.getAttribute('data-notification-filter') || 'all';
+    renderFeed();
+  });
+
+  document.getElementById('notificationsMarkAllRead')?.addEventListener('click', () => {
+    markAllNotificationsRead();
+    renderFeed();
+  });
 }
 
-function startRealtimeFeed() {
-  stopRealtimeFeed();
+function stopCenter() {
+  if (notificationListenerId) unsubscribeNotifications(notificationListenerId);
+  notificationListenerId = null;
+  stopNotificationEventBridge();
+}
 
-  list.innerHTML = '<div class="item muted">Starting live feed...</div>';
+function startCenter() {
+  stopCenter();
+  startNotificationEventBridge();
 
-  unsubscribeJobs = onSnapshot(collection(db, 'jobs'), (snap) => {
-    jobRows = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  notificationListenerId = subscribeNotifications(() => {
     renderFeed();
-  }, (error) => {
-    console.error(error);
-    list.innerHTML = '<div class="item muted">Job feed failed to load.</div>';
+    status('Operational inbox synced.');
   });
 
-  unsubscribeInvoices = onSnapshot(collection(db, 'invoices'), (snap) => {
-    invoiceRows = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    renderFeed();
-  }, (error) => {
-    console.error(error);
-    list.innerHTML = '<div class="item muted">Invoice feed failed to load.</div>';
-  });
+  renderFeed();
 }
 
 function init() {
+  bindEvents();
+
+  window.EvaraPageLifecycle?.registerCleanup?.(stopCenter);
+  window.addEventListener('pagehide', stopCenter);
+
   onAuthStateChanged(auth, (user) => {
     if (!user) {
+      stopCenter();
       window.location.assign('/login.html');
       return;
     }
 
-    startRealtimeFeed();
+    if (!allowedRole()) {
+      status('Notifications unavailable for this role.');
+      return;
+    }
+
+    startCenter();
   });
 }
 
-window.EvaraPageLifecycle?.registerCleanup?.(stopRealtimeFeed);
-window.addEventListener('beforeunload', stopRealtimeFeed);
-window.addEventListener('pagehide', stopRealtimeFeed);
+window.EvaraNotificationsCenter = {
+  startCenter,
+  stopCenter,
+  renderFeed,
+  getNotifications,
+  getNotificationSummary,
+  audiences: NOTIFICATION_AUDIENCES
+};
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init, { once: true });
