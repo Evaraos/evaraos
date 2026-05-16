@@ -24,6 +24,13 @@ import {
   summarizeReplayTimelines
 } from './compliance-replay.js';
 
+import {
+  createDashboardRuntime,
+  startDashboardRuntime,
+  stopDashboardRuntime,
+  registerRuntimeCleanup
+} from './dashboard-runtime.js';
+
 const statusNode = document.getElementById('replayStatus');
 const timelineRoot = document.getElementById('replayTimelineRoot');
 const detailRoot = document.getElementById('replayDetailRoot');
@@ -32,6 +39,12 @@ const totalEventNode = document.getElementById('replayEventCount');
 const criticalNode = document.getElementById('replayCriticalCount');
 const persistenceNode = document.getElementById('replayPersistenceStatus');
 const filterRoot = document.getElementById('replayFilters');
+
+const runtime = createDashboardRuntime({
+  id: 'replay-dashboard-runtime',
+  name: 'Replay Dashboard Runtime',
+  metadata: { page: 'replay-dashboard.html' }
+});
 
 let replayListenerId = null;
 let activeFilter = 'all';
@@ -163,15 +176,39 @@ function bindEvents() {
   });
 }
 
-function startReplayDashboard() {
+async function startReplayDashboard() {
   stopReplayDashboard();
-  startAuditLogEngine();
-  startEventPersistence();
 
-  replayListenerId = subscribeReplayTimelines((timelines) => {
-    renderTimelines(currentTimelines().length ? currentTimelines() : timelines);
-    status('Replay timelines synced.');
-  }, timelineOptions());
+  await startDashboardRuntime(runtime.id, [
+    {
+      label: 'Start audit log engine',
+      run() {
+        startAuditLogEngine();
+        return stopAuditLogEngine;
+      }
+    },
+    {
+      label: 'Start event persistence',
+      run() {
+        startEventPersistence();
+        return stopEventPersistence;
+      }
+    },
+    {
+      label: 'Subscribe replay timelines',
+      run() {
+        replayListenerId = subscribeReplayTimelines((timelines) => {
+          renderTimelines(currentTimelines().length ? currentTimelines() : timelines);
+          status('Replay timelines synced.');
+        }, timelineOptions());
+
+        return () => {
+          if (replayListenerId) unsubscribeReplayTimelines(replayListenerId);
+          replayListenerId = null;
+        };
+      }
+    }
+  ]);
 
   renderTimelines();
 }
@@ -179,12 +216,12 @@ function startReplayDashboard() {
 function stopReplayDashboard() {
   if (replayListenerId) unsubscribeReplayTimelines(replayListenerId);
   replayListenerId = null;
-  stopAuditLogEngine();
-  stopEventPersistence();
+  stopDashboardRuntime(runtime.id);
 }
 
 function init() {
   bindEvents();
+  registerRuntimeCleanup(runtime.id, stopReplayDashboard);
   window.EvaraPageLifecycle?.registerCleanup?.(stopReplayDashboard);
   window.addEventListener('pagehide', stopReplayDashboard);
 
@@ -201,12 +238,10 @@ function init() {
       return;
     }
 
-    try {
-      startReplayDashboard();
-    } catch (error) {
+    startReplayDashboard().catch((error) => {
       console.error(error);
       status('Replay dashboard failed to start.');
-    }
+    });
   });
 }
 
