@@ -6,9 +6,8 @@ import {
 import {
   createInvoice,
   updateInvoice,
-  markInvoicePaid,
-  markInvoiceVoid,
-  markInvoicePastDue,
+  applyInvoicePayment,
+  voidInvoice,
   getInvoices,
   summarizeInvoices
 } from './invoice-orchestration-engine.js';
@@ -45,14 +44,14 @@ export async function updatePersistentInvoice(invoiceId, patch = {}, options = {
   return localInvoice;
 }
 
-export async function markPersistentInvoicePaid(invoiceId, payment = {}, options = {}) {
-  const localInvoice = markInvoicePaid(invoiceId, payment);
+export async function applyPersistentInvoicePayment(invoiceId, payment = {}, options = {}) {
+  const localInvoice = applyInvoicePayment(invoiceId, payment);
   await invoiceAdapter.set(invoiceId, localInvoice, { merge: true, ...options });
   return localInvoice;
 }
 
-export async function markPersistentInvoiceVoid(invoiceId, reason = '', options = {}) {
-  const localInvoice = markInvoiceVoid(invoiceId, reason);
+export async function voidPersistentInvoice(invoiceId, reason = '', options = {}) {
+  const localInvoice = voidInvoice(invoiceId, reason);
   await invoiceAdapter.update(invoiceId, {
     status: 'void',
     voidReason: reason,
@@ -63,11 +62,17 @@ export async function markPersistentInvoiceVoid(invoiceId, reason = '', options 
 }
 
 export async function markPersistentInvoicePastDue(invoiceId, options = {}) {
-  const localInvoice = markInvoicePastDue(invoiceId);
+  const localInvoice = updateInvoice(invoiceId, {
+    status: 'past_due',
+    pastDueAtMs: Date.now()
+  });
+
   await invoiceAdapter.update(invoiceId, {
     status: 'past_due',
+    pastDueAtMs: Date.now(),
     updatedAtMs: Date.now()
   }, options);
+
   return localInvoice;
 }
 
@@ -137,8 +142,8 @@ export function summarizePersistentInvoices() {
 window.EvaraPersistentInvoicesAdapter = {
   createPersistentInvoice,
   updatePersistentInvoice,
-  markPersistentInvoicePaid,
-  markPersistentInvoiceVoid,
+  applyPersistentInvoicePayment,
+  voidPersistentInvoice,
   markPersistentInvoicePastDue,
   loadPersistentInvoices,
   subscribePersistentInvoices,
