@@ -42,6 +42,7 @@ export const NAV_PAGES = {
   ownerOnly: [
     { page: "companies.html", label: "Companies", icon: "companies", bubble: "companies", group: "Organization" },
     { page: "governance-dashboard.html", label: "Governance", icon: "org", bubble: "governance", group: "Organization" },
+    { page: "audit-dashboard.html", label: "Audit", icon: "org", bubble: "audit", group: "Organization" },
     { page: "users.html", label: "Users", icon: "users", bubble: "users", group: "Organization" },
     { page: "org.html", label: "Organization", icon: "org", bubble: "org", group: "Organization" },
 
@@ -70,8 +71,8 @@ export const NAV_EXEC_GROUPS = [
   },
   {
     title: "Organization",
-    subtitle: "Company OS",
-    description: "Companies, users, governance, and ownership structure.",
+    subtitle: "Governance & Audit OS",
+    description: "Companies, users, governance, audit traceability, and ownership structure.",
     icon: "org"
   },
   {
