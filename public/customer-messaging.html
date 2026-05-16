@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#050814" />
+  <title>Evaraos Customer Messaging</title>
+
+  <link rel="icon" href="./assets/img/evaraos-emblem.png" />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/theme.css" />
+  <link rel="stylesheet" href="./assets/css/nav.css" />
+  <link rel="stylesheet" href="./assets/css/dashboard.css" />
+  <link rel="stylesheet" href="./assets/css/app-system.css" />
+</head>
+<body data-route-guard="private" class="dashboard-body app-loading">
+  <div class="page-aurora" aria-hidden="true"></div>
+  <div class="page-grid-overlay" aria-hidden="true"></div>
+
+  <main class="dashboard-shell">
+    <aside class="dashboard-sidebar glass-card">
+      <div class="dashboard-sidebar-inner">
+        <div class="dashboard-sidebar-head">
+          <p class="dashboard-sidebar-eyebrow">Customer Support</p>
+          <h2>Messages</h2>
+        </div>
+
+        <nav class="dashboard-sidebar-nav" aria-label="Customer messaging navigation">
+          <a class="dashboard-nav-link active" href="./customer-messaging.html"><span class="dashboard-nav-icon">◎</span><span>Messages</span></a>
+          <a class="dashboard-nav-link" href="./customer-commerce.html"><span class="dashboard-nav-icon">◈</span><span>Billing</span></a>
+          <a class="dashboard-nav-link" href="./dashboard.html"><span class="dashboard-nav-icon">▲</span><span>Dashboard</span></a>
+          <a class="dashboard-nav-link" href="./settings.html"><span class="dashboard-nav-icon">◆</span><span>Settings</span></a>
+        </nav>
+
+        <div class="dashboard-sidebar-foot glass-card">
+          <div class="dashboard-sidebar-foot-copy">
+            <strong>Conversation Center</strong>
+            <span>Keep billing, quote, service, and support conversations in one secure portal.</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="dashboard-main">
+      <section class="dashboard-hero glass-card">
+        <div class="dashboard-hero-copy">
+          <p class="dashboard-eyebrow">Customer Messaging Center</p>
+          <h1>Manage support, billing, quote, and service conversations from one secure inbox.</h1>
+          <p class="dashboard-hero-text">Messaging keeps customers and operations connected with unread tracking, priorities, support states, and conversation history.</p>
+        </div>
+
+        <div class="dashboard-hero-panel glass-card">
+          <div class="dashboard-hero-panel-top">
+            <span class="dashboard-mini-badge">Messages Live</span>
+            <span class="dashboard-live-dot" aria-hidden="true"></span>
+          </div>
+          <div class="dashboard-hero-panel-copy">
+            <strong><span id="messageThreadUnread">0</span> Unread</strong>
+            <span id="customerMessagingStatus">Initializing customer messaging...</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-overview glass-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Support Snapshot</p>
+            <h2>Conversation Overview</h2>
+          </div>
+          <span class="dashboard-mini-badge">Support</span>
+        </div>
+
+        <div class="dashboard-stats-grid">
+          <article class="dashboard-stat-card glass-card">
+            <p>Total Threads</p>
+            <h3 id="messageThreadTotal">0</h3>
+            <span>All conversations</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Open</p>
+            <h3 id="messageThreadOpen">0</h3>
+            <span>Needs attention</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Urgent</p>
+            <h3 id="messageThreadUrgent">0</h3>
+            <span>High priority</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Unread</p>
+            <h3 id="messageThreadUnread">0</h3>
+            <span>New replies</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Inbox</p>
+              <h2>Conversations</h2>
+            </div>
+          </div>
+          <div id="customerThreadRoot" class="dashboard-list">
+            <div class="item muted">Loading conversations...</div>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Thread</p>
+              <h2>Message History</h2>
+            </div>
+          </div>
+          <div id="customerMessageRoot" class="dashboard-list">
+            <div class="item muted">Select a conversation to view messages.</div>
+          </div>
+
+          <form id="customerMessageComposer" class="glass-card" style="margin-top:16px;padding:16px">
+            <label class="form-label" for="customerMessageInput">Reply</label>
+            <textarea id="customerMessageInput" class="form-input" rows="4" placeholder="Write your message..."></textarea>
+            <div class="row" style="margin-top:12px">
+              <button class="btn btn-theme-primary" type="submit">Send Message</button>
+            </div>
+          </form>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="./assets/js/loader.js"></script>
+  <script type="module" src="./assets/js/firebase.js"></script>
+  <script type="module" src="./assets/js/theme.js"></script>
+  <script type="module" src="./assets/js/route-guard.js"></script>
+  <script type="module" src="./assets/js/nav.js"></script>
+  <script type="module" src="./assets/js/customer-messaging-dashboard.js"></script>
+</body>
+</html>
