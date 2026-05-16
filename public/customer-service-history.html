@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#050814" />
+  <title>Evaraos Customer Service History</title>
+
+  <link rel="icon" href="./assets/img/evaraos-emblem.png" />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/theme.css" />
+  <link rel="stylesheet" href="./assets/css/nav.css" />
+  <link rel="stylesheet" href="./assets/css/dashboard.css" />
+  <link rel="stylesheet" href="./assets/css/app-system.css" />
+</head>
+<body data-route-guard="private" class="dashboard-body app-loading">
+  <div class="page-aurora" aria-hidden="true"></div>
+  <div class="page-grid-overlay" aria-hidden="true"></div>
+
+  <main class="dashboard-shell">
+    <aside class="dashboard-sidebar glass-card">
+      <div class="dashboard-sidebar-inner">
+        <div class="dashboard-sidebar-head">
+          <p class="dashboard-sidebar-eyebrow">Customer Portfolio</p>
+          <h2>Service History</h2>
+        </div>
+
+        <nav class="dashboard-sidebar-nav" aria-label="Customer history navigation">
+          <a class="dashboard-nav-link active" href="./customer-service-history.html"><span class="dashboard-nav-icon">◎</span><span>History</span></a>
+          <a class="dashboard-nav-link" href="./customer-messaging.html"><span class="dashboard-nav-icon">◈</span><span>Messages</span></a>
+          <a class="dashboard-nav-link" href="./customer-commerce.html"><span class="dashboard-nav-icon">▲</span><span>Billing</span></a>
+          <a class="dashboard-nav-link" href="./dashboard.html"><span class="dashboard-nav-icon">◆</span><span>Dashboard</span></a>
+          <a class="dashboard-nav-link" href="./settings.html"><span class="dashboard-nav-icon">●</span><span>Settings</span></a>
+        </nav>
+
+        <div class="dashboard-sidebar-foot glass-card">
+          <div class="dashboard-sidebar-foot-copy">
+            <strong>Service Timeline</strong>
+            <span>View completed services, invoices, route activity, conversations, and future before/after media.</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="dashboard-main">
+      <section class="dashboard-hero glass-card">
+        <div class="dashboard-hero-copy">
+          <p class="dashboard-eyebrow">Customer Service History</p>
+          <h1>Track your completed services, billing activity, conversations, and visual service proof in one timeline.</h1>
+          <p class="dashboard-hero-text">Service History turns operational activity into a customer-facing portfolio with invoices, routes, support history, and media-ready records.</p>
+        </div>
+
+        <div class="dashboard-hero-panel glass-card">
+          <div class="dashboard-hero-panel-top">
+            <span class="dashboard-mini-badge">Timeline Live</span>
+            <span class="dashboard-live-dot" aria-hidden="true"></span>
+          </div>
+          <div class="dashboard-hero-panel-copy">
+            <strong><span id="customerHistoryTotal">0</span> Entries</strong>
+            <span id="customerHistoryStatus">Initializing service history...</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-overview glass-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Portfolio Snapshot</p>
+            <h2>Customer Timeline Overview</h2>
+          </div>
+          <span class="dashboard-mini-badge">History</span>
+        </div>
+
+        <div class="dashboard-stats-grid">
+          <article class="dashboard-stat-card glass-card">
+            <p>Total Entries</p>
+            <h3 id="customerHistoryTotal">0</h3>
+            <span>Timeline records</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Completed</p>
+            <h3 id="customerHistoryCompleted">0</h3>
+            <span>Finished records</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Media</p>
+            <h3 id="customerHistoryMedia">0</h3>
+            <span>Proof-ready entries</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Value</p>
+            <h3 id="customerHistoryValue">$0.00</h3>
+            <span>Tracked history value</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Customer Intelligence</p>
+              <h2>History Summary</h2>
+            </div>
+          </div>
+          <div id="customerHistorySummaryRoot" class="dashboard-list">
+            <div class="item muted">Loading history summary...</div>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Portfolio Timeline</p>
+              <h2>Service Activity</h2>
+            </div>
+          </div>
+          <div id="customerHistoryTimelineRoot" class="dashboard-list">
+            <div class="item muted">Loading service timeline...</div>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="./assets/js/loader.js"></script>
+  <script type="module" src="./assets/js/firebase.js"></script>
+  <script type="module" src="./assets/js/theme.js"></script>
+  <script type="module" src="./assets/js/route-guard.js"></script>
+  <script type="module" src="./assets/js/nav.js"></script>
+  <script type="module" src="./assets/js/customer-service-history-dashboard.js"></script>
+</body>
+</html>
