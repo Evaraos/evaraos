@@ -36,6 +36,7 @@ export const NAV_PAGES = {
 
   authedMain: [
     { page: "dashboard.html", label: "Dashboard", icon: "dashboard", bubble: "dashboard" },
+    { page: "customer-commerce.html", label: "Billing", icon: "operations", bubble: "customer-billing" },
     { page: "settings.html", label: "Settings", icon: "settings", bubble: "settings" }
   ],
 
