@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#050814" />
+  <title>Evaraos Customer Commerce</title>
+
+  <link rel="icon" href="./assets/img/evaraos-emblem.png" />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/theme.css" />
+  <link rel="stylesheet" href="./assets/css/nav.css" />
+  <link rel="stylesheet" href="./assets/css/dashboard.css" />
+  <link rel="stylesheet" href="./assets/css/app-system.css" />
+</head>
+<body data-route-guard="private" class="dashboard-body app-loading">
+  <div class="page-aurora" aria-hidden="true"></div>
+  <div class="page-grid-overlay" aria-hidden="true"></div>
+
+  <main class="dashboard-shell">
+    <aside class="dashboard-sidebar glass-card">
+      <div class="dashboard-sidebar-inner">
+        <div class="dashboard-sidebar-head">
+          <p class="dashboard-sidebar-eyebrow">Customer Portal</p>
+          <h2>My Account</h2>
+        </div>
+
+        <nav class="dashboard-sidebar-nav" aria-label="Customer commerce navigation">
+          <a class="dashboard-nav-link active" href="./customer-commerce.html"><span class="dashboard-nav-icon">◎</span><span>Billing</span></a>
+          <a class="dashboard-nav-link" href="./dashboard.html"><span class="dashboard-nav-icon">◈</span><span>Dashboard</span></a>
+          <a class="dashboard-nav-link" href="./leads.html"><span class="dashboard-nav-icon">▲</span><span>Requests</span></a>
+          <a class="dashboard-nav-link" href="./settings.html"><span class="dashboard-nav-icon">◆</span><span>Settings</span></a>
+        </nav>
+
+        <div class="dashboard-sidebar-foot glass-card">
+          <div class="dashboard-sidebar-foot-copy">
+            <strong>Self-Service Billing</strong>
+            <span>Review quotes, invoices, subscriptions, payment links, and account actions.</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="dashboard-main">
+      <section class="dashboard-hero glass-card">
+        <div class="dashboard-hero-copy">
+          <p class="dashboard-eyebrow">Customer Commerce Portal</p>
+          <h1>Manage your quotes, invoices, subscriptions, and payment actions in one place.</h1>
+          <p class="dashboard-hero-text">Your customer portal keeps billing, account actions, open invoices, subscription details, and quote visibility organized in real time.</p>
+        </div>
+
+        <div class="dashboard-hero-panel glass-card">
+          <div class="dashboard-hero-panel-top">
+            <span class="dashboard-mini-badge">Account Live</span>
+            <span class="dashboard-live-dot" aria-hidden="true"></span>
+          </div>
+          <div class="dashboard-hero-panel-copy">
+            <strong id="customerOutstanding">$0.00</strong>
+            <span id="customerCommerceStatus">Initializing customer commerce portal...</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-overview glass-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Account Snapshot</p>
+            <h2>Billing Overview</h2>
+          </div>
+          <span class="dashboard-mini-badge">Customer</span>
+        </div>
+
+        <div class="dashboard-stats-grid">
+          <article class="dashboard-stat-card glass-card">
+            <p>Outstanding</p>
+            <h3 id="customerOutstanding">$0.00</h3>
+            <span>Open balance</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Paid</p>
+            <h3 id="customerPaid">$0.00</h3>
+            <span>Total paid</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Subscriptions</p>
+            <h3 id="customerActiveSubscriptions">0</h3>
+            <span>Active plans</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Quotes</p>
+            <h3 id="customerQuoteCount">0</h3>
+            <span>Total quotes</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Account Actions</p>
+              <h2>What Needs Attention</h2>
+            </div>
+          </div>
+          <div id="customerActionRoot" class="dashboard-list">
+            <div class="item muted">Loading account actions...</div>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Payments</p>
+              <h2>Open Invoices</h2>
+            </div>
+          </div>
+          <div id="customerInvoiceRoot" class="dashboard-list">
+            <div class="item muted">Loading invoices...</div>
+          </div>
+        </section>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Recurring Services</p>
+              <h2>Subscriptions</h2>
+            </div>
+          </div>
+          <div id="customerSubscriptionRoot" class="dashboard-list">
+            <div class="item muted">Loading subscriptions...</div>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Service Estimates</p>
+              <h2>Quotes</h2>
+            </div>
+          </div>
+          <div id="customerQuoteRoot" class="dashboard-list">
+            <div class="item muted">Loading quotes...</div>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="./assets/js/loader.js"></script>
+  <script type="module" src="./assets/js/firebase.js"></script>
+  <script type="module" src="./assets/js/theme.js"></script>
+  <script type="module" src="./assets/js/route-guard.js"></script>
+  <script type="module" src="./assets/js/nav.js"></script>
+  <script type="module" src="./assets/js/customer-commerce-dashboard.js"></script>
+</body>
+</html>
