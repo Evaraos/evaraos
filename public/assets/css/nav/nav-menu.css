@@ -1,6 +1,5 @@
-/* EVARAOS NAV MENU / CONTROL CENTER
-   Clean source-of-truth dropdown system.
-   No overlay patches, no nested blur battles, no 4-column cramped launcher. */
+/* EVARAOS CONTROL CENTER NAV
+   Image 2-inspired layout. Active source file, not an overlay. */
 
 body.nav-menu-open {
   overflow: hidden;
@@ -13,9 +12,9 @@ body.nav-menu-open {
   bottom: calc(var(--eva-island-offset, 10px) + 92px);
   top: auto;
   z-index: 2147483646;
-  width: min(560px, calc(100vw - 20px));
-  max-height: min(72vh, calc(100vh - 156px));
-  padding: 14px;
+  width: min(580px, calc(100vw - 18px));
+  max-height: min(78vh, calc(100vh - 142px));
+  padding: 18px;
   border-radius: 34px;
   overflow: auto;
   opacity: 0;
@@ -23,9 +22,10 @@ body.nav-menu-open {
   pointer-events: none;
   transform: translate3d(-50%, 12px, 0) scale(0.98);
   transform-origin: bottom center;
-  background: rgba(255,255,255,0.78);
-  border: 1px solid rgba(255,255,255,0.72);
-  box-shadow: 0 28px 72px rgba(15,23,42,0.16), inset 0 1px 0 rgba(255,255,255,0.86);
+  color: #0d1724;
+  background: linear-gradient(145deg, rgba(255,255,255,0.92), rgba(245,248,255,0.80));
+  border: 1px solid rgba(148,163,184,0.28);
+  box-shadow: 0 28px 72px rgba(15,23,42,0.18), inset 0 1px 0 rgba(255,255,255,0.92);
   backdrop-filter: blur(28px) saturate(160%);
   -webkit-backdrop-filter: blur(28px) saturate(160%);
   transition: opacity 0.18s ease, visibility 0.18s ease, transform 0.24s ease;
@@ -43,115 +43,286 @@ body.nav-menu-open .eva-menu-panel {
 
 html[data-theme="dark"] .eva-menu-panel {
   color: #f8fbff;
-  background: rgba(15,18,27,0.86);
-  border-color: rgba(255,255,255,0.14);
-  box-shadow: 0 28px 74px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.10);
+  background: linear-gradient(145deg, rgba(18,24,38,0.94), rgba(6,12,24,0.88));
+  border-color: rgba(255,255,255,0.13);
+  box-shadow: 0 30px 82px rgba(0,0,0,0.48), inset 0 1px 0 rgba(255,255,255,0.10);
 }
 
-.eva-menu-titlebar,
-.eva-menu-search,
-.eva-menu-section,
-.eva-account-section {
+.eva-menu-apps {
+  display: grid;
+  gap: 12px;
+}
+
+.eva-menu-top-block,
+.eva-menu-folder-shell,
+.eva-menu-search {
   position: relative;
-  z-index: 1;
+  border-radius: 24px;
+  border: 1px solid rgba(148,163,184,0.22);
+  background: rgba(255,255,255,0.58);
+  box-shadow: 0 12px 28px rgba(15,23,42,0.07), inset 0 1px 0 rgba(255,255,255,0.65);
+  overflow: hidden;
 }
 
-.eva-menu-titlebar {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+html[data-theme="dark"] .eva-menu-top-block,
+html[data-theme="dark"] .eva-menu-folder-shell,
+html[data-theme="dark"] .eva-menu-search {
+  background: rgba(255,255,255,0.055);
+  border-color: rgba(255,255,255,0.11);
+  box-shadow: 0 14px 34px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.eva-top-block-head,
+.eva-folder-summary {
+  list-style: none;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 54px 1fr auto;
+  align-items: center;
   gap: 14px;
-  padding: 4px 8px 12px;
+  padding: 14px;
 }
 
-.eva-menu-titlebar p,
-.eva-section-head p {
+.eva-folder-summary::-webkit-details-marker {
+  display: none;
+}
+
+.eva-top-block-icon,
+.eva-folder-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  font-size: 1.45rem;
+  font-weight: 950;
+  color: #1d4ed8;
+  background: linear-gradient(145deg, rgba(59,130,246,0.24), rgba(37,99,235,0.11));
+  border: 1px solid rgba(59,130,246,0.28);
+}
+
+.eva-top-block-head p,
+.eva-folder-copy p,
+.eva-section-label {
   margin: 0 0 4px;
-  font-size: 0.58rem;
+  font-size: 0.72rem;
   font-weight: 950;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.20em;
   text-transform: uppercase;
-  color: rgba(12,33,27,0.52);
+  color: rgba(15,23,42,0.58);
 }
 
-.eva-menu-titlebar h2,
-.eva-section-head h3 {
+.eva-top-block-head h3,
+.eva-folder-copy h3 {
   margin: 0;
-  font-weight: 950;
-  letter-spacing: -0.04em;
-  color: #0c211b;
-}
-
-.eva-menu-titlebar h2 {
-  font-size: 1.22rem;
-  line-height: 1;
-}
-
-.eva-section-head h3 {
   font-size: 0.98rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: #0f172a;
 }
 
-html[data-theme="dark"] .eva-menu-titlebar h2,
-html[data-theme="dark"] .eva-section-head h3 {
+html[data-theme="dark"] .eva-top-block-head p,
+html[data-theme="dark"] .eva-folder-copy p,
+html[data-theme="dark"] .eva-section-label {
+  color: rgba(226,232,240,0.64);
+}
+
+html[data-theme="dark"] .eva-top-block-head h3,
+html[data-theme="dark"] .eva-folder-copy h3 {
   color: #f8fbff;
 }
 
-html[data-theme="dark"] .eva-menu-titlebar p,
-html[data-theme="dark"] .eva-section-head p {
-  color: rgba(230,236,255,0.56);
+.eva-top-block-arrow,
+.eva-folder-chevron {
+  font-size: 1.95rem;
+  line-height: 1;
+  opacity: 0.72;
 }
 
-.eva-menu-actions {
-  display: flex;
+.eva-folder-meta {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
-.eva-menu-badge {
-  min-height: 28px;
-  padding: 0 12px;
+.eva-folder-count {
+  min-width: 34px;
+  height: 34px;
   border-radius: 999px;
-  display: inline-grid;
+  display: grid;
   place-items: center;
-  font-size: 0.66rem;
+  font-size: 0.82rem;
   font-weight: 950;
-  color: rgba(18,35,30,0.78);
-  background: rgba(255,255,255,0.66);
-  border: 1px solid rgba(255,255,255,0.72);
+  color: #111827;
+  background: rgba(15,23,42,0.06);
+  border: 1px solid rgba(15,23,42,0.06);
 }
 
-html[data-theme="dark"] .eva-menu-badge {
-  color: rgba(255,255,255,0.88);
+html[data-theme="dark"] .eva-folder-count {
+  color: #f8fbff;
   background: rgba(255,255,255,0.10);
-  border-color: rgba(255,255,255,0.16);
+  border-color: rgba(255,255,255,0.08);
 }
 
-.eva-menu-search {
-  padding: 8px 4px 12px;
-  margin-bottom: 4px;
+.eva-folder-viewport {
+  display: none;
+  padding: 0 14px 14px;
 }
 
-.eva-menu-search input {
-  width: 100%;
-  min-height: 46px;
-  border-radius: 999px;
-  padding: 0 16px;
+.eva-menu-folder[open] .eva-folder-viewport {
+  display: block;
+}
+
+.eva-menu-folder[open] .eva-folder-chevron {
+  transform: rotate(90deg);
+}
+
+.eva-quick-strip,
+.eva-account-strip {
+  display: grid;
+  gap: 8px;
+  padding: 0 14px 14px;
+}
+
+.eva-quick-strip {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.eva-account-strip {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.eva-quick-strip a,
+.eva-account-strip a {
+  min-height: 74px;
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  text-align: center;
+  text-decoration: none;
   color: inherit;
-  background: rgba(255,255,255,0.72);
-  border: 1px solid rgba(15,23,42,0.10);
-  outline: none;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.46);
+  border: 1px solid rgba(148,163,184,0.18);
+}
+
+html[data-theme="dark"] .eva-quick-strip a,
+html[data-theme="dark"] .eva-account-strip a {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.08);
+}
+
+.eva-quick-strip span,
+.eva-account-strip span {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.eva-quick-strip strong,
+.eva-account-strip strong {
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.eva-quick-strip small {
+  font-size: 0.65rem;
+  opacity: 0.68;
+}
+
+.eva-section-label {
+  padding: 4px 8px 0;
+  margin-top: 4px;
+}
+
+.eva-folder-operations .eva-folder-icon { color: #60a5fa; background: rgba(59,130,246,0.16); border-color: rgba(59,130,246,0.32); }
+.eva-folder-organizations .eva-folder-icon { color: #22c55e; background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.28); }
+.eva-folder-finance .eva-folder-icon { color: #f59e0b; background: rgba(245,158,11,0.16); border-color: rgba(245,158,11,0.30); }
+.eva-folder-customer .eva-folder-icon { color: #d946ef; background: rgba(217,70,239,0.15); border-color: rgba(217,70,239,0.28); }
+.eva-folder-intelligence .eva-folder-icon { color: #22d3ee; background: rgba(34,211,238,0.15); border-color: rgba(34,211,238,0.30); }
+.eva-folder-system .eva-folder-icon { color: #818cf8; background: rgba(129,140,248,0.15); border-color: rgba(129,140,248,0.30); }
+
+.eva-folder-operations { border-color: rgba(59,130,246,0.24); }
+.eva-folder-organizations { border-color: rgba(34,197,94,0.22); }
+.eva-folder-finance { border-color: rgba(245,158,11,0.24); }
+.eva-folder-customer { border-color: rgba(217,70,239,0.22); }
+.eva-folder-intelligence { border-color: rgba(34,211,238,0.24); }
+.eva-folder-system { border-color: rgba(129,140,248,0.24); }
+
+#evaMenuPanel .eva-app-grid,
+#evaMenuPanel .eva-account-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.eva-menu-search-bottom {
+  margin-top: 14px;
+  padding: 14px;
+  overflow: visible;
+}
+
+.eva-search-shell {
+  min-height: 62px;
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border-radius: 22px;
+  background: rgba(255,255,255,0.56);
+  border: 1px solid rgba(59,130,246,0.34);
+  box-shadow: 0 0 0 1px rgba(59,130,246,0.07), 0 0 24px rgba(59,130,246,0.15);
+}
+
+html[data-theme="dark"] .eva-search-shell {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(59,130,246,0.60);
+  box-shadow: 0 0 0 1px rgba(59,130,246,0.14), 0 0 28px rgba(59,130,246,0.20);
+}
+
+.eva-search-icon {
+  font-size: 1.65rem;
+  opacity: 0.72;
+}
+
+.eva-search-shell input {
+  width: 100%;
+  min-height: 58px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: inherit;
+  background: transparent;
   font: inherit;
-  font-weight: 800;
+  font-size: 1rem;
+  font-weight: 700;
 }
 
-.eva-menu-search input:focus {
-  border-color: color-mix(in srgb, var(--user-card-tint, #d61f42) 44%, rgba(15,23,42,0.14));
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--user-card-tint, #d61f42) 12%, transparent);
+.eva-search-key {
+  padding: 8px 11px;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  font-weight: 900;
+  color: rgba(15,23,42,0.60);
+  background: rgba(15,23,42,0.06);
 }
 
-html[data-theme="dark"] .eva-menu-search input {
+html[data-theme="dark"] .eva-search-key {
+  color: rgba(248,250,252,0.70);
   background: rgba(255,255,255,0.08);
-  border-color: rgba(255,255,255,0.14);
+}
+
+.eva-search-helper {
+  margin: 12px 0 0;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: rgba(37,99,235,0.78);
+}
+
+html[data-theme="dark"] .eva-search-helper {
+  color: rgba(96,165,250,0.86);
 }
 
 .eva-search-results.active {
@@ -160,36 +331,26 @@ html[data-theme="dark"] .eva-menu-search input {
   margin-top: 10px;
 }
 
-.eva-search-empty {
-  padding: 10px 12px;
+.eva-search-empty,
+.eva-search-result {
   border-radius: 16px;
-  font-size: 0.84rem;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.62);
+  border: 1px solid rgba(148,163,184,0.18);
+}
+
+.eva-search-empty {
   opacity: 0.68;
-  background: rgba(255,255,255,0.14);
+  font-size: 0.84rem;
 }
 
 .eva-search-result {
   width: 100%;
-  text-align: left;
-  border: 1px solid rgba(15,23,42,0.08);
-  border-radius: 18px;
-  padding: 11px 12px;
-  color: inherit;
-  background: rgba(255,255,255,0.52);
   display: grid;
   gap: 3px;
+  text-align: left;
+  color: inherit;
   cursor: pointer;
-}
-
-.eva-search-result:hover,
-.eva-search-result:focus-visible {
-  outline: none;
-  background: rgba(255,255,255,0.76);
-}
-
-.eva-search-result span {
-  font-size: 0.74rem;
-  opacity: 0.66;
 }
 
 html[data-theme="dark"] .eva-search-empty,
@@ -198,139 +359,40 @@ html[data-theme="dark"] .eva-search-result {
   border-color: rgba(255,255,255,0.12);
 }
 
-.eva-menu-apps {
-  display: grid;
-  gap: 10px;
-}
-
-.eva-menu-section,
-.eva-account-section {
-  margin-top: 10px;
-  border-radius: 26px;
-  background: rgba(255,255,255,0.48);
-  border: 1px solid rgba(255,255,255,0.58);
-  overflow: hidden;
-}
-
-html[data-theme="dark"] .eva-menu-section,
-html[data-theme="dark"] .eva-account-section {
-  background: rgba(255,255,255,0.06);
-  border-color: rgba(255,255,255,0.11);
-}
-
-.eva-menu-folder {
-  display: grid;
-}
-
-.eva-folder-summary {
-  list-style: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px;
-}
-
-.eva-folder-summary::-webkit-details-marker {
-  display: none;
-}
-
-.eva-folder-count {
-  min-width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  font-size: 0.72rem;
-  font-weight: 950;
-  background: rgba(255,255,255,0.22);
-  border: 1px solid rgba(255,255,255,0.20);
-}
-
-#evaMenuPanel .eva-app-grid,
-#evaMenuPanel .eva-account-grid,
-#evaAuthLinks .eva-app-grid {
-  display: grid !important;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  gap: 10px !important;
-  justify-items: stretch !important;
-  align-items: stretch !important;
-  width: 100% !important;
-  padding: 0 12px 12px;
-}
-
-#evaMenuPanel .eva-menu-app-launcher {
-  min-height: 64px;
-  width: auto !important;
-  display: grid !important;
-  grid-template-columns: 40px 1fr;
-  align-items: center;
-  justify-items: start !important;
-  gap: 10px;
-  padding: 12px !important;
-  border-radius: 20px;
-  text-align: left;
-  text-decoration: none;
-  color: inherit;
-  background: rgba(255,255,255,0.46);
-  border: 1px solid rgba(255,255,255,0.44);
-  transition: transform 0.16s ease, background 0.16s ease;
-}
-
-#evaMenuPanel .eva-menu-app-launcher:hover,
-#evaMenuPanel .eva-menu-app-launcher:focus-visible {
-  transform: translateY(-1px);
-  outline: none;
-  background: rgba(255,255,255,0.70);
-}
-
-html[data-theme="dark"] #evaMenuPanel .eva-menu-app-launcher {
-  background: rgba(255,255,255,0.07);
-  border-color: rgba(255,255,255,0.11);
-}
-
-html[data-theme="dark"] #evaMenuPanel .eva-menu-app-launcher:hover,
-html[data-theme="dark"] #evaMenuPanel .eva-menu-app-launcher:focus-visible {
-  background: rgba(255,255,255,0.12);
-}
-
-#evaMenuPanel .eva-menu-app-square {
-  width: 40px !important;
-  height: 40px !important;
-  min-width: 40px !important;
-  display: grid;
-  place-items: center;
-  border-radius: 16px;
-  background: rgba(255,255,255,0.42);
-}
-
-html[data-theme="dark"] #evaMenuPanel .eva-menu-app-square {
-  background: rgba(255,255,255,0.10);
-}
-
-#evaMenuPanel .eva-menu-app-name {
-  max-width: 100%;
-  white-space: normal !important;
-  line-height: 1.1;
-  text-align: left !important;
-  font-size: 0.86rem;
-  font-weight: 900;
+.eva-search-result span {
+  font-size: 0.74rem;
+  opacity: 0.66;
 }
 
 @media (max-width: 560px) {
   .eva-menu-panel {
     width: calc(100vw - 14px);
-    max-height: min(74vh, calc(100vh - 142px));
+    max-height: min(80vh, calc(100vh - 126px));
     bottom: calc(var(--eva-island-offset, 10px) + 86px);
-    padding: 12px;
+    padding: 14px;
     border-radius: 30px;
   }
 
-  #evaMenuPanel .eva-app-grid,
-  #evaMenuPanel .eva-account-grid,
-  #evaAuthLinks .eva-app-grid {
-    grid-template-columns: 1fr !important;
+  .eva-quick-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .eva-account-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .eva-top-block-head,
+  .eva-folder-summary {
+    grid-template-columns: 48px 1fr auto;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .eva-top-block-icon,
+  .eva-folder-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
   }
 }
 
@@ -338,6 +400,6 @@ html[data-theme="dark"] #evaMenuPanel .eva-menu-app-square {
   .eva-menu-panel,
   .eva-menu-app-launcher,
   .eva-search-result {
-    transition: none !important;
+    transition: none;
   }
 }
