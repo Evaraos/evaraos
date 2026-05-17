@@ -2,13 +2,14 @@
   const FAST_LOADER_ID = "evaraFastLoader";
   const GLOBAL_LOADER_ID = "evaraGlobalLoader";
   const PAGE_TRANSITION_ID = "evaPageTransition";
+  const LOGO_SRC = "./assets/img/evaraos-emblem.png";
 
-  const NAV_FAST_DELAY = 900;
-  const NAV_FULL_DELAY = 2200;
-  const INITIAL_FAST_DELAY = 1200;
-  const INITIAL_FULL_DELAY = 2600;
-  const FORCE_UNLOCK_DELAY = 3600;
-  const EXIT_DURATION = 120;
+  const NAV_FAST_DELAY = 350;
+  const NAV_FULL_DELAY = 1200;
+  const INITIAL_FAST_DELAY = 0;
+  const INITIAL_FULL_DELAY = 850;
+  const FORCE_UNLOCK_DELAY = 4200;
+  const EXIT_DURATION = 180;
 
   let fastTimer = null;
   let fullTimer = null;
@@ -47,31 +48,8 @@
     );
   }
 
-  function inlineMarkSVG(className) {
-    return `
-      <svg viewBox="0 0 100 100" class="${className}" aria-hidden="true" focusable="false">
-        <defs>
-          <radialGradient id="evaraCoreGrad" cx="50%" cy="40%" r="60%">
-            <stop offset="0%" stop-color="#ffb3c0"></stop>
-            <stop offset="32%" stop-color="#ff355d"></stop>
-            <stop offset="72%" stop-color="#b10f35"></stop>
-            <stop offset="100%" stop-color="#5f0821"></stop>
-          </radialGradient>
-          <linearGradient id="evaraChrome" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#ffffff"></stop>
-            <stop offset="55%" stop-color="#d9dbe8"></stop>
-            <stop offset="100%" stop-color="#8c91a8"></stop>
-          </linearGradient>
-        </defs>
-        <circle cx="50" cy="50" r="28" fill="url(#evaraCoreGrad)"></circle>
-        <ellipse cx="50" cy="50" rx="37" ry="18" fill="none" stroke="url(#evaraChrome)" stroke-width="6.8" transform="rotate(-18 50 50)"></ellipse>
-        <ellipse cx="50" cy="50" rx="20" ry="37" fill="none" stroke="url(#evaraChrome)" stroke-width="6.8" transform="rotate(28 50 50)"></ellipse>
-        <circle cx="72" cy="34" r="5.6" fill="#ff2048"></circle>
-        <circle cx="31" cy="34" r="5.2" fill="#ff6a7e"></circle>
-        <circle cx="72" cy="66" r="5.2" fill="#ff2048"></circle>
-        <circle cx="31" cy="66" r="5.2" fill="#ff6a7e"></circle>
-      </svg>
-    `;
+  function logoImage(className) {
+    return `<img class="${className}" src="${LOGO_SRC}" alt="Evaraos" loading="eager" decoding="async" />`;
   }
 
   function ensureLoaders() {
@@ -88,14 +66,14 @@
     if (!document.getElementById(FAST_LOADER_ID)) {
       const fast = document.createElement("div");
       fast.id = FAST_LOADER_ID;
-      fast.className = "evara-loader-fast";
+      fast.className = "evara-loader-fast evara-loader-fast--logo-first";
       fast.setAttribute("aria-hidden", "true");
       fast.innerHTML = `
         <div class="evara-loader-fast-wrap">
           <span class="evara-loader-fast-wave wave-a"></span>
           <span class="evara-loader-fast-wave wave-b"></span>
           <span class="evara-loader-fast-wave wave-c"></span>
-          ${inlineMarkSVG("evara-loader-fast-logo")}
+          ${logoImage("evara-loader-fast-logo evara-loader-logo-image")}
         </div>
       `;
       document.body.appendChild(fast);
@@ -104,7 +82,7 @@
     if (!document.getElementById(GLOBAL_LOADER_ID)) {
       const global = document.createElement("div");
       global.id = GLOBAL_LOADER_ID;
-      global.className = "evara-global-loader";
+      global.className = "evara-global-loader evara-global-loader--logo-first";
       global.setAttribute("aria-hidden", "true");
       global.innerHTML = `
         <div class="evara-loader-box glass-card">
@@ -113,13 +91,13 @@
               <span class="evara-loader-wave wave-1"></span>
               <span class="evara-loader-wave wave-2"></span>
               <span class="evara-loader-wave wave-3"></span>
-              ${inlineMarkSVG("evara-loader-logo evara-loader-logo--premium")}
+              ${logoImage("evara-loader-logo evara-loader-logo--premium evara-loader-logo-image")}
             </div>
           </div>
 
           <div class="evara-loader-copy">
             <p class="evara-loader-title" id="evaraLoaderTitle">Opening Evaraos</p>
-            <p class="evara-loader-subtitle" id="evaraLoaderSubtitle">Loading your experience.</p>
+            <p class="evara-loader-subtitle" id="evaraLoaderSubtitle">Loading your secure operating system.</p>
           </div>
         </div>
       `;
@@ -142,9 +120,7 @@
     fast?.classList.add("active", "is-entering");
     fast?.setAttribute("aria-hidden", "false");
 
-    requestAnimationFrame(() => {
-      fast?.classList.remove("is-entering");
-    });
+    requestAnimationFrame(() => fast?.classList.remove("is-entering"));
   }
 
   function hideFastLoader(immediate = false) {
@@ -179,15 +155,13 @@
     hideFastLoader(true);
 
     if (titleEl) titleEl.textContent = options.title || "Opening Evaraos";
-    if (subtitleEl) subtitleEl.textContent = options.subtitle || "Preparing your next screen.";
+    if (subtitleEl) subtitleEl.textContent = options.subtitle || "Preparing your secure workspace.";
 
     loader.classList.remove("is-exiting");
     loader.classList.add("active", "is-entering");
     loader.setAttribute("aria-hidden", "false");
 
-    requestAnimationFrame(() => {
-      loader.classList.remove("is-entering");
-    });
+    requestAnimationFrame(() => loader.classList.remove("is-entering"));
   }
 
   function hideFullLoader(immediate = false) {
@@ -232,9 +206,7 @@
       showFullLoader(options);
     }, fullDelay);
 
-    forceTimer = setTimeout(() => {
-      hideAllLoaders(true);
-    }, FORCE_UNLOCK_DELAY);
+    forceTimer = setTimeout(() => hideAllLoaders(true), FORCE_UNLOCK_DELAY);
   }
 
   function beginNavigationLoad(options = {}) {
@@ -244,13 +216,10 @@
     clearAllTimers();
     unlockApp();
 
-    scheduleEmergencyLoaders(
-      {
-        title: options.title || "Opening Evaraos",
-        subtitle: options.subtitle || "Preparing your next screen."
-      },
-      "nav"
-    );
+    scheduleEmergencyLoaders({
+      title: options.title || "Opening Evaraos",
+      subtitle: options.subtitle || "Preparing your next screen."
+    }, "nav");
   }
 
   function completeNavigationLoad() {
@@ -303,24 +272,20 @@
         subtitle: "Preparing your next screen."
       });
 
-      requestAnimationFrame(() => {
-        window.location.assign(anchor.href);
-      });
+      requestAnimationFrame(() => window.location.assign(anchor.href));
     });
   }
 
   function setupInitialBoot() {
     if (firstBootDone) return;
 
-    unlockApp();
+    ensureLoaders();
+    showFastLoader();
 
-    scheduleEmergencyLoaders(
-      {
-        title: "Loading Evaraos",
-        subtitle: "Checking your secure session."
-      },
-      "initial"
-    );
+    scheduleEmergencyLoaders({
+      title: "Loading Evaraos",
+      subtitle: "Checking your secure session."
+    }, "initial");
 
     window.addEventListener("load", () => {
       if (!isStillPending()) hideAllLoaders(false);
@@ -342,12 +307,7 @@
       hideAllLoaders,
       markAppReady,
       getState() {
-        return {
-          isTransitioning,
-          firstBootDone,
-          appPending: isStillPending(),
-          loadersCreated
-        };
+        return { isTransitioning, firstBootDone, appPending: isStillPending(), loadersCreated };
       }
     };
   }
@@ -357,9 +317,7 @@
     setupInitialBoot();
     interceptDocumentLinks();
 
-    window.addEventListener("evara:session-ready", () => {
-      markAppReady();
-    });
+    window.addEventListener("evara:session-ready", () => markAppReady());
 
     window.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible" && !isTransitioning && firstBootDone) {
