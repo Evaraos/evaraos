@@ -1,7 +1,7 @@
 // Evaraos App Registry
 // Centralized application catalog powering navigation, launcher, command search, and role visibility.
 
-export const APP_REGISTRY_VERSION = "2026.05.17-app-registry";
+export const APP_REGISTRY_VERSION = "2026.05.17-app-registry-aligned";
 
 export const APP_CATEGORIES = Object.freeze({
   operations: "operations",
@@ -25,7 +25,7 @@ export const APP_ROLES = Object.freeze({
 export const APP_REGISTRY = Object.freeze([
   {
     id: "dashboard",
-    title: "Executive Dashboard",
+    title: "Owner Mega Dashboard",
     category: APP_CATEGORIES.intelligence,
     route: "/dashboard.html",
     icon: "◈",
@@ -33,22 +33,49 @@ export const APP_REGISTRY = Object.freeze([
     roles: ["owner", "admin"]
   },
   {
-    id: "organizations",
-    title: "Organizations",
+    id: "customer-dashboard",
+    title: "Customer Dashboard",
+    category: APP_CATEGORIES.customer,
+    route: "/customer_dashboard.html",
+    icon: "◉",
+    searchable: true,
+    roles: ["customer", "owner", "admin"]
+  },
+  {
+    id: "organization",
+    title: "Organization Dashboard",
     category: APP_CATEGORIES.organizations,
-    route: "/organizations.html",
+    route: "/org.html",
     icon: "◎",
     searchable: true,
     roles: ["owner", "organization", "admin"]
   },
   {
-    id: "vendors",
-    title: "Vendors",
+    id: "companies",
+    title: "Companies",
     category: APP_CATEGORIES.organizations,
-    route: "/vendors.html",
+    route: "/companies.html",
+    icon: "◌",
+    searchable: true,
+    roles: ["owner", "admin"]
+  },
+  {
+    id: "users",
+    title: "Users",
+    category: APP_CATEGORIES.organizations,
+    route: "/users.html",
+    icon: "◍",
+    searchable: true,
+    roles: ["owner", "admin", "hr"]
+  },
+  {
+    id: "applications",
+    title: "Applications",
+    category: APP_CATEGORIES.organizations,
+    route: "/applications.html",
     icon: "◐",
     searchable: true,
-    roles: ["owner", "vendor", "admin"]
+    roles: ["owner", "admin", "hr"]
   },
   {
     id: "jobs",
@@ -56,6 +83,15 @@ export const APP_REGISTRY = Object.freeze([
     category: APP_CATEGORIES.operations,
     route: "/jobs.html",
     icon: "◒",
+    searchable: true,
+    roles: ["owner", "organization", "vendor", "admin", "staff"]
+  },
+  {
+    id: "leads",
+    title: "Leads",
+    category: APP_CATEGORIES.operations,
+    route: "/leads.html",
+    icon: "◇",
     searchable: true,
     roles: ["owner", "organization", "vendor", "admin", "staff"]
   },
@@ -69,13 +105,67 @@ export const APP_REGISTRY = Object.freeze([
     roles: ["owner", "organization", "admin"]
   },
   {
+    id: "field",
+    title: "Field Ops",
+    category: APP_CATEGORIES.operations,
+    route: "/field.html",
+    icon: "⬡",
+    searchable: true,
+    roles: ["owner", "organization", "vendor", "admin", "staff"]
+  },
+  {
+    id: "schedule",
+    title: "Schedule",
+    category: APP_CATEGORIES.operations,
+    route: "/schedule.html",
+    icon: "◷",
+    searchable: true,
+    roles: ["owner", "organization", "vendor", "admin", "staff"]
+  },
+  {
     id: "operations-map",
     title: "Operations Map",
     category: APP_CATEGORIES.operations,
-    route: "/operations-map.html",
+    route: "/operations_map.html",
     icon: "⬢",
     searchable: true,
     roles: ["owner", "organization", "vendor", "admin"]
+  },
+  {
+    id: "territory-intelligence",
+    title: "Territory Intelligence",
+    category: APP_CATEGORIES.intelligence,
+    route: "/territory_intelligence.html",
+    icon: "⬠",
+    searchable: true,
+    roles: ["owner", "organization", "admin"]
+  },
+  {
+    id: "predictive-ops",
+    title: "Predictive Ops",
+    category: APP_CATEGORIES.intelligence,
+    route: "/predictive_ops.html",
+    icon: "✦",
+    searchable: true,
+    roles: ["owner", "organization", "admin"]
+  },
+  {
+    id: "ai-command",
+    title: "AI Command",
+    category: APP_CATEGORIES.intelligence,
+    route: "/ai_command.html",
+    icon: "✧",
+    searchable: true,
+    roles: ["owner", "organization", "admin"]
+  },
+  {
+    id: "analytics",
+    title: "Analytics",
+    category: APP_CATEGORIES.intelligence,
+    route: "/analytics.html",
+    icon: "◬",
+    searchable: true,
+    roles: ["owner", "organization", "admin"]
   },
   {
     id: "revenue",
@@ -96,13 +186,22 @@ export const APP_REGISTRY = Object.freeze([
     roles: ["owner", "organization", "admin", "hr"]
   },
   {
-    id: "crm",
-    title: "Customer CRM",
-    category: APP_CATEGORIES.customer,
-    route: "/customers.html",
-    icon: "☰",
+    id: "ledger",
+    title: "Ledger",
+    category: APP_CATEGORIES.finance,
+    route: "/ledger.html",
+    icon: "▤",
     searchable: true,
-    roles: ["owner", "organization", "vendor", "admin", "staff"]
+    roles: ["owner", "organization", "vendor", "admin"]
+  },
+  {
+    id: "payment-ops",
+    title: "Payment Ops",
+    category: APP_CATEGORIES.finance,
+    route: "/payment_ops.html",
+    icon: "◫",
+    searchable: true,
+    roles: ["owner", "organization", "admin"]
   },
   {
     id: "messages",
@@ -111,16 +210,16 @@ export const APP_REGISTRY = Object.freeze([
     route: "/customer-messaging.html",
     icon: "✉",
     searchable: true,
-    roles: ["owner", "organization", "vendor", "admin", "staff", "customer"]
+    roles: ["owner", "organization", "vendor", "admin", "hr", "staff", "customer"]
   },
   {
-    id: "ai",
-    title: "AI Intelligence",
-    category: APP_CATEGORIES.intelligence,
-    route: "/ai-intelligence.html",
-    icon: "✦",
+    id: "service-history",
+    title: "Service History",
+    category: APP_CATEGORIES.customer,
+    route: "/customer-service-history.html",
+    icon: "◴",
     searchable: true,
-    roles: ["owner", "organization", "admin"]
+    roles: ["owner", "organization", "vendor", "admin", "staff", "customer"]
   },
   {
     id: "settings",
@@ -135,7 +234,8 @@ export const APP_REGISTRY = Object.freeze([
 
 export function appsForRole(role = "customer") {
   const normalized = String(role || "customer").toLowerCase();
-  return APP_REGISTRY.filter((app) => app.roles.includes(normalized));
+  const effectiveRole = normalized === "super_admin" ? "owner" : normalized;
+  return APP_REGISTRY.filter((app) => app.roles.includes(effectiveRole));
 }
 
 export function appsByCategory(role = "customer") {
@@ -154,7 +254,8 @@ export function searchApps(query = "", role = "customer") {
     return (
       app.title.toLowerCase().includes(normalized) ||
       app.id.toLowerCase().includes(normalized) ||
-      app.category.toLowerCase().includes(normalized)
+      app.category.toLowerCase().includes(normalized) ||
+      app.route.toLowerCase().includes(normalized)
     );
   });
 }
