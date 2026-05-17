@@ -18,29 +18,20 @@ import {
   hideQuickBubbles
 } from "./nav-scroll.js";
 
-import {
-  closeMenu
-} from "./nav-menu.js";
-
-import {
-  navigateWithLoader
-} from "./nav-navigation.js";
-
-import {
-  logoutAndRedirect
-} from "../firebase.js";
+import { closeMenu } from "./nav-menu.js";
+import { navigateWithLoader } from "./nav-navigation.js";
+import { logoutAndRedirect } from "../firebase.js";
 
 const NAV_ACTION_SELECTOR = "#evaMenuBtn, #evaThemePillToggle, .eva-menu-btn, .eva-theme-nav-btn";
 const BRAND_SELECTOR = "#evaBrandBlock";
+const BOUND_ATTR = "data-evara-nav-bound";
 
 function isNavActionTarget(event) {
-  const target = event?.target;
-  return !!target?.closest?.(NAV_ACTION_SELECTOR);
+  return !!event?.target?.closest?.(NAV_ACTION_SELECTOR);
 }
 
 function isBrandTarget(event) {
-  const target = event?.target;
-  return !!target?.closest?.(BRAND_SELECTOR);
+  return !!event?.target?.closest?.(BRAND_SELECTOR);
 }
 
 function shouldIgnorePillTarget(event) {
@@ -48,31 +39,43 @@ function shouldIgnorePillTarget(event) {
 }
 
 function stopEvent(event) {
-  if (!event) return;
-  event.preventDefault();
-  event.stopPropagation();
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
 }
 
 function clean(value = "") {
-  return String(value || "").replace(/[<>]/g, "");
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function label(value = "") {
   return String(value || "")
     .replaceAll("_", " ")
+    .replaceAll("-", " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
+function bindOnce(node, key, handler, options) {
+  if (!node) return false;
+  const attr = `${BOUND_ATTR}-${key}`;
+  if (node.getAttribute(attr) === "true") return false;
+  node.setAttribute(attr, "true");
+  node.addEventListener(key, handler, options);
+  return true;
+}
+
 export function clearPressTimer() {
-  if (NAV_STATE.pressTimer) {
-    clearTimeout(NAV_STATE.pressTimer);
-    NAV_STATE.pressTimer = null;
-  }
+  if (!NAV_STATE.pressTimer) return;
+  clearTimeout(NAV_STATE.pressTimer);
+  NAV_STATE.pressTimer = null;
 }
 
 export function endCompactPress() {
   const pill = getNavPill();
-
   clearPressTimer();
   pill?.classList.remove("is-pressing");
   document.body.classList.remove("eva-pressing-nav");
@@ -80,7 +83,6 @@ export function endCompactPress() {
 
 export function togglePill(event) {
   stopEvent(event);
-
   if (document.body.classList.contains("nav-menu-open")) return;
 
   if (isCompact()) {
@@ -94,7 +96,6 @@ export function togglePill(event) {
 
 export function startCompactPress(event) {
   const pill = getNavPill();
-
   if (!pill || !isCompact() || shouldIgnorePillTarget(event)) return;
 
   clearPressTimer();
@@ -111,60 +112,46 @@ export function startCompactPress(event) {
 
 export function bindTapToggle() {
   const pill = getNavPill();
-  if (!pill) return;
+  if (!pill || pill.dataset.tapToggleBound === "true") return;
+  pill.dataset.tapToggleBound = "true";
 
-  function onTouchStart(event) {
+  pill.addEventListener("touchstart", (event) => {
     if (shouldIgnorePillTarget(event)) return;
-
     const touch = event.touches ? event.touches[0] : event;
-
     NAV_STATE.tapStartX = touch.clientX;
     NAV_STATE.tapStartY = touch.clientY;
     NAV_STATE.tapMoved = false;
     NAV_STATE.tapHandled = false;
-
     startCompactPress(event);
-  }
+  }, { passive: false });
 
-  function onTouchMove(event) {
+  pill.addEventListener("touchmove", (event) => {
     if (shouldIgnorePillTarget(event)) return;
-
     const touch = event.touches ? event.touches[0] : event;
     const dx = Math.abs(touch.clientX - NAV_STATE.tapStartX);
     const dy = Math.abs(touch.clientY - NAV_STATE.tapStartY);
-
     if (dx > 10 || dy > 10) {
       NAV_STATE.tapMoved = true;
       endCompactPress();
     }
-  }
+  }, { passive: false });
 
-  function onTouchEnd(event) {
+  pill.addEventListener("touchend", (event) => {
     if (shouldIgnorePillTarget(event)) return;
-
     const wasLongPress = NAV_STATE.longPressTriggered;
-
     endCompactPress();
-
     if (NAV_STATE.tapMoved || NAV_STATE.tapHandled || wasLongPress) {
       stopEvent(event);
       return;
     }
-
     NAV_STATE.tapHandled = true;
     togglePill(event);
-  }
+  }, { passive: false });
 
-  pill.addEventListener("touchstart", onTouchStart, { passive: false });
-  pill.addEventListener("touchmove", onTouchMove, { passive: false });
-  pill.addEventListener("touchend", onTouchEnd, { passive: false });
   pill.addEventListener("touchcancel", endCompactPress);
-
   pill.addEventListener("mousedown", (event) => {
-    if (shouldIgnorePillTarget(event)) return;
-    startCompactPress(event);
+    if (!shouldIgnorePillTarget(event)) startCompactPress(event);
   });
-
   pill.addEventListener("mouseup", (event) => {
     const wasLongPress = NAV_STATE.longPressTriggered;
     endCompactPress();
@@ -173,41 +160,30 @@ export function bindTapToggle() {
       stopEvent(event);
     }
   });
-
   pill.addEventListener("mouseleave", endCompactPress);
   pill.addEventListener("dragstart", (event) => event.preventDefault());
   pill.addEventListener("selectstart", (event) => event.preventDefault());
-
   pill.addEventListener("click", (event) => {
     if (shouldIgnorePillTarget(event)) return;
-
-    if (NAV_STATE.longPressTriggered) {
+    if (NAV_STATE.longPressTriggered || NAV_STATE.tapHandled) {
       NAV_STATE.longPressTriggered = false;
-      stopEvent(event);
-      return;
-    }
-
-    if (NAV_STATE.tapHandled) {
       NAV_STATE.tapHandled = false;
       stopEvent(event);
       return;
     }
-
     togglePill(event);
   });
 }
 
 export function bindBrandHome() {
   const brand = getBrandBlock();
-  if (!brand) return;
+  if (!brand || brand.dataset.brandHomeBound === "true") return;
+  brand.dataset.brandHomeBound = "true";
 
   function openHome(event) {
     stopEvent(event);
-
     if (isCompact()) return;
-
     const href = brand.getAttribute("data-home-link") || buildHref("index.html");
-
     navigateWithLoader(href, {
       title: "Opening Home",
       subtitle: "Loading the Evaraos home experience."
@@ -215,40 +191,33 @@ export function bindBrandHome() {
   }
 
   brand.addEventListener("click", openHome);
-
   brand.addEventListener("keydown", (event) => {
-    if (event.key !== "Enter" && event.key !== " ") return;
-    openHome(event);
+    if (event.key === "Enter" || event.key === " ") openHome(event);
+  });
+}
+
+function openNavHref(href, options = {}) {
+  if (!href) return;
+  closeMenu(false);
+  hideQuickBubbles(true);
+  navigateWithLoader(href, {
+    title: options.title || "Loading page",
+    subtitle: options.subtitle || "Preparing your next screen."
   });
 }
 
 export function bindLinks() {
   document.querySelectorAll("[data-menu-link]").forEach((link) => {
-    link.addEventListener("click", (event) => {
+    bindOnce(link, "click", (event) => {
       stopEvent(event);
-
-      const href = link.getAttribute("data-menu-link");
-      if (!href) return;
-
-      closeMenu(false);
-
-      navigateWithLoader(href, {
-        title: "Loading page",
-        subtitle: "Preparing your next screen."
-      });
+      openNavHref(link.getAttribute("data-menu-link") || link.getAttribute("href"));
     });
   });
 
   document.querySelectorAll("[data-quick-link]").forEach((btn) => {
-    btn.addEventListener("click", (event) => {
+    bindOnce(btn, "click", (event) => {
       stopEvent(event);
-
-      const href = btn.getAttribute("data-quick-link");
-      if (!href) return;
-
-      hideQuickBubbles(true);
-
-      navigateWithLoader(href, {
+      openNavHref(btn.getAttribute("data-quick-link"), {
         title: "Opening shortcut",
         subtitle: "Launching your quick action."
       });
@@ -256,34 +225,25 @@ export function bindLinks() {
   });
 
   const logoutBtn = document.getElementById("evaLogoutBtn");
-
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", async (event) => {
-      stopEvent(event);
-      closeMenu(false);
-      await logoutAndRedirect(buildHref("login.html"));
-    });
-  }
+  bindOnce(logoutBtn, "click", async (event) => {
+    stopEvent(event);
+    closeMenu(false);
+    await logoutAndRedirect(buildHref("login.html"));
+  });
 }
 
 export function bindThemeToggle() {
-  const toggles = Array.from(document.querySelectorAll("#evaThemeToggle, #evaThemePillToggle"));
-  if (!toggles.length) return;
-
-  toggles.forEach((toggle) => {
-    toggle.addEventListener("click", (event) => {
+  Array.from(document.querySelectorAll("#evaThemeToggle, #evaThemePillToggle")).forEach((toggle) => {
+    bindOnce(toggle, "click", (event) => {
       stopEvent(event);
-
       const current = getAppearanceTheme();
       const next = current === "light" ? "dark" : "light";
 
       try {
         const raw = localStorage.getItem("evaraos-appearance");
         const appearance = raw ? JSON.parse(raw) : {};
-
         appearance.mode = next;
         appearance.baseFamily = next;
-
         localStorage.setItem("evaraos-appearance", JSON.stringify(appearance));
       } catch {}
 
@@ -294,51 +254,48 @@ export function bindThemeToggle() {
 }
 
 function navSearchItems() {
-  return Array.from(document.querySelectorAll(".eva-menu-app-launcher[data-menu-link]")).map((link) => {
-    return {
-      label: link.getAttribute("aria-label") || link.textContent.trim(),
-      href: link.getAttribute("data-menu-link") || link.getAttribute("href"),
-      group: link.getAttribute("data-group") || "",
-      page: link.getAttribute("data-page") || "",
-      element: link,
-      haystack: [
-        link.getAttribute("aria-label"),
-        link.getAttribute("data-label"),
-        link.getAttribute("data-group"),
-        link.getAttribute("data-page"),
-        link.textContent
-      ].filter(Boolean).join(" ").toLowerCase()
-    };
-  });
+  return Array.from(document.querySelectorAll(".eva-menu-app-launcher[data-menu-link]")).map((link) => ({
+    label: link.getAttribute("aria-label") || link.textContent.trim(),
+    href: link.getAttribute("data-menu-link") || link.getAttribute("href"),
+    group: link.getAttribute("data-group") || "",
+    page: link.getAttribute("data-page") || "",
+    element: link,
+    haystack: [
+      link.getAttribute("aria-label"),
+      link.getAttribute("data-label"),
+      link.getAttribute("data-group"),
+      link.getAttribute("data-page"),
+      link.textContent
+    ].filter(Boolean).join(" ").toLowerCase()
+  }));
 }
 
-function scoreSearchItem(item, value) {
-  const query = String(value || "").toLowerCase();
+function scoreSearchItem(item, query = "") {
+  const value = String(query || "").toLowerCase();
   const labelValue = String(item.label || "").toLowerCase();
   const pageValue = String(item.page || "").toLowerCase();
   const groupValue = String(item.group || "").toLowerCase();
-  let score = 0;
-  if (!query) return 1;
-  if (labelValue === query) score += 100;
-  if (labelValue.startsWith(query)) score += 80;
-  if (labelValue.includes(query)) score += 60;
-  if (pageValue.includes(query)) score += 35;
-  if (groupValue.includes(query)) score += 25;
-  if (item.haystack.includes(query)) score += 10;
-  return score;
+  if (!value) return 1;
+  if (labelValue === value) return 100;
+  if (labelValue.startsWith(value)) return 80;
+  if (labelValue.includes(value)) return 60;
+  if (pageValue.includes(value)) return 35;
+  if (groupValue.includes(value)) return 25;
+  if (item.haystack.includes(value)) return 10;
+  return 0;
 }
 
 function renderSearchResults(root, items = [], query = "") {
   if (!root) return;
 
   if (!query.trim()) {
-    root.innerHTML = '<div class="eva-search-empty">Start typing to search the app.</div>';
+    root.innerHTML = '<div class="eva-search-empty">Start typing to search apps, tools, finance, jobs, or settings.</div>';
     root.classList.remove("active");
     return;
   }
 
   if (!items.length) {
-    root.innerHTML = '<div class="eva-search-empty">No matching pages found for “' + clean(query) + '”.</div>';
+    root.innerHTML = '<div class="eva-search-empty">No matching apps found for “' + clean(query) + '”.</div>';
     root.classList.add("active");
     return;
   }
@@ -346,39 +303,30 @@ function renderSearchResults(root, items = [], query = "") {
   root.innerHTML = items.map((item) => {
     return '<button type="button" class="eva-search-result" data-search-link="' + clean(item.href) + '"><strong>' + clean(item.label) + '</strong><span>' + clean(label(item.group || 'App')) + ' • ' + clean(item.page) + '</span></button>';
   }).join("");
-
   root.classList.add("active");
 }
 
 export function bindSearch() {
   const input = document.getElementById("evaSearchInput");
   const resultsRoot = document.getElementById("evaSearchResults");
-  const launchers = Array.from(document.querySelectorAll(".eva-menu-app-launcher[data-menu-link]"));
-  const sections = Array.from(document.querySelectorAll(".eva-menu-section[data-nav-section]"));
-
-  if (!input) return;
+  if (!input || input.dataset.searchBound === "true") return;
+  input.dataset.searchBound = "true";
 
   function applySearch() {
     const value = input.value.trim().toLowerCase();
-    const scored = navSearchItems()
+    const items = navSearchItems();
+    const scored = items
       .map((item) => ({ ...item, score: scoreSearchItem(item, value) }))
       .filter((item) => !value || item.score > 0)
       .sort((a, b) => b.score - a.score || a.label.localeCompare(b.label));
 
-    launchers.forEach((link) => {
-      const haystack = [
-        link.getAttribute("aria-label"),
-        link.getAttribute("data-label"),
-        link.getAttribute("data-group"),
-        link.getAttribute("data-page"),
-        link.textContent
-      ].filter(Boolean).join(" ").toLowerCase();
-      link.style.display = !value || haystack.includes(value) ? "" : "none";
+    items.forEach((item) => {
+      item.element.hidden = !!value && item.score === 0;
     });
 
-    sections.forEach((section) => {
-      const visibleChildren = Array.from(section.querySelectorAll(".eva-menu-app-launcher[data-menu-link]")).some((link) => link.style.display !== "none");
-      section.style.display = visibleChildren || !value ? "" : "none";
+    document.querySelectorAll(".eva-menu-section[data-nav-section]").forEach((section) => {
+      const visibleChildren = Array.from(section.querySelectorAll(".eva-menu-app-launcher[data-menu-link]")).some((link) => !link.hidden);
+      section.hidden = !!value && !visibleChildren;
     });
 
     renderSearchResults(resultsRoot, scored.slice(0, 8), input.value);
@@ -388,22 +336,20 @@ export function bindSearch() {
   input.addEventListener("focus", applySearch);
   input.addEventListener("keydown", (event) => {
     if (event.key !== "Enter") return;
-    const first = resultsRoot?.querySelector("[data-search-link]");
-    const href = first?.getAttribute("data-search-link");
+    const href = resultsRoot?.querySelector("[data-search-link]")?.getAttribute("data-search-link");
     if (!href) return;
     stopEvent(event);
-    closeMenu(false);
-    navigateWithLoader(href, { title: "Opening result", subtitle: "Launching your selected Evaraos page." });
+    openNavHref(href, { title: "Opening result", subtitle: "Launching your selected Evaraos app." });
   });
 
   resultsRoot?.addEventListener("click", (event) => {
     const button = event.target.closest("[data-search-link]");
     if (!button) return;
     stopEvent(event);
-    const href = button.getAttribute("data-search-link");
-    if (!href) return;
-    closeMenu(false);
-    navigateWithLoader(href, { title: "Opening result", subtitle: "Launching your selected Evaraos page." });
+    openNavHref(button.getAttribute("data-search-link"), {
+      title: "Opening result",
+      subtitle: "Launching your selected Evaraos app."
+    });
   });
 
   document.addEventListener("click", (event) => {
@@ -414,9 +360,7 @@ export function bindSearch() {
 
 function bindMenuCloseButton() {
   const closeBtn = document.getElementById("evaMenuCloseBtn");
-  if (!closeBtn) return;
-
-  closeBtn.addEventListener("click", (event) => {
+  bindOnce(closeBtn, "click", (event) => {
     stopEvent(event);
     closeMenu(true);
   });
