@@ -1,16 +1,17 @@
 // assets/js/dashboard.js
 // Compatibility entry for dashboard.html.
-// The dashboard reads dashboard_stats/global through dashboard-stats.js and applies role-aware visual organization here.
+// Owner dashboard stays the mega command center; widget intelligence mounts as an additive layer.
 
 import "./dashboard-stats.js?v=1";
 import { getSavedUserProfile, normalizeRole } from "./firebase.js";
+import { autoMountDashboardWidgets } from "./dashboard-widget-ui.js";
 
 const ROUTES = {
   companies: "/companies.html?analytics=companies&from=dashboard",
   users: "/users.html?analytics=users&from=dashboard",
   leads: "/leads.html?analytics=leads&from=dashboard",
   jobs: "/jobs.html?analytics=jobs&from=dashboard",
-  billing: "/customer-commerce.html?from=dashboard",
+  billing: "/customer_dashboard.html?from=dashboard",
   messages: "/customer-messaging.html?from=dashboard",
   history: "/customer-service-history.html?from=dashboard",
   settings: "/settings.html?from=dashboard",
@@ -66,13 +67,6 @@ function setText(id, text) {
   if (node) node.textContent = text;
 }
 
-function setLink(selector, href, text) {
-  const node = document.querySelector(selector);
-  if (!node) return;
-  node.setAttribute("href", href);
-  if (text) node.textContent = text;
-}
-
 function hideSection(id) {
   const node = document.getElementById(id);
   if (node) node.hidden = true;
@@ -84,50 +78,16 @@ function showSection(id) {
 }
 
 function updateHero(bucket) {
-  const profile = getSavedUserProfile() || {};
-  const name = profile.displayName || profile.fullName || profile.name || profile.email || "there";
-
-  if (bucket === "customer") {
-    setText("dashboardOverviewTitle", "Customer Portal");
-    setText("heroStatusTitle", "Welcome back");
-    setText("heroStatusText", "Your billing, messages, service history, and account tools are ready.");
-    const eyebrow = document.querySelector(".dashboard-eyebrow");
-    const title = document.querySelector(".dashboard-hero h1");
-    const copy = document.querySelector(".dashboard-hero-text");
-    if (eyebrow) eyebrow.textContent = "CUSTOMER DASHBOARD";
-    if (title) title.textContent = `Welcome back, ${name}.`;
-    if (copy) copy.textContent = "Manage your services, view invoices, message the team, and track your service history from one clean portal.";
-    return;
+  if (bucket === "leadership") {
+    setText("dashboardOverviewTitle", "Executive Control");
+    setText("heroStatusTitle", "Mega dashboard ready");
+    setText("heroStatusText", "Owner command center is active. Live widget intelligence is mounted below.");
   }
-
-  if (bucket === "staff") {
-    setText("dashboardOverviewTitle", "Field Workspace");
-    setText("heroStatusTitle", "Field workspace ready");
-    setText("heroStatusText", "Your jobs, leads, messages, and service tools are ready.");
-    const eyebrow = document.querySelector(".dashboard-eyebrow");
-    const title = document.querySelector(".dashboard-hero h1");
-    const copy = document.querySelector(".dashboard-hero-text");
-    if (eyebrow) eyebrow.textContent = "STAFF DASHBOARD";
-    if (title) title.textContent = "Operate the day with clarity.";
-    if (copy) copy.textContent = "Access assigned leads, jobs, messages, service history, and field tools without digging through executive pages.";
-    return;
-  }
-
-  setText("dashboardOverviewTitle", "Executive Control");
 }
 
 function updateHeroActions(bucket) {
   const actions = document.querySelector(".dashboard-hero-actions");
   if (!actions) return;
-
-  if (bucket === "customer") {
-    actions.innerHTML = `
-      <a href="${ROUTES.billing}" class="btn btn-theme-primary beam-target">Open Billing</a>
-      <a href="${ROUTES.messages}" class="btn btn-theme-secondary beam-target">Messages</a>
-      <a href="${ROUTES.history}" class="btn btn-theme-secondary beam-target">Service History</a>
-    `;
-    return;
-  }
 
   if (bucket === "staff") {
     actions.innerHTML = `
@@ -135,6 +95,11 @@ function updateHeroActions(bucket) {
       <a href="${ROUTES.leads}" class="btn btn-theme-secondary beam-target">Open Leads</a>
       <a href="${ROUTES.messages}" class="btn btn-theme-secondary beam-target">Messages</a>
     `;
+    return;
+  }
+
+  if (bucket === "customer") {
+    routeTo(ROUTES.billing);
     return;
   }
 
@@ -149,21 +114,6 @@ function updateSidebar(bucket) {
   const nav = document.querySelector(".dashboard-sidebar-nav");
   const footLink = document.querySelector(".dashboard-sidebar-foot .btn");
   if (!nav) return;
-
-  if (bucket === "customer") {
-    nav.innerHTML = `
-      <a href="#overviewSection" class="dashboard-nav-link active aurora-card beam-target"><span class="dashboard-nav-icon">◉</span><span>Overview</span></a>
-      <a href="#kpiSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon">◎</span><span>Account</span></a>
-      <a href="#pipelineSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon">◒</span><span>Billing</span></a>
-      <a href="#operationsSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon">◈</span><span>Messages</span></a>
-      <a href="#activitySection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon">◐</span><span>History</span></a>
-    `;
-    if (footLink) {
-      footLink.href = ROUTES.billing;
-      footLink.textContent = "Open Billing";
-    }
-    return;
-  }
 
   if (bucket === "staff") {
     nav.innerHTML = `
@@ -181,25 +131,6 @@ function updateSidebar(bucket) {
 }
 
 function relabelSections(bucket) {
-  if (bucket === "customer") {
-    hideSection("companiesSection");
-    hideSection("usersSection");
-    showSection("pipelineSection");
-    showSection("operationsSection");
-    setText("statCompaniesMeta", "Customer account tools");
-    setText("statUsersMeta", "Messages and service updates");
-    setText("statLeadsMeta", "Quotes, invoices, and subscriptions");
-    setText("statJobsMeta", "Service history and upcoming work");
-    setText("statCompanies", "Portal");
-    setText("statUsers", "Inbox");
-    setText("statLeads", "Billing");
-    setText("statJobs", "History");
-    document.querySelector("#kpiSection h2") && (document.querySelector("#kpiSection h2").textContent = "Customer Command Center");
-    document.querySelector("#pipelineSection h2") && (document.querySelector("#pipelineSection h2").textContent = "Billing & Subscriptions");
-    document.querySelector("#operationsSection h2") && (document.querySelector("#operationsSection h2").textContent = "Messages & Service Updates");
-    return;
-  }
-
   if (bucket === "staff") {
     hideSection("companiesSection");
     hideSection("usersSection");
@@ -215,18 +146,52 @@ function relabelSections(bucket) {
   showSection("usersSection");
 }
 
+function ensureWidgetMount() {
+  let mount = document.getElementById("dashboardWidgetMount");
+  if (mount) return mount;
+
+  const main = document.querySelector(".dashboard-main");
+  if (!main) return null;
+
+  mount = document.createElement("section");
+  mount.id = "dashboardWidgetMount";
+  mount.className = "dashboard-widget-mount";
+  mount.setAttribute("aria-label", "Executive live intelligence widgets");
+
+  const hero = document.getElementById("overviewSection");
+  if (hero?.nextSibling) main.insertBefore(mount, hero.nextSibling);
+  else main.appendChild(mount);
+
+  return mount;
+}
+
+function mountExecutiveWidgets() {
+  const bucket = roleBucket();
+  if (bucket !== "leadership") return;
+
+  const mount = ensureWidgetMount();
+  if (!mount) return;
+
+  autoMountDashboardWidgets({
+    selector: "#dashboardWidgetMount",
+    role: "owner",
+    input: {
+      alerts: { critical: 0, payroll: 0, promotion: 0 },
+      health: { state: "stable" },
+      dataByType: {
+        ecosystem_health: { value: "Stable", subtitle: "Ecosystem intelligence is online." },
+        live_revenue: { value: "$0", subtitle: "Live revenue stream ready for Firestore connection." },
+        live_activity: { subtitle: "Live events will appear here as the activity feed connects." },
+        ai_recommendations: { subtitle: "AI recommendations engine is ready." },
+        organization_tree: { subtitle: "Organization, office, and vendor tree ready for live data." },
+        operations_map: { subtitle: "Global operations map ready for GIS integration." }
+      }
+    }
+  });
+}
+
 function bindDashboardCards() {
   const bucket = roleBucket();
-
-  if (bucket === "customer") {
-    makeClickable(document.getElementById("statCompanies")?.closest(".dashboard-stat-card"), ROUTES.billing, "Open customer portal");
-    makeClickable(document.getElementById("statUsers")?.closest(".dashboard-stat-card"), ROUTES.messages, "Open messages");
-    makeClickable(document.getElementById("statLeads")?.closest(".dashboard-stat-card"), ROUTES.billing, "Open billing");
-    makeClickable(document.getElementById("statJobs")?.closest(".dashboard-stat-card"), ROUTES.history, "Open service history");
-    makeClickable(document.getElementById("pipelineSection"), ROUTES.billing, "Open billing");
-    makeClickable(document.getElementById("operationsSection"), ROUTES.messages, "Open messages");
-    return;
-  }
 
   if (bucket === "staff") {
     makeClickable(document.getElementById("statLeads")?.closest(".dashboard-stat-card"), ROUTES.leads, "Open assigned leads");
@@ -259,9 +224,7 @@ function injectDashboardClickStyles() {
     .dashboard-click-card:hover::after, .dashboard-click-card:focus-visible::after { opacity: 1; transform: translateY(0); }
     .dashboard-stat-card.dashboard-click-card { overflow: hidden; }
     [hidden] { display: none !important; }
-    body.dashboard-role-customer .dashboard-sidebar-foot-copy span { display: block; }
-    body.dashboard-role-customer .dashboard-sidebar-foot-copy span::after { content: " Billing, messages, service history, and support are grouped here."; }
-    body.dashboard-role-staff .dashboard-sidebar-foot-copy span::after { content: " Field jobs, assigned leads, and team communication are grouped here."; }
+    .dashboard-widget-mount { scroll-margin-top: 90px; }
     @media (max-width: 760px) { .dashboard-click-card::after { opacity: 1; transform: none; top: 10px; right: 10px; } }
   `;
   document.head.appendChild(style);
@@ -275,6 +238,7 @@ function applyRoleDashboard() {
   updateHeroActions(bucket);
   updateSidebar(bucket);
   relabelSections(bucket);
+  mountExecutiveWidgets();
 }
 
 function initDashboardInteractions() {
@@ -298,9 +262,10 @@ if (document.readyState === "loading") {
 }
 
 window.EvaraDashboard = {
-  mode: "stats-document",
+  mode: "owner-mega-dashboard",
   source: "dashboard_stats/global",
   routes: ROUTES,
   bindDashboardCards,
-  applyRoleDashboard
+  applyRoleDashboard,
+  mountExecutiveWidgets
 };
