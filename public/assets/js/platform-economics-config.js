@@ -42,7 +42,7 @@ export const DASHBOARD_SCOPE_MAP = Object.freeze({
     canSeeAllOffices: true
   },
   organization: {
-    dashboard: "organization-dashboard.html",
+    dashboard: "org.html",
     label: "Organization Dashboard",
     scope: "organization_network",
     canBuildOrganization: true,
