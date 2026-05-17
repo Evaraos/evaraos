@@ -1,50 +1,53 @@
-/* NAV EFFECTS CLEANED */
+/* EVARAOS NAV EFFECTS
+   Row/folder control-center effects. No old app-square lighting or tile physics. */
 
-#evaMenuPanel .eva-menu-app-square {
-  will-change: transform;
+.eva-menu-folder-shell,
+.eva-menu-top-block,
+.eva-menu-search-bottom {
+  will-change: transform, opacity;
 }
 
-#evaMenuPanel .eva-menu-app-square::before {
-  content: "";
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  top: 7px;
-  height: 2px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.62);
-  opacity: 0.58;
-  pointer-events: none;
+.eva-menu-folder-shell.is-hovered,
+.eva-menu-top-block.is-hovered,
+.eva-menu-app-launcher.is-hovered,
+.eva-quick-strip a.is-hovered,
+.eva-account-strip a.is-hovered {
+  transform: translateY(-1px);
 }
 
-#evaMenuPanel .eva-menu-app-square::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(circle at var(--eva-light-x, 30%) var(--eva-light-y, 12%), rgba(255,255,255,0.28), transparent 40%);
-  opacity: 0.4;
-  pointer-events: none;
-  transition: opacity .2s ease;
+.eva-menu-folder-shell.is-pressed,
+.eva-menu-top-block.is-pressed,
+.eva-menu-app-launcher.is-pressed,
+.eva-quick-strip a.is-pressed,
+.eva-account-strip a.is-pressed {
+  transform: translateY(0) scale(.992);
 }
 
-#evaMenuPanel .eva-menu-app-launcher:active .eva-menu-app-square {
-  transform: scale(.95);
+.eva-menu-folder[open] .eva-folder-summary {
+  border-bottom: 1px solid rgba(148,163,184,0.16);
 }
 
-#evaMenuPanel .eva-menu-app-launcher:active .eva-menu-app-square::after {
-  opacity: 0.65;
+html[data-theme="dark"] .eva-menu-folder[open] .eva-folder-summary {
+  border-bottom-color: rgba(255,255,255,0.08);
 }
 
-body.nav-menu-open .eva-menu-section {
-  animation: evaMenuSectionRise .28s cubic-bezier(.2,1,.2,1) both;
+.eva-folder-viewport {
+  animation: evaFolderOpen .18s ease both;
 }
 
-body.nav-menu-open #evaMenuPanel .eva-menu-app-launcher {
-  animation: evaAppTilePop .22s cubic-bezier(.2,1.2,.2,1) both;
+body.nav-menu-open .eva-menu-top-block,
+body.nav-menu-open .eva-menu-folder-shell,
+body.nav-menu-open .eva-menu-search-bottom {
+  animation: evaControlRowRise .22s ease both;
 }
 
-@keyframes evaMenuSectionRise {
+body.nav-menu-open .eva-menu-folder-shell:nth-of-type(2) { animation-delay: .02s; }
+body.nav-menu-open .eva-menu-folder-shell:nth-of-type(3) { animation-delay: .04s; }
+body.nav-menu-open .eva-menu-folder-shell:nth-of-type(4) { animation-delay: .06s; }
+body.nav-menu-open .eva-menu-folder-shell:nth-of-type(5) { animation-delay: .08s; }
+body.nav-menu-open .eva-menu-folder-shell:nth-of-type(6) { animation-delay: .10s; }
+
+@keyframes evaControlRowRise {
   from {
     opacity: 0;
     transform: translateY(8px);
@@ -55,20 +58,35 @@ body.nav-menu-open #evaMenuPanel .eva-menu-app-launcher {
   }
 }
 
-@keyframes evaAppTilePop {
+@keyframes evaFolderOpen {
   from {
     opacity: 0;
-    transform: scale(.94);
+    transform: translateY(-4px);
   }
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(0);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body.nav-menu-open .eva-menu-section,
-  body.nav-menu-open #evaMenuPanel .eva-menu-app-launcher {
+  body.nav-menu-open .eva-menu-top-block,
+  body.nav-menu-open .eva-menu-folder-shell,
+  body.nav-menu-open .eva-menu-search-bottom,
+  .eva-folder-viewport {
     animation: none !important;
+  }
+
+  .eva-menu-folder-shell.is-hovered,
+  .eva-menu-top-block.is-hovered,
+  .eva-menu-app-launcher.is-hovered,
+  .eva-quick-strip a.is-hovered,
+  .eva-account-strip a.is-hovered,
+  .eva-menu-folder-shell.is-pressed,
+  .eva-menu-top-block.is-pressed,
+  .eva-menu-app-launcher.is-pressed,
+  .eva-quick-strip a.is-pressed,
+  .eva-account-strip a.is-pressed {
+    transform: none !important;
   }
 }
