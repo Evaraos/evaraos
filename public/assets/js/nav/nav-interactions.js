@@ -1,34 +1,20 @@
-const TILE_SELECTOR = "#evaMenuPanel .eva-menu-app-launcher";
+const ROW_SELECTOR = [
+  ".eva-menu-folder-shell",
+  ".eva-menu-top-block",
+  ".eva-menu-app-launcher",
+  ".eva-quick-strip a",
+  ".eva-account-strip a"
+].join(",");
 
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
+function activate(node) {
+  if (!node) return;
+  node.classList.add("is-hovered");
 }
 
-function resetTile(tile) {
-  if (!tile) return;
-  tile.style.setProperty("--eva-tilt-x", "0deg");
-  tile.style.setProperty("--eva-tilt-y", "0deg");
-  tile.style.setProperty("--eva-light-x", "32%");
-  tile.style.setProperty("--eva-light-y", "16%");
-}
-
-function updateTileFromPoint(tile, clientX, clientY) {
-  const square = tile.querySelector(".eva-menu-app-square");
-  if (!square) return;
-
-  const rect = square.getBoundingClientRect();
-  if (!rect.width || !rect.height) return;
-
-  const x = clamp((clientX - rect.left) / rect.width, 0, 1);
-  const y = clamp((clientY - rect.top) / rect.height, 0, 1);
-
-  const tiltY = (x - 0.5) * 4.8;
-  const tiltX = (0.5 - y) * 4.8;
-
-  tile.style.setProperty("--eva-tilt-x", `${tiltX.toFixed(2)}deg`);
-  tile.style.setProperty("--eva-tilt-y", `${tiltY.toFixed(2)}deg`);
-  tile.style.setProperty("--eva-light-x", `${Math.round(24 + x * 52)}%`);
-  tile.style.setProperty("--eva-light-y", `${Math.round(10 + y * 40)}%`);
+function deactivate(node) {
+  if (!node) return;
+  node.classList.remove("is-hovered");
+  node.classList.remove("is-pressed");
 }
 
 export function bindNavInteractions() {
@@ -37,22 +23,34 @@ export function bindNavInteractions() {
 
   panel.dataset.interactionsBound = "true";
 
-  panel.addEventListener("pointermove", (event) => {
-    const tile = event.target.closest(TILE_SELECTOR);
-    if (!tile || !panel.contains(tile)) return;
-    updateTileFromPoint(tile, event.clientX, event.clientY);
+  panel.addEventListener("pointerover", (event) => {
+    const target = event.target.closest(ROW_SELECTOR);
+    if (!target || !panel.contains(target)) return;
+    activate(target);
   }, { passive: true });
 
-  panel.addEventListener("pointerleave", (event) => {
-    resetTile(event.target.closest(TILE_SELECTOR));
-  }, true);
+  panel.addEventListener("pointerout", (event) => {
+    const target = event.target.closest(ROW_SELECTOR);
+    deactivate(target);
+  }, { passive: true });
 
-  panel.addEventListener("pointercancel", (event) => {
-    resetTile(event.target.closest(TILE_SELECTOR));
-  }, true);
+  panel.addEventListener("pointerdown", (event) => {
+    const target = event.target.closest(ROW_SELECTOR);
+    if (!target) return;
+    target.classList.add("is-pressed");
+  }, { passive: true });
 
   panel.addEventListener("pointerup", (event) => {
-    const tile = event.target.closest(TILE_SELECTOR);
-    window.setTimeout(() => resetTile(tile), 80);
-  }, true);
+    const target = event.target.closest(ROW_SELECTOR);
+    if (!target) return;
+
+    window.setTimeout(() => {
+      target.classList.remove("is-pressed");
+    }, 120);
+  }, { passive: true });
+
+  panel.addEventListener("pointercancel", (event) => {
+    const target = event.target.closest(ROW_SELECTOR);
+    deactivate(target);
+  }, { passive: true });
 }
