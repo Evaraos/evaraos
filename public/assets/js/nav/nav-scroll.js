@@ -3,6 +3,7 @@ import { getNavShell, getBrandBlock, getQuickBubbles } from "./nav-utils.js";
 
 let lastY = window.scrollY || 0;
 let scrollDebt = 0;
+let scrollTicking = false;
 
 const QUICK_HIDE_DELAY = 5200;
 const PIN_UNLOCK_DISTANCE = 36;
@@ -136,6 +137,7 @@ export function settleAfterScroll() {
 }
 
 function updateFromScroll() {
+  scrollTicking = false;
   const y = window.scrollY || 0;
   const dy = y - lastY;
 
@@ -145,10 +147,10 @@ function updateFromScroll() {
     return;
   }
 
-  if (dy !== 0) {
-    NAV_STATE.lastScrollDirection = dy < 0 ? -1 : 1;
-    scrollDebt += Math.abs(dy);
-  }
+  if (Math.abs(dy) < 2) return;
+
+  NAV_STATE.lastScrollDirection = dy < 0 ? -1 : 1;
+  scrollDebt += Math.abs(dy);
 
   if (NAV_STATE.navPinnedOpen && scrollDebt < PIN_UNLOCK_DISTANCE) {
     setTarget(1, "tap");
@@ -166,15 +168,20 @@ function updateFromScroll() {
   NAV_STATE.lastY = y;
 }
 
+function requestScrollUpdate() {
+  if (scrollTicking) return;
+  scrollTicking = true;
+  requestAnimationFrame(updateFromScroll);
+}
+
 export function bindScrollBehavior() {
   lastY = window.scrollY || 0;
   NAV_STATE.lastY = lastY;
   scrollDebt = 0;
 
-  window.addEventListener("scroll", updateFromScroll, { passive: true });
-  document.addEventListener("scroll", updateFromScroll, { passive: true, capture: true });
-  window.addEventListener("wheel", updateFromScroll, { passive: true });
-  window.addEventListener("touchmove", updateFromScroll, { passive: true });
+  window.addEventListener("scroll", requestScrollUpdate, { passive: true });
+  window.addEventListener("wheel", requestScrollUpdate, { passive: true });
+  window.addEventListener("touchmove", requestScrollUpdate, { passive: true });
 }
 
 export function animateNav() {
