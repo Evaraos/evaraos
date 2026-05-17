@@ -53,6 +53,16 @@ function stopEvent(event) {
   event.stopPropagation();
 }
 
+function clean(value = "") {
+  return String(value || "").replace(/[<>]/g, "");
+}
+
+function label(value = "") {
+  return String(value || "")
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
 export function clearPressTimer() {
   if (NAV_STATE.pressTimer) {
     clearTimeout(NAV_STATE.pressTimer);
@@ -283,19 +293,122 @@ export function bindThemeToggle() {
   });
 }
 
+function navSearchItems() {
+  return Array.from(document.querySelectorAll(".eva-menu-app-launcher[data-menu-link]")).map((link) => {
+    return {
+      label: link.getAttribute("aria-label") || link.textContent.trim(),
+      href: link.getAttribute("data-menu-link") || link.getAttribute("href"),
+      group: link.getAttribute("data-group") || "",
+      page: link.getAttribute("data-page") || "",
+      element: link,
+      haystack: [
+        link.getAttribute("aria-label"),
+        link.getAttribute("data-label"),
+        link.getAttribute("data-group"),
+        link.getAttribute("data-page"),
+        link.textContent
+      ].filter(Boolean).join(" ").toLowerCase()
+    };
+  });
+}
+
+function scoreSearchItem(item, value) {
+  const query = String(value || "").toLowerCase();
+  const labelValue = String(item.label || "").toLowerCase();
+  const pageValue = String(item.page || "").toLowerCase();
+  const groupValue = String(item.group || "").toLowerCase();
+  let score = 0;
+  if (!query) return 1;
+  if (labelValue === query) score += 100;
+  if (labelValue.startsWith(query)) score += 80;
+  if (labelValue.includes(query)) score += 60;
+  if (pageValue.includes(query)) score += 35;
+  if (groupValue.includes(query)) score += 25;
+  if (item.haystack.includes(query)) score += 10;
+  return score;
+}
+
+function renderSearchResults(root, items = [], query = "") {
+  if (!root) return;
+
+  if (!query.trim()) {
+    root.innerHTML = '<div class="eva-search-empty">Start typing to search the app.</div>';
+    root.classList.remove("active");
+    return;
+  }
+
+  if (!items.length) {
+    root.innerHTML = '<div class="eva-search-empty">No matching pages found for “' + clean(query) + '”.</div>';
+    root.classList.add("active");
+    return;
+  }
+
+  root.innerHTML = items.map((item) => {
+    return '<button type="button" class="eva-search-result" data-search-link="' + clean(item.href) + '"><strong>' + clean(item.label) + '</strong><span>' + clean(label(item.group || 'App')) + ' • ' + clean(item.page) + '</span></button>';
+  }).join("");
+
+  root.classList.add("active");
+}
+
 export function bindSearch() {
   const input = document.getElementById("evaSearchInput");
-  const links = Array.from(document.querySelectorAll("#evaLinks .eva-link, #evaAuthLinks .eva-link"));
+  const resultsRoot = document.getElementById("evaSearchResults");
+  const launchers = Array.from(document.querySelectorAll(".eva-menu-app-launcher[data-menu-link]"));
+  const sections = Array.from(document.querySelectorAll(".eva-menu-section[data-nav-section]"));
 
   if (!input) return;
 
-  input.addEventListener("input", () => {
+  function applySearch() {
     const value = input.value.trim().toLowerCase();
+    const scored = navSearchItems()
+      .map((item) => ({ ...item, score: scoreSearchItem(item, value) }))
+      .filter((item) => !value || item.score > 0)
+      .sort((a, b) => b.score - a.score || a.label.localeCompare(b.label));
 
-    links.forEach((link) => {
-      const label = (link.getAttribute("data-label") || "").toLowerCase();
-      link.style.display = !value || label.includes(value) ? "" : "none";
+    launchers.forEach((link) => {
+      const haystack = [
+        link.getAttribute("aria-label"),
+        link.getAttribute("data-label"),
+        link.getAttribute("data-group"),
+        link.getAttribute("data-page"),
+        link.textContent
+      ].filter(Boolean).join(" ").toLowerCase();
+      link.style.display = !value || haystack.includes(value) ? "" : "none";
     });
+
+    sections.forEach((section) => {
+      const visibleChildren = Array.from(section.querySelectorAll(".eva-menu-app-launcher[data-menu-link]")).some((link) => link.style.display !== "none");
+      section.style.display = visibleChildren || !value ? "" : "none";
+    });
+
+    renderSearchResults(resultsRoot, scored.slice(0, 8), input.value);
+  }
+
+  input.addEventListener("input", applySearch);
+  input.addEventListener("focus", applySearch);
+  input.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    const first = resultsRoot?.querySelector("[data-search-link]");
+    const href = first?.getAttribute("data-search-link");
+    if (!href) return;
+    stopEvent(event);
+    closeMenu(false);
+    navigateWithLoader(href, { title: "Opening result", subtitle: "Launching your selected Evaraos page." });
+  });
+
+  resultsRoot?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-search-link]");
+    if (!button) return;
+    stopEvent(event);
+    const href = button.getAttribute("data-search-link");
+    if (!href) return;
+    closeMenu(false);
+    navigateWithLoader(href, { title: "Opening result", subtitle: "Launching your selected Evaraos page." });
+  });
+
+  document.addEventListener("click", (event) => {
+    if (event.target.closest(".eva-menu-search")) return;
+    resultsRoot?.classList.remove("active");
   });
 }
 
