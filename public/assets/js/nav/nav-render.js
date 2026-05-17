@@ -5,83 +5,164 @@ import {
   getVisibleLinks
 } from "./nav-utils.js";
 
-import { NAV_GROUP_ORDER } from "./nav-config.js";
 import { iconSvg } from "./nav-icons.js";
+import { APP_CATEGORIES, appsByCategory } from "../navigation/app-registry.js";
 
-const NAV_RENDER_BUILD = "nav-render-grouped-search-20260517";
+const NAV_RENDER_BUILD = "nav-render-registry-clean-20260517";
 
-function appTile(page, label, icon, options = {}) {
-  const href = options.href || buildHref(page);
-  const safeLabel = String(label || "").toLowerCase();
-  const group = String(options.group || "").toLowerCase();
-  const attrs = options.action
-    ? `data-action="${options.action}" id="${options.id || ""}" role="button"`
-    : `data-menu-link="${href}"`;
+const CATEGORY_LABELS = Object.freeze({
+  operations: { title: "Operations", subtitle: "Jobs, dispatch, field & schedule" },
+  organizations: { title: "Organizations", subtitle: "Companies, users, offices & people" },
+  finance: { title: "Finance", subtitle: "Revenue, payroll, ledger & payments" },
+  customer: { title: "Customer", subtitle: "Portal, messages & service history" },
+  intelligence: { title: "Intelligence", subtitle: "AI, analytics & predictions" },
+  system: { title: "System", subtitle: "Settings & account control" },
+  access: { title: "Access", subtitle: "Login, signup & applications" },
+  core: { title: "Core", subtitle: "Start here" }
+});
+
+const CATEGORY_ORDER = Object.freeze([
+  APP_CATEGORIES.operations,
+  APP_CATEGORIES.organizations,
+  APP_CATEGORIES.finance,
+  APP_CATEGORIES.customer,
+  APP_CATEGORIES.intelligence,
+  APP_CATEGORIES.system
+]);
+
+function clean(value = "") {
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function routeToPage(route = "/") {
+  return String(route || "/").replace(/^\//, "");
+}
+
+function appIcon(app = {}) {
+  const icon = String(app.icon || "");
+  if (/^[a-z0-9_-]+$/i.test(icon)) return iconSvg(icon);
+  return clean(icon || "◈");
+}
+
+function appTileFromApp(app = {}) {
+  const href = app.route || "/";
+  const page = routeToPage(href);
+  const safeLabel = String(app.title || "").toLowerCase();
+  const group = String(app.category || "app").toLowerCase();
 
   return `
     <a
-      href="${href}"
+      href="${clean(href)}"
       class="eva-menu-app-launcher"
-      ${attrs}
-      data-label="${safeLabel}"
-      data-group="${group}"
-      data-page="${page}"
-      aria-label="${label}"
+      data-menu-link="${clean(href)}"
+      data-label="${clean(safeLabel)}"
+      data-group="${clean(group)}"
+      data-page="${clean(page)}"
+      aria-label="${clean(app.title)}"
     >
-      <span class="eva-menu-app-square">${iconSvg(icon)}</span>
-      <span class="eva-menu-app-name">${label}</span>
+      <span class="eva-menu-app-square">${appIcon(app)}</span>
+      <span class="eva-menu-app-name">${clean(app.title)}</span>
     </a>
   `;
 }
 
-function groupedSections(items = []) {
-  const grouped = new Map();
-  items.forEach((item) => {
-    const group = item.group || "Other";
-    if (!grouped.has(group)) grouped.set(group, []);
-    grouped.get(group).push(item);
-  });
-
-  return [...grouped.entries()].sort(([a], [b]) => {
-    const ai = NAV_GROUP_ORDER.indexOf(a);
-    const bi = NAV_GROUP_ORDER.indexOf(b);
-    if (ai === -1 && bi === -1) return a.localeCompare(b);
-    if (ai === -1) return 1;
-    if (bi === -1) return -1;
-    return ai - bi;
-  });
-}
-
-function menuSection(title, subtitle, items, className = "") {
-  if (!items || !items.length) return "";
+function legacyAppTile(page, label, icon, options = {}) {
+  const href = options.href || buildHref(page);
+  const safeLabel = String(label || "").toLowerCase();
+  const group = String(options.group || "").toLowerCase();
+  const attrs = options.action
+    ? `data-action="${clean(options.action)}" id="${clean(options.id || "")}" role="button"`
+    : `data-menu-link="${clean(href)}"`;
 
   return `
-    <section class="eva-menu-section ${className}" data-nav-section="${title}">
+    <a
+      href="${clean(href)}"
+      class="eva-menu-app-launcher"
+      ${attrs}
+      data-label="${clean(safeLabel)}"
+      data-group="${clean(group)}"
+      data-page="${clean(page)}"
+      aria-label="${clean(label)}"
+    >
+      <span class="eva-menu-app-square">${iconSvg(icon)}</span>
+      <span class="eva-menu-app-name">${clean(label)}</span>
+    </a>
+  `;
+}
+
+function menuSection(category, apps = [], className = "") {
+  if (!apps.length) return "";
+  const copy = CATEGORY_LABELS[category] || { title: category, subtitle: "Apps" };
+
+  return `
+    <section class="eva-menu-section ${className}" data-nav-section="${clean(copy.title)}">
       <details class="eva-menu-folder" open>
         <summary class="eva-section-head eva-folder-summary">
-          <span><p>${subtitle}</p><h3>${title}</h3></span>
-          <span class="eva-folder-count">${items.length}</span>
+          <span><p>${clean(copy.subtitle)}</p><h3>${clean(copy.title)}</h3></span>
+          <span class="eva-folder-count">${apps.length}</span>
         </summary>
         <div class="eva-app-grid">
-          ${items.map((item) => appTile(item.page, item.label, item.icon, { group: item.group })).join("")}
+          ${apps.map(appTileFromApp).join("")}
         </div>
       </details>
     </section>
   `;
 }
 
-function searchBox() {
+function legacySection(category, items = []) {
+  if (!items.length) return "";
+  const copy = CATEGORY_LABELS[category] || { title: category, subtitle: "Access" };
+
+  return `
+    <section class="eva-menu-section" data-nav-section="${clean(copy.title)}">
+      <details class="eva-menu-folder" open>
+        <summary class="eva-section-head eva-folder-summary">
+          <span><p>${clean(copy.subtitle)}</p><h3>${clean(copy.title)}</h3></span>
+          <span class="eva-folder-count">${items.length}</span>
+        </summary>
+        <div class="eva-app-grid">
+          ${items.map((item) => legacyAppTile(item.page, item.label, item.icon, { group: category })).join("")}
+        </div>
+      </details>
+    </section>
+  `;
+}
+
+function searchBox(authed = false) {
   return `
     <div class="eva-menu-search" role="search">
-      <label class="sr-only" for="evaSearchInput">Search Evaraos pages</label>
-      <input id="evaSearchInput" type="search" autocomplete="off" placeholder="Search pages, tools, finance, jobs..." />
+      <label class="sr-only" for="evaSearchInput">Search Evaraos apps</label>
+      <input id="evaSearchInput" type="search" autocomplete="off" placeholder="${authed ? "Search apps, tools, finance, jobs..." : "Search access, login, staff application..."}" />
       <div id="evaSearchResults" class="eva-search-results" aria-live="polite"></div>
     </div>
   `;
 }
 
+function normalizeRegistryRole(role = "customer") {
+  const normalized = String(role || "customer").toLowerCase();
+  if (["owner", "super_admin"].includes(normalized)) return "owner";
+  if (["admin", "manager", "operations_manager", "operations_coordinator"].includes(normalized)) return "admin";
+  if (["organization", "organization_owner", "office_owner", "branch_owner"].includes(normalized)) return "organization";
+  if (["vendor", "lead_vendor", "service_vendor", "management_program"].includes(normalized)) return "vendor";
+  if (["hr", "hr_manager"].includes(normalized)) return "hr";
+  if (["sales", "sales_rep", "technician", "cleaner", "staff", "field_staff", "crew_lead", "customer_support", "quality_control"].includes(normalized)) return "staff";
+  return "customer";
+}
+
+function registrySections(role = "customer") {
+  const groups = appsByCategory(normalizeRegistryRole(role));
+  return CATEGORY_ORDER
+    .map((category) => menuSection(category, groups[category] || [], `eva-${category}-section`))
+    .join("");
+}
+
 export function navLink(page, label, icon) {
-  return appTile(page, label, icon);
+  return legacyAppTile(page, label, icon);
 }
 
 export function renderNav() {
@@ -89,10 +170,12 @@ export function renderNav() {
   if (!mount) return false;
 
   const groups = getVisibleLinks();
-  const accountAccess = groups.main.filter((item) => ["login.html", "signup.html", "reset.html", "staff_application.html"].includes(item.page));
   const publicNavigation = groups.main.filter((item) => ["index.html"].includes(item.page));
-  const authedItems = groups.main.filter((item) => !["index.html", "staff_application.html", "login.html", "signup.html", "reset.html"].includes(item.page));
-  const grouped = groupedSections(groups.authed ? authedItems : [...publicNavigation, ...accountAccess]);
+  const accountAccess = groups.main.filter((item) => ["login.html", "signup.html", "reset.html", "staff_application.html"].includes(item.page));
+
+  const bodySections = groups.authed
+    ? registrySections(groups.role)
+    : legacySection("core", publicNavigation) + legacySection("access", accountAccess);
 
   const accountTools = groups.authed
     ? `
@@ -100,7 +183,7 @@ export function renderNav() {
         <details class="eva-menu-folder" open>
           <summary class="eva-section-head eva-folder-summary"><span><p>Session</p><h3>Account Tools</h3></span><span class="eva-folder-count">1</span></summary>
           <div class="eva-app-grid eva-account-grid">
-            ${appTile("login.html", "Logout", "logout", { href: "#logout", action: "logout", id: "evaLogoutBtn", group: "Account" })}
+            ${legacyAppTile("login.html", "Logout", "logout", { href: "#logout", action: "logout", id: "evaLogoutBtn", group: "account" })}
           </div>
         </details>
       </section>
@@ -131,11 +214,11 @@ export function renderNav() {
       <div class="eva-menu-panel eva-control-center-panel" id="evaMenuPanel">
         <div class="eva-menu-titlebar">
           <div><p>EVARAOS</p><h2>${groups.authed ? "App Library" : "Control Center"}</h2></div>
-          <div class="eva-menu-actions"><span class="eva-menu-badge">${groups.authed ? groups.role : "Guest"}</span></div>
+          <div class="eva-menu-actions"><span class="eva-menu-badge">${groups.authed ? clean(normalizeRegistryRole(groups.role)) : "Guest"}</span></div>
         </div>
-        ${searchBox()}
+        ${searchBox(groups.authed)}
         <nav class="eva-menu-apps" id="evaLinks" aria-label="Main navigation">
-          ${grouped.map(([group, items]) => menuSection(group, group === "Core" ? "Start" : "Apps", items, `eva-${group.toLowerCase().replace(/\s+/g, "-")}-section`)).join("")}
+          ${bodySections}
         </nav>
         ${accountTools}
       </div>
