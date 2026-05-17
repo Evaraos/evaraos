@@ -70,6 +70,12 @@ import {
   unsubscribeProductionValidation
 } from './production-data-validation.js';
 
+import {
+  buildExecutiveTelemetryVisualModel,
+  renderExecutiveTelemetryCards,
+  renderExecutiveTelemetryBars
+} from './executive-telemetry-visuals.js';
+
 const statusNode = document.getElementById('financeDashboardStatus');
 const riskScoreNode = document.getElementById('financeRiskScore');
 const riskLevelNode = document.getElementById('financeRiskLevel');
@@ -83,6 +89,8 @@ const summaryRoot = document.getElementById('financeSummaryRoot');
 const recommendationRoot = document.getElementById('financeRecommendationRoot');
 const invoiceRoot = document.getElementById('financeInvoiceRoot');
 const payoutRoot = document.getElementById('financePayoutRoot');
+const telemetryCardsRoot = document.getElementById('financeTelemetryCardsRoot');
+const telemetryBarsRoot = document.getElementById('financeTelemetryBarsRoot');
 
 const runtime = createDashboardRuntime({
   id: 'enterprise-finance-dashboard-runtime',
@@ -137,6 +145,18 @@ function renderStats(snapshot = {}) {
   if (outstandingNode) outstandingNode.textContent = money(kpis.outstandingRevenueCents);
   if (platformNode) platformNode.textContent = money(kpis.platformRevenueCents);
   if (vendorNode) vendorNode.textContent = money(kpis.vendorPayoutCents);
+}
+
+function renderVisuals(snapshot = {}) {
+  const model = buildExecutiveTelemetryVisualModel({
+    revenueSnapshot: snapshot,
+    syncHealth: latestSyncHealth || getFirestoreSyncHealth(),
+    validation: latestValidationReport || { status: 'pending', invalidCount: 0, warningCount: 0 },
+    stripeEvents: latestStripeEvents || []
+  });
+
+  renderExecutiveTelemetryCards(telemetryCardsRoot, model);
+  renderExecutiveTelemetryBars(telemetryBarsRoot, model);
 }
 
 function renderSummary(snapshot = {}) {
@@ -229,6 +249,7 @@ function buildValidationFromSnapshot(snapshot = {}) {
 function renderFinanceDashboard(snapshot = {}) {
   latestValidationReport = buildValidationFromSnapshot(snapshot);
   renderStats(snapshot);
+  renderVisuals(snapshot);
   renderSummary(snapshot);
   renderRecommendations(snapshot);
   renderInvoices(snapshot);
@@ -254,38 +275,14 @@ async function startEnterpriseFinanceDashboard() {
   await hydratePersistentFinanceData();
 
   await startDashboardRuntime(runtime.id, [
-    {
-      label: 'Start invoice orchestration',
-      run() {
-        startInvoiceOrchestration();
-        return stopInvoiceOrchestration;
-      }
-    },
-    {
-      label: 'Start subscription lifecycle',
-      run() {
-        startSubscriptionLifecycleEngine();
-        return stopSubscriptionLifecycleEngine;
-      }
-    },
-    {
-      label: 'Start revenue analytics',
-      run() {
-        startRevenueAnalyticsEngine();
-        return stopRevenueAnalyticsEngine;
-      }
-    },
+    { label: 'Start invoice orchestration', run() { startInvoiceOrchestration(); return stopInvoiceOrchestration; } },
+    { label: 'Start subscription lifecycle', run() { startSubscriptionLifecycleEngine(); return stopSubscriptionLifecycleEngine; } },
+    { label: 'Start revenue analytics', run() { startRevenueAnalyticsEngine(); return stopRevenueAnalyticsEngine; } },
     {
       label: 'Subscribe finance dashboard renderer',
       run() {
-        analyticsListenerId = subscribeRevenueAnalytics((snapshot) => {
-          renderFinanceDashboard(snapshot);
-        });
-
-        return () => {
-          if (analyticsListenerId) unsubscribeRevenueAnalytics(analyticsListenerId);
-          analyticsListenerId = null;
-        };
+        analyticsListenerId = subscribeRevenueAnalytics((snapshot) => renderFinanceDashboard(snapshot));
+        return () => { if (analyticsListenerId) unsubscribeRevenueAnalytics(analyticsListenerId); analyticsListenerId = null; };
       }
     },
     {
@@ -294,64 +291,35 @@ async function startEnterpriseFinanceDashboard() {
         subscribePersistentQuotes({}, () => renderFinanceDashboard(refreshRevenueAnalytics()));
         subscribePersistentSubscriptions({}, () => renderFinanceDashboard(refreshRevenueAnalytics()));
         subscribePersistentInvoices({}, () => renderFinanceDashboard(refreshRevenueAnalytics()));
-
-        return () => {
-          stopPersistentQuotesSubscription();
-          stopPersistentSubscriptionsSubscription();
-          stopPersistentInvoicesSubscription();
-        };
+        return () => { stopPersistentQuotesSubscription(); stopPersistentSubscriptionsSubscription(); stopPersistentInvoicesSubscription(); };
       }
     },
     {
       label: 'Subscribe persistent analytics snapshots',
       run() {
-        persistentAnalyticsUnsubscribe = subscribePersistentRevenueAnalytics({}, () => {
-          renderFinanceDashboard(refreshRevenueAnalytics());
-        });
-        return () => {
-          if (persistentAnalyticsUnsubscribe) persistentAnalyticsUnsubscribe();
-          persistentAnalyticsUnsubscribe = null;
-          stopPersistentRevenueAnalyticsSubscription();
-        };
+        persistentAnalyticsUnsubscribe = subscribePersistentRevenueAnalytics({}, () => renderFinanceDashboard(refreshRevenueAnalytics()));
+        return () => { if (persistentAnalyticsUnsubscribe) persistentAnalyticsUnsubscribe(); persistentAnalyticsUnsubscribe = null; stopPersistentRevenueAnalyticsSubscription(); };
       }
     },
     {
       label: 'Subscribe Stripe webhook events',
       run() {
-        stripeWebhookUnsubscribe = subscribePersistentStripeWebhookEvents({}, (events = []) => {
-          latestStripeEvents = events || [];
-          renderFinanceDashboard(refreshRevenueAnalytics());
-        });
-        return () => {
-          if (stripeWebhookUnsubscribe) stripeWebhookUnsubscribe();
-          stripeWebhookUnsubscribe = null;
-        };
+        stripeWebhookUnsubscribe = subscribePersistentStripeWebhookEvents({}, (events = []) => { latestStripeEvents = events || []; renderFinanceDashboard(refreshRevenueAnalytics()); });
+        return () => { if (stripeWebhookUnsubscribe) stripeWebhookUnsubscribe(); stripeWebhookUnsubscribe = null; };
       }
     },
     {
       label: 'Subscribe sync health telemetry',
       run() {
-        syncHealthListenerId = subscribeFirestoreSyncHealth((health) => {
-          latestSyncHealth = health;
-          renderFinanceDashboard(refreshRevenueAnalytics());
-        });
-        return () => {
-          if (syncHealthListenerId) unsubscribeFirestoreSyncHealth(syncHealthListenerId);
-          syncHealthListenerId = null;
-        };
+        syncHealthListenerId = subscribeFirestoreSyncHealth((health) => { latestSyncHealth = health; renderFinanceDashboard(refreshRevenueAnalytics()); });
+        return () => { if (syncHealthListenerId) unsubscribeFirestoreSyncHealth(syncHealthListenerId); syncHealthListenerId = null; };
       }
     },
     {
       label: 'Subscribe production validation telemetry',
       run() {
-        validationListenerId = subscribeProductionValidation((report) => {
-          latestValidationReport = report || latestValidationReport;
-          renderSummary(refreshRevenueAnalytics());
-        });
-        return () => {
-          if (validationListenerId) unsubscribeProductionValidation(validationListenerId);
-          validationListenerId = null;
-        };
+        validationListenerId = subscribeProductionValidation((report) => { latestValidationReport = report || latestValidationReport; renderVisuals(refreshRevenueAnalytics()); renderSummary(refreshRevenueAnalytics()); });
+        return () => { if (validationListenerId) unsubscribeProductionValidation(validationListenerId); validationListenerId = null; };
       }
     }
   ]);
