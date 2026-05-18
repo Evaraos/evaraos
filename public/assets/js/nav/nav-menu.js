@@ -5,10 +5,7 @@ import {
   getMenuPanel
 } from "./nav-utils.js";
 
-import {
-  expandNav,
-  hideQuickBubbles
-} from "./nav-scroll.js";
+import { expandNav } from "./nav-scroll.js";
 
 export function updateMenuViewportFit() {
   const panel = getMenuPanel();
@@ -40,10 +37,8 @@ export function unlockBodyScroll() {
 export function openMenu() {
   const zone = getMenuZone();
   const btn = getMenuBtn();
-
   if (!zone || !btn) return;
 
-  hideQuickBubbles(true);
   updateMenuViewportFit();
   lockBodyScroll();
 
@@ -56,7 +51,6 @@ export function openMenu() {
 export function closeMenu(keepExpanded = true) {
   const zone = getMenuZone();
   const btn = getMenuBtn();
-
   if (!zone || !btn) return;
 
   document.body.classList.remove("nav-menu-open");
@@ -77,40 +71,29 @@ export function bindMenu() {
   const panel = getMenuPanel();
   const backdrop = document.getElementById("evaBackdrop");
 
-  if (!zone || !btn || !panel || !backdrop) return;
+  if (!zone || !btn || !panel || !backdrop || btn.dataset.menuBound === "true") return;
+  btn.dataset.menuBound = "true";
 
   btn.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
     if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
 
-    hideQuickBubbles(true);
-
-    if (document.body.classList.contains("nav-menu-open")) {
-      closeMenu(true);
-    } else {
-      openMenu();
-    }
+    if (document.body.classList.contains("nav-menu-open")) closeMenu(true);
+    else openMenu();
   }, true);
 
   panel.addEventListener("click", (event) => event.stopPropagation());
-
-  backdrop.addEventListener("click", () => {
-    closeMenu(true);
-    hideQuickBubbles(true);
-  });
+  backdrop.addEventListener("click", () => closeMenu(true));
 
   document.addEventListener("click", (event) => {
     const target = event.target;
     const clickedMenuButton = btn.contains(target);
     const clickedMenuPanel = panel.contains(target);
-    const clickedQuickBubbles = target?.closest?.("#evaQuickBubbles");
 
     if (!clickedMenuButton && !clickedMenuPanel && document.body.classList.contains("nav-menu-open")) {
       closeMenu(true);
     }
-
-    if (!clickedQuickBubbles) hideQuickBubbles(true);
   });
 
   window.addEventListener("resize", () => {
