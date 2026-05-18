@@ -1,8 +1,9 @@
-/* EVARAOS NAV SYSTEM */
-@import url("./nav/nav-shell.css?v=image2-nav-20260517a");
-@import url("./nav/nav-actions.css?v=image2-nav-20260517a");
-@import url("./nav/nav-menu.css?v=image2-nav-20260517a");
-@import url("./nav/nav-app-tiles.css?v=image2-nav-20260517a");
-@import url("./nav/nav-effects.css?v=image2-nav-20260517a");
-@import url("./nav/nav-motion.css?v=image2-nav-20260517a");
-@import url("./nav/nav-quick-bubbles.css?v=image2-nav-20260517a");
+/* EVARAOS NAV SYSTEM
+   Single CSS entrypoint for Image 2 control-center runtime. */
+@import url("./nav/nav-shell.css?v=image2-nav-20260517d");
+@import url("./nav/nav-actions.css?v=image2-nav-20260517d");
+@import url("./nav/nav-menu.css?v=image2-nav-20260517d");
+@import url("./nav/nav-app-tiles.css?v=image2-nav-20260517d");
+@import url("./nav/nav-effects.css?v=image2-nav-20260517d");
+@import url("./nav/nav-motion.css?v=image2-nav-20260517d");
+@import url("./nav/nav-quick-bubbles.css?v=image2-nav-20260517d");
