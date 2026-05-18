@@ -29,5 +29,5 @@
 @import url("./effects/animations.css");
 
 /* Loader */
-@import url("./loaders/loader.css");
-@import url("./loaders/loader-viewport.css");
+@import url("./loaders/loader.css?v=loader-v1");
+@import url("./loaders/loader-viewport.css?v=loader-v1");
