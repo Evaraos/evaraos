@@ -1,4 +1,4 @@
-const NAV_BUILD = "meca-nav-20260518a";
+const NAV_BUILD = "nav-v1";
 
 const { NAV_STATE } = await import(`./nav-config.js?v=${NAV_BUILD}`);
 
