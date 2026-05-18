@@ -1,4 +1,4 @@
-const NAV_BUILD = "image2-nav-20260517d";
+const NAV_BUILD = "meca-nav-20260518a";
 
 const { NAV_STATE } = await import(`./nav-config.js?v=${NAV_BUILD}`);
 
@@ -13,7 +13,6 @@ const { renderNav } = await import(`./nav-render.js?v=${NAV_BUILD}`);
 
 const {
   applyProgress,
-  atTopOfPage,
   bindScrollBehavior,
   animateNav
 } = await import(`./nav-scroll.js?v=${NAV_BUILD}`);
@@ -71,19 +70,22 @@ export function initNav() {
   if (!rendered) return;
 
   const shell = getNavShell();
-  const immediate = atTopOfPage() ? 1 : 0;
 
-  NAV_STATE.progress = immediate;
-  NAV_STATE.targetProgress = immediate;
+  NAV_STATE.progress = 1;
+  NAV_STATE.targetProgress = 1;
+  NAV_STATE.motionMode = "stable";
 
   if (shell) {
-    shell.style.setProperty("--nav-progress", immediate.toFixed(4));
-    shell.classList.toggle("expanded", immediate === 1);
-    shell.classList.toggle("compact", immediate !== 1);
+    shell.style.setProperty("--nav-progress", "1.0000");
+    shell.classList.add("expanded");
+    shell.classList.remove("compact", "quick-pressing");
     shell.dataset.navBuild = NAV_BUILD;
   }
 
-  applyProgress(immediate);
+  document.body.classList.add("eva-nav-expanded");
+  document.body.classList.remove("eva-nav-compact", "eva-pressing-nav");
+
+  applyProgress(1);
 
   bindAllNavEvents();
   bindMenu();
