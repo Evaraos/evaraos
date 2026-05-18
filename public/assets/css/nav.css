@@ -1,9 +1,9 @@
 /* EVARAOS NAV SYSTEM
-   Single CSS entrypoint for Meca/Image 2 control-center runtime. */
-@import url("./nav/nav-shell.css?v=meca-nav-20260518a");
-@import url("./nav/nav-actions.css?v=meca-nav-20260518a");
-@import url("./nav/nav-menu.css?v=meca-nav-20260518a");
-@import url("./nav/nav-app-tiles.css?v=meca-nav-20260518a");
-@import url("./nav/nav-effects.css?v=meca-nav-20260518a");
-@import url("./nav/nav-motion.css?v=meca-nav-20260518a");
-@import url("./nav/nav-quick-bubbles.css?v=meca-nav-20260518a");
+   Single CSS entrypoint for the nav-v1 runtime. */
+@import url("./nav/nav-shell.css?v=nav-v1");
+@import url("./nav/nav-actions.css?v=nav-v1");
+@import url("./nav/nav-menu.css?v=nav-v1");
+@import url("./nav/nav-app-tiles.css?v=nav-v1");
+@import url("./nav/nav-effects.css?v=nav-v1");
+@import url("./nav/nav-motion.css?v=nav-v1");
+@import url("./nav/nav-quick-bubbles.css?v=nav-v1");
