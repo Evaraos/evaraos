@@ -1,5 +1,5 @@
 /* EVARAOS NAV SHELL
-   Stable Image 2-inspired bottom control bar. Active source file, no overlay. */
+   Meca/Image 2 bottom dock: stable brand, bell, close/menu action. */
 
 :root {
   --eva-island-offset: max(10px, calc(env(safe-area-inset-bottom, 0px) + 10px));
@@ -46,7 +46,7 @@
   margin: 0 auto;
   padding: 10px 12px;
   display: grid;
-  grid-template-columns: 58px minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
   border-radius: 28px;
@@ -71,14 +71,9 @@ html[data-theme="dark"] .eva-nav-pill {
   box-shadow: 0 24px 62px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.09);
 }
 
-.eva-nav-pill.is-pressing,
-.eva-nav-shell.quick-pressing .eva-nav-pill {
-  transform: translateY(1px) scale(.992);
-}
-
 .eva-left-spacer,
 .eva-right-spacer {
-  display: none;
+  display: none !important;
 }
 
 .eva-brand {
@@ -90,7 +85,6 @@ html[data-theme="dark"] .eva-nav-pill {
   justify-content: start;
   gap: 12px;
   min-width: 0;
-  max-width: none;
   width: auto;
   pointer-events: auto;
   text-align: left;
@@ -98,7 +92,6 @@ html[data-theme="dark"] .eva-nav-pill {
   color: inherit;
   padding: 0;
   z-index: 2;
-  grid-column: 1 / span 2;
 }
 
 .eva-logo {
@@ -144,7 +137,6 @@ html[data-theme="dark"] .eva-nav-pill {
 }
 
 .eva-menu-zone {
-  grid-column: 3;
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -180,7 +172,6 @@ html[data-theme="light"] body.nav-menu-open .eva-backdrop {
     width: calc(100vw - 18px);
     height: 72px;
     min-height: 72px;
-    grid-template-columns: 50px minmax(0, 1fr) auto;
     gap: 10px;
     padding: 9px 10px;
     border-radius: 26px;
@@ -209,7 +200,7 @@ html[data-theme="light"] body.nav-menu-open .eva-backdrop {
   }
 }
 
-@media (max-width: 370px) {
+@media (max-width: 390px) {
   .eva-brand-copy span {
     display: none;
   }
