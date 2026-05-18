@@ -2,7 +2,7 @@
   const FAST_LOADER_ID = "evaraFastLoader";
   const GLOBAL_LOADER_ID = "evaraGlobalLoader";
   const PAGE_TRANSITION_ID = "evaPageTransition";
-  const LOGO_SRC = "./assets/img/evaraos-emblem.png";
+  const LOGO_SRC = "/assets/img/evaraos_logo.png";
 
   const NAV_FAST_DELAY = 350;
   const NAV_FULL_DELAY = 1200;
