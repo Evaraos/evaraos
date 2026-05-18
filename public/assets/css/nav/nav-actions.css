@@ -1,5 +1,5 @@
 /* EVARAOS NAV ACTIONS
-   Stable dock action buttons for Image 2 control center. */
+   Image 2 dock controls: bell + close/menu button. No legacy hamburger or compact-island actions. */
 
 .eva-menu-zone {
   position: static;
@@ -12,18 +12,10 @@
   pointer-events: auto;
 }
 
-.eva-nav-shell.compact .eva-menu-zone,
-body.eva-nav-compact .eva-menu-zone {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  transform: none;
-}
-
-#evaThemePillToggle,
-.eva-theme-nav-btn,
+.eva-nav-action-btn,
 #evaMenuBtn,
-.eva-menu-btn {
+.eva-menu-btn,
+.eva-nav-bell-btn {
   width: 50px;
   height: 50px;
   min-width: 50px;
@@ -37,134 +29,96 @@ body.eva-nav-compact .eva-menu-zone {
   position: relative;
   overflow: hidden;
   color: inherit;
-  background: rgba(255,255,255,0.58);
-  border: 1px solid rgba(148,163,184,0.28);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.60), 0 10px 22px rgba(15,23,42,0.10);
+  background: rgba(255,255,255,0.60);
+  border: 1px solid rgba(148,163,184,0.24);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.72), 0 10px 22px rgba(15,23,42,0.09);
   appearance: none;
   -webkit-appearance: none;
   -webkit-tap-highlight-color: transparent;
-  transition: transform .16s ease, background .16s ease, border-color .16s ease;
+  transition: transform .16s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease;
 }
 
-html[data-theme="dark"] #evaThemePillToggle,
-html[data-theme="dark"] .eva-theme-nav-btn,
+html[data-theme="dark"] .eva-nav-action-btn,
 html[data-theme="dark"] #evaMenuBtn,
-html[data-theme="dark"] .eva-menu-btn {
-  background: rgba(255,255,255,0.08);
-  border-color: rgba(255,255,255,0.12);
+html[data-theme="dark"] .eva-menu-btn,
+html[data-theme="dark"] .eva-nav-bell-btn {
+  background: rgba(255,255,255,0.075);
+  border-color: rgba(255,255,255,0.11);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 12px 24px rgba(0,0,0,0.26);
 }
 
-#evaThemePillToggle:hover,
-.eva-theme-nav-btn:hover,
+.eva-nav-action-btn:hover,
 #evaMenuBtn:hover,
-.eva-menu-btn:hover {
+.eva-menu-btn:hover,
+.eva-nav-bell-btn:hover {
   transform: translateY(-1px);
-  background: rgba(255,255,255,0.72);
+  background: rgba(255,255,255,0.76);
 }
 
-html[data-theme="dark"] #evaThemePillToggle:hover,
-html[data-theme="dark"] .eva-theme-nav-btn:hover,
+html[data-theme="dark"] .eva-nav-action-btn:hover,
 html[data-theme="dark"] #evaMenuBtn:hover,
-html[data-theme="dark"] .eva-menu-btn:hover {
+html[data-theme="dark"] .eva-menu-btn:hover,
+html[data-theme="dark"] .eva-nav-bell-btn:hover {
   background: rgba(255,255,255,0.13);
 }
 
-#evaThemePillToggle:active,
-.eva-theme-nav-btn:active,
+.eva-nav-action-btn:active,
 #evaMenuBtn:active,
-.eva-menu-btn:active {
+.eva-menu-btn:active,
+.eva-nav-bell-btn:active {
   transform: scale(.96);
 }
 
-#evaThemePillToggle::before,
-#evaThemePillToggle::after,
-.eva-theme-nav-btn::before,
-.eva-theme-nav-btn::after,
+.eva-nav-action-btn::before,
+.eva-nav-action-btn::after,
 #evaMenuBtn::before,
 #evaMenuBtn::after,
 .eva-menu-btn::before,
-.eva-menu-btn::after {
+.eva-menu-btn::after,
+.eva-nav-bell-btn::before,
+.eva-nav-bell-btn::after {
   display: none;
   content: none;
 }
 
-.eva-theme-nav-icon {
-  width: 24px;
-  height: 24px;
-  display: block;
-  position: relative;
-}
-
-.eva-theme-nav-icon::before {
-  content: "◴";
-  position: absolute;
-  inset: 0;
+.eva-nav-bell-btn span,
+.eva-nav-close-icon {
   display: grid;
   place-items: center;
-  color: currentColor;
-  font-size: 23px;
-  font-weight: 900;
+  width: 24px;
+  height: 24px;
+  font-size: 1.52rem;
+  font-weight: 850;
   line-height: 1;
+  color: currentColor;
 }
 
-html[data-theme="dark"] .eva-theme-nav-icon::before {
-  content: "◴";
+.eva-nav-bell-btn span {
+  font-size: 1.28rem;
 }
 
-#evaMenuBtn .eva-burger,
-.eva-menu-btn .eva-burger {
-  width: 22px;
-  height: 22px;
-  position: relative;
-  display: block;
+.eva-nav-close-icon {
+  font-size: 1.95rem;
+  transform: translateY(-1px);
 }
 
-#evaMenuBtn .eva-burger-line,
-.eva-menu-btn .eva-burger-line,
+.eva-theme-nav-btn,
+#evaThemePillToggle,
+.eva-theme-nav-icon,
+.eva-burger,
 .eva-burger-line {
-  position: absolute;
-  left: 50%;
-  width: 22px;
-  height: 2.5px;
-  border-radius: 999px;
-  background: currentColor;
-  transform-origin: center;
-  transition: top 0.18s ease, transform 0.18s ease, opacity 0.14s ease;
-}
-
-.eva-burger-line.top { top: 3px; transform: translateX(-50%) rotate(0deg); }
-.eva-burger-line.mid { top: 10px; transform: translateX(-50%) rotate(0deg); }
-.eva-burger-line.bot { top: 17px; transform: translateX(-50%) rotate(0deg); }
-
-body.nav-menu-open .eva-burger-line.top,
-.eva-menu-zone.open .eva-burger-line.top {
-  top: 10px;
-  transform: translateX(-50%) rotate(45deg);
-}
-
-body.nav-menu-open .eva-burger-line.mid,
-.eva-menu-zone.open .eva-burger-line.mid {
-  top: 10px;
-  opacity: 0;
-  transform: translateX(-50%) scaleX(0);
-}
-
-body.nav-menu-open .eva-burger-line.bot,
-.eva-menu-zone.open .eva-burger-line.bot {
-  top: 10px;
-  transform: translateX(-50%) rotate(-45deg);
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 @media (max-width: 520px) {
-  .eva-menu-zone {
-    gap: 8px;
-  }
+  .eva-menu-zone { gap: 8px; }
 
-  #evaThemePillToggle,
-  .eva-theme-nav-btn,
+  .eva-nav-action-btn,
   #evaMenuBtn,
-  .eva-menu-btn {
+  .eva-menu-btn,
+  .eva-nav-bell-btn {
     width: 46px;
     height: 46px;
     min-width: 46px;
@@ -173,10 +127,10 @@ body.nav-menu-open .eva-burger-line.bot,
 }
 
 @media (max-width: 390px) {
-  #evaThemePillToggle,
-  .eva-theme-nav-btn,
+  .eva-nav-action-btn,
   #evaMenuBtn,
-  .eva-menu-btn {
+  .eva-menu-btn,
+  .eva-nav-bell-btn {
     width: 42px;
     height: 42px;
     min-width: 42px;
