@@ -1,42 +1,17 @@
-import { NAV_STATE } from "./nav-config.js";
-
 import {
   buildHref,
   getAppearanceTheme,
   setTheme,
   syncThemeLabel,
-  getNavPill,
   getBrandBlock
 } from "./nav-utils.js";
-
-import {
-  isCompact,
-  expandNav,
-  compactNav,
-  scheduleCompact,
-  showQuickBubbles,
-  hideQuickBubbles
-} from "./nav-scroll.js";
 
 import { closeMenu } from "./nav-menu.js";
 import { navigateWithLoader } from "./nav-navigation.js";
 import { logoutAndRedirect } from "../firebase.js";
+import { searchApps } from "../navigation/app-registry.js";
 
-const NAV_ACTION_SELECTOR = "#evaMenuBtn, #evaThemePillToggle, .eva-menu-btn, .eva-theme-nav-btn";
-const BRAND_SELECTOR = "#evaBrandBlock";
 const BOUND_ATTR = "data-evara-nav-bound";
-
-function isNavActionTarget(event) {
-  return !!event?.target?.closest?.(NAV_ACTION_SELECTOR);
-}
-
-function isBrandTarget(event) {
-  return !!event?.target?.closest?.(BRAND_SELECTOR);
-}
-
-function shouldIgnorePillTarget(event) {
-  return isNavActionTarget(event) || isBrandTarget(event);
-}
 
 function stopEvent(event) {
   event?.preventDefault?.();
@@ -68,112 +43,11 @@ function bindOnce(node, key, handler, options) {
   return true;
 }
 
-export function clearPressTimer() {
-  if (!NAV_STATE.pressTimer) return;
-  clearTimeout(NAV_STATE.pressTimer);
-  NAV_STATE.pressTimer = null;
-}
-
-export function endCompactPress() {
-  const pill = getNavPill();
-  clearPressTimer();
-  pill?.classList.remove("is-pressing");
-  document.body.classList.remove("eva-pressing-nav");
-}
-
-export function togglePill(event) {
-  stopEvent(event);
-  if (document.body.classList.contains("nav-menu-open")) return;
-
-  if (isCompact()) {
-    expandNav(true, "tap");
-    scheduleCompact();
-    return;
-  }
-
-  compactNav(true, "tap");
-}
-
-export function startCompactPress(event) {
-  const pill = getNavPill();
-  if (!pill || !isCompact() || shouldIgnorePillTarget(event)) return;
-
-  clearPressTimer();
-  NAV_STATE.longPressTriggered = false;
-
-  pill.classList.add("is-pressing");
-  document.body.classList.add("eva-pressing-nav");
-
-  NAV_STATE.pressTimer = setTimeout(() => {
-    NAV_STATE.longPressTriggered = true;
-    showQuickBubbles();
-  }, 240);
-}
-
-export function bindTapToggle() {
-  const pill = getNavPill();
-  if (!pill || pill.dataset.tapToggleBound === "true") return;
-  pill.dataset.tapToggleBound = "true";
-
-  pill.addEventListener("touchstart", (event) => {
-    if (shouldIgnorePillTarget(event)) return;
-    const touch = event.touches ? event.touches[0] : event;
-    NAV_STATE.tapStartX = touch.clientX;
-    NAV_STATE.tapStartY = touch.clientY;
-    NAV_STATE.tapMoved = false;
-    NAV_STATE.tapHandled = false;
-    startCompactPress(event);
-  }, { passive: false });
-
-  pill.addEventListener("touchmove", (event) => {
-    if (shouldIgnorePillTarget(event)) return;
-    const touch = event.touches ? event.touches[0] : event;
-    const dx = Math.abs(touch.clientX - NAV_STATE.tapStartX);
-    const dy = Math.abs(touch.clientY - NAV_STATE.tapStartY);
-    if (dx > 10 || dy > 10) {
-      NAV_STATE.tapMoved = true;
-      endCompactPress();
-    }
-  }, { passive: false });
-
-  pill.addEventListener("touchend", (event) => {
-    if (shouldIgnorePillTarget(event)) return;
-    const wasLongPress = NAV_STATE.longPressTriggered;
-    endCompactPress();
-    if (NAV_STATE.tapMoved || NAV_STATE.tapHandled || wasLongPress) {
-      stopEvent(event);
-      return;
-    }
-    NAV_STATE.tapHandled = true;
-    togglePill(event);
-  }, { passive: false });
-
-  pill.addEventListener("touchcancel", endCompactPress);
-  pill.addEventListener("mousedown", (event) => {
-    if (!shouldIgnorePillTarget(event)) startCompactPress(event);
-  });
-  pill.addEventListener("mouseup", (event) => {
-    const wasLongPress = NAV_STATE.longPressTriggered;
-    endCompactPress();
-    if (wasLongPress) {
-      NAV_STATE.longPressTriggered = false;
-      stopEvent(event);
-    }
-  });
-  pill.addEventListener("mouseleave", endCompactPress);
-  pill.addEventListener("dragstart", (event) => event.preventDefault());
-  pill.addEventListener("selectstart", (event) => event.preventDefault());
-  pill.addEventListener("click", (event) => {
-    if (shouldIgnorePillTarget(event)) return;
-    if (NAV_STATE.longPressTriggered || NAV_STATE.tapHandled) {
-      NAV_STATE.longPressTriggered = false;
-      NAV_STATE.tapHandled = false;
-      stopEvent(event);
-      return;
-    }
-    togglePill(event);
-  });
-}
+export function clearPressTimer() {}
+export function endCompactPress() {}
+export function togglePill() {}
+export function startCompactPress() {}
+export function bindTapToggle() {}
 
 export function bindBrandHome() {
   const brand = getBrandBlock();
@@ -182,7 +56,6 @@ export function bindBrandHome() {
 
   function openHome(event) {
     stopEvent(event);
-    if (isCompact()) return;
     const href = brand.getAttribute("data-home-link") || buildHref("index.html");
     navigateWithLoader(href, {
       title: "Opening Home",
@@ -199,11 +72,27 @@ export function bindBrandHome() {
 function openNavHref(href, options = {}) {
   if (!href) return;
   closeMenu(false);
-  hideQuickBubbles(true);
   navigateWithLoader(href, {
     title: options.title || "Loading page",
     subtitle: options.subtitle || "Preparing your next screen."
   });
+}
+
+function openGroupPrimary(button) {
+  if (!button) return;
+
+  try {
+    const apps = JSON.parse(button.getAttribute("data-group-apps") || "[]");
+    const first = apps.find((app) => app.route);
+    if (first?.route) {
+      openNavHref(first.route, {
+        title: `Opening ${button.textContent.trim()}`,
+        subtitle: "Launching the first tool in this Evaraos group."
+      });
+    }
+  } catch (error) {
+    console.warn("Unable to open nav group:", error);
+  }
 }
 
 export function bindLinks() {
@@ -214,13 +103,10 @@ export function bindLinks() {
     });
   });
 
-  document.querySelectorAll("[data-quick-link]").forEach((btn) => {
-    bindOnce(btn, "click", (event) => {
+  document.querySelectorAll("[data-nav-group]").forEach((button) => {
+    bindOnce(button, "click", (event) => {
       stopEvent(event);
-      openNavHref(btn.getAttribute("data-quick-link"), {
-        title: "Opening shortcut",
-        subtitle: "Launching your quick action."
-      });
+      openGroupPrimary(button);
     });
   });
 
@@ -253,35 +139,25 @@ export function bindThemeToggle() {
   });
 }
 
-function navSearchItems() {
-  return Array.from(document.querySelectorAll(".eva-menu-app-launcher[data-menu-link]")).map((link) => ({
-    label: link.getAttribute("aria-label") || link.textContent.trim(),
-    href: link.getAttribute("data-menu-link") || link.getAttribute("href"),
-    group: link.getAttribute("data-group") || "",
-    page: link.getAttribute("data-page") || "",
-    element: link,
-    haystack: [
-      link.getAttribute("aria-label"),
-      link.getAttribute("data-label"),
-      link.getAttribute("data-group"),
-      link.getAttribute("data-page"),
-      link.textContent
-    ].filter(Boolean).join(" ").toLowerCase()
-  }));
+function currentRole() {
+  const nav = document.getElementById("evaLinks");
+  return nav?.dataset?.navRole || localStorage.getItem("evaraos-role") || "customer";
 }
 
-function scoreSearchItem(item, query = "") {
+function scoreSearchItem(app, query = "") {
   const value = String(query || "").toLowerCase();
-  const labelValue = String(item.label || "").toLowerCase();
-  const pageValue = String(item.page || "").toLowerCase();
-  const groupValue = String(item.group || "").toLowerCase();
+  const title = String(app.title || "").toLowerCase();
+  const id = String(app.id || "").toLowerCase();
+  const category = String(app.category || "").toLowerCase();
+  const route = String(app.route || "").toLowerCase();
+
   if (!value) return 1;
-  if (labelValue === value) return 100;
-  if (labelValue.startsWith(value)) return 80;
-  if (labelValue.includes(value)) return 60;
-  if (pageValue.includes(value)) return 35;
-  if (groupValue.includes(value)) return 25;
-  if (item.haystack.includes(value)) return 10;
+  if (title === value) return 100;
+  if (title.startsWith(value)) return 80;
+  if (title.includes(value)) return 60;
+  if (id.includes(value)) return 45;
+  if (route.includes(value)) return 35;
+  if (category.includes(value)) return 25;
   return 0;
 }
 
@@ -289,7 +165,7 @@ function renderSearchResults(root, items = [], query = "") {
   if (!root) return;
 
   if (!query.trim()) {
-    root.innerHTML = '<div class="eva-search-empty">Start typing to search apps, tools, finance, jobs, or settings.</div>';
+    root.innerHTML = '<div class="eva-search-empty">Start typing to search apps, groups, tools, finance, jobs, or settings.</div>';
     root.classList.remove("active");
     return;
   }
@@ -300,8 +176,8 @@ function renderSearchResults(root, items = [], query = "") {
     return;
   }
 
-  root.innerHTML = items.map((item) => {
-    return '<button type="button" class="eva-search-result" data-search-link="' + clean(item.href) + '"><strong>' + clean(item.label) + '</strong><span>' + clean(label(item.group || 'App')) + ' • ' + clean(item.page) + '</span></button>';
+  root.innerHTML = items.map((app) => {
+    return '<button type="button" class="eva-search-result" data-search-link="' + clean(app.route) + '"><strong>' + clean(app.title) + '</strong><span>' + clean(label(app.category || 'App')) + ' • ' + clean(app.route) + '</span></button>';
   }).join("");
   root.classList.add("active");
 }
@@ -314,20 +190,11 @@ export function bindSearch() {
 
   function applySearch() {
     const value = input.value.trim().toLowerCase();
-    const items = navSearchItems();
-    const scored = items
-      .map((item) => ({ ...item, score: scoreSearchItem(item, value) }))
-      .filter((item) => !value || item.score > 0)
-      .sort((a, b) => b.score - a.score || a.label.localeCompare(b.label));
-
-    items.forEach((item) => {
-      item.element.hidden = !!value && item.score === 0;
-    });
-
-    document.querySelectorAll(".eva-menu-section[data-nav-section]").forEach((section) => {
-      const visibleChildren = Array.from(section.querySelectorAll(".eva-menu-app-launcher[data-menu-link]")).some((link) => !link.hidden);
-      section.hidden = !!value && !visibleChildren;
-    });
+    const apps = searchApps(value, currentRole());
+    const scored = apps
+      .map((app) => ({ ...app, score: scoreSearchItem(app, value) }))
+      .filter((app) => !value || app.score > 0)
+      .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title));
 
     renderSearchResults(resultsRoot, scored.slice(0, 8), input.value);
   }
@@ -367,7 +234,6 @@ function bindMenuCloseButton() {
 }
 
 export function bindAllNavEvents() {
-  bindTapToggle();
   bindBrandHome();
   bindLinks();
   bindThemeToggle();
