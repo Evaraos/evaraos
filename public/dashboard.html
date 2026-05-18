@@ -3,38 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
-  <!-- Evaraos App Identity / PWA / Favicons -->
   <link rel="manifest" href="/manifest.json" />
-
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/icon-192.png" />
   <link rel="shortcut icon" href="/favicon.ico" />
-
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
-  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" />
-
   <meta name="theme-color" content="#f4f7f6" />
-  <meta name="msapplication-TileColor" content="#f4f7f6" />
-  <meta name="msapplication-TileImage" content="/assets/img/icon-192.png" />
-
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Evaraos" />
   <meta name="application-name" content="Evaraos" />
-
-  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
-  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
-  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin />
-  <link rel="dns-prefetch" href="https://www.gstatic.com" />
-  <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
-  <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com" />
   <link rel="preload" as="image" href="/assets/img/evaraos_logo.png" />
 
   <title>Dashboard • Evaraos Inc</title>
@@ -42,46 +26,18 @@
   <script src="/assets/js/theme-boot.js?v=1"></script>
 
   <style>
-    html,
-    body {
-      background: #f4f7f6;
-    }
-
-    html[data-theme="dark"],
-    html[data-theme="dark"] body {
-      background: #020307;
-    }
-
-    html.boot-pending body {
-      margin: 0;
-      overflow: hidden;
-      touch-action: none;
-    }
-
-    html.auth-pending body,
-    body.auth-pending {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    body.dashboard-body {
-      margin: 0;
-      min-height: 100vh;
-      background: transparent;
-    }
-
-    body.app-loading #appRoot {
-      visibility: hidden;
-    }
-
-    body.app-ready #appRoot {
-      visibility: visible;
-    }
+    html, body { background: #f4f7f6; }
+    html[data-theme="dark"], html[data-theme="dark"] body { background: #020307; }
+    html.boot-pending body { margin: 0; overflow: hidden; touch-action: none; }
+    html.auth-pending body, body.auth-pending { opacity: 0; pointer-events: none; }
+    body.dashboard-body { margin: 0; min-height: 100vh; background: transparent; }
+    body.app-loading #appRoot { visibility: hidden; }
+    body.app-ready #appRoot { visibility: visible; }
   </style>
 
   <link rel="stylesheet" href="/assets/css/base.css?v=34" />
   <link rel="stylesheet" href="/assets/css/theme.css?v=36" />
-  <link rel="stylesheet" href="/assets/css/nav.css?v=unified-20260505" />
+  <link rel="stylesheet" href="/assets/css/nav.css?v=image2-nav-20260517c" />
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=34" />
   <link rel="stylesheet" href="/assets/css/app-system.css?v=phase-a" />
 </head>
@@ -97,16 +53,7 @@
         <div class="dashboard-sidebar-inner glass-shell aurora-card active-glow beam-target">
           <div class="dashboard-sidebar-search">
             <div class="dashboard-search-shell input-shell aurora-card active-glow beam-target">
-              <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
-                <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
-              </svg>
-              <input
-                type="search"
-                class="dashboard-search-input input"
-                id="dashboardSearch"
-                placeholder="Search companies, users, leads, jobs..."
-                aria-label="Search dashboard"
-              />
+              <input type="search" class="dashboard-search-input input" id="dashboardSearch" placeholder="Search companies, users, leads, jobs..." aria-label="Search dashboard" />
             </div>
           </div>
 
@@ -116,40 +63,19 @@
           </div>
 
           <nav class="dashboard-sidebar-nav" aria-label="Dashboard sections">
-            <a href="#overviewSection" class="dashboard-nav-link active aurora-card beam-target">
-              <span class="dashboard-nav-icon">◉</span>
-              <span>Overview</span>
-            </a>
-            <a href="#kpiSection" class="dashboard-nav-link aurora-card beam-target">
-              <span class="dashboard-nav-icon">◎</span>
-              <span>KPI Board</span>
-            </a>
-            <a href="#companiesSection" class="dashboard-nav-link aurora-card beam-target">
-              <span class="dashboard-nav-icon">◌</span>
-              <span>Companies</span>
-            </a>
-            <a href="#usersSection" class="dashboard-nav-link aurora-card beam-target">
-              <span class="dashboard-nav-icon">◍</span>
-              <span>Users</span>
-            </a>
-            <a href="#pipelineSection" class="dashboard-nav-link aurora-card beam-target">
-              <span class="dashboard-nav-icon">◒</span>
-              <span>Pipeline</span>
-            </a>
-            <a href="#operationsSection" class="dashboard-nav-link aurora-card beam-target">
-              <span class="dashboard-nav-icon">◈</span>
-              <span>Operations</span>
-            </a>
-            <a href="#activitySection" class="dashboard-nav-link aurora-card beam-target">
-              <span class="dashboard-nav-icon">◐</span>
-              <span>Activity</span>
-            </a>
+            <a href="#overviewSection" class="dashboard-nav-link active aurora-card beam-target"><span class="dashboard-nav-icon">◉</span><span>Overview</span></a>
+            <a href="#kpiSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon">◎</span><span>KPI Board</span></a>
+            <a href="#companiesSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon">◌</span><span>Companies</span></a>
+            <a href="#usersSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon">◍</span><span>Users</span></a>
+            <a href="#pipelineSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon">◒</span><span>Pipeline</span></a>
+            <a href="#operationsSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon">◈</span><span>Operations</span></a>
+            <a href="#activitySection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon">◐</span><span>Activity</span></a>
           </nav>
 
           <div class="dashboard-sidebar-foot glass-card aurora-card active-glow beam-target">
             <div class="dashboard-sidebar-foot-copy">
               <strong>System Health</strong>
-              <span>One premium operating system for subsidiaries, teams, customers, leads, and jobs.</span>
+              <span>One operating system for subsidiaries, teams, customers, leads, and jobs.</span>
             </div>
             <a href="/companies.html" class="btn btn-theme-primary beam-target">Open Companies</a>
           </div>
@@ -161,10 +87,7 @@
           <div class="dashboard-hero-copy">
             <p class="dashboard-eyebrow">OWNER DASHBOARD</p>
             <h1>Run the ecosystem like a premium operating system.</h1>
-            <p class="dashboard-hero-text">
-              Watch subsidiaries, users, leads, jobs, approvals, and recent movement from one Apple-like command center built for Evaraos Inc.
-            </p>
-
+            <p class="dashboard-hero-text">Watch subsidiaries, users, leads, jobs, approvals, and recent movement from one command center built for Evaraos Inc.</p>
             <div class="dashboard-hero-actions">
               <a href="/companies.html" class="btn btn-theme-primary beam-target">Manage Companies</a>
               <a href="/leads.html" class="btn btn-theme-secondary beam-target">Open Leads</a>
@@ -173,168 +96,49 @@
           </div>
 
           <div class="dashboard-hero-panel glass-card aurora-card active-glow beam-target">
-            <div class="dashboard-hero-panel-top">
-              <span class="dashboard-mini-badge">Live Platform</span>
-              <span class="dashboard-live-dot"></span>
-            </div>
-
-            <div class="dashboard-hero-logo-wrap">
-              <img
-                src="/assets/img/evaraos_logo.png"
-                alt="Evaraos"
-                class="dashboard-hero-logo"
-                loading="eager"
-                decoding="async"
-                fetchpriority="high"
-              />
-            </div>
-
-            <div class="dashboard-hero-panel-copy">
-              <strong id="heroStatusTitle">Workspace ready</strong>
-              <span id="heroStatusText">Dashboard is open. Live records are syncing in the background.</span>
-            </div>
+            <div class="dashboard-hero-panel-top"><span class="dashboard-mini-badge">Live Platform</span><span class="dashboard-live-dot"></span></div>
+            <div class="dashboard-hero-logo-wrap"><img src="/assets/img/evaraos_logo.png" alt="Evaraos" class="dashboard-hero-logo" loading="eager" decoding="async" fetchpriority="high" /></div>
+            <div class="dashboard-hero-panel-copy"><strong id="heroStatusTitle">Workspace ready</strong><span id="heroStatusText">Dashboard is open. Live records are syncing in the background.</span></div>
           </div>
         </section>
 
         <section class="dashboard-overview glass-card aurora-card active-glow beam-target" id="kpiSection">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Snapshot</p>
-              <h2>Executive KPI Board</h2>
-            </div>
-            <a href="/settings.html" class="btn btn-theme-secondary beam-target">Open Settings</a>
-          </div>
-
+          <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Snapshot</p><h2>Executive KPI Board</h2></div><a href="/settings.html" class="btn btn-theme-secondary beam-target">Open Settings</a></div>
           <div class="dashboard-stats-grid">
-            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
-              <p>Active Companies</p>
-              <h3 id="statCompanies">0</h3>
-              <span id="statCompaniesMeta">Syncing in background</span>
-            </article>
-
-            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
-              <p>Total Users</p>
-              <h3 id="statUsers">0</h3>
-              <span id="statUsersMeta">Syncing in background</span>
-            </article>
-
-            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
-              <p>Open Leads</p>
-              <h3 id="statLeads">0</h3>
-              <span id="statLeadsMeta">Syncing in background</span>
-            </article>
-
-            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
-              <p>Jobs</p>
-              <h3 id="statJobs">0</h3>
-              <span id="statJobsMeta">Syncing in background</span>
-            </article>
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target"><p>Active Companies</p><h3 id="statCompanies">0</h3><span id="statCompaniesMeta">Syncing in background</span></article>
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target"><p>Total Users</p><h3 id="statUsers">0</h3><span id="statUsersMeta">Syncing in background</span></article>
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target"><p>Open Leads</p><h3 id="statLeads">0</h3><span id="statLeadsMeta">Syncing in background</span></article>
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target"><p>Jobs</p><h3 id="statJobs">0</h3><span id="statJobsMeta">Syncing in background</span></article>
           </div>
         </section>
 
         <section class="dashboard-grid-2">
           <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="companiesSection">
-            <div class="dashboard-section-head">
-              <div>
-                <p class="dashboard-section-kicker">Subsidiaries</p>
-                <h2>Company Health</h2>
-              </div>
-              <a href="/companies.html" class="dashboard-inline-link">View all</a>
-            </div>
-
-            <div class="dashboard-list" id="companiesList">
-              <article class="dashboard-list-item glass-card aurora-card active-glow beam-target">
-                <div>
-                  <strong>Company health is syncing</strong>
-                  <span>Your dashboard is visible first. Firestore records load after first paint.</span>
-                </div>
-                <span class="dashboard-status-pill working">Syncing</span>
-              </article>
-            </div>
+            <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Subsidiaries</p><h2>Company Health</h2></div><a href="/companies.html" class="dashboard-inline-link">View all</a></div>
+            <div class="dashboard-list" id="companiesList"><article class="dashboard-list-item glass-card aurora-card active-glow beam-target"><div><strong>Company health is syncing</strong><span>Your dashboard is visible first. Firestore records load after first paint.</span></div><span class="dashboard-status-pill working">Syncing</span></article></div>
           </section>
 
           <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="usersSection">
-            <div class="dashboard-section-head">
-              <div>
-                <p class="dashboard-section-kicker">Access</p>
-                <h2>User Roles</h2>
-              </div>
-              <a href="/users.html" class="dashboard-inline-link">Manage</a>
-            </div>
-
-            <div class="dashboard-role-grid" id="usersRoleGrid">
-              <article class="dashboard-role-card glass-card aurora-card active-glow beam-target">
-                <div>
-                  <strong>Role board is syncing</strong>
-                  <span>User role totals load in the background.</span>
-                </div>
-                <span class="dashboard-status-pill working">Syncing</span>
-              </article>
-            </div>
+            <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Access</p><h2>User Roles</h2></div><a href="/users.html" class="dashboard-inline-link">Manage</a></div>
+            <div class="dashboard-role-grid" id="usersRoleGrid"><article class="dashboard-role-card glass-card aurora-card active-glow beam-target"><div><strong>Role board is syncing</strong><span>User role totals load in the background.</span></div><span class="dashboard-status-pill working">Syncing</span></article></div>
           </section>
         </section>
 
         <section class="dashboard-grid-2" id="pipelineSection">
           <section class="dashboard-panel glass-card aurora-card active-glow beam-target">
-            <div class="dashboard-section-head">
-              <div>
-                <p class="dashboard-section-kicker">Pipeline</p>
-                <h2>Lead Flow</h2>
-              </div>
-              <a href="/leads.html" class="dashboard-inline-link">Review queue</a>
-            </div>
-
-            <div class="dashboard-progress-stack" id="leadFlowStack">
-              <div class="dashboard-progress-row glass-card aurora-card active-glow beam-target">
-                <div class="dashboard-progress-copy">
-                  <strong>Lead flow is syncing</strong>
-                  <span>Pipeline counts will appear automatically.</span>
-                </div>
-                <div class="dashboard-progress-bar">
-                  <span style="width: 20%;"></span>
-                </div>
-              </div>
-            </div>
+            <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Pipeline</p><h2>Lead Flow</h2></div><a href="/leads.html" class="dashboard-inline-link">Review queue</a></div>
+            <div class="dashboard-progress-stack" id="leadFlowStack"><div class="dashboard-progress-row glass-card aurora-card active-glow beam-target"><div class="dashboard-progress-copy"><strong>Lead flow is syncing</strong><span>Pipeline counts will appear automatically.</span></div><div class="dashboard-progress-bar"><span style="width: 20%;"></span></div></div></div>
           </section>
 
           <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="operationsSection">
-            <div class="dashboard-section-head">
-              <div>
-                <p class="dashboard-section-kicker">Execution</p>
-                <h2>Jobs In Motion</h2>
-              </div>
-              <a href="/jobs.html" class="dashboard-inline-link">Open jobs</a>
-            </div>
-
-            <div class="dashboard-list" id="jobsList">
-              <article class="dashboard-list-item glass-card aurora-card active-glow beam-target">
-                <div>
-                  <strong>Jobs are syncing</strong>
-                  <span>Operations data will appear automatically.</span>
-                </div>
-                <span class="dashboard-status-pill working">Syncing</span>
-              </article>
-            </div>
+            <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Execution</p><h2>Jobs In Motion</h2></div><a href="/jobs.html" class="dashboard-inline-link">Open jobs</a></div>
+            <div class="dashboard-list" id="jobsList"><article class="dashboard-list-item glass-card aurora-card active-glow beam-target"><div><strong>Jobs are syncing</strong><span>Operations data will appear automatically.</span></div><span class="dashboard-status-pill working">Syncing</span></article></div>
           </section>
         </section>
 
         <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="activitySection">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Activity</p>
-              <h2>Recent Platform Events</h2>
-            </div>
-          </div>
-
-          <div class="dashboard-feed" id="activityFeed">
-            <article class="dashboard-feed-item glass-card aurora-card active-glow beam-target">
-              <div>
-                <strong>Activity is syncing</strong>
-                <span>Recent platform activity loads without blocking the dashboard.</span>
-              </div>
-              <span class="dashboard-status-pill working">Syncing</span>
-            </article>
-          </div>
+          <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Activity</p><h2>Recent Platform Events</h2></div></div>
+          <div class="dashboard-feed" id="activityFeed"><article class="dashboard-feed-item glass-card aurora-card active-glow beam-target"><div><strong>Activity is syncing</strong><span>Recent platform activity loads without blocking the dashboard.</span></div><span class="dashboard-status-pill working">Syncing</span></article></div>
         </section>
       </main>
     </div>
@@ -345,11 +149,7 @@
   <script type="module" src="/assets/js/theme.js?v=37"></script>
   <script src="/assets/js/theme-css-loader.js?v=1"></script>
   <script type="module" src="/assets/js/route-guard.js?v=35"></script>
-  <script type="module" src="/assets/js/nav.js?v=unified-20260505"></script>
+  <script type="module" src="/assets/js/nav.js?v=image2-nav-20260517c"></script>
   <script type="module" src="/assets/js/dashboard.js?v=2"></script>
-
-<!-- EVARAOS BOTTOM DOT NAV + ABOVE DROPDOWN TUNE -->
-<!-- /EVARAOS BOTTOM DOT NAV + ABOVE DROPDOWN TUNE -->
-
 </body>
 </html>
