@@ -1,5 +1,3 @@
-import { NAV_PAGES } from "./nav-config.js";
-
 export function getMount() {
   return document.getElementById("universalNavRoot") || document.getElementById("universalNav");
 }
@@ -9,18 +7,17 @@ export function getBasePath() {
   const segments = path.split("/").filter(Boolean);
   const last = segments[segments.length - 1] || "";
   const isFile = /\.[a-z0-9]+$/i.test(last);
-
   if (!segments.length || isFile) return "";
   return `/${segments.join("/")}`;
 }
 
 export function buildHref(page) {
-  const base = getBasePath();
-  return `${base}/${page}`;
+  const normalized = String(page || "index.html").replace(/^\//, "");
+  return `/${normalized}`;
 }
 
 export function normalizePage(path) {
-  return path.split("/").pop() || "index.html";
+  return String(path || "").split("/").pop() || "index.html";
 }
 
 export function isCurrentPage(path) {
@@ -41,16 +38,30 @@ export function getStoredUser() {
 export function isPrivateRoutePending() {
   const mode = document.body?.dataset?.routeGuard || "";
   const path = window.location.pathname || "";
-  const privatePage = mode === "private" || path.includes("/dashboard.html") || path.includes("/companies.html") || path.includes("/users.html") || path.includes("/leads.html") || path.includes("/jobs.html") || path.includes("/qa.html") || path.includes("/settings.html") || path.includes("/settings/");
-  const authResolving = document.documentElement.classList.contains("auth-pending") || document.body?.classList.contains("auth-pending") || document.body?.classList.contains("app-loading");
+  const privatePage = mode === "private" || [
+    "/dashboard.html",
+    "/customer_dashboard.html",
+    "/companies.html",
+    "/users.html",
+    "/leads.html",
+    "/jobs.html",
+    "/qa.html",
+    "/settings.html",
+    "/applications.html",
+    "/org.html"
+  ].some((page) => path.includes(page)) || path.includes("/settings/");
+
+  const authResolving = document.documentElement.classList.contains("auth-pending") ||
+    document.body?.classList.contains("auth-pending") ||
+    document.body?.classList.contains("app-loading");
+
   return privatePage && authResolving;
 }
 
 export function isAuthenticated() {
   const user = getStoredUser();
   if (user && (user.uid || user.email)) return true;
-  if (isPrivateRoutePending()) return true;
-  return false;
+  return isPrivateRoutePending();
 }
 
 export function getRole() {
@@ -78,11 +89,11 @@ export function getAppearanceTheme() {
   } catch {}
 
   const docTheme = document.documentElement.getAttribute("data-theme");
-  return docTheme === "light" ? "light" : "dark";
+  return docTheme === "dark" ? "dark" : "light";
 }
 
 export function setTheme(theme) {
-  const safe = theme === "light" ? "light" : "dark";
+  const safe = theme === "dark" ? "dark" : "light";
   document.documentElement.setAttribute("data-theme", safe);
   syncThemeLabel();
 }
@@ -100,25 +111,17 @@ export function forcePageVisible() {
 }
 
 export function getVisibleLinks() {
-  const role = getRole();
-  const authed = isAuthenticated();
-
-  const main = authed ? [...NAV_PAGES.common, ...NAV_PAGES.authedMain, ...(role === "owner" ? NAV_PAGES.ownerOnly : [])] : [...NAV_PAGES.common, ...NAV_PAGES.guestMain];
-  const quick = authed ? [
-    { page: "dashboard.html", label: "Dashboard", icon: "dashboard", bubble: "dashboard" },
-    { page: "settings.html", label: "Settings", icon: "settings", bubble: "settings" },
-    { page: "index.html", label: "Home", icon: "home", bubble: "home" }
-  ] : [
-    { page: "login.html", label: "Login", icon: "login", bubble: "login" },
-    { page: "signup.html", label: "Sign Up", icon: "signup", bubble: "signup" },
-    { page: "index.html", label: "Home", icon: "home", bubble: "home" }
-  ];
-
-  return { main, quick, authed, role, displayName: getDisplayName() };
+  return {
+    authed: isAuthenticated(),
+    role: getRole(),
+    displayName: getDisplayName()
+  };
 }
 
 export function navHaptic(ms = 8) {
-  try { if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") navigator.vibrate(ms); } catch {}
+  try {
+    if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") navigator.vibrate(ms);
+  } catch {}
 }
 
 export function getMenuZone() { return document.getElementById("evaMenuZone"); }
@@ -127,4 +130,4 @@ export function getMenuPanel() { return document.getElementById("evaMenuPanel");
 export function getNavShell() { return document.getElementById("evaNavShell"); }
 export function getBrandBlock() { return document.getElementById("evaBrandBlock"); }
 export function getNavPill() { return document.getElementById("evaNavPill"); }
-export function getQuickBubbles() { return document.getElementById("evaQuickBubbles"); }
+export function getQuickBubbles() { return null; }
