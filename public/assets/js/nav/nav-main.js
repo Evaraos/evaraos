@@ -1,47 +1,35 @@
-import { NAV_STATE } from "./nav-config.js";
+const NAV_BUILD = "image2-nav-20260517d";
 
-import {
+const { NAV_STATE } = await import(`./nav-config.js?v=${NAV_BUILD}`);
+
+const {
   getNavShell,
   setTheme,
   getAppearanceTheme,
   syncThemeLabel
-} from "./nav-utils.js";
+} = await import(`./nav-utils.js?v=${NAV_BUILD}`);
 
-import {
-  renderNav
-} from "./nav-render.js";
+const { renderNav } = await import(`./nav-render.js?v=${NAV_BUILD}`);
 
-import {
+const {
   applyProgress,
   atTopOfPage,
   bindScrollBehavior,
   animateNav
-} from "./nav-scroll.js";
+} = await import(`./nav-scroll.js?v=${NAV_BUILD}`);
 
-import {
-  bindMenu
-} from "./nav-menu.js";
+const { bindMenu } = await import(`./nav-menu.js?v=${NAV_BUILD}`);
+const { bindAllNavEvents } = await import(`./nav-events.js?v=${NAV_BUILD}`);
+const { bindRuntimeRefresh } = await import(`./nav-session.js?v=${NAV_BUILD}`);
+const { bindNavInteractions } = await import(`./nav-interactions.js?v=${NAV_BUILD}`);
 
-import {
-  bindAllNavEvents
-} from "./nav-events.js";
-
-import {
-  bindRuntimeRefresh
-} from "./nav-session.js";
-
-import {
-  bindNavInteractions
-} from "./nav-interactions.js";
-
-import {
+const {
   startNotificationsDropdown,
   stopNotificationsDropdown
-} from "../notifications-dropdown.js";
+} = await import(`../notifications-dropdown.js?v=${NAV_BUILD}`);
 
 function bootReadySignal() {
   if (NAV_STATE.hasBootAnimated) return;
-
   NAV_STATE.hasBootAnimated = true;
 
   requestAnimationFrame(() => {
@@ -72,8 +60,10 @@ function bindGlobalNotifications() {
 
 export function initNav() {
   if (NAV_STATE.hasInitialized) return;
-
   NAV_STATE.hasInitialized = true;
+
+  window.EVARAOS_NAV_BUILD = NAV_BUILD;
+  document.documentElement.dataset.evaraosNavBuild = NAV_BUILD;
 
   setTheme(getAppearanceTheme());
 
@@ -90,7 +80,7 @@ export function initNav() {
     shell.style.setProperty("--nav-progress", immediate.toFixed(4));
     shell.classList.toggle("expanded", immediate === 1);
     shell.classList.toggle("compact", immediate !== 1);
-    shell.dataset.navBuild = "unified-20260504";
+    shell.dataset.navBuild = NAV_BUILD;
   }
 
   applyProgress(immediate);
