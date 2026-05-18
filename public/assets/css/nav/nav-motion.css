@@ -1,9 +1,7 @@
 /* EVARAOS NAV MOTION
-   Motion is driven by --nav-progress from assets/js/nav/nav-scroll.js.
-   This file only owns page clearance and reduced-motion behavior. */
+   Image 2 runtime uses stable dock geometry. This file only owns page clearance and reduced-motion safety. */
 
 :root {
-  --eva-page-nav-clearance: 0px;
   --eva-page-nav-bottom-clearance: calc(122px + env(safe-area-inset-bottom, 0px));
   --eva-island-offset: max(10px, calc(env(safe-area-inset-bottom, 0px) + 10px));
 }
@@ -43,20 +41,18 @@ main.page-container,
   padding-bottom: var(--eva-page-nav-bottom-clearance) !important;
 }
 
-.eva-nav-shell,
-.eva-nav-pill,
-.eva-logo,
-.eva-brand,
-.eva-brand-copy,
-.eva-menu-zone {
-  will-change: transform, width, height, opacity;
+.eva-menu-panel,
+.eva-nav-pill {
+  will-change: transform, opacity;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .eva-nav-pill,
   .eva-menu-panel,
-  .eva-quick-bubbles,
-  .eva-quick-bubble {
+  .eva-control-row,
+  .eva-menu-top-block,
+  .eva-quick-strip a,
+  .eva-account-strip a {
     transition: none !important;
     animation: none !important;
   }
