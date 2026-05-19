@@ -10,7 +10,7 @@ import {
 
 import { APP_CATEGORIES, appsByCategory } from "../navigation/app-registry.js";
 
-const NAV_RENDER_BUILD = "nav-v1-control-center-ai-prompt";
+const NAV_RENDER_BUILD = "nav-v1-control-center-ai-prompt-no-duplicate-theme";
 
 const CATEGORY_LABELS = Object.freeze({
   operations: { title: "Operations", subtitle: "Field Ops, Dispatch, Jobs & More", icon: "▣" },
@@ -120,7 +120,7 @@ function accountSection(authed = false) {
       <div class="eva-account-strip">
         <a href="${buildHref("settings.html")}" data-menu-link="${buildHref("settings.html")}" data-label="profile" data-group="account" data-page="settings.html"><span>♙</span><strong>Profile</strong></a>
         <a href="${buildHref("settings.html")}" data-menu-link="${buildHref("settings.html")}" data-label="settings" data-group="account" data-page="settings.html"><span>⚙</span><strong>Settings</strong></a>
-        <button type="button" id="evaThemePillToggle" class="eva-account-action eva-theme-nav-btn" data-theme-label="true"><span class="eva-theme-nav-icon">◐</span><strong>Theme</strong></button>
+        <a href="${buildHref("settings.html")}" data-menu-link="${buildHref("settings.html")}" data-label="preferences" data-group="account" data-page="settings.html"><span>☷</span><strong>Preferences</strong></a>
         <a href="${buildHref("settings.html")}" data-menu-link="${buildHref("settings.html")}" data-label="security" data-group="account" data-page="settings.html"><span>♢</span><strong>Security</strong></a>
         <a href="#logout" id="evaLogoutBtn" data-action="logout" data-label="logout" data-group="account" data-page="logout"><span>⇥</span><strong>Logout</strong></a>
       </div>
@@ -132,11 +132,10 @@ function accessSection() {
   return `
     <section class="eva-menu-top-block eva-account-tools-block" data-nav-section="Access">
       <div class="eva-top-block-head"><span class="eva-top-block-icon">◌</span><div><p>ACCESS</p><h3>Authentication & onboarding</h3></div><span class="eva-top-block-arrow">›</span></div>
-      <div class="eva-account-strip">
+      <div class="eva-account-strip eva-access-strip">
         <a href="${buildHref("login.html")}" data-menu-link="${buildHref("login.html")}" data-label="login" data-group="access" data-page="login.html"><span>⇥</span><strong>Login</strong></a>
         <a href="${buildHref("signup.html")}" data-menu-link="${buildHref("signup.html")}" data-label="signup" data-group="access" data-page="signup.html"><span>＋</span><strong>Signup</strong></a>
         <a href="${buildHref("staff_application.html")}" data-menu-link="${buildHref("staff_application.html")}" data-label="apply" data-group="access" data-page="staff_application.html"><span>◐</span><strong>Apply</strong></a>
-        <button type="button" id="evaThemePillToggle" class="eva-account-action eva-theme-nav-btn" data-theme-label="true"><span class="eva-theme-nav-icon">◐</span><strong>Theme</strong></button>
       </div>
     </section>
   `;
@@ -158,7 +157,7 @@ export function renderNav() {
             <div class="eva-brand-copy"><strong>Evaraos Inc</strong><span>Subsidiaries Allocation SaaS</span></div>
           </div>
           <div class="eva-menu-zone" id="evaMenuZone">
-            <button class="eva-nav-action-btn eva-theme-nav-btn" type="button" id="evaThemeToggle" aria-label="Toggle light or dark mode"><span class="eva-theme-nav-icon" aria-hidden="true">◐</span></button>
+            <button class="eva-nav-action-btn eva-theme-nav-btn" type="button" id="evaThemeToggle" data-theme-label="true" aria-label="Toggle light or dark mode"><span class="eva-theme-nav-icon" aria-hidden="true">◐</span></button>
             <button class="eva-nav-action-btn eva-nav-bell-btn" type="button" id="evaNotificationsBtn" aria-label="Open notifications"><span aria-hidden="true">♧</span></button>
             <button class="eva-nav-action-btn eva-menu-btn" type="button" id="evaMenuBtn" aria-expanded="false" aria-label="Open menu">
               <span class="eva-burger" aria-hidden="true"><span class="eva-burger-line"></span><span class="eva-burger-line"></span><span class="eva-burger-line"></span></span>
