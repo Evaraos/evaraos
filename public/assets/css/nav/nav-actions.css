@@ -1,5 +1,5 @@
 /* EVARAOS NAV ACTIONS
-   nav-v1 controls: theme, notifications, animated hamburger/menu close.
+   nav-v1 bottom island controls: theme + animated menu only.
 */
 
 .eva-menu-zone {
@@ -16,8 +16,7 @@
 .eva-nav-action-btn,
 #evaMenuBtn,
 .eva-menu-btn,
-.eva-theme-nav-btn,
-.eva-nav-bell-btn {
+.eva-theme-nav-btn {
   width: 50px;
   height: 50px;
   min-width: 50px;
@@ -43,8 +42,7 @@
 html[data-theme="dark"] .eva-nav-action-btn,
 html[data-theme="dark"] #evaMenuBtn,
 html[data-theme="dark"] .eva-menu-btn,
-html[data-theme="dark"] .eva-theme-nav-btn,
-html[data-theme="dark"] .eva-nav-bell-btn {
+html[data-theme="dark"] .eva-theme-nav-btn {
   color: #f8fbff;
   background: rgba(255,255,255,0.075);
   border-color: rgba(255,255,255,0.12);
@@ -54,8 +52,7 @@ html[data-theme="dark"] .eva-nav-bell-btn {
 .eva-nav-action-btn:hover,
 #evaMenuBtn:hover,
 .eva-menu-btn:hover,
-.eva-theme-nav-btn:hover,
-.eva-nav-bell-btn:hover {
+.eva-theme-nav-btn:hover {
   transform: translateY(-1px);
   background: rgba(255,255,255,0.82);
   border-color: rgba(96,165,250,0.32);
@@ -64,16 +61,14 @@ html[data-theme="dark"] .eva-nav-bell-btn {
 html[data-theme="dark"] .eva-nav-action-btn:hover,
 html[data-theme="dark"] #evaMenuBtn:hover,
 html[data-theme="dark"] .eva-menu-btn:hover,
-html[data-theme="dark"] .eva-theme-nav-btn:hover,
-html[data-theme="dark"] .eva-nav-bell-btn:hover {
+html[data-theme="dark"] .eva-theme-nav-btn:hover {
   background: rgba(255,255,255,0.14);
 }
 
 .eva-nav-action-btn:active,
 #evaMenuBtn:active,
 .eva-menu-btn:active,
-.eva-theme-nav-btn:active,
-.eva-nav-bell-btn:active {
+.eva-theme-nav-btn:active {
   transform: scale(.96);
 }
 
@@ -84,9 +79,7 @@ html[data-theme="dark"] .eva-nav-bell-btn:hover {
 .eva-menu-btn::before,
 .eva-menu-btn::after,
 .eva-theme-nav-btn::before,
-.eva-theme-nav-btn::after,
-.eva-nav-bell-btn::before,
-.eva-nav-bell-btn::after {
+.eva-theme-nav-btn::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -99,20 +92,17 @@ html[data-theme="dark"] .eva-nav-bell-btn:hover {
 .eva-nav-action-btn::before,
 #evaMenuBtn::before,
 .eva-menu-btn::before,
-.eva-theme-nav-btn::before,
-.eva-nav-bell-btn::before {
+.eva-theme-nav-btn::before {
   background: radial-gradient(circle at 35% 20%, rgba(255,255,255,.65), transparent 38%);
 }
 
 .eva-nav-action-btn:hover::before,
 #evaMenuBtn:hover::before,
 .eva-menu-btn:hover::before,
-.eva-theme-nav-btn:hover::before,
-.eva-nav-bell-btn:hover::before {
+.eva-theme-nav-btn:hover::before {
   opacity: .9;
 }
 
-.eva-nav-bell-btn span,
 .eva-theme-nav-icon {
   display: grid;
   place-items: center;
@@ -205,8 +195,7 @@ html[data-theme="dark"] .eva-account-action {
   .eva-nav-action-btn,
   #evaMenuBtn,
   .eva-menu-btn,
-  .eva-theme-nav-btn,
-  .eva-nav-bell-btn {
+  .eva-theme-nav-btn {
     width: 46px;
     height: 46px;
     min-width: 46px;
@@ -218,8 +207,7 @@ html[data-theme="dark"] .eva-account-action {
   .eva-nav-action-btn,
   #evaMenuBtn,
   .eva-menu-btn,
-  .eva-theme-nav-btn,
-  .eva-nav-bell-btn {
+  .eva-theme-nav-btn {
     width: 42px;
     height: 42px;
     min-width: 42px;
