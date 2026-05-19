@@ -95,13 +95,27 @@ export function getAppearanceTheme() {
 export function setTheme(theme) {
   const safe = theme === "dark" ? "dark" : "light";
   document.documentElement.setAttribute("data-theme", safe);
+  document.documentElement.style.colorScheme = safe;
   syncThemeLabel();
 }
 
 export function syncThemeLabel() {
-  const label = document.querySelector("[data-theme-label]");
-  if (!label) return;
-  label.textContent = getAppearanceTheme() === "light" ? "Light mode" : "Dark mode";
+  const mode = getAppearanceTheme();
+  const text = mode === "light" ? "Light mode" : "Dark mode";
+  const icon = mode === "light" ? "☀" : "☾";
+
+  document.querySelectorAll("[data-theme-label]").forEach((node) => {
+    const labelNode = node.querySelector?.("[data-theme-text]");
+    const iconNode = node.querySelector?.(".eva-theme-nav-icon");
+
+    if (labelNode) labelNode.textContent = text;
+    else if (!node.children.length) node.textContent = text;
+
+    if (iconNode) iconNode.textContent = icon;
+
+    node.setAttribute("aria-label", `Switch theme. Current: ${text}`);
+    node.dataset.themeMode = mode;
+  });
 }
 
 export function forcePageVisible() {
