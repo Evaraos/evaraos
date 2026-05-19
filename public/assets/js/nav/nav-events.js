@@ -120,7 +120,7 @@ export function bindLinks() {
 
 async function toggleThemeFromEngine() {
   try {
-    const themeModule = await import("../theme.js?v=37");
+    const themeModule = await import("../theme.js?v=38");
     const appearance = themeModule.toggleTheme?.();
     const mode = appearance?.mode || themeModule.getTheme?.() || getAppearanceTheme();
     setTheme(mode);
@@ -188,7 +188,7 @@ function renderSearchResults(root, items = [], query = "") {
   }
 
   if (!items.length) {
-    root.innerHTML = '<div class="eva-search-empty">Press Enter to ask Evaraos AI.</div>';
+    root.innerHTML = '<div class="eva-search-empty">Tap Send to ask Evaraos AI.</div>';
     root.classList.add("active");
     return;
   }
@@ -232,9 +232,74 @@ async function askAiCommand(prompt, resultsRoot) {
   renderAiMessage(resultsRoot, data.message || "Evaraos AI received your command.", data.mode || "ai");
 }
 
+async function runAiPrompt(input, resultsRoot) {
+  const prompt = input?.value?.trim() || "";
+  if (!prompt) {
+    renderAiMessage(resultsRoot, "Type or speak a command first.", "error");
+    input?.focus?.();
+    return;
+  }
+
+  const href = resultsRoot?.querySelector("[data-search-link]")?.getAttribute("data-search-link");
+  if (href) {
+    openNavHref(href, { title: "Opening result", subtitle: "Launching your selected Evaraos app." });
+    return;
+  }
+
+  try {
+    await askAiCommand(prompt, resultsRoot);
+  } catch (error) {
+    console.warn("Evaraos AI command failed:", error);
+    renderAiMessage(resultsRoot, "Evaraos AI could not connect yet. Check Functions/App Check logs if this continues.", "error");
+  }
+}
+
+function bindSpeech(input, resultsRoot) {
+  const mic = document.getElementById("evaAiMicBtn");
+  if (!mic || mic.dataset.micBound === "true") return;
+  mic.dataset.micBound = "true";
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    mic.setAttribute("aria-disabled", "true");
+    mic.title = "Speech input is not supported in this browser.";
+    return;
+  }
+
+  mic.addEventListener("click", (event) => {
+    stopEvent(event);
+    const recognition = new SpeechRecognition();
+    recognition.lang = navigator.language || "en-US";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    mic.dataset.listening = "true";
+    renderAiMessage(resultsRoot, "Listening...", "loading");
+
+    recognition.onresult = (speechEvent) => {
+      const transcript = speechEvent.results?.[0]?.[0]?.transcript || "";
+      input.value = transcript;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      mic.dataset.listening = "false";
+    };
+
+    recognition.onerror = () => {
+      mic.dataset.listening = "false";
+      renderAiMessage(resultsRoot, "Speech input was not available. Type your command instead.", "error");
+    };
+
+    recognition.onend = () => {
+      mic.dataset.listening = "false";
+    };
+
+    recognition.start();
+  });
+}
+
 export function bindSearch() {
   const input = document.getElementById("evaSearchInput");
   const resultsRoot = document.getElementById("evaSearchResults");
+  const form = document.getElementById("evaAiPromptForm");
+  const sendBtn = document.getElementById("evaAiSendBtn");
   if (!input || input.dataset.searchBound === "true") return;
   input.dataset.searchBound = "true";
 
@@ -253,24 +318,21 @@ export function bindSearch() {
   input.addEventListener("focus", applySearch);
   input.addEventListener("keydown", async (event) => {
     if (event.key !== "Enter") return;
-    const prompt = input.value.trim();
-    if (!prompt) return;
-    const href = resultsRoot?.querySelector("[data-search-link]")?.getAttribute("data-search-link");
-
     stopEvent(event);
-
-    if (href) {
-      openNavHref(href, { title: "Opening result", subtitle: "Launching your selected Evaraos app." });
-      return;
-    }
-
-    try {
-      await askAiCommand(prompt, resultsRoot);
-    } catch (error) {
-      console.warn("Evaraos AI command failed:", error);
-      renderAiMessage(resultsRoot, "Evaraos AI could not connect yet. Make sure Functions are deployed and App Check is configured.", "error");
-    }
+    await runAiPrompt(input, resultsRoot);
   });
+
+  form?.addEventListener("submit", async (event) => {
+    stopEvent(event);
+    await runAiPrompt(input, resultsRoot);
+  });
+
+  sendBtn?.addEventListener("click", async (event) => {
+    stopEvent(event);
+    await runAiPrompt(input, resultsRoot);
+  });
+
+  bindSpeech(input, resultsRoot);
 
   resultsRoot?.addEventListener("click", (event) => {
     const button = event.target.closest("[data-search-link]");
