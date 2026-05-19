@@ -1,5 +1,6 @@
 /* EVARAOS CONTROL CENTER NAV
-   Image 2 dropdown: grouped rows, account tools, bottom command search. */
+   nav-v1 dropdown: compact grouped rows, account tools, and AI command prompt.
+*/
 
 body.nav-menu-open {
   overflow: hidden;
@@ -56,10 +57,10 @@ html[data-theme="dark"] .eva-menu-panel {
 .eva-menu-top-block,
 .eva-menu-search-bottom {
   position: relative;
-  border-radius: 24px;
-  border: 1px solid rgba(148,163,184,0.22);
+  border-radius: 26px;
+  border: 1px solid rgba(148,163,184,0.20);
   background: rgba(255,255,255,0.62);
-  box-shadow: 0 12px 28px rgba(15,23,42,0.07), inset 0 1px 0 rgba(255,255,255,0.68);
+  box-shadow: 0 12px 28px rgba(15,23,42,0.07), inset 0 1px 0 rgba(255,255,255,0.78);
   overflow: hidden;
 }
 
@@ -75,21 +76,22 @@ html[data-theme="dark"] .eva-menu-search-bottom {
   grid-template-columns: 54px 1fr auto;
   align-items: center;
   gap: 14px;
-  padding: 14px;
+  padding: 14px 14px 10px;
 }
 
 .eva-top-block-icon,
 .eva-control-row-icon {
   width: 54px;
   height: 54px;
-  border-radius: 18px;
+  border-radius: 19px;
   display: grid;
   place-items: center;
-  font-size: 1.45rem;
+  font-size: 1.42rem;
   font-weight: 950;
   color: #2563eb;
   background: linear-gradient(145deg, rgba(59,130,246,0.24), rgba(37,99,235,0.11));
   border: 1px solid rgba(59,130,246,0.28);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.46), 0 10px 24px rgba(37,99,235,0.12);
 }
 
 .eva-top-block-head p,
@@ -97,16 +99,16 @@ html[data-theme="dark"] .eva-menu-search-bottom {
   margin: 0 0 4px;
   font-size: 0.72rem;
   font-weight: 950;
-  letter-spacing: 0.20em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: rgba(15,23,42,0.58);
 }
 
 .eva-top-block-head h3 {
   margin: 0;
-  font-size: 0.98rem;
-  font-weight: 900;
-  letter-spacing: -0.03em;
+  font-size: 1.05rem;
+  font-weight: 950;
+  letter-spacing: -0.04em;
   color: #0f172a;
 }
 
@@ -119,10 +121,12 @@ html[data-theme="dark"] .eva-top-block-head h3 {
   color: #f8fbff;
 }
 
-.eva-top-block-arrow {
-  font-size: 1.95rem;
+.eva-top-block-arrow,
+.eva-control-row-arrow {
+  font-size: 2rem;
   line-height: 1;
   opacity: 0.72;
+  font-weight: 850;
 }
 
 .eva-quick-strip,
@@ -130,13 +134,12 @@ html[data-theme="dark"] .eva-top-block-head h3 {
   display: grid;
   gap: 8px;
   padding: 0 14px 14px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
-.eva-quick-strip { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-.eva-account-strip { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-
 .eva-quick-strip a,
-.eva-account-strip a {
+.eva-account-strip a,
+.eva-account-action {
   min-height: 74px;
   display: grid;
   place-items: center;
@@ -147,24 +150,29 @@ html[data-theme="dark"] .eva-top-block-head h3 {
   border-radius: 18px;
   background: rgba(255,255,255,0.48);
   border: 1px solid rgba(148,163,184,0.18);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.64);
 }
 
 html[data-theme="dark"] .eva-quick-strip a,
-html[data-theme="dark"] .eva-account-strip a {
+html[data-theme="dark"] .eva-account-strip a,
+html[data-theme="dark"] .eva-account-action {
   background: rgba(255,255,255,0.05);
   border-color: rgba(255,255,255,0.08);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
 }
 
 .eva-quick-strip span,
-.eva-account-strip span {
-  font-size: 1.35rem;
+.eva-account-strip span,
+.eva-account-action span {
+  font-size: 1.28rem;
   line-height: 1;
 }
 
 .eva-quick-strip strong,
-.eva-account-strip strong {
-  font-size: 0.76rem;
-  font-weight: 900;
+.eva-account-strip strong,
+.eva-account-action strong {
+  font-size: 0.74rem;
+  font-weight: 950;
   letter-spacing: -0.02em;
 }
 
@@ -174,8 +182,8 @@ html[data-theme="dark"] .eva-account-strip a {
 }
 
 .eva-section-label {
-  padding: 4px 8px 0;
-  margin-top: 4px;
+  padding: 5px 8px 0;
+  margin-top: 3px;
 }
 
 .eva-control-row-stack {
@@ -185,12 +193,12 @@ html[data-theme="dark"] .eva-account-strip a {
 
 .eva-control-row {
   width: 100%;
-  min-height: 78px;
-  padding: 10px 12px;
+  min-height: 72px;
+  padding: 9px 12px;
   border: 0;
   border-radius: 22px;
   display: grid;
-  grid-template-columns: 58px minmax(0, 1fr) auto auto;
+  grid-template-columns: 54px minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 12px;
   text-align: left;
@@ -224,14 +232,14 @@ html[data-theme="dark"] .eva-control-row {
 }
 
 .eva-control-row-copy strong {
-  font-size: 1.02rem;
+  font-size: 1rem;
   font-weight: 950;
   letter-spacing: -0.03em;
   color: #0f172a;
 }
 
 .eva-control-row-copy small {
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 650;
   color: rgba(15,23,42,0.58);
   white-space: nowrap;
@@ -243,12 +251,12 @@ html[data-theme="dark"] .eva-control-row-copy strong { color: #f8fbff; }
 html[data-theme="dark"] .eva-control-row-copy small { color: rgba(226,232,240,0.64); }
 
 .eva-control-row-count {
-  min-width: 38px;
-  height: 38px;
+  min-width: 36px;
+  height: 36px;
   border-radius: 14px;
   display: grid;
   place-items: center;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   font-weight: 950;
   color: #111827;
   background: rgba(15,23,42,0.06);
@@ -261,13 +269,6 @@ html[data-theme="dark"] .eva-control-row-count {
   border-color: rgba(255,255,255,0.08);
 }
 
-.eva-control-row-arrow {
-  font-size: 2rem;
-  font-weight: 800;
-  opacity: 0.76;
-  line-height: 1;
-}
-
 .eva-folder-operations .eva-control-row-icon { color: #60a5fa; background: rgba(59,130,246,0.16); border-color: rgba(59,130,246,0.32); }
 .eva-folder-organizations .eva-control-row-icon { color: #8b5cf6; background: rgba(139,92,246,0.16); border-color: rgba(139,92,246,0.30); }
 .eva-folder-finance .eva-control-row-icon { color: #22c55e; background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.28); }
@@ -275,25 +276,55 @@ html[data-theme="dark"] .eva-control-row-count {
 .eva-folder-intelligence .eva-control-row-icon { color: #a855f7; background: rgba(168,85,247,0.16); border-color: rgba(168,85,247,0.30); }
 .eva-folder-system .eva-control-row-icon { color: #64748b; background: rgba(100,116,139,0.13); border-color: rgba(100,116,139,0.24); }
 
-.eva-folder-operations { border-color: rgba(59,130,246,0.24); }
-.eva-folder-organizations { border-color: rgba(139,92,246,0.24); }
-.eva-folder-finance { border-color: rgba(34,197,94,0.22); }
-.eva-folder-customer { border-color: rgba(245,158,11,0.24); }
-.eva-folder-intelligence { border-color: rgba(168,85,247,0.26); }
-.eva-folder-system { border-color: rgba(100,116,139,0.24); }
-
 .eva-menu-search-bottom {
   margin-top: 14px;
   padding: 14px;
   overflow: visible;
 }
 
-.eva-search-shell {
-  min-height: 62px;
+.eva-ai-prompt-head {
   display: grid;
-  grid-template-columns: 36px 1fr auto;
+  grid-template-columns: 44px 1fr;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.eva-ai-orb {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  font-size: .86rem;
+  font-weight: 950;
+  letter-spacing: -.03em;
+  color: #2563eb;
+  background: linear-gradient(145deg, rgba(59,130,246,.18), rgba(255,255,255,.36));
+  border: 1px solid rgba(59,130,246,.20);
+}
+
+.eva-ai-prompt-head strong {
+  display: block;
+  font-size: 1rem;
+  font-weight: 950;
+  letter-spacing: -.035em;
+}
+
+.eva-ai-prompt-head small {
+  display: block;
+  margin-top: 2px;
+  font-size: .76rem;
+  opacity: .64;
+  font-weight: 750;
+}
+
+.eva-search-shell {
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: 9px;
   padding: 0 12px;
   border-radius: 22px;
   background: rgba(255,255,255,0.58);
@@ -307,26 +338,26 @@ html[data-theme="dark"] .eva-search-shell {
   box-shadow: 0 0 0 1px rgba(59,130,246,0.14), 0 0 28px rgba(59,130,246,0.20);
 }
 
-.eva-search-icon { font-size: 1.65rem; opacity: 0.72; }
+.eva-search-icon { font-size: 1.42rem; opacity: 0.72; }
 
 .eva-search-shell input {
   width: 100%;
-  min-height: 58px;
+  min-height: 54px;
   padding: 0;
   border: 0;
   outline: 0;
   color: inherit;
   background: transparent;
   font: inherit;
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: .95rem;
+  font-weight: 780;
 }
 
 .eva-search-key {
   padding: 8px 11px;
-  border-radius: 12px;
+  border-radius: 13px;
   font-size: 0.82rem;
-  font-weight: 900;
+  font-weight: 950;
   color: rgba(15,23,42,0.60);
   background: rgba(15,23,42,0.06);
 }
@@ -339,8 +370,8 @@ html[data-theme="dark"] .eva-search-key {
 .eva-search-helper {
   margin: 12px 0 0;
   text-align: center;
-  font-size: 0.82rem;
-  font-weight: 800;
+  font-size: 0.78rem;
+  font-weight: 850;
   color: rgba(37,99,235,0.78);
 }
 
@@ -409,50 +440,44 @@ html[data-theme="dark"] .eva-search-result {
   }
 
   .eva-quick-strip a,
-  .eva-account-strip a {
+  .eva-account-strip a,
+  .eva-account-action {
     min-height: 66px;
     border-radius: 16px;
   }
 
   .eva-quick-strip span,
-  .eva-account-strip span { font-size: 1.22rem; }
+  .eva-account-strip span,
+  .eva-account-action span { font-size: 1.18rem; }
   .eva-quick-strip strong,
-  .eva-account-strip strong { font-size: 0.68rem; }
-  .eva-quick-strip small { font-size: 0.58rem; }
+  .eva-account-strip strong,
+  .eva-account-action strong { font-size: 0.66rem; }
 
-  .eva-top-block-head {
-    grid-template-columns: 50px 1fr auto;
-    gap: 12px;
-    padding: 12px;
+  .eva-control-row {
+    min-height: 68px;
+    grid-template-columns: 50px minmax(0, 1fr) auto auto;
+    border-radius: 20px;
   }
 
-  .eva-top-block-icon,
   .eva-control-row-icon {
     width: 50px;
     height: 50px;
-    border-radius: 16px;
+    border-radius: 17px;
   }
 
-  .eva-control-row {
-    min-height: 74px;
-    grid-template-columns: 54px minmax(0, 1fr) 36px auto;
-    gap: 10px;
+  .eva-search-shell {
+    min-height: 54px;
+    border-radius: 20px;
   }
 
-  .eva-control-row-copy small { font-size: 0.76rem; }
+  .eva-search-shell input {
+    min-height: 50px;
+    font-size: .9rem;
+  }
 }
 
 @media (max-width: 390px) {
+  .eva-menu-panel { width: calc(100vw - 10px); padding: 12px; }
   .eva-quick-strip,
-  .eva-account-strip {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .eva-menu-panel,
-  .eva-control-row,
-  .eva-search-result {
-    transition: none;
-  }
+  .eva-account-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
