@@ -14,6 +14,8 @@ const ROUTES = {
   dashboard: "./dashboard.html"
 };
 
+const AUTH_WAIT_TIMEOUT_MS = 4500;
+
 const OWNER_ROLES = new Set(["owner", "super_admin", "admin"]);
 const OPS_ROLES = new Set([
   "owner",
@@ -187,9 +189,24 @@ function waitForVerifiedFirebaseUser() {
   if (auth.currentUser) return Promise.resolve(auth.currentUser);
 
   return new Promise((resolve) => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      unsubscribe?.();
+    let settled = false;
+    let unsubscribe = null;
+
+    const finish = (user = null) => {
+      if (settled) return;
+      settled = true;
+      try { unsubscribe?.(); } catch {}
       resolve(user || null);
+    };
+
+    const timer = setTimeout(() => {
+      console.warn("Firebase auth wait timed out. Continuing safely.");
+      finish(auth.currentUser || null);
+    }, AUTH_WAIT_TIMEOUT_MS);
+
+    unsubscribe = onAuthStateChanged(auth, (user) => {
+      clearTimeout(timer);
+      finish(user || null);
     });
   });
 }
