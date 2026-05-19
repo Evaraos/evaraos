@@ -60,7 +60,9 @@ service cloud.firestore {
         'admin', 'Admin', 'ADMIN',
         'manager', 'Manager', 'MANAGER',
         'operations_manager', 'Operations Manager', 'OPERATIONS_MANAGER',
-        'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR'
+        'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR',
+        'hr', 'HR',
+        'hr_manager', 'HR Manager', 'HR_MANAGER'
       ];
     }
 
@@ -72,6 +74,11 @@ service cloud.firestore {
         'manager', 'Manager', 'MANAGER',
         'operations_manager', 'Operations Manager', 'OPERATIONS_MANAGER',
         'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR',
+        'field_manager', 'Field Manager', 'FIELD_MANAGER',
+        'sales_manager', 'Sales Manager', 'SALES_MANAGER',
+        'dispatcher', 'Dispatcher', 'DISPATCHER',
+        'hr', 'HR',
+        'hr_manager', 'HR Manager', 'HR_MANAGER',
         'sales', 'Sales', 'SALES',
         'sales_rep', 'Sales Rep', 'SALES_REP'
       ];
@@ -84,6 +91,9 @@ service cloud.firestore {
         'manager', 'Manager', 'MANAGER',
         'operations_manager', 'Operations Manager', 'OPERATIONS_MANAGER',
         'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR',
+        'field_manager', 'Field Manager', 'FIELD_MANAGER',
+        'dispatcher', 'Dispatcher', 'DISPATCHER',
+        'sales_manager', 'Sales Manager', 'SALES_MANAGER',
         'sales', 'Sales', 'SALES',
         'sales_rep', 'Sales Rep', 'SALES_REP'
       ];
@@ -96,21 +106,41 @@ service cloud.firestore {
         'manager', 'Manager', 'MANAGER',
         'operations_manager', 'Operations Manager', 'OPERATIONS_MANAGER',
         'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR',
+        'field_manager', 'Field Manager', 'FIELD_MANAGER',
+        'dispatcher', 'Dispatcher', 'DISPATCHER',
+        'quality_control', 'Quality Control', 'QUALITY_CONTROL',
         'technician', 'Technician', 'TECHNICIAN',
+        'lead_technician', 'Lead Technician', 'LEAD_TECHNICIAN',
         'cleaner', 'Cleaner', 'CLEANER',
+        'lead_cleaner', 'Lead Cleaner', 'LEAD_CLEANER',
         'staff', 'Staff', 'STAFF',
+        'field_staff', 'Field Staff', 'FIELD_STAFF',
+        'crew_lead', 'Crew Lead', 'CREW_LEAD',
         'sales', 'Sales', 'SALES',
-        'sales_rep', 'Sales Rep', 'SALES_REP'
+        'sales_rep', 'Sales Rep', 'SALES_REP',
+        'customer_support', 'Customer Support', 'CUSTOMER_SUPPORT'
       ];
     }
 
     function isStaffAssignableRole(roleValue) {
       return roleValue in [
+        'hr', 'HR',
+        'hr_manager', 'HR Manager', 'HR_MANAGER',
+        'operations_manager', 'Operations Manager', 'OPERATIONS_MANAGER',
+        'dispatcher', 'Dispatcher', 'DISPATCHER',
+        'field_manager', 'Field Manager', 'FIELD_MANAGER',
+        'sales_manager', 'Sales Manager', 'SALES_MANAGER',
+        'customer_support', 'Customer Support', 'CUSTOMER_SUPPORT',
+        'quality_control', 'Quality Control', 'QUALITY_CONTROL',
         'sales', 'Sales', 'SALES',
         'sales_rep', 'Sales Rep', 'SALES_REP',
         'technician', 'Technician', 'TECHNICIAN',
+        'lead_technician', 'Lead Technician', 'LEAD_TECHNICIAN',
         'cleaner', 'Cleaner', 'CLEANER',
-        'staff', 'Staff', 'STAFF'
+        'lead_cleaner', 'Lead Cleaner', 'LEAD_CLEANER',
+        'staff', 'Staff', 'STAFF',
+        'field_staff', 'Field Staff', 'FIELD_STAFF',
+        'crew_lead', 'Crew Lead', 'CREW_LEAD'
       ];
     }
 
@@ -164,15 +194,26 @@ service cloud.firestore {
         && sameCompanyOrPlatform(resource.data.companyId)
         && request.resource.data.companyId == resource.data.companyId
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'status', 'notes', 'description', 'nextStep', 'updatedAt', 'updatedBy',
-          'updatedByUid', 'updatedByName', 'staffClaimed', 'staffClaimedBy',
-          'staffClaimedAt', 'syncStatus'
+          'status',
+          'notes',
+          'description',
+          'nextStep',
+          'updatedAt',
+          'updatedBy',
+          'updatedByUid',
+          'updatedByName',
+          'staffClaimed',
+          'staffClaimedBy',
+          'staffClaimedAt',
+          'syncStatus'
         ]);
     }
 
     function canReadLead() {
       return signedIn() && (
-        isManagerPlus() || leadBelongsToMe(resource.data) || sameCompanyOrPlatform(resource.data.companyId)
+        isManagerPlus() ||
+        leadBelongsToMe(resource.data) ||
+        sameCompanyOrPlatform(resource.data.companyId)
       );
     }
 
@@ -205,9 +246,19 @@ service cloud.firestore {
         && request.resource.data.status == resource.data.status
         && request.resource.data.approvalStatus == resource.data.approvalStatus
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'displayName', 'fullName', 'name', 'username', 'usernameLower', 'phone',
-          'bio', 'notes', 'photoURL', 'themePreferences', 'themePreferencesUpdatedAt',
-          'notificationPreferences', 'updatedAt'
+          'displayName',
+          'fullName',
+          'name',
+          'username',
+          'usernameLower',
+          'phone',
+          'bio',
+          'notes',
+          'photoURL',
+          'themePreferences',
+          'themePreferencesUpdatedAt',
+          'notificationPreferences',
+          'updatedAt'
         ]);
     }
 
@@ -218,11 +269,31 @@ service cloud.firestore {
         && request.resource.data.status in ['active', 'approved']
         && request.resource.data.approvalStatus == 'approved'
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'role', 'status', 'approvalStatus', 'companyId', 'companyName', 'companySlug',
-          'companyCategory', 'staffApplicationId', 'approvedAt', 'approvedBy',
-          'approvedByEmail', 'approvedByName', 'updatedAt', 'updatedBy',
-          'updatedByEmail', 'updatedByName'
+          'role',
+          'status',
+          'approvalStatus',
+          'companyId',
+          'companyName',
+          'companySlug',
+          'companyCategory',
+          'staffApplicationId',
+          'approvedAt',
+          'approvedBy',
+          'approvedByEmail',
+          'approvedByName',
+          'updatedAt',
+          'updatedBy',
+          'updatedByEmail',
+          'updatedByName'
         ]);
+    }
+
+    function safeStaffProfileWrite(profileId) {
+      return isOperationsPlus()
+        && request.resource.data.uid == profileId
+        && request.resource.data.userId == profileId
+        && isStaffAssignableRole(request.resource.data.role)
+        && request.resource.data.status in ['active', 'inactive', 'suspended', 'approved'];
     }
 
     function validAuditCreate() {
@@ -234,8 +305,16 @@ service cloud.firestore {
     function validOperationEventCreate() {
       return isGovernancePlus()
         && request.resource.data.keys().hasOnly([
-          'eventId', 'eventType', 'timestamp', 'source', 'actor', 'severity',
-          'correlationId', 'payload', 'metadata', 'persistedAt'
+          'eventId',
+          'eventType',
+          'timestamp',
+          'source',
+          'actor',
+          'severity',
+          'correlationId',
+          'payload',
+          'metadata',
+          'persistedAt'
         ])
         && request.resource.data.eventType is string
         && request.resource.data.timestamp is number
@@ -295,11 +374,25 @@ service cloud.firestore {
         && request.resource.data.applicantUid == resource.data.applicantUid
         && request.resource.data.roleRequested == resource.data.roleRequested
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'fullName', 'phone', 'address', 'city', 'state', 'zip', 'dateOfBirth',
-          'workAuthorization', 'hasDriversLicense', 'driversLicenseState',
-          'hasReliableTransportation', 'availability', 'experienceSummary',
-          'emergencyContactName', 'emergencyContactPhone', 'attachments', 'status',
-          'verificationStatus', 'updatedAt'
+          'fullName',
+          'phone',
+          'address',
+          'city',
+          'state',
+          'zip',
+          'dateOfBirth',
+          'workAuthorization',
+          'hasDriversLicense',
+          'driversLicenseState',
+          'hasReliableTransportation',
+          'availability',
+          'experienceSummary',
+          'emergencyContactName',
+          'emergencyContactPhone',
+          'attachments',
+          'status',
+          'verificationStatus',
+          'updatedAt'
         ]);
     }
 
@@ -310,10 +403,22 @@ service cloud.firestore {
         && request.resource.data.status in ['submitted', 'needs_more_info', 'approved', 'rejected']
         && request.resource.data.verificationStatus in ['pending_review', 'verified', 'rejected', 'needs_more_info']
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'status', 'verificationStatus', 'reviewNotes', 'reviewedAt', 'reviewedBy',
-          'reviewedByEmail', 'reviewedByName', 'approvedAt', 'approvedBy',
-          'approvedByEmail', 'approvedByName', 'rejectedAt', 'rejectedBy',
-          'rejectedByEmail', 'rejectedByName', 'updatedAt'
+          'status',
+          'verificationStatus',
+          'reviewNotes',
+          'reviewedAt',
+          'reviewedBy',
+          'reviewedByEmail',
+          'reviewedByName',
+          'approvedAt',
+          'approvedBy',
+          'approvedByEmail',
+          'approvedByName',
+          'rejectedAt',
+          'rejectedBy',
+          'rejectedByEmail',
+          'rejectedByName',
+          'updatedAt'
         ]);
     }
 
@@ -346,6 +451,12 @@ service cloud.firestore {
       allow delete: if isOwnerOrAdmin();
     }
 
+    match /staff_profiles/{profileId} {
+      allow read: if signedIn() && (isOperationsPlus() || profileId == request.auth.uid);
+      allow create, update: if safeStaffProfileWrite(profileId);
+      allow delete: if isOwnerOrAdmin();
+    }
+
     match /invites/{inviteId} {
       allow read: if isOperationsPlus();
       allow create: if safeStaffInviteCreate();
@@ -354,10 +465,13 @@ service cloud.firestore {
 
     match /notifications/{notificationId} {
       allow read: if signedIn() && (
-        isOwnerOrAdmin() || resource.data.userId == request.auth.uid || sameCompanyOrPlatform(resource.data.companyId)
+        isOwnerOrAdmin() ||
+        resource.data.userId == request.auth.uid ||
+        sameCompanyOrPlatform(resource.data.companyId)
       );
       allow update: if signedIn() && (
-        resource.data.userId == request.auth.uid || isOwnerOrAdmin()
+        resource.data.userId == request.auth.uid ||
+        isOwnerOrAdmin()
       ) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'readAt', 'updatedAt']);
       allow create, delete: if false;
     }
@@ -385,6 +499,7 @@ service cloud.firestore {
       allow create: if canCreateLead();
       allow update: if canUpdateLead();
       allow delete: if canDeleteLead();
+
       match /activities/{activityId} {
         allow read: if canReadLead();
         allow create: if isManagerPlus() || (isStaffDispatcher() && assignedToMe(get(/databases/$(database)/documents/leads/$(leadId)).data));
@@ -426,6 +541,130 @@ service cloud.firestore {
     match /payments/{paymentId} {
       allow read: if isOwnerOrAdmin();
       allow create, update, delete: if isOwnerOrAdmin();
+    }
+
+    match /invoices/{invoiceId} {
+      allow read: if signedIn() && (
+        isManagerPlus() ||
+        resource.data.customerUid == request.auth.uid
+      );
+      allow create, update: if isManagerPlus();
+      allow delete: if isOwnerOrAdmin();
+    }
+
+    match /transactions/{transactionId} {
+      allow read: if isManagerPlus();
+      allow create, update: if isOperationsPlus();
+      allow delete: if isOwnerOrAdmin();
+    }
+
+    match /payouts/{payoutId} {
+      allow read: if isOwnerOrAdmin() || (
+        signedIn() && resource.data.userId == request.auth.uid
+      );
+      allow create, update: if isOperationsPlus();
+      allow delete: if isOwnerOrAdmin();
+    }
+
+    match /marketplace_payouts/{payoutId} {
+      allow read: if isOwnerOrAdmin() || isOperationsPlus();
+      allow create, update: if isOwnerOrAdmin();
+      allow delete: if isOwnerOrAdmin();
+    }
+
+    match /stripe_webhook_events/{eventId} {
+      allow read: if isOwnerOrAdmin();
+      allow create, update, delete: if false;
+    }
+
+    match /stripe_sessions/{sessionId} {
+      allow read: if isOwnerOrAdmin() || isOperationsPlus();
+      allow create, update, delete: if false;
+    }
+
+    match /revenue_analytics/{snapshotId} {
+      allow read: if isOwnerOrAdmin() || isOperationsPlus();
+      allow create, update: if isOwnerOrAdmin();
+      allow delete: if isOwnerOrAdmin();
+    }
+
+    match /customer_notifications/{notificationId} {
+      allow read: if signedIn() && (
+        isOperationsPlus() ||
+        resource.data.customerId == request.auth.uid ||
+        resource.data.userId == request.auth.uid
+      );
+      allow create: if isOperationsPlus();
+      allow update: if signedIn() && (
+        isOperationsPlus() ||
+        resource.data.customerId == request.auth.uid ||
+        resource.data.userId == request.auth.uid
+      ) && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+        'status',
+        'readAtMs',
+        'archivedAtMs',
+        'dismissedAtMs',
+        'updatedAtMs'
+      ]);
+      allow delete: if isOwnerOrAdmin();
+    }
+
+    match /customer_message_threads/{threadId} {
+      allow read: if signedIn() && (
+        isOperationsPlus() ||
+        resource.data.customerId == request.auth.uid
+      );
+      allow create, update: if isOperationsPlus();
+      allow delete: if isOwnerOrAdmin();
+
+      match /messages/{messageId} {
+        allow read: if signedIn() && (
+          isOperationsPlus() ||
+          get(/databases/$(database)/documents/customer_message_threads/$(threadId)).data.customerId == request.auth.uid
+        );
+        allow create: if signedIn() && (
+          isOperationsPlus() ||
+          get(/databases/$(database)/documents/customer_message_threads/$(threadId)).data.customerId == request.auth.uid
+        );
+        allow update, delete: if isOwnerOrAdmin();
+      }
+    }
+
+    match /customer_service_history/{historyId} {
+      allow read: if signedIn() && (
+        isOperationsPlus() ||
+        resource.data.customerId == request.auth.uid
+      );
+      allow create, update: if isOperationsPlus();
+      allow delete: if isOwnerOrAdmin();
+    }
+
+    match /payroll_runs/{runId} {
+      allow read: if isOperationsPlus();
+      allow create, update, delete: if isOwnerOrAdmin();
+    }
+
+    match /dispatch_assignments/{assignmentId} {
+      allow read: if signedIn();
+      allow create: if isManagerPlus() && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isManagerPlus() || isOperationsPlus();
+      allow delete: if isOwnerOrAdmin();
+    }
+
+    match /presence/{userId} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && request.auth.uid == userId;
+      allow delete: if isOwnerOrAdmin() || ownsUserDoc(userId);
+    }
+
+    match /workforce_locations/{userId} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && request.auth.uid == userId;
+      allow delete: if isOwnerOrAdmin() || ownsUserDoc(userId);
+    }
+
+    match /channels/{channelId}/messages/{messageId} {
+      allow read, write: if signedIn();
     }
 
     match /{document=**} {
