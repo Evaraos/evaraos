@@ -1,5 +1,5 @@
-// Evaraos Image 2 Control Center Renderer
-// Main nav shows grouped rows. Individual apps are searchable/launchable, not dumped as an icon wall.
+// Evaraos Control Center Renderer
+// Single nav-v1 renderer: grouped rows, account tools, AI command prompt, and animated controls.
 
 import {
   getMount,
@@ -10,7 +10,7 @@ import {
 
 import { APP_CATEGORIES, appsByCategory } from "../navigation/app-registry.js";
 
-const NAV_RENDER_BUILD = "image2-control-center-rows-20260518a";
+const NAV_RENDER_BUILD = "nav-v1-control-center-ai-prompt";
 
 const CATEGORY_LABELS = Object.freeze({
   operations: { title: "Operations", subtitle: "Field Ops, Dispatch, Jobs & More", icon: "▣" },
@@ -78,17 +78,21 @@ function registryRows(role = "customer") {
   return CATEGORY_ORDER.map((category) => groupRow(category, groups[category] || [])).join("");
 }
 
-function searchBox(authed = false) {
+function aiPromptBox(authed = false) {
   return `
-    <div class="eva-menu-search eva-menu-search-bottom" role="search">
-      <label class="sr-only" for="evaSearchInput">Search Evaraos apps</label>
-      <div class="eva-search-shell">
-        <span class="eva-search-icon">⌕</span>
-        <input id="evaSearchInput" type="search" autocomplete="off" placeholder="${authed ? "Search apps, groups, tools..." : "Search access & onboarding..."}" />
-        <span class="eva-search-key">⌘ K</span>
+    <div class="eva-menu-search eva-ai-prompt eva-menu-search-bottom" role="search">
+      <label class="sr-only" for="evaSearchInput">Ask Evaraos AI</label>
+      <div class="eva-ai-prompt-head">
+        <span class="eva-ai-orb">AI</span>
+        <div><strong>Evaraos AI Command</strong><small>Ask, search, open pages, or route app actions.</small></div>
       </div>
-      <div id="evaSearchResults" class="eva-search-results" aria-live="polite"></div>
-      <p class="eva-search-helper">✦ Quick search across all systems</p>
+      <div class="eva-search-shell eva-ai-search-shell">
+        <span class="eva-search-icon">✦</span>
+        <input id="evaSearchInput" type="search" autocomplete="off" placeholder="${authed ? "Ask Evaraos AI anything..." : "Ask about access, onboarding, or the platform..."}" />
+        <span class="eva-search-key">AI</span>
+      </div>
+      <div id="evaSearchResults" class="eva-search-results eva-ai-results" aria-live="polite"></div>
+      <p class="eva-search-helper">Try: “open jobs”, “show companies”, “go to settings”, or “find leads”.</p>
     </div>
   `;
 }
@@ -116,7 +120,7 @@ function accountSection(authed = false) {
       <div class="eva-account-strip">
         <a href="${buildHref("settings.html")}" data-menu-link="${buildHref("settings.html")}" data-label="profile" data-group="account" data-page="settings.html"><span>♙</span><strong>Profile</strong></a>
         <a href="${buildHref("settings.html")}" data-menu-link="${buildHref("settings.html")}" data-label="settings" data-group="account" data-page="settings.html"><span>⚙</span><strong>Settings</strong></a>
-        <a href="${buildHref("settings.html")}" data-menu-link="${buildHref("settings.html")}" data-label="preferences" data-group="account" data-page="settings.html"><span>≛</span><strong>Preferences</strong></a>
+        <button type="button" id="evaThemePillToggle" class="eva-account-action eva-theme-nav-btn" data-theme-label="true"><span class="eva-theme-nav-icon">◐</span><strong>Theme</strong></button>
         <a href="${buildHref("settings.html")}" data-menu-link="${buildHref("settings.html")}" data-label="security" data-group="account" data-page="settings.html"><span>♢</span><strong>Security</strong></a>
         <a href="#logout" id="evaLogoutBtn" data-action="logout" data-label="logout" data-group="account" data-page="logout"><span>⇥</span><strong>Logout</strong></a>
       </div>
@@ -132,6 +136,7 @@ function accessSection() {
         <a href="${buildHref("login.html")}" data-menu-link="${buildHref("login.html")}" data-label="login" data-group="access" data-page="login.html"><span>⇥</span><strong>Login</strong></a>
         <a href="${buildHref("signup.html")}" data-menu-link="${buildHref("signup.html")}" data-label="signup" data-group="access" data-page="signup.html"><span>＋</span><strong>Signup</strong></a>
         <a href="${buildHref("staff_application.html")}" data-menu-link="${buildHref("staff_application.html")}" data-label="apply" data-group="access" data-page="staff_application.html"><span>◐</span><strong>Apply</strong></a>
+        <button type="button" id="evaThemePillToggle" class="eva-account-action eva-theme-nav-btn" data-theme-label="true"><span class="eva-theme-nav-icon">◐</span><strong>Theme</strong></button>
       </div>
     </section>
   `;
@@ -153,8 +158,11 @@ export function renderNav() {
             <div class="eva-brand-copy"><strong>Evaraos Inc</strong><span>Subsidiaries Allocation SaaS</span></div>
           </div>
           <div class="eva-menu-zone" id="evaMenuZone">
+            <button class="eva-nav-action-btn eva-theme-nav-btn" type="button" id="evaThemeToggle" aria-label="Toggle light or dark mode"><span class="eva-theme-nav-icon" aria-hidden="true">◐</span></button>
             <button class="eva-nav-action-btn eva-nav-bell-btn" type="button" id="evaNotificationsBtn" aria-label="Open notifications"><span aria-hidden="true">♧</span></button>
-            <button class="eva-nav-action-btn eva-menu-btn" type="button" id="evaMenuBtn" aria-expanded="false" aria-label="Open menu"><span class="eva-nav-close-icon" aria-hidden="true">×</span></button>
+            <button class="eva-nav-action-btn eva-menu-btn" type="button" id="evaMenuBtn" aria-expanded="false" aria-label="Open menu">
+              <span class="eva-burger" aria-hidden="true"><span class="eva-burger-line"></span><span class="eva-burger-line"></span><span class="eva-burger-line"></span></span>
+            </button>
           </div>
         </div>
       </header>
@@ -165,7 +173,7 @@ export function renderNav() {
           ${groups.authed ? accountSection(true) : accessSection()}
           ${groups.authed ? `<p class="eva-section-label">OPERATIONS</p><div class="eva-control-row-stack">${registryRows(groups.role)}</div>` : ""}
         </nav>
-        ${searchBox(groups.authed)}
+        ${aiPromptBox(groups.authed)}
       </div>
     </div>
   `;
