@@ -1,7 +1,7 @@
 {
   "name": "evaraos-functions",
   "version": "1.0.0",
-  "description": "Evaraos backend automation and trusted server workflows.",
+  "description": "Evaraos backend automation, AI command routing, and trusted server workflows.",
   "private": true,
   "engines": {
     "node": "20"
@@ -16,6 +16,7 @@
   "dependencies": {
     "firebase-admin": "^12.7.0",
     "firebase-functions": "^6.3.2",
+    "openai": "^4.104.0",
     "stripe": "^17.5.0"
   }
 }
