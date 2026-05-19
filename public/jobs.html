@@ -72,7 +72,7 @@
 
   <link rel="stylesheet" href="/assets/css/base.css?v=34" />
   <link rel="stylesheet" href="/assets/css/theme.css?v=36" />
-  <link rel="stylesheet" href="/assets/css/nav.css?v=20260503-final" />
+  <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v1" />
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=34" />
   <link rel="stylesheet" href="/assets/css/app-system.css?v=simple-glass" />
 </head>
@@ -91,162 +91,11 @@
               <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
                 <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
               </svg>
-              <input
-                type="search"
-                class="dashboard-search-input input"
-                id="jobsSearch"
-                placeholder="Search jobs..."
-                aria-label="Search jobs"
-              />
+              <input type="search" class="dashboard-search-input input" id="jobsSearch" placeholder="Search jobs..." aria-label="Search jobs" />
             </div>
-          </div>
-
-          <div class="dashboard-sidebar-head">
-            <p class="dashboard-sidebar-eyebrow">Job Navigation</p>
-            <h2 id="dashboardOverviewTitle">Jobs Overview</h2>
-          </div>
-
-          <nav class="dashboard-sidebar-nav" aria-label="Jobs sections">
-            <a href="#jobsOverviewSection" class="dashboard-nav-link active aurora-card beam-target">
-              <span class="dashboard-nav-icon">◉</span>
-              <span>Overview</span>
-            </a>
-
-            <a href="#jobsListSection" class="dashboard-nav-link aurora-card beam-target">
-              <span class="dashboard-nav-icon">◎</span>
-              <span>Job Queue</span>
-            </a>
-
-            <a href="#jobsFeedSection" class="dashboard-nav-link aurora-card beam-target">
-              <span class="dashboard-nav-icon">◌</span>
-              <span>Execution Feed</span>
-            </a>
-          </nav>
-
-          <div class="dashboard-sidebar-foot glass-card aurora-card active-glow beam-target">
-            <div class="dashboard-sidebar-foot-copy">
-              <strong>Execution Control</strong>
-              <span>
-                Monitor jobs, statuses, and operations activity directly from Firestore job records.
-              </span>
-            </div>
-            <button type="button" id="jobsRefreshBtnSide" class="btn btn-theme-primary">Refresh Jobs</button>
           </div>
         </div>
       </aside>
-
-      <main class="dashboard-main">
-        <section class="dashboard-hero glass-card aurora-card active-glow beam-target" id="jobsOverviewSection">
-          <div class="dashboard-hero-copy">
-            <p class="dashboard-eyebrow">JOB EXECUTION</p>
-            <h1>Track work in motion across your service operation.</h1>
-            <p class="dashboard-hero-text">
-              Keep a live view of job records, active statuses, and execution flow with data
-              connected directly to Firestore.
-            </p>
-
-            <div class="dashboard-hero-actions">
-              <button type="button" id="jobsRefreshBtnTop" class="btn btn-theme-primary">Refresh Data</button>
-              <a href="/dashboard.html" class="btn btn-theme-secondary">Back to Dashboard</a>
-            </div>
-          </div>
-
-          <div class="dashboard-hero-panel glass-card aurora-card active-glow beam-target">
-            <div class="dashboard-hero-panel-top">
-              <span class="dashboard-mini-badge">Job Status</span>
-              <span class="dashboard-live-dot"></span>
-            </div>
-
-            <div class="dashboard-hero-logo-wrap">
-              <img
-                src="/assets/img/evaraos_logo.png"
-                alt="Evaraos"
-                class="dashboard-hero-logo"
-                loading="eager"
-                decoding="async"
-                fetchpriority="high"
-              />
-            </div>
-
-            <div class="dashboard-hero-panel-copy">
-              <strong id="jobsHeroTitle">Loading jobs...</strong>
-              <span id="jobsHeroText">Connecting to Firestore job records.</span>
-            </div>
-          </div>
-        </section>
-
-        <section class="dashboard-overview glass-card aurora-card active-glow beam-target">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Snapshot</p>
-              <h2>Jobs Overview</h2>
-            </div>
-          </div>
-
-          <div class="dashboard-stats-grid">
-            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
-              <p>Total Jobs</p>
-              <h3 id="jobsStatTotal">0</h3>
-              <span id="jobsStatTotalMeta">Loading job queue...</span>
-            </article>
-
-            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
-              <p>In Progress</p>
-              <h3 id="jobsStatActive">0</h3>
-              <span id="jobsStatActiveMeta">Checking statuses...</span>
-            </article>
-
-            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
-              <p>Completed</p>
-              <h3 id="jobsStatCompleted">0</h3>
-              <span id="jobsStatCompletedMeta">Checking statuses...</span>
-            </article>
-
-            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
-              <p>Filtered</p>
-              <h3 id="jobsStatFiltered">0</h3>
-              <span id="jobsStatFilteredMeta">Matches current search</span>
-            </article>
-          </div>
-        </section>
-
-        <section class="dashboard-grid-2">
-          <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="jobsListSection">
-            <div class="dashboard-section-head">
-              <div>
-                <p class="dashboard-section-kicker">Queue</p>
-                <h2>Job List</h2>
-              </div>
-
-              <button type="button" id="jobsSortBtn" class="btn btn-theme-secondary">Sort A–Z</button>
-            </div>
-
-            <div class="dashboard-list" id="jobsList"></div>
-          </section>
-
-          <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="jobsFeedSection">
-            <div class="dashboard-section-head">
-              <div>
-                <p class="dashboard-section-kicker">Execution</p>
-                <h2>Job Feed</h2>
-              </div>
-            </div>
-
-            <div class="dashboard-feed" id="jobsFeed"></div>
-          </section>
-        </section>
-
-        <section class="dashboard-panel glass-card aurora-card active-glow beam-target">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Status Mix</p>
-              <h2>Execution Breakdown</h2>
-            </div>
-          </div>
-
-          <div class="dashboard-progress-stack" id="jobsProgressStack"></div>
-        </section>
-      </main>
     </div>
   </div>
 
@@ -255,11 +104,7 @@
   <script type="module" src="/assets/js/theme.js?v=37"></script>
   <script src="/assets/js/theme-css-loader.js?v=1"></script>
   <script type="module" src="/assets/js/route-guard.js?v=35"></script>
-  <script type="module" src="/assets/js/nav.js?v=20260503-final"></script>
+  <script type="module" src="/assets/js/nav.js?v=nav-v1"></script>
   <script type="module" src="/assets/js/jobs.js?v=4"></script>
-
-<!-- EVARAOS BOTTOM DOT NAV + ABOVE DROPDOWN TUNE -->
-<!-- /EVARAOS BOTTOM DOT NAV + ABOVE DROPDOWN TUNE -->
-
 </body>
 </html>
