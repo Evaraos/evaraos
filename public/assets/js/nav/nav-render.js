@@ -5,12 +5,13 @@ import {
   getMount,
   getBasePath,
   buildHref,
-  getVisibleLinks
+  getVisibleLinks,
+  isCurrentPage
 } from "./nav-utils.js";
 
 import { APP_CATEGORIES, appsByCategory } from "../navigation/app-registry.js";
 
-const NAV_RENDER_BUILD = "nav-v1-menu-notifications-theme-menu-only";
+const NAV_RENDER_BUILD = "nav-v1-active-control-center";
 
 const CATEGORY_LABELS = Object.freeze({
   operations: { title: "Operations", subtitle: "Field Ops, Dispatch, Jobs & More", icon: "▣" },
@@ -39,6 +40,10 @@ function clean(value = "") {
     .replaceAll("'", "&#039;");
 }
 
+function activeAttrs(route = "") {
+  return isCurrentPage(route) ? ' aria-current="page" data-active="true"' : "";
+}
+
 function normalizeRegistryRole(role = "customer") {
   const normalized = String(role || "customer").toLowerCase();
   if (["owner", "super_admin"].includes(normalized)) return "owner";
@@ -57,8 +62,9 @@ function routeData(apps = []) {
 function groupRow(category, apps = []) {
   if (!apps.length) return "";
   const copy = CATEGORY_LABELS[category] || { title: category, subtitle: "Apps", icon: "◈" };
+  const active = apps.some((app) => isCurrentPage(app.route));
   return `
-    <button type="button" class="eva-control-row eva-folder-${clean(category)}" data-nav-group="${clean(category)}" data-group-apps='${routeData(apps)}' aria-label="Open ${clean(copy.title)} tools">
+    <button type="button" class="eva-control-row eva-folder-${clean(category)}" data-nav-group="${clean(category)}" data-group-apps='${routeData(apps)}' ${active ? 'data-active="true" aria-current="page"' : ""} aria-label="Open ${clean(copy.title)} tools">
       <span class="eva-control-row-icon">${clean(copy.icon)}</span>
       <span class="eva-control-row-copy"><strong>${clean(copy.title)}</strong><small>${clean(copy.subtitle)}</small></span>
       <span class="eva-control-row-count">${apps.length}</span>
@@ -83,42 +89,50 @@ function aiPromptBox(authed = false) {
 }
 
 function navigationSection() {
+  const homeHref = buildHref("index.html");
+  const dashboardHref = buildHref("dashboard.html");
+  const mapHref = buildHref("operations_map.html");
   return `
     <section class="eva-menu-top-block eva-navigation-block" data-nav-section="Navigation">
       <div class="eva-top-block-head"><span class="eva-top-block-icon">↗</span><div><p>NAVIGATION</p><h3>Go to dashboards & core areas</h3></div><span class="eva-top-block-arrow">›</span></div>
       <div class="eva-quick-strip">
-        <a href="${buildHref("index.html")}" data-menu-link="${buildHref("index.html")}" data-label="home" data-group="navigation" data-page="index.html"><span>⌂</span><strong>Home</strong><small>Dashboard</small></a>
-        <a href="${buildHref("dashboard.html")}" data-menu-link="${buildHref("dashboard.html")}" data-label="dashboards" data-group="navigation" data-page="dashboard.html"><span>▦</span><strong>Dashboards</strong><small>All Dashboards</small></a>
-        <a href="${buildHref("operations_map.html")}" data-menu-link="${buildHref("operations_map.html")}" data-label="map view" data-group="navigation" data-page="operations_map.html"><span>◉</span><strong>Map View</strong><small>Live Operations</small></a>
-        <a href="${buildHref("dashboard.html")}" data-menu-link="${buildHref("dashboard.html")}" data-label="bookmarks" data-group="navigation" data-page="bookmarks"><span>★</span><strong>Bookmarks</strong><small>Quick Access</small></a>
-        <a href="${buildHref("dashboard.html")}" data-menu-link="${buildHref("dashboard.html")}" data-label="recent" data-group="navigation" data-page="recent"><span>◷</span><strong>Recent</strong><small>History</small></a>
+        <a href="${homeHref}" data-menu-link="${homeHref}" data-label="home" data-group="navigation" data-page="index.html"${activeAttrs(homeHref)}><span>⌂</span><strong>Home</strong><small>Dashboard</small></a>
+        <a href="${dashboardHref}" data-menu-link="${dashboardHref}" data-label="dashboards" data-group="navigation" data-page="dashboard.html"${activeAttrs(dashboardHref)}><span>▦</span><strong>Dashboards</strong><small>All Dashboards</small></a>
+        <a href="${mapHref}" data-menu-link="${mapHref}" data-label="map view" data-group="navigation" data-page="operations_map.html"${activeAttrs(mapHref)}><span>◉</span><strong>Map View</strong><small>Live Operations</small></a>
+        <a href="${dashboardHref}" data-menu-link="${dashboardHref}" data-label="bookmarks" data-group="navigation" data-page="bookmarks"><span>★</span><strong>Bookmarks</strong><small>Quick Access</small></a>
+        <a href="${dashboardHref}" data-menu-link="${dashboardHref}" data-label="recent" data-group="navigation" data-page="recent"><span>◷</span><strong>Recent</strong><small>History</small></a>
       </div>
     </section>`;
 }
 
 function accountSection(authed = false) {
   if (!authed) return "";
+  const settingsHref = buildHref("settings.html");
+  const notificationsHref = buildHref("notifications.html");
   return `
     <section class="eva-menu-top-block eva-account-tools-block" data-nav-section="Account Tools">
       <div class="eva-top-block-head"><span class="eva-top-block-icon">♙</span><div><p>ACCOUNT TOOLS</p><h3>Profile, settings & preferences</h3></div><span class="eva-top-block-arrow">›</span></div>
       <div class="eva-account-strip">
-        <a href="${buildHref("settings.html")}" data-menu-link="${buildHref("settings.html")}" data-label="profile" data-group="account" data-page="settings.html"><span>♙</span><strong>Profile</strong></a>
-        <a href="${buildHref("settings.html")}" data-menu-link="${buildHref("settings.html")}" data-label="settings" data-group="account" data-page="settings.html"><span>⚙</span><strong>Settings</strong></a>
-        <a href="${buildHref("notifications.html")}" data-menu-link="${buildHref("notifications.html")}" data-label="notifications" data-group="account" data-page="notifications.html"><span>♧</span><strong>Alerts</strong></a>
-        <a href="${buildHref("settings.html")}" data-menu-link="${buildHref("settings.html")}" data-label="security" data-group="account" data-page="settings.html"><span>♢</span><strong>Security</strong></a>
+        <a href="${settingsHref}" data-menu-link="${settingsHref}" data-label="profile" data-group="account" data-page="settings.html"${activeAttrs(settingsHref)}><span>♙</span><strong>Profile</strong></a>
+        <a href="${settingsHref}" data-menu-link="${settingsHref}" data-label="settings" data-group="account" data-page="settings.html"${activeAttrs(settingsHref)}><span>⚙</span><strong>Settings</strong></a>
+        <a href="${notificationsHref}" data-menu-link="${notificationsHref}" data-label="notifications" data-group="account" data-page="notifications.html"${activeAttrs(notificationsHref)}><span>♧</span><strong>Alerts</strong></a>
+        <a href="${settingsHref}" data-menu-link="${settingsHref}" data-label="security" data-group="account" data-page="settings.html"${activeAttrs(settingsHref)}><span>♢</span><strong>Security</strong></a>
         <a href="#logout" id="evaLogoutBtn" data-action="logout" data-label="logout" data-group="account" data-page="logout"><span>⇥</span><strong>Logout</strong></a>
       </div>
     </section>`;
 }
 
 function accessSection() {
+  const loginHref = buildHref("login.html");
+  const signupHref = buildHref("signup.html");
+  const applyHref = buildHref("staff_application.html");
   return `
     <section class="eva-menu-top-block eva-account-tools-block" data-nav-section="Access">
       <div class="eva-top-block-head"><span class="eva-top-block-icon">◌</span><div><p>ACCESS</p><h3>Authentication & onboarding</h3></div><span class="eva-top-block-arrow">›</span></div>
       <div class="eva-account-strip eva-access-strip">
-        <a href="${buildHref("login.html")}" data-menu-link="${buildHref("login.html")}" data-label="login" data-group="access" data-page="login.html"><span>⇥</span><strong>Login</strong></a>
-        <a href="${buildHref("signup.html")}" data-menu-link="${buildHref("signup.html")}" data-label="signup" data-group="access" data-page="signup.html"><span>＋</span><strong>Signup</strong></a>
-        <a href="${buildHref("staff_application.html")}" data-menu-link="${buildHref("staff_application.html")}" data-label="apply" data-group="access" data-page="staff_application.html"><span>◐</span><strong>Apply</strong></a>
+        <a href="${loginHref}" data-menu-link="${loginHref}" data-label="login" data-group="access" data-page="login.html"${activeAttrs(loginHref)}><span>⇥</span><strong>Login</strong></a>
+        <a href="${signupHref}" data-menu-link="${signupHref}" data-label="signup" data-group="access" data-page="signup.html"${activeAttrs(signupHref)}><span>＋</span><strong>Signup</strong></a>
+        <a href="${applyHref}" data-menu-link="${applyHref}" data-label="apply" data-group="access" data-page="staff_application.html"${activeAttrs(applyHref)}><span>◐</span><strong>Apply</strong></a>
       </div>
     </section>`;
 }
