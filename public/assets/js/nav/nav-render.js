@@ -11,7 +11,7 @@ import {
 
 import { APP_CATEGORIES, appsByCategory } from "../navigation/app-registry.js";
 
-const NAV_RENDER_BUILD = "nav-v1-active-control-center";
+const NAV_RENDER_BUILD = "nav-v1-ai-send-controls";
 
 const CATEGORY_LABELS = Object.freeze({
   operations: { title: "Operations", subtitle: "Field Ops, Dispatch, Jobs & More", icon: "▣" },
@@ -82,7 +82,12 @@ function aiPromptBox(authed = false) {
     <div class="eva-menu-search eva-ai-prompt eva-menu-search-bottom" role="search">
       <label class="sr-only" for="evaSearchInput">Ask Evaraos AI</label>
       <div class="eva-ai-prompt-head"><span class="eva-ai-orb">AI</span><div><strong>Evaraos AI Command</strong><small>Ask, search, open pages, or route app actions.</small></div></div>
-      <div class="eva-search-shell eva-ai-search-shell"><span class="eva-search-icon">✦</span><input id="evaSearchInput" type="search" autocomplete="off" placeholder="${authed ? "Ask Evaraos AI anything..." : "Ask about access, onboarding, or the platform..."}" /><span class="eva-search-key">AI</span></div>
+      <form class="eva-search-shell eva-ai-search-shell" id="evaAiPromptForm" autocomplete="off">
+        <span class="eva-search-icon">✦</span>
+        <input id="evaSearchInput" name="evaSearchInput" type="search" autocomplete="off" enterkeyhint="send" inputmode="search" placeholder="${authed ? "Ask Evaraos AI anything..." : "Ask about access, onboarding, or the platform..."}" />
+        <button class="eva-ai-mic-btn" id="evaAiMicBtn" type="button" aria-label="Speak to Evaraos AI">Mic</button>
+        <button class="eva-ai-send-btn" id="evaAiSendBtn" type="submit" aria-label="Send command to Evaraos AI">Send</button>
+      </form>
       <div id="evaSearchResults" class="eva-search-results eva-ai-results" aria-live="polite"></div>
       <p class="eva-search-helper">Try: “open jobs”, “show companies”, “go to settings”, or “find leads”.</p>
     </div>`;
