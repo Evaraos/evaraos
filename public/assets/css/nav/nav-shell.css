@@ -1,5 +1,6 @@
 /* EVARAOS NAV SHELL
-   Meca/Image 2 bottom dock: stable brand, bell, close/menu action. */
+   nav-v1 bottom dock: stable brand, theme toggle, and animated menu action.
+*/
 
 :root {
   --eva-island-offset: max(10px, calc(env(safe-area-inset-bottom, 0px) + 10px));
@@ -40,15 +41,15 @@
 }
 
 .eva-nav-pill {
-  width: min(580px, calc(100vw - 20px));
-  min-height: 76px;
-  height: 76px;
+  width: min(540px, calc(100vw - 20px));
+  min-height: 74px;
+  height: 74px;
   margin: 0 auto;
   padding: 10px 12px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   border-radius: 28px;
   pointer-events: auto;
   position: relative;
@@ -61,7 +62,13 @@
   box-shadow: 0 22px 56px rgba(15,23,42,0.16), inset 0 1px 0 rgba(255,255,255,0.86);
   backdrop-filter: blur(24px) saturate(150%);
   -webkit-backdrop-filter: blur(24px) saturate(150%);
-  transition: transform .16s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
+  transition: transform .18s cubic-bezier(.2,.8,.2,1), background .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+body.nav-menu-open .eva-nav-pill {
+  transform: translateY(-1px) scale(1.008);
+  border-color: rgba(96,165,250,0.34);
+  box-shadow: 0 26px 70px rgba(15,23,42,0.19), inset 0 1px 0 rgba(255,255,255,0.88);
 }
 
 html[data-theme="dark"] .eva-nav-pill {
@@ -69,6 +76,11 @@ html[data-theme="dark"] .eva-nav-pill {
   border-color: rgba(255,255,255,0.13);
   background: linear-gradient(145deg, rgba(22,28,42,0.92), rgba(9,14,24,0.84));
   box-shadow: 0 24px 62px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.09);
+}
+
+html[data-theme="dark"] body.nav-menu-open .eva-nav-pill {
+  border-color: rgba(96,165,250,0.26);
+  box-shadow: 0 30px 76px rgba(0,0,0,0.52), inset 0 1px 0 rgba(255,255,255,0.11);
 }
 
 .eva-left-spacer,
@@ -154,7 +166,7 @@ html[data-theme="dark"] .eva-nav-pill {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity .14s ease, visibility .14s ease;
+  transition: opacity .18s ease, visibility .18s ease;
 }
 
 body.nav-menu-open .eva-backdrop {
@@ -170,10 +182,10 @@ html[data-theme="light"] body.nav-menu-open .eva-backdrop {
 @media (max-width: 520px) {
   .eva-nav-pill {
     width: calc(100vw - 18px);
-    height: 72px;
-    min-height: 72px;
-    gap: 10px;
-    padding: 9px 10px;
+    height: 70px;
+    min-height: 70px;
+    gap: 9px;
+    padding: 8px 10px;
     border-radius: 26px;
   }
 
