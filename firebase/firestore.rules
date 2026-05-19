@@ -22,6 +22,14 @@ service cloud.firestore {
       return currentUserExists() ? currentUser().data.companyId : null;
     }
 
+    function hasUserCompany() {
+      return userCompanyId() != null && userCompanyId() != '';
+    }
+
+    function hasRecordCompany(recordCompanyId) {
+      return recordCompanyId != null && recordCompanyId != '';
+    }
+
     function isCustomer() {
       return signedIn() && userRole() in ['customer', 'Customer', 'CUSTOMER'];
     }
@@ -111,11 +119,11 @@ service cloud.firestore {
     }
 
     function sameCompanyOrPlatform(recordCompanyId) {
-      return recordCompanyId == null ||
-        recordCompanyId == '' ||
-        userCompanyId() == null ||
-        userCompanyId() == '' ||
-        recordCompanyId == userCompanyId();
+      return isOwnerOrAdmin() || (
+        hasUserCompany() &&
+        hasRecordCompany(recordCompanyId) &&
+        recordCompanyId == userCompanyId()
+      );
     }
 
     function assignedToMe(data) {
@@ -156,26 +164,15 @@ service cloud.firestore {
         && sameCompanyOrPlatform(resource.data.companyId)
         && request.resource.data.companyId == resource.data.companyId
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'status',
-          'notes',
-          'description',
-          'nextStep',
-          'updatedAt',
-          'updatedBy',
-          'updatedByUid',
-          'updatedByName',
-          'staffClaimed',
-          'staffClaimedBy',
-          'staffClaimedAt',
-          'syncStatus'
+          'status', 'notes', 'description', 'nextStep', 'updatedAt', 'updatedBy',
+          'updatedByUid', 'updatedByName', 'staffClaimed', 'staffClaimedBy',
+          'staffClaimedAt', 'syncStatus'
         ]);
     }
 
     function canReadLead() {
       return signedIn() && (
-        isManagerPlus() ||
-        leadBelongsToMe(resource.data) ||
-        sameCompanyOrPlatform(resource.data.companyId)
+        isManagerPlus() || leadBelongsToMe(resource.data) || sameCompanyOrPlatform(resource.data.companyId)
       );
     }
 
@@ -208,19 +205,9 @@ service cloud.firestore {
         && request.resource.data.status == resource.data.status
         && request.resource.data.approvalStatus == resource.data.approvalStatus
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'displayName',
-          'fullName',
-          'name',
-          'username',
-          'usernameLower',
-          'phone',
-          'bio',
-          'notes',
-          'photoURL',
-          'themePreferences',
-          'themePreferencesUpdatedAt',
-          'notificationPreferences',
-          'updatedAt'
+          'displayName', 'fullName', 'name', 'username', 'usernameLower', 'phone',
+          'bio', 'notes', 'photoURL', 'themePreferences', 'themePreferencesUpdatedAt',
+          'notificationPreferences', 'updatedAt'
         ]);
     }
 
@@ -231,22 +218,10 @@ service cloud.firestore {
         && request.resource.data.status in ['active', 'approved']
         && request.resource.data.approvalStatus == 'approved'
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'role',
-          'status',
-          'approvalStatus',
-          'companyId',
-          'companyName',
-          'companySlug',
-          'companyCategory',
-          'staffApplicationId',
-          'approvedAt',
-          'approvedBy',
-          'approvedByEmail',
-          'approvedByName',
-          'updatedAt',
-          'updatedBy',
-          'updatedByEmail',
-          'updatedByName'
+          'role', 'status', 'approvalStatus', 'companyId', 'companyName', 'companySlug',
+          'companyCategory', 'staffApplicationId', 'approvedAt', 'approvedBy',
+          'approvedByEmail', 'approvedByName', 'updatedAt', 'updatedBy',
+          'updatedByEmail', 'updatedByName'
         ]);
     }
 
@@ -259,16 +234,8 @@ service cloud.firestore {
     function validOperationEventCreate() {
       return isGovernancePlus()
         && request.resource.data.keys().hasOnly([
-          'eventId',
-          'eventType',
-          'timestamp',
-          'source',
-          'actor',
-          'severity',
-          'correlationId',
-          'payload',
-          'metadata',
-          'persistedAt'
+          'eventId', 'eventType', 'timestamp', 'source', 'actor', 'severity',
+          'correlationId', 'payload', 'metadata', 'persistedAt'
         ])
         && request.resource.data.eventType is string
         && request.resource.data.timestamp is number
@@ -328,25 +295,11 @@ service cloud.firestore {
         && request.resource.data.applicantUid == resource.data.applicantUid
         && request.resource.data.roleRequested == resource.data.roleRequested
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'fullName',
-          'phone',
-          'address',
-          'city',
-          'state',
-          'zip',
-          'dateOfBirth',
-          'workAuthorization',
-          'hasDriversLicense',
-          'driversLicenseState',
-          'hasReliableTransportation',
-          'availability',
-          'experienceSummary',
-          'emergencyContactName',
-          'emergencyContactPhone',
-          'attachments',
-          'status',
-          'verificationStatus',
-          'updatedAt'
+          'fullName', 'phone', 'address', 'city', 'state', 'zip', 'dateOfBirth',
+          'workAuthorization', 'hasDriversLicense', 'driversLicenseState',
+          'hasReliableTransportation', 'availability', 'experienceSummary',
+          'emergencyContactName', 'emergencyContactPhone', 'attachments', 'status',
+          'verificationStatus', 'updatedAt'
         ]);
     }
 
@@ -357,22 +310,10 @@ service cloud.firestore {
         && request.resource.data.status in ['submitted', 'needs_more_info', 'approved', 'rejected']
         && request.resource.data.verificationStatus in ['pending_review', 'verified', 'rejected', 'needs_more_info']
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'status',
-          'verificationStatus',
-          'reviewNotes',
-          'reviewedAt',
-          'reviewedBy',
-          'reviewedByEmail',
-          'reviewedByName',
-          'approvedAt',
-          'approvedBy',
-          'approvedByEmail',
-          'approvedByName',
-          'rejectedAt',
-          'rejectedBy',
-          'rejectedByEmail',
-          'rejectedByName',
-          'updatedAt'
+          'status', 'verificationStatus', 'reviewNotes', 'reviewedAt', 'reviewedBy',
+          'reviewedByEmail', 'reviewedByName', 'approvedAt', 'approvedBy',
+          'approvedByEmail', 'approvedByName', 'rejectedAt', 'rejectedBy',
+          'rejectedByEmail', 'rejectedByName', 'updatedAt'
         ]);
     }
 
@@ -413,13 +354,10 @@ service cloud.firestore {
 
     match /notifications/{notificationId} {
       allow read: if signedIn() && (
-        isOwnerOrAdmin() ||
-        resource.data.userId == request.auth.uid ||
-        sameCompanyOrPlatform(resource.data.companyId)
+        isOwnerOrAdmin() || resource.data.userId == request.auth.uid || sameCompanyOrPlatform(resource.data.companyId)
       );
       allow update: if signedIn() && (
-        resource.data.userId == request.auth.uid ||
-        isOwnerOrAdmin()
+        resource.data.userId == request.auth.uid || isOwnerOrAdmin()
       ) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'readAt', 'updatedAt']);
       allow create, delete: if false;
     }
@@ -447,7 +385,6 @@ service cloud.firestore {
       allow create: if canCreateLead();
       allow update: if canUpdateLead();
       allow delete: if canDeleteLead();
-
       match /activities/{activityId} {
         allow read: if canReadLead();
         allow create: if isManagerPlus() || (isStaffDispatcher() && assignedToMe(get(/databases/$(database)/documents/leads/$(leadId)).data));
