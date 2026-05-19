@@ -8,7 +8,7 @@ import {
 
 import { closeMenu } from "./nav-menu.js";
 import { navigateWithLoader } from "./nav-navigation.js";
-import { logoutAndRedirect } from "../firebase.js";
+import { logoutAndRedirect, functions, httpsCallable } from "../firebase.js";
 import { searchApps } from "../navigation/app-registry.js";
 
 const BOUND_ATTR = "data-evara-nav-bound";
@@ -188,7 +188,7 @@ function renderSearchResults(root, items = [], query = "") {
   }
 
   if (!items.length) {
-    root.innerHTML = '<div class="eva-search-empty">AI command queued locally. Backend AI can answer this once Firebase Functions + OpenAI are connected.</div>';
+    root.innerHTML = '<div class="eva-search-empty">Press Enter to ask Evaraos AI.</div>';
     root.classList.add("active");
     return;
   }
@@ -197,6 +197,39 @@ function renderSearchResults(root, items = [], query = "") {
     return '<button type="button" class="eva-search-result" data-search-link="' + clean(app.route) + '"><strong>' + clean(app.title) + '</strong><span>' + clean(label(app.category || 'App')) + ' • ' + clean(app.route) + '</span></button>';
   }).join("");
   root.classList.add("active");
+}
+
+function renderAiMessage(root, message = "", mode = "ai") {
+  if (!root) return;
+  root.innerHTML = '<div class="eva-search-empty eva-ai-message" data-ai-mode="' + clean(mode) + '">' + clean(message || "Evaraos AI is ready.") + '</div>';
+  root.classList.add("active");
+}
+
+async function askAiCommand(prompt, resultsRoot) {
+  const ask = httpsCallable(functions, "aiCommand");
+  renderAiMessage(resultsRoot, "Thinking through your Evaraos command...", "loading");
+
+  const response = await ask({
+    prompt,
+    context: {
+      path: window.location.pathname,
+      role: currentRole(),
+      theme: getAppearanceTheme()
+    }
+  });
+
+  const data = response?.data || {};
+
+  if (data?.action?.type === "navigate" && data.action.route) {
+    renderAiMessage(resultsRoot, data.message || `Opening ${data.action.title || "page"}.`, data.mode || "action");
+    openNavHref(data.action.route, {
+      title: data.action.title ? `Opening ${data.action.title}` : "Opening Evaraos",
+      subtitle: data.message || "Launching from Evaraos AI."
+    });
+    return;
+  }
+
+  renderAiMessage(resultsRoot, data.message || "Evaraos AI received your command.", data.mode || "ai");
 }
 
 export function bindSearch() {
@@ -218,12 +251,25 @@ export function bindSearch() {
 
   input.addEventListener("input", applySearch);
   input.addEventListener("focus", applySearch);
-  input.addEventListener("keydown", (event) => {
+  input.addEventListener("keydown", async (event) => {
     if (event.key !== "Enter") return;
+    const prompt = input.value.trim();
+    if (!prompt) return;
     const href = resultsRoot?.querySelector("[data-search-link]")?.getAttribute("data-search-link");
-    if (!href) return;
+
     stopEvent(event);
-    openNavHref(href, { title: "Opening result", subtitle: "Launching your selected Evaraos app." });
+
+    if (href) {
+      openNavHref(href, { title: "Opening result", subtitle: "Launching your selected Evaraos app." });
+      return;
+    }
+
+    try {
+      await askAiCommand(prompt, resultsRoot);
+    } catch (error) {
+      console.warn("Evaraos AI command failed:", error);
+      renderAiMessage(resultsRoot, "Evaraos AI could not connect yet. Make sure Functions are deployed and App Check is configured.", "error");
+    }
   });
 
   resultsRoot?.addEventListener("click", (event) => {
