@@ -118,23 +118,40 @@ export function bindLinks() {
   });
 }
 
+async function toggleThemeFromEngine() {
+  try {
+    const themeModule = await import("../theme.js?v=37");
+    const appearance = themeModule.toggleTheme?.();
+    const mode = appearance?.mode || themeModule.getTheme?.() || getAppearanceTheme();
+    setTheme(mode);
+    syncThemeLabel();
+    return;
+  } catch (error) {
+    console.warn("Theme engine import failed; using nav fallback.", error);
+  }
+
+  const current = getAppearanceTheme();
+  const next = current === "light" ? "dark" : "light";
+
+  try {
+    const raw = localStorage.getItem("evaraos-appearance");
+    const appearance = raw ? JSON.parse(raw) : {};
+    appearance.mode = next;
+    appearance.baseFamily = next;
+    appearance.updatedAt = new Date().toISOString();
+    localStorage.setItem("evaraos-appearance", JSON.stringify(appearance));
+  } catch {}
+
+  setTheme(next);
+  syncThemeLabel();
+  window.dispatchEvent(new CustomEvent("evara:appearance-updated", { detail: { mode: next, baseFamily: next } }));
+}
+
 export function bindThemeToggle() {
   Array.from(document.querySelectorAll("#evaThemeToggle, #evaThemePillToggle")).forEach((toggle) => {
-    bindOnce(toggle, "click", (event) => {
+    bindOnce(toggle, "click", async (event) => {
       stopEvent(event);
-      const current = getAppearanceTheme();
-      const next = current === "light" ? "dark" : "light";
-
-      try {
-        const raw = localStorage.getItem("evaraos-appearance");
-        const appearance = raw ? JSON.parse(raw) : {};
-        appearance.mode = next;
-        appearance.baseFamily = next;
-        localStorage.setItem("evaraos-appearance", JSON.stringify(appearance));
-      } catch {}
-
-      setTheme(next);
-      syncThemeLabel();
+      await toggleThemeFromEngine();
     });
   });
 }
@@ -165,13 +182,13 @@ function renderSearchResults(root, items = [], query = "") {
   if (!root) return;
 
   if (!query.trim()) {
-    root.innerHTML = '<div class="eva-search-empty">Start typing to search apps, groups, tools, finance, jobs, or settings.</div>';
+    root.innerHTML = '<div class="eva-search-empty">Ask Evaraos AI to open apps, find tools, or route your next action.</div>';
     root.classList.remove("active");
     return;
   }
 
   if (!items.length) {
-    root.innerHTML = '<div class="eva-search-empty">No matching apps found for “' + clean(query) + '”.</div>';
+    root.innerHTML = '<div class="eva-search-empty">AI command queued locally. Backend AI can answer this once Firebase Functions + OpenAI are connected.</div>';
     root.classList.add("active");
     return;
   }
