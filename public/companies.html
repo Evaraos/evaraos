@@ -8,21 +8,17 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
-  <!-- Evaraos App Identity / PWA / Favicons -->
   <link rel="manifest" href="/manifest.json" />
-
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/icon-192.png" />
   <link rel="shortcut icon" href="/favicon.ico" />
-
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" />
 
   <meta name="theme-color" content="#f4f7f6" />
   <meta name="msapplication-TileColor" content="#f4f7f6" />
   <meta name="msapplication-TileImage" content="/assets/img/icon-192.png" />
-
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -42,37 +38,18 @@
   <script src="/assets/js/theme-boot.js?v=1"></script>
 
   <style>
-    html,
-    body { background: #f4f7f6; }
-
-    html[data-theme="dark"],
-    html[data-theme="dark"] body { background: #020307; }
-
-    html.boot-pending body {
-      margin: 0;
-      overflow: hidden;
-      touch-action: none;
-    }
-
-    html.auth-pending body,
-    body.auth-pending {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    body.dashboard-body {
-      margin: 0;
-      min-height: 100vh;
-      background: transparent;
-    }
-
+    html, body { background: #f4f7f6; }
+    html[data-theme="dark"], html[data-theme="dark"] body { background: #020307; }
+    html.boot-pending body { margin: 0; overflow: hidden; touch-action: none; }
+    html.auth-pending body, body.auth-pending { opacity: 0; pointer-events: none; }
+    body.dashboard-body { margin: 0; min-height: 100vh; background: transparent; }
     body.app-loading #appRoot { visibility: hidden; }
     body.app-ready #appRoot { visibility: visible; }
   </style>
 
   <link rel="stylesheet" href="/assets/css/base.css?v=34" />
   <link rel="stylesheet" href="/assets/css/theme.css?v=36" />
-  <link rel="stylesheet" href="/assets/css/nav.css?v=20260503-final" />
+  <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v1" />
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=34" />
   <link rel="stylesheet" href="/assets/css/app-system.css?v=simple-glass" />
 </head>
@@ -88,13 +65,7 @@
         <div class="dashboard-sidebar-inner glass-shell aurora-card active-glow beam-target">
           <div class="dashboard-sidebar-search">
             <div class="dashboard-search-shell input-shell aurora-card active-glow beam-target">
-              <input
-                type="search"
-                class="dashboard-search-input input"
-                id="companiesSearch"
-                placeholder="Search companies..."
-                aria-label="Search companies"
-              />
+              <input type="search" class="dashboard-search-input input" id="companiesSearch" placeholder="Search companies..." aria-label="Search companies" />
             </div>
           </div>
 
@@ -104,23 +75,14 @@
           </div>
 
           <nav class="dashboard-sidebar-nav" aria-label="Companies sections">
-            <a href="#companiesHeroSection" class="dashboard-nav-link active aurora-card beam-target">
-              <span class="dashboard-nav-icon">◉</span>
-              <span>Overview</span>
-            </a>
-
-            <a href="#companiesMainSection" class="dashboard-nav-link aurora-card beam-target">
-              <span class="dashboard-nav-icon">◎</span>
-              <span>Portfolio</span>
-            </a>
+            <a href="#companiesHeroSection" class="dashboard-nav-link active aurora-card beam-target"><span class="dashboard-nav-icon">◉</span><span>Overview</span></a>
+            <a href="#companiesMainSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon">◎</span><span>Portfolio</span></a>
           </nav>
 
           <div class="dashboard-sidebar-foot glass-card aurora-card active-glow beam-target">
             <div class="dashboard-sidebar-foot-copy">
               <strong>Portfolio Tools</strong>
-              <span>
-                Search, review, and refresh company records across your Evaraos ecosystem.
-              </span>
+              <span>Search, review, and refresh company records across your Evaraos ecosystem.</span>
             </div>
             <button type="button" id="companiesRefreshBtnSide" class="btn btn-theme-primary">Refresh</button>
           </div>
@@ -132,10 +94,7 @@
           <div class="dashboard-hero-copy">
             <p class="dashboard-eyebrow">COMPANY PORTFOLIO</p>
             <h1 id="companiesHeroTitle">Loading companies...</h1>
-            <p class="dashboard-hero-text" id="companiesHeroText">
-              Connecting to Firestore company records.
-            </p>
-
+            <p class="dashboard-hero-text" id="companiesHeroText">Connecting to Firestore company records.</p>
             <div class="dashboard-hero-actions">
               <button type="button" id="companiesRefreshBtnTop" class="btn btn-theme-primary">Refresh</button>
               <button type="button" id="companiesSortBtn" class="btn btn-theme-secondary">Sort A–Z</button>
@@ -143,84 +102,30 @@
           </div>
 
           <div class="dashboard-hero-panel glass-card aurora-card active-glow beam-target">
-            <div class="dashboard-hero-panel-top">
-              <span class="dashboard-mini-badge">Portfolio Status</span>
-              <span class="dashboard-live-dot"></span>
-            </div>
-
-            <div class="dashboard-hero-logo-wrap">
-              <img
-                src="/assets/img/evaraos_logo.png"
-                alt="Evaraos"
-                class="dashboard-hero-logo"
-                loading="eager"
-                decoding="async"
-                fetchpriority="high"
-              />
-            </div>
-
-            <div class="dashboard-hero-panel-copy">
-              <strong>Company Registry</strong>
-              <span>Track portfolio health and company record visibility.</span>
-            </div>
+            <div class="dashboard-hero-panel-top"><span class="dashboard-mini-badge">Portfolio Status</span><span class="dashboard-live-dot"></span></div>
+            <div class="dashboard-hero-logo-wrap"><img src="/assets/img/evaraos_logo.png" alt="Evaraos" class="dashboard-hero-logo" loading="eager" decoding="async" fetchpriority="high" /></div>
+            <div class="dashboard-hero-panel-copy"><strong>Company Registry</strong><span>Track portfolio health and company record visibility.</span></div>
           </div>
         </section>
 
         <section class="dashboard-overview glass-card aurora-card active-glow beam-target">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Snapshot</p>
-              <h2>Portfolio Overview</h2>
-            </div>
-          </div>
-
+          <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Snapshot</p><h2>Portfolio Overview</h2></div></div>
           <div class="dashboard-stats-grid">
-            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
-              <p>Total</p>
-              <h3 id="companiesStatTotal">0</h3>
-              <span id="companiesStatTotalMeta">Company records loaded</span>
-            </article>
-
-            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
-              <p>Healthy</p>
-              <h3 id="companiesStatHealthy">0</h3>
-              <span id="companiesStatHealthyMeta">Healthy or active companies</span>
-            </article>
-
-            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
-              <p>Review</p>
-              <h3 id="companiesStatReview">0</h3>
-              <span id="companiesStatReviewMeta">Records needing review</span>
-            </article>
-
-            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target">
-              <p>Filtered</p>
-              <h3 id="companiesStatFiltered">0</h3>
-              <span id="companiesStatFilteredMeta">Matches current search</span>
-            </article>
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target"><p>Total</p><h3 id="companiesStatTotal">0</h3><span id="companiesStatTotalMeta">Company records loaded</span></article>
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target"><p>Healthy</p><h3 id="companiesStatHealthy">0</h3><span id="companiesStatHealthyMeta">Healthy or active companies</span></article>
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target"><p>Review</p><h3 id="companiesStatReview">0</h3><span id="companiesStatReviewMeta">Records needing review</span></article>
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target"><p>Filtered</p><h3 id="companiesStatFiltered">0</h3><span id="companiesStatFilteredMeta">Matches current search</span></article>
           </div>
         </section>
 
         <section class="dashboard-grid-2" id="companiesMainSection">
           <section class="dashboard-panel glass-card aurora-card active-glow beam-target">
-            <div class="dashboard-section-head">
-              <div>
-                <p class="dashboard-section-kicker">Registry</p>
-                <h2>Companies</h2>
-              </div>
-            </div>
-
+            <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Registry</p><h2>Companies</h2></div></div>
             <div class="dashboard-list" id="companiesList"></div>
           </section>
 
           <section class="dashboard-panel glass-card aurora-card active-glow beam-target">
-            <div class="dashboard-section-head">
-              <div>
-                <p class="dashboard-section-kicker">Activity</p>
-                <h2>Portfolio Feed</h2>
-              </div>
-            </div>
-
+            <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Activity</p><h2>Portfolio Feed</h2></div></div>
             <div class="dashboard-feed" id="companiesFeed"></div>
           </section>
         </section>
@@ -233,11 +138,7 @@
   <script type="module" src="/assets/js/theme.js?v=37"></script>
   <script src="/assets/js/theme-css-loader.js?v=1"></script>
   <script type="module" src="/assets/js/route-guard.js?v=35"></script>
-  <script type="module" src="/assets/js/nav.js?v=20260503-final"></script>
+  <script type="module" src="/assets/js/nav.js?v=nav-v1"></script>
   <script type="module" src="/assets/js/companies.js?v=1"></script>
-
-<!-- EVARAOS BOTTOM DOT NAV + ABOVE DROPDOWN TUNE -->
-<!-- /EVARAOS BOTTOM DOT NAV + ABOVE DROPDOWN TUNE -->
-
 </body>
 </html>
