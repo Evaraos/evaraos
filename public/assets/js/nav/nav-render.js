@@ -1,37 +1,18 @@
-// Evaraos Control Center Renderer
-// Single nav-v1 renderer: grouped rows, account tools, AI command prompt, and clean bottom controls.
-
-import {
-  getMount,
-  getBasePath,
-  buildHref,
-  getVisibleLinks,
-  isCurrentPage
-} from "./nav-utils.js";
-
+import { getMount, getBasePath, buildHref, getVisibleLinks, isCurrentPage } from "./nav-utils.js";
 import { APP_CATEGORIES, appsByCategory } from "../navigation/app-registry.js";
 
-const NAV_RENDER_BUILD = "nav-v1-ai-send-controls";
+const NAV_RENDER_BUILD = "evaraos-clean-nav-20260519";
 
-const CATEGORY_LABELS = Object.freeze({
-  operations: { title: "Operations", subtitle: "Field Ops, Dispatch, Jobs & More", icon: "▣" },
-  organizations: { title: "Organizations", subtitle: "Companies, Offices, Vendors & Teams", icon: "▥" },
-  finance: { title: "Finance", subtitle: "Billing, Payroll, Revenue & Accounting", icon: "$" },
-  customer: { title: "Customer", subtitle: "Customer Portal & Support Tools", icon: "♙" },
-  intelligence: { title: "Executive", subtitle: "AI Command, Analytics & Intelligence", icon: "ϟ" },
-  system: { title: "System", subtitle: "Administration & System Tools", icon: "♢" }
-});
+const CATEGORIES = [
+  [APP_CATEGORIES.operations, "Operations", "Jobs, leads, dispatch", "▣"],
+  [APP_CATEGORIES.organizations, "Organizations", "Companies, offices, vendors", "▥"],
+  [APP_CATEGORIES.finance, "Finance", "Billing, payouts, payroll", "$"],
+  [APP_CATEGORIES.customer, "Customer", "Portal, support, history", "♙"],
+  [APP_CATEGORIES.intelligence, "Executive", "AI, analytics, command", "✦"],
+  [APP_CATEGORIES.system, "System", "Admin, settings, QA", "⚙"]
+];
 
-const CATEGORY_ORDER = Object.freeze([
-  APP_CATEGORIES.operations,
-  APP_CATEGORIES.organizations,
-  APP_CATEGORIES.finance,
-  APP_CATEGORIES.customer,
-  APP_CATEGORIES.intelligence,
-  APP_CATEGORIES.system
-]);
-
-function clean(value = "") {
+function esc(value = "") {
   return String(value || "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
@@ -40,128 +21,126 @@ function clean(value = "") {
     .replaceAll("'", "&#039;");
 }
 
-function activeAttrs(route = "") {
-  return isCurrentPage(route) ? ' aria-current="page" data-active="true"' : "";
-}
-
-function normalizeRegistryRole(role = "customer") {
-  const normalized = String(role || "customer").toLowerCase();
-  if (["owner", "super_admin"].includes(normalized)) return "owner";
-  if (["admin", "manager", "operations_manager"].includes(normalized)) return "admin";
-  if (["organization", "organization_owner", "office_owner", "branch_owner"].includes(normalized)) return "organization";
-  if (["vendor", "lead_vendor", "service_vendor", "management_program"].includes(normalized)) return "vendor";
-  if (["hr", "hr_manager"].includes(normalized)) return "hr";
-  if (["staff", "sales", "sales_rep", "technician", "cleaner", "field_staff", "crew_lead"].includes(normalized)) return "staff";
+function roleForRegistry(role = "customer") {
+  const value = String(role || "customer").toLowerCase();
+  if (["owner", "super_admin"].includes(value)) return "owner";
+  if (["admin", "manager", "operations_manager"].includes(value)) return "admin";
+  if (["organization", "organization_owner", "office_owner", "branch_owner"].includes(value)) return "organization";
+  if (["vendor", "lead_vendor", "service_vendor", "management_program"].includes(value)) return "vendor";
+  if (["hr", "hr_manager"].includes(value)) return "hr";
+  if (["staff", "sales", "sales_rep", "technician", "cleaner", "field_staff", "crew_lead"].includes(value)) return "staff";
   return "customer";
 }
 
-function routeData(apps = []) {
-  return clean(JSON.stringify(apps.map((app) => ({ title: app.title, route: app.route, category: app.category, id: app.id }))));
+function active(route = "") {
+  return isCurrentPage(route) ? ' data-active="true" aria-current="page"' : "";
 }
 
-function groupRow(category, apps = []) {
+function linkCard(route, icon, title, subtitle, label = title) {
+  return `<a class="eva-nav-card" href="${route}" data-menu-link="${route}" data-label="${esc(label)}"${active(route)}><span>${icon}</span><strong>${esc(title)}</strong><small>${esc(subtitle)}</small></a>`;
+}
+
+function groupRow(category, title, subtitle, icon, apps = []) {
   if (!apps.length) return "";
-  const copy = CATEGORY_LABELS[category] || { title: category, subtitle: "Apps", icon: "◈" };
-  const active = apps.some((app) => isCurrentPage(app.route));
-  return `
-    <button type="button" class="eva-control-row eva-folder-${clean(category)}" data-nav-group="${clean(category)}" data-group-apps='${routeData(apps)}' ${active ? 'data-active="true" aria-current="page"' : ""} aria-label="Open ${clean(copy.title)} tools">
-      <span class="eva-control-row-icon">${clean(copy.icon)}</span>
-      <span class="eva-control-row-copy"><strong>${clean(copy.title)}</strong><small>${clean(copy.subtitle)}</small></span>
-      <span class="eva-control-row-count">${apps.length}</span>
-      <span class="eva-control-row-arrow">›</span>
-    </button>`;
+  const isActive = apps.some((app) => isCurrentPage(app.route));
+  const data = esc(JSON.stringify(apps.map((app) => ({ title: app.title, route: app.route, category: app.category, id: app.id }))));
+  return `<button class="eva-group-row eva-folder-${esc(category)}" type="button" data-nav-group="${esc(category)}" data-group-apps='${data}'${isActive ? ' data-active="true" aria-current="page"' : ""}>
+    <span class="eva-group-icon">${icon}</span>
+    <span class="eva-group-copy"><strong>${esc(title)}</strong><small>${esc(subtitle)}</small></span>
+    <span class="eva-group-count">${apps.length}</span>
+    <span class="eva-group-arrow">›</span>
+  </button>`;
 }
 
-function registryRows(role = "customer") {
-  const groups = appsByCategory(normalizeRegistryRole(role));
-  return CATEGORY_ORDER.map((category) => groupRow(category, groups[category] || [])).join("");
+function quickNavigation() {
+  return `<section class="eva-menu-section">
+    <div class="eva-section-head"><span>↗</span><div><p>Navigation</p><h3>Move through Evaraos</h3></div></div>
+    <div class="eva-card-grid">
+      ${linkCard(buildHref("index.html"), "⌂", "Home", "Start")}
+      ${linkCard(buildHref("dashboard.html"), "▦", "Dashboard", "Command")}
+      ${linkCard(buildHref("operations_map.html"), "◉", "Map", "Live ops")}
+      ${linkCard(buildHref("leads.html"), "◎", "Leads", "Pipeline")}
+      ${linkCard(buildHref("jobs.html"), "▣", "Jobs", "Work")}
+    </div>
+  </section>`;
 }
 
-function aiPromptBox(authed = false) {
-  return `
-    <div class="eva-menu-search eva-ai-prompt eva-menu-search-bottom" role="search">
-      <label class="sr-only" for="evaSearchInput">Ask Evaraos AI</label>
-      <div class="eva-ai-prompt-head"><span class="eva-ai-orb">AI</span><div><strong>Evaraos AI Command</strong><small>Ask, search, open pages, or route app actions.</small></div></div>
-      <form class="eva-search-shell eva-ai-search-shell" id="evaAiPromptForm" autocomplete="off">
-        <span class="eva-search-icon">✦</span>
-        <input id="evaSearchInput" name="evaSearchInput" type="search" autocomplete="off" enterkeyhint="send" inputmode="search" placeholder="${authed ? "Ask Evaraos AI anything..." : "Ask about access, onboarding, or the platform..."}" />
-        <button class="eva-ai-mic-btn" id="evaAiMicBtn" type="button" aria-label="Speak to Evaraos AI">Mic</button>
-        <button class="eva-ai-send-btn" id="evaAiSendBtn" type="submit" aria-label="Send command to Evaraos AI">Send</button>
-      </form>
-      <div id="evaSearchResults" class="eva-search-results eva-ai-results" aria-live="polite"></div>
-      <p class="eva-search-helper">Try: “open jobs”, “show companies”, “go to settings”, or “find leads”.</p>
-    </div>`;
-}
-
-function navigationSection() {
-  const homeHref = buildHref("index.html");
-  const dashboardHref = buildHref("dashboard.html");
-  const mapHref = buildHref("operations_map.html");
-  return `
-    <section class="eva-menu-top-block eva-navigation-block" data-nav-section="Navigation">
-      <div class="eva-top-block-head"><span class="eva-top-block-icon">↗</span><div><p>NAVIGATION</p><h3>Go to dashboards & core areas</h3></div><span class="eva-top-block-arrow">›</span></div>
-      <div class="eva-quick-strip">
-        <a href="${homeHref}" data-menu-link="${homeHref}" data-label="home" data-group="navigation" data-page="index.html"${activeAttrs(homeHref)}><span>⌂</span><strong>Home</strong><small>Dashboard</small></a>
-        <a href="${dashboardHref}" data-menu-link="${dashboardHref}" data-label="dashboards" data-group="navigation" data-page="dashboard.html"${activeAttrs(dashboardHref)}><span>▦</span><strong>Dashboards</strong><small>All Dashboards</small></a>
-        <a href="${mapHref}" data-menu-link="${mapHref}" data-label="map view" data-group="navigation" data-page="operations_map.html"${activeAttrs(mapHref)}><span>◉</span><strong>Map View</strong><small>Live Operations</small></a>
-        <a href="${dashboardHref}" data-menu-link="${dashboardHref}" data-label="bookmarks" data-group="navigation" data-page="bookmarks"><span>★</span><strong>Bookmarks</strong><small>Quick Access</small></a>
-        <a href="${dashboardHref}" data-menu-link="${dashboardHref}" data-label="recent" data-group="navigation" data-page="recent"><span>◷</span><strong>Recent</strong><small>History</small></a>
+function accountTools(authed) {
+  if (!authed) {
+    return `<section class="eva-menu-section">
+      <div class="eva-section-head"><span>◌</span><div><p>Access</p><h3>Sign in or apply</h3></div></div>
+      <div class="eva-card-grid eva-card-grid-three">
+        ${linkCard(buildHref("login.html"), "⇥", "Login", "Access")}
+        ${linkCard(buildHref("signup.html"), "+", "Signup", "Create")}
+        ${linkCard(buildHref("staff_application.html"), "◐", "Apply", "Staff")}
       </div>
     </section>`;
+  }
+
+  return `<section class="eva-menu-section">
+    <div class="eva-section-head"><span>♙</span><div><p>Account</p><h3>Profile, alerts, security</h3></div></div>
+    <div class="eva-card-grid">
+      ${linkCard(buildHref("settings.html"), "♙", "Profile", "Account")}
+      ${linkCard(buildHref("settings.html"), "⚙", "Settings", "System")}
+      ${linkCard(buildHref("notifications.html"), "♧", "Alerts", "Inbox")}
+      ${linkCard(buildHref("settings.html"), "♢", "Security", "Access")}
+      <a class="eva-nav-card" href="#logout" id="evaLogoutBtn" data-action="logout"><span>⇥</span><strong>Logout</strong><small>Exit</small></a>
+    </div>
+  </section>`;
 }
 
-function accountSection(authed = false) {
-  if (!authed) return "";
-  const settingsHref = buildHref("settings.html");
-  const notificationsHref = buildHref("notifications.html");
-  return `
-    <section class="eva-menu-top-block eva-account-tools-block" data-nav-section="Account Tools">
-      <div class="eva-top-block-head"><span class="eva-top-block-icon">♙</span><div><p>ACCOUNT TOOLS</p><h3>Profile, settings & preferences</h3></div><span class="eva-top-block-arrow">›</span></div>
-      <div class="eva-account-strip">
-        <a href="${settingsHref}" data-menu-link="${settingsHref}" data-label="profile" data-group="account" data-page="settings.html"${activeAttrs(settingsHref)}><span>♙</span><strong>Profile</strong></a>
-        <a href="${settingsHref}" data-menu-link="${settingsHref}" data-label="settings" data-group="account" data-page="settings.html"${activeAttrs(settingsHref)}><span>⚙</span><strong>Settings</strong></a>
-        <a href="${notificationsHref}" data-menu-link="${notificationsHref}" data-label="notifications" data-group="account" data-page="notifications.html"${activeAttrs(notificationsHref)}><span>♧</span><strong>Alerts</strong></a>
-        <a href="${settingsHref}" data-menu-link="${settingsHref}" data-label="security" data-group="account" data-page="settings.html"${activeAttrs(settingsHref)}><span>♢</span><strong>Security</strong></a>
-        <a href="#logout" id="evaLogoutBtn" data-action="logout" data-label="logout" data-group="account" data-page="logout"><span>⇥</span><strong>Logout</strong></a>
-      </div>
-    </section>`;
+function operationGroups(role) {
+  const groups = appsByCategory(roleForRegistry(role));
+  const rows = CATEGORIES.map(([category, title, subtitle, icon]) => groupRow(category, title, subtitle, icon, groups[category] || [])).join("");
+  if (!rows) return "";
+  return `<section class="eva-menu-section eva-groups-section"><p class="eva-section-label">Operating System</p><div class="eva-group-stack">${rows}</div></section>`;
 }
 
-function accessSection() {
-  const loginHref = buildHref("login.html");
-  const signupHref = buildHref("signup.html");
-  const applyHref = buildHref("staff_application.html");
-  return `
-    <section class="eva-menu-top-block eva-account-tools-block" data-nav-section="Access">
-      <div class="eva-top-block-head"><span class="eva-top-block-icon">◌</span><div><p>ACCESS</p><h3>Authentication & onboarding</h3></div><span class="eva-top-block-arrow">›</span></div>
-      <div class="eva-account-strip eva-access-strip">
-        <a href="${loginHref}" data-menu-link="${loginHref}" data-label="login" data-group="access" data-page="login.html"${activeAttrs(loginHref)}><span>⇥</span><strong>Login</strong></a>
-        <a href="${signupHref}" data-menu-link="${signupHref}" data-label="signup" data-group="access" data-page="signup.html"${activeAttrs(signupHref)}><span>＋</span><strong>Signup</strong></a>
-        <a href="${applyHref}" data-menu-link="${applyHref}" data-label="apply" data-group="access" data-page="staff_application.html"${activeAttrs(applyHref)}><span>◐</span><strong>Apply</strong></a>
-      </div>
-    </section>`;
+function aiBox(authed) {
+  return `<section class="eva-menu-section eva-ai-section">
+    <div class="eva-section-head"><span>AI</span><div><p>Evaraos AI</p><h3>Ask, search, or open tools</h3></div></div>
+    <form class="eva-ai-form" id="evaAiPromptForm" autocomplete="off">
+      <span class="eva-ai-spark">✦</span>
+      <input id="evaSearchInput" name="evaSearchInput" type="search" autocomplete="off" enterkeyhint="send" inputmode="search" placeholder="${authed ? "Ask Evaraos AI..." : "Ask about Evaraos..."}" />
+      <button class="eva-ai-icon-btn" id="evaAiMicBtn" type="button" aria-label="Speak">🎙</button>
+      <button class="eva-ai-send-btn" id="evaAiSendBtn" type="submit" aria-label="Send">➜</button>
+    </form>
+    <div id="evaSearchResults" class="eva-ai-results" aria-live="polite"></div>
+    <p class="eva-ai-helper">Try “open jobs”, “show leads”, or “go to settings”.</p>
+  </section>`;
 }
 
 export function renderNav() {
   const mount = getMount();
   if (!mount) return false;
-  const groups = getVisibleLinks();
-  const role = normalizeRegistryRole(groups.role);
-  mount.innerHTML = `
-    <div class="eva-nav-layer" data-render-build="${NAV_RENDER_BUILD}">
-      <header class="eva-nav-shell" id="evaNavShell"><div class="eva-nav-pill glass-shell" id="evaNavPill">
-        <div class="eva-brand" id="evaBrandBlock" data-home-link="${buildHref("index.html")}" tabindex="0"><img src="${getBasePath()}/assets/img/evaraos_logo.png" alt="Evaraos logo" class="eva-logo" /><div class="eva-brand-copy"><strong>Evaraos Inc</strong><span>Subsidiaries Allocation SaaS</span></div></div>
+
+  const session = getVisibleLinks();
+  const role = roleForRegistry(session.role);
+  const logo = `${getBasePath()}/assets/img/evaraos_logo.png`;
+
+  mount.innerHTML = `<div class="eva-nav-layer" data-render-build="${NAV_RENDER_BUILD}">
+    <header class="eva-nav-shell" id="evaNavShell">
+      <div class="eva-nav-pill" id="evaNavPill">
+        <button class="eva-brand" id="evaBrandBlock" data-home-link="${buildHref("index.html")}" type="button">
+          <img src="${logo}" alt="Evaraos" class="eva-logo" />
+          <span class="eva-brand-copy"><strong>Evaraos Inc</strong><small>Subsidiaries Allocation SaaS</small></span>
+        </button>
         <div class="eva-menu-zone" id="evaMenuZone">
-          <button class="eva-nav-action-btn eva-theme-nav-btn" type="button" id="evaThemeToggle" data-theme-label="true" aria-label="Toggle light or dark mode"><span class="eva-theme-nav-icon" aria-hidden="true">◐</span></button>
-          <button class="eva-nav-action-btn eva-menu-btn" type="button" id="evaMenuBtn" aria-expanded="false" aria-label="Open menu"><span class="eva-burger" aria-hidden="true"><span class="eva-burger-line"></span><span class="eva-burger-line"></span><span class="eva-burger-line"></span></span></button>
+          <button class="eva-nav-action-btn eva-theme-nav-btn" type="button" id="evaThemeToggle" data-theme-label="true" aria-label="Toggle theme"><span class="eva-theme-nav-icon">◐</span></button>
+          <button class="eva-nav-action-btn eva-menu-btn" type="button" id="evaMenuBtn" aria-expanded="false" aria-label="Open menu"><span class="eva-burger"><i></i><i></i><i></i></span></button>
         </div>
-      </div></header>
-      <div class="eva-backdrop" id="evaBackdrop"></div>
-      <div class="eva-menu-panel eva-control-center-panel" id="evaMenuPanel"><nav class="eva-menu-apps" id="evaLinks" data-nav-role="${clean(role)}">
-        ${navigationSection()}
-        ${groups.authed ? accountSection(true) : accessSection()}
-        ${groups.authed ? `<p class="eva-section-label">OPERATIONS</p><div class="eva-control-row-stack">${registryRows(groups.role)}</div>` : ""}
-      </nav>${aiPromptBox(groups.authed)}</div>
-    </div>`;
+      </div>
+    </header>
+    <button class="eva-backdrop" id="evaBackdrop" type="button" aria-label="Close menu"></button>
+    <aside class="eva-menu-panel" id="evaMenuPanel" aria-label="Evaraos menu">
+      <nav class="eva-menu-content" id="evaLinks" data-nav-role="${esc(role)}">
+        ${quickNavigation()}
+        ${accountTools(session.authed)}
+        ${session.authed ? operationGroups(session.role) : ""}
+        ${aiBox(session.authed)}
+      </nav>
+    </aside>
+  </div>`;
+
   return true;
 }
