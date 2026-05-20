@@ -1,8 +1,8 @@
 export const APPEARANCE_STORAGE_KEY = "evaraos-appearance";
 
 export const DEFAULT_APPEARANCE = {
-  mode: "dark",
-  baseFamily: "dark",
+  mode: "system",
+  baseFamily: "system",
   cardTint: "#ffffff",
   buttonTint: "#ffffff",
   beamColor: "#7c3aed",
@@ -18,12 +18,30 @@ export function safeJsonParse(value, fallback = null) {
   }
 }
 
+export function systemTheme() {
+  try {
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  } catch {
+    return "light";
+  }
+}
+
+export function normalizeAppearanceMode(mode = "system") {
+  const value = String(mode || "system").trim().toLowerCase();
+  if (["light", "dark", "system", "custom", "galaxy"].includes(value)) return value;
+  return "system";
+}
+
 export function getAppearance() {
   const stored = safeJsonParse(localStorage.getItem(APPEARANCE_STORAGE_KEY), null);
-  return {
+  const merged = {
     ...DEFAULT_APPEARANCE,
     ...(stored || {})
   };
+
+  merged.mode = normalizeAppearanceMode(merged.mode);
+  if (!merged.baseFamily) merged.baseFamily = merged.mode;
+  return merged;
 }
 
 export function saveAppearance(nextAppearance) {
@@ -32,15 +50,26 @@ export function saveAppearance(nextAppearance) {
     ...(nextAppearance || {})
   };
 
+  merged.mode = normalizeAppearanceMode(merged.mode);
+  if (merged.mode !== "custom") merged.baseFamily = merged.mode;
+  if (merged.mode === "custom" && !merged.baseFamily) merged.baseFamily = systemTheme();
+  merged.updatedAt = new Date().toISOString();
+
   localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify(merged));
+  localStorage.setItem("evaraos-theme", getThemeFromAppearance(merged));
   applyAppearance(merged);
   return merged;
 }
 
 export function resetAppearance() {
-  localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify(DEFAULT_APPEARANCE));
-  applyAppearance(DEFAULT_APPEARANCE);
-  return { ...DEFAULT_APPEARANCE };
+  const reset = {
+    ...DEFAULT_APPEARANCE,
+    updatedAt: new Date().toISOString()
+  };
+  localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify(reset));
+  localStorage.setItem("evaraos-theme", getThemeFromAppearance(reset));
+  applyAppearance(reset);
+  return { ...reset };
 }
 
 export function getThemeFromAppearance(appearance) {
@@ -49,14 +78,20 @@ export function getThemeFromAppearance(appearance) {
     ...(appearance || {})
   };
 
-  if (safe.mode === "light") return "light";
+  const mode = normalizeAppearanceMode(safe.mode);
 
-  if (safe.mode === "custom") {
+  if (mode === "light") return "light";
+  if (mode === "dark") return "dark";
+  if (mode === "system") return systemTheme();
+  if (mode === "galaxy") return "dark";
+
+  if (mode === "custom") {
     if (safe.baseFamily === "light") return "light";
+    if (safe.baseFamily === "system") return systemTheme();
     return "dark";
   }
 
-  return "dark";
+  return systemTheme();
 }
 
 export function applyAppearance(appearance) {
@@ -65,19 +100,42 @@ export function applyAppearance(appearance) {
     ...(appearance || {})
   };
 
+  safe.mode = normalizeAppearanceMode(safe.mode);
   const theme = getThemeFromAppearance(safe);
-  document.documentElement.setAttribute("data-theme", theme);
+  const root = document.documentElement;
 
-  document.documentElement.style.setProperty("--user-card-tint", safe.cardTint);
-  document.documentElement.style.setProperty("--user-button-tint", safe.buttonTint);
-  document.documentElement.style.setProperty("--user-beam-color", safe.beamColor);
-  document.documentElement.style.setProperty("--user-background-glow", safe.backgroundGlow);
+  root.setAttribute("data-theme", theme);
+  root.setAttribute("data-appearance-mode", safe.mode);
+  root.style.colorScheme = theme;
+  root.classList.toggle("dark", theme === "dark");
+
+  if (document.body) {
+    document.body.setAttribute("data-theme", theme);
+    document.body.setAttribute("data-appearance-mode", safe.mode);
+    document.body.classList.toggle("dark", theme === "dark");
+  }
+
+  try {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", theme === "dark" ? "#020307" : "#f4f7f6");
+  } catch {}
+
+  root.style.setProperty("--user-card-tint", safe.cardTint);
+  root.style.setProperty("--user-button-tint", safe.buttonTint);
+  root.style.setProperty("--user-beam-color", safe.beamColor);
+  root.style.setProperty("--user-background-glow", safe.backgroundGlow);
 
   if (safe.rainbowBeam && theme !== "dark") {
-    document.documentElement.setAttribute("data-beam-mode", "rainbow");
+    root.setAttribute("data-beam-mode", "rainbow");
   } else {
-    document.documentElement.setAttribute("data-beam-mode", "default");
+    root.setAttribute("data-beam-mode", "default");
   }
+
+  window.EvaraLoader?.syncTheme?.(theme);
+  window.dispatchEvent(new CustomEvent("evara:appearance-updated", {
+    detail: { ...safe, theme, mode: safe.mode, resolvedTheme: theme }
+  }));
+  window.dispatchEvent(new CustomEvent("evara:theme-applied", { detail: { theme, mode: safe.mode } }));
 
   return safe;
 }
@@ -105,3 +163,13 @@ export function markSettingsReady() {
 }
 
 applyAppearance(getAppearance());
+
+try {
+  const media = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
+  if (media) {
+    media.addEventListener?.("change", () => {
+      const appearance = getAppearance();
+      if (appearance.mode === "system" || appearance.baseFamily === "system") applyAppearance(appearance);
+    });
+  }
+} catch {}
