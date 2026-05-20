@@ -8,59 +8,24 @@
   --eva-ambient-blue: rgba(37,99,235,.16);
   --eva-ambient-purple: rgba(124,58,237,.13);
   --eva-ambient-white: rgba(255,255,255,.10);
+  --eva-glow-x: 50%;
+  --eva-glow-y: 50%;
 }
 
 html,
-body {
-  min-height: 100%;
-}
+body { min-height: 100%; }
 
-body {
-  position: relative;
-  overflow-x: hidden;
-}
+body { position: relative; overflow-x: hidden; }
 
 body::before,
-body::after {
-  content: "";
-  position: fixed;
-  inset: -20%;
-  pointer-events: none;
-  z-index: -2;
-}
-
-body::before {
-  background:
-    radial-gradient(circle at 18% 20%, var(--eva-ambient-blue), transparent 24%),
-    radial-gradient(circle at 82% 18%, var(--eva-ambient-purple), transparent 26%),
-    radial-gradient(circle at 50% 82%, rgba(59,130,246,.10), transparent 28%);
-  filter: blur(34px);
-  animation: evaAmbientShift 18s ease-in-out infinite alternate;
-  opacity: .92;
-}
-
-body::after {
-  background:
-    linear-gradient(115deg,
-      transparent 0%,
-      rgba(255,255,255,.028) 22%,
-      transparent 44%,
-      transparent 100%);
-  animation: evaBeamSweep 12s linear infinite;
-  opacity: .48;
-  z-index: -1;
-}
+body::after { content: ""; position: fixed; inset: -20%; pointer-events: none; z-index: -2; }
+body::before { background: radial-gradient(circle at 18% 20%, var(--eva-ambient-blue), transparent 24%), radial-gradient(circle at 82% 18%, var(--eva-ambient-purple), transparent 26%), radial-gradient(circle at 50% 82%, rgba(59,130,246,.10), transparent 28%); filter: blur(34px); animation: evaAmbientShift 18s ease-in-out infinite alternate; opacity: .92; }
+body::after { background: linear-gradient(115deg, transparent 0%, rgba(255,255,255,.028) 22%, transparent 44%, transparent 100%); animation: evaBeamSweep 12s linear infinite; opacity: .48; z-index: -1; }
 
 html[data-theme="dark"] body::before,
 body[data-theme="dark"]::before,
 html.dark body::before,
-body.dark::before {
-  background:
-    radial-gradient(circle at 18% 20%, rgba(37,99,235,.22), transparent 24%),
-    radial-gradient(circle at 82% 18%, rgba(124,58,237,.18), transparent 26%),
-    radial-gradient(circle at 50% 82%, rgba(96,165,250,.12), transparent 28%);
-  opacity: 1;
-}
+body.dark::before { background: radial-gradient(circle at 18% 20%, rgba(37,99,235,.22), transparent 24%), radial-gradient(circle at 82% 18%, rgba(124,58,237,.18), transparent 26%), radial-gradient(circle at 50% 82%, rgba(96,165,250,.12), transparent 28%); opacity: 1; }
 
 .glass-card,
 .glass-shell,
@@ -89,6 +54,8 @@ body.dark::before {
   position: relative;
   isolation: isolate;
   overflow: hidden;
+  --eva-local-x: var(--eva-glow-x);
+  --eva-local-y: var(--eva-glow-y);
 }
 
 .glass-card::before,
@@ -121,13 +88,11 @@ body.dark::before {
   border-radius: inherit;
   pointer-events: none;
   background:
-    linear-gradient(135deg,
-      rgba(255,255,255,.18),
-      transparent 22%,
-      transparent 72%,
-      rgba(255,255,255,.08));
-  opacity: .72;
+    radial-gradient(circle at var(--eva-local-x) var(--eva-local-y), rgba(96,165,250,.22), transparent 28%),
+    linear-gradient(135deg, rgba(255,255,255,.18), transparent 22%, transparent 72%, rgba(255,255,255,.08));
+  opacity: .68;
   z-index: 0;
+  transition: opacity .22s var(--eva-motion);
 }
 
 .glass-card::after,
@@ -159,18 +124,13 @@ body.dark::before {
   inset: -1px;
   border-radius: inherit;
   padding: 1px;
-  background:
-    linear-gradient(145deg,
-      rgba(255,255,255,.18),
-      rgba(255,255,255,.04),
-      rgba(37,99,235,.10));
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
+  background: linear-gradient(145deg, rgba(255,255,255,.20), rgba(255,255,255,.04), rgba(37,99,235,.14));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   opacity: .72;
   pointer-events: none;
+  transition: opacity .22s var(--eva-motion);
 }
 
 .glass-card:hover,
@@ -183,11 +143,19 @@ body.dark::before {
 .category-card:hover,
 .info-card:hover,
 .dashboard-panel:hover,
-.dashboard-stat-card:hover {
-  transform: translateY(-2px);
-  transition: transform .24s var(--eva-motion), box-shadow .24s var(--eva-motion);
-}
+.dashboard-stat-card:hover { transform: translateY(-2px); transition: transform .24s var(--eva-motion), box-shadow .24s var(--eva-motion); }
 
+.glass-card:hover::before,
+.glass-shell:hover::before,
+.aurora-card:hover::before,
+.hero-card:hover::before,
+.stats-card:hover::before,
+.feature-card:hover::before,
+.service-card:hover::before,
+.category-card:hover::before,
+.info-card:hover::before,
+.dashboard-panel:hover::before,
+.dashboard-stat-card:hover::before,
 .glass-card:hover::after,
 .glass-shell:hover::after,
 .aurora-card:hover::after,
@@ -198,9 +166,7 @@ body.dark::before {
 .category-card:hover::after,
 .info-card:hover::after,
 .dashboard-panel:hover::after,
-.dashboard-stat-card:hover::after {
-  opacity: 1;
-}
+.dashboard-stat-card:hover::after { opacity: 1; }
 
 .glass-card > *,
 .glass-shell > *,
@@ -225,10 +191,7 @@ body.dark::before {
 .dashboard-feed-item > *,
 .dashboard-role-card > *,
 .dashboard-progress-row > *,
-.dashboard-state-card > * {
-  position: relative;
-  z-index: 1;
-}
+.dashboard-state-card > * { position: relative; z-index: 1; }
 
 .dashboard-shell,
 .dashboard-main,
@@ -241,77 +204,32 @@ body.dark::before {
 .dashboard-list,
 .dashboard-feed,
 .dashboard-progress-stack,
-.dashboard-role-grid {
-  position: relative;
-}
+.dashboard-role-grid { position: relative; }
 
 .dashboard-shell,
 .dashboard-main,
 .home-page main,
 .login-page .login-shell,
-body:not(.dashboard-body):not(.login-page) main {
-  animation: evaAppPageRise .32s var(--eva-motion) both;
-}
+body:not(.dashboard-body):not(.login-page) main { animation: evaAppPageRise .32s var(--eva-motion) both; }
 
 .dashboard-grid,
 .dashboard-role-grid,
 .dashboard-list,
 .dashboard-feed,
-.dashboard-progress-stack {
-  display: grid;
-  gap: 14px;
-}
+.dashboard-progress-stack { display: grid; gap: 14px; }
 
 .dashboard-section-head,
 .dashboard-hero,
 .dashboard-panel,
-.dashboard-overview {
-  min-width: 0;
-}
+.dashboard-overview { min-width: 0; }
 
 input::placeholder,
-textarea::placeholder {
-  opacity: 0.56;
-}
+textarea::placeholder { opacity: 0.56; }
 
-@keyframes evaAppPageRise {
-  from {
-    opacity: 0;
-    transform: translateY(8px) scale(.996);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes evaAmbientShift {
-  0% {
-    transform: translate3d(-2%, -1%, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(2%, 1%, 0) scale(1.03);
-  }
-  100% {
-    transform: translate3d(-1%, 2%, 0) scale(1.02);
-  }
-}
-
-@keyframes evaBeamSweep {
-  0% {
-    transform: translateX(-35%) translateY(-8%) rotate(0deg);
-  }
-  100% {
-    transform: translateX(35%) translateY(8%) rotate(1deg);
-  }
-}
+@keyframes evaAppPageRise { from { opacity: 0; transform: translateY(8px) scale(.996); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes evaAmbientShift { 0% { transform: translate3d(-2%, -1%, 0) scale(1); } 50% { transform: translate3d(2%, 1%, 0) scale(1.03); } 100% { transform: translate3d(-1%, 2%, 0) scale(1.02); } }
+@keyframes evaBeamSweep { 0% { transform: translateX(-35%) translateY(-8%) rotate(0deg); } 100% { transform: translateX(35%) translateY(8%) rotate(1deg); } }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation: none !important;
-    transition: none !important;
-    scroll-behavior: auto !important;
-  }
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
