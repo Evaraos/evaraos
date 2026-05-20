@@ -1,27 +1,6 @@
+// Deprecated Evaraos theme CSS loader
+// Kept as a no-op for older HTML pages that still import this file.
+// The active appearance system is owned by theme-boot.js + theme.js.
 (function () {
-  const THEME_LINK_ID = "evaraos-theme-css";
-
-  function getMode() {
-    try {
-      const raw = localStorage.getItem("evaraos-appearance");
-      if (!raw) return "light";
-      const appearance = JSON.parse(raw);
-      if (appearance.mode === "dark") return "dark";
-      if (appearance.mode === "light") return "light";
-      if (appearance.mode === "custom") return appearance.baseFamily === "light" ? "light" : "dark";
-    } catch {}
-    return "light";
-  }
-
-  function applyTheme() {
-    const mode = getMode();
-    document.documentElement.setAttribute("data-theme", mode);
-
-    const stale = document.getElementById(THEME_LINK_ID);
-    if (stale) stale.remove();
-  }
-
-  applyTheme();
-  window.addEventListener("storage", applyTheme);
-  window.addEventListener("evara:appearance-updated", applyTheme);
+  document.getElementById("evaraos-theme-css")?.remove();
 })();
