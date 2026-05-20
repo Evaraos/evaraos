@@ -41,7 +41,8 @@ body.nav-menu-open .eva-menu-panel { opacity: 1; visibility: visible; pointer-ev
 .eva-menu-content { display: grid; gap: 10px; min-width: 0; max-width: 100%; padding-bottom: 6px; }
 .eva-menu-section { border-radius: var(--eva-nav-radius-lg); padding: 10px; background: var(--eva-nav-section); border: 1px solid var(--eva-nav-line); box-shadow: inset 0 1px 0 rgba(255,255,255,.38); }
 html[data-theme="dark"] .eva-menu-section, body[data-theme="dark"] .eva-menu-section, html.dark .eva-menu-section, body.dark .eva-menu-section { box-shadow: inset 0 1px 0 rgba(255,255,255,.045); }
-.eva-section-head { display: grid; grid-template-columns: 48px minmax(0, 1fr) 14px; align-items: center; gap: 12px; margin-bottom: 10px; cursor: pointer; }
+.eva-section-head { display: grid; grid-template-columns: 48px minmax(0, 1fr) 14px; align-items: center; gap: 12px; margin-bottom: 10px; cursor: pointer; color: var(--eva-nav-text); text-decoration: none; }
+.eva-section-head:hover, .eva-section-head:focus, .eva-ai-head-link, .eva-ai-head-link:hover, .eva-ai-head-link:focus { color: var(--eva-nav-text); text-decoration: none; }
 .eva-section-head::after { content: "›"; font-size: 1.42rem; line-height: 1; color: var(--eva-nav-muted); }
 .eva-section-head > span, .eva-group-icon { width: 48px; height: 48px; border-radius: 15px; display: grid; place-items: center; color: var(--eva-nav-blue); background: var(--eva-nav-icon-bg); border: 1px solid color-mix(in srgb, var(--eva-nav-blue) 16%, transparent); box-shadow: inset 0 1px 0 rgba(255,255,255,.46); }
 html[data-theme="dark"] .eva-section-head > span, html[data-theme="dark"] .eva-group-icon, body[data-theme="dark"] .eva-section-head > span, body[data-theme="dark"] .eva-group-icon { box-shadow: inset 0 1px 0 rgba(255,255,255,.06); }
@@ -75,12 +76,13 @@ html[data-theme="dark"] .eva-group-count, body[data-theme="dark"] .eva-group-cou
 .eva-ai-section { overflow: visible; }
 .eva-ai-form { min-height: 58px; display: grid; grid-template-columns: 28px minmax(0,1fr); align-items: center; gap: 10px; padding: 0; border-radius: 0; background: transparent; border: 0; box-shadow: none; transition: none; }
 .eva-ai-spark { width: 28px; height: 58px; display: grid; place-items: center; color: var(--eva-nav-blue); pointer-events: none; }
-.eva-ai-input-shell { min-height: 58px; display: grid; grid-template-columns: minmax(0,1fr) 44px; align-items: center; gap: 8px; padding: 0 7px 0 14px; border-radius: 20px; background: var(--eva-nav-row); border: 1px solid color-mix(in srgb, var(--eva-nav-blue) 20%, var(--eva-nav-line)); box-shadow: inset 0 1px 0 rgba(255,255,255,.34); }
-html[data-theme="dark"] .eva-ai-input-shell { box-shadow: inset 0 1px 0 rgba(255,255,255,.045); }
-.eva-ai-input-shell:focus-within { border-color: color-mix(in srgb, var(--eva-nav-blue) 54%, var(--eva-nav-line)); }
-.eva-ai-form input { width: 100%; min-width: 0; min-height: 54px; border: 0; outline: 0; background: transparent; color: var(--eva-nav-text); font: inherit; font-size: .92rem; font-weight: 650; }
+.eva-ai-input-shell { min-height: 58px; display: grid; grid-template-columns: minmax(0,1fr) 44px; align-items: center; gap: 8px; padding: 0 7px 0 14px; border-radius: 20px; background: color-mix(in srgb, var(--eva-nav-row) 86%, var(--eva-nav-blue) 8%); border: 1px solid color-mix(in srgb, var(--eva-nav-blue) 20%, var(--eva-nav-line)); box-shadow: inset 0 1px 0 rgba(255,255,255,.34); }
+html[data-theme="dark"] .eva-ai-input-shell { background: rgba(255,255,255,.085); box-shadow: inset 0 1px 0 rgba(255,255,255,.045); }
+.eva-ai-input-shell:focus-within { background: color-mix(in srgb, var(--eva-nav-row) 78%, var(--eva-nav-blue) 14%); border-color: color-mix(in srgb, var(--eva-nav-blue) 54%, var(--eva-nav-line)); }
+html[data-theme="dark"] .eva-ai-input-shell:focus-within { background: rgba(255,255,255,.11); }
+.eva-ai-form input { width: 100%; min-width: 0; min-height: 54px; padding-right: 6px; border: 0; outline: 0; background: transparent; color: var(--eva-nav-text); font: inherit; font-size: .92rem; font-weight: 650; }
 .eva-ai-send-btn { width: 38px; height: 38px; min-width: 38px; min-height: 38px; padding: 0; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--eva-nav-blue) 18%, var(--eva-nav-line)); display: grid; place-items: center; cursor: pointer; appearance: none; -webkit-appearance: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; background: color-mix(in srgb, var(--eva-nav-row) 86%, #fff 14%); color: var(--eva-nav-text); box-shadow: inset 0 1px 0 rgba(255,255,255,.42); transform: none; }
-html[data-theme="dark"] .eva-ai-send-btn { background: rgba(255,255,255,.08); color: #f8fbff; box-shadow: inset 0 1px 0 rgba(255,255,255,.07); }
+html[data-theme="dark"] .eva-ai-send-btn { background: rgba(255,255,255,.12); color: #f8fbff; box-shadow: inset 0 1px 0 rgba(255,255,255,.07); }
 .eva-ai-send-btn svg { width: 18px; height: 18px; }
 .eva-ai-send-btn:active { transform: scale(.94); }
 .eva-ai-helper { margin: 10px 0 0; text-align: center; color: var(--eva-nav-muted); font-size: .74rem; font-weight: 680; }
