@@ -7,41 +7,16 @@ import { toggleTheme as toggleEvaraTheme, getAppearance, getThemeFromAppearance 
 
 const BOUND = "data-evara-clean-bound";
 const GROUP_FALLBACK_ROUTES = Object.freeze({ operations: "/jobs.html", organizations: "/companies.html", finance: "/revenue.html", customer: "/customer_dashboard.html", intelligence: "/dashboard.html", system: "/settings.html" });
-
 function stop(event) { event?.preventDefault?.(); event?.stopPropagation?.(); }
 function once(node, eventName, handler) { if (!node) return; const key = `${BOUND}-${eventName}`; if (node.getAttribute(key) === "true") return; node.setAttribute(key, "true"); node.addEventListener(eventName, handler, { passive: false }); }
-
-function syncThemeButtonVisual() {
-  const appearance = getAppearance();
-  const theme = getThemeFromAppearance(appearance);
-  const icon = appearance.mode === "system" ? "◐" : theme === "dark" ? "☾" : "☀";
-  const label = appearance.mode === "system" ? `System (${theme})` : theme === "dark" ? "Dark" : "Light";
-
-  document.querySelectorAll("#evaThemeToggle, [data-theme-label]").forEach((button) => {
-    button.setAttribute("data-theme-mode", theme);
-    button.setAttribute("data-appearance-mode", appearance.mode);
-    button.setAttribute("aria-label", `Theme: ${label}. Tap to change.`);
-    const iconNode = button.querySelector(".eva-theme-nav-icon");
-    if (iconNode) iconNode.textContent = icon;
-  });
-}
-
+function syncThemeButtonVisual() { const appearance = getAppearance(); const theme = getThemeFromAppearance(appearance); const icon = appearance.mode === "system" ? "◐" : theme === "dark" ? "☾" : "☀"; const label = appearance.mode === "system" ? `System (${theme})` : theme === "dark" ? "Dark" : "Light"; document.querySelectorAll("#evaThemeToggle, [data-theme-label]").forEach((button) => { button.setAttribute("data-theme-mode", theme); button.setAttribute("data-appearance-mode", appearance.mode); button.setAttribute("aria-label", `Theme: ${label}. Tap to change.`); const iconNode = button.querySelector(".eva-theme-nav-icon"); if (iconNode) iconNode.textContent = icon; }); }
 function esc(value = "") { return String(value || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
 function label(value = "") { return String(value || "").replaceAll("_", " ").replaceAll("-", " ").replace(/\b\w/g, (letter) => letter.toUpperCase()); }
 function role() { return document.getElementById("evaLinks")?.dataset?.navRole || localStorage.getItem("evaraos-role") || "customer"; }
 function normalizeHref(href = "") { const value = String(href || "").trim(); if (!value) return ""; if (value.startsWith("http") || value.startsWith("/")) return value; return buildHref(value); }
 function openHref(href, title = "Loading page", subtitle = "Preparing your next screen.") { const route = normalizeHref(href); if (!route) return; closeMenu(false); navigateWithLoader(route, { title, subtitle, theme: getAppearanceTheme() }); }
 function bestLocalCommand(prompt = "") { const query = normalizeQuery(prompt); if (!query) return null; return searchApps(query, role())[0] || null; }
-
-function renderResults(root, items = [], query = "") {
-  if (!root) return;
-  const normalized = normalizeQuery(query);
-  if (!normalized) { root.classList.remove("active"); root.innerHTML = ""; return; }
-  if (!items.length) { root.classList.add("active"); root.innerHTML = '<div class="eva-search-empty">Press Enter to ask Evaraos AI.</div>'; return; }
-  root.classList.add("active");
-  root.innerHTML = items.map((app) => '<button type="button" class="eva-search-result" data-search-link="' + esc(app.route) + '"><strong>' + esc(app.title) + '</strong><span>' + esc(label(app.category || "App")) + ' • ' + esc(app.route) + '</span></button>').join("");
-}
-
+function renderResults(root, items = [], query = "") { if (!root) return; const normalized = normalizeQuery(query); if (!normalized) { root.classList.remove("active"); root.innerHTML = ""; return; } if (!items.length) { root.classList.add("active"); root.innerHTML = '<div class="eva-search-empty">Press Enter to ask Evaraos AI.</div>'; return; } root.classList.add("active"); root.innerHTML = items.map((app) => '<button type="button" class="eva-search-result" data-search-link="' + esc(app.route) + '"><strong>' + esc(app.title) + '</strong><span>' + esc(label(app.category || "App")) + ' • ' + esc(app.route) + '</span></button>').join(""); }
 function renderMessage(root, message = "", mode = "ai") { if (!root) return; root.classList.add("active"); root.innerHTML = '<div class="eva-ai-message" data-ai-mode="' + esc(mode) + '">' + esc(message || "Evaraos AI is ready.") + '</div>'; }
 async function askBackend(prompt, resultsRoot) { renderMessage(resultsRoot, "Thinking through your Evaraos command...", "loading"); const ask = httpsCallable(functions, "aiCommand"); const response = await ask({ prompt, context: { path: window.location.pathname, role: role(), theme: getAppearanceTheme() } }); const data = response?.data || {}; if (data?.action?.type === "navigate" && data.action.route) { renderMessage(resultsRoot, data.message || `Opening ${data.action.title || "page"}.`, "action"); openHref(data.action.route, data.action.title ? `Opening ${data.action.title}` : "Opening Evaraos", data.message || "Launching from Evaraos AI."); return; } renderMessage(resultsRoot, data.message || "Evaraos AI received your command.", data.mode || "ai"); }
 async function runPrompt(input, resultsRoot) { const prompt = input?.value?.trim() || ""; if (!prompt) { renderMessage(resultsRoot, "Type or speak a command first.", "error"); input?.focus?.(); return; } const directHref = resultsRoot?.querySelector("[data-search-link]")?.getAttribute("data-search-link"); if (directHref) { openHref(directHref, "Opening result", "Launching your selected Evaraos app."); return; } const local = bestLocalCommand(prompt); if (local?.route) { renderMessage(resultsRoot, `Opening ${local.title || "Evaraos"}.`, "action"); openHref(local.route, `Opening ${local.title || "Evaraos"}`, "Launching from Evaraos command."); return; } try { await askBackend(prompt, resultsRoot); } catch (error) { console.warn("Evaraos AI command failed:", error); renderMessage(resultsRoot, "Evaraos AI could not connect. Local app search still works.", "error"); } }
@@ -49,34 +24,12 @@ function parseGroupApps(button) { try { const apps = JSON.parse(button.getAttrib
 function preferredGroupApp(button) { const category = String(button.getAttribute("data-nav-group") || "").trim(); const apps = parseGroupApps(button); const fallback = GROUP_FALLBACK_ROUTES[category] || ""; return apps.find((app) => app.route === fallback) || apps.find((app) => String(app.id || "").includes(category)) || apps[0] || (fallback ? { title: label(category || "Evaraos"), route: fallback } : null); }
 function makeNavRowsAccessible() { document.querySelectorAll("[data-nav-group]").forEach((button) => { const app = preferredGroupApp(button); if (!app?.route) return; button.dataset.groupHref = app.route; button.setAttribute("role", "link"); button.setAttribute("aria-label", `Open ${app.title || label(button.dataset.navGroup || "section")}`); }); }
 function focusCommandInput() { const input = document.getElementById("evaSearchInput"); if (!input) return; openMenu?.(); window.setTimeout(() => { input.focus({ preventScroll: true }); input.select?.(); }, 80); }
-
-export function bindBrandHome() { const brand = getBrandBlock(); once(brand, "click", (event) => { stop(event); openHref(brand?.getAttribute("data-home-link") || buildHref("index.html"), "Opening Home", "Loading Evaraos home."); }); }
-
-export function bindLinks() {
-  document.querySelectorAll("[data-menu-link]").forEach((link) => { once(link, "click", (event) => { stop(event); openHref(link.getAttribute("data-menu-link") || link.getAttribute("href"), "Opening page", "Loading your selected Evaraos screen."); }); });
-  makeNavRowsAccessible();
-  document.querySelectorAll("[data-nav-group]").forEach((button) => { const openGroup = (event) => { stop(event); const app = preferredGroupApp(button); if (app?.route) openHref(app.route, `Opening ${app.title || label(button.dataset.navGroup || "section")}`, "Launching this Evaraos operating-system area."); }; once(button, "click", openGroup); once(button, "keydown", (event) => { if (event.key !== "Enter" && event.key !== " ") return; openGroup(event); }); });
-  const logoutBtn = document.getElementById("evaLogoutBtn"); once(logoutBtn, "click", async (event) => { stop(event); closeMenu(false); await logoutAndRedirect(buildHref("login.html")); });
-}
-
-export function bindThemeToggle() {
-  const button = document.getElementById("evaThemeToggle");
-  once(button, "click", (event) => {
-    stop(event);
-    toggleEvaraTheme();
-    syncThemeLabel();
-    syncThemeButtonVisual();
-  });
-  syncThemeButtonVisual();
-  if (!window.__evaraThemeVisualEventsBound) {
-    window.__evaraThemeVisualEventsBound = true;
-    window.addEventListener("evara:theme-applied", () => syncThemeButtonVisual());
-    window.addEventListener("evara:appearance-updated", () => syncThemeButtonVisual());
-  }
-}
-
+export function bindBrandHome() { const brand = getBrandBlock(); once(brand, "click", (event) => { stop(event); openHref(brand?.getAttribute("data-home-link") || buildHref("index.html"), "Opening Profile", "Loading your account workspace."); }); }
+export function bindLinks() { document.querySelectorAll("[data-menu-link]").forEach((link) => { once(link, "click", (event) => { stop(event); openHref(link.getAttribute("data-menu-link") || link.getAttribute("href"), "Opening page", "Loading your selected Evaraos screen."); }); }); makeNavRowsAccessible(); document.querySelectorAll("[data-nav-group]").forEach((button) => { const openGroup = (event) => { stop(event); const app = preferredGroupApp(button); if (app?.route) openHref(app.route, `Opening ${app.title || label(button.dataset.navGroup || "section")}`, "Launching this Evaraos operating-system area."); }; once(button, "click", openGroup); once(button, "keydown", (event) => { if (event.key !== "Enter" && event.key !== " ") return; openGroup(event); }); }); }
+export function bindLogout() { if (window.__evaraLogoutDelegatedBound) return; window.__evaraLogoutDelegatedBound = true; document.addEventListener("click", async (event) => { const button = event.target?.closest?.("#evaLogoutBtn,[data-action='logout']"); if (!button) return; stop(event); button.setAttribute("aria-busy", "true"); button.classList.add("is-loading"); closeMenu(false); await logoutAndRedirect(buildHref("login.html")); }, true); }
+export function bindThemeToggle() { const button = document.getElementById("evaThemeToggle"); once(button, "click", (event) => { stop(event); toggleEvaraTheme(); syncThemeLabel(); syncThemeButtonVisual(); }); syncThemeButtonVisual(); if (!window.__evaraThemeVisualEventsBound) { window.__evaraThemeVisualEventsBound = true; window.addEventListener("evara:theme-applied", () => syncThemeButtonVisual()); window.addEventListener("evara:appearance-updated", () => syncThemeButtonVisual()); } }
 export function bindSearch() { const input = document.getElementById("evaSearchInput"); const form = document.getElementById("evaAiPromptForm"); const results = document.getElementById("evaSearchResults"); if (!input) return; once(input, "input", () => { const query = input.value.trim(); const items = searchApps(query, role()).slice(0, 8); renderResults(results, items, query); }); once(input, "keydown", async (event) => { if (event.key === "Escape") { stop(event); input.value = ""; renderResults(results, [], ""); closeMenu(true); return; } if (event.key !== "Enter") return; stop(event); await runPrompt(input, results); }); once(form, "submit", async (event) => { stop(event); await runPrompt(input, results); }); once(results, "click", (event) => { const target = event.target.closest("[data-search-link]"); if (!target) return; stop(event); openHref(target.getAttribute("data-search-link"), "Opening result", "Launching your selected Evaraos app."); }); }
 function bindKeyboardCommands() { once(document, "keydown", (event) => { const target = event.target; const isTyping = target && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName); const comboK = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k"; const slash = event.key === "/" && !isTyping && !event.metaKey && !event.ctrlKey && !event.altKey; const escape = event.key === "Escape"; if (comboK || slash) { stop(event); focusCommandInput(); return; } if (escape && document.body.classList.contains("nav-menu-open")) { stop(event); closeMenu(true); } }); }
 function bindMenuBasics() { once(document.getElementById("evaMenuBtn"), "click", (event) => { stop(event); toggleMenu(); }); once(document.getElementById("evaBackdrop"), "click", (event) => { stop(event); closeMenu(true); }); }
 export function clearPressTimer() {} export function endCompactPress() {} export function togglePill() {} export function startCompactPress() {} export function bindTapToggle() {}
-export function bindAllNavEvents() { bindMenuBasics(); bindBrandHome(); bindLinks(); bindThemeToggle(); bindSearch(); bindKeyboardCommands(); syncThemeLabel(); syncThemeButtonVisual(); makeNavRowsAccessible(); }
+export function bindAllNavEvents() { bindMenuBasics(); bindBrandHome(); bindLinks(); bindLogout(); bindThemeToggle(); bindSearch(); bindKeyboardCommands(); syncThemeLabel(); syncThemeButtonVisual(); makeNavRowsAccessible(); }
