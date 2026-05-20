@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#050814" />
+  <meta name="theme-color" content="#f4f7f6" />
   <title>Evaraos Notifications Center</title>
 
+  <script src="./assets/js/theme-boot.js"></script>
   <link rel="icon" href="./assets/img/evaraos-emblem.png" />
   <link rel="stylesheet" href="./assets/css/base.css" />
   <link rel="stylesheet" href="./assets/css/theme.css" />
@@ -14,10 +15,11 @@
   <link rel="stylesheet" href="./assets/css/app-system.css" />
 </head>
 <body data-route-guard="private" class="dashboard-body app-loading">
+  <div id="universalNavRoot"></div>
   <div class="page-aurora" aria-hidden="true"></div>
   <div class="page-grid-overlay" aria-hidden="true"></div>
 
-  <main class="dashboard-shell">
+  <main id="appRoot" class="dashboard-shell">
     <aside class="dashboard-sidebar glass-card">
       <div class="dashboard-sidebar-inner">
         <div class="dashboard-sidebar-head">
