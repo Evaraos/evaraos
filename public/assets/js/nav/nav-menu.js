@@ -19,24 +19,15 @@ export function lockBodyScroll() {
   NAV_STATE.lockedScrollY = lockedScrollY;
   document.documentElement.classList.add("nav-menu-open", "eva-menu-layer-open");
   document.body.classList.add("nav-menu-open");
-  document.body.style.position = "fixed";
-  document.body.style.top = `-${lockedScrollY}px`;
-  document.body.style.left = "0";
-  document.body.style.right = "0";
-  document.body.style.width = "100%";
   document.body.style.overflow = "hidden";
+  document.body.style.overscrollBehavior = "none";
 }
 
 export function unlockBodyScroll() {
   document.documentElement.classList.remove("nav-menu-open", "eva-menu-layer-open");
   document.body.classList.remove("nav-menu-open");
-  document.body.style.position = "";
-  document.body.style.top = "";
-  document.body.style.left = "";
-  document.body.style.right = "";
-  document.body.style.width = "";
   document.body.style.overflow = "";
-  window.scrollTo(0, lockedScrollY || NAV_STATE.lockedScrollY || 0);
+  document.body.style.overscrollBehavior = "";
 }
 
 export function isMenuOpen() {
