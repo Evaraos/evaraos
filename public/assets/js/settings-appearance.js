@@ -5,7 +5,8 @@ import {
   applyAppearance,
   setText,
   setMessage,
-  markSettingsReady
+  markSettingsReady,
+  normalizeAppearanceMode
 } from "./settings-shared.js";
 
 let draft = getAppearance();
@@ -15,15 +16,19 @@ function byId(id) {
 }
 
 function normalizeMode(mode) {
-  return "dark";
+  return normalizeAppearanceMode(mode);
 }
 
 function modeLabel(mode) {
   const safe = normalizeMode(mode);
+
   if (safe === "light") return "Light";
   if (safe === "dark") return "Dark";
+  if (safe === "system") return "System";
+  if (safe === "galaxy") return "Galaxy";
   if (safe === "custom") return "Custom";
-  return "Dark";
+
+  return "System";
 }
 
 function syncControls() {
@@ -55,6 +60,8 @@ function updateDraft(patch) {
     ...patch
   };
 
+  draft.mode = normalizeMode(draft.mode);
+
   if (draft.mode !== "custom") {
     draft.baseFamily = draft.mode;
   }
@@ -71,9 +78,12 @@ function bindModeButtons() {
   document.querySelectorAll("[data-appearance-mode]").forEach((button) => {
     button.addEventListener("click", () => {
       const mode = normalizeMode(button.dataset.appearanceMode);
+
       updateDraft({
         mode,
-        baseFamily: mode === "custom" ? draft.baseFamily || "dark" : mode
+        baseFamily: mode === "custom"
+          ? draft.baseFamily || "dark"
+          : mode
       });
     });
   });
@@ -100,6 +110,7 @@ function bindColorControls() {
   });
 
   const rainbowBeam = byId("rainbowBeamToggle");
+
   if (rainbowBeam) {
     rainbowBeam.addEventListener("change", () => {
       updateDraft({
