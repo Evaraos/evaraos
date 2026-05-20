@@ -10,6 +10,37 @@ let applyProgress;
 let bindScrollBehavior;
 let animateNav;
 
+function ensureNavMount() {
+  let mount = document.getElementById("universalNavRoot") || document.getElementById("universalNav");
+  if (mount) return mount;
+
+  mount = document.createElement("div");
+  mount.id = "universalNavRoot";
+
+  if (document.body.firstChild) {
+    document.body.insertBefore(mount, document.body.firstChild);
+  } else {
+    document.body.appendChild(mount);
+  }
+
+  return mount;
+}
+
+function ensureAppRoot() {
+  if (document.getElementById("appRoot")) return;
+
+  const candidates = [
+    "main.dashboard-shell",
+    "main.page-shell",
+    "main.app-shell",
+    "main.container",
+    "main"
+  ];
+
+  const root = candidates.map((selector) => document.querySelector(selector)).find(Boolean);
+  if (root) root.id = "appRoot";
+}
+
 async function loadCoreNav() {
   const config = await import(`./nav-config.js?v=${NAV_BUILD}`);
   const utils = await import(`./nav-utils.js?v=${NAV_BUILD}`);
@@ -50,10 +81,6 @@ function bootReadySignal() {
   });
 }
 
-function shouldStartGlobalNotifications() {
-  return document.body?.dataset?.routeGuard === "private";
-}
-
 async function bindOptionalSystems() {
   const menu = await safeImport("./nav-menu.js");
   const events = await safeImport("./nav-events.js");
@@ -66,23 +93,12 @@ async function bindOptionalSystems() {
   try { bindScrollBehavior?.(); } catch (error) { console.warn("Nav scroll failed:", error); }
   try { session?.bindRuntimeRefresh?.(); } catch (error) { console.warn("Nav session refresh failed:", error); }
   try { syncThemeLabel?.(); } catch (error) { console.warn("Nav theme label failed:", error); }
-
-  if (shouldStartGlobalNotifications()) {
-    const notifications = await safeImport("../notifications-dropdown.js");
-    try {
-      notifications?.startNotificationsDropdown?.();
-      if (notifications?.stopNotificationsDropdown) {
-        window.EvaraPageLifecycle?.registerCleanup?.(notifications.stopNotificationsDropdown);
-        window.addEventListener("pagehide", notifications.stopNotificationsDropdown);
-      }
-    } catch (error) {
-      console.warn("Global notifications dropdown failed to start:", error);
-    }
-  }
 }
 
 export async function initNav() {
   try {
+    ensureNavMount();
+    ensureAppRoot();
     await loadCoreNav();
 
     if (NAV_STATE.hasInitialized) return;
@@ -95,7 +111,7 @@ export async function initNav() {
 
     const rendered = renderNav();
     if (!rendered) {
-      console.warn("Evaraos nav did not render: missing mount.");
+      console.warn("Evaraos nav did not render.");
       bootReadySignal();
       return;
     }
