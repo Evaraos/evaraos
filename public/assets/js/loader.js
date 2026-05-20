@@ -1,13 +1,15 @@
 (function () {
   const LOADER_ID = "evaraGlobalLoader";
   const LOGO_SRC = "/assets/img/evaraos_logo.png";
-  const EXIT_DURATION = 220;
+  const EXIT_DURATION = 260;
   const FORCE_UNLOCK_DELAY = 4200;
+  const SPLASH_KEY = "evaraos-first-open-splash-seen";
 
   let forceTimer = null;
   let isTransitioning = false;
   let loaderCreated = false;
   let initialReady = false;
+  let firstSplashThisSession = false;
 
   function clearForceTimer() {
     if (forceTimer) clearTimeout(forceTimer);
@@ -30,7 +32,11 @@
         if (appearance?.mode === "dark") return "dark";
         if (appearance?.mode === "light") return "light";
         if (appearance?.mode === "system") return systemTheme();
-        if (appearance?.mode === "custom") return appearance.baseFamily === "light" ? "light" : "dark";
+        if (appearance?.mode === "custom") {
+          if (appearance.baseFamily === "light") return "light";
+          if (appearance.baseFamily === "system") return systemTheme();
+          return "dark";
+        }
       }
       const stored = localStorage.getItem("evaraos-theme");
       if (stored === "dark" || stored === "light") return stored;
@@ -52,15 +58,26 @@
 
     try {
       const meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.setAttribute("content", safeTheme === "dark" ? "#020307" : "#f4f7f6");
+      if (meta) meta.setAttribute("content", safeTheme === "dark" ? "#000000" : "#f7f8fa");
     } catch {}
 
     if (loader) loader.dataset.theme = safeTheme;
     return safeTheme;
   }
 
-  function logo() {
-    return `<img class="evara-loader-logo" src="${LOGO_SRC}" alt="Evaraos" loading="eager" decoding="async" />`;
+  function shouldShowFirstSplash() {
+    try {
+      return !sessionStorage.getItem(SPLASH_KEY);
+    } catch {
+      return !firstSplashThisSession;
+    }
+  }
+
+  function markFirstSplashSeen() {
+    firstSplashThisSession = true;
+    try {
+      sessionStorage.setItem(SPLASH_KEY, "true");
+    } catch {}
   }
 
   function ensureLoader() {
@@ -80,16 +97,17 @@
       loader.className = "evara-global-loader";
       loader.setAttribute("aria-hidden", "true");
       loader.innerHTML = `
-        <div class="evara-loader-card" role="status" aria-live="polite">
-          <div class="evara-loader-mark">
-            <span class="evara-loader-ring ring-a"></span>
-            <span class="evara-loader-ring ring-b"></span>
-            <span class="evara-loader-ring ring-c"></span>
-            ${logo()}
+        <div class="evara-loader-stage" role="status" aria-live="polite">
+          <div class="evara-loader-center">
+            <img class="evara-loader-logo" src="${LOGO_SRC}" alt="Evaraos" loading="eager" decoding="async" />
+            <div class="evara-loader-copy">
+              <p class="evara-loader-title" id="evaraLoaderTitle">Evaraos</p>
+              <p class="evara-loader-subtitle" id="evaraLoaderSubtitle">Preparing your workspace.</p>
+            </div>
           </div>
-          <div class="evara-loader-copy">
-            <p class="evara-loader-title" id="evaraLoaderTitle">Loading Evaraos</p>
-            <p class="evara-loader-subtitle" id="evaraLoaderSubtitle">Preparing your secure workspace.</p>
+          <div class="evara-loader-from" aria-label="from Evaraos Inc">
+            <span>from</span>
+            <strong>Evaraos Inc</strong>
           </div>
         </div>
       `;
@@ -112,10 +130,12 @@
     const loader = ensureLoader();
     const title = loader.querySelector("#evaraLoaderTitle");
     const subtitle = loader.querySelector("#evaraLoaderSubtitle");
+    const variant = options.variant || "page";
 
     loader.dataset.theme = theme;
-    if (title) title.textContent = options.title || "Loading Evaraos";
-    if (subtitle) subtitle.textContent = options.subtitle || "Preparing your secure workspace.";
+    loader.dataset.variant = variant;
+    if (title) title.textContent = options.title || (variant === "splash" ? "Evaraos" : "Opening Evaraos");
+    if (subtitle) subtitle.textContent = options.subtitle || (variant === "splash" ? "" : "Preparing your next screen.");
 
     loader.classList.remove("is-exiting");
     loader.classList.add("active", "is-entering");
@@ -125,7 +145,7 @@
     requestAnimationFrame(() => loader.classList.remove("is-entering"));
 
     clearForceTimer();
-    forceTimer = setTimeout(() => hideLoader(true), FORCE_UNLOCK_DELAY);
+    forceTimer = setTimeout(() => hideLoader(true), options.forceMs || FORCE_UNLOCK_DELAY);
   }
 
   function hideLoader(immediate = false) {
@@ -160,7 +180,8 @@
     showLoader({
       title: options.title || "Opening Evaraos",
       subtitle: options.subtitle || "Preparing your next screen.",
-      theme: options.theme
+      theme: options.theme,
+      variant: "page"
     });
   }
 
@@ -206,12 +227,20 @@
 
   function setupInitialBoot() {
     ensureLoader();
+    const useSplash = shouldShowFirstSplash();
+    if (useSplash) markFirstSplashSeen();
+
     showLoader({
-      title: "Loading Evaraos",
-      subtitle: "Checking your secure session."
+      title: "Evaraos",
+      subtitle: "",
+      variant: useSplash ? "splash" : "page",
+      forceMs: useSplash ? 5200 : FORCE_UNLOCK_DELAY
     });
 
-    window.addEventListener("load", () => hideLoader(false), { once: true });
+    const minimum = useSplash ? 1150 : 180;
+    window.addEventListener("load", () => {
+      window.setTimeout(() => hideLoader(false), minimum);
+    }, { once: true });
     window.addEventListener("pageshow", () => {
       if (initialReady && !isTransitioning) hideLoader(true);
     });
@@ -230,6 +259,10 @@
       hideAllLoaders: hideLoader,
       markAppReady,
       syncTheme: applyTheme,
+      resetFirstSplash() {
+        try { sessionStorage.removeItem(SPLASH_KEY); } catch {}
+        firstSplashThisSession = false;
+      },
       getState() {
         return { isTransitioning, initialReady, loaderCreated, theme: getTheme() };
       }
@@ -241,7 +274,7 @@
     setupInitialBoot();
     interceptDocumentLinks();
     window.addEventListener("evara:session-ready", () => markAppReady());
-    window.addEventListener("evara:appearance-updated", (event) => applyTheme(event.detail?.mode || event.detail?.theme));
+    window.addEventListener("evara:appearance-updated", (event) => applyTheme(event.detail?.theme || event.detail?.resolvedTheme));
     window.addEventListener("evara:theme-applied", (event) => applyTheme(event.detail?.theme));
     window.addEventListener("storage", (event) => {
       if (["evaraos-theme", "evaraos-appearance"].includes(event.key)) applyTheme();
