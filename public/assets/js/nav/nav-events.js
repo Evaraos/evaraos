@@ -1,5 +1,5 @@
 import { buildHref, getAppearanceTheme, setTheme, syncThemeLabel, getBrandBlock } from "./nav-utils.js";
-import { closeMenu, toggleMenu } from "./nav-menu.js";
+import { closeMenu, openMenu, toggleMenu } from "./nav-menu.js";
 import { navigateWithLoader } from "./nav-navigation.js";
 import { logoutAndRedirect, functions, httpsCallable } from "../firebase.js";
 import { searchApps } from "../navigation/app-registry.js";
@@ -13,6 +13,37 @@ const GROUP_FALLBACK_ROUTES = Object.freeze({
   customer: "/customer_dashboard.html",
   intelligence: "/dashboard.html",
   system: "/settings.html"
+});
+
+const COMMAND_ALIASES = Object.freeze({
+  home: "/index.html",
+  dashboard: "/dashboard.html",
+  command: "/dashboard.html",
+  executive: "/dashboard.html",
+  map: "/operations_map.html",
+  operations: "/jobs.html",
+  jobs: "/jobs.html",
+  job: "/jobs.html",
+  leads: "/leads.html",
+  lead: "/leads.html",
+  companies: "/companies.html",
+  company: "/companies.html",
+  organizations: "/companies.html",
+  organization: "/org.html",
+  users: "/users.html",
+  people: "/users.html",
+  applications: "/applications.html",
+  applicants: "/applications.html",
+  settings: "/settings.html",
+  profile: "/settings.html",
+  system: "/settings.html",
+  alerts: "/notifications.html",
+  notifications: "/notifications.html",
+  customer: "/customer_dashboard.html",
+  customers: "/customer_dashboard.html",
+  apply: "/staff_application.html",
+  login: "/login.html",
+  signup: "/signup.html"
 });
 
 function stop(event) {
@@ -54,6 +85,14 @@ function label(value = "") {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
+function normalizeCommand(value = "") {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/^(open|go to|show|take me to|launch|view)\s+/, "")
+    .replace(/\s+/g, " ");
+}
+
 function role() {
   return document.getElementById("evaLinks")?.dataset?.navRole || localStorage.getItem("evaraos-role") || "customer";
 }
@@ -73,31 +112,50 @@ function openHref(href, title = "Loading page", subtitle = "Preparing your next 
 }
 
 function score(app, query = "") {
-  const q = String(query || "").toLowerCase();
+  const q = normalizeCommand(query);
   const title = String(app.title || "").toLowerCase();
   const id = String(app.id || "").toLowerCase();
   const category = String(app.category || "").toLowerCase();
   const route = String(app.route || "").toLowerCase();
   if (!q) return 1;
   if (title === q) return 100;
+  if (id === q) return 95;
+  if (COMMAND_ALIASES[q] && COMMAND_ALIASES[q] === app.route) return 92;
   if (title.startsWith(q)) return 80;
   if (title.includes(q)) return 65;
   if (id.includes(q)) return 45;
-  if (route.includes(q)) return 35;
+  if (route.includes(q.replaceAll(" ", "_"))) return 38;
+  if (route.includes(q.replaceAll(" ", "-"))) return 36;
   if (category.includes(q)) return 25;
   return 0;
 }
 
+function bestLocalCommand(prompt = "") {
+  const query = normalizeCommand(prompt);
+  if (!query) return null;
+
+  const aliasRoute = COMMAND_ALIASES[query];
+  if (aliasRoute) return { title: label(query), route: aliasRoute };
+
+  const items = searchApps(query, role())
+    .map((app) => ({ ...app, score: score(app, query) }))
+    .filter((app) => app.score > 0)
+    .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title));
+
+  return items[0] || null;
+}
+
 function renderResults(root, items = [], query = "") {
   if (!root) return;
-  if (!query.trim()) {
+  const normalized = normalizeCommand(query);
+  if (!normalized) {
     root.classList.remove("active");
     root.innerHTML = "";
     return;
   }
   if (!items.length) {
     root.classList.add("active");
-    root.innerHTML = '<div class="eva-search-empty">Tap send to ask Evaraos AI.</div>';
+    root.innerHTML = '<div class="eva-search-empty">Press Enter to ask Evaraos AI.</div>';
     return;
   }
   root.classList.add("active");
@@ -135,16 +193,25 @@ async function runPrompt(input, resultsRoot) {
     input?.focus?.();
     return;
   }
+
   const directHref = resultsRoot?.querySelector("[data-search-link]")?.getAttribute("data-search-link");
   if (directHref) {
     openHref(directHref, "Opening result", "Launching your selected Evaraos app.");
     return;
   }
+
+  const local = bestLocalCommand(prompt);
+  if (local?.route) {
+    renderMessage(resultsRoot, `Opening ${local.title || "Evaraos"}.`, "action");
+    openHref(local.route, `Opening ${local.title || "Evaraos"}`, "Launching from Evaraos command.");
+    return;
+  }
+
   try {
     await askBackend(prompt, resultsRoot);
   } catch (error) {
     console.warn("Evaraos AI command failed:", error);
-    renderMessage(resultsRoot, "Evaraos AI could not connect. Check Functions/App Check logs if this continues.", "error");
+    renderMessage(resultsRoot, "Evaraos AI could not connect. Local app search still works.", "error");
   }
 }
 
@@ -178,6 +245,16 @@ function makeNavRowsAccessible() {
     button.setAttribute("role", "link");
     button.setAttribute("aria-label", `Open ${app.title || label(button.dataset.navGroup || "section")}`);
   });
+}
+
+function focusCommandInput() {
+  const input = document.getElementById("evaSearchInput");
+  if (!input) return;
+  openMenu?.();
+  window.setTimeout(() => {
+    input.focus({ preventScroll: true });
+    input.select?.();
+  }, 80);
 }
 
 export function bindBrandHome() {
@@ -273,10 +350,17 @@ export function bindSearch() {
   if (!input) return;
   once(input, "input", () => {
     const query = input.value.trim();
-    const items = searchApps(query, role()).map((app) => ({ ...app, score: score(app, query) })).filter((app) => !query || app.score > 0).sort((a, b) => b.score - a.score || a.title.localeCompare(b.title)).slice(0, 8);
+    const items = searchApps(normalizeCommand(query), role()).map((app) => ({ ...app, score: score(app, query) })).filter((app) => !query || app.score > 0).sort((a, b) => b.score - a.score || a.title.localeCompare(b.title)).slice(0, 8);
     renderResults(results, items, query);
   });
   once(input, "keydown", async (event) => {
+    if (event.key === "Escape") {
+      stop(event);
+      input.value = "";
+      renderResults(results, [], "");
+      closeMenu(true);
+      return;
+    }
     if (event.key !== "Enter") return;
     stop(event);
     await runPrompt(input, results);
@@ -314,6 +398,27 @@ export function bindSearch() {
   });
 }
 
+function bindKeyboardCommands() {
+  once(document, "keydown", (event) => {
+    const target = event.target;
+    const isTyping = target && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
+    const comboK = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k";
+    const slash = event.key === "/" && !isTyping && !event.metaKey && !event.ctrlKey && !event.altKey;
+    const escape = event.key === "Escape";
+
+    if (comboK || slash) {
+      stop(event);
+      focusCommandInput();
+      return;
+    }
+
+    if (escape && document.body.classList.contains("nav-menu-open")) {
+      stop(event);
+      closeMenu(true);
+    }
+  });
+}
+
 function bindMenuBasics() {
   once(document.getElementById("evaMenuBtn"), "click", (event) => { stop(event); toggleMenu(); });
   once(document.getElementById("evaBackdrop"), "click", (event) => { stop(event); closeMenu(true); });
@@ -331,6 +436,7 @@ export function bindAllNavEvents() {
   bindLinks();
   bindThemeToggle();
   bindSearch();
+  bindKeyboardCommands();
   syncThemeLabel();
   syncThemeButtonVisual();
   makeNavRowsAccessible();
