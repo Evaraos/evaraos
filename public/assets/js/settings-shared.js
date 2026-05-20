@@ -5,8 +5,8 @@ export const DEFAULT_APPEARANCE = {
   baseFamily: "system",
   cardTint: "#ffffff",
   buttonTint: "#ffffff",
-  beamColor: "#7c3aed",
-  backgroundGlow: "#7c3aed",
+  beamColor: "#dc2626",
+  backgroundGlow: "#dc2626",
   rainbowBeam: false
 };
 
@@ -28,7 +28,7 @@ export function systemTheme() {
 
 export function normalizeAppearanceMode(mode = "system") {
   const value = String(mode || "system").trim().toLowerCase();
-  if (["light", "dark", "system", "custom", "galaxy"].includes(value)) return value;
+  if (["light", "dark", "system", "custom"].includes(value)) return value;
   return "system";
 }
 
@@ -41,6 +41,7 @@ export function getAppearance() {
 
   merged.mode = normalizeAppearanceMode(merged.mode);
   if (!merged.baseFamily) merged.baseFamily = merged.mode;
+  if (merged.baseFamily === "galaxy") merged.baseFamily = "dark";
   return merged;
 }
 
@@ -53,6 +54,7 @@ export function saveAppearance(nextAppearance) {
   merged.mode = normalizeAppearanceMode(merged.mode);
   if (merged.mode !== "custom") merged.baseFamily = merged.mode;
   if (merged.mode === "custom" && !merged.baseFamily) merged.baseFamily = systemTheme();
+  if (merged.baseFamily === "galaxy") merged.baseFamily = "dark";
   merged.updatedAt = new Date().toISOString();
 
   localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify(merged));
@@ -83,7 +85,6 @@ export function getThemeFromAppearance(appearance) {
   if (mode === "light") return "light";
   if (mode === "dark") return "dark";
   if (mode === "system") return systemTheme();
-  if (mode === "galaxy") return "dark";
 
   if (mode === "custom") {
     if (safe.baseFamily === "light") return "light";
