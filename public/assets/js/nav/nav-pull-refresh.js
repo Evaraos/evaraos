@@ -49,16 +49,23 @@ function resetIndicator() {
   setIndicator(0, "idle");
 }
 
+function hardRefreshCurrentPage() {
+  const url = new URL(window.location.href);
+  url.searchParams.set("_eva_refresh", String(Date.now()));
+  window.location.replace(url.toString());
+}
+
 function refreshCurrentPage() {
   if (refreshing) return;
   refreshing = true;
   setIndicator(THRESHOLD, "refreshing");
   document.body.classList.add("eva-pull-refreshing");
-  try { navigator.vibrate?.(18); } catch {}
+  try { navigator.vibrate?.([12, 18, 12]); } catch {}
+  try { sessionStorage.setItem("evaraos-hard-refresh", String(Date.now())); } catch {}
   slowLoaderTimer = window.setTimeout(() => {
-    window.EvaraLoader?.show?.({ variant: "page", title: "Refreshing", subtitle: "Updating this page." });
-  }, 700);
-  window.setTimeout(() => window.location.reload(), 260);
+    window.EvaraLoader?.show?.({ variant: "page", title: "Refreshing", subtitle: "Reopening this screen fresh." });
+  }, 650);
+  window.setTimeout(hardRefreshCurrentPage, 240);
 }
 
 function onTouchStart(event) {
@@ -79,7 +86,7 @@ function onTouchMove(event) {
   if (delta <= 0 || getScrollTop() > 0) { resetIndicator(); return; }
   pullY = Math.min(MAX_PULL, delta * 0.58);
   if (pullY > 8) event.preventDefault();
-  if (pullY >= THRESHOLD && !hasVibrated) { hasVibrated = true; try { navigator.vibrate?.(10); } catch {} }
+  if (pullY >= THRESHOLD && !hasVibrated) { hasVibrated = true; try { navigator.vibrate?.(16); } catch {} }
   setIndicator(pullY, pullY >= THRESHOLD ? "release" : "pulling");
 }
 
