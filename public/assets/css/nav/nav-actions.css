@@ -5,9 +5,8 @@
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
-  pointer-events: auto !important;
-  z-index: 10;
-  position: relative;
+  pointer-events: auto;
+  z-index: 3;
 }
 
 .eva-nav-action-btn,
@@ -35,8 +34,6 @@
   -webkit-appearance: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  pointer-events: auto !important;
-  z-index: 11;
   transition: transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease, color .18s ease;
 }
 
@@ -92,20 +89,15 @@ body.dark #evaMenuBtn {
   font-size: 1.28rem;
   line-height: 1;
   color: currentColor;
-  pointer-events: none;
 }
 
 html[data-theme="light"] .eva-theme-nav-icon,
-body[data-theme="light"] .eva-theme-nav-icon {
-  color: #f59e0b;
-}
+body[data-theme="light"] .eva-theme-nav-icon { color: #f59e0b; }
 
 html[data-theme="dark"] .eva-theme-nav-icon,
 body[data-theme="dark"] .eva-theme-nav-icon,
 html.dark .eva-theme-nav-icon,
-body.dark .eva-theme-nav-icon {
-  color: #60a5fa;
-}
+body.dark .eva-theme-nav-icon { color: #60a5fa; }
 
 .eva-burger {
   width: 24px;
@@ -113,7 +105,6 @@ body.dark .eva-theme-nav-icon {
   display: grid;
   align-content: space-between;
   position: relative;
-  pointer-events: none;
 }
 
 .eva-burger i {
@@ -159,5 +150,5 @@ body.nav-menu-open .eva-burger i:nth-child(3) { transform: translateY(-7.8px) ro
   .eva-burger { width: 21px; height: 16px; }
   .eva-burger i { width: 21px; }
   body.nav-menu-open .eva-burger i:nth-child(1) { transform: translateY(6.8px) rotate(45deg); }
-  body.nav-menu-open .eva-burger i:nth-child(3) { transform: translateY(-6.8px) rotate(-6.8px) rotate(-45deg); }
+  body.nav-menu-open .eva-burger i:nth-child(3) { transform: translateY(-6.8px) rotate(-45deg); }
 }
