@@ -1,22 +1,18 @@
-/* EVARAOS NAV ACTIONS
-   nav-v1 bottom island controls: theme + animated menu only.
-*/
+/* Evaraos Clean Nav Actions */
 
 .eva-menu-zone {
-  position: static;
-  transform: none;
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
-  z-index: 3;
   pointer-events: auto;
+  z-index: 3;
 }
 
 .eva-nav-action-btn,
-#evaMenuBtn,
+.eva-theme-nav-btn,
 .eva-menu-btn,
-.eva-theme-nav-btn {
+#evaMenuBtn {
   width: 50px;
   height: 50px;
   min-width: 50px;
@@ -26,81 +22,56 @@
   border-radius: 999px;
   display: grid;
   place-items: center;
-  cursor: pointer;
   position: relative;
   overflow: hidden;
+  cursor: pointer;
   color: #0f172a;
-  background: rgba(255,255,255,0.64);
-  border: 1px solid rgba(148,163,184,0.28);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.78), 0 10px 22px rgba(15,23,42,0.09);
+  background: rgba(255,255,255,.68);
+  border: 1px solid rgba(148,163,184,.28);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.78), 0 10px 22px rgba(15,23,42,.09);
   appearance: none;
   -webkit-appearance: none;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   transition: transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease, color .18s ease;
 }
 
 html[data-theme="dark"] .eva-nav-action-btn,
-html[data-theme="dark"] #evaMenuBtn,
+html[data-theme="dark"] .eva-theme-nav-btn,
 html[data-theme="dark"] .eva-menu-btn,
-html[data-theme="dark"] .eva-theme-nav-btn {
+html[data-theme="dark"] #evaMenuBtn,
+body[data-theme="dark"] .eva-nav-action-btn,
+body[data-theme="dark"] .eva-theme-nav-btn,
+body[data-theme="dark"] .eva-menu-btn,
+body[data-theme="dark"] #evaMenuBtn,
+html.dark .eva-nav-action-btn,
+html.dark .eva-theme-nav-btn,
+html.dark .eva-menu-btn,
+html.dark #evaMenuBtn,
+body.dark .eva-nav-action-btn,
+body.dark .eva-theme-nav-btn,
+body.dark .eva-menu-btn,
+body.dark #evaMenuBtn {
   color: #f8fbff;
-  background: rgba(255,255,255,0.075);
-  border-color: rgba(255,255,255,0.12);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.11), 0 12px 24px rgba(0,0,0,0.28);
+  background: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.12);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 12px 24px rgba(0,0,0,.28);
 }
 
 .eva-nav-action-btn:hover,
-#evaMenuBtn:hover,
+.eva-theme-nav-btn:hover,
 .eva-menu-btn:hover,
-.eva-theme-nav-btn:hover {
+#evaMenuBtn:hover {
   transform: translateY(-1px);
-  background: rgba(255,255,255,0.82);
-  border-color: rgba(96,165,250,0.32);
-}
-
-html[data-theme="dark"] .eva-nav-action-btn:hover,
-html[data-theme="dark"] #evaMenuBtn:hover,
-html[data-theme="dark"] .eva-menu-btn:hover,
-html[data-theme="dark"] .eva-theme-nav-btn:hover {
-  background: rgba(255,255,255,0.14);
+  border-color: rgba(96,165,250,.32);
+  background: rgba(255,255,255,.84);
 }
 
 .eva-nav-action-btn:active,
-#evaMenuBtn:active,
+.eva-theme-nav-btn:active,
 .eva-menu-btn:active,
-.eva-theme-nav-btn:active {
+#evaMenuBtn:active {
   transform: scale(.96);
-}
-
-.eva-nav-action-btn::before,
-.eva-nav-action-btn::after,
-#evaMenuBtn::before,
-#evaMenuBtn::after,
-.eva-menu-btn::before,
-.eva-menu-btn::after,
-.eva-theme-nav-btn::before,
-.eva-theme-nav-btn::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity .18s ease;
-}
-
-.eva-nav-action-btn::before,
-#evaMenuBtn::before,
-.eva-menu-btn::before,
-.eva-theme-nav-btn::before {
-  background: radial-gradient(circle at 35% 20%, rgba(255,255,255,.65), transparent 38%);
-}
-
-.eva-nav-action-btn:hover::before,
-#evaMenuBtn:hover::before,
-.eva-menu-btn:hover::before,
-.eva-theme-nav-btn:hover::before {
-  opacity: .9;
 }
 
 .eva-theme-nav-icon {
@@ -108,19 +79,20 @@ html[data-theme="dark"] .eva-theme-nav-btn:hover {
   place-items: center;
   width: 24px;
   height: 24px;
-  font-size: 1.34rem;
-  font-weight: 900;
+  font-size: 1.28rem;
   line-height: 1;
   color: currentColor;
-  position: relative;
-  z-index: 2;
 }
 
-.eva-theme-nav-btn[data-theme-mode="light"] .eva-theme-nav-icon {
+html[data-theme="light"] .eva-theme-nav-icon,
+body[data-theme="light"] .eva-theme-nav-icon {
   color: #f59e0b;
 }
 
-.eva-theme-nav-btn[data-theme-mode="dark"] .eva-theme-nav-icon {
+html[data-theme="dark"] .eva-theme-nav-icon,
+body[data-theme="dark"] .eva-theme-nav-icon,
+html.dark .eva-theme-nav-icon,
+body.dark .eva-theme-nav-icon {
   color: #60a5fa;
 }
 
@@ -130,72 +102,37 @@ html[data-theme="dark"] .eva-theme-nav-btn:hover {
   display: grid;
   align-content: space-between;
   position: relative;
-  z-index: 2;
 }
 
-.eva-burger-line {
+.eva-burger i {
   display: block;
   width: 24px;
   height: 2.4px;
   border-radius: 999px;
   background: currentColor;
   transform-origin: center;
-  transition: transform .22s cubic-bezier(.2,.8,.2,1), opacity .16s ease, width .18s ease;
+  transition: transform .24s cubic-bezier(.2,.8,.2,1), opacity .16s ease, width .18s ease;
 }
 
-body.nav-menu-open .eva-burger-line:nth-child(1) {
+body.nav-menu-open .eva-burger i:nth-child(1) {
   transform: translateY(7.8px) rotate(45deg);
 }
 
-body.nav-menu-open .eva-burger-line:nth-child(2) {
+body.nav-menu-open .eva-burger i:nth-child(2) {
   opacity: 0;
   transform: scaleX(.25);
 }
 
-body.nav-menu-open .eva-burger-line:nth-child(3) {
+body.nav-menu-open .eva-burger i:nth-child(3) {
   transform: translateY(-7.8px) rotate(-45deg);
-}
-
-.eva-account-action {
-  min-height: 66px;
-  display: grid;
-  place-items: center;
-  gap: 4px;
-  text-align: center;
-  text-decoration: none;
-  color: inherit;
-  border-radius: 18px;
-  background: rgba(255,255,255,0.48);
-  border: 1px solid rgba(148,163,184,0.18);
-  cursor: pointer;
-  font: inherit;
-  appearance: none;
-  -webkit-appearance: none;
-}
-
-html[data-theme="dark"] .eva-account-action {
-  background: rgba(255,255,255,0.05);
-  border-color: rgba(255,255,255,0.08);
-}
-
-.eva-account-action span {
-  font-size: 1.22rem;
-  line-height: 1;
-}
-
-.eva-account-action strong {
-  font-size: 0.68rem;
-  font-weight: 900;
-  letter-spacing: -0.02em;
 }
 
 @media (max-width: 520px) {
   .eva-menu-zone { gap: 8px; }
-
   .eva-nav-action-btn,
-  #evaMenuBtn,
+  .eva-theme-nav-btn,
   .eva-menu-btn,
-  .eva-theme-nav-btn {
+  #evaMenuBtn {
     width: 46px;
     height: 46px;
     min-width: 46px;
@@ -205,9 +142,9 @@ html[data-theme="dark"] .eva-account-action {
 
 @media (max-width: 390px) {
   .eva-nav-action-btn,
-  #evaMenuBtn,
+  .eva-theme-nav-btn,
   .eva-menu-btn,
-  .eva-theme-nav-btn {
+  #evaMenuBtn {
     width: 42px;
     height: 42px;
     min-width: 42px;
@@ -219,15 +156,15 @@ html[data-theme="dark"] .eva-account-action {
     height: 16px;
   }
 
-  .eva-burger-line {
+  .eva-burger i {
     width: 21px;
   }
 
-  body.nav-menu-open .eva-burger-line:nth-child(1) {
+  body.nav-menu-open .eva-burger i:nth-child(1) {
     transform: translateY(6.8px) rotate(45deg);
   }
 
-  body.nav-menu-open .eva-burger-line:nth-child(3) {
+  body.nav-menu-open .eva-burger i:nth-child(3) {
     transform: translateY(-6.8px) rotate(-45deg);
   }
 }
