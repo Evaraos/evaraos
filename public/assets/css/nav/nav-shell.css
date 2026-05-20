@@ -4,16 +4,16 @@
   --eva-island-offset: max(10px, calc(env(safe-area-inset-bottom, 0px) + 10px));
   --eva-page-nav-clearance: 104px;
   --eva-dock-width: min(552px, calc(100vw - 20px));
-  --eva-active-accent: #2563eb;
-  --eva-active-accent-soft: rgba(37,99,235,.16);
+  --eva-active-accent: #dc2626;
+  --eva-active-accent-soft: rgba(220,38,38,.15);
 }
 
-html[data-eva-active-category="operations"] { --eva-active-accent: #2563eb; --eva-active-accent-soft: rgba(37,99,235,.16); }
-html[data-eva-active-category="organizations"] { --eva-active-accent: #7c3aed; --eva-active-accent-soft: rgba(124,58,237,.16); }
-html[data-eva-active-category="finance"] { --eva-active-accent: #16a34a; --eva-active-accent-soft: rgba(22,163,74,.16); }
-html[data-eva-active-category="customer"] { --eva-active-accent: #0891b2; --eva-active-accent-soft: rgba(8,145,178,.16); }
-html[data-eva-active-category="intelligence"] { --eva-active-accent: #dc2626; --eva-active-accent-soft: rgba(220,38,38,.15); }
-html[data-eva-active-category="system"] { --eva-active-accent: #475569; --eva-active-accent-soft: rgba(71,85,105,.16); }
+html[data-eva-active-category="operations"],
+html[data-eva-active-category="organizations"],
+html[data-eva-active-category="finance"],
+html[data-eva-active-category="customer"],
+html[data-eva-active-category="intelligence"],
+html[data-eva-active-category="system"] { --eva-active-accent: #dc2626; --eva-active-accent-soft: rgba(220,38,38,.15); }
 
 #universalNavRoot,
 #universalNav {
@@ -85,7 +85,7 @@ html[data-eva-active-category="system"] { --eva-active-accent: #475569; --eva-ac
 }
 
 body.nav-menu-open .eva-nav-pill {
-  border-color: color-mix(in srgb, var(--eva-active-accent) 28%, rgba(96,165,250,.26));
+  border-color: color-mix(in srgb, var(--eva-active-accent) 28%, rgba(220,38,38,.22));
   box-shadow:
     0 24px 62px rgba(15,23,42,.18),
     inset 0 1px 0 rgba(255,255,255,.92);
@@ -118,7 +118,7 @@ html[data-theme="dark"] body.nav-menu-open .eva-nav-pill,
 body[data-theme="dark"].nav-menu-open .eva-nav-pill,
 html.dark body.nav-menu-open .eva-nav-pill,
 body.dark.nav-menu-open .eva-nav-pill {
-  border-color: color-mix(in srgb, var(--eva-active-accent) 24%, rgba(96,165,250,.24));
+  border-color: color-mix(in srgb, var(--eva-active-accent) 24%, rgba(220,38,38,.22));
   box-shadow: 0 28px 72px rgba(0,0,0,.50), inset 0 1px 0 rgba(255,255,255,.12);
 }
 
