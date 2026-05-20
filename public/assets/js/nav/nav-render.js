@@ -1,7 +1,7 @@
 import { getMount, getBasePath, buildHref, getVisibleLinks, isCurrentPage } from "./nav-utils.js";
 import { APP_CATEGORIES, appsByCategory } from "../navigation/app-registry.js";
 
-const NAV_RENDER_BUILD = "evaraos-clean-nav-20260519";
+const NAV_RENDER_BUILD = "evaraos-active-shell-20260520";
 
 const CATEGORIES = [
   [APP_CATEGORIES.operations, "Operations", "Jobs, leads, dispatch", "▣"],
@@ -34,6 +34,32 @@ function roleForRegistry(role = "customer") {
 
 function active(route = "") {
   return isCurrentPage(route) ? ' data-active="true" aria-current="page"' : "";
+}
+
+function currentPageName() {
+  const page = (window.location.pathname || "/").split("/").filter(Boolean).pop() || "index.html";
+  return page.replace(".html", "").replaceAll("_", "-").replaceAll(" ", "-").toLowerCase();
+}
+
+function activeCategory(groups = {}) {
+  for (const [category] of CATEGORIES) {
+    if ((groups[category] || []).some((app) => isCurrentPage(app.route))) return category;
+  }
+  if (isCurrentPage("settings.html")) return APP_CATEGORIES.system;
+  if (isCurrentPage("customer_dashboard.html")) return APP_CATEGORIES.customer;
+  if (isCurrentPage("dashboard.html")) return APP_CATEGORIES.intelligence;
+  if (isCurrentPage("companies.html") || isCurrentPage("users.html") || isCurrentPage("applications.html") || isCurrentPage("org.html")) return APP_CATEGORIES.organizations;
+  if (isCurrentPage("jobs.html") || isCurrentPage("leads.html") || isCurrentPage("operations_map.html")) return APP_CATEGORIES.operations;
+  return "home";
+}
+
+function activeTitle(groups = {}) {
+  for (const apps of Object.values(groups)) {
+    const hit = (apps || []).find((app) => isCurrentPage(app.route));
+    if (hit?.title) return hit.title;
+  }
+  const fallback = currentPageName().replaceAll("-", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+  return fallback || "Home";
 }
 
 function linkCard(route, icon, title, subtitle, label = title) {
@@ -92,8 +118,8 @@ function accountTools(authed) {
 function operationGroups(role) {
   const groups = appsByCategory(roleForRegistry(role));
   const rows = CATEGORIES.map(([category, title, subtitle, icon]) => groupRow(category, title, subtitle, icon, groups[category] || [])).join("");
-  if (!rows) return "";
-  return `<section class="eva-menu-section eva-groups-section"><p class="eva-section-label">Operating System</p><div class="eva-group-stack">${rows}</div></section>`;
+  if (!rows) return { html: "", groups };
+  return { html: `<section class="eva-menu-section eva-groups-section"><p class="eva-section-label">Operating System</p><div class="eva-group-stack">${rows}</div></section>`, groups };
 }
 
 function aiBox(authed) {
@@ -117,14 +143,21 @@ export function renderNav() {
   const session = getVisibleLinks();
   const role = roleForRegistry(session.role);
   const logo = `${getBasePath()}/assets/img/evaraos_logo.png`;
+  const operating = session.authed ? operationGroups(session.role) : { html: "", groups: {} };
+  const category = activeCategory(operating.groups);
+  const pageTitle = activeTitle(operating.groups);
 
-  mount.innerHTML = `<div class="eva-nav-layer" data-render-build="${NAV_RENDER_BUILD}">
+  document.documentElement.dataset.evaActivePage = currentPageName();
+  document.documentElement.dataset.evaActiveCategory = category;
+
+  mount.innerHTML = `<div class="eva-nav-layer" data-render-build="${NAV_RENDER_BUILD}" data-active-category="${esc(category)}" data-active-page="${esc(currentPageName())}">
     <header class="eva-nav-shell" id="evaNavShell">
-      <div class="eva-nav-pill" id="evaNavPill">
+      <div class="eva-nav-pill" id="evaNavPill" data-active-category="${esc(category)}">
         <button class="eva-brand" id="evaBrandBlock" data-home-link="${buildHref("index.html")}" type="button">
           <img src="${logo}" alt="Evaraos" class="eva-logo" />
-          <span class="eva-brand-copy"><strong>Evaraos Inc</strong><small>Subsidiaries Allocation SaaS</small></span>
+          <span class="eva-brand-copy"><strong>Evaraos Inc</strong><small>${esc(pageTitle)} • ${esc(category === "home" ? "Home" : category)}</small></span>
         </button>
+        <div class="eva-active-chip" aria-hidden="true"><span></span></div>
         <div class="eva-menu-zone" id="evaMenuZone">
           <button class="eva-nav-action-btn eva-theme-nav-btn" type="button" id="evaThemeToggle" data-theme-label="true" aria-label="Toggle theme"><span class="eva-theme-nav-icon">◐</span></button>
           <button class="eva-nav-action-btn eva-menu-btn" type="button" id="evaMenuBtn" aria-expanded="false" aria-label="Open menu"><span class="eva-burger"><i></i><i></i><i></i></span></button>
@@ -136,7 +169,7 @@ export function renderNav() {
       <nav class="eva-menu-content" id="evaLinks" data-nav-role="${esc(role)}">
         ${quickNavigation()}
         ${accountTools(session.authed)}
-        ${session.authed ? operationGroups(session.role) : ""}
+        ${operating.html}
         ${aiBox(session.authed)}
       </nav>
     </aside>
