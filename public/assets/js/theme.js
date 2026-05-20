@@ -35,6 +35,9 @@ export function getTheme() {
 export function applyTheme(theme = getTheme()) {
   const safeTheme = theme === "dark" ? "dark" : "light";
   document.documentElement.setAttribute("data-theme", safeTheme);
+  document.body?.setAttribute("data-theme", safeTheme);
+  document.documentElement.classList.toggle("dark", safeTheme === "dark");
+  document.body?.classList.toggle("dark", safeTheme === "dark");
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", safeTheme === "dark" ? "#060814" : "#f4f7f6");
   window.dispatchEvent(new CustomEvent("evara:theme-applied", { detail: { theme: safeTheme } }));
   return safeTheme;
@@ -54,3 +57,4 @@ export function toggleTheme() {
 }
 
 applyTheme();
+window.addEventListener("DOMContentLoaded", () => applyTheme());
