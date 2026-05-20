@@ -6,8 +6,15 @@ import {
   getSavedUserRole,
   clearSavedUserRole,
   clearSavedUserProfile,
-  normalizeRole
+  normalizeRole as normalizeFirebaseRole
 } from "./firebase.js";
+
+import {
+  normalizeRole,
+  getRoleDefinition,
+  appByRoute,
+  roleCanAccessApp
+} from "./navigation/app-registry.js";
 
 const ROUTES = {
   login: "/login.html",
@@ -16,76 +23,10 @@ const ROUTES = {
 };
 
 const AUTH_WAIT_TIMEOUT_MS = 4500;
-
-const OWNER_ROLES = new Set(["owner", "super_admin", "admin"]);
-const OPS_ROLES = new Set([
-  "owner",
-  "super_admin",
-  "admin",
-  "manager",
-  "operations_manager",
-  "operations_coordinator",
-  "dispatcher",
-  "field_manager",
-  "sales_manager",
-  "hr",
-  "hr_manager"
-]);
-const STAFF_ROLES = new Set([
-  "technician",
-  "cleaner",
-  "staff",
-  "field_staff",
-  "crew_lead",
-  "sales",
-  "sales_rep",
-  "customer_support",
-  "quality_control"
-]);
-
-const CUSTOMER_ALLOWED = new Set([
-  "customer_dashboard.html",
-  "customer-commerce.html",
-  "customer-messaging.html",
-  "customer-service-history.html",
-  "settings.html"
-]);
-
-const STAFF_ALLOWED = new Set([
-  "dashboard.html",
-  "leads.html",
-  "jobs.html",
-  "customer-messaging.html",
-  "customer-service-history.html",
-  "presence.html",
-  "territory-map.html",
-  "settings.html"
-]);
-
-const OPS_ONLY = new Set([
-  "operations-visibility.html",
-  "enterprise-finance-dashboard.html",
-  "marketplace-payouts.html",
-  "applications.html",
-  "users.html",
-  "companies.html",
-  "governance-dashboard.html",
-  "governance-analytics.html",
-  "anomaly-dashboard.html",
-  "audit-dashboard.html",
-  "replay-dashboard.html",
-  "org.html",
-  "notifications.html",
-  "executive-queue.html",
-  "workflow-monitor-dashboard.html",
-  "alerts-dashboard.html",
-  "analytics-dashboard.html",
-  "territories.html",
-  "live-operations-command.html",
-  "qa.html"
-]);
-
 let hasFinishedRouteGuard = false;
+
+const PUBLIC_AUTH_PAGES = new Set(["login.html", "signup.html", "reset.html", "index.html"]);
+const CUSTOMER_PAGES = new Set(["customer_dashboard.html", "customer-commerce.html", "customer-messaging.html", "customer-service-history.html", "settings.html"]);
 
 function emit(name, detail = {}) {
   window.dispatchEvent(new CustomEvent(name, { detail: { at: Date.now(), ...detail } }));
@@ -152,6 +93,27 @@ function saveIntendedRoute() {
   } catch {}
 }
 
+function roleFromProfile(profile = getSavedUserProfile()) {
+  const rawRole = profile?.role || getSavedUserRole() || "customer";
+  return normalizeRole(normalizeFirebaseRole?.(rawRole) || rawRole);
+}
+
+function defaultDashboardForRole(role = "customer") {
+  const normalized = normalizeRole(role);
+  const definition = getRoleDefinition(normalized);
+
+  if (definition.group === "customer") return ROUTES.customerDashboard;
+  if (definition.group === "organization") return "/org.html";
+  if (definition.group === "vendor") return "/jobs.html";
+  if (definition.group === "staff") {
+    if (["sales_rep"].includes(normalized)) return "/leads.html";
+    if (["customer_support"].includes(normalized)) return "/customer-messaging.html";
+    return "/jobs.html";
+  }
+
+  return ROUTES.dashboard;
+}
+
 function consumeIntendedRoute(role = "customer") {
   try {
     const saved = sessionStorage.getItem("evaraos-intended-route");
@@ -163,27 +125,20 @@ function consumeIntendedRoute(role = "customer") {
   }
 }
 
-function getEffectiveRole(profile = getSavedUserProfile()) {
-  return normalizeRole(profile?.role || getSavedUserRole() || "customer");
-}
-
 function canAccessCurrentPage(role = "customer") {
   const page = pageName();
   const normalized = normalizeRole(role);
 
-  if (!OPS_ONLY.has(page)) {
-    if (normalized === "customer") return CUSTOMER_ALLOWED.has(page);
-    if (STAFF_ROLES.has(normalized)) return STAFF_ALLOWED.has(page) || !OPS_ONLY.has(page);
-    return true;
-  }
+  if (PUBLIC_AUTH_PAGES.has(page)) return true;
+  if (normalized === "owner" || normalized === "super_admin") return true;
 
-  return OWNER_ROLES.has(normalized) || OPS_ROLES.has(normalized);
-}
+  if (normalized === "customer") return CUSTOMER_PAGES.has(page);
 
-function defaultDashboardForRole(role = "customer") {
-  const normalized = normalizeRole(role);
-  if (normalized === "customer") return ROUTES.customerDashboard;
-  return ROUTES.dashboard;
+  const app = appByRoute(`/${page}`);
+  if (app) return roleCanAccessApp(normalized, app);
+
+  const definition = getRoleDefinition(normalized);
+  return definition.level >= 80;
 }
 
 function waitForVerifiedFirebaseUser() {
@@ -218,15 +173,12 @@ async function handlePrivateRoute() {
   if (!verifiedUser) {
     saveIntendedRoute();
     clearUserSession();
-    beginGuardRedirect(ROUTES.login, {
-      title: "Secure Area",
-      subtitle: "Please sign in to continue."
-    });
+    beginGuardRedirect(ROUTES.login, { title: "Secure Area", subtitle: "Please sign in to continue." });
     return;
   }
 
   const profile = await hydrateUserProfile(verifiedUser);
-  const role = getEffectiveRole(profile);
+  const role = roleFromProfile(profile);
 
   if (!canAccessCurrentPage(role)) {
     beginGuardRedirect(defaultDashboardForRole(role), {
@@ -236,7 +188,7 @@ async function handlePrivateRoute() {
     return;
   }
 
-  safeMarkReady({ mode: "private", authenticated: true, role, source: "route-guard" });
+  safeMarkReady({ mode: "private", authenticated: true, role, roleDefinition: getRoleDefinition(role), source: "route-guard" });
 }
 
 async function handleAuthRoute() {
@@ -244,7 +196,7 @@ async function handleAuthRoute() {
 
   if (verifiedUser) {
     const profile = await hydrateUserProfile(verifiedUser);
-    const role = getEffectiveRole(profile);
+    const role = roleFromProfile(profile);
     const target = consumeIntendedRoute(role);
 
     beginGuardRedirect(target || defaultDashboardForRole(role), {
