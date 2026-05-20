@@ -2,7 +2,7 @@ import { buildHref, getAppearanceTheme, setTheme, syncThemeLabel, getBrandBlock 
 import { closeMenu, openMenu, toggleMenu } from "./nav-menu.js";
 import { navigateWithLoader } from "./nav-navigation.js";
 import { logoutAndRedirect, functions, httpsCallable } from "../firebase.js";
-import { searchApps } from "../navigation/app-registry.js";
+import { searchApps, normalizeQuery } from "../navigation/app-registry.js";
 
 const BOUND = "data-evara-clean-bound";
 
@@ -13,37 +13,6 @@ const GROUP_FALLBACK_ROUTES = Object.freeze({
   customer: "/customer_dashboard.html",
   intelligence: "/dashboard.html",
   system: "/settings.html"
-});
-
-const COMMAND_ALIASES = Object.freeze({
-  home: "/index.html",
-  dashboard: "/dashboard.html",
-  command: "/dashboard.html",
-  executive: "/dashboard.html",
-  map: "/operations_map.html",
-  operations: "/jobs.html",
-  jobs: "/jobs.html",
-  job: "/jobs.html",
-  leads: "/leads.html",
-  lead: "/leads.html",
-  companies: "/companies.html",
-  company: "/companies.html",
-  organizations: "/companies.html",
-  organization: "/org.html",
-  users: "/users.html",
-  people: "/users.html",
-  applications: "/applications.html",
-  applicants: "/applications.html",
-  settings: "/settings.html",
-  profile: "/settings.html",
-  system: "/settings.html",
-  alerts: "/notifications.html",
-  notifications: "/notifications.html",
-  customer: "/customer_dashboard.html",
-  customers: "/customer_dashboard.html",
-  apply: "/staff_application.html",
-  login: "/login.html",
-  signup: "/signup.html"
 });
 
 function stop(event) {
@@ -85,14 +54,6 @@ function label(value = "") {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function normalizeCommand(value = "") {
-  return String(value || "")
-    .trim()
-    .toLowerCase()
-    .replace(/^(open|go to|show|take me to|launch|view)\s+/, "")
-    .replace(/\s+/g, " ");
-}
-
 function role() {
   return document.getElementById("evaLinks")?.dataset?.navRole || localStorage.getItem("evaraos-role") || "customer";
 }
@@ -111,43 +72,15 @@ function openHref(href, title = "Loading page", subtitle = "Preparing your next 
   navigateWithLoader(route, { title, subtitle, theme: getAppearanceTheme() });
 }
 
-function score(app, query = "") {
-  const q = normalizeCommand(query);
-  const title = String(app.title || "").toLowerCase();
-  const id = String(app.id || "").toLowerCase();
-  const category = String(app.category || "").toLowerCase();
-  const route = String(app.route || "").toLowerCase();
-  if (!q) return 1;
-  if (title === q) return 100;
-  if (id === q) return 95;
-  if (COMMAND_ALIASES[q] && COMMAND_ALIASES[q] === app.route) return 92;
-  if (title.startsWith(q)) return 80;
-  if (title.includes(q)) return 65;
-  if (id.includes(q)) return 45;
-  if (route.includes(q.replaceAll(" ", "_"))) return 38;
-  if (route.includes(q.replaceAll(" ", "-"))) return 36;
-  if (category.includes(q)) return 25;
-  return 0;
-}
-
 function bestLocalCommand(prompt = "") {
-  const query = normalizeCommand(prompt);
+  const query = normalizeQuery(prompt);
   if (!query) return null;
-
-  const aliasRoute = COMMAND_ALIASES[query];
-  if (aliasRoute) return { title: label(query), route: aliasRoute };
-
-  const items = searchApps(query, role())
-    .map((app) => ({ ...app, score: score(app, query) }))
-    .filter((app) => app.score > 0)
-    .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title));
-
-  return items[0] || null;
+  return searchApps(query, role())[0] || null;
 }
 
 function renderResults(root, items = [], query = "") {
   if (!root) return;
-  const normalized = normalizeCommand(query);
+  const normalized = normalizeQuery(query);
   if (!normalized) {
     root.classList.remove("active");
     root.innerHTML = "";
@@ -350,7 +283,7 @@ export function bindSearch() {
   if (!input) return;
   once(input, "input", () => {
     const query = input.value.trim();
-    const items = searchApps(normalizeCommand(query), role()).map((app) => ({ ...app, score: score(app, query) })).filter((app) => !query || app.score > 0).sort((a, b) => b.score - a.score || a.title.localeCompare(b.title)).slice(0, 8);
+    const items = searchApps(query, role()).slice(0, 8);
     renderResults(results, items, query);
   });
   once(input, "keydown", async (event) => {
