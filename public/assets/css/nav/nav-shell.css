@@ -65,7 +65,7 @@ html[data-eva-active-category="system"] { --eva-active-accent: #475569; --eva-ac
   overflow: hidden;
   isolation: isolate;
   transform: translateZ(0);
-  transition: transform .2s cubic-bezier(.2,.8,.2,1), border-color .18s ease, box-shadow .18s ease, background .18s ease;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
 }
 
 .eva-nav-pill::before {
@@ -85,10 +85,9 @@ html[data-eva-active-category="system"] { --eva-active-accent: #475569; --eva-ac
 }
 
 body.nav-menu-open .eva-nav-pill {
-  transform: translateY(-2px) scale(1.01);
   border-color: color-mix(in srgb, var(--eva-active-accent) 28%, rgba(96,165,250,.26));
   box-shadow:
-    0 30px 76px rgba(15,23,42,.20),
+    0 24px 62px rgba(15,23,42,.18),
     inset 0 1px 0 rgba(255,255,255,.92);
 }
 
@@ -120,7 +119,7 @@ body[data-theme="dark"].nav-menu-open .eva-nav-pill,
 html.dark body.nav-menu-open .eva-nav-pill,
 body.dark.nav-menu-open .eva-nav-pill {
   border-color: color-mix(in srgb, var(--eva-active-accent) 24%, rgba(96,165,250,.24));
-  box-shadow: 0 34px 84px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,255,255,.12);
+  box-shadow: 0 28px 72px rgba(0,0,0,.50), inset 0 1px 0 rgba(255,255,255,.12);
 }
 
 .eva-brand {
