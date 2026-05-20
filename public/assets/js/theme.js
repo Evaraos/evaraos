@@ -25,20 +25,10 @@ function normalizeBaseFamily(baseFamily = "system") {
 }
 
 function normalizeAppearance(value = {}) {
-  const raw = {
-    ...DEFAULT_APPEARANCE,
-    ...(value || {})
-  };
-
+  const raw = { ...DEFAULT_APPEARANCE, ...(value || {}) };
   const mode = normalizeMode(raw.mode);
   const baseFamily = mode === "custom" ? normalizeBaseFamily(raw.baseFamily) : mode;
-
-  return {
-    ...raw,
-    mode,
-    baseFamily,
-    updatedAt: raw.updatedAt || new Date().toISOString()
-  };
+  return { ...raw, mode, baseFamily, updatedAt: raw.updatedAt || new Date().toISOString() };
 }
 
 export function getAppearance() {
@@ -53,17 +43,14 @@ export function getAppearance() {
 
 export function getThemeFromAppearance(appearance = getAppearance()) {
   const safe = normalizeAppearance(appearance);
-
   if (safe.mode === "light") return "light";
   if (safe.mode === "dark") return "dark";
   if (safe.mode === "system") return systemTheme();
-
   if (safe.mode === "custom") {
     if (safe.baseFamily === "light") return "light";
     if (safe.baseFamily === "dark") return "dark";
     return systemTheme();
   }
-
   return systemTheme();
 }
 
@@ -86,13 +73,8 @@ export function applyTheme(theme = getTheme(), mode = getAppearance().mode) {
     document.body.classList.toggle("dark", safeTheme === "dark");
   }
 
-  try {
-    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", safeTheme === "dark" ? "#000000" : "#f7f8fa");
-  } catch {}
-
-  try {
-    localStorage.setItem(THEME_KEY, safeTheme);
-  } catch {}
+  try { document.querySelector('meta[name="theme-color"]')?.setAttribute("content", safeTheme === "dark" ? "#000000" : "#f7f8fa"); } catch {}
+  try { localStorage.setItem(THEME_KEY, safeTheme); } catch {}
 
   window.EvaraLoader?.syncTheme?.(safeTheme);
   window.dispatchEvent(new CustomEvent("evara:theme-applied", { detail: { theme: safeTheme, mode: safeMode } }));
@@ -100,11 +82,7 @@ export function applyTheme(theme = getTheme(), mode = getAppearance().mode) {
 }
 
 export function saveAppearance(nextAppearance = {}) {
-  const appearance = normalizeAppearance({
-    ...getAppearance(),
-    ...nextAppearance,
-    updatedAt: new Date().toISOString()
-  });
+  const appearance = normalizeAppearance({ ...getAppearance(), ...nextAppearance, updatedAt: new Date().toISOString() });
   const theme = getThemeFromAppearance(appearance);
 
   try {
@@ -123,6 +101,18 @@ export function toggleTheme() {
   return saveAppearance({ mode: nextMode, baseFamily: nextMode });
 }
 
+function exposeThemeController() {
+  window.EvaraTheme = {
+    getAppearance,
+    getTheme,
+    getThemeFromAppearance,
+    applyTheme,
+    saveAppearance,
+    toggleTheme
+  };
+}
+
+exposeThemeController();
 applyTheme();
 
 try {
@@ -130,10 +120,14 @@ try {
   media?.addEventListener?.("change", () => {
     const appearance = getAppearance();
     if (appearance.mode === "system" || appearance.baseFamily === "system") {
-      applyTheme(getThemeFromAppearance(appearance), appearance.mode);
-      window.dispatchEvent(new CustomEvent("evara:appearance-updated", { detail: { ...appearance, theme: getThemeFromAppearance(appearance), resolvedTheme: getThemeFromAppearance(appearance) } }));
+      const theme = getThemeFromAppearance(appearance);
+      applyTheme(theme, appearance.mode);
+      window.dispatchEvent(new CustomEvent("evara:appearance-updated", { detail: { ...appearance, theme, resolvedTheme: theme } }));
     }
   });
 } catch {}
 
-window.addEventListener("DOMContentLoaded", () => applyTheme());
+window.addEventListener("DOMContentLoaded", () => {
+  exposeThemeController();
+  applyTheme();
+});
