@@ -17,7 +17,8 @@ export function buildHref(page) {
 }
 
 export function normalizePage(path) {
-  return String(path || "").split("/").pop() || "index.html";
+  const value = String(path || "").split("?")[0].split("#")[0].replace(/\/+$/, "");
+  return value.split("/").pop() || "index.html";
 }
 
 export function isCurrentPage(path) {
@@ -41,6 +42,9 @@ export function isPrivateRoutePending() {
   const privatePage = mode === "private" || [
     "/dashboard.html",
     "/customer_dashboard.html",
+    "/customer-commerce.html",
+    "/customer-messaging.html",
+    "/customer-service-history.html",
     "/companies.html",
     "/users.html",
     "/leads.html",
@@ -48,7 +52,16 @@ export function isPrivateRoutePending() {
     "/qa.html",
     "/settings.html",
     "/applications.html",
-    "/org.html"
+    "/org.html",
+    "/notifications.html",
+    "/operations_map.html",
+    "/territory-map.html",
+    "/presence.html",
+    "/analytics-dashboard.html",
+    "/audit-dashboard.html",
+    "/alerts-dashboard.html",
+    "/executive-queue.html",
+    "/workflow-monitor-dashboard.html"
   ].some((page) => path.includes(page)) || path.includes("/settings/");
 
   const authResolving = document.documentElement.classList.contains("auth-pending") ||
@@ -77,6 +90,14 @@ export function getDisplayName() {
   return user.displayName || user.fullName || user.username || user.email || "Profile";
 }
 
+export function getSystemTheme() {
+  try {
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  } catch {
+    return "light";
+  }
+}
+
 export function getAppearanceTheme() {
   try {
     const raw = localStorage.getItem("evaraos-appearance");
@@ -84,25 +105,53 @@ export function getAppearanceTheme() {
       const appearance = JSON.parse(raw);
       if (appearance.mode === "light") return "light";
       if (appearance.mode === "dark") return "dark";
-      if (appearance.mode === "custom") return appearance.baseFamily === "light" ? "light" : "dark";
+      if (appearance.mode === "system") return getSystemTheme();
+      if (appearance.mode === "galaxy") return "dark";
+      if (appearance.mode === "custom") {
+        if (appearance.baseFamily === "light") return "light";
+        if (appearance.baseFamily === "system") return getSystemTheme();
+        return "dark";
+      }
     }
   } catch {}
 
   const docTheme = document.documentElement.getAttribute("data-theme");
-  return docTheme === "dark" ? "dark" : "light";
+  if (docTheme === "dark" || docTheme === "light") return docTheme;
+  return getSystemTheme();
 }
 
 export function setTheme(theme) {
   const safe = theme === "dark" ? "dark" : "light";
   document.documentElement.setAttribute("data-theme", safe);
   document.documentElement.style.colorScheme = safe;
+  document.documentElement.classList.toggle("dark", safe === "dark");
+
+  if (document.body) {
+    document.body.setAttribute("data-theme", safe);
+    document.body.classList.toggle("dark", safe === "dark");
+  }
+
+  try {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", safe === "dark" ? "#020307" : "#f4f7f6");
+  } catch {}
+
   syncThemeLabel();
 }
 
 export function syncThemeLabel() {
   const mode = getAppearanceTheme();
-  const text = mode === "light" ? "Light mode" : "Dark mode";
-  const icon = mode === "light" ? "☀" : "☾";
+  const rawMode = (() => {
+    try {
+      const appearance = JSON.parse(localStorage.getItem("evaraos-appearance") || "{}");
+      return appearance.mode || mode;
+    } catch {
+      return mode;
+    }
+  })();
+
+  const text = rawMode === "system" ? `System mode (${mode})` : mode === "light" ? "Light mode" : "Dark mode";
+  const icon = rawMode === "system" ? "◐" : mode === "light" ? "☀" : "☾";
 
   document.querySelectorAll("[data-theme-label]").forEach((node) => {
     const labelNode = node.querySelector?.("[data-theme-text]");
@@ -115,6 +164,7 @@ export function syncThemeLabel() {
 
     node.setAttribute("aria-label", `Switch theme. Current: ${text}`);
     node.dataset.themeMode = mode;
+    node.dataset.appearanceMode = rawMode;
   });
 }
 
