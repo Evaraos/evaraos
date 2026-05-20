@@ -1,6 +1,7 @@
-:root { --ai-page-pad: 16px; --ai-max: 760px; }
-html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
-body.ai-page { width: 100%; min-height: 100svh; background: var(--page-bg); color: var(--text-primary); overflow-x: hidden; }
+:root { --ai-page-pad: 16px; --ai-max: 760px; --page-bg: #f7f8fb; --text-primary: #101522; --text-muted: rgba(16,21,34,.58); --surface-bg: rgba(255,255,255,.82); --surface-border: rgba(148,163,184,.22); --card-bg-top: rgba(255,255,255,.92); --card-bg-bottom: rgba(248,250,252,.82); --card-border: rgba(148,163,184,.20); }
+html[data-theme="dark"], body[data-theme="dark"], html.dark, body.dark { --page-bg: #080b12; --text-primary: #f7f9ff; --text-muted: rgba(235,240,255,.62); --surface-bg: rgba(255,255,255,.075); --surface-border: rgba(255,255,255,.10); --card-bg-top: rgba(255,255,255,.08); --card-bg-bottom: rgba(255,255,255,.045); --card-border: rgba(255,255,255,.10); }
+html, body { width: 100%; max-width: 100%; margin: 0; overflow-x: hidden; }
+body.ai-page { width: 100%; min-height: 100svh; background: var(--page-bg); color: var(--text-primary); overflow-x: hidden; font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", sans-serif; }
 body.ai-page * { box-sizing: border-box; max-width: 100%; }
 body.ai-page::before { content: ""; position: fixed; inset: 0; z-index: -2; pointer-events: none; background: radial-gradient(circle at 50% 0%, rgba(59,130,246,.16), transparent 42%); }
 html[data-theme="dark"] body.ai-page::before { background: radial-gradient(circle at 50% 0%, rgba(59,130,246,.18), transparent 44%); }
