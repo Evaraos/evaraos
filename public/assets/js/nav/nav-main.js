@@ -1,5 +1,4 @@
-const NAV_BUILD = "nav-ai-guard-20260520";
-const IS_AI_PAGE = window.location.pathname.endsWith("/ai.html") || window.location.pathname.endsWith("ai.html");
+const NAV_BUILD = "nav-source-clean-20260520";
 
 let NAV_STATE;
 let getNavShell;
@@ -71,7 +70,7 @@ function syncNavThemeVisual() {
   if (!button || !window.EvaraTheme) return;
   const appearance = window.EvaraTheme.getAppearance();
   const theme = window.EvaraTheme.getThemeFromAppearance(appearance);
-  const icon = appearance.mode === "system" ? "SYS" : theme === "dark" ? "DK" : "LT";
+  const icon = appearance.mode === "system" ? "\u25D0" : theme === "dark" ? "\u263E" : "\u2600";
   button.dataset.themeMode = theme;
   button.dataset.appearanceMode = appearance.mode;
   button.setAttribute("aria-label", `Theme: ${appearance.mode === "system" ? `System (${theme})` : theme}. Tap to change.`);
@@ -113,13 +112,6 @@ async function bindOptionalSystems() {
 }
 
 export async function initNav() {
-  if (IS_AI_PAGE) {
-    document.body.classList.remove("app-loading");
-    document.body.classList.add("app-ready", "eva-ai-runtime-isolated");
-    window.EVARAOS_NAV_BUILD = NAV_BUILD;
-    document.documentElement.dataset.evaraosNavBuild = NAV_BUILD;
-    return;
-  }
   try {
     ensureNavMount();
     ensureAppRoot();
