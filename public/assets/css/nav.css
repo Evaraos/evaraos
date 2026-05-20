@@ -32,10 +32,14 @@ html.eva-transitioning body {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  background: radial-gradient(circle at 50% 42%, rgba(37,99,235,.18), transparent 26%), radial-gradient(circle at 50% 60%, rgba(124,58,237,.13), transparent 30%), rgba(3,7,18,.72);
-  backdrop-filter: blur(20px) saturate(145%);
-  -webkit-backdrop-filter: blur(20px) saturate(145%);
-  transition: opacity .22s ease, visibility .22s ease;
+  background:
+    radial-gradient(circle at 48% 34%, rgba(255,255,255,.13), transparent 13%),
+    radial-gradient(circle at 50% 42%, rgba(37,99,235,.24), transparent 28%),
+    radial-gradient(circle at 50% 62%, rgba(124,58,237,.17), transparent 32%),
+    linear-gradient(145deg, rgba(2,6,23,.84), rgba(8,13,28,.78));
+  backdrop-filter: blur(24px) saturate(155%);
+  -webkit-backdrop-filter: blur(24px) saturate(155%);
+  transition: opacity .24s ease, visibility .24s ease;
 }
 
 .evara-global-loader.active {
@@ -44,25 +48,37 @@ html.eva-transitioning body {
   pointer-events: auto;
 }
 
+.evara-global-loader.is-exiting {
+  opacity: 0;
+}
+
 .evara-loader-card {
-  width: min(340px, calc(100vw - 40px));
-  min-height: 300px;
-  border-radius: 34px;
+  width: min(352px, calc(100vw - 40px));
+  min-height: 312px;
+  border-radius: 36px;
   display: grid;
   justify-items: center;
   align-content: center;
   gap: 22px;
   text-align: center;
   color: #f8fbff;
-  background: linear-gradient(145deg, rgba(255,255,255,.16), rgba(255,255,255,.055));
-  border: 1px solid rgba(255,255,255,.16);
-  box-shadow: 0 34px 90px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.14);
+  background: linear-gradient(145deg, rgba(255,255,255,.18), rgba(255,255,255,.055));
+  border: 1px solid rgba(255,255,255,.17);
+  box-shadow: 0 38px 96px rgba(0,0,0,.44), inset 0 1px 0 rgba(255,255,255,.16);
+  backdrop-filter: blur(30px) saturate(165%);
+  -webkit-backdrop-filter: blur(30px) saturate(165%);
+  transform: translateY(12px) scale(.97);
+  transition: transform .28s cubic-bezier(.2,.8,.2,1);
+}
+
+.evara-global-loader.active .evara-loader-card {
+  transform: translateY(0) scale(1);
 }
 
 .evara-loader-mark {
   position: relative;
-  width: 132px;
-  height: 132px;
+  width: 136px;
+  height: 136px;
   display: grid;
   place-items: center;
 }
@@ -70,7 +86,76 @@ html.eva-transitioning body {
 .evara-loader-logo {
   position: relative;
   z-index: 3;
-  width: 78px;
-  height: 78px;
+  width: 80px;
+  height: 80px;
   object-fit: contain;
+  filter: drop-shadow(0 15px 28px rgba(0,0,0,.32));
+  animation: evaLoaderFloat 1.9s ease-in-out infinite;
+}
+
+.evara-loader-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(96,165,250,.22);
+  animation: evaLoaderPulse 1.9s ease-out infinite;
+}
+
+.evara-loader-ring.ring-b {
+  animation-delay: .35s;
+  border-color: rgba(124,58,237,.24);
+}
+
+.evara-loader-ring.ring-c {
+  animation-delay: .7s;
+  border-color: rgba(255,255,255,.18);
+}
+
+.evara-loader-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.evara-loader-title {
+  margin: 0;
+  font-size: 1.12rem;
+  font-weight: 950;
+  letter-spacing: -.04em;
+}
+
+.evara-loader-subtitle {
+  margin: 0;
+  font-size: .86rem;
+  line-height: 1.45;
+  color: rgba(226,232,240,.72);
+  font-weight: 720;
+}
+
+@keyframes evaLoaderPulse {
+  0% { transform: scale(.58); opacity: .92; }
+  70% { transform: scale(1.04); opacity: .08; }
+  100% { transform: scale(1.08); opacity: 0; }
+}
+
+@keyframes evaLoaderFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-5px) scale(1.035); }
+}
+
+@media (max-width: 760px) {
+  .evara-loader-card {
+    width: min(320px, calc(100vw - 32px));
+    min-height: 282px;
+    border-radius: 30px;
+  }
+
+  .evara-loader-mark {
+    width: 118px;
+    height: 118px;
+  }
+
+  .evara-loader-logo {
+    width: 70px;
+    height: 70px;
+  }
 }
