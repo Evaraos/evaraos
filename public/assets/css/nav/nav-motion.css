@@ -1,11 +1,35 @@
 /* EVARAOS NAV MOTION
-   Owns page clearance, route handoff motion, and reduced-motion safety. */
+   Owns page clearance, shell surface normalization, route handoff motion, and reduced-motion safety. */
 
 :root {
   --eva-page-nav-bottom-clearance: calc(122px + env(safe-area-inset-bottom, 0px));
   --eva-island-offset: max(10px, calc(env(safe-area-inset-bottom, 0px) + 10px));
   --eva-page-enter-distance: 12px;
   --eva-page-enter-scale: .992;
+  --eva-page-bg: #f7f8fa;
+  --eva-page-text: #101522;
+  --eva-page-muted: rgba(16, 21, 34, .66);
+  --eva-page-card: rgba(255, 255, 255, .78);
+  --eva-page-line: rgba(148, 163, 184, .22);
+}
+
+html[data-theme="dark"],
+body[data-theme="dark"],
+html.dark,
+body.dark {
+  --eva-page-bg: #020307;
+  --eva-page-text: #f8fbff;
+  --eva-page-muted: rgba(226, 232, 240, .68);
+  --eva-page-card: rgba(255, 255, 255, .065);
+  --eva-page-line: rgba(255, 255, 255, .10);
+}
+
+html,
+body {
+  background: var(--eva-page-bg) !important;
+  color: var(--eva-page-text);
+  scroll-padding-top: 0 !important;
+  scroll-padding-bottom: var(--eva-page-nav-bottom-clearance) !important;
 }
 
 body:not(.login-page) #appRoot {
@@ -19,9 +43,45 @@ body.login-page #appRoot {
   padding-bottom: 0 !important;
 }
 
-html {
-  scroll-padding-top: 0 !important;
-  scroll-padding-bottom: var(--eva-page-nav-bottom-clearance) !important;
+.page-aurora,
+.page-grid-overlay {
+  pointer-events: none;
+}
+
+html[data-theme="light"] .page-aurora,
+body[data-theme="light"] .page-aurora,
+html:not([data-theme="dark"]) .page-aurora {
+  opacity: .72;
+  background:
+    radial-gradient(circle at 16% 4%, rgba(59, 130, 246, .12), transparent 30%),
+    radial-gradient(circle at 82% 6%, rgba(220, 38, 38, .075), transparent 32%),
+    radial-gradient(circle at 50% 92%, rgba(14, 165, 233, .08), transparent 34%) !important;
+}
+
+html[data-theme="dark"] .page-aurora,
+body[data-theme="dark"] .page-aurora,
+html.dark .page-aurora,
+body.dark .page-aurora {
+  opacity: .92;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(37, 99, 235, .18), transparent 28%),
+    radial-gradient(circle at 84% 10%, rgba(220, 38, 38, .13), transparent 30%),
+    radial-gradient(circle at 50% 96%, rgba(14, 165, 233, .10), transparent 34%) !important;
+}
+
+html[data-theme="light"] .page-grid-overlay,
+body[data-theme="light"] .page-grid-overlay,
+html:not([data-theme="dark"]) .page-grid-overlay {
+  opacity: .18 !important;
+  mix-blend-mode: multiply;
+}
+
+html[data-theme="dark"] .page-grid-overlay,
+body[data-theme="dark"] .page-grid-overlay,
+html.dark .page-grid-overlay,
+body.dark .page-grid-overlay {
+  opacity: .20 !important;
+  mix-blend-mode: screen;
 }
 
 .page-shell,
@@ -40,7 +100,73 @@ html {
 main.container,
 main.page-container,
 .home-shell {
+  color: var(--eva-page-text);
   padding-bottom: var(--eva-page-nav-bottom-clearance) !important;
+}
+
+.glass-card,
+.aurora-card,
+.dashboard-panel,
+.dashboard-overview,
+.dashboard-hero,
+.dashboard-stat-card,
+.dashboard-list-item,
+.dashboard-feed-item,
+.dashboard-role-card,
+.dashboard-progress-row,
+.dashboard-state-card {
+  color: var(--eva-page-text);
+  border-color: var(--eva-page-line);
+}
+
+html[data-theme="light"] .glass-card,
+body[data-theme="light"] .glass-card,
+html[data-theme="light"] .aurora-card,
+body[data-theme="light"] .aurora-card,
+html[data-theme="light"] .dashboard-panel,
+html[data-theme="light"] .dashboard-overview,
+html[data-theme="light"] .dashboard-hero,
+html[data-theme="light"] .dashboard-stat-card,
+html[data-theme="light"] .dashboard-list-item,
+html[data-theme="light"] .dashboard-feed-item,
+html[data-theme="light"] .dashboard-role-card,
+html[data-theme="light"] .dashboard-progress-row,
+html[data-theme="light"] .dashboard-state-card {
+  background: linear-gradient(145deg, rgba(255,255,255,.88), rgba(255,255,255,.66)) !important;
+  border-color: rgba(148, 163, 184, .22) !important;
+  box-shadow: 0 18px 46px rgba(15, 23, 42, .075), inset 0 1px 0 rgba(255,255,255,.80) !important;
+}
+
+html[data-theme="dark"] .glass-card,
+body[data-theme="dark"] .glass-card,
+html[data-theme="dark"] .aurora-card,
+body[data-theme="dark"] .aurora-card,
+html[data-theme="dark"] .dashboard-panel,
+html[data-theme="dark"] .dashboard-overview,
+html[data-theme="dark"] .dashboard-hero,
+html[data-theme="dark"] .dashboard-stat-card,
+html[data-theme="dark"] .dashboard-list-item,
+html[data-theme="dark"] .dashboard-feed-item,
+html[data-theme="dark"] .dashboard-role-card,
+html[data-theme="dark"] .dashboard-progress-row,
+html[data-theme="dark"] .dashboard-state-card {
+  background: linear-gradient(145deg, rgba(255,255,255,.078), rgba(255,255,255,.038)) !important;
+  border-color: rgba(255,255,255,.10) !important;
+  box-shadow: 0 22px 54px rgba(0, 0, 0, .26), inset 0 1px 0 rgba(255,255,255,.07) !important;
+}
+
+.dashboard-eyebrow,
+.dashboard-section-kicker,
+.dashboard-sidebar-eyebrow,
+.dashboard-hero-text,
+.dashboard-sidebar-foot-copy span,
+.dashboard-list-item span,
+.dashboard-feed-item span,
+.dashboard-role-card span,
+.dashboard-stat-card span,
+.dashboard-progress-copy span,
+.dashboard-state-card span {
+  color: var(--eva-page-muted) !important;
 }
 
 .eva-menu-panel,
@@ -82,40 +208,18 @@ body.app-ready .aurora-card:nth-of-type(4),
 body.app-ready .beam-target:nth-of-type(4) { animation-delay: .105s; }
 
 @keyframes evaPageEnter {
-  from {
-    opacity: 0;
-    transform: translateY(var(--eva-page-enter-distance)) scale(var(--eva-page-enter-scale));
-    filter: blur(5px) saturate(.94);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0) saturate(1);
-  }
+  from { opacity: 0; transform: translateY(var(--eva-page-enter-distance)) scale(var(--eva-page-enter-scale)); filter: blur(5px) saturate(.94); }
+  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0) saturate(1); }
 }
 
 @keyframes evaPageLeave {
-  from {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0) saturate(1);
-  }
-  to {
-    opacity: .72;
-    transform: translateY(-4px) scale(.996);
-    filter: blur(3px) saturate(.94);
-  }
+  from { opacity: 1; transform: translateY(0) scale(1); filter: blur(0) saturate(1); }
+  to { opacity: .72; transform: translateY(-4px) scale(.996); filter: blur(3px) saturate(.94); }
 }
 
 @keyframes evaSurfaceSettle {
-  from {
-    opacity: .72;
-    transform: translateY(7px) scale(.993);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: .72; transform: translateY(7px) scale(.993); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @media (prefers-reduced-motion: reduce) {
