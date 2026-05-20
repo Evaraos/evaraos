@@ -12,8 +12,7 @@
 .appearance-launch-btn,
 .eva-chip,
 .eva-link,
-.eva-menu-btn,
-button:not(.plain-btn):not(.unstyled) {
+.eva-menu-btn {
   position: relative;
   min-height: 44px;
   border-radius: 999px;
@@ -50,7 +49,6 @@ button:not(.plain-btn):not(.unstyled) {
 .eva-chip::before,
 .eva-link::before,
 .eva-menu-btn::before,
-button:not(.plain-btn):not(.unstyled)::before,
 .btn::after,
 .btn-apple::after,
 .btn-theme-primary::after,
@@ -65,8 +63,7 @@ button:not(.plain-btn):not(.unstyled)::before,
 .appearance-launch-btn::after,
 .eva-chip::after,
 .eva-link::after,
-.eva-menu-btn::after,
-button:not(.plain-btn):not(.unstyled)::after {
+.eva-menu-btn::after {
   display: none;
   content: none;
 }
@@ -85,8 +82,7 @@ button:not(.plain-btn):not(.unstyled)::after {
 .appearance-launch-btn:hover,
 .eva-chip:hover,
 .eva-link:hover,
-.eva-menu-btn:hover,
-button:not(.plain-btn):not(.unstyled):hover {
+.eva-menu-btn:hover {
   transform: translateY(-1px) translateZ(0);
   filter: saturate(1.02);
 }
@@ -105,8 +101,7 @@ button:not(.plain-btn):not(.unstyled):hover {
 .appearance-launch-btn:active,
 .eva-chip:active,
 .eva-link:active,
-.eva-menu-btn:active,
-button:not(.plain-btn):not(.unstyled):active {
+.eva-menu-btn:active {
   transform: translateY(1px) scale(.985) translateZ(0);
 }
 
@@ -124,8 +119,7 @@ button:not(.plain-btn):not(.unstyled):active {
 .appearance-launch-btn > *,
 .eva-chip > *,
 .eva-link > *,
-.eva-menu-btn > *,
-button:not(.plain-btn):not(.unstyled) > * {
+.eva-menu-btn > * {
   position: relative;
   z-index: 1;
 }
@@ -163,8 +157,7 @@ html[data-theme="light"] .custom-sheet-item-btn,
 html[data-theme="light"] .appearance-launch-btn,
 html[data-theme="light"] .eva-chip,
 html[data-theme="light"] .eva-link,
-html[data-theme="light"] .eva-menu-btn,
-html[data-theme="light"] button:not(.plain-btn):not(.unstyled) {
+html[data-theme="light"] .eva-menu-btn {
   color: var(--text-primary);
   background: rgba(255, 255, 255, 0.84);
   border-color: rgba(148, 163, 184, 0.22);
@@ -184,8 +177,7 @@ html[data-theme="dark"] .custom-sheet-item-btn,
 html[data-theme="dark"] .appearance-launch-btn,
 html[data-theme="dark"] .eva-chip,
 html[data-theme="dark"] .eva-link,
-html[data-theme="dark"] .eva-menu-btn,
-html[data-theme="dark"] button:not(.plain-btn):not(.unstyled) {
+html[data-theme="dark"] .eva-menu-btn {
   color: var(--text-primary);
   background: rgba(255, 255, 255, 0.075);
   border-color: rgba(255, 255, 255, 0.11);
@@ -209,8 +201,7 @@ html[data-theme="dark"] .role-pill-option.active {
 .btn:focus-visible,
 .btn-apple:focus-visible,
 .btn-theme-primary:focus-visible,
-.btn-theme-secondary:focus-visible,
-button:not(.plain-btn):not(.unstyled):focus-visible {
+.btn-theme-secondary:focus-visible {
   outline: none;
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.18), 0 14px 30px rgba(37, 99, 235, 0.16);
 }
@@ -219,8 +210,7 @@ button:not(.plain-btn):not(.unstyled):focus-visible {
   .btn,
   .btn-apple,
   .btn-theme-primary,
-  .btn-theme-secondary,
-  button:not(.plain-btn):not(.unstyled) {
+  .btn-theme-secondary {
     transition: none;
   }
 }
