@@ -1,12 +1,12 @@
 /* EVARAOS NAV SYSTEM
-   Single CSS entrypoint for the nav-v1 runtime. */
-@import url("./nav/nav-shell.css?v=nav-v1");
-@import url("./nav/nav-actions.css?v=nav-v1");
-@import url("./nav/nav-menu.css?v=nav-v1");
-@import url("./nav/nav-app-tiles.css?v=nav-v1");
-@import url("./nav/nav-effects.css?v=nav-v1");
-@import url("./nav/nav-motion.css?v=nav-v1");
-@import url("./nav/nav-quick-bubbles.css?v=nav-v1");
+   Single CSS entrypoint for the nav runtime. */
+@import url("./nav/nav-shell.css?v=nav-v2");
+@import url("./nav/nav-actions.css?v=nav-v2");
+@import url("./nav/nav-menu.css?v=nav-v2");
+@import url("./nav/nav-app-tiles.css?v=nav-v2");
+@import url("./nav/nav-effects.css?v=nav-v2");
+@import url("./nav/nav-motion.css?v=nav-v2");
+@import url("./nav/nav-quick-bubbles.css?v=nav-v2");
 
 .eva-page-transition,
 #evaPageTransition,
@@ -81,40 +81,11 @@ html.eva-transitioning body { visibility: visible !important; }
   justify-items: center;
   gap: 8px;
   text-align: center;
-  opacity: 0;
-  transform: translateY(10px);
-  animation: evaSplashFromIn .52s cubic-bezier(.16,1,.3,1) .18s forwards;
 }
 
-.evara-loader-from span { font-size: 1rem; line-height: 1; font-weight: 700; letter-spacing: -.015em; color: rgba(148,163,184,.82); }
-.evara-loader-from strong { font-size: 1.28rem; line-height: 1; font-weight: 850; letter-spacing: -.035em; color: rgba(248,250,252,.92); }
-.evara-global-loader[data-theme="light"] .evara-loader-from span { color: rgba(71,85,105,.66); }
-.evara-global-loader[data-theme="light"] .evara-loader-from strong { color: rgba(15,23,42,.88); }
+.evara-loader-from small { font-size: .74rem; color: rgba(226,232,240,.52); font-weight: 700; }
+.evara-global-loader[data-theme="light"] .evara-loader-from small { color: rgba(15,23,42,.46); }
 
-.evara-global-loader[data-variant="splash"] .evara-loader-title,
-.evara-global-loader[data-variant="splash"] .evara-loader-subtitle { display: none; }
-
-.evara-global-loader[data-variant="page"] { background: rgba(0,0,0,.58); backdrop-filter: blur(18px) saturate(150%); -webkit-backdrop-filter: blur(18px) saturate(150%); }
-.evara-global-loader[data-variant="page"][data-theme="light"] { background: rgba(247,248,250,.72); }
-.evara-global-loader[data-variant="page"] .evara-loader-stage { min-height: 100dvh; }
-.evara-global-loader[data-variant="page"] .evara-loader-center { min-width: min(280px, calc(100vw - 48px)); min-height: 220px; padding: 28px; border-radius: 34px; background: linear-gradient(145deg, rgba(255,255,255,.16), rgba(255,255,255,.05)); border: 1px solid rgba(255,255,255,.14); box-shadow: 0 34px 84px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.12); backdrop-filter: blur(24px) saturate(160%); -webkit-backdrop-filter: blur(24px) saturate(160%); }
-.evara-global-loader[data-variant="page"][data-theme="light"] .evara-loader-center { background: linear-gradient(145deg, rgba(255,255,255,.92), rgba(255,255,255,.68)); border-color: rgba(148,163,184,.22); box-shadow: 0 28px 72px rgba(15,23,42,.14), inset 0 1px 0 rgba(255,255,255,.82); }
-.evara-global-loader[data-variant="page"] .evara-loader-logo { width: 72px; height: 72px; max-width: 72px; max-height: 72px; animation: evaPageLoaderPulse 1.5s ease-in-out infinite; }
-.evara-global-loader[data-variant="page"] .evara-loader-from { display: none; }
-
-@keyframes evaSplashCenterIn { from { opacity: 0; transform: translateY(-3vh) scale(.94); filter: blur(8px); } to { opacity: 1; transform: translateY(-4vh) scale(1); filter: blur(0); } }
-@keyframes evaSplashFromIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes evaPageLoaderPulse { 0%, 100% { transform: scale(1); opacity: .92; } 50% { transform: scale(1.055); opacity: 1; } }
-
-@media (max-width: 760px) {
-  .evara-loader-logo { width: 288px; height: 288px; max-width: 58vw; max-height: 58vw; }
-  .evara-loader-from { bottom: max(58px, calc(env(safe-area-inset-bottom, 0px) + 44px)); }
-  .evara-loader-from strong { font-size: 1.18rem; }
-  .evara-global-loader[data-variant="page"] .evara-loader-logo { width: 66px; height: 66px; max-width: 66px; max-height: 66px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .evara-loader-center,
-  .evara-loader-from,
-  .evara-global-loader[data-variant="page"] .evara-loader-logo { animation: none !important; opacity: 1 !important; transform: none !important; filter: none !important; }
+@keyframes evaSplashCenterIn {
+  to { opacity: 1; transform: translateY(-4vh) scale(1); }
 }
