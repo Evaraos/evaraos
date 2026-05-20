@@ -15,39 +15,24 @@
 .eva-menu-btn,
 button:not(.plain-btn):not(.unstyled) {
   position: relative;
+  min-height: 44px;
+  border-radius: 999px;
   overflow: hidden;
   isolation: isolate;
-  border-radius: 999px;
-  min-height: 44px;
-  color: var(--liquid-text) !important;
-  font-weight: 900;
+  font-weight: 850;
   letter-spacing: -0.02em;
-
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--user-button-tint, rgba(var(--tint-rgb), 1)) 8%, var(--liquid-bg-top)),
-      color-mix(in srgb, var(--user-button-tint, rgba(var(--tint-rgb), 1)) 4%, var(--liquid-bg-bottom))
-    ) !important;
-
-  border: 1px solid var(--liquid-border) !important;
-
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.34),
-    inset 0 -1px 0 rgba(255,255,255,0.06),
-    0 12px 22px var(--liquid-shadow),
-    0 0 0 1px color-mix(in srgb, var(--user-button-tint, rgba(var(--tint-rgb), 1)) 5%, transparent) !important;
-
-  backdrop-filter: blur(22px) saturate(170%) !important;
-  -webkit-backdrop-filter: blur(22px) saturate(170%) !important;
-
+  color: var(--text-primary);
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255,255,255,0.40);
+  appearance: none;
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
   transform: translateZ(0);
-  transition:
-    background var(--page-transition-ms, 220ms) ease,
-    box-shadow var(--page-transition-ms, 220ms) ease,
-    border-color var(--page-transition-ms, 220ms) ease,
-    transform 0.16s ease,
-    filter 0.16s ease;
+  transition: transform .16s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease, color .18s ease, filter .16s ease;
 }
 
 .btn::before,
@@ -65,19 +50,7 @@ button:not(.plain-btn):not(.unstyled) {
 .eva-chip::before,
 .eva-link::before,
 .eva-menu-btn::before,
-button:not(.plain-btn):not(.unstyled)::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 28% 0%, rgba(255,255,255,0.72), transparent 36%),
-    linear-gradient(135deg, rgba(255,255,255,0.42), rgba(255,255,255,0.12) 34%, transparent 62%);
-  opacity: 0.96;
-  z-index: 0;
-}
-
+button:not(.plain-btn):not(.unstyled)::before,
 .btn::after,
 .btn-apple::after,
 .btn-theme-primary::after,
@@ -94,18 +67,47 @@ button:not(.plain-btn):not(.unstyled)::before {
 .eva-link::after,
 .eva-menu-btn::after,
 button:not(.plain-btn):not(.unstyled)::after {
-  content: "";
-  position: absolute;
-  top: 8%;
-  left: 14%;
-  right: 14%;
-  height: 42%;
-  border-radius: 999px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.50), rgba(255,255,255,0.10));
-  pointer-events: none;
-  opacity: 0.74;
-  z-index: 0;
-  filter: blur(0.2px);
+  display: none;
+  content: none;
+}
+
+.btn:hover,
+.btn-apple:hover,
+.btn-theme-primary:hover,
+.btn-theme-secondary:hover,
+.settings-preview-btn:hover,
+.settings-chip:hover,
+.settings-section-link:hover,
+.settings-color-open:hover,
+.settings-color-sheet-close:hover,
+.settings-color-sheet-btn:hover,
+.custom-sheet-item-btn:hover,
+.appearance-launch-btn:hover,
+.eva-chip:hover,
+.eva-link:hover,
+.eva-menu-btn:hover,
+button:not(.plain-btn):not(.unstyled):hover {
+  transform: translateY(-1px) translateZ(0);
+  filter: saturate(1.02);
+}
+
+.btn:active,
+.btn-apple:active,
+.btn-theme-primary:active,
+.btn-theme-secondary:active,
+.settings-preview-btn:active,
+.settings-chip:active,
+.settings-section-link:active,
+.settings-color-open:active,
+.settings-color-sheet-close:active,
+.settings-color-sheet-btn:active,
+.custom-sheet-item-btn:active,
+.appearance-launch-btn:active,
+.eva-chip:active,
+.eva-link:active,
+.eva-menu-btn:active,
+button:not(.plain-btn):not(.unstyled):active {
+  transform: translateY(1px) scale(.985) translateZ(0);
 }
 
 .btn > *,
@@ -128,43 +130,24 @@ button:not(.plain-btn):not(.unstyled) > * {
   z-index: 1;
 }
 
-.btn:hover,
-.btn-apple:hover,
-.btn-theme-primary:hover,
-.btn-theme-secondary:hover,
-.settings-preview-btn:hover,
-.settings-chip:hover,
-.settings-section-link:hover,
-.settings-color-open:hover,
-.settings-color-sheet-close:hover,
-.settings-color-sheet-btn:hover,
-.custom-sheet-item-btn:hover,
-.appearance-launch-btn:hover,
-.eva-chip:hover,
-.eva-link:hover,
-.eva-menu-btn:hover,
-button:not(.plain-btn):not(.unstyled):hover {
-  transform: translateY(-1px) translateZ(0);
-  filter: saturate(1.04);
+.btn-theme-primary,
+.premium-red-btn,
+.role-pill.active,
+.role-pill-option.active {
+  color: #ffffff;
+  background: linear-gradient(145deg, #3b82f6, #2563eb);
+  border-color: rgba(37, 99, 235, 0.34);
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.18), inset 0 1px 0 rgba(255,255,255,0.22);
 }
 
-.btn:active,
-.btn-apple:active,
-.btn-theme-primary:active,
-.btn-theme-secondary:active,
-.settings-preview-btn:active,
-.settings-chip:active,
-.settings-section-link:active,
-.settings-color-open:active,
-.settings-color-sheet-close:active,
-.settings-color-sheet-btn:active,
-.custom-sheet-item-btn:active,
-.appearance-launch-btn:active,
-.eva-chip:active,
-.eva-link:active,
-.eva-menu-btn:active,
-button:not(.plain-btn):not(.unstyled):active {
-  transform: translateY(1px) scale(0.985) translateZ(0);
+.btn-theme-secondary,
+.btn-apple,
+.settings-chip,
+.eva-chip,
+.eva-link {
+  color: var(--text-primary);
+  background: var(--surface-bg);
+  border-color: var(--surface-border);
 }
 
 html[data-theme="light"] .btn,
@@ -182,43 +165,54 @@ html[data-theme="light"] .eva-chip,
 html[data-theme="light"] .eva-link,
 html[data-theme="light"] .eva-menu-btn,
 html[data-theme="light"] button:not(.plain-btn):not(.unstyled) {
-  color: #10231d !important;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.92), rgba(245,248,250,0.72)) !important;
-  border-color: rgba(15, 23, 42, 0.10) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.94),
-    inset 0 -1px 0 rgba(15,23,42,0.04),
-    0 16px 32px rgba(15, 23, 42, 0.08),
-    0 0 0 1px rgba(255,255,255,0.70) !important;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.84);
+  border-color: rgba(148, 163, 184, 0.22);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255,255,255,0.62);
+}
+
+html[data-theme="dark"] .btn,
+html[data-theme="dark"] .btn-apple,
+html[data-theme="dark"] .btn-theme-secondary,
+html[data-theme="dark"] .settings-preview-btn,
+html[data-theme="dark"] .settings-chip,
+html[data-theme="dark"] .settings-section-link,
+html[data-theme="dark"] .settings-color-open,
+html[data-theme="dark"] .settings-color-sheet-close,
+html[data-theme="dark"] .settings-color-sheet-btn,
+html[data-theme="dark"] .custom-sheet-item-btn,
+html[data-theme="dark"] .appearance-launch-btn,
+html[data-theme="dark"] .eva-chip,
+html[data-theme="dark"] .eva-link,
+html[data-theme="dark"] .eva-menu-btn,
+html[data-theme="dark"] button:not(.plain-btn):not(.unstyled) {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.075);
+  border-color: rgba(255, 255, 255, 0.11);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255,255,255,0.06);
 }
 
 html[data-theme="light"] .btn-theme-primary,
 html[data-theme="light"] .premium-red-btn,
 html[data-theme="light"] .role-pill.active,
-html[data-theme="light"] .role-pill-option.active {
-  color: #ffffff !important;
-  background:
-    radial-gradient(circle at 28% 0%, rgba(255,255,255,0.42), transparent 34%),
-    linear-gradient(135deg, #ff3b5f, #d71945 52%, #9f0025) !important;
-  border-color: rgba(255,255,255,0.34) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.48),
-    inset 0 -1px 0 rgba(0,0,0,0.12),
-    0 18px 34px rgba(216, 25, 69, 0.26),
-    0 0 0 1px rgba(216,25,69,0.18) !important;
+html[data-theme="light"] .role-pill-option.active,
+html[data-theme="dark"] .btn-theme-primary,
+html[data-theme="dark"] .premium-red-btn,
+html[data-theme="dark"] .role-pill.active,
+html[data-theme="dark"] .role-pill-option.active {
+  color: #ffffff;
+  background: linear-gradient(145deg, #3b82f6, #2563eb);
+  border-color: rgba(37, 99, 235, 0.34);
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.18), inset 0 1px 0 rgba(255,255,255,0.22);
 }
 
-html[data-theme="light"] .btn:focus-visible,
-html[data-theme="light"] .btn-apple:focus-visible,
-html[data-theme="light"] .btn-theme-primary:focus-visible,
-html[data-theme="light"] .btn-theme-secondary:focus-visible,
-html[data-theme="light"] button:not(.plain-btn):not(.unstyled):focus-visible {
+.btn:focus-visible,
+.btn-apple:focus-visible,
+.btn-theme-primary:focus-visible,
+.btn-theme-secondary:focus-visible,
+button:not(.plain-btn):not(.unstyled):focus-visible {
   outline: none;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.96),
-    0 0 0 4px rgba(255,47,87,0.16),
-    0 18px 36px rgba(15,23,42,0.10) !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.18), 0 14px 30px rgba(37, 99, 235, 0.16);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -227,6 +221,6 @@ html[data-theme="light"] button:not(.plain-btn):not(.unstyled):focus-visible {
   .btn-theme-primary,
   .btn-theme-secondary,
   button:not(.plain-btn):not(.unstyled) {
-    transition: none !important;
+    transition: none;
   }
 }
