@@ -7,3 +7,17 @@
 @import url("./nav/nav-effects.css?v=nav-v1");
 @import url("./nav/nav-motion.css?v=nav-v1");
 @import url("./nav/nav-quick-bubbles.css?v=nav-v1");
+
+/* Single loader cleanup */
+.eva-page-transition,
+#evaPageTransition,
+#evaraFastLoader {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+html.eva-transitioning body {
+  visibility: visible !important;
+}
