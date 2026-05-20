@@ -1,5 +1,5 @@
 import { getMount, getBasePath, buildHref, getVisibleLinks, isCurrentPage } from "./nav-utils.js";
-import { APP_CATEGORIES, appsByCategory, normalizeRole } from "../navigation/app-registry.js";
+import { APP_CATEGORIES, appsByCategory, normalizeRole, getRoleDefinition } from "../navigation/app-registry.js";
 
 const NAV_RENDER_BUILD = "evaraos-clean-shell-20260520";
 
@@ -11,6 +11,8 @@ const CATEGORIES = [
   [APP_CATEGORIES.intelligence, "Executive", "AI, analytics, command", "executive"],
   [APP_CATEGORIES.system, "System", "Admin, settings, QA", "system"]
 ];
+
+const CUSTOMER_CATEGORIES = new Set([APP_CATEGORIES.customer, APP_CATEGORIES.system]);
 
 const CATEGORY_FALLBACK_ROUTES = Object.freeze({
   [APP_CATEGORIES.operations]: "/jobs.html",
@@ -99,7 +101,21 @@ function groupRow(category, title, subtitle, iconKey, apps = []) {
   </a>`;
 }
 
-function quickNavigation() {
+function quickNavigation(role, authed) {
+  const definition = getRoleDefinition(role);
+  if (authed && definition.group === "customer") {
+    return `<section class="eva-menu-section">
+      <div class="eva-section-head"><span class="eva-svg-icon">${ICONS.customer}</span><div><p>Customer</p><h3>Your service portal</h3></div></div>
+      <div class="eva-card-grid">
+        ${linkCard(buildHref("customer_dashboard.html"), ICONS.home, "Portal", "Home")}
+        ${linkCard(buildHref("customer-service-history.html"), ICONS.jobs, "History", "Services")}
+        ${linkCard(buildHref("customer-messaging.html"), ICONS.dashboard, "Messages", "Support")}
+        ${linkCard(buildHref("settings.html"), ICONS.customer, "Profile", "Account")}
+        ${linkCard(buildHref("settings.html"), ICONS.system, "Security", "Access")}
+      </div>
+    </section>`;
+  }
+
   return `<section class="eva-menu-section">
     <div class="eva-section-head"><span class="eva-svg-icon">${ICONS.dashboard}</span><div><p>Navigation</p><h3>Move through Evaraos</h3></div></div>
     <div class="eva-card-grid">
@@ -112,7 +128,7 @@ function quickNavigation() {
   </section>`;
 }
 
-function accountTools(authed) {
+function accountTools(authed, role) {
   if (!authed) {
     return `<section class="eva-menu-section">
       <div class="eva-section-head"><span class="eva-svg-icon">${ICONS.login}</span><div><p>Access</p><h3>Sign in or apply</h3></div></div>
@@ -124,35 +140,47 @@ function accountTools(authed) {
     </section>`;
   }
 
+  const definition = getRoleDefinition(role);
+  const alertsRoute = definition.group === "customer" ? "customer-messaging.html" : "notifications.html";
+  const alertsTitle = definition.group === "customer" ? "Support" : "Alerts";
+  const alertsSub = definition.group === "customer" ? "Messages" : "Inbox";
+
   return `<section class="eva-menu-section">
     <div class="eva-section-head"><span class="eva-svg-icon">${ICONS.customer}</span><div><p>Account</p><h3>Profile, alerts, security</h3></div></div>
     <div class="eva-card-grid">
       ${linkCard(buildHref("settings.html"), ICONS.customer, "Profile", "Account")}
       ${linkCard(buildHref("settings.html"), ICONS.system, "Settings", "System")}
-      ${linkCard(buildHref("notifications.html"), ICONS.dashboard, "Alerts", "Inbox")}
+      ${linkCard(buildHref(alertsRoute), ICONS.dashboard, alertsTitle, alertsSub)}
       ${linkCard(buildHref("settings.html"), ICONS.system, "Security", "Access")}
-      <a class="eva-nav-card" href="#logout" id="evaLogoutBtn" data-action="logout"><span class="eva-svg-icon">${ICONS.logout}</span><strong>Logout</strong><small>Exit</small></a>
+      <button class="eva-nav-card" type="button" id="evaLogoutBtn" data-action="logout"><span class="eva-svg-icon">${ICONS.logout}</span><strong>Logout</strong><small>Exit</small></button>
     </div>
   </section>`;
 }
 
 function operationGroups(role) {
+  const definition = getRoleDefinition(role);
   const groups = appsByCategory(normalizeRole(role));
-  const rows = CATEGORIES.map(([category, title, subtitle, iconKey]) => groupRow(category, title, subtitle, iconKey, groups[category] || [])).join("");
+  const visibleCategories = definition.group === "customer" ? CATEGORIES.filter(([category]) => CUSTOMER_CATEGORIES.has(category)) : CATEGORIES;
+  const rows = visibleCategories.map(([category, title, subtitle, iconKey]) => groupRow(category, title, subtitle, iconKey, groups[category] || [])).join("");
   if (!rows) return { html: "", groups };
-  return { html: `<section class="eva-menu-section eva-groups-section"><p class="eva-section-label">Operating System</p><div class="eva-group-stack">${rows}</div></section>`, groups };
+  const label = definition.group === "customer" ? "Customer Tools" : "Operating System";
+  return { html: `<section class="eva-menu-section eva-groups-section"><p class="eva-section-label">${label}</p><div class="eva-group-stack">${rows}</div></section>`, groups };
 }
 
-function aiBox(authed) {
+function aiBox(authed, role) {
+  const definition = getRoleDefinition(role);
+  const title = definition.group === "customer" ? "Ask for service help" : "Command your workspace";
+  const placeholder = definition.group === "customer" ? "Ask about services, history, or support..." : authed ? "Ask Evaraos or open an app..." : "Ask about Evaraos...";
+  const helper = definition.group === "customer" ? "Try “show my history”, “message support”, or “open profile”." : "Try “open jobs”, “show leads”, or “go to settings”.";
   return `<section class="eva-menu-section eva-ai-section">
-    <div class="eva-section-head"><span class="eva-svg-icon">${ICONS.executive}</span><div><p>Evaraos AI</p><h3>Command your workspace</h3></div></div>
+    <div class="eva-section-head"><span class="eva-svg-icon">${ICONS.executive}</span><div><p>Evaraos AI</p><h3>${title}</h3></div></div>
     <form class="eva-ai-form" id="evaAiPromptForm" autocomplete="off">
       <span class="eva-ai-spark eva-svg-icon">${ICONS.executive}</span>
-      <input id="evaSearchInput" name="evaSearchInput" type="search" autocomplete="off" enterkeyhint="send" inputmode="search" placeholder="${authed ? "Ask Evaraos or open an app..." : "Ask about Evaraos..."}" />
+      <input id="evaSearchInput" name="evaSearchInput" type="search" autocomplete="off" enterkeyhint="send" inputmode="search" placeholder="${esc(placeholder)}" />
       <button class="eva-ai-send-btn" id="evaAiSendBtn" type="submit" aria-label="Send">Ask</button>
     </form>
     <div id="evaSearchResults" class="eva-ai-results" aria-live="polite"></div>
-    <p class="eva-ai-helper">Try “open jobs”, “show leads”, or “go to settings”.</p>
+    <p class="eva-ai-helper">${esc(helper)}</p>
   </section>`;
 }
 
@@ -166,6 +194,7 @@ export function renderNav() {
   const operating = session.authed ? operationGroups(role) : { html: "", groups: {} };
   const category = activeCategory(operating.groups);
   const pageTitle = activeTitle(operating.groups);
+  const brandRoute = session.authed ? buildHref("settings.html") : buildHref("index.html");
 
   document.documentElement.dataset.evaActivePage = currentPageName();
   document.documentElement.dataset.evaActiveCategory = category;
@@ -173,7 +202,7 @@ export function renderNav() {
   mount.innerHTML = `<div class="eva-nav-layer" data-render-build="${NAV_RENDER_BUILD}" data-active-category="${esc(category)}" data-active-page="${esc(currentPageName())}">
     <header class="eva-nav-shell" id="evaNavShell">
       <div class="eva-nav-pill" id="evaNavPill" data-active-category="${esc(category)}">
-        <button class="eva-brand" id="evaBrandBlock" data-home-link="${buildHref("index.html")}" type="button">
+        <button class="eva-brand" id="evaBrandBlock" data-home-link="${brandRoute}" type="button">
           <img src="${logo}" alt="Evaraos" class="eva-logo" />
           <span class="eva-brand-copy"><strong>Evaraos Inc</strong><small>${esc(pageTitle)} • ${esc(category === "home" ? "Home" : category)}</small></span>
         </button>
@@ -186,10 +215,10 @@ export function renderNav() {
     <button class="eva-backdrop" id="evaBackdrop" type="button" aria-label="Close menu"></button>
     <aside class="eva-menu-panel" id="evaMenuPanel" aria-label="Evaraos menu">
       <nav class="eva-menu-content" id="evaLinks" data-nav-role="${esc(role)}">
-        ${quickNavigation()}
-        ${accountTools(session.authed)}
+        ${quickNavigation(role, session.authed)}
+        ${accountTools(session.authed, role)}
         ${operating.html}
-        ${aiBox(session.authed)}
+        ${aiBox(session.authed, role)}
       </nav>
     </aside>
   </div>`;
