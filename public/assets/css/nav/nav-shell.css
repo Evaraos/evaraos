@@ -4,7 +4,16 @@
   --eva-island-offset: max(10px, calc(env(safe-area-inset-bottom, 0px) + 10px));
   --eva-page-nav-clearance: 104px;
   --eva-dock-width: min(552px, calc(100vw - 20px));
+  --eva-active-accent: #2563eb;
+  --eva-active-accent-soft: rgba(37,99,235,.16);
 }
+
+html[data-eva-active-category="operations"] { --eva-active-accent: #2563eb; --eva-active-accent-soft: rgba(37,99,235,.16); }
+html[data-eva-active-category="organizations"] { --eva-active-accent: #7c3aed; --eva-active-accent-soft: rgba(124,58,237,.16); }
+html[data-eva-active-category="finance"] { --eva-active-accent: #16a34a; --eva-active-accent-soft: rgba(22,163,74,.16); }
+html[data-eva-active-category="customer"] { --eva-active-accent: #0891b2; --eva-active-accent-soft: rgba(8,145,178,.16); }
+html[data-eva-active-category="intelligence"] { --eva-active-accent: #dc2626; --eva-active-accent-soft: rgba(220,38,38,.15); }
+html[data-eva-active-category="system"] { --eva-active-accent: #475569; --eva-active-accent-soft: rgba(71,85,105,.16); }
 
 #universalNavRoot,
 #universalNav {
@@ -36,17 +45,19 @@
   padding: 10px 12px;
   border-radius: 30px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 11px;
   pointer-events: auto;
   color: #07111f;
   background:
     radial-gradient(circle at 22% 0%, rgba(255,255,255,.86), transparent 38%),
+    radial-gradient(circle at 72% 8%, var(--eva-active-accent-soft), transparent 34%),
     linear-gradient(145deg, rgba(255,255,255,.94), rgba(248,250,252,.78));
   border: 1px solid rgba(148,163,184,.24);
   box-shadow:
     0 24px 62px rgba(15,23,42,.16),
+    0 0 0 1px color-mix(in srgb, var(--eva-active-accent) 10%, transparent),
     inset 0 1px 0 rgba(255,255,255,.90),
     inset 0 -1px 0 rgba(15,23,42,.035);
   backdrop-filter: blur(28px) saturate(165%);
@@ -64,18 +75,35 @@
   inset: 1px;
   border-radius: inherit;
   pointer-events: none;
-  background: linear-gradient(120deg, rgba(255,255,255,.58), transparent 32%, rgba(37,99,235,.08) 68%, transparent);
+  background: linear-gradient(120deg, rgba(255,255,255,.58), transparent 32%, color-mix(in srgb, var(--eva-active-accent) 12%, transparent) 68%, transparent);
   opacity: .72;
   z-index: -1;
 }
 
+.eva-nav-pill::after {
+  content: "";
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  bottom: 6px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--eva-active-accent), transparent);
+  opacity: .55;
+  filter: blur(.2px);
+  pointer-events: none;
+  transform: scaleX(.82);
+  transform-origin: center;
+  animation: evaDockLineIn .56s cubic-bezier(.16,1,.3,1) both;
+}
+
 body.nav-menu-open .eva-nav-pill {
   transform: translateY(-2px) scale(1.01);
-  border-color: rgba(96,165,250,.38);
+  border-color: color-mix(in srgb, var(--eva-active-accent) 42%, rgba(96,165,250,.38));
   box-shadow:
     0 30px 76px rgba(15,23,42,.20),
-    inset 0 1px 0 rgba(255,255,255,.92),
-    0 0 0 1px rgba(37,99,235,.06);
+    0 0 0 1px color-mix(in srgb, var(--eva-active-accent) 16%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.92);
 }
 
 html[data-theme="dark"] .eva-nav-pill,
@@ -84,11 +112,12 @@ html.dark .eva-nav-pill,
 body.dark .eva-nav-pill {
   color: #f8fbff;
   background:
-    radial-gradient(circle at 26% 0%, rgba(37,99,235,.22), transparent 38%),
+    radial-gradient(circle at 26% 0%, color-mix(in srgb, var(--eva-active-accent) 26%, transparent), transparent 38%),
     linear-gradient(145deg, rgba(21,28,43,.94), rgba(5,10,20,.86));
   border-color: rgba(255,255,255,.13);
   box-shadow:
     0 28px 72px rgba(0,0,0,.48),
+    0 0 0 1px color-mix(in srgb, var(--eva-active-accent) 11%, transparent),
     inset 0 1px 0 rgba(255,255,255,.10),
     inset 0 -1px 0 rgba(255,255,255,.035);
 }
@@ -97,7 +126,7 @@ html[data-theme="dark"] .eva-nav-pill::before,
 body[data-theme="dark"] .eva-nav-pill::before,
 html.dark .eva-nav-pill::before,
 body.dark .eva-nav-pill::before {
-  background: linear-gradient(120deg, rgba(255,255,255,.10), transparent 34%, rgba(96,165,250,.14) 70%, transparent);
+  background: linear-gradient(120deg, rgba(255,255,255,.10), transparent 34%, color-mix(in srgb, var(--eva-active-accent) 18%, transparent) 70%, transparent);
   opacity: .86;
 }
 
@@ -105,8 +134,8 @@ html[data-theme="dark"] body.nav-menu-open .eva-nav-pill,
 body[data-theme="dark"].nav-menu-open .eva-nav-pill,
 html.dark body.nav-menu-open .eva-nav-pill,
 body.dark.nav-menu-open .eva-nav-pill {
-  border-color: rgba(96,165,250,.30);
-  box-shadow: 0 34px 84px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,255,255,.12), 0 0 0 1px rgba(96,165,250,.06);
+  border-color: color-mix(in srgb, var(--eva-active-accent) 32%, rgba(96,165,250,.30));
+  box-shadow: 0 34px 84px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,255,255,.12), 0 0 0 1px color-mix(in srgb, var(--eva-active-accent) 12%, transparent);
 }
 
 .eva-brand {
@@ -131,7 +160,7 @@ body.dark.nav-menu-open .eva-nav-pill {
 }
 
 .eva-brand:focus-visible {
-  outline: 3px solid rgba(37,99,235,.32);
+  outline: 3px solid color-mix(in srgb, var(--eva-active-accent) 32%, transparent);
   outline-offset: 4px;
   border-radius: 22px;
 }
@@ -170,8 +199,36 @@ body.dark.nav-menu-open .eva-nav-pill {
   white-space: nowrap;
   font-size: .76rem;
   font-weight: 720;
-  opacity: .68;
+  opacity: .72;
   line-height: 1.12;
+}
+
+.eva-active-chip {
+  width: 12px;
+  height: 44px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--eva-active-accent) 10%, rgba(255,255,255,.52));
+  border: 1px solid color-mix(in srgb, var(--eva-active-accent) 28%, rgba(148,163,184,.18));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.58), 0 8px 18px color-mix(in srgb, var(--eva-active-accent) 18%, transparent);
+  pointer-events: none;
+}
+
+.eva-active-chip span {
+  width: 5px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--eva-active-accent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--eva-active-accent) 55%, transparent);
+  animation: evaActivePulse 1.9s ease-in-out infinite;
+}
+
+html[data-theme="dark"] .eva-active-chip,
+body[data-theme="dark"] .eva-active-chip {
+  background: color-mix(in srgb, var(--eva-active-accent) 16%, rgba(255,255,255,.08));
+  border-color: color-mix(in srgb, var(--eva-active-accent) 30%, rgba(255,255,255,.10));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 10px 24px color-mix(in srgb, var(--eva-active-accent) 20%, transparent);
 }
 
 .eva-left-spacer,
@@ -187,6 +244,23 @@ body.dark.nav-menu-open .eva-nav-pill {
   }
 }
 
+@keyframes evaActivePulse {
+  0%, 100% { transform: scaleY(.76); opacity: .74; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+
+@keyframes evaDockLineIn {
+  from { opacity: 0; transform: scaleX(.2); }
+  to { opacity: .55; transform: scaleX(.82); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eva-active-chip span,
+  .eva-nav-pill::after {
+    animation: none !important;
+  }
+}
+
 @media (max-width: 520px) {
   :root {
     --eva-page-nav-clearance: 98px;
@@ -199,6 +273,7 @@ body.dark.nav-menu-open .eva-nav-pill {
     gap: 9px;
     padding: 9px 10px;
     border-radius: 28px;
+    grid-template-columns: minmax(0, 1fr) 10px auto;
   }
 
   .eva-brand {
@@ -220,6 +295,16 @@ body.dark.nav-menu-open .eva-nav-pill {
   .eva-brand-copy span {
     font-size: .72rem;
   }
+
+  .eva-active-chip {
+    width: 10px;
+    height: 40px;
+  }
+
+  .eva-active-chip span {
+    width: 4px;
+    height: 21px;
+  }
 }
 
 @media (max-width: 390px) {
@@ -230,6 +315,11 @@ body.dark.nav-menu-open .eva-nav-pill {
     min-height: 68px;
     padding: 8px 9px;
     border-radius: 26px;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .eva-active-chip {
+    display: none;
   }
 
   .eva-brand {
