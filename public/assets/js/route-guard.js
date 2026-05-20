@@ -10,8 +10,9 @@ import {
 } from "./firebase.js";
 
 const ROUTES = {
-  login: "./login.html",
-  dashboard: "./dashboard.html"
+  login: "/login.html",
+  dashboard: "/dashboard.html",
+  customerDashboard: "/customer_dashboard.html"
 };
 
 const AUTH_WAIT_TIMEOUT_MS = 4500;
@@ -43,7 +44,7 @@ const STAFF_ROLES = new Set([
 ]);
 
 const CUSTOMER_ALLOWED = new Set([
-  "dashboard.html",
+  "customer_dashboard.html",
   "customer-commerce.html",
   "customer-messaging.html",
   "customer-service-history.html",
@@ -151,13 +152,14 @@ function saveIntendedRoute() {
   } catch {}
 }
 
-function consumeIntendedRoute() {
+function consumeIntendedRoute(role = "customer") {
   try {
     const saved = sessionStorage.getItem("evaraos-intended-route");
     sessionStorage.removeItem("evaraos-intended-route");
-    return normalizePath(saved || ROUTES.dashboard);
+    if (!saved) return defaultDashboardForRole(role);
+    return normalizePath(saved);
   } catch {
-    return ROUTES.dashboard;
+    return defaultDashboardForRole(role);
   }
 }
 
@@ -170,7 +172,7 @@ function canAccessCurrentPage(role = "customer") {
   const normalized = normalizeRole(role);
 
   if (!OPS_ONLY.has(page)) {
-    if (normalized === "customer") return CUSTOMER_ALLOWED.has(page) || page === "dashboard.html";
+    if (normalized === "customer") return CUSTOMER_ALLOWED.has(page);
     if (STAFF_ROLES.has(normalized)) return STAFF_ALLOWED.has(page) || !OPS_ONLY.has(page);
     return true;
   }
@@ -180,9 +182,8 @@ function canAccessCurrentPage(role = "customer") {
 
 function defaultDashboardForRole(role = "customer") {
   const normalized = normalizeRole(role);
-  if (normalized === "customer") return "./dashboard.html";
-  if (STAFF_ROLES.has(normalized)) return "./dashboard.html";
-  return "./dashboard.html";
+  if (normalized === "customer") return ROUTES.customerDashboard;
+  return ROUTES.dashboard;
 }
 
 function waitForVerifiedFirebaseUser() {
@@ -244,7 +245,7 @@ async function handleAuthRoute() {
   if (verifiedUser) {
     const profile = await hydrateUserProfile(verifiedUser);
     const role = getEffectiveRole(profile);
-    const target = consumeIntendedRoute();
+    const target = consumeIntendedRoute(role);
 
     beginGuardRedirect(target || defaultDashboardForRole(role), {
       title: "Opening Evaraos",
