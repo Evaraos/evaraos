@@ -1,5 +1,5 @@
 import { getMount, getBasePath, buildHref, getVisibleLinks, isCurrentPage } from "./nav-utils.js";
-import { APP_CATEGORIES, appsByCategory } from "../navigation/app-registry.js";
+import { APP_CATEGORIES, appsByCategory, normalizeRole } from "../navigation/app-registry.js";
 
 const NAV_RENDER_BUILD = "evaraos-active-shell-20260520";
 
@@ -19,17 +19,6 @@ function esc(value = "") {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
-}
-
-function roleForRegistry(role = "customer") {
-  const value = String(role || "customer").toLowerCase();
-  if (["owner", "super_admin"].includes(value)) return "owner";
-  if (["admin", "manager", "operations_manager"].includes(value)) return "admin";
-  if (["organization", "organization_owner", "office_owner", "branch_owner"].includes(value)) return "organization";
-  if (["vendor", "lead_vendor", "service_vendor", "management_program"].includes(value)) return "vendor";
-  if (["hr", "hr_manager"].includes(value)) return "hr";
-  if (["staff", "sales", "sales_rep", "technician", "cleaner", "field_staff", "crew_lead"].includes(value)) return "staff";
-  return "customer";
 }
 
 function active(route = "") {
@@ -116,7 +105,7 @@ function accountTools(authed) {
 }
 
 function operationGroups(role) {
-  const groups = appsByCategory(roleForRegistry(role));
+  const groups = appsByCategory(normalizeRole(role));
   const rows = CATEGORIES.map(([category, title, subtitle, icon]) => groupRow(category, title, subtitle, icon, groups[category] || [])).join("");
   if (!rows) return { html: "", groups };
   return { html: `<section class="eva-menu-section eva-groups-section"><p class="eva-section-label">Operating System</p><div class="eva-group-stack">${rows}</div></section>`, groups };
@@ -141,9 +130,9 @@ export function renderNav() {
   if (!mount) return false;
 
   const session = getVisibleLinks();
-  const role = roleForRegistry(session.role);
+  const role = normalizeRole(session.role);
   const logo = `${getBasePath()}/assets/img/evaraos_logo.png`;
-  const operating = session.authed ? operationGroups(session.role) : { html: "", groups: {} };
+  const operating = session.authed ? operationGroups(role) : { html: "", groups: {} };
   const category = activeCategory(operating.groups);
   const pageTitle = activeTitle(operating.groups);
 
