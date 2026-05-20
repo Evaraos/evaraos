@@ -7,21 +7,17 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
-  <!-- Evaraos App Identity / PWA / Favicons -->
   <link rel="manifest" href="/manifest.json" />
-
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/icon-192.png" />
   <link rel="shortcut icon" href="/favicon.ico" />
-
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" />
 
-  <meta name="theme-color" content="#f4f7f6" />
-  <meta name="msapplication-TileColor" content="#f4f7f6" />
+  <meta name="theme-color" content="#f7f8fa" />
+  <meta name="msapplication-TileColor" content="#f7f8fa" />
   <meta name="msapplication-TileImage" content="/assets/img/icon-192.png" />
-
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -38,37 +34,12 @@
 
   <title>Login • Evaraos Inc</title>
 
-  <script>
-    (function () {
-      try {
-        var raw = localStorage.getItem("evaraos-appearance");
-        var theme = "light";
-
-        if (raw) {
-          var appearance = JSON.parse(raw);
-
-          if (appearance.mode === "light") theme = "light";
-          else if (appearance.mode === "custom") {
-            if (appearance.baseFamily === "light") theme = "light";
-            else theme = "dark";
-          }
-        }
-
-        document.documentElement.setAttribute("data-theme", theme);
-      } catch {
-        document.documentElement.setAttribute("data-theme", "light");
-      }
-
-      document.documentElement.classList.add("boot-pending", "auth-pending");
-    })();
-  </script>
+  <script src="/assets/js/theme-boot.js"></script>
 
   <style>
     html,
-    body { background: #f4f7f6; }
-    html[data-theme="light"], html[data-theme="light"] body { background: #f4f7f6; }
+    body { background: var(--eva-page-bg, #f7f8fa); }
     html.boot-pending body { margin: 0; overflow: hidden; touch-action: none; }
-    html.auth-pending body, body.auth-pending { opacity: 0; pointer-events: none; }
     body.login-page { margin: 0; min-height: 100vh; background: transparent; }
     body.app-loading #appRoot { visibility: hidden; }
     body.app-ready #appRoot { visibility: visible; }
@@ -81,10 +52,8 @@
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=34" />
   <link rel="stylesheet" href="/assets/css/app-system.css?v=phase-a" />
 </head>
-<body class="login-page auth-pending app-loading" data-route-guard="auth">
+<body class="login-page app-loading" data-route-guard="auth">
   <div id="universalNavRoot"></div>
-  <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
-
   <div id="appRoot">
     <div class="page-grid-overlay"></div>
 
@@ -142,7 +111,6 @@
   <script src="/assets/js/loader.js?v=35"></script>
   <script type="module" src="/assets/js/firebase.js?v=38"></script>
   <script type="module" src="/assets/js/theme.js?v=37"></script>
-  <script src="/assets/js/theme-css-loader.js?v=1"></script>
   <script type="module" src="/assets/js/route-guard.js?v=36"></script>
   <script type="module" src="/assets/js/auth.js?v=38"></script>
   <script type="module" src="/assets/js/nav.js?v=meca-nav-20260518a"></script>
