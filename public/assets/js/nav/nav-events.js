@@ -1,10 +1,11 @@
-import { buildHref, getAppearanceTheme, setTheme, syncThemeLabel, getBrandBlock } from "./nav-utils.js";
+import { buildHref, getAppearanceTheme, setTheme, syncThemeLabel, getBrandBlock, getSystemTheme } from "./nav-utils.js";
 import { closeMenu, openMenu, toggleMenu } from "./nav-menu.js";
 import { navigateWithLoader } from "./nav-navigation.js";
 import { logoutAndRedirect, functions, httpsCallable } from "../firebase.js";
 import { searchApps, normalizeQuery } from "../navigation/app-registry.js";
 
 const BOUND = "data-evara-clean-bound";
+const APPEARANCE_KEY = "evaraos-appearance";
 
 const GROUP_FALLBACK_ROUTES = Object.freeze({
   operations: "/jobs.html",
@@ -28,13 +29,73 @@ function once(node, eventName, handler) {
   node.addEventListener(eventName, handler, { passive: false });
 }
 
-function syncThemeButtonVisual(theme = getAppearanceTheme()) {
-  const safeTheme = theme === "dark" ? "dark" : "light";
+function getStoredAppearance() {
+  try {
+    return JSON.parse(localStorage.getItem(APPEARANCE_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function normalizeMode(mode = "system") {
+  return ["system", "light", "dark", "custom"].includes(mode) ? mode : "system";
+}
+
+function getAppearanceMode() {
+  return normalizeMode(getStoredAppearance().mode || "system");
+}
+
+function resolvedThemeFromMode(mode = getAppearanceMode()) {
+  if (mode === "light") return "light";
+  if (mode === "dark") return "dark";
+  if (mode === "custom") return getAppearanceTheme();
+  return getSystemTheme();
+}
+
+function nextAppearanceMode(mode = getAppearanceMode()) {
+  if (mode === "system") return "light";
+  if (mode === "light") return "dark";
+  return "system";
+}
+
+function saveAppearanceMode(mode) {
+  const safeMode = normalizeMode(mode);
+  const previous = getStoredAppearance();
+  const resolved = resolvedThemeFromMode(safeMode);
+  const next = {
+    ...previous,
+    mode: safeMode,
+    baseFamily: safeMode === "custom" ? previous.baseFamily || resolved : safeMode,
+    updatedAt: new Date().toISOString()
+  };
+
+  try {
+    localStorage.setItem(APPEARANCE_KEY, JSON.stringify(next));
+    localStorage.setItem("evaraos-theme", resolved);
+  } catch {}
+
+  setTheme(resolved);
+  window.EvaraLoader?.syncTheme?.(resolved);
+  window.dispatchEvent(new CustomEvent("evara:appearance-updated", {
+    detail: { ...next, mode: safeMode, theme: resolved, resolvedTheme: resolved }
+  }));
+  window.dispatchEvent(new CustomEvent("evara:theme-applied", { detail: { theme: resolved, mode: safeMode } }));
+  syncThemeLabel();
+  syncThemeButtonVisual();
+}
+
+function syncThemeButtonVisual() {
+  const mode = getAppearanceMode();
+  const resolved = resolvedThemeFromMode(mode);
+  const icon = mode === "system" ? "◐" : resolved === "dark" ? "☾" : "☀";
+  const label = mode === "system" ? `System (${resolved})` : resolved === "dark" ? "Dark" : "Light";
+
   document.querySelectorAll("#evaThemeToggle, #evaThemePillToggle, [data-theme-label]").forEach((button) => {
-    button.setAttribute("data-theme-mode", safeTheme);
-    button.setAttribute("aria-label", safeTheme === "dark" ? "Switch to light mode" : "Switch to dark mode");
-    const icon = button.querySelector(".eva-theme-nav-icon");
-    if (icon) icon.textContent = safeTheme === "dark" ? "☾" : "☀";
+    button.setAttribute("data-theme-mode", resolved);
+    button.setAttribute("data-appearance-mode", mode);
+    button.setAttribute("aria-label", `Theme: ${label}. Tap to change.`);
+    const iconNode = button.querySelector(".eva-theme-nav-icon");
+    if (iconNode) iconNode.textContent = icon;
   });
 }
 
@@ -237,32 +298,7 @@ export function bindLinks() {
 }
 
 async function toggleTheme() {
-  const current = getAppearanceTheme();
-  const next = current === "dark" ? "light" : "dark";
-  try {
-    localStorage.setItem("evaraos-theme", next);
-    const raw = localStorage.getItem("evaraos-appearance");
-    const appearance = raw ? JSON.parse(raw) : {};
-    appearance.mode = next;
-    appearance.baseFamily = next;
-    appearance.updatedAt = new Date().toISOString();
-    localStorage.setItem("evaraos-appearance", JSON.stringify(appearance));
-  } catch {}
-
-  document.documentElement.dataset.theme = next;
-  document.documentElement.style.colorScheme = next;
-  document.documentElement.classList.toggle("dark", next === "dark");
-  if (document.body) {
-    document.body.dataset.theme = next;
-    document.body.classList.toggle("dark", next === "dark");
-  }
-
-  setTheme(next);
-  syncThemeLabel();
-  syncThemeButtonVisual(next);
-  window.EvaraLoader?.syncTheme?.(next);
-  window.dispatchEvent(new CustomEvent("evara:appearance-updated", { detail: { mode: next, theme: next, baseFamily: next } }));
-  window.dispatchEvent(new CustomEvent("evara:theme-applied", { detail: { theme: next } }));
+  saveAppearanceMode(nextAppearanceMode());
 }
 
 export function bindThemeToggle() {
@@ -271,15 +307,14 @@ export function bindThemeToggle() {
     await toggleTheme();
   });
   syncThemeButtonVisual();
-  window.addEventListener("evara:theme-applied", (event) => syncThemeButtonVisual(event.detail?.theme));
-  window.addEventListener("evara:appearance-updated", (event) => syncThemeButtonVisual(event.detail?.mode || event.detail?.theme));
+  window.addEventListener("evara:theme-applied", () => syncThemeButtonVisual());
+  window.addEventListener("evara:appearance-updated", () => syncThemeButtonVisual());
 }
 
 export function bindSearch() {
   const input = document.getElementById("evaSearchInput");
   const form = document.getElementById("evaAiPromptForm");
   const results = document.getElementById("evaSearchResults");
-  const mic = document.getElementById("evaAiMicBtn");
   if (!input) return;
   once(input, "input", () => {
     const query = input.value.trim();
@@ -307,27 +342,6 @@ export function bindSearch() {
     if (!target) return;
     stop(event);
     openHref(target.getAttribute("data-search-link"), "Opening result", "Launching your selected Evaraos app.");
-  });
-  once(mic, "click", (event) => {
-    stop(event);
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      renderMessage(results, "Speech input is not supported in this browser yet.", "error");
-      return;
-    }
-    const recognition = new SpeechRecognition();
-    recognition.lang = navigator.language || "en-US";
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-    mic.dataset.listening = "true";
-    renderMessage(results, "Listening...", "loading");
-    recognition.onresult = (speechEvent) => {
-      input.value = speechEvent.results?.[0]?.[0]?.transcript || "";
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-    };
-    recognition.onerror = () => renderMessage(results, "Speech input failed. Type your command instead.", "error");
-    recognition.onend = () => { mic.dataset.listening = "false"; };
-    recognition.start();
   });
 }
 
