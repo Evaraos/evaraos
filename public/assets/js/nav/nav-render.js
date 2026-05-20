@@ -177,7 +177,6 @@ export function renderNav() {
           <img src="${logo}" alt="Evaraos" class="eva-logo" />
           <span class="eva-brand-copy"><strong>Evaraos Inc</strong><small>${esc(pageTitle)} • ${esc(category === "home" ? "Home" : category)}</small></span>
         </button>
-        <div class="eva-active-chip" aria-hidden="true"><span></span></div>
         <div class="eva-menu-zone" id="evaMenuZone">
           <button class="eva-nav-action-btn eva-theme-nav-btn" type="button" id="evaThemeToggle" data-theme-label="true" aria-label="Toggle theme"><span class="eva-theme-nav-icon">◐</span></button>
           <button class="eva-nav-action-btn eva-menu-btn" type="button" id="evaMenuBtn" aria-expanded="false" aria-label="Open menu"><span class="eva-burger"><i></i><i></i><i></i></span></button>
