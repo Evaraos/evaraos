@@ -9,41 +9,33 @@
   <link rel="stylesheet" href="./assets/css/pages/ai.css" />
 </head>
 <body class="app-loading ai-page">
-  <div id="universalNavRoot"></div>
-
   <main id="appRoot" class="eva-ai-page-shell">
-    <section class="eva-ai-topbar" aria-label="AI workspace header">
-      <div class="eva-ai-identity">
-        <div class="eva-ai-orb">✦</div>
+    <header class="eva-ai-chat-header" aria-label="Evaraos AI header">
+      <button class="eva-ai-back" id="evaAiBackBtn" type="button" aria-label="Go back">‹</button>
+      <div class="eva-ai-title-block">
+        <span class="eva-ai-dot">✦</span>
         <div>
           <p>Evaraos AI</p>
-          <h1>Workspace Intelligence</h1>
+          <h1>Assistant</h1>
         </div>
       </div>
       <button class="eva-ai-new-chat" type="button" id="evaAiNewChat">New</button>
-    </section>
-
-    <section class="eva-ai-welcome" id="evaAiWelcome">
-      <div class="eva-ai-glow-mark">AI</div>
-      <p class="eva-ai-kicker">EVARAOS COMMAND LAYER</p>
-      <h2>What are we building, fixing, or running today?</h2>
-      <p class="eva-ai-subtitle">Ask Evaraos AI to navigate the app, plan features, improve operations, or help manage customers, jobs, leads, teams, and settings.</p>
-    </section>
-
-    <section class="eva-ai-quick-grid" aria-label="AI quick actions">
-      <button type="button" data-ai-prompt="Give me the next best build priority for Evaraos OS"><span>Build Priority</span><small>Product roadmap</small></button>
-      <button type="button" data-ai-prompt="Help me improve the customer experience in Evaraos"><span>Customer UX</span><small>Portal support</small></button>
-      <button type="button" data-ai-prompt="Show me what dashboard system we should build next"><span>Dashboards</span><small>Role hierarchy</small></button>
-      <button type="button" data-ai-prompt="Help me organize jobs, leads, and operations"><span>Operations</span><small>Jobs + leads</small></button>
-    </section>
+    </header>
 
     <section class="eva-ai-thread" id="evaAiThread" aria-live="polite">
       <article class="eva-ai-message-card assistant">
         <div class="eva-ai-avatar">AI</div>
         <div class="eva-ai-bubble">
-          <p>I’m your Evaraos AI workspace. Tell me what you want to build, fix, or open next.</p>
+          <p>I’m Evaraos AI. Ask me to help build, fix, open, or organize anything inside the system.</p>
         </div>
       </article>
+    </section>
+
+    <section class="eva-ai-quick-row" aria-label="Suggested prompts">
+      <button type="button" data-ai-prompt="What should we build next?">Build next</button>
+      <button type="button" data-ai-prompt="Help me fix the UI">Fix UI</button>
+      <button type="button" data-ai-prompt="Open the customer portal">Customer portal</button>
+      <button type="button" data-ai-prompt="Plan the dashboard hierarchy">Dashboards</button>
     </section>
 
     <form class="eva-ai-composer" id="evaAiPageForm" autocomplete="off">
@@ -54,7 +46,6 @@
   </main>
 
   <script type="module" src="./assets/js/theme.js"></script>
-  <script type="module" src="./assets/js/nav/nav-main.js"></script>
   <script type="module" src="./assets/js/pages/ai.js"></script>
 </body>
 </html>
