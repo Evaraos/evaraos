@@ -34,6 +34,10 @@ export function unlockBodyScroll() {
   document.body.style.overflow = "";
 }
 
+export function isMenuOpen() {
+  return document.body.classList.contains("nav-menu-open");
+}
+
 export function openMenu() {
   const zone = getMenuZone();
   const btn = getMenuBtn();
@@ -65,6 +69,26 @@ export function closeMenu(keepExpanded = true) {
   }
 }
 
+export function toggleMenu(forceOpen = null) {
+  if (forceOpen === true) {
+    openMenu();
+    return true;
+  }
+
+  if (forceOpen === false) {
+    closeMenu(true);
+    return false;
+  }
+
+  if (isMenuOpen()) {
+    closeMenu(true);
+    return false;
+  }
+
+  openMenu();
+  return true;
+}
+
 export function bindMenu() {
   const zone = getMenuZone();
   const btn = getMenuBtn();
@@ -78,9 +102,7 @@ export function bindMenu() {
     event.preventDefault();
     event.stopPropagation();
     if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
-
-    if (document.body.classList.contains("nav-menu-open")) closeMenu(true);
-    else openMenu();
+    toggleMenu();
   }, true);
 
   panel.addEventListener("click", (event) => event.stopPropagation());
@@ -91,18 +113,18 @@ export function bindMenu() {
     const clickedMenuButton = btn.contains(target);
     const clickedMenuPanel = panel.contains(target);
 
-    if (!clickedMenuButton && !clickedMenuPanel && document.body.classList.contains("nav-menu-open")) {
+    if (!clickedMenuButton && !clickedMenuPanel && isMenuOpen()) {
       closeMenu(true);
     }
   });
 
   window.addEventListener("resize", () => {
-    if (document.body.classList.contains("nav-menu-open")) updateMenuViewportFit();
+    if (isMenuOpen()) updateMenuViewportFit();
   });
 
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", () => {
-      if (document.body.classList.contains("nav-menu-open")) updateMenuViewportFit();
+      if (isMenuOpen()) updateMenuViewportFit();
     });
   }
 }
