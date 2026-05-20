@@ -100,10 +100,6 @@
         <div class="evara-loader-stage" role="status" aria-live="polite">
           <div class="evara-loader-center">
             <img class="evara-loader-logo" src="${LOGO_SRC}" alt="Evaraos" loading="eager" decoding="async" />
-            <div class="evara-loader-copy">
-              <p class="evara-loader-title" id="evaraLoaderTitle">Evaraos</p>
-              <p class="evara-loader-subtitle" id="evaraLoaderSubtitle">Preparing your workspace.</p>
-            </div>
           </div>
           <div class="evara-loader-from" aria-label="from Evaraos Inc">
             <span>from</span>
@@ -128,15 +124,10 @@
   function showLoader(options = {}) {
     const theme = applyTheme(options.theme || getTheme());
     const loader = ensureLoader();
-    const title = loader.querySelector("#evaraLoaderTitle");
-    const subtitle = loader.querySelector("#evaraLoaderSubtitle");
     const variant = options.variant || "page";
 
     loader.dataset.theme = theme;
     loader.dataset.variant = variant;
-    if (title) title.textContent = options.title || (variant === "splash" ? "Evaraos" : "Opening Evaraos");
-    if (subtitle) subtitle.textContent = options.subtitle || (variant === "splash" ? "" : "Preparing your next screen.");
-
     loader.classList.remove("is-exiting");
     loader.classList.add("active", "is-entering");
     loader.setAttribute("aria-hidden", "false");
@@ -178,8 +169,6 @@
     isTransitioning = true;
     unlockApp();
     showLoader({
-      title: options.title || "Opening Evaraos",
-      subtitle: options.subtitle || "Preparing your next screen.",
       theme: options.theme,
       variant: "page"
     });
@@ -217,10 +206,7 @@
       if (anchor.hasAttribute("data-menu-link") || anchor.closest("#evaNavShell") || anchor.closest("#evaMenuPanel")) return;
 
       event.preventDefault();
-      beginNavigationLoad({
-        title: "Opening Evaraos",
-        subtitle: "Preparing your next screen."
-      });
+      beginNavigationLoad({ theme: getTheme() });
       requestAnimationFrame(() => window.location.assign(anchor.href));
     });
   }
@@ -231,8 +217,6 @@
     if (useSplash) markFirstSplashSeen();
 
     showLoader({
-      title: "Evaraos",
-      subtitle: "",
       variant: useSplash ? "splash" : "page",
       forceMs: useSplash ? 5200 : FORCE_UNLOCK_DELAY
     });
