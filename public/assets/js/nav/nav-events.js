@@ -6,6 +6,15 @@ import { searchApps } from "../navigation/app-registry.js";
 
 const BOUND = "data-evara-clean-bound";
 
+const GROUP_FALLBACK_ROUTES = Object.freeze({
+  operations: "/jobs.html",
+  organizations: "/companies.html",
+  finance: "/revenue.html",
+  customer: "/customer_dashboard.html",
+  intelligence: "/dashboard.html",
+  system: "/settings.html"
+});
+
 function stop(event) {
   event?.preventDefault?.();
   event?.stopPropagation?.();
@@ -16,7 +25,7 @@ function once(node, eventName, handler) {
   const key = `${BOUND}-${eventName}`;
   if (node.getAttribute(key) === "true") return;
   node.setAttribute(key, "true");
-  node.addEventListener(eventName, handler);
+  node.addEventListener(eventName, handler, { passive: false });
 }
 
 function syncThemeButtonVisual(theme = getAppearanceTheme()) {
@@ -25,7 +34,7 @@ function syncThemeButtonVisual(theme = getAppearanceTheme()) {
     button.setAttribute("data-theme-mode", safeTheme);
     button.setAttribute("aria-label", safeTheme === "dark" ? "Switch to light mode" : "Switch to dark mode");
     const icon = button.querySelector(".eva-theme-nav-icon");
-    if (icon) icon.textContent = safeTheme === "dark" ? "☾" : "◐";
+    if (icon) icon.textContent = safeTheme === "dark" ? "☾" : "☀";
   });
 }
 
@@ -49,10 +58,18 @@ function role() {
   return document.getElementById("evaLinks")?.dataset?.navRole || localStorage.getItem("evaraos-role") || "customer";
 }
 
+function normalizeHref(href = "") {
+  const value = String(href || "").trim();
+  if (!value) return "";
+  if (value.startsWith("http") || value.startsWith("/")) return value;
+  return buildHref(value);
+}
+
 function openHref(href, title = "Loading page", subtitle = "Preparing your next screen.") {
-  if (!href) return;
+  const route = normalizeHref(href);
+  if (!route) return;
   closeMenu(false);
-  navigateWithLoader(href, { title, subtitle });
+  navigateWithLoader(route, { title, subtitle, theme: getAppearanceTheme() });
 }
 
 function score(app, query = "") {
@@ -131,6 +148,38 @@ async function runPrompt(input, resultsRoot) {
   }
 }
 
+function parseGroupApps(button) {
+  try {
+    const apps = JSON.parse(button.getAttribute("data-group-apps") || "[]");
+    return Array.isArray(apps) ? apps.filter((app) => app && app.route) : [];
+  } catch {
+    return [];
+  }
+}
+
+function preferredGroupApp(button) {
+  const category = String(button.getAttribute("data-nav-group") || "").trim();
+  const apps = parseGroupApps(button);
+  const fallback = GROUP_FALLBACK_ROUTES[category] || "";
+
+  return (
+    apps.find((app) => app.route === fallback) ||
+    apps.find((app) => String(app.id || "").includes(category)) ||
+    apps[0] ||
+    (fallback ? { title: label(category || "Evaraos"), route: fallback } : null)
+  );
+}
+
+function makeNavRowsAccessible() {
+  document.querySelectorAll("[data-nav-group]").forEach((button) => {
+    const app = preferredGroupApp(button);
+    if (!app?.route) return;
+    button.dataset.groupHref = app.route;
+    button.setAttribute("role", "link");
+    button.setAttribute("aria-label", `Open ${app.title || label(button.dataset.navGroup || "section")}`);
+  });
+}
+
 export function bindBrandHome() {
   const brand = getBrandBlock();
   once(brand, "click", (event) => {
@@ -146,18 +195,29 @@ export function bindLinks() {
       openHref(link.getAttribute("data-menu-link") || link.getAttribute("href"), "Opening page", "Loading your selected Evaraos screen.");
     });
   });
+
+  makeNavRowsAccessible();
+
   document.querySelectorAll("[data-nav-group]").forEach((button) => {
-    once(button, "click", (event) => {
+    const openGroup = (event) => {
       stop(event);
-      try {
-        const apps = JSON.parse(button.getAttribute("data-group-apps") || "[]");
-        const first = apps.find((app) => app.route);
-        if (first?.route) openHref(first.route, `Opening ${first.title || "tool"}`, "Launching this Evaraos tool.");
-      } catch (error) {
-        console.warn("Unable to open nav group:", error);
+      const app = preferredGroupApp(button);
+      if (app?.route) {
+        openHref(app.route, `Opening ${app.title || label(button.dataset.navGroup || "section")}`, "Launching this Evaraos operating-system area.");
       }
+    };
+
+    once(button, "click", openGroup);
+    once(button, "pointerup", (event) => {
+      if (event.pointerType === "mouse") return;
+      openGroup(event);
+    });
+    once(button, "keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      openGroup(event);
     });
   });
+
   const logoutBtn = document.getElementById("evaLogoutBtn");
   once(logoutBtn, "click", async (event) => {
     stop(event);
@@ -178,14 +238,21 @@ async function toggleTheme() {
     appearance.updatedAt = new Date().toISOString();
     localStorage.setItem("evaraos-appearance", JSON.stringify(appearance));
   } catch {}
+
   document.documentElement.dataset.theme = next;
-  document.body.dataset.theme = next;
+  document.documentElement.style.colorScheme = next;
   document.documentElement.classList.toggle("dark", next === "dark");
-  document.body.classList.toggle("dark", next === "dark");
+  if (document.body) {
+    document.body.dataset.theme = next;
+    document.body.classList.toggle("dark", next === "dark");
+  }
+
   setTheme(next);
   syncThemeLabel();
   syncThemeButtonVisual(next);
-  window.dispatchEvent(new CustomEvent("evara:appearance-updated", { detail: { mode: next, baseFamily: next } }));
+  window.EvaraLoader?.syncTheme?.(next);
+  window.dispatchEvent(new CustomEvent("evara:appearance-updated", { detail: { mode: next, theme: next, baseFamily: next } }));
+  window.dispatchEvent(new CustomEvent("evara:theme-applied", { detail: { theme: next } }));
 }
 
 export function bindThemeToggle() {
@@ -195,7 +262,7 @@ export function bindThemeToggle() {
   });
   syncThemeButtonVisual();
   window.addEventListener("evara:theme-applied", (event) => syncThemeButtonVisual(event.detail?.theme));
-  window.addEventListener("evara:appearance-updated", (event) => syncThemeButtonVisual(event.detail?.mode));
+  window.addEventListener("evara:appearance-updated", (event) => syncThemeButtonVisual(event.detail?.mode || event.detail?.theme));
 }
 
 export function bindSearch() {
@@ -266,4 +333,5 @@ export function bindAllNavEvents() {
   bindSearch();
   syncThemeLabel();
   syncThemeButtonVisual();
+  makeNavRowsAccessible();
 }
