@@ -106,7 +106,6 @@ export function getAppearanceTheme() {
       if (appearance.mode === "light") return "light";
       if (appearance.mode === "dark") return "dark";
       if (appearance.mode === "system") return getSystemTheme();
-      if (appearance.mode === "galaxy") return "dark";
       if (appearance.mode === "custom") {
         if (appearance.baseFamily === "light") return "light";
         if (appearance.baseFamily === "system") return getSystemTheme();
@@ -144,7 +143,7 @@ export function syncThemeLabel() {
   const rawMode = (() => {
     try {
       const appearance = JSON.parse(localStorage.getItem("evaraos-appearance") || "{}");
-      return appearance.mode || mode;
+      return ["light", "dark", "system", "custom"].includes(appearance.mode) ? appearance.mode : mode;
     } catch {
       return mode;
     }
