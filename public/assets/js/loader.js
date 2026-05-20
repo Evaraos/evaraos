@@ -14,12 +14,61 @@
     forceTimer = null;
   }
 
+  function systemTheme() {
+    try {
+      return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    } catch {
+      return "light";
+    }
+  }
+
+  function getTheme() {
+    try {
+      const raw = localStorage.getItem("evaraos-appearance");
+      if (raw) {
+        const appearance = JSON.parse(raw);
+        if (appearance?.mode === "dark") return "dark";
+        if (appearance?.mode === "light") return "light";
+        if (appearance?.mode === "system") return systemTheme();
+        if (appearance?.mode === "custom") return appearance.baseFamily === "light" ? "light" : "dark";
+      }
+      const stored = localStorage.getItem("evaraos-theme");
+      if (stored === "dark" || stored === "light") return stored;
+    } catch {}
+    return document.documentElement.dataset.theme === "dark" ? "dark" : systemTheme();
+  }
+
+  function applyTheme(theme = getTheme()) {
+    const safeTheme = theme === "dark" ? "dark" : "light";
+    const loader = document.getElementById(LOADER_ID);
+
+    document.documentElement.dataset.theme = safeTheme;
+    document.documentElement.style.colorScheme = safeTheme;
+    document.documentElement.classList.toggle("dark", safeTheme === "dark");
+    if (document.body) {
+      document.body.dataset.theme = safeTheme;
+      document.body.classList.toggle("dark", safeTheme === "dark");
+    }
+
+    try {
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute("content", safeTheme === "dark" ? "#020307" : "#f4f7f6");
+    } catch {}
+
+    if (loader) loader.dataset.theme = safeTheme;
+    return safeTheme;
+  }
+
   function logo() {
     return `<img class="evara-loader-logo" src="${LOGO_SRC}" alt="Evaraos" loading="eager" decoding="async" />`;
   }
 
   function ensureLoader() {
-    if (loaderCreated && document.getElementById(LOADER_ID)) return document.getElementById(LOADER_ID);
+    if (loaderCreated && document.getElementById(LOADER_ID)) {
+      const existing = document.getElementById(LOADER_ID);
+      existing.dataset.theme = applyTheme();
+      return existing;
+    }
 
     document.getElementById("evaraFastLoader")?.remove();
     document.getElementById("evaPageTransition")?.remove();
@@ -47,6 +96,7 @@
       document.body.appendChild(loader);
     }
 
+    loader.dataset.theme = applyTheme();
     loaderCreated = true;
     return loader;
   }
@@ -58,10 +108,12 @@
   }
 
   function showLoader(options = {}) {
+    const theme = applyTheme(options.theme || getTheme());
     const loader = ensureLoader();
     const title = loader.querySelector("#evaraLoaderTitle");
     const subtitle = loader.querySelector("#evaraLoaderSubtitle");
 
+    loader.dataset.theme = theme;
     if (title) title.textContent = options.title || "Loading Evaraos";
     if (subtitle) subtitle.textContent = options.subtitle || "Preparing your secure workspace.";
 
@@ -84,6 +136,7 @@
     initialReady = true;
 
     if (!loader) return;
+    loader.dataset.theme = applyTheme();
 
     if (immediate) {
       loader.classList.remove("active", "is-entering", "is-exiting");
@@ -106,7 +159,8 @@
     unlockApp();
     showLoader({
       title: options.title || "Opening Evaraos",
-      subtitle: options.subtitle || "Preparing your next screen."
+      subtitle: options.subtitle || "Preparing your next screen.",
+      theme: options.theme
     });
   }
 
@@ -139,7 +193,7 @@
     document.addEventListener("click", (event) => {
       const anchor = event.target.closest("a[href]");
       if (!shouldInterceptLink(anchor)) return;
-      if (anchor.hasAttribute("data-menu-link") || anchor.closest("#evaNavShell")) return;
+      if (anchor.hasAttribute("data-menu-link") || anchor.closest("#evaNavShell") || anchor.closest("#evaMenuPanel")) return;
 
       event.preventDefault();
       beginNavigationLoad({
@@ -175,8 +229,9 @@
       hideFastLoader: hideLoader,
       hideAllLoaders: hideLoader,
       markAppReady,
+      syncTheme: applyTheme,
       getState() {
-        return { isTransitioning, initialReady, loaderCreated };
+        return { isTransitioning, initialReady, loaderCreated, theme: getTheme() };
       }
     };
   }
@@ -186,6 +241,11 @@
     setupInitialBoot();
     interceptDocumentLinks();
     window.addEventListener("evara:session-ready", () => markAppReady());
+    window.addEventListener("evara:appearance-updated", (event) => applyTheme(event.detail?.mode || event.detail?.theme));
+    window.addEventListener("evara:theme-applied", (event) => applyTheme(event.detail?.theme));
+    window.addEventListener("storage", (event) => {
+      if (["evaraos-theme", "evaraos-appearance"].includes(event.key)) applyTheme();
+    });
     window.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible" && !isTransitioning && initialReady) hideLoader(true);
     });
