@@ -19,6 +19,16 @@ function once(node, eventName, handler) {
   node.addEventListener(eventName, handler);
 }
 
+function syncThemeButtonVisual(theme = getAppearanceTheme()) {
+  const safeTheme = theme === "dark" ? "dark" : "light";
+  document.querySelectorAll("#evaThemeToggle, #evaThemePillToggle, [data-theme-label]").forEach((button) => {
+    button.setAttribute("data-theme-mode", safeTheme);
+    button.setAttribute("aria-label", safeTheme === "dark" ? "Switch to light mode" : "Switch to dark mode");
+    const icon = button.querySelector(".eva-theme-nav-icon");
+    if (icon) icon.textContent = safeTheme === "dark" ? "☾" : "◐";
+  });
+}
+
 function esc(value = "") {
   return String(value || "")
     .replaceAll("&", "&amp;")
@@ -63,19 +73,16 @@ function score(app, query = "") {
 
 function renderResults(root, items = [], query = "") {
   if (!root) return;
-
   if (!query.trim()) {
     root.classList.remove("active");
     root.innerHTML = "";
     return;
   }
-
   if (!items.length) {
     root.classList.add("active");
     root.innerHTML = '<div class="eva-search-empty">Tap send to ask Evaraos AI.</div>';
     return;
   }
-
   root.classList.add("active");
   root.innerHTML = items.map((app) => (
     '<button type="button" class="eva-search-result" data-search-link="' + esc(app.route) + '">' +
@@ -94,22 +101,13 @@ function renderMessage(root, message = "", mode = "ai") {
 async function askBackend(prompt, resultsRoot) {
   renderMessage(resultsRoot, "Thinking through your Evaraos command...", "loading");
   const ask = httpsCallable(functions, "aiCommand");
-  const response = await ask({
-    prompt,
-    context: {
-      path: window.location.pathname,
-      role: role(),
-      theme: getAppearanceTheme()
-    }
-  });
-
+  const response = await ask({ prompt, context: { path: window.location.pathname, role: role(), theme: getAppearanceTheme() } });
   const data = response?.data || {};
   if (data?.action?.type === "navigate" && data.action.route) {
     renderMessage(resultsRoot, data.message || `Opening ${data.action.title || "page"}.`, "action");
     openHref(data.action.route, data.action.title ? `Opening ${data.action.title}` : "Opening Evaraos", data.message || "Launching from Evaraos AI.");
     return;
   }
-
   renderMessage(resultsRoot, data.message || "Evaraos AI received your command.", data.mode || "ai");
 }
 
@@ -120,13 +118,11 @@ async function runPrompt(input, resultsRoot) {
     input?.focus?.();
     return;
   }
-
   const directHref = resultsRoot?.querySelector("[data-search-link]")?.getAttribute("data-search-link");
   if (directHref) {
     openHref(directHref, "Opening result", "Launching your selected Evaraos app.");
     return;
   }
-
   try {
     await askBackend(prompt, resultsRoot);
   } catch (error) {
@@ -150,7 +146,6 @@ export function bindLinks() {
       openHref(link.getAttribute("data-menu-link") || link.getAttribute("href"), "Opening page", "Loading your selected Evaraos screen.");
     });
   });
-
   document.querySelectorAll("[data-nav-group]").forEach((button) => {
     once(button, "click", (event) => {
       stop(event);
@@ -163,7 +158,6 @@ export function bindLinks() {
       }
     });
   });
-
   const logoutBtn = document.getElementById("evaLogoutBtn");
   once(logoutBtn, "click", async (event) => {
     stop(event);
@@ -175,7 +169,6 @@ export function bindLinks() {
 async function toggleTheme() {
   const current = getAppearanceTheme();
   const next = current === "dark" ? "light" : "dark";
-
   try {
     localStorage.setItem("evaraos-theme", next);
     const raw = localStorage.getItem("evaraos-appearance");
@@ -185,13 +178,13 @@ async function toggleTheme() {
     appearance.updatedAt = new Date().toISOString();
     localStorage.setItem("evaraos-appearance", JSON.stringify(appearance));
   } catch {}
-
   document.documentElement.dataset.theme = next;
   document.body.dataset.theme = next;
   document.documentElement.classList.toggle("dark", next === "dark");
   document.body.classList.toggle("dark", next === "dark");
   setTheme(next);
   syncThemeLabel();
+  syncThemeButtonVisual(next);
   window.dispatchEvent(new CustomEvent("evara:appearance-updated", { detail: { mode: next, baseFamily: next } }));
 }
 
@@ -200,6 +193,9 @@ export function bindThemeToggle() {
     stop(event);
     await toggleTheme();
   });
+  syncThemeButtonVisual();
+  window.addEventListener("evara:theme-applied", (event) => syncThemeButtonVisual(event.detail?.theme));
+  window.addEventListener("evara:appearance-updated", (event) => syncThemeButtonVisual(event.detail?.mode));
 }
 
 export function bindSearch() {
@@ -208,35 +204,26 @@ export function bindSearch() {
   const results = document.getElementById("evaSearchResults");
   const mic = document.getElementById("evaAiMicBtn");
   if (!input) return;
-
   once(input, "input", () => {
     const query = input.value.trim();
-    const items = searchApps(query, role())
-      .map((app) => ({ ...app, score: score(app, query) }))
-      .filter((app) => !query || app.score > 0)
-      .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title))
-      .slice(0, 8);
+    const items = searchApps(query, role()).map((app) => ({ ...app, score: score(app, query) })).filter((app) => !query || app.score > 0).sort((a, b) => b.score - a.score || a.title.localeCompare(b.title)).slice(0, 8);
     renderResults(results, items, query);
   });
-
   once(input, "keydown", async (event) => {
     if (event.key !== "Enter") return;
     stop(event);
     await runPrompt(input, results);
   });
-
   once(form, "submit", async (event) => {
     stop(event);
     await runPrompt(input, results);
   });
-
   once(results, "click", (event) => {
     const target = event.target.closest("[data-search-link]");
     if (!target) return;
     stop(event);
     openHref(target.getAttribute("data-search-link"), "Opening result", "Launching your selected Evaraos app.");
   });
-
   once(mic, "click", (event) => {
     stop(event);
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -244,14 +231,12 @@ export function bindSearch() {
       renderMessage(results, "Speech input is not supported in this browser yet.", "error");
       return;
     }
-
     const recognition = new SpeechRecognition();
     recognition.lang = navigator.language || "en-US";
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
     mic.dataset.listening = "true";
     renderMessage(results, "Listening...", "loading");
-
     recognition.onresult = (speechEvent) => {
       input.value = speechEvent.results?.[0]?.[0]?.transcript || "";
       input.dispatchEvent(new Event("input", { bubbles: true }));
@@ -263,15 +248,8 @@ export function bindSearch() {
 }
 
 function bindMenuBasics() {
-  once(document.getElementById("evaMenuBtn"), "click", (event) => {
-    stop(event);
-    toggleMenu();
-  });
-
-  once(document.getElementById("evaBackdrop"), "click", (event) => {
-    stop(event);
-    closeMenu(true);
-  });
+  once(document.getElementById("evaMenuBtn"), "click", (event) => { stop(event); toggleMenu(); });
+  once(document.getElementById("evaBackdrop"), "click", (event) => { stop(event); closeMenu(true); });
 }
 
 export function clearPressTimer() {}
@@ -287,4 +265,5 @@ export function bindAllNavEvents() {
   bindThemeToggle();
   bindSearch();
   syncThemeLabel();
+  syncThemeButtonVisual();
 }
