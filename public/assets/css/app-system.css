@@ -1,30 +1,205 @@
 /* =========================================================
    EVARAOS APP SYSTEM
-   Layout + app shell only.
-   Glass, buttons, nav, tokens, and page backgrounds are owned by theme modules.
+   Premium Visual Runtime Layer
    ========================================================= */
 
 :root {
   --eva-motion: cubic-bezier(.19, 1, .22, 1);
+  --eva-ambient-blue: rgba(37,99,235,.16);
+  --eva-ambient-purple: rgba(124,58,237,.13);
+  --eva-ambient-white: rgba(255,255,255,.10);
 }
 
-body,
-main,
-section,
-article,
-p,
-h1,
-h2,
-h3,
-h4,
-a,
-span,
-label,
-input,
-textarea,
-select,
-button {
-  color: inherit;
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  position: relative;
+  overflow-x: hidden;
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  pointer-events: none;
+  z-index: -2;
+}
+
+body::before {
+  background:
+    radial-gradient(circle at 18% 20%, var(--eva-ambient-blue), transparent 24%),
+    radial-gradient(circle at 82% 18%, var(--eva-ambient-purple), transparent 26%),
+    radial-gradient(circle at 50% 82%, rgba(59,130,246,.10), transparent 28%);
+  filter: blur(34px);
+  animation: evaAmbientShift 18s ease-in-out infinite alternate;
+  opacity: .92;
+}
+
+body::after {
+  background:
+    linear-gradient(115deg,
+      transparent 0%,
+      rgba(255,255,255,.028) 22%,
+      transparent 44%,
+      transparent 100%);
+  animation: evaBeamSweep 12s linear infinite;
+  opacity: .48;
+  z-index: -1;
+}
+
+html[data-theme="dark"] body::before,
+body[data-theme="dark"]::before,
+html.dark body::before,
+body.dark::before {
+  background:
+    radial-gradient(circle at 18% 20%, rgba(37,99,235,.22), transparent 24%),
+    radial-gradient(circle at 82% 18%, rgba(124,58,237,.18), transparent 26%),
+    radial-gradient(circle at 50% 82%, rgba(96,165,250,.12), transparent 28%);
+  opacity: 1;
+}
+
+.glass-card,
+.glass-shell,
+.aurora-card,
+.auth-panel,
+.login-panel,
+.hero-card,
+.stats-card,
+.feature-card,
+.service-card,
+.category-card,
+.info-card,
+.cta-panel,
+.section-panel,
+.site-footer-inner,
+.dashboard-panel,
+.dashboard-overview,
+.dashboard-hero,
+.dashboard-hero-panel,
+.dashboard-stat-card,
+.dashboard-list-item,
+.dashboard-feed-item,
+.dashboard-role-card,
+.dashboard-progress-row,
+.dashboard-state-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.glass-card::before,
+.glass-shell::before,
+.aurora-card::before,
+.auth-panel::before,
+.login-panel::before,
+.hero-card::before,
+.stats-card::before,
+.feature-card::before,
+.service-card::before,
+.category-card::before,
+.info-card::before,
+.cta-panel::before,
+.section-panel::before,
+.site-footer-inner::before,
+.dashboard-panel::before,
+.dashboard-overview::before,
+.dashboard-hero::before,
+.dashboard-hero-panel::before,
+.dashboard-stat-card::before,
+.dashboard-list-item::before,
+.dashboard-feed-item::before,
+.dashboard-role-card::before,
+.dashboard-progress-row::before,
+.dashboard-state-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg,
+      rgba(255,255,255,.18),
+      transparent 22%,
+      transparent 72%,
+      rgba(255,255,255,.08));
+  opacity: .72;
+  z-index: 0;
+}
+
+.glass-card::after,
+.glass-shell::after,
+.aurora-card::after,
+.auth-panel::after,
+.login-panel::after,
+.hero-card::after,
+.stats-card::after,
+.feature-card::after,
+.service-card::after,
+.category-card::after,
+.info-card::after,
+.cta-panel::after,
+.section-panel::after,
+.site-footer-inner::after,
+.dashboard-panel::after,
+.dashboard-overview::after,
+.dashboard-hero::after,
+.dashboard-hero-panel::after,
+.dashboard-stat-card::after,
+.dashboard-list-item::after,
+.dashboard-feed-item::after,
+.dashboard-role-card::after,
+.dashboard-progress-row::after,
+.dashboard-state-card::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background:
+    linear-gradient(145deg,
+      rgba(255,255,255,.18),
+      rgba(255,255,255,.04),
+      rgba(37,99,235,.10));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: .72;
+  pointer-events: none;
+}
+
+.glass-card:hover,
+.glass-shell:hover,
+.aurora-card:hover,
+.hero-card:hover,
+.stats-card:hover,
+.feature-card:hover,
+.service-card:hover,
+.category-card:hover,
+.info-card:hover,
+.dashboard-panel:hover,
+.dashboard-stat-card:hover {
+  transform: translateY(-2px);
+  transition: transform .24s var(--eva-motion), box-shadow .24s var(--eva-motion);
+}
+
+.glass-card:hover::after,
+.glass-shell:hover::after,
+.aurora-card:hover::after,
+.hero-card:hover::after,
+.stats-card:hover::after,
+.feature-card:hover::after,
+.service-card:hover::after,
+.category-card:hover::after,
+.info-card:hover::after,
+.dashboard-panel:hover::after,
+.dashboard-stat-card:hover::after {
+  opacity: 1;
 }
 
 .glass-card > *,
@@ -100,12 +275,41 @@ textarea::placeholder {
 }
 
 @keyframes evaAppPageRise {
-  from { opacity: 0; transform: translateY(8px) scale(.996); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(.996);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes evaAmbientShift {
+  0% {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(2%, 1%, 0) scale(1.03);
+  }
+  100% {
+    transform: translate3d(-1%, 2%, 0) scale(1.02);
+  }
+}
+
+@keyframes evaBeamSweep {
+  0% {
+    transform: translateX(-35%) translateY(-8%) rotate(0deg);
+  }
+  100% {
+    transform: translateX(35%) translateY(8%) rotate(1deg);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
