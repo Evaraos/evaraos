@@ -1,4 +1,5 @@
-const NAV_BUILD = "nav-ai-clean-20260520";
+const NAV_BUILD = "nav-ai-guard-20260520";
+const IS_AI_PAGE = window.location.pathname.endsWith("/ai.html") || window.location.pathname.endsWith("ai.html");
 
 let NAV_STATE;
 let getNavShell;
@@ -53,7 +54,7 @@ async function safeImport(path) {
 }
 
 function bootReadySignal() {
-  if (NAV_STATE?.hasBootAnimated) return;
+  if (NAV_STATE && NAV_STATE.hasBootAnimated) return;
   if (NAV_STATE) NAV_STATE.hasBootAnimated = true;
   requestAnimationFrame(() => {
     if (window.EvaraLoader && typeof window.EvaraLoader.markAppReady === "function") window.EvaraLoader.markAppReady();
@@ -65,12 +66,12 @@ function bootReadySignal() {
 }
 
 function syncNavThemeVisual() {
-  try { syncThemeLabel?.(); } catch {}
+  try { if (syncThemeLabel) syncThemeLabel(); } catch {}
   const button = document.getElementById("evaThemeToggle");
   if (!button || !window.EvaraTheme) return;
   const appearance = window.EvaraTheme.getAppearance();
   const theme = window.EvaraTheme.getThemeFromAppearance(appearance);
-  const icon = appearance.mode === "system" ? "◐" : theme === "dark" ? "☾" : "☀";
+  const icon = appearance.mode === "system" ? "SYS" : theme === "dark" ? "DK" : "LT";
   button.dataset.themeMode = theme;
   button.dataset.appearanceMode = appearance.mode;
   button.setAttribute("aria-label", `Theme: ${appearance.mode === "system" ? `System (${theme})` : theme}. Tap to change.`);
@@ -82,11 +83,11 @@ function bindDelegatedThemeToggle() {
   if (window.__evaraDelegatedThemeToggleBound) return;
   window.__evaraDelegatedThemeToggleBound = true;
   document.addEventListener("click", (event) => {
-    const button = event.target?.closest?.("#evaThemeToggle");
+    const button = event.target && event.target.closest ? event.target.closest("#evaThemeToggle") : null;
     if (!button) return;
     event.preventDefault();
     event.stopPropagation();
-    if (window.EvaraTheme?.toggleTheme) {
+    if (window.EvaraTheme && window.EvaraTheme.toggleTheme) {
       window.EvaraTheme.toggleTheme();
       syncNavThemeVisual();
     } else {
@@ -102,16 +103,23 @@ async function bindOptionalSystems() {
   const events = await safeImport("./nav-events.js");
   const session = await safeImport("./nav-session.js");
   const interactions = await safeImport("./nav-interactions.js");
-  try { events?.bindAllNavEvents?.(); } catch (error) { console.warn("Nav events failed:", error); }
-  try { menu?.bindMenu?.(); } catch (error) { console.warn("Nav menu failed:", error); }
-  try { interactions?.bindNavInteractions?.(); } catch (error) { console.warn("Nav interactions failed:", error); }
-  try { bindScrollBehavior?.(); } catch (error) { console.warn("Nav scroll failed:", error); }
-  try { session?.bindRuntimeRefresh?.(); } catch (error) { console.warn("Nav session refresh failed:", error); }
-  try { bindPullToRefresh?.(); } catch (error) { console.warn("Pull refresh failed:", error); }
+  try { if (events && events.bindAllNavEvents) events.bindAllNavEvents(); } catch (error) { console.warn("Nav events failed:", error); }
+  try { if (menu && menu.bindMenu) menu.bindMenu(); } catch (error) { console.warn("Nav menu failed:", error); }
+  try { if (interactions && interactions.bindNavInteractions) interactions.bindNavInteractions(); } catch (error) { console.warn("Nav interactions failed:", error); }
+  try { if (bindScrollBehavior) bindScrollBehavior(); } catch (error) { console.warn("Nav scroll failed:", error); }
+  try { if (session && session.bindRuntimeRefresh) session.bindRuntimeRefresh(); } catch (error) { console.warn("Nav session refresh failed:", error); }
+  try { if (bindPullToRefresh) bindPullToRefresh(); } catch (error) { console.warn("Pull refresh failed:", error); }
   syncNavThemeVisual();
 }
 
 export async function initNav() {
+  if (IS_AI_PAGE) {
+    document.body.classList.remove("app-loading");
+    document.body.classList.add("app-ready", "eva-ai-runtime-isolated");
+    window.EVARAOS_NAV_BUILD = NAV_BUILD;
+    document.documentElement.dataset.evaraosNavBuild = NAV_BUILD;
+    return;
+  }
   try {
     ensureNavMount();
     ensureAppRoot();
