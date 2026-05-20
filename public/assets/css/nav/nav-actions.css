@@ -5,13 +5,15 @@
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
-  pointer-events: auto;
-  z-index: 3;
+  pointer-events: auto !important;
+  z-index: 10;
+  position: relative;
 }
 
 .eva-nav-action-btn,
 .eva-theme-nav-btn,
 .eva-menu-btn,
+#evaThemeToggle,
 #evaMenuBtn {
   width: 50px;
   height: 50px;
@@ -33,24 +35,30 @@
   -webkit-appearance: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  pointer-events: auto !important;
+  z-index: 11;
   transition: transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease, color .18s ease;
 }
 
 html[data-theme="dark"] .eva-nav-action-btn,
 html[data-theme="dark"] .eva-theme-nav-btn,
 html[data-theme="dark"] .eva-menu-btn,
+html[data-theme="dark"] #evaThemeToggle,
 html[data-theme="dark"] #evaMenuBtn,
 body[data-theme="dark"] .eva-nav-action-btn,
 body[data-theme="dark"] .eva-theme-nav-btn,
 body[data-theme="dark"] .eva-menu-btn,
+body[data-theme="dark"] #evaThemeToggle,
 body[data-theme="dark"] #evaMenuBtn,
 html.dark .eva-nav-action-btn,
 html.dark .eva-theme-nav-btn,
 html.dark .eva-menu-btn,
+html.dark #evaThemeToggle,
 html.dark #evaMenuBtn,
 body.dark .eva-nav-action-btn,
 body.dark .eva-theme-nav-btn,
 body.dark .eva-menu-btn,
+body.dark #evaThemeToggle,
 body.dark #evaMenuBtn {
   color: #f8fbff;
   background: rgba(255,255,255,.08);
@@ -61,6 +69,7 @@ body.dark #evaMenuBtn {
 .eva-nav-action-btn:hover,
 .eva-theme-nav-btn:hover,
 .eva-menu-btn:hover,
+#evaThemeToggle:hover,
 #evaMenuBtn:hover {
   transform: translateY(-1px);
   border-color: rgba(96,165,250,.32);
@@ -70,6 +79,7 @@ body.dark #evaMenuBtn {
 .eva-nav-action-btn:active,
 .eva-theme-nav-btn:active,
 .eva-menu-btn:active,
+#evaThemeToggle:active,
 #evaMenuBtn:active {
   transform: scale(.96);
 }
@@ -82,6 +92,7 @@ body.dark #evaMenuBtn {
   font-size: 1.28rem;
   line-height: 1;
   color: currentColor;
+  pointer-events: none;
 }
 
 html[data-theme="light"] .eva-theme-nav-icon,
@@ -102,6 +113,7 @@ body.dark .eva-theme-nav-icon {
   display: grid;
   align-content: space-between;
   position: relative;
+  pointer-events: none;
 }
 
 .eva-burger i {
@@ -114,24 +126,16 @@ body.dark .eva-theme-nav-icon {
   transition: transform .24s cubic-bezier(.2,.8,.2,1), opacity .16s ease, width .18s ease;
 }
 
-body.nav-menu-open .eva-burger i:nth-child(1) {
-  transform: translateY(7.8px) rotate(45deg);
-}
-
-body.nav-menu-open .eva-burger i:nth-child(2) {
-  opacity: 0;
-  transform: scaleX(.25);
-}
-
-body.nav-menu-open .eva-burger i:nth-child(3) {
-  transform: translateY(-7.8px) rotate(-45deg);
-}
+body.nav-menu-open .eva-burger i:nth-child(1) { transform: translateY(7.8px) rotate(45deg); }
+body.nav-menu-open .eva-burger i:nth-child(2) { opacity: 0; transform: scaleX(.25); }
+body.nav-menu-open .eva-burger i:nth-child(3) { transform: translateY(-7.8px) rotate(-45deg); }
 
 @media (max-width: 520px) {
   .eva-menu-zone { gap: 8px; }
   .eva-nav-action-btn,
   .eva-theme-nav-btn,
   .eva-menu-btn,
+  #evaThemeToggle,
   #evaMenuBtn {
     width: 46px;
     height: 46px;
@@ -144,6 +148,7 @@ body.nav-menu-open .eva-burger i:nth-child(3) {
   .eva-nav-action-btn,
   .eva-theme-nav-btn,
   .eva-menu-btn,
+  #evaThemeToggle,
   #evaMenuBtn {
     width: 42px;
     height: 42px;
@@ -151,20 +156,8 @@ body.nav-menu-open .eva-burger i:nth-child(3) {
     min-height: 42px;
   }
 
-  .eva-burger {
-    width: 21px;
-    height: 16px;
-  }
-
-  .eva-burger i {
-    width: 21px;
-  }
-
-  body.nav-menu-open .eva-burger i:nth-child(1) {
-    transform: translateY(6.8px) rotate(45deg);
-  }
-
-  body.nav-menu-open .eva-burger i:nth-child(3) {
-    transform: translateY(-6.8px) rotate(-45deg);
-  }
+  .eva-burger { width: 21px; height: 16px; }
+  .eva-burger i { width: 21px; }
+  body.nav-menu-open .eva-burger i:nth-child(1) { transform: translateY(6.8px) rotate(45deg); }
+  body.nav-menu-open .eva-burger i:nth-child(3) { transform: translateY(-6.8px) rotate(-6.8px) rotate(-45deg); }
 }
