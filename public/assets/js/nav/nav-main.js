@@ -93,21 +93,6 @@ function bindDelegatedThemeToggle() {
   window.addEventListener("evara:appearance-updated", syncNavThemeVisual);
 }
 
-function bindRefreshAction() {
-  if (window.__evaraRefreshBound) return;
-  window.__evaraRefreshBound = true;
-  document.addEventListener("click", (event) => {
-    const button = event.target?.closest?.("#evaRefreshBtn");
-    if (!button) return;
-    event.preventDefault();
-    event.stopPropagation();
-    button.classList.add("is-refreshing");
-    requestAnimationFrame(() => {
-      window.location.reload();
-    });
-  }, true);
-}
-
 async function bindOptionalSystems() {
   const menu = await safeImport("./nav-menu.js");
   const events = await safeImport("./nav-events.js");
@@ -126,7 +111,6 @@ export async function initNav() {
     ensureNavMount();
     ensureAppRoot();
     bindDelegatedThemeToggle();
-    bindRefreshAction();
     await loadCoreNav();
     if (NAV_STATE.hasInitialized) return;
     NAV_STATE.hasInitialized = true;
