@@ -12,6 +12,7 @@ import {
 import {
   normalizeRole,
   getRoleDefinition,
+  getHomeRouteForRole,
   appByRoute,
   roleCanAccessApp
 } from "./navigation/app-registry.js";
@@ -99,19 +100,7 @@ function roleFromProfile(profile = getSavedUserProfile()) {
 }
 
 function defaultDashboardForRole(role = "customer") {
-  const normalized = normalizeRole(role);
-  const definition = getRoleDefinition(normalized);
-
-  if (definition.group === "customer") return ROUTES.customerDashboard;
-  if (definition.group === "organization") return "/org.html";
-  if (definition.group === "vendor") return "/jobs.html";
-  if (definition.group === "staff") {
-    if (["sales_rep"].includes(normalized)) return "/leads.html";
-    if (["customer_support"].includes(normalized)) return "/customer-messaging.html";
-    return "/jobs.html";
-  }
-
-  return ROUTES.dashboard;
+  return getHomeRouteForRole(role) || ROUTES.customerDashboard;
 }
 
 function consumeIntendedRoute(role = "customer") {
@@ -131,7 +120,6 @@ function canAccessCurrentPage(role = "customer") {
 
   if (PUBLIC_AUTH_PAGES.has(page)) return true;
   if (normalized === "owner" || normalized === "super_admin") return true;
-
   if (normalized === "customer") return CUSTOMER_PAGES.has(page);
 
   const app = appByRoute(`/${page}`);
@@ -182,7 +170,7 @@ async function handlePrivateRoute() {
 
   if (!canAccessCurrentPage(role)) {
     beginGuardRedirect(defaultDashboardForRole(role), {
-      title: "Opening your dashboard",
+      title: "Opening your workspace",
       subtitle: "That page is not available for this account."
     });
     return;
