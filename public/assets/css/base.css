@@ -199,8 +199,8 @@ html.eva-transitioning * { transition: none !important; }
 html.auth-pending body,
 body.auth-pending { pointer-events: none !important; }
 body.app-loading { overflow: hidden; touch-action: none; }
-body.app-loading .eva-nav-shell { opacity: 0; transform: translateY(-6px); transition: none; }
-body.app-ready .eva-nav-shell { opacity: 1; transform: translateY(0); transition: all 0.18s ease; }
+body.app-loading .eva-nav-shell { opacity: 0; transition: none; }
+body.app-ready .eva-nav-shell { opacity: 1; transition: opacity 0.18s ease; }
 
 .site-footer {
   width: min(100%, var(--page-max));
