@@ -9,6 +9,7 @@ let renderNav;
 let applyProgress;
 let bindScrollBehavior;
 let animateNav;
+let bindPullToRefresh;
 
 function ensureNavMount() {
   let mount = document.getElementById("universalNavRoot") || document.getElementById("universalNav");
@@ -32,6 +33,8 @@ async function loadCoreNav() {
   const utils = await import(`./nav-utils.js?v=${NAV_BUILD}`);
   const renderer = await import(`./nav-render.js?v=${NAV_BUILD}`);
   const scroll = await import(`./nav-scroll.js?v=${NAV_BUILD}`);
+  const pullRefresh = await import(`./nav-pull-refresh.js?v=${NAV_BUILD}`);
+
   NAV_STATE = config.NAV_STATE;
   getNavShell = utils.getNavShell;
   setTheme = utils.setTheme;
@@ -41,6 +44,7 @@ async function loadCoreNav() {
   applyProgress = scroll.applyProgress;
   bindScrollBehavior = scroll.bindScrollBehavior;
   animateNav = scroll.animateNav;
+  bindPullToRefresh = pullRefresh.bindPullToRefresh;
 }
 
 async function safeImport(path) {
@@ -103,6 +107,7 @@ async function bindOptionalSystems() {
   try { interactions?.bindNavInteractions?.(); } catch (error) { console.warn("Nav interactions failed:", error); }
   try { bindScrollBehavior?.(); } catch (error) { console.warn("Nav scroll failed:", error); }
   try { session?.bindRuntimeRefresh?.(); } catch (error) { console.warn("Nav session refresh failed:", error); }
+  try { bindPullToRefresh?.(); } catch (error) { console.warn("Pull refresh failed:", error); }
   syncNavThemeVisual();
 }
 
