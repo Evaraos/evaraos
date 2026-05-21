@@ -1,11 +1,7 @@
 import { NAV_STATE } from "./nav-config.js";
 import { getNavShell, getBrandBlock } from "./nav-utils.js";
 
-let scrollTicking = false;
-
-export function atTopOfPage() {
-  return (window.scrollY || 0) <= 4;
-}
+export function atTopOfPage() { return (window.scrollY || 0) <= 4; }
 
 export function atBottomOfPage() {
   const scrollBottom = (window.scrollY || 0) + window.innerHeight;
@@ -13,9 +9,7 @@ export function atBottomOfPage() {
   return scrollBottom >= docHeight - 4;
 }
 
-export function isCompact() {
-  return false;
-}
+export function isCompact() { return false; }
 
 export function applyProgress() {
   const shell = getNavShell();
@@ -53,10 +47,7 @@ export function expandNav() {
   applyProgress();
 }
 
-export function compactNav() {
-  expandNav();
-}
-
+export function compactNav() { expandNav(); }
 export function scheduleCompact() {}
 export function clearCompactTimer() {}
 export function clearScrollSettleTimer() {}
@@ -64,22 +55,10 @@ export function settleAfterScroll() {}
 export function hideQuickBubbles() {}
 export function showQuickBubbles() {}
 
-function requestScrollUpdate() {
-  if (scrollTicking) return;
-  scrollTicking = true;
-  requestAnimationFrame(() => {
-    scrollTicking = false;
-    applyProgress();
-  });
-}
-
 export function bindScrollBehavior() {
   if (NAV_STATE.scrollBehaviorBound) return;
   NAV_STATE.scrollBehaviorBound = true;
   applyProgress();
-  window.addEventListener("scroll", requestScrollUpdate, { passive: true });
 }
 
-export function animateNav() {
-  applyProgress();
-}
+export function animateNav() { applyProgress(); }
