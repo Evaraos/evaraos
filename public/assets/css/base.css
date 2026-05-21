@@ -86,6 +86,16 @@ body:not(.home-page):not(.ai-page) .page-shell {
   overflow-x: clip;
 }
 
+body:not(.home-page):not(.ai-page) .dashboard-shell {
+  margin-top: 0 !important;
+  padding-top: calc(var(--eva-page-top-space) + env(safe-area-inset-top, 0px)) !important;
+  padding-bottom: var(--eva-page-bottom-space) !important;
+}
+
+body:not(.home-page):not(.ai-page) .dashboard-sidebar {
+  top: calc(var(--eva-page-top-space) + env(safe-area-inset-top, 0px)) !important;
+}
+
 body:not(.home-page):not(.ai-page) .hero,
 body:not(.home-page):not(.ai-page) .page-hero,
 body:not(.home-page):not(.ai-page) .dashboard-hero,
@@ -300,6 +310,15 @@ body.app-ready .eva-nav-shell { opacity: 1; transition: opacity 0.18s ease; }
     padding-top: calc(var(--eva-mobile-page-top-space) + env(safe-area-inset-top, 0px));
     padding-bottom: var(--eva-page-bottom-space);
     gap: var(--eva-shell-gap);
+  }
+
+  body:not(.home-page):not(.ai-page) .dashboard-shell {
+    margin-top: 0 !important;
+    padding-top: calc(var(--eva-mobile-page-top-space) + env(safe-area-inset-top, 0px)) !important;
+  }
+
+  body:not(.home-page):not(.ai-page) .dashboard-sidebar {
+    top: 0 !important;
   }
 
   .home-shell { padding: 74px 12px 24px; }
