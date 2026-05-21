@@ -12,6 +12,8 @@ const FIX_MODE = process.argv.includes("--fix");
 
 const IGNORE_DIRS = new Set([".git", "node_modules", "tools/reports"]);
 const HTML_REPAIR_FILES = [];
+const NAV_CONFIG_PATH = "public/assets/js/nav/nav-config.js";
+const APP_REGISTRY_PATH = "public/assets/js/navigation/app-registry.js";
 
 function walk(dir, output = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -101,10 +103,7 @@ function extractQuotedPages(content = "") {
 }
 
 function collectRouteReferences() {
-  const sources = [
-    "public/assets/js/nav/nav-config.js",
-    "public/assets/js/navigation/app-registry.js"
-  ].filter(exists);
+  const sources = [NAV_CONFIG_PATH, APP_REGISTRY_PATH].filter(exists);
 
   const bySource = {};
   const all = new Set();
@@ -116,6 +115,39 @@ function collectRouteReferences() {
   }
 
   return { bySource, allRoutes: [...all].sort() };
+}
+
+function compareNavAndRegistry(routeReferences, files) {
+  const navRoutes = new Set(routeReferences.bySource[NAV_CONFIG_PATH] || []);
+  const registryRoutes = new Set(routeReferences.bySource[APP_REGISTRY_PATH] || []);
+
+  const navOnly = [...navRoutes]
+    .filter((route) => !registryRoutes.has(route))
+    .map((route) => ({
+      route,
+      exists: files.includes(`public/${route}`),
+      recommendation: "add-to-app-registry-or-mark-nav-only"
+    }));
+
+  const registryOnly = [...registryRoutes]
+    .filter((route) => !navRoutes.has(route))
+    .map((route) => ({
+      route,
+      exists: files.includes(`public/${route}`),
+      recommendation: "add-to-nav-or-mark-command-search-only"
+    }));
+
+  const shared = [...navRoutes].filter((route) => registryRoutes.has(route)).sort();
+
+  return {
+    sourceOfTruthRecommendation: "Use app-registry.js as the long-term single source of truth, then generate nav views from it.",
+    navRouteCount: navRoutes.size,
+    registryRouteCount: registryRoutes.size,
+    sharedRouteCount: shared.length,
+    shared,
+    navOnly,
+    registryOnly
+  };
 }
 
 function classifyHtmlPages(files, routeReferences) {
@@ -152,6 +184,7 @@ function main() {
 
   const duplicatePages = detectDuplicatePages(files);
   const routeReferences = collectRouteReferences();
+  const navRegistryComparison = compareNavAndRegistry(routeReferences, files);
   const cleanupClassification = classifyHtmlPages(files, routeReferences);
 
   const results = [];
@@ -179,6 +212,7 @@ function main() {
     generatedAt: new Date().toISOString(),
     mode: FIX_MODE ? "fix" : "audit",
     routeReferences,
+    navRegistryComparison,
     duplicatePages,
     cleanupClassification,
     repairedFiles: HTML_REPAIR_FILES,
@@ -186,7 +220,6 @@ function main() {
   };
 
   fs.mkdirSync(REPORT_DIR, { recursive: true });
-
   fs.writeFileSync(path.join(REPORT_DIR, "repo-audit-report.json"), JSON.stringify(report, null, 2), "utf8");
 
   const markdown = [
@@ -194,6 +227,26 @@ function main() {
     "",
     `Generated: ${report.generatedAt}`,
     `Mode: ${report.mode}`,
+    "",
+    "## Navigation vs App Registry",
+    "",
+    `Nav routes: ${navRegistryComparison.navRouteCount}`,
+    `Registry routes: ${navRegistryComparison.registryRouteCount}`,
+    `Shared routes: ${navRegistryComparison.sharedRouteCount}`,
+    "",
+    `Recommendation: ${navRegistryComparison.sourceOfTruthRecommendation}`,
+    "",
+    "### Nav-only routes",
+    "",
+    ...(navRegistryComparison.navOnly.length
+      ? navRegistryComparison.navOnly.map((item) => `- [ ] ${item.route} — exists: ${item.exists}`)
+      : ["- None"]),
+    "",
+    "### Registry-only routes",
+    "",
+    ...(navRegistryComparison.registryOnly.length
+      ? navRegistryComparison.registryOnly.map((item) => `- [ ] ${item.route} — exists: ${item.exists}`)
+      : ["- None"]),
     "",
     "## Missing referenced routes",
     "",
@@ -236,6 +289,8 @@ function main() {
   console.log("\nEvaraos Repo Audit Complete");
   console.log(`Mode: ${report.mode}`);
   console.log(`Referenced routes: ${routeReferences.allRoutes.length}`);
+  console.log(`Nav-only routes: ${navRegistryComparison.navOnly.length}`);
+  console.log(`Registry-only routes: ${navRegistryComparison.registryOnly.length}`);
   console.log(`Missing referenced routes: ${cleanupClassification.missingReferencedRoutes.length}`);
   console.log(`Duplicate page groups: ${duplicatePages.length}`);
   console.log(`Unreferenced public HTML pages: ${cleanupClassification.unreferencedPublicHtml.length}`);
