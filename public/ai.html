@@ -33,14 +33,17 @@
   <link rel="stylesheet" href="/assets/css/theme.css?v=36" />
   <link rel="stylesheet" href="/assets/css/loader.css?v=1" />
   <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v1" />
-  <link rel="stylesheet" href="/assets/css/pages/ai.css?v=7" />
+  <link rel="stylesheet" href="/assets/css/pages/ai.css?v=8" />
 </head>
 <body class="ai-page app-loading">
   <div id="universalNavRoot"></div>
   <main id="appRoot" class="eva-ai-app-root">
     <section class="eva-ai-page-shell" aria-label="Evaraos AI assistant">
       <header class="eva-ai-chat-header" aria-label="Evaraos AI header">
-        <div class="eva-ai-title-block"><span class="eva-ai-dot">&#10022;</span><div><p>Evaraos AI</p><h1>Assistant</h1></div></div>
+        <div class="eva-ai-title-block">
+          <span class="eva-ai-icon-wrap"><img src="/assets/img/evaraos_logo.png" alt="Evaraos" class="eva-ai-app-icon" /><span class="eva-ai-intel-star">&#10022;</span></span>
+          <div><p>Evaraos AI</p><h1>Assistant</h1></div>
+        </div>
         <button class="eva-ai-new-chat" type="button" id="evaAiNewChat">New</button>
       </header>
       <section class="eva-ai-thread" id="evaAiThread" aria-live="polite">
@@ -53,15 +56,14 @@
         <button type="button" data-ai-prompt="Plan the dashboard hierarchy">Dashboards</button>
       </section>
       <form class="eva-ai-composer" id="evaAiPageForm" autocomplete="off">
-        <button class="eva-ai-plus" type="button" aria-label="More tools">+</button>
-        <textarea id="evaAiPageInput" rows="1" placeholder="Message Evaraos AI..." enterkeyhint="send"></textarea>
-        <button class="eva-ai-submit" type="submit" aria-label="Send message">&#8593;</button>
+        <button class="eva-ai-plus" id="evaAiPlus" type="button" aria-label="Open AI tools">+</button>
+        <div class="eva-ai-input-shell"><textarea id="evaAiPageInput" rows="1" placeholder="Message Evaraos AI..." enterkeyhint="send"></textarea><button class="eva-ai-submit" type="submit" aria-label="Send message">&#8593;</button></div>
       </form>
     </section>
   </main>
   <script src="/assets/js/loader.js?v=1"></script>
   <script type="module" src="/assets/js/theme.js?v=1"></script>
   <script type="module" src="/assets/js/nav/nav-main.js?v=nav-v1"></script>
-  <script type="module" src="/assets/js/pages/ai.js?v=2"></script>
+  <script type="module" src="/assets/js/pages/ai.js?v=3"></script>
 </body>
 </html>
