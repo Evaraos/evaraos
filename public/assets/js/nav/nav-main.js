@@ -1,4 +1,4 @@
-const NAV_BUILD = "nav-source-clean-20260520";
+const NAV_BUILD = "nav-source-clean-20260520-fast-menu";
 
 let NAV_STATE;
 let getNavShell;
@@ -10,6 +10,7 @@ let applyProgress;
 let bindScrollBehavior;
 let animateNav;
 let bindPullToRefresh;
+let menuApi;
 
 function ensureNavMount() {
   let mount = document.getElementById("universalNavRoot") || document.getElementById("universalNav");
@@ -64,6 +65,42 @@ function bootReadySignal() {
   });
 }
 
+function fastToggleMenuFallback() {
+  const zone = document.getElementById("evaMenuZone");
+  const btn = document.getElementById("evaMenuBtn");
+  const panel = document.getElementById("evaMenuPanel");
+  if (!zone || !btn || !panel) return false;
+  const isOpen = document.body.classList.contains("nav-menu-open") || zone.classList.contains("open");
+  zone.classList.toggle("open", !isOpen);
+  btn.setAttribute("aria-expanded", String(!isOpen));
+  document.documentElement.classList.toggle("nav-menu-open", !isOpen);
+  document.documentElement.classList.toggle("eva-menu-layer-open", !isOpen);
+  document.body.classList.toggle("nav-menu-open", !isOpen);
+  document.body.style.overflow = !isOpen ? "hidden" : "";
+  document.body.style.overscrollBehavior = !isOpen ? "none" : "";
+  return true;
+}
+
+function bindFastDelegatedMenu() {
+  if (window.__evaraFastMenuBound) return;
+  window.__evaraFastMenuBound = true;
+  document.addEventListener("pointerdown", (event) => {
+    const button = event.target && event.target.closest ? event.target.closest("#evaMenuBtn") : null;
+    if (!button) return;
+    button.classList.add("is-instant-press");
+  }, { capture: true, passive: true });
+  document.addEventListener("click", (event) => {
+    const button = event.target && event.target.closest ? event.target.closest("#evaMenuBtn") : null;
+    if (!button) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
+    if (menuApi && typeof menuApi.toggleMenu === "function") menuApi.toggleMenu();
+    else fastToggleMenuFallback();
+    requestAnimationFrame(() => button.classList.remove("is-instant-press"));
+  }, true);
+}
+
 function syncNavThemeVisual() {
   try { if (syncThemeLabel) syncThemeLabel(); } catch {}
   const button = document.getElementById("evaThemeToggle");
@@ -99,6 +136,7 @@ function bindDelegatedThemeToggle() {
 
 async function bindOptionalSystems() {
   const menu = await safeImport("./nav-menu.js");
+  menuApi = menu;
   const events = await safeImport("./nav-events.js");
   const session = await safeImport("./nav-session.js");
   const interactions = await safeImport("./nav-interactions.js");
@@ -115,6 +153,7 @@ export async function initNav() {
   try {
     ensureNavMount();
     ensureAppRoot();
+    bindFastDelegatedMenu();
     bindDelegatedThemeToggle();
     await loadCoreNav();
     if (NAV_STATE.hasInitialized) return;
