@@ -24,7 +24,9 @@ const ROUTES = {
 };
 
 const AUTH_WAIT_TIMEOUT_MS = 4500;
+const ROUTE_GUARD_HARD_TIMEOUT_MS = 8500;
 let hasFinishedRouteGuard = false;
+let routeGuardWatchdog = null;
 
 const PUBLIC_AUTH_PAGES = new Set(["login.html", "signup.html", "reset.html", "index.html"]);
 const CUSTOMER_PAGES = new Set(["customer_dashboard.html", "customer-commerce.html", "customer-messaging.html", "customer-service-history.html", "settings.html"]);
@@ -48,19 +50,26 @@ function normalizePath(path = "") {
   }
 }
 
+function clearRouteGuardWatchdog() {
+  if (routeGuardWatchdog) clearTimeout(routeGuardWatchdog);
+  routeGuardWatchdog = null;
+}
+
 function setReadyState() {
-  document.documentElement.classList.remove("auth-pending");
+  document.documentElement.classList.remove("auth-pending", "boot-pending");
   document.body?.classList.remove("auth-pending", "app-loading");
   document.body?.classList.add("app-ready");
 }
 
 function markLoaderReady() {
   window.EvaraLoader?.markAppReady?.();
+  window.EvaraLoader?.hideAllLoaders?.(true);
 }
 
 function safeMarkReady(detail = {}) {
   if (hasFinishedRouteGuard) return;
   hasFinishedRouteGuard = true;
+  clearRouteGuardWatchdog();
   setReadyState();
   markLoaderReady();
   emit("evara:session-ready", detail);
@@ -74,11 +83,13 @@ function clearUserSession() {
 function beginGuardRedirect(url, options = {}) {
   if (hasFinishedRouteGuard) return;
   hasFinishedRouteGuard = true;
+  clearRouteGuardWatchdog();
 
   if (window.EvaraLoader?.beginNavigationLoad) {
     window.EvaraLoader.beginNavigationLoad({
       title: options.title || "Opening Evaraos",
-      subtitle: options.subtitle || "Taking you to the right page."
+      subtitle: options.subtitle || "Taking you to the right page.",
+      forceMs: 2600
     });
   }
 
@@ -129,6 +140,15 @@ function canAccessCurrentPage(role = "customer") {
   return definition.level >= 80;
 }
 
+function withTimeout(promise, ms, label = "operation") {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+    })
+  ]);
+}
+
 function waitForVerifiedFirebaseUser() {
   if (auth.currentUser) return Promise.resolve(auth.currentUser);
 
@@ -155,6 +175,15 @@ function waitForVerifiedFirebaseUser() {
   });
 }
 
+async function safeHydrateProfile(user) {
+  try {
+    return await withTimeout(hydrateUserProfile(user), 3500, "profile hydration");
+  } catch (error) {
+    console.warn("Profile hydration fallback used:", error);
+    return getSavedUserProfile();
+  }
+}
+
 async function handlePrivateRoute() {
   const verifiedUser = await waitForVerifiedFirebaseUser();
 
@@ -165,7 +194,7 @@ async function handlePrivateRoute() {
     return;
   }
 
-  const profile = await hydrateUserProfile(verifiedUser);
+  const profile = await safeHydrateProfile(verifiedUser);
   const role = roleFromProfile(profile);
 
   if (!canAccessCurrentPage(role)) {
@@ -183,7 +212,7 @@ async function handleAuthRoute() {
   const verifiedUser = await waitForVerifiedFirebaseUser();
 
   if (verifiedUser) {
-    const profile = await hydrateUserProfile(verifiedUser);
+    const profile = await safeHydrateProfile(verifiedUser);
     const role = roleFromProfile(profile);
     const target = consumeIntendedRoute(role);
 
@@ -206,8 +235,29 @@ function handlePublicRoute(mode) {
   });
 }
 
+function armRouteGuardWatchdog(mode = "") {
+  clearRouteGuardWatchdog();
+  routeGuardWatchdog = setTimeout(() => {
+    if (hasFinishedRouteGuard) return;
+    console.warn("Route guard watchdog released stuck page.");
+
+    if (mode === "private") {
+      saveIntendedRoute();
+      clearUserSession();
+      beginGuardRedirect(ROUTES.login, {
+        title: "Returning to login",
+        subtitle: "Session verification took too long."
+      });
+      return;
+    }
+
+    safeMarkReady({ mode, source: "route-guard-watchdog", timeout: true });
+  }, ROUTE_GUARD_HARD_TIMEOUT_MS);
+}
+
 async function initRouteGuard() {
   const mode = document.body?.dataset?.routeGuard || "";
+  armRouteGuardWatchdog(mode);
 
   try {
     if (mode === "private") {
