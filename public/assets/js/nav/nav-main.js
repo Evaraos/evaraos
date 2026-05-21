@@ -1,4 +1,4 @@
-const NAV_BUILD = "nav-source-clean-20260520-fast-menu";
+const NAV_BUILD = "nav-source-clean-20260520-fast-menu-lite";
 
 let NAV_STATE;
 let getNavShell;
@@ -9,7 +9,6 @@ let renderNav;
 let applyProgress;
 let bindScrollBehavior;
 let animateNav;
-let bindPullToRefresh;
 let menuApi;
 
 function ensureNavMount() {
@@ -34,7 +33,6 @@ async function loadCoreNav() {
   const utils = await import(`./nav-utils.js?v=${NAV_BUILD}`);
   const renderer = await import(`./nav-render.js?v=${NAV_BUILD}`);
   const scroll = await import(`./nav-scroll.js?v=${NAV_BUILD}`);
-  const pullRefresh = await import(`./nav-pull-refresh.js?v=${NAV_BUILD}`);
 
   NAV_STATE = config.NAV_STATE;
   getNavShell = utils.getNavShell;
@@ -45,7 +43,6 @@ async function loadCoreNav() {
   applyProgress = scroll.applyProgress;
   bindScrollBehavior = scroll.bindScrollBehavior;
   animateNav = scroll.animateNav;
-  bindPullToRefresh = pullRefresh.bindPullToRefresh;
 }
 
 async function safeImport(path) {
@@ -139,13 +136,10 @@ async function bindOptionalSystems() {
   menuApi = menu;
   const events = await safeImport("./nav-events.js");
   const session = await safeImport("./nav-session.js");
-  const interactions = await safeImport("./nav-interactions.js");
   try { if (events && events.bindAllNavEvents) events.bindAllNavEvents(); } catch (error) { console.warn("Nav events failed:", error); }
   try { if (menu && menu.bindMenu) menu.bindMenu(); } catch (error) { console.warn("Nav menu failed:", error); }
-  try { if (interactions && interactions.bindNavInteractions) interactions.bindNavInteractions(); } catch (error) { console.warn("Nav interactions failed:", error); }
   try { if (bindScrollBehavior) bindScrollBehavior(); } catch (error) { console.warn("Nav scroll failed:", error); }
   try { if (session && session.bindRuntimeRefresh) session.bindRuntimeRefresh(); } catch (error) { console.warn("Nav session refresh failed:", error); }
-  try { if (bindPullToRefresh) bindPullToRefresh(); } catch (error) { console.warn("Pull refresh failed:", error); }
   syncNavThemeVisual();
 }
 
