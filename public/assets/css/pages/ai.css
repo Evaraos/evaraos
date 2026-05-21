@@ -1,13 +1,474 @@
-:root{--ai-page-pad:16px;--ai-max:760px;--ai-bg:#f7f8fb;--ai-text:#101522;--ai-muted:rgba(16,21,34,.58);--ai-surface:rgba(255,255,255,.88);--ai-border:rgba(148,163,184,.24);--ai-card:rgba(255,255,255,.95);--ai-top-offset:44px;--ai-bottom-clearance:calc(var(--eva-page-nav-clearance,104px) + 22px)}
-html[data-theme="dark"],body[data-theme="dark"],html.dark,body.dark{--ai-bg:#05070d;--ai-text:#f7f9ff;--ai-muted:rgba(235,240,255,.66);--ai-surface:rgba(28,34,48,.76);--ai-border:rgba(255,255,255,.18);--ai-card:rgba(26,30,40,.82)}html,body{width:100%;min-height:100%;margin:0;padding:0;background:var(--ai-bg);overflow:hidden}body.ai-page{min-height:100svh;color:var(--ai-text);font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter","Segoe UI",sans-serif}body.ai-page *{box-sizing:border-box;max-width:100%}
-#appRoot.eva-ai-app-root{width:100%;height:100svh;overflow:hidden}.eva-ai-page-shell{position:relative;width:min(100%,var(--ai-max));height:100svh;margin:0 auto;padding:calc(var(--ai-top-offset) + env(safe-area-inset-top,0px)) var(--ai-page-pad) calc(var(--ai-bottom-clearance) + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;background:radial-gradient(circle at 50% -18%,rgba(59,130,246,.11),transparent 42%)}
-.eva-ai-chat-header{position:sticky;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:20;flex:0 0 auto;min-height:66px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:26px;background:var(--ai-surface);border:1px solid var(--ai-border);box-shadow:0 12px 30px rgba(15,23,42,.10);backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%)}.eva-ai-title-block{min-width:0;display:flex;align-items:center;gap:12px}.eva-ai-icon-wrap{position:relative;flex:0 0 46px;width:46px;height:46px}.eva-ai-app-icon{width:46px;height:46px;border-radius:16px;object-fit:cover;box-shadow:0 6px 18px rgba(37,99,235,.22)}.eva-ai-intel-star{position:absolute;right:-8px;bottom:-5px;color:#fff;font-size:1.32rem;font-weight:900;line-height:1;text-shadow:0 2px 7px rgba(2,6,23,.48),0 0 12px rgba(96,165,250,.52)}.eva-ai-intel-star.two{right:4px;bottom:-13px;font-size:.78rem;opacity:.98}.eva-ai-title-block p{margin:0 0 2px;font-size:.64rem;font-weight:900;letter-spacing:.16em;color:var(--ai-muted);text-transform:uppercase}.eva-ai-title-block h1{margin:0;font-size:1.08rem;line-height:1.05;letter-spacing:-.04em;color:var(--ai-text)}.eva-ai-new-chat{flex:0 0 auto;min-height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--ai-border);background:color-mix(in srgb,var(--ai-surface) 86%,transparent);color:var(--ai-text);font-weight:850;font-size:.98rem}
-.eva-ai-thread{flex:1 1 auto;min-height:160px;display:flex;flex-direction:column;gap:14px;padding:2px 0 10px;overflow:visible}.eva-ai-message-card{display:grid;grid-template-columns:38px minmax(0,1fr);gap:10px;align-items:end;animation:aiMessageIn .18s ease both}.eva-ai-message-card.user{grid-template-columns:minmax(0,1fr) 38px}.eva-ai-message-card.user .eva-ai-avatar{order:2}.eva-ai-avatar{width:38px;height:38px;border-radius:14px;display:grid;place-items:center;font-size:.66rem;font-weight:950;color:var(--ai-text);background:var(--ai-surface);border:1px solid var(--ai-border)}
-.eva-ai-bubble{width:fit-content;max-width:100%;padding:16px 18px;border-radius:24px;color:var(--ai-text);background:var(--ai-card);border:1px solid var(--ai-border);box-shadow:0 10px 24px rgba(15,23,42,.08)}.eva-ai-message-card.user .eva-ai-bubble{justify-self:end;background:linear-gradient(145deg,#3b82f6,#2563eb);color:#fff;border-color:rgba(37,99,235,.32)}.eva-ai-bubble p{margin:0;line-height:1.56;font-weight:620;overflow-wrap:anywhere;font-size:1rem}.eva-ai-attachment-bubble{width:min(100%,360px);display:grid;gap:12px}.eva-ai-attachment-bubble p{font-size:.9rem;font-weight:850;opacity:.92}.eva-ai-attachment-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.eva-ai-attachment-card{margin:0;overflow:hidden;border-radius:18px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.18)}.eva-ai-attachment-card img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}.eva-ai-attachment-card figcaption{padding:8px 10px;font-size:.72rem;font-weight:800;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:currentColor;opacity:.86}
-.eva-ai-quick-row{position:relative;display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;padding-bottom:2px;scrollbar-width:none}.eva-ai-quick-row::-webkit-scrollbar{display:none}.eva-ai-quick-row button{flex:0 0 auto;height:48px;padding:0 18px;border-radius:999px;border:1px solid var(--ai-border);background:var(--ai-surface);color:var(--ai-text);font-weight:760;font-size:.98rem;white-space:nowrap}
-.eva-ai-composer{position:relative;display:grid;grid-template-columns:52px minmax(0,1fr);align-items:center;gap:10px;z-index:5;margin-bottom:6px}.eva-ai-plus{width:52px;height:52px;border-radius:999px;border:1px solid var(--ai-border);display:grid;place-items:center;background:var(--ai-surface);color:var(--ai-text);font-size:1.4rem;font-weight:950;box-shadow:0 10px 24px rgba(15,23,42,.08)}.eva-ai-input-shell{min-height:70px;display:grid;grid-template-columns:minmax(0,1fr) 52px;align-items:end;gap:8px;padding:9px 9px 9px 16px;border-radius:32px;background:color-mix(in srgb,var(--ai-surface) 92%,transparent);border:1px solid var(--ai-border);box-shadow:0 16px 38px rgba(15,23,42,.12);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%)}.eva-ai-input-shell textarea{width:100%;resize:none;border:0;outline:0;min-height:44px;max-height:128px;padding:12px 0;background:transparent;color:var(--ai-text);font:inherit;font-weight:670;line-height:1.35;overflow-y:auto}.eva-ai-input-shell textarea::placeholder{color:var(--ai-muted)}.eva-ai-submit{width:52px;height:52px;border-radius:999px;border:1px solid rgba(15,23,42,.08);display:grid;place-items:center;background:#111827;color:#fff;font-size:1.18rem;font-weight:950;box-shadow:0 8px 18px rgba(2,6,23,.18)}
-html[data-theme="dark"] .eva-ai-submit,body[data-theme="dark"] .eva-ai-submit,html.dark .eva-ai-submit,body.dark .eva-ai-submit{background:#60a5fa;color:#fff;box-shadow:0 8px 22px rgba(96,165,250,.26)}html[data-theme="dark"] .eva-ai-attachment-card,body[data-theme="dark"] .eva-ai-attachment-card,html.dark .eva-ai-attachment-card,body.dark .eva-ai-attachment-card{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.16)}
-@keyframes aiMessageIn{from{opacity:0;transform:translateY(5px) scale(.995)}to{opacity:1;transform:translateY(0) scale(1)}}
-@media(max-width:520px){:root{--ai-page-pad:12px;--ai-top-offset:38px;--ai-bottom-clearance:calc(var(--eva-page-nav-clearance,98px) + 18px)}.eva-ai-page-shell{gap:12px}.eva-ai-chat-header{min-height:62px;padding:8px 10px;border-radius:24px}.eva-ai-icon-wrap,.eva-ai-app-icon{width:42px;height:42px}.eva-ai-title-block h1{font-size:1rem;max-width:160px}.eva-ai-thread{gap:12px;min-height:34svh;padding-bottom:8px}.eva-ai-quick-row button{height:46px;padding:0 16px}.eva-ai-composer{grid-template-columns:48px minmax(0,1fr)}.eva-ai-plus{width:48px;height:48px}.eva-ai-input-shell{min-height:64px;grid-template-columns:minmax(0,1fr) 48px;padding:8px 8px 8px 14px;border-radius:28px}.eva-ai-submit{width:48px;height:48px}.eva-ai-attachment-bubble{width:min(100%,300px)}.eva-ai-attachment-grid{gap:8px}.eva-ai-attachment-card{border-radius:16px}}
-@media(max-width:390px){:root{--ai-top-offset:32px;--ai-bottom-clearance:calc(var(--eva-page-nav-clearance,92px) + 16px)}.eva-ai-title-block h1{max-width:136px;font-size:.95rem}.eva-ai-bubble p{font-size:.96rem}.eva-ai-attachment-bubble{width:min(100%,260px)}}
-body.ai-keyboard-active .eva-ai-quick-row{display:none}
+:root {
+  --ai-max: 760px;
+  --ai-pad: 16px;
+  --ai-top: 44px;
+  --ai-bottom: calc(var(--eva-page-nav-clearance, 104px) + 18px);
+  --ai-bg: #f7f8fb;
+  --ai-text: #101522;
+  --ai-muted: rgba(16, 21, 34, .58);
+  --ai-surface: rgba(255, 255, 255, .9);
+  --ai-border: rgba(148, 163, 184, .24);
+  --ai-card: rgba(255, 255, 255, .96);
+}
+
+html[data-theme="dark"],
+body[data-theme="dark"],
+html.dark,
+body.dark {
+  --ai-bg: #05070d;
+  --ai-text: #f7f9ff;
+  --ai-muted: rgba(235, 240, 255, .66);
+  --ai-surface: rgba(24, 30, 42, .86);
+  --ai-border: rgba(255, 255, 255, .16);
+  --ai-card: rgba(26, 31, 43, .9);
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  background: var(--ai-bg);
+}
+
+body.ai-page {
+  min-height: 100svh;
+  color: var(--ai-text);
+  overflow: hidden;
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", sans-serif;
+}
+
+body.ai-page * {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+#appRoot.eva-ai-app-root {
+  width: 100%;
+  height: 100svh;
+  overflow: hidden;
+}
+
+.eva-ai-page-shell {
+  width: min(100%, var(--ai-max));
+  height: 100svh;
+  margin: 0 auto;
+  padding: calc(var(--ai-top) + env(safe-area-inset-top, 0px)) var(--ai-pad) calc(var(--ai-bottom) + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: radial-gradient(circle at 50% -20%, rgba(59, 130, 246, .1), transparent 42%);
+}
+
+.eva-ai-chat-header {
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px) + 8px);
+  z-index: 20;
+  flex: 0 0 auto;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 24px;
+  color: var(--ai-text);
+  background: var(--ai-surface);
+  border: 1px solid var(--ai-border);
+  box-shadow: 0 12px 26px rgba(15, 23, 42, .08);
+  backdrop-filter: blur(14px) saturate(135%);
+  -webkit-backdrop-filter: blur(14px) saturate(135%);
+}
+
+.eva-ai-title-block {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.eva-ai-icon-wrap {
+  position: relative;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+}
+
+.eva-ai-app-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 15px;
+  object-fit: cover;
+}
+
+.eva-ai-intel-star {
+  position: absolute;
+  right: -7px;
+  bottom: -5px;
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 2px 7px rgba(2, 6, 23, .42);
+}
+
+.eva-ai-intel-star.two {
+  right: 4px;
+  bottom: -12px;
+  font-size: .72rem;
+}
+
+.eva-ai-title-block p {
+  margin: 0 0 2px;
+  font-size: .62rem;
+  font-weight: 900;
+  letter-spacing: .15em;
+  color: var(--ai-muted);
+  text-transform: uppercase;
+}
+
+.eva-ai-title-block h1 {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.05;
+  letter-spacing: -.04em;
+  color: var(--ai-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.eva-ai-new-chat {
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--ai-border);
+  background: var(--ai-surface);
+  color: var(--ai-text);
+  font-weight: 850;
+}
+
+.eva-ai-thread {
+  flex: 1 1 auto;
+  min-height: 34svh;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 2px 0 8px;
+}
+
+.eva-ai-message-card {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 10px;
+  align-items: end;
+  animation: aiMessageIn .16s ease both;
+}
+
+.eva-ai-message-card.user {
+  grid-template-columns: minmax(0, 1fr) 38px;
+}
+
+.eva-ai-message-card.user .eva-ai-avatar {
+  order: 2;
+}
+
+.eva-ai-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: .66rem;
+  font-weight: 950;
+  color: var(--ai-text);
+  background: var(--ai-surface);
+  border: 1px solid var(--ai-border);
+}
+
+.eva-ai-bubble {
+  width: fit-content;
+  max-width: 100%;
+  padding: 15px 17px;
+  border-radius: 23px;
+  color: var(--ai-text);
+  background: var(--ai-card);
+  border: 1px solid var(--ai-border);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, .07);
+}
+
+.eva-ai-message-card.user .eva-ai-bubble {
+  justify-self: end;
+  color: #fff;
+  background: linear-gradient(145deg, #3b82f6, #2563eb);
+  border-color: rgba(37, 99, 235, .32);
+}
+
+.eva-ai-bubble p {
+  margin: 0;
+  line-height: 1.55;
+  font-size: 1rem;
+  font-weight: 620;
+  overflow-wrap: anywhere;
+}
+
+.eva-ai-attachment-bubble {
+  width: min(100%, 360px);
+  display: grid;
+  gap: 12px;
+}
+
+.eva-ai-attachment-bubble p {
+  font-size: .9rem;
+  font-weight: 850;
+  opacity: .92;
+}
+
+.eva-ai-attachment-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.eva-ai-attachment-card {
+  margin: 0;
+  overflow: hidden;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .16);
+  border: 1px solid rgba(255, 255, 255, .18);
+}
+
+.eva-ai-attachment-card img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: block;
+  object-fit: cover;
+}
+
+.eva-ai-attachment-card figcaption {
+  padding: 8px 10px;
+  color: currentColor;
+  font-size: .72rem;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: .86;
+}
+
+.eva-ai-quick-row {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.eva-ai-quick-row::-webkit-scrollbar {
+  display: none;
+}
+
+.eva-ai-quick-row button {
+  flex: 0 0 auto;
+  height: 46px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--ai-border);
+  background: var(--ai-surface);
+  color: var(--ai-text);
+  font-size: .96rem;
+  font-weight: 760;
+  white-space: nowrap;
+}
+
+.eva-ai-composer {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.eva-ai-plus {
+  width: 50px;
+  height: 50px;
+  border-radius: 999px;
+  border: 1px solid var(--ai-border);
+  display: grid;
+  place-items: center;
+  background: var(--ai-surface);
+  color: var(--ai-text);
+  font-size: 1.35rem;
+  font-weight: 950;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, .08);
+}
+
+.eva-ai-input-shell {
+  min-height: 64px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 50px;
+  align-items: end;
+  gap: 8px;
+  padding: 8px 8px 8px 14px;
+  border-radius: 28px;
+  background: var(--ai-surface);
+  border: 1px solid var(--ai-border);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .1);
+  backdrop-filter: blur(12px) saturate(130%);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
+}
+
+.eva-ai-input-shell textarea {
+  width: 100%;
+  min-height: 44px;
+  max-height: 128px;
+  padding: 12px 0;
+  resize: none;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ai-text);
+  font: inherit;
+  font-weight: 670;
+  line-height: 1.35;
+  overflow-y: auto;
+}
+
+.eva-ai-input-shell textarea::placeholder {
+  color: var(--ai-muted);
+}
+
+.eva-ai-submit {
+  width: 50px;
+  height: 50px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, .08);
+  display: grid;
+  place-items: center;
+  background: #111827;
+  color: #fff;
+  font-size: 1.16rem;
+  font-weight: 950;
+}
+
+html[data-theme="dark"] .eva-ai-submit,
+body[data-theme="dark"] .eva-ai-submit,
+html.dark .eva-ai-submit,
+body.dark .eva-ai-submit {
+  background: #60a5fa;
+  color: #fff;
+}
+
+html[data-theme="dark"] .eva-ai-attachment-card,
+body[data-theme="dark"] .eva-ai-attachment-card,
+html.dark .eva-ai-attachment-card,
+body.dark .eva-ai-attachment-card {
+  background: rgba(255, 255, 255, .08);
+  border-color: rgba(255, 255, 255, .16);
+}
+
+@keyframes aiMessageIn {
+  from { opacity: 0; transform: translateY(5px) scale(.995); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 520px) {
+  :root {
+    --ai-pad: 12px;
+    --ai-top: 34px;
+    --ai-bottom: calc(var(--eva-page-nav-clearance, 98px) + 14px);
+  }
+
+  .eva-ai-page-shell {
+    gap: 12px;
+  }
+
+  .eva-ai-chat-header {
+    min-height: 60px;
+    padding: 8px 10px;
+    border-radius: 23px;
+    backdrop-filter: blur(10px) saturate(125%);
+    -webkit-backdrop-filter: blur(10px) saturate(125%);
+  }
+
+  .eva-ai-icon-wrap,
+  .eva-ai-app-icon {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  .eva-ai-title-block h1 {
+    max-width: 158px;
+    font-size: .98rem;
+  }
+
+  .eva-ai-thread {
+    min-height: 32svh;
+    gap: 12px;
+  }
+
+  .eva-ai-quick-row button {
+    height: 44px;
+    padding: 0 15px;
+  }
+
+  .eva-ai-composer {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .eva-ai-plus,
+  .eva-ai-submit {
+    width: 48px;
+    height: 48px;
+  }
+
+  .eva-ai-input-shell {
+    min-height: 62px;
+    grid-template-columns: minmax(0, 1fr) 48px;
+    border-radius: 27px;
+  }
+
+  .eva-ai-attachment-bubble {
+    width: min(100%, 300px);
+  }
+}
+
+@media (max-width: 390px) {
+  :root {
+    --ai-top: 30px;
+    --ai-bottom: calc(var(--eva-page-nav-clearance, 92px) + 12px);
+  }
+
+  .eva-ai-title-block h1 {
+    max-width: 132px;
+    font-size: .94rem;
+  }
+
+  .eva-ai-bubble p {
+    font-size: .96rem;
+  }
+
+  .eva-ai-attachment-bubble {
+    width: min(100%, 260px);
+  }
+}
+
+body.ai-keyboard-active .eva-ai-quick-row {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eva-ai-message-card {
+    animation: none;
+  }
+}
