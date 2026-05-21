@@ -7,7 +7,6 @@ const fs = require("fs");
 const path = require("path");
 
 const ROOT = path.resolve(__dirname, "..");
-const PUBLIC_ROOT = path.join(ROOT, "public");
 const REPORT_DIR = path.join(ROOT, "tools", "reports");
 const FIX_MODE = process.argv.includes("--fix");
 
@@ -39,6 +38,10 @@ function write(relative, content) {
   fs.writeFileSync(path.join(ROOT, relative), content, "utf8");
 }
 
+function exists(relative) {
+  return fs.existsSync(path.join(ROOT, relative));
+}
+
 function repairHtml(relative, content) {
   let next = content;
 
@@ -67,23 +70,76 @@ function checkHtml(relative, content) {
 
 function detectDuplicatePages(files) {
   const duplicateGroups = [];
-  const rootHtml = files.filter((f) => f.endsWith('.html') && !f.startsWith('public/'));
+  const rootHtml = files.filter((f) => f.endsWith(".html") && !f.startsWith("public/") && !f.startsWith("tools/"));
 
   for (const file of rootHtml) {
     const basename = path.basename(file);
     const publicVersion = `public/${basename}`;
 
     if (files.includes(publicVersion)) {
-      duplicateGroups.push({ root: file, deployed: publicVersion });
+      duplicateGroups.push({ root: file, deployed: publicVersion, recommendation: "review-root-copy-for-removal" });
     }
   }
 
   return duplicateGroups;
 }
 
+function extractQuotedPages(content = "") {
+  const pages = new Set();
+  const patterns = [
+    /page:\s*["']([^"']+\.html)["']/g,
+    /route:\s*["']\/?([^"']+\.html)["']/g,
+    /href=["']\/?([^"'#?]+\.html)/g
+  ];
+
+  for (const pattern of patterns) {
+    let match;
+    while ((match = pattern.exec(content))) pages.add(match[1].replace(/^\//, ""));
+  }
+
+  return [...pages].sort();
+}
+
+function collectRouteReferences() {
+  const sources = [
+    "public/assets/js/nav/nav-config.js",
+    "public/assets/js/navigation/app-registry.js"
+  ].filter(exists);
+
+  const bySource = {};
+  const all = new Set();
+
+  for (const source of sources) {
+    const pages = extractQuotedPages(read(source));
+    bySource[source] = pages;
+    pages.forEach((page) => all.add(page));
+  }
+
+  return { bySource, allRoutes: [...all].sort() };
+}
+
+function classifyHtmlPages(files, routeReferences) {
+  const active = new Set(routeReferences.allRoutes.map((page) => `public/${page}`));
+  const publicHtml = files.filter((f) => f.startsWith("public/") && f.endsWith(".html"));
+  const rootHtml = files.filter((f) => f.endsWith(".html") && !f.startsWith("public/") && !f.startsWith("tools/"));
+
+  const missingReferencedRoutes = routeReferences.allRoutes
+    .map((page) => `public/${page}`)
+    .filter((file) => !files.includes(file));
+
+  const unreferencedPublicHtml = publicHtml
+    .filter((file) => !active.has(file))
+    .map((file) => ({ file, recommendation: "review-before-removal-or-add-to-nav-registry" }));
+
+  const rootOnlyHtml = rootHtml
+    .filter((file) => !files.includes(`public/${path.basename(file)}`))
+    .map((file) => ({ file, recommendation: "legacy-or-tooling-review" }));
+
+  return { missingReferencedRoutes, unreferencedPublicHtml, rootOnlyHtml };
+}
+
 function main() {
   const files = walk(ROOT);
-
   const htmlFiles = files.filter((file) => file.endsWith(".html") && file.startsWith("public/"));
 
   if (FIX_MODE) {
@@ -95,13 +151,14 @@ function main() {
   }
 
   const duplicatePages = detectDuplicatePages(files);
+  const routeReferences = collectRouteReferences();
+  const cleanupClassification = classifyHtmlPages(files, routeReferences);
 
   const results = [];
 
   for (const file of htmlFiles) {
     const content = read(file);
     const checks = checkHtml(file, content);
-
     results.push({ file, checks });
   }
 
@@ -121,26 +178,68 @@ function main() {
   const report = {
     generatedAt: new Date().toISOString(),
     mode: FIX_MODE ? "fix" : "audit",
+    routeReferences,
     duplicatePages,
+    cleanupClassification,
     repairedFiles: HTML_REPAIR_FILES,
     files: filesSummary
   };
 
   fs.mkdirSync(REPORT_DIR, { recursive: true });
 
-  fs.writeFileSync(
-    path.join(REPORT_DIR, "repo-audit-report.json"),
-    JSON.stringify(report, null, 2),
-    "utf8"
-  );
+  fs.writeFileSync(path.join(REPORT_DIR, "repo-audit-report.json"), JSON.stringify(report, null, 2), "utf8");
+
+  const markdown = [
+    "# Evaraos Repo Audit Report",
+    "",
+    `Generated: ${report.generatedAt}`,
+    `Mode: ${report.mode}`,
+    "",
+    "## Missing referenced routes",
+    "",
+    ...(cleanupClassification.missingReferencedRoutes.length
+      ? cleanupClassification.missingReferencedRoutes.map((file) => `- [ ] ${file}`)
+      : ["- None"]),
+    "",
+    "## Duplicate root/public pages",
+    "",
+    ...(duplicatePages.length
+      ? duplicatePages.map((pair) => `- [ ] ${pair.root} duplicates ${pair.deployed}`)
+      : ["- None"]),
+    "",
+    "## Unreferenced public HTML pages",
+    "",
+    ...(cleanupClassification.unreferencedPublicHtml.length
+      ? cleanupClassification.unreferencedPublicHtml.map((item) => `- [ ] ${item.file}`)
+      : ["- None"]),
+    "",
+    "## Root-only HTML pages",
+    "",
+    ...(cleanupClassification.rootOnlyHtml.length
+      ? cleanupClassification.rootOnlyHtml.map((item) => `- [ ] ${item.file}`)
+      : ["- None"]),
+    "",
+    "## Page checks",
+    "",
+    ...filesSummary.flatMap((item) => [
+      `### ${item.file}`,
+      "",
+      `Score: ${item.score}`,
+      "",
+      ...(item.issues.length ? item.issues.map((issue) => `- [ ] ${issue}`) : ["- All checks passed"]),
+      ""
+    ])
+  ];
+
+  fs.writeFileSync(path.join(REPORT_DIR, "repo-audit-report.md"), markdown.join("\n"), "utf8");
 
   console.log("\nEvaraos Repo Audit Complete");
   console.log(`Mode: ${report.mode}`);
+  console.log(`Referenced routes: ${routeReferences.allRoutes.length}`);
+  console.log(`Missing referenced routes: ${cleanupClassification.missingReferencedRoutes.length}`);
   console.log(`Duplicate page groups: ${duplicatePages.length}`);
-
-  duplicatePages.forEach((pair) => {
-    console.log(`DUPLICATE: ${pair.root} -> ${pair.deployed}`);
-  });
+  console.log(`Unreferenced public HTML pages: ${cleanupClassification.unreferencedPublicHtml.length}`);
+  console.log(`Root-only HTML pages: ${cleanupClassification.rootOnlyHtml.length}`);
 }
 
 main();
