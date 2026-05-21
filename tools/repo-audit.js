@@ -46,7 +46,6 @@ function exists(relative) {
 
 function repairHtml(relative, content) {
   let next = content;
-
   next = next.replace(/overflow-x:\s*hidden;/gi, "overflow-x: clip;");
 
   if (!/id="universalNavRoot"/.test(next) && /<body/i.test(next)) {
@@ -66,6 +65,22 @@ function checkHtml(relative, content) {
   checks.push({ label: "loader awareness", pass: /loader.js|EvaraLoader/.test(content) });
   checks.push({ label: "overflow-x protection", pass: /overflow-x:\s*(hidden|clip)/i.test(content) });
   checks.push({ label: "safe viewport usage", pass: /svh|dvh|min-height:\s*100vh/i.test(content) });
+  checks.push({ label: "design-system CSS linked", pass: /assets\/css\/(theme|base|dashboard|mobile-polish|components\/glass|components\/liquid-glass)/.test(content) });
+  checks.push({ label: "mobile responsiveness signal", pass: /@media|mobile-polish|viewport|safe-area-inset|svh|dvh/i.test(content) });
+  checks.push({ label: "glass/card UI signal", pass: /glass|card|panel|backdrop-filter|box-shadow|border-radius/i.test(content) });
+
+  return checks;
+}
+
+function checkCss(relative, content) {
+  const checks = [];
+
+  checks.push({ label: "uses spacing or layout scale", pass: /gap:|padding:|margin:|--space|--page|--layout/i.test(content) });
+  checks.push({ label: "uses radius/card polish", pass: /border-radius|--radius|card|panel/i.test(content) });
+  checks.push({ label: "uses shadow or elevation", pass: /box-shadow|--shadow|elevation/i.test(content) });
+  checks.push({ label: "has mobile media coverage", pass: /@media\s*\([^)]*max-width|@media\s*\([^)]*width\s*<=/i.test(content) });
+  checks.push({ label: "prevents horizontal overflow", pass: /overflow-x:\s*(hidden|clip)|max-width:\s*100%/i.test(content) });
+  checks.push({ label: "supports theme variables", pass: /data-theme|\.dark|--text|--surface|--bg|color-scheme/i.test(content) });
 
   return checks;
 }
@@ -123,19 +138,11 @@ function compareNavAndRegistry(routeReferences, files) {
 
   const navOnly = [...navRoutes]
     .filter((route) => !registryRoutes.has(route))
-    .map((route) => ({
-      route,
-      exists: files.includes(`public/${route}`),
-      recommendation: "add-to-app-registry-or-mark-nav-only"
-    }));
+    .map((route) => ({ route, exists: files.includes(`public/${route}`), recommendation: "add-to-app-registry-or-mark-nav-only" }));
 
   const registryOnly = [...registryRoutes]
     .filter((route) => !navRoutes.has(route))
-    .map((route) => ({
-      route,
-      exists: files.includes(`public/${route}`),
-      recommendation: "add-to-nav-or-mark-command-search-only"
-    }));
+    .map((route) => ({ route, exists: files.includes(`public/${route}`), recommendation: "add-to-nav-or-mark-command-search-only" }));
 
   const shared = [...navRoutes].filter((route) => registryRoutes.has(route)).sort();
 
@@ -170,9 +177,17 @@ function classifyHtmlPages(files, routeReferences) {
   return { missingReferencedRoutes, unreferencedPublicHtml, rootOnlyHtml };
 }
 
+function summarizeChecks(file, checks) {
+  const passed = checks.filter((check) => check.pass).length;
+  const total = checks.length;
+  const issues = checks.filter((check) => !check.pass).map((check) => check.label);
+  return { file, score: `${passed}/${total}`, status: total && passed === total ? "pass" : "review", issues };
+}
+
 function main() {
   const files = walk(ROOT);
   const htmlFiles = files.filter((file) => file.endsWith(".html") && file.startsWith("public/"));
+  const cssFiles = files.filter((file) => file.endsWith(".css") && file.startsWith("public/assets/css/"));
 
   if (FIX_MODE) {
     for (const file of htmlFiles) {
@@ -187,26 +202,20 @@ function main() {
   const navRegistryComparison = compareNavAndRegistry(routeReferences, files);
   const cleanupClassification = classifyHtmlPages(files, routeReferences);
 
-  const results = [];
+  const pageChecks = htmlFiles.map((file) => summarizeChecks(file, checkHtml(file, read(file))));
+  const cssChecks = cssFiles.map((file) => summarizeChecks(file, checkCss(file, read(file))));
 
-  for (const file of htmlFiles) {
-    const content = read(file);
-    const checks = checkHtml(file, content);
-    results.push({ file, checks });
-  }
-
-  const filesSummary = results.map((result) => {
-    const passed = result.checks.filter((check) => check.pass).length;
-    const total = result.checks.length;
-    const issues = result.checks.filter((check) => !check.pass).map((check) => check.label);
-
-    return {
-      file: result.file,
-      score: `${passed}/${total}`,
-      status: total && passed === total ? "pass" : "review",
-      issues
-    };
-  });
+  const uiConsistency = {
+    cssFileCount: cssFiles.length,
+    cssReviewCount: cssChecks.filter((item) => item.status === "review").length,
+    pageReviewCount: pageChecks.filter((item) => item.status === "review").length,
+    priority: [
+      "Standardize page shell spacing and bottom nav safe-area padding.",
+      "Use shared glass/card component classes instead of one-off page styles.",
+      "Keep mobile behavior in mobile-polish.css or page-specific CSS, not scattered inline.",
+      "Prefer theme tokens for surfaces, text, borders, shadows, and radii."
+    ]
+  };
 
   const report = {
     generatedAt: new Date().toISOString(),
@@ -215,8 +224,10 @@ function main() {
     navRegistryComparison,
     duplicatePages,
     cleanupClassification,
+    uiConsistency,
     repairedFiles: HTML_REPAIR_FILES,
-    files: filesSummary
+    files: pageChecks,
+    css: cssChecks
   };
 
   fs.mkdirSync(REPORT_DIR, { recursive: true });
@@ -228,6 +239,16 @@ function main() {
     `Generated: ${report.generatedAt}`,
     `Mode: ${report.mode}`,
     "",
+    "## UI Consistency",
+    "",
+    `CSS files scanned: ${uiConsistency.cssFileCount}`,
+    `CSS files needing review: ${uiConsistency.cssReviewCount}`,
+    `Public pages needing review: ${uiConsistency.pageReviewCount}`,
+    "",
+    "### UI priorities",
+    "",
+    ...uiConsistency.priority.map((item) => `- ${item}`),
+    "",
     "## Navigation vs App Registry",
     "",
     `Nav routes: ${navRegistryComparison.navRouteCount}`,
@@ -238,50 +259,35 @@ function main() {
     "",
     "### Nav-only routes",
     "",
-    ...(navRegistryComparison.navOnly.length
-      ? navRegistryComparison.navOnly.map((item) => `- [ ] ${item.route} — exists: ${item.exists}`)
-      : ["- None"]),
+    ...(navRegistryComparison.navOnly.length ? navRegistryComparison.navOnly.map((item) => `- [ ] ${item.route} — exists: ${item.exists}`) : ["- None"]),
     "",
     "### Registry-only routes",
     "",
-    ...(navRegistryComparison.registryOnly.length
-      ? navRegistryComparison.registryOnly.map((item) => `- [ ] ${item.route} — exists: ${item.exists}`)
-      : ["- None"]),
+    ...(navRegistryComparison.registryOnly.length ? navRegistryComparison.registryOnly.map((item) => `- [ ] ${item.route} — exists: ${item.exists}`) : ["- None"]),
     "",
     "## Missing referenced routes",
     "",
-    ...(cleanupClassification.missingReferencedRoutes.length
-      ? cleanupClassification.missingReferencedRoutes.map((file) => `- [ ] ${file}`)
-      : ["- None"]),
+    ...(cleanupClassification.missingReferencedRoutes.length ? cleanupClassification.missingReferencedRoutes.map((file) => `- [ ] ${file}`) : ["- None"]),
     "",
     "## Duplicate root/public pages",
     "",
-    ...(duplicatePages.length
-      ? duplicatePages.map((pair) => `- [ ] ${pair.root} duplicates ${pair.deployed}`)
-      : ["- None"]),
+    ...(duplicatePages.length ? duplicatePages.map((pair) => `- [ ] ${pair.root} duplicates ${pair.deployed}`) : ["- None"]),
     "",
     "## Unreferenced public HTML pages",
     "",
-    ...(cleanupClassification.unreferencedPublicHtml.length
-      ? cleanupClassification.unreferencedPublicHtml.map((item) => `- [ ] ${item.file}`)
+    ...(cleanupClassification.unreferencedPublicHtml.length ? cleanupClassification.unreferencedPublicHtml.map((item) => `- [ ] ${item.file}`) : ["- None"]),
+    "",
+    "## CSS checks needing review",
+    "",
+    ...(cssChecks.filter((item) => item.status === "review").length
+      ? cssChecks.filter((item) => item.status === "review").map((item) => `- [ ] ${item.file} — ${item.issues.join(", ")}`)
       : ["- None"]),
     "",
-    "## Root-only HTML pages",
+    "## Page checks needing review",
     "",
-    ...(cleanupClassification.rootOnlyHtml.length
-      ? cleanupClassification.rootOnlyHtml.map((item) => `- [ ] ${item.file}`)
-      : ["- None"]),
-    "",
-    "## Page checks",
-    "",
-    ...filesSummary.flatMap((item) => [
-      `### ${item.file}`,
-      "",
-      `Score: ${item.score}`,
-      "",
-      ...(item.issues.length ? item.issues.map((issue) => `- [ ] ${issue}`) : ["- All checks passed"]),
-      ""
-    ])
+    ...(pageChecks.filter((item) => item.status === "review").length
+      ? pageChecks.filter((item) => item.status === "review").map((item) => `- [ ] ${item.file} — ${item.issues.join(", ")}`)
+      : ["- None"])
   ];
 
   fs.writeFileSync(path.join(REPORT_DIR, "repo-audit-report.md"), markdown.join("\n"), "utf8");
@@ -294,7 +300,8 @@ function main() {
   console.log(`Missing referenced routes: ${cleanupClassification.missingReferencedRoutes.length}`);
   console.log(`Duplicate page groups: ${duplicatePages.length}`);
   console.log(`Unreferenced public HTML pages: ${cleanupClassification.unreferencedPublicHtml.length}`);
-  console.log(`Root-only HTML pages: ${cleanupClassification.rootOnlyHtml.length}`);
+  console.log(`CSS files needing review: ${uiConsistency.cssReviewCount}`);
+  console.log(`Public pages needing review: ${uiConsistency.pageReviewCount}`);
 }
 
 main();
