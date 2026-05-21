@@ -1,17 +1,13 @@
 /**
  * Evaraos Repo Audit + Repair Script
- *
- * Audit only:
- *   node tools/repo-audit.js
- *
- * Apply safe light-first HTML repairs:
- *   node tools/repo-audit.js --fix
+ * Modernized for Firebase public/ deployment structure.
  */
 
 const fs = require("fs");
 const path = require("path");
 
 const ROOT = path.resolve(__dirname, "..");
+const PUBLIC_ROOT = path.join(ROOT, "public");
 const REPORT_DIR = path.join(ROOT, "tools", "reports");
 const FIX_MODE = process.argv.includes("--fix");
 
@@ -46,121 +42,49 @@ function write(relative, content) {
 function repairHtml(relative, content) {
   let next = content;
 
-  next = next.replace(/<html([^>]*?)data-theme="dark"([^>]*?)>/i, "<html$1data-theme=\"light\"$2>");
-  next = next.replace(/var\s+theme\s*=\s*"dark";/g, "var theme = \"light\";");
-  next = next.replace(/setAttribute\("data-theme",\s*"dark"\)/g, "setAttribute(\"data-theme\", \"light\")");
-  next = next.replace(/background:\s*#060814;/gi, "background: #f4f7f6;");
-  next = next.replace(/<meta\s+name="theme-color"\s+content="#050311"\s*\/>/gi, '<meta name="theme-color" content="#f4f7f6" />');
-  next = next.replace(/<meta\s+name="msapplication-TileColor"\s+content="#050311"\s*\/>/gi, '<meta name="msapplication-TileColor" content="#f4f7f6" />');
+  next = next.replace(/overflow-x:\s*hidden;/gi, "overflow-x: clip;");
 
-  if (next !== content) {
-    HTML_REPAIR_FILES.push(relative);
+  if (!/id="universalNavRoot"/.test(next) && /<body/i.test(next)) {
+    next = next.replace(/<body([^>]*)>/i, '<body$1>\n<div id="universalNavRoot"></div>');
   }
 
+  if (next !== content) HTML_REPAIR_FILES.push(relative);
   return next;
 }
 
 function checkHtml(relative, content) {
   const checks = [];
 
-  checks.push({
-    label: "DOCTYPE present",
-    pass: /<!DOCTYPE html>/i.test(content)
-  });
-
-  checks.push({
-    label: "light-first html theme",
-    pass: !/<html[^>]*data-theme="dark"/i.test(content)
-  });
-
-  checks.push({
-    label: "light-first boot variable",
-    pass: !/var\s+theme\s*=\s*"dark";/.test(content)
-  });
-
-  checks.push({
-    label: "light fallback theme",
-    pass: !/setAttribute\("data-theme",\s*"dark"\)/.test(content)
-  });
-
-  checks.push({
-    label: "light first-paint background",
-    pass: !/background:\s*#060814;/i.test(content)
-  });
-
-  checks.push({
-    label: "light browser theme meta",
-    pass: !/<meta\s+name="theme-color"\s+content="#050311"/i.test(content)
-  });
-
-  checks.push({
-    label: "light tile color meta",
-    pass: !/<meta\s+name="msapplication-TileColor"\s+content="#050311"/i.test(content)
-  });
-
-  checks.push({
-    label: "universal nav mount present",
-    pass: /id="universalNavRoot"|id="universalNav"/.test(content)
-  });
-
-  checks.push({
-    label: "repo absolute asset paths",
-    pass: !/(href|src)="\.\//.test(content)
-  });
+  checks.push({ label: "DOCTYPE present", pass: /<!DOCTYPE html>/i.test(content) });
+  checks.push({ label: "universal nav mount present", pass: /id="universalNavRoot"/.test(content) });
+  checks.push({ label: "route guard awareness", pass: /data-route-guard|routeGuard|auth-pending/.test(content) });
+  checks.push({ label: "loader awareness", pass: /loader.js|EvaraLoader/.test(content) });
+  checks.push({ label: "overflow-x protection", pass: /overflow-x:\s*(hidden|clip)/i.test(content) });
+  checks.push({ label: "safe viewport usage", pass: /svh|dvh|min-height:\s*100vh/i.test(content) });
 
   return checks;
 }
 
-function checkTextFile(relative, content, checks) {
-  if (relative === "assets/js/nav/nav-main.js") {
-    checks.push({
-      label: "logo home override bound",
-      pass: /bindAlwaysHomeLogo/.test(content)
-    });
+function detectDuplicatePages(files) {
+  const duplicateGroups = [];
+  const rootHtml = files.filter((f) => f.endsWith('.html') && !f.startsWith('public/'));
+
+  for (const file of rootHtml) {
+    const basename = path.basename(file);
+    const publicVersion = `public/${basename}`;
+
+    if (files.includes(publicVersion)) {
+      duplicateGroups.push({ root: file, deployed: publicVersion });
+    }
   }
 
-  if (relative === "assets/js/theme-css-loader.js") {
-    checks.push({
-      label: "theme hydration marker present",
-      pass: /data-evara-theme-ready/.test(content)
-    });
-
-    checks.push({
-      label: "theme css loader light fallback",
-      pass: /return document\.documentElement\.getAttribute\("data-theme"\) \|\| "light";/.test(content)
-    });
-  }
-
-  if (relative === "assets/css/theme.css") {
-    checks.push({
-      label: "first-paint light guard imported",
-      pass: /first-paint-light\.css/.test(content)
-    });
-  }
-
-  if (relative === "manifest.json") {
-    checks.push({
-      label: "manifest light background",
-      pass: /"background_color"\s*:\s*"#f4f7f6"/.test(content)
-    });
-
-    checks.push({
-      label: "manifest light theme color",
-      pass: /"theme_color"\s*:\s*"#f4f7f6"/.test(content)
-    });
-  }
+  return duplicateGroups;
 }
 
 function main() {
   const files = walk(ROOT);
-  const htmlFiles = files.filter((file) => file.endsWith(".html") && !file.startsWith("tools/"));
-  const coreFiles = [
-    "assets/js/nav/nav-main.js",
-    "assets/js/theme-css-loader.js",
-    "assets/css/theme.css",
-    "assets/css/themes/first-paint-light.css",
-    "manifest.json"
-  ].filter((file) => fs.existsSync(path.join(ROOT, file)));
+
+  const htmlFiles = files.filter((file) => file.endsWith(".html") && file.startsWith("public/"));
 
   if (FIX_MODE) {
     for (const file of htmlFiles) {
@@ -170,18 +94,14 @@ function main() {
     }
   }
 
+  const duplicatePages = detectDuplicatePages(files);
+
   const results = [];
 
   for (const file of htmlFiles) {
     const content = read(file);
     const checks = checkHtml(file, content);
-    results.push({ file, checks });
-  }
 
-  for (const file of coreFiles) {
-    const content = read(file);
-    const checks = [];
-    checkTextFile(file, content, checks);
     results.push({ file, checks });
   }
 
@@ -193,76 +113,34 @@ function main() {
     return {
       file: result.file,
       score: `${passed}/${total}`,
-      passed,
-      total,
       status: total && passed === total ? "pass" : "review",
       issues
     };
   });
 
-  const totals = filesSummary.reduce(
-    (acc, item) => {
-      acc.passed += item.passed;
-      acc.total += item.total;
-      return acc;
-    },
-    { passed: 0, total: 0 }
-  );
-
   const report = {
     generatedAt: new Date().toISOString(),
     mode: FIX_MODE ? "fix" : "audit",
-    totals,
+    duplicatePages,
     repairedFiles: HTML_REPAIR_FILES,
     files: filesSummary
   };
 
   fs.mkdirSync(REPORT_DIR, { recursive: true });
-  fs.writeFileSync(path.join(REPORT_DIR, "repo-audit-report.json"), JSON.stringify(report, null, 2), "utf8");
 
-  const markdown = [
-    "# Evaraos Repo Audit Report",
-    "",
-    `Generated: ${report.generatedAt}`,
-    `Mode: ${report.mode}`,
-    `Overall Score: ${totals.passed}/${totals.total}`,
-    "",
-    FIX_MODE ? `Repaired Files: ${HTML_REPAIR_FILES.length}` : "Repaired Files: 0",
-    "",
-    ...filesSummary.flatMap((item) => [
-      `## ${item.file}`,
-      "",
-      `Score: ${item.score}`,
-      "",
-      ...(item.issues.length ? item.issues.map((issue) => `- [ ] ${issue}`) : ["- All checks passed"]),
-      ""
-    ])
-  ];
+  fs.writeFileSync(
+    path.join(REPORT_DIR, "repo-audit-report.json"),
+    JSON.stringify(report, null, 2),
+    "utf8"
+  );
 
-  fs.writeFileSync(path.join(REPORT_DIR, "repo-audit-report.md"), markdown.join("\n"), "utf8");
-
-  console.log("\nEvaraos Repo Audit");
+  console.log("\nEvaraos Repo Audit Complete");
   console.log(`Mode: ${report.mode}`);
-  console.log(`Overall Score: ${totals.passed}/${totals.total}`);
+  console.log(`Duplicate page groups: ${duplicatePages.length}`);
 
-  if (FIX_MODE) {
-    console.log(`Repaired HTML files: ${HTML_REPAIR_FILES.length}`);
-    HTML_REPAIR_FILES.forEach((file) => console.log(`  - ${file}`));
-  }
-
-  const failing = filesSummary.filter((item) => item.issues.length);
-  if (failing.length) {
-    console.log("\nNeeds Review:");
-    failing.forEach((item) => {
-      console.log(`- ${item.file}: ${item.issues.join(", ")}`);
-    });
-  } else {
-    console.log("\nAll checks passed.");
-  }
-
-  console.log("\nReports written:");
-  console.log("- tools/reports/repo-audit-report.json");
-  console.log("- tools/reports/repo-audit-report.md\n");
+  duplicatePages.forEach((pair) => {
+    console.log(`DUPLICATE: ${pair.root} -> ${pair.deployed}`);
+  });
 }
 
 main();
