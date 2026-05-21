@@ -3,6 +3,11 @@
   --radius-panel: 34px;
   --radius-pill: 999px;
   --page-max: 1240px;
+  --eva-page-gutter: clamp(14px, 2.2vw, 24px);
+  --eva-page-top-space: 104px;
+  --eva-mobile-page-top-space: 82px;
+  --eva-page-bottom-space: calc(40px + env(safe-area-inset-bottom, 0px));
+  --eva-shell-gap: clamp(16px, 2vw, 24px);
 
   --text-dark: #f5f7ff;
   --muted-dark: rgba(232, 237, 247, 0.76);
@@ -28,11 +33,12 @@ html {
   min-height: 100%;
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
+  overflow-x: clip;
 }
 
 body {
   margin: 0;
-  min-height: 100vh;
+  min-height: 100svh;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
   color: var(--text-dark);
   background:
@@ -40,7 +46,7 @@ body {
     radial-gradient(circle at 84% 14%, rgba(163,195,255,0.08), transparent 22%),
     linear-gradient(180deg, #040812 0%, #091120 100%);
   background-attachment: fixed;
-  overflow-x: hidden;
+  overflow-x: clip;
   position: relative;
 }
 
@@ -55,6 +61,56 @@ html[data-theme="light"] body {
 img { display: block; max-width: 100%; }
 a { color: inherit; }
 button, input, textarea, select { font: inherit; }
+
+#appRoot {
+  width: 100%;
+  min-height: 100svh;
+  overflow-x: clip;
+}
+
+body:not(.home-page):not(.ai-page) #appRoot > main,
+body:not(.home-page):not(.ai-page) main.app-shell,
+body:not(.home-page):not(.ai-page) main.dashboard-shell,
+body:not(.home-page):not(.ai-page) main.page-shell,
+body:not(.home-page):not(.ai-page) .eva-page-shell,
+body:not(.home-page):not(.ai-page) .dashboard-shell,
+body:not(.home-page):not(.ai-page) .app-shell,
+body:not(.home-page):not(.ai-page) .page-shell {
+  width: min(var(--page-max), calc(100% - (var(--eva-page-gutter) * 2)));
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-top: calc(var(--eva-page-top-space) + env(safe-area-inset-top, 0px));
+  padding-bottom: var(--eva-page-bottom-space);
+  display: grid;
+  gap: var(--eva-shell-gap);
+  overflow-x: clip;
+}
+
+body:not(.home-page):not(.ai-page) .hero,
+body:not(.home-page):not(.ai-page) .page-hero,
+body:not(.home-page):not(.ai-page) .dashboard-hero,
+body:not(.home-page):not(.ai-page) .section-panel,
+body:not(.home-page):not(.ai-page) .glass-card,
+body:not(.home-page):not(.ai-page) .panel,
+body:not(.home-page):not(.ai-page) .card {
+  max-width: 100%;
+}
+
+body:not(.home-page):not(.ai-page) .grid,
+body:not(.home-page):not(.ai-page) .cards-grid,
+body:not(.home-page):not(.ai-page) .features-grid,
+body:not(.home-page):not(.ai-page) .stats-grid,
+body:not(.home-page):not(.ai-page) .kpi-grid {
+  min-width: 0;
+}
+
+body:not(.home-page):not(.ai-page) .grid > *,
+body:not(.home-page):not(.ai-page) .cards-grid > *,
+body:not(.home-page):not(.ai-page) .features-grid > *,
+body:not(.home-page):not(.ai-page) .stats-grid > *,
+body:not(.home-page):not(.ai-page) .kpi-grid > * {
+  min-width: 0;
+}
 
 .page-aurora {
   position: fixed;
@@ -224,8 +280,41 @@ body.app-ready .eva-nav-shell { opacity: 1; transition: opacity 0.18s ease; }
 .site-footer-right a { text-decoration: none; font-weight: 700; }
 
 @media (max-width: 760px) {
+  :root {
+    --eva-page-gutter: 12px;
+    --eva-page-top-space: 82px;
+    --eva-mobile-page-top-space: 78px;
+    --eva-page-bottom-space: calc(32px + env(safe-area-inset-bottom, 0px));
+    --eva-shell-gap: 14px;
+  }
+
+  body:not(.home-page):not(.ai-page) #appRoot > main,
+  body:not(.home-page):not(.ai-page) main.app-shell,
+  body:not(.home-page):not(.ai-page) main.dashboard-shell,
+  body:not(.home-page):not(.ai-page) main.page-shell,
+  body:not(.home-page):not(.ai-page) .eva-page-shell,
+  body:not(.home-page):not(.ai-page) .dashboard-shell,
+  body:not(.home-page):not(.ai-page) .app-shell,
+  body:not(.home-page):not(.ai-page) .page-shell {
+    width: min(100%, calc(100% - (var(--eva-page-gutter) * 2)));
+    padding-top: calc(var(--eva-mobile-page-top-space) + env(safe-area-inset-top, 0px));
+    padding-bottom: var(--eva-page-bottom-space);
+    gap: var(--eva-shell-gap);
+  }
+
   .home-shell { padding: 74px 12px 24px; }
   .hero-title { font-size: clamp(2.8rem, 12vw, 4.6rem); }
   .hero-actions { gap: 10px; }
   .site-footer { padding: 0 12px; }
+}
+
+@media (max-width: 420px) {
+  :root { --eva-page-gutter: 10px; }
+
+  body:not(.home-page):not(.ai-page) .section-panel,
+  body:not(.home-page):not(.ai-page) .glass-card,
+  body:not(.home-page):not(.ai-page) .panel,
+  body:not(.home-page):not(.ai-page) .card {
+    border-radius: min(var(--radius-card), 24px);
+  }
 }
