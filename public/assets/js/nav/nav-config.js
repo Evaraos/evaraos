@@ -31,7 +31,7 @@ export const NAV_ROLE_GROUPS = {
 export const NAV_PAGES = {
   common: [
     { page: "index.html", label: "Home", icon: "home", bubble: "home", group: "Core", roles: ["guest", "customer", "staff", "leadership"] },
-    { page: "staff_application.html", label: "Apply as Staff", icon: "applications", bubble: "apply", group: "People", roles: ["guest", "customer", "leadership"] }
+    { page: "application.html", label: "Apply as Staff", icon: "applications", bubble: "apply", group: "People", roles: ["guest", "customer", "leadership"] }
   ],
 
   guestMain: [
