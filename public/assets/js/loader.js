@@ -1,8 +1,8 @@
 (function () {
   const LOADER_ID = "evaraGlobalLoader";
   const LOGO_SRC = "/assets/img/evaraos_logo.png";
-  const EXIT_DURATION = 260;
-  const FORCE_UNLOCK_DELAY = 4200;
+  const EXIT_DURATION = 180;
+  const FORCE_UNLOCK_DELAY = 1600;
   const SPLASH_KEY = "evaraos-first-open-splash-seen";
 
   let forceTimer = null;
@@ -168,19 +168,11 @@
     if (isTransitioning) return;
     isTransitioning = true;
     unlockApp();
-    showLoader({
-      theme: options.theme,
-      variant: "page"
-    });
+    showLoader({ theme: options.theme, variant: "page", forceMs: options.forceMs || 1200 });
   }
 
-  function completeNavigationLoad() {
-    hideLoader(false);
-  }
-
-  function markAppReady() {
-    hideLoader(false);
-  }
+  function completeNavigationLoad() { hideLoader(false); }
+  function markAppReady() { hideLoader(false); }
 
   function shouldInterceptLink(anchor) {
     if (!anchor) return false;
@@ -206,7 +198,7 @@
       if (anchor.hasAttribute("data-menu-link") || anchor.closest("#evaNavShell") || anchor.closest("#evaMenuPanel")) return;
 
       event.preventDefault();
-      beginNavigationLoad({ theme: getTheme() });
+      beginNavigationLoad({ theme: getTheme(), forceMs: 1200 });
       requestAnimationFrame(() => window.location.assign(anchor.href));
     });
   }
@@ -216,15 +208,11 @@
     const useSplash = shouldShowFirstSplash();
     if (useSplash) markFirstSplashSeen();
 
-    showLoader({
-      variant: useSplash ? "splash" : "page",
-      forceMs: useSplash ? 5200 : FORCE_UNLOCK_DELAY
-    });
+    showLoader({ variant: useSplash ? "splash" : "page", forceMs: useSplash ? 2200 : FORCE_UNLOCK_DELAY });
 
-    const minimum = useSplash ? 1150 : 180;
-    window.addEventListener("load", () => {
-      window.setTimeout(() => hideLoader(false), minimum);
-    }, { once: true });
+    const minimum = useSplash ? 520 : 80;
+    window.addEventListener("DOMContentLoaded", () => window.setTimeout(() => hideLoader(false), minimum), { once: true });
+    window.addEventListener("load", () => window.setTimeout(() => hideLoader(false), minimum), { once: true });
     window.addEventListener("pageshow", () => {
       if (initialReady && !isTransitioning) hideLoader(true);
     });
@@ -247,9 +235,7 @@
         try { sessionStorage.removeItem(SPLASH_KEY); } catch {}
         firstSplashThisSession = false;
       },
-      getState() {
-        return { isTransitioning, initialReady, loaderCreated, theme: getTheme() };
-      }
+      getState() { return { isTransitioning, initialReady, loaderCreated, theme: getTheme() }; }
     };
   }
 
@@ -268,9 +254,6 @@
     });
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init, { once: true });
-  } else {
-    init();
-  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });
+  else init();
 })();
