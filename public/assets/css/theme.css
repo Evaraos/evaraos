@@ -20,7 +20,6 @@
 /* Core Components */
 @import url("./components/liquid-glass.css?v=2");
 @import url("./components/buttons.css");
-@import url("./components/application-polish.css?v=1");
 
 /* Scoped Settings Glass */
 @import url("./components/apple-settings-glass.css?v=3");
