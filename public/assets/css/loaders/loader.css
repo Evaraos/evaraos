@@ -1,6 +1,6 @@
 /* ===============================
-   EVARAOS LOADER
-   Single lightweight loader authority.
+   EVARAOS LOADERS
+   Clean loader authority. Viewport locking is handled by loader-viewport.css.
    =============================== */
 
 .evara-global-loader,
@@ -13,7 +13,7 @@
 .evara-loader-fast {
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.14s ease, visibility 0.14s ease;
+  transition: opacity 0.18s ease, visibility 0.18s ease;
 }
 
 .evara-global-loader.active,
@@ -32,77 +32,112 @@
   opacity: 0;
 }
 
-.evara-loader-stage {
-  position: relative;
-  width: 100%;
-  min-height: 100dvh;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  background: #020307;
-}
-
-.evara-global-loader[data-theme="light"] .evara-loader-stage,
-html[data-theme="light"] .evara-loader-stage {
-  background: #f7f8fa;
-}
-
-.evara-loader-center {
-  display: grid;
-  justify-items: center;
-  gap: 14px;
-  transform: translateY(-4vh);
-  opacity: 0;
-  animation: evaLoaderCenterIn .22s ease forwards;
-}
-
-.evara-loader-logo,
-.evara-loader-logo--premium {
-  width: 148px;
-  height: 148px;
-  display: block;
-  position: relative;
-  z-index: 2;
-  object-fit: contain;
-}
-
-.evara-loader-fast-logo {
-  width: 56px;
-  height: 56px;
-  display: block;
-  position: relative;
-  z-index: 2;
-}
-
-.evara-loader-from {
+.evara-loader-mode-bg,
+.evara-loader-fast-bg,
+.evara-loader-backdrop {
   position: absolute;
-  left: 24px;
-  right: 24px;
-  bottom: max(28px, calc(env(safe-area-inset-bottom, 0px) + 22px));
-  display: grid;
-  justify-items: center;
-  gap: 4px;
-  text-align: center;
-  color: rgba(248,251,255,.72);
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
 
-.evara-global-loader[data-theme="light"] .evara-loader-from,
-html[data-theme="light"] .evara-loader-from {
-  color: rgba(7,17,31,.54);
+.evara-loader-backdrop {
+  background:
+    radial-gradient(circle at 50% 34%, rgba(255, 255, 255, 0.08), transparent 28%),
+    linear-gradient(180deg, rgba(5, 8, 18, 0.72), rgba(9, 17, 32, 0.92));
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
 }
 
-.evara-loader-from span {
-  font-size: .72rem;
-  line-height: 1;
-  font-weight: 700;
-  letter-spacing: .02em;
+html[data-theme="light"] .evara-loader-backdrop {
+  background:
+    radial-gradient(circle at 50% 34%, rgba(255, 255, 255, 0.56), transparent 28%),
+    linear-gradient(180deg, rgba(244, 247, 251, 0.78), rgba(237, 242, 240, 0.92));
 }
 
-.evara-loader-from strong {
-  font-size: .86rem;
-  line-height: 1.05;
-  font-weight: 900;
-  letter-spacing: -.025em;
+.evara-loader-bg-wave,
+.evara-loader-fast-bg-wave {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(22px);
+  opacity: 0.22;
+  animation: loaderBgDrift 10s ease-in-out infinite;
+}
+
+.evara-loader-bg-wave.wave-1,
+.evara-loader-fast-bg-wave.wave-a {
+  width: 36vw;
+  height: 36vw;
+  left: -8vw;
+  bottom: 8vh;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.26), transparent 64%);
+}
+
+.evara-loader-bg-wave.wave-2,
+.evara-loader-fast-bg-wave.wave-b {
+  width: 32vw;
+  height: 32vw;
+  right: -6vw;
+  top: 18vh;
+  background: radial-gradient(circle, rgba(79, 124, 255, 0.24), transparent 64%);
+  animation-delay: 1.4s;
+}
+
+.evara-loader-bg-wave.wave-3,
+.evara-loader-fast-bg-wave.wave-c {
+  width: 28vw;
+  height: 28vw;
+  left: 32vw;
+  top: 12vh;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.10), transparent 64%);
+  animation-delay: 2.4s;
+}
+
+.evara-loader-bg-wave.wave-4 {
+  width: 34vw;
+  height: 34vw;
+  right: 20vw;
+  bottom: 6vh;
+  background: radial-gradient(circle, rgba(255, 124, 214, 0.18), transparent 64%);
+  animation-delay: 3.1s;
+}
+
+html[data-theme="light"] .evara-loader-bg-wave.wave-1,
+html[data-theme="light"] .evara-loader-fast-bg-wave.wave-a {
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.12), transparent 64%);
+}
+
+html[data-theme="light"] .evara-loader-bg-wave.wave-2,
+html[data-theme="light"] .evara-loader-fast-bg-wave.wave-b {
+  background: radial-gradient(circle, rgba(79, 124, 255, 0.10), transparent 64%);
+}
+
+html[data-theme="light"] .evara-loader-bg-wave.wave-4 {
+  background: radial-gradient(circle, rgba(255, 124, 214, 0.08), transparent 64%);
+}
+
+.evara-loader-bg-glow,
+.evara-loader-fast-bg-glow,
+.evara-loader-bg-stars,
+.evara-loader-fast-bg-stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.evara-loader-bg-glow,
+.evara-loader-fast-bg-glow {
+  opacity: 0.22;
+}
+
+.evara-loader-bg-stars,
+.evara-loader-fast-bg-stars {
+  opacity: 0.52;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,0.72) 1px, transparent 1.8px),
+    radial-gradient(circle, rgba(255,255,255,0.42) 1px, transparent 1.6px);
+  background-size: 90px 90px, 130px 130px;
+  background-position: 0 0, 24px 18px;
 }
 
 .evara-loader-box {
@@ -122,6 +157,24 @@ html[data-theme="light"] .evara-loader-from {
   transform: none !important;
 }
 
+.evara-loader-fast-logo {
+  width: 56px;
+  height: 56px;
+  display: block;
+  position: relative;
+  z-index: 2;
+}
+
+.evara-loader-logo,
+.evara-loader-logo--premium {
+  width: 112px;
+  height: 112px;
+  display: block;
+  position: relative;
+  z-index: 2;
+  object-fit: contain;
+}
+
 .evara-loader-mark,
 .evara-loader-mark--premium,
 .evara-loader-logo-wrap,
@@ -130,6 +183,44 @@ html[data-theme="light"] .evara-loader-from {
   position: relative;
   display: grid;
   place-items: center;
+}
+
+.evara-loader-wave,
+.evara-loader-fast-wave,
+.evara-loader-pulse-ring,
+.evara-loader-pulse-glow {
+  position: absolute;
+  inset: 50%;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.evara-loader-wave,
+.evara-loader-fast-wave,
+.evara-loader-pulse-ring {
+  border: 1px solid rgba(255,255,255,0.10);
+  background: radial-gradient(circle, rgba(255,255,255,0.06), transparent 62%);
+  animation: loaderWave 2.4s ease-out infinite;
+}
+
+.evara-loader-wave,
+.evara-loader-pulse-ring {
+  width: 170px;
+  height: 170px;
+}
+
+.evara-loader-fast-wave {
+  width: 108px;
+  height: 108px;
+  animation-name: loaderFastWave;
+}
+
+.evara-loader-pulse-glow {
+  width: 140px;
+  height: 140px;
+  background: radial-gradient(circle, rgba(255, 53, 93, 0.18), transparent 64%);
+  filter: blur(14px);
 }
 
 .evara-loader-copy {
@@ -166,7 +257,7 @@ html[data-theme="light"] .evara-loader-from {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.12s ease, visibility 0.12s ease;
+  transition: opacity 0.14s ease, visibility 0.14s ease;
 }
 
 .evara-micro-loader.active {
@@ -174,41 +265,28 @@ html[data-theme="light"] .evara-loader-from {
   visibility: visible;
 }
 
-.evara-loader-mode-bg,
-.evara-loader-fast-bg,
-.evara-loader-backdrop,
-.evara-loader-bg-wave,
-.evara-loader-fast-bg-wave,
-.evara-loader-bg-glow,
-.evara-loader-fast-bg-glow,
-.evara-loader-bg-stars,
-.evara-loader-fast-bg-stars,
-.evara-loader-wave,
-.evara-loader-fast-wave,
-.evara-loader-pulse-ring,
-.evara-loader-pulse-glow {
-  display: none !important;
+@keyframes loaderBgDrift {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(1.4vw, -1.2vh, 0) scale(1.04); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
 }
 
-@keyframes evaLoaderCenterIn {
-  to { opacity: 1; transform: translateY(-4vh); }
+@keyframes loaderWave {
+  0% { transform: translate(-50%, -50%) scale(0.72); opacity: 0.44; }
+  100% { transform: translate(-50%, -50%) scale(1.42); opacity: 0; }
 }
 
-@media (max-width: 520px) {
-  .evara-loader-logo,
-  .evara-loader-logo--premium {
-    width: 132px;
-    height: 132px;
-  }
-
-  .evara-loader-center {
-    transform: translateY(-3.5vh);
-  }
+@keyframes loaderFastWave {
+  0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0.38; }
+  100% { transform: translate(-50%, -50%) scale(1.34); opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .evara-loader-center {
+  .evara-loader-bg-wave,
+  .evara-loader-fast-bg-wave,
+  .evara-loader-wave,
+  .evara-loader-fast-wave,
+  .evara-loader-pulse-ring {
     animation: none !important;
-    opacity: 1;
   }
 }
