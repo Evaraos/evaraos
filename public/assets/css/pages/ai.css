@@ -2,11 +2,12 @@
   --ai-max: 760px;
   --ai-pad: 16px;
   --ai-top: 44px;
+  --ai-header-h: 76px;
   --ai-bottom: calc(var(--eva-page-nav-clearance, 104px) + 18px);
   --ai-bg: #f7f8fb;
   --ai-text: #101522;
   --ai-muted: rgba(16, 21, 34, .58);
-  --ai-surface: rgba(255, 255, 255, .9);
+  --ai-surface: rgba(255, 255, 255, .92);
   --ai-border: rgba(148, 163, 184, .24);
   --ai-card: rgba(255, 255, 255, .96);
 }
@@ -18,8 +19,8 @@ body.dark {
   --ai-bg: #05070d;
   --ai-text: #f7f9ff;
   --ai-muted: rgba(235, 240, 255, .66);
-  --ai-surface: rgba(24, 30, 42, .86);
-  --ai-border: rgba(255, 255, 255, .16);
+  --ai-surface: rgba(24, 30, 42, .88);
+  --ai-border: rgba(255, 255, 255, .15);
   --ai-card: rgba(26, 31, 43, .9);
 }
 
@@ -50,39 +51,43 @@ body.ai-page * {
 }
 
 .eva-ai-page-shell {
+  position: relative;
   width: min(100%, var(--ai-max));
   height: 100svh;
   margin: 0 auto;
-  padding: calc(var(--ai-top) + env(safe-area-inset-top, 0px)) var(--ai-pad) calc(var(--ai-bottom) + env(safe-area-inset-bottom, 0px));
+  padding:
+    calc(var(--ai-top) + env(safe-area-inset-top, 0px) + var(--ai-header-h) + 14px)
+    var(--ai-pad)
+    calc(var(--ai-bottom) + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   gap: 14px;
   overflow-x: hidden;
   overflow-y: auto;
-  scroll-padding-top: 92px;
   -webkit-overflow-scrolling: touch;
-  background: radial-gradient(circle at 50% -20%, rgba(59, 130, 246, .1), transparent 42%);
+  background: radial-gradient(circle at 50% -20%, rgba(59, 130, 246, .08), transparent 42%);
 }
 
 .eva-ai-chat-header {
-  position: sticky;
-  top: calc(env(safe-area-inset-top, 0px) + 8px);
-  z-index: 20;
-  flex: 0 0 auto;
-  min-height: 64px;
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  width: min(calc(100vw - (var(--ai-pad) * 2)), calc(var(--ai-max) - (var(--ai-pad) * 2)));
+  height: var(--ai-header-h);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   padding: 10px 12px;
-  margin-bottom: 8px;
   border-radius: 24px;
   color: var(--ai-text);
   background: var(--ai-surface);
   border: 1px solid var(--ai-border);
-  box-shadow: 0 12px 26px rgba(15, 23, 42, .08);
-  backdrop-filter: blur(12px) saturate(130%);
-  -webkit-backdrop-filter: blur(12px) saturate(130%);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, .08);
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
 }
 
 .eva-ai-title-block {
@@ -160,7 +165,7 @@ body.ai-page * {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 8px 0 8px;
+  padding: 0 0 8px;
 }
 
 .eva-ai-message-card {
@@ -169,12 +174,7 @@ body.ai-page * {
   grid-template-columns: 38px minmax(0, 1fr);
   gap: 10px;
   align-items: end;
-  scroll-margin-top: 96px;
   animation: aiMessageIn .16s ease both;
-}
-
-.eva-ai-message-card:first-child {
-  margin-top: 4px;
 }
 
 .eva-ai-message-card.user {
@@ -206,7 +206,7 @@ body.ai-page * {
   color: var(--ai-text);
   background: var(--ai-card);
   border: 1px solid var(--ai-border);
-  box-shadow: 0 8px 20px rgba(15, 23, 42, .07);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, .06);
 }
 
 .eva-ai-message-card.user .eva-ai-bubble {
@@ -329,9 +329,7 @@ body.ai-page * {
   border-radius: 28px;
   background: var(--ai-surface);
   border: 1px solid var(--ai-border);
-  box-shadow: 0 12px 28px rgba(15, 23, 42, .1);
-  backdrop-filter: blur(10px) saturate(125%);
-  -webkit-backdrop-filter: blur(10px) saturate(125%);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .08);
 }
 
 .eva-ai-input-shell textarea {
@@ -392,18 +390,18 @@ body.dark .eva-ai-attachment-card {
   :root {
     --ai-pad: 12px;
     --ai-top: 34px;
+    --ai-header-h: 72px;
     --ai-bottom: calc(var(--eva-page-nav-clearance, 98px) + 14px);
   }
 
   .eva-ai-page-shell {
     gap: 12px;
-    scroll-padding-top: 88px;
   }
 
   .eva-ai-chat-header {
-    min-height: 60px;
+    top: calc(env(safe-area-inset-top, 0px) + 10px);
+    height: var(--ai-header-h);
     padding: 8px 10px;
-    margin-bottom: 10px;
     border-radius: 23px;
     backdrop-filter: blur(8px) saturate(120%);
     -webkit-backdrop-filter: blur(8px) saturate(120%);
@@ -424,11 +422,6 @@ body.dark .eva-ai-attachment-card {
   .eva-ai-thread {
     min-height: 32svh;
     gap: 12px;
-    padding-top: 10px;
-  }
-
-  .eva-ai-message-card {
-    scroll-margin-top: 92px;
   }
 
   .eva-ai-quick-row button {
