@@ -68,6 +68,32 @@ button, input, textarea, select { font: inherit; }
   overflow-x: clip;
 }
 
+/* AI pages are app-style workspaces. Base owns this reset so global home/hero/page styles never bleed into AI. */
+body.ai-page {
+  overflow: hidden;
+}
+
+body.ai-page #appRoot {
+  min-height: 100svh;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+body.ai-page .home-shell,
+body.ai-page .hero-home,
+body.ai-page .hero-content,
+body.ai-page .hero-title,
+body.ai-page .hero-subtitle,
+body.ai-page .hero-actions,
+body.ai-page .section-panel,
+body.ai-page .section-head,
+body.ai-page .glass-card,
+body.ai-page .aurora-card,
+body.ai-page .panel,
+body.ai-page .card {
+  all: revert-layer;
+}
+
 body:not(.home-page):not(.ai-page) #appRoot > main,
 body:not(.home-page):not(.ai-page) main.app-shell,
 body:not(.home-page):not(.ai-page) main.dashboard-shell,
@@ -104,236 +130,4 @@ body:not(.home-page):not(.ai-page) .glass-card,
 body:not(.home-page):not(.ai-page) .panel,
 body:not(.home-page):not(.ai-page) .card {
   max-width: 100%;
-}
-
-body:not(.home-page):not(.ai-page) .grid,
-body:not(.home-page):not(.ai-page) .cards-grid,
-body:not(.home-page):not(.ai-page) .features-grid,
-body:not(.home-page):not(.ai-page) .stats-grid,
-body:not(.home-page):not(.ai-page) .kpi-grid {
-  min-width: 0;
-}
-
-body:not(.home-page):not(.ai-page) .grid > *,
-body:not(.home-page):not(.ai-page) .cards-grid > *,
-body:not(.home-page):not(.ai-page) .features-grid > *,
-body:not(.home-page):not(.ai-page) .stats-grid > *,
-body:not(.home-page):not(.ai-page) .kpi-grid > * {
-  min-width: 0;
-}
-
-.page-aurora {
-  position: fixed;
-  inset: 0;
-  z-index: -2;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.page-aurora::before,
-.page-aurora::after {
-  content: "";
-  position: absolute;
-  width: 120%;
-  height: 120%;
-  filter: blur(120px);
-  opacity: 0.38;
-  animation: evaAuroraMove 18s infinite alternate ease-in-out;
-}
-
-.page-aurora::before { background: radial-gradient(circle at 30% 30%, var(--user-bg-color, #7C3AED), transparent 60%); }
-.page-aurora::after { background: radial-gradient(circle at 70% 60%, var(--user-bg-color-2, #2563EB), transparent 60%); animation-delay: 4s; }
-
-@keyframes evaAuroraMove {
-  0% { transform: translate(0%, 0%) scale(1); }
-  50% { transform: translate(-10%, 10%) scale(1.08); }
-  100% { transform: translate(10%, -8%) scale(1); }
-}
-
-.galaxy-engine {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  overflow: hidden;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-}
-
-.galaxy-engine.is-active { opacity: 1; }
-
-.galaxy-engine::before,
-.galaxy-engine::after {
-  content: "";
-  position: absolute;
-  inset: -10%;
-  pointer-events: none;
-}
-
-.galaxy-engine::before {
-  background:
-    radial-gradient(circle at 20% 30%, rgba(180, 110, 255, 0.18), transparent 18%),
-    radial-gradient(circle at 72% 26%, rgba(90, 160, 255, 0.16), transparent 18%),
-    radial-gradient(circle at 60% 68%, rgba(255, 120, 210, 0.12), transparent 16%),
-    radial-gradient(circle at 42% 48%, rgba(255,255,255,0.08), transparent 12%);
-  filter: blur(48px);
-}
-
-.galaxy-engine::after {
-  background:
-    radial-gradient(ellipse at 50% 48%, rgba(255,255,255,0.08), transparent 22%),
-    radial-gradient(ellipse at 54% 52%, rgba(182, 152, 255, 0.12), transparent 26%),
-    radial-gradient(ellipse at 46% 46%, rgba(88, 126, 255, 0.08), transparent 18%);
-  filter: blur(64px);
-  opacity: 0.9;
-}
-
-.page-grid-overlay {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
-  opacity: 0.08;
-  background:
-    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-  background-size: 52px 52px;
-}
-
-html[data-theme="light"] .page-grid-overlay {
-  opacity: 0.05;
-  background:
-    linear-gradient(rgba(21,36,30,0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(21,36,30,0.02) 1px, transparent 1px);
-  background-size: 52px 52px;
-}
-
-main,
-footer {
-  position: relative;
-  z-index: 1;
-}
-
-.home-shell {
-  width: min(100%, var(--page-max));
-  margin: 0 auto;
-  padding: 84px 16px 32px;
-}
-
-.hero-home { min-height: 320px; }
-.hero-content { width: min(100%, 960px); }
-.hero-kicker { margin: 0 0 18px; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.84; font-size: 0.96rem; }
-.hero-title { margin: 0 0 18px; font-size: clamp(3.15rem, 9vw, 5.8rem); line-height: 0.92; letter-spacing: -0.058em; font-weight: 900; }
-.hero-subtitle { margin: 0; max-width: 960px; font-size: clamp(1.12rem, 1vw + 0.96rem, 1.5rem); line-height: 1.62; color: var(--muted-dark); }
-html[data-theme="light"] .hero-subtitle { color: var(--muted-light); }
-.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
-.hero-actions .btn { flex: 0 0 auto; }
-
-.section-panel { margin-top: 0; }
-.section-head { margin-bottom: 0; }
-.section-head h2,
-.cta-panel h2 { text-wrap: balance; }
-.section-head p,
-.cta-panel p,
-.info-card p,
-.service-card p,
-.category-card p,
-.feature-card p,
-.stats-card p { text-wrap: pretty; }
-.feature-card h3,
-.service-card h3,
-.category-card h3,
-.info-card h3 { letter-spacing: -0.03em; }
-.card-tag,
-.service-meta { box-shadow: inset 0 1px 0 rgba(255,255,255,0.10); }
-
-.eva-page-transition {
-  position: fixed;
-  inset: 0;
-  z-index: calc(var(--loader-z) - 1);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.12s ease;
-  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.04), transparent 22%), rgba(6, 10, 22, 0.34);
-}
-
-.eva-page-transition.active { opacity: 1; }
-html.eva-transitioning body { visibility: hidden; }
-html.eva-transitioning,
-html.eva-transitioning * { transition: none !important; }
-
-html.auth-pending body,
-body.auth-pending { pointer-events: none !important; }
-body.app-loading { overflow: hidden; touch-action: none; }
-body.app-loading .eva-nav-shell { opacity: 0; transition: none; }
-body.app-ready .eva-nav-shell { opacity: 1; transition: opacity 0.18s ease; }
-
-.site-footer {
-  width: min(100%, var(--page-max));
-  margin: 18px auto 24px;
-  padding: 0 16px;
-}
-
-.site-footer-inner {
-  min-height: 76px;
-  padding: 16px 18px;
-  border-radius: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.site-footer-left { display: grid; gap: 4px; }
-.site-footer-right { display: flex; gap: 12px; flex-wrap: wrap; }
-.site-footer-right a { text-decoration: none; font-weight: 700; }
-
-@media (max-width: 760px) {
-  :root {
-    --eva-page-gutter: 12px;
-    --eva-page-top-space: 82px;
-    --eva-mobile-page-top-space: 78px;
-    --eva-page-bottom-space: calc(32px + env(safe-area-inset-bottom, 0px));
-    --eva-shell-gap: 14px;
-  }
-
-  body:not(.home-page):not(.ai-page) #appRoot > main,
-  body:not(.home-page):not(.ai-page) main.app-shell,
-  body:not(.home-page):not(.ai-page) main.dashboard-shell,
-  body:not(.home-page):not(.ai-page) main.page-shell,
-  body:not(.home-page):not(.ai-page) .eva-page-shell,
-  body:not(.home-page):not(.ai-page) .dashboard-shell,
-  body:not(.home-page):not(.ai-page) .app-shell,
-  body:not(.home-page):not(.ai-page) .page-shell {
-    width: min(100%, calc(100% - (var(--eva-page-gutter) * 2)));
-    padding-top: calc(var(--eva-mobile-page-top-space) + env(safe-area-inset-top, 0px));
-    padding-bottom: var(--eva-page-bottom-space);
-    gap: var(--eva-shell-gap);
-  }
-
-  body:not(.home-page):not(.ai-page) .dashboard-shell {
-    margin-top: 0 !important;
-    padding-top: calc(var(--eva-mobile-page-top-space) + env(safe-area-inset-top, 0px)) !important;
-  }
-
-  body:not(.home-page):not(.ai-page) .dashboard-sidebar {
-    top: 0 !important;
-  }
-
-  .home-shell { padding: 74px 12px 24px; }
-  .hero-title { font-size: clamp(2.8rem, 12vw, 4.6rem); }
-  .hero-actions { gap: 10px; }
-  .site-footer { padding: 0 12px; }
-}
-
-@media (max-width: 420px) {
-  :root { --eva-page-gutter: 10px; }
-
-  body:not(.home-page):not(.ai-page) .section-panel,
-  body:not(.home-page):not(.ai-page) .glass-card,
-  body:not(.home-page):not(.ai-page) .panel,
-  body:not(.home-page):not(.ai-page) .card {
-    border-radius: min(var(--radius-card), 24px);
-  }
 }
