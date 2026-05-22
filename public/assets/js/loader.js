@@ -1,8 +1,8 @@
 (function () {
   const LOADER_ID = "evaraGlobalLoader";
   const LOGO_SRC = "/assets/img/evaraos_logo.png";
-  const EXIT_DURATION = 180;
-  const FORCE_UNLOCK_DELAY = 1600;
+  const EXIT_DURATION = 120;
+  const FORCE_UNLOCK_DELAY = 900;
   const SPLASH_KEY = "evaraos-first-open-splash-seen";
 
   let forceTimer = null;
@@ -168,7 +168,7 @@
     if (isTransitioning) return;
     isTransitioning = true;
     unlockApp();
-    showLoader({ theme: options.theme, variant: "page", forceMs: options.forceMs || 1200 });
+    showLoader({ theme: options.theme, variant: "page", forceMs: options.forceMs || 700 });
   }
 
   function completeNavigationLoad() { hideLoader(false); }
@@ -198,23 +198,29 @@
       if (anchor.hasAttribute("data-menu-link") || anchor.closest("#evaNavShell") || anchor.closest("#evaMenuPanel")) return;
 
       event.preventDefault();
-      beginNavigationLoad({ theme: getTheme(), forceMs: 1200 });
+      beginNavigationLoad({ theme: getTheme(), forceMs: 700 });
       requestAnimationFrame(() => window.location.assign(anchor.href));
     });
   }
 
   function setupInitialBoot() {
-    ensureLoader();
     const useSplash = shouldShowFirstSplash();
     if (useSplash) markFirstSplashSeen();
 
-    showLoader({ variant: useSplash ? "splash" : "page", forceMs: useSplash ? 2200 : FORCE_UNLOCK_DELAY });
+    if (!useSplash && document.readyState !== "loading") {
+      hideLoader(true);
+      return;
+    }
 
-    const minimum = useSplash ? 520 : 80;
+    ensureLoader();
+    showLoader({ variant: useSplash ? "splash" : "page", forceMs: useSplash ? 1200 : FORCE_UNLOCK_DELAY });
+
+    const minimum = useSplash ? 320 : 0;
     window.addEventListener("DOMContentLoaded", () => window.setTimeout(() => hideLoader(false), minimum), { once: true });
     window.addEventListener("load", () => window.setTimeout(() => hideLoader(false), minimum), { once: true });
-    window.addEventListener("pageshow", () => {
-      if (initialReady && !isTransitioning) hideLoader(true);
+    window.addEventListener("pageshow", (event) => {
+      if (event.persisted) hideLoader(true);
+      else if (initialReady && !isTransitioning) hideLoader(true);
     });
   }
 
