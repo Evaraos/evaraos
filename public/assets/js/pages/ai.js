@@ -34,8 +34,6 @@ function cleanupGlobalLoader() {
     "eva-route-loading",
     "eva-loading"
   );
-
-  document.body.classList.add("app-ready");
 }
 
 function markReady() {
