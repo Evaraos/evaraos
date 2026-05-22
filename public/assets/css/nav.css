@@ -1,13 +1,13 @@
 /* EVARAOS NAV SYSTEM
    Single CSS entrypoint for the nav runtime.
    Loader styling lives in assets/css/loaders via theme.css. */
-@import url("./nav/nav-shell.css?v=nav-v3");
-@import url("./nav/nav-actions.css?v=nav-v3");
-@import url("./nav/nav-menu.css?v=nav-v3");
-@import url("./nav/nav-app-tiles.css?v=nav-v3");
-@import url("./nav/nav-effects.css?v=nav-v3");
-@import url("./nav/nav-motion.css?v=nav-v3");
-@import url("./nav/nav-quick-bubbles.css?v=nav-v3");
+@import url("./nav/nav-shell.css?v=nav-v4");
+@import url("./nav/nav-actions.css?v=nav-v4");
+@import url("./nav/nav-menu.css?v=nav-v4");
+@import url("./nav/nav-app-tiles.css?v=nav-v4");
+@import url("./nav/nav-effects.css?v=nav-v4");
+@import url("./nav/nav-motion.css?v=nav-v4");
+@import url("./nav/nav-quick-bubbles.css?v=nav-v4");
 
 .eva-page-transition,
 #evaPageTransition,
