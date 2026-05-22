@@ -11,33 +11,58 @@ let submitLock = false;
 let pendingImages = [];
 let growRaf = 0;
 let scrollRaf = 0;
+let touchStartY = 0;
 
 function cleanupGlobalLoader() {
-  [
-    "#evaraLoader",
-    "#evaraPageLoader",
-    "#evaraRouteLoader",
-    "#evaPageTransition",
-    "#evaraFastLoader"
-  ].forEach((selector) => {
+  ["#evaraLoader", "#evaraPageLoader", "#evaraRouteLoader", "#evaPageTransition", "#evaraFastLoader"].forEach((selector) => {
     document.querySelectorAll(selector).forEach((node) => node.remove());
   });
 
-  document.documentElement.classList.remove(
-    "eva-transitioning",
-    "eva-route-loading",
-    "eva-loading"
-  );
+  document.documentElement.classList.remove("eva-transitioning", "eva-route-loading", "eva-loading");
+  document.body.classList.remove("app-loading", "eva-route-loading", "eva-loading");
+}
 
-  document.body.classList.remove(
-    "app-loading",
-    "eva-route-loading",
-    "eva-loading"
-  );
+function lockAiViewport() {
+  document.documentElement.style.overflow = "hidden";
+  document.body.style.overflow = "hidden";
+  document.body.style.position = "fixed";
+  document.body.style.inset = "0";
+  document.body.style.width = "100%";
+  document.body.style.height = "100%";
+  window.scrollTo(0, 0);
+}
+
+function isInsideThread(target) {
+  return Boolean(thread && target && thread.contains(target));
+}
+
+function installTouchLock() {
+  window.addEventListener("scroll", () => window.scrollTo(0, 0), { passive: true });
+
+  document.addEventListener("touchstart", (event) => {
+    touchStartY = event.touches?.[0]?.clientY || 0;
+  }, { passive: true });
+
+  document.addEventListener("touchmove", (event) => {
+    if (!isInsideThread(event.target)) {
+      event.preventDefault();
+      return;
+    }
+
+    const currentY = event.touches?.[0]?.clientY || 0;
+    const deltaY = currentY - touchStartY;
+    const atTop = thread.scrollTop <= 0;
+    const atBottom = Math.ceil(thread.scrollTop + thread.clientHeight) >= thread.scrollHeight;
+
+    if ((atTop && deltaY > 0) || (atBottom && deltaY < 0)) {
+      event.preventDefault();
+    }
+  }, { passive: false });
 }
 
 function markReady() {
   cleanupGlobalLoader();
+  lockAiViewport();
 }
 
 function autoGrow() {
@@ -53,21 +78,14 @@ function scrollToBottom(behavior = "auto") {
   if (!thread) return;
   cancelAnimationFrame(scrollRaf);
   scrollRaf = requestAnimationFrame(() => {
-    try {
-      thread.scrollTo({ top: thread.scrollHeight, behavior });
-    } catch {
-      thread.scrollTop = thread.scrollHeight;
-    }
+    try { thread.scrollTo({ top: thread.scrollHeight, behavior }); }
+    catch { thread.scrollTop = thread.scrollHeight; }
   });
 }
 
 function buildMessage(role, text) {
   const card = document.createElement("article");
   card.className = `eva-ai-message-card ${role}`;
-
-  const avatar = document.createElement("div");
-  avatar.className = "eva-ai-avatar";
-  avatar.textContent = role === "user" ? "You" : "AI";
 
   const bubble = document.createElement("div");
   bubble.className = "eva-ai-bubble";
@@ -76,7 +94,6 @@ function buildMessage(role, text) {
   p.textContent = text;
 
   bubble.appendChild(p);
-  card.appendChild(avatar);
   card.appendChild(bubble);
   return card;
 }
@@ -99,7 +116,7 @@ function removeThinking() {
   thinkingCard = null;
 }
 
-function fakeAiResponse(prompt = "") {
+function fakeAiResponse() {
   return "I’m ready. Tell me what part of Evaraos you want to build, fix, or improve next.";
 }
 
@@ -160,4 +177,5 @@ window.addEventListener("pageshow", markReady, { once: true });
 window.addEventListener("load", markReady, { once: true });
 
 autoGrow();
+installTouchLock();
 markReady();
