@@ -1,8 +1,8 @@
 (function () {
   const LOADER_ID = "evaraGlobalLoader";
   const LOGO_SRC = "/assets/img/evaraos_logo.png";
-  const EXIT_DURATION = 120;
-  const FORCE_UNLOCK_DELAY = 900;
+  const EXIT_DURATION = 260;
+  const FORCE_UNLOCK_DELAY = 4200;
   const SPLASH_KEY = "evaraos-first-open-splash-seen";
 
   let forceTimer = null;
@@ -100,6 +100,10 @@
         <div class="evara-loader-stage" role="status" aria-live="polite">
           <div class="evara-loader-center">
             <img class="evara-loader-logo" src="${LOGO_SRC}" alt="Evaraos" loading="eager" decoding="async" />
+            <div class="evara-loader-copy">
+              <p class="evara-loader-title" id="evaraLoaderTitle">Evaraos</p>
+              <p class="evara-loader-subtitle" id="evaraLoaderSubtitle">Preparing your workspace.</p>
+            </div>
           </div>
           <div class="evara-loader-from" aria-label="from Evaraos Inc">
             <span>from</span>
@@ -124,10 +128,15 @@
   function showLoader(options = {}) {
     const theme = applyTheme(options.theme || getTheme());
     const loader = ensureLoader();
+    const title = loader.querySelector("#evaraLoaderTitle");
+    const subtitle = loader.querySelector("#evaraLoaderSubtitle");
     const variant = options.variant || "page";
 
     loader.dataset.theme = theme;
     loader.dataset.variant = variant;
+    if (title) title.textContent = options.title || (variant === "splash" ? "Evaraos" : "Opening Evaraos");
+    if (subtitle) subtitle.textContent = options.subtitle || (variant === "splash" ? "" : "Preparing your next screen.");
+
     loader.classList.remove("is-exiting");
     loader.classList.add("active", "is-entering");
     loader.setAttribute("aria-hidden", "false");
@@ -168,11 +177,21 @@
     if (isTransitioning) return;
     isTransitioning = true;
     unlockApp();
-    showLoader({ theme: options.theme, variant: "page", forceMs: options.forceMs || 700 });
+    showLoader({
+      title: options.title || "Opening Evaraos",
+      subtitle: options.subtitle || "Preparing your next screen.",
+      theme: options.theme,
+      variant: "page"
+    });
   }
 
-  function completeNavigationLoad() { hideLoader(false); }
-  function markAppReady() { hideLoader(false); }
+  function completeNavigationLoad() {
+    hideLoader(false);
+  }
+
+  function markAppReady() {
+    hideLoader(false);
+  }
 
   function shouldInterceptLink(anchor) {
     if (!anchor) return false;
@@ -198,29 +217,32 @@
       if (anchor.hasAttribute("data-menu-link") || anchor.closest("#evaNavShell") || anchor.closest("#evaMenuPanel")) return;
 
       event.preventDefault();
-      beginNavigationLoad({ theme: getTheme(), forceMs: 700 });
+      beginNavigationLoad({
+        title: "Opening Evaraos",
+        subtitle: "Preparing your next screen."
+      });
       requestAnimationFrame(() => window.location.assign(anchor.href));
     });
   }
 
   function setupInitialBoot() {
+    ensureLoader();
     const useSplash = shouldShowFirstSplash();
     if (useSplash) markFirstSplashSeen();
 
-    if (!useSplash && document.readyState !== "loading") {
-      hideLoader(true);
-      return;
-    }
+    showLoader({
+      title: "Evaraos",
+      subtitle: "",
+      variant: useSplash ? "splash" : "page",
+      forceMs: useSplash ? 5200 : FORCE_UNLOCK_DELAY
+    });
 
-    ensureLoader();
-    showLoader({ variant: useSplash ? "splash" : "page", forceMs: useSplash ? 1200 : FORCE_UNLOCK_DELAY });
-
-    const minimum = useSplash ? 320 : 0;
-    window.addEventListener("DOMContentLoaded", () => window.setTimeout(() => hideLoader(false), minimum), { once: true });
-    window.addEventListener("load", () => window.setTimeout(() => hideLoader(false), minimum), { once: true });
-    window.addEventListener("pageshow", (event) => {
-      if (event.persisted) hideLoader(true);
-      else if (initialReady && !isTransitioning) hideLoader(true);
+    const minimum = useSplash ? 1150 : 180;
+    window.addEventListener("load", () => {
+      window.setTimeout(() => hideLoader(false), minimum);
+    }, { once: true });
+    window.addEventListener("pageshow", () => {
+      if (initialReady && !isTransitioning) hideLoader(true);
     });
   }
 
@@ -241,7 +263,9 @@
         try { sessionStorage.removeItem(SPLASH_KEY); } catch {}
         firstSplashThisSession = false;
       },
-      getState() { return { isTransitioning, initialReady, loaderCreated, theme: getTheme() }; }
+      getState() {
+        return { isTransitioning, initialReady, loaderCreated, theme: getTheme() };
+      }
     };
   }
 
@@ -260,6 +284,9 @@
     });
   }
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });
-  else init();
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init, { once: true });
+  } else {
+    init();
+  }
 })();
