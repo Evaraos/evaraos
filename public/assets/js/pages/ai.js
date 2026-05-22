@@ -1,7 +1,6 @@
 const form = document.getElementById("evaAiPageForm");
 const input = document.getElementById("evaAiPageInput");
 const thread = document.getElementById("evaAiThread");
-const shell = document.querySelector(".eva-ai-page-shell");
 const suggestions = document.querySelectorAll("[data-ai-prompt]");
 const newChat = document.getElementById("evaAiNewChat");
 const plusButton = document.getElementById("evaAiPlus");
@@ -29,14 +28,13 @@ function autoGrow() {
 }
 
 function scrollToBottom(behavior = "auto") {
-  const target = shell || document.scrollingElement || document.documentElement;
-  if (!target) return;
+  if (!thread) return;
   cancelAnimationFrame(scrollRaf);
   scrollRaf = requestAnimationFrame(() => {
     try {
-      target.scrollTo({ top: target.scrollHeight, behavior });
+      thread.scrollTo({ top: thread.scrollHeight, behavior });
     } catch {
-      target.scrollTop = target.scrollHeight;
+      thread.scrollTop = thread.scrollHeight;
     }
   });
 }
@@ -166,7 +164,7 @@ function resetChat() {
   setBusy(false);
   pendingImages = [];
   thread.innerHTML = "";
-  if (shell) shell.scrollTop = 0;
+  thread.scrollTop = 0;
   appendMessage("assistant", "Fresh workspace opened. What do you want to build or fix next?");
 }
 
@@ -185,7 +183,7 @@ function handleImageSelection(event) {
 
 function restoreTopOnFreshOpen(event) {
   if (event?.persisted) return;
-  if (shell) shell.scrollTop = 0;
+  if (thread) thread.scrollTop = 0;
 }
 
 form?.addEventListener("submit", (event) => {
