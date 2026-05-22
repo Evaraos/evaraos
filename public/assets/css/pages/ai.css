@@ -1,11 +1,11 @@
-/* Evaraos AI Page — clean fixed-layer layout */
+/* Evaraos AI Page — ChatGPT-like fixed-layer layout */
 :root {
   --ai-max: 760px;
   --ai-pad: 16px;
   --ai-top: 44px;
   --ai-header-h: 76px;
   --ai-composer-h: 92px;
-  --ai-nav-gap: calc(var(--eva-page-nav-clearance, 104px) + 2px);
+  --ai-nav-gap: calc(var(--eva-page-nav-clearance, 104px) + 10px);
   --ai-bg: #f7f8fb;
   --ai-text: #101522;
   --ai-muted: rgba(16,21,34,.58);
@@ -25,15 +25,10 @@ body.dark {
   --ai-surface: rgba(18,24,36,.92);
   --ai-border: rgba(255,255,255,.14);
   --ai-card: rgba(24,30,44,.92);
-  --ai-send: #4f8cff;
+  --ai-send: #f7f9ff;
 }
 
-html, body {
-  width: 100%;
-  min-height: 100%;
-  margin: 0;
-  background: var(--ai-bg) !important;
-}
+html, body { width: 100%; min-height: 100%; margin: 0; background: var(--ai-bg) !important; }
 
 body.ai-page {
   position: fixed;
@@ -42,20 +37,12 @@ body.ai-page {
   min-height: 100svh;
   overflow: hidden;
   overscroll-behavior: none;
-  touch-action: pan-y;
   color: var(--ai-text);
   font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", sans-serif;
 }
 
 body.ai-page * { box-sizing: border-box; }
-
-body.ai-page.app-ready #appRoot,
-body.ai-page #appRoot {
-  animation: none !important;
-  transform: none !important;
-  filter: none !important;
-  will-change: auto !important;
-}
+body.ai-page.app-ready #appRoot, body.ai-page #appRoot { animation: none !important; transform: none !important; filter: none !important; will-change: auto !important; }
 
 #appRoot.eva-ai-app-root {
   width: 100%;
@@ -67,7 +54,6 @@ body.ai-page #appRoot {
 }
 
 .eva-ai-page-shell {
-  position: relative;
   width: min(100%, var(--ai-max));
   height: 100svh;
   margin: 0 auto;
@@ -100,81 +86,14 @@ body.ai-page #appRoot {
   -webkit-backdrop-filter: blur(10px) saturate(120%);
 }
 
-.eva-ai-title-block {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.eva-ai-icon-wrap {
-  position: relative;
-  flex: 0 0 44px;
-  width: 44px;
-  height: 44px;
-}
-
-.eva-ai-app-icon {
-  width: 44px;
-  height: 44px;
-  display: block;
-  object-fit: contain;
-  border-radius: 15px;
-}
-
-.eva-ai-intel-star {
-  position: absolute;
-  right: -8px;
-  bottom: -5px;
-  color: var(--ai-text);
-  font-size: 1rem;
-  font-weight: 900;
-  line-height: 1;
-  opacity: .72;
-  text-shadow: 0 2px 8px rgba(2,6,23,.18);
-}
-
-.eva-ai-intel-star.two {
-  right: 4px;
-  bottom: -12px;
-  font-size: .72rem;
-  opacity: .58;
-}
-
-.eva-ai-title-block p {
-  margin: 0 0 2px;
-  font-size: .62rem;
-  font-weight: 900;
-  letter-spacing: .22em;
-  color: var(--ai-muted);
-  text-transform: uppercase;
-}
-
-.eva-ai-title-block h1 {
-  margin: 0;
-  font-size: 1.08rem;
-  line-height: 1.05;
-  letter-spacing: -.045em;
-  color: var(--ai-text);
-  white-space: nowrap;
-}
-
-.eva-ai-new-chat {
-  flex: 0 0 auto;
-  min-height: 40px;
-  padding: 0 16px;
-  border-radius: 999px;
-  border: 1px solid var(--ai-border);
-  background: var(--ai-surface);
-  color: #111827;
-  font-weight: 850;
-  font-size: 1rem;
-}
-
-html[data-theme="dark"] .eva-ai-new-chat,
-body[data-theme="dark"] .eva-ai-new-chat,
-html.dark .eva-ai-new-chat,
-body.dark .eva-ai-new-chat { color: #f7f9ff; }
+.eva-ai-title-block { min-width: 0; display: flex; align-items: center; gap: 12px; }
+.eva-ai-icon-wrap { position: relative; flex: 0 0 44px; width: 44px; height: 44px; }
+.eva-ai-app-icon { width: 44px; height: 44px; display: block; object-fit: contain; border-radius: 15px; }
+.eva-ai-intel-star { position: absolute; left: 34px; top: 30px; color: var(--ai-text); font-size: .78rem; opacity: .58; line-height: 1; }
+.eva-ai-intel-star.two { left: 43px; top: 38px; font-size: .52rem; opacity: .42; }
+.eva-ai-title-block p { margin: 0 0 2px; font-size: .62rem; font-weight: 900; letter-spacing: .22em; color: var(--ai-muted); text-transform: uppercase; }
+.eva-ai-title-block h1 { margin: 0; font-size: 1.08rem; line-height: 1.05; letter-spacing: -.045em; color: var(--ai-text); white-space: nowrap; }
+.eva-ai-new-chat { flex: 0 0 auto; min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--ai-border); background: var(--ai-surface); color: var(--ai-text); font-weight: 850; font-size: 1rem; }
 
 .eva-ai-thread {
   flex: 1 1 auto;
@@ -189,64 +108,17 @@ body.dark .eva-ai-new-chat { color: #f7f9ff; }
   -webkit-overflow-scrolling: touch;
 }
 
-.eva-ai-message-card {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 38px minmax(0, 1fr);
-  gap: 10px;
-  align-items: end;
-}
-
-.eva-ai-message-card.user { grid-template-columns: minmax(0, 1fr) 38px; }
-.eva-ai-message-card.user .eva-ai-avatar { order: 2; }
-
-.eva-ai-avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 14px;
-  display: grid;
-  place-items: center;
-  font-size: .66rem;
-  font-weight: 950;
-  color: var(--ai-text);
-  background: var(--ai-surface);
-  border: 1px solid var(--ai-border);
-}
-
-.eva-ai-avatar::before {
-  content: "";
-  width: 20px;
-  height: 20px;
-  display: block;
-  background: url("/assets/img/evaraos_logo.png") center / contain no-repeat;
-}
-.eva-ai-avatar { font-size: 0; }
-
-.eva-ai-bubble {
-  width: fit-content;
-  max-width: 100%;
-  padding: 15px 17px;
-  border-radius: 23px;
-  color: var(--ai-text);
-  background: var(--ai-card);
-  border: 1px solid var(--ai-border);
-  box-shadow: 0 8px 20px rgba(15,23,42,.06);
-}
-
-.eva-ai-bubble p {
-  margin: 0;
-  line-height: 1.55;
-  font-size: 1rem;
-  font-weight: 620;
-  overflow-wrap: anywhere;
-}
-
+.eva-ai-message-card { width: 100%; display: block; }
+.eva-ai-message-card.user { display: block; }
+.eva-ai-avatar { display: none !important; }
+.eva-ai-bubble { width: auto; max-width: 100%; margin-left: 0; padding: 15px 17px; border-radius: 23px; color: var(--ai-text); background: var(--ai-card); border: 1px solid var(--ai-border); box-shadow: 0 8px 20px rgba(15,23,42,.06); }
+.eva-ai-bubble p { margin: 0; line-height: 1.55; font-size: 1rem; font-weight: 620; overflow-wrap: anywhere; }
 .eva-ai-quick-row { display: none !important; }
 
 .eva-ai-composer {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--ai-nav-gap) + 4px + env(safe-area-inset-bottom,0px));
+  bottom: calc(var(--ai-nav-gap) + 16px + env(safe-area-inset-bottom,0px));
   transform: translate3d(-50%,0,0);
   z-index: 45;
   width: min(calc(100vw - 24px), calc(var(--ai-max) - 24px));
@@ -258,91 +130,18 @@ body.dark .eva-ai-new-chat { color: #f7f9ff; }
   will-change: auto;
 }
 
-.eva-ai-plus {
-  width: 50px;
-  height: 50px;
-  border-radius: 999px;
-  border: 1px solid var(--ai-border);
-  display: grid;
-  place-items: center;
-  background: var(--ai-surface);
-  color: #111827;
-  font-size: 1.35rem;
-  font-weight: 900;
-  box-shadow: 0 8px 22px rgba(15,23,42,.08);
-}
-
-.eva-ai-input-shell {
-  min-height: 64px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 50px;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 8px 8px 18px;
-  border-radius: 28px;
-  background: rgba(255,255,255,.94);
-  border: 1px solid rgba(148,163,184,.22);
-  box-shadow: 0 12px 28px rgba(15,23,42,.08), inset 0 1px 0 rgba(255,255,255,.76);
-}
-
-html[data-theme="dark"] .eva-ai-input-shell,
-body[data-theme="dark"] .eva-ai-input-shell,
-html.dark .eva-ai-input-shell,
-body.dark .eva-ai-input-shell {
-  background: rgba(22,29,43,.94);
-  border-color: rgba(255,255,255,.14);
-  box-shadow: 0 14px 34px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.08);
-}
-
-.eva-ai-input-shell textarea {
-  width: 100%;
-  min-height: 42px;
-  max-height: 112px;
-  padding: 11px 0;
-  resize: none;
-  border: 0 !important;
-  outline: 0;
-  background: transparent !important;
-  box-shadow: none !important;
-  color: var(--ai-text);
-  font: inherit;
-  font-weight: 670;
-  line-height: 1.35;
-  overflow-y: auto;
-}
-
+.eva-ai-plus { width: 50px; height: 50px; border-radius: 999px; border: 1px solid var(--ai-border); display: grid; place-items: center; background: var(--ai-surface); color: var(--ai-text); font-size: 1.35rem; font-weight: 900; box-shadow: 0 8px 22px rgba(15,23,42,.08); }
+.eva-ai-input-shell { min-height: 64px; display: grid; grid-template-columns: minmax(0, 1fr) 50px; align-items: center; gap: 8px; padding: 8px 8px 8px 18px; border-radius: 32px; background: rgba(255,255,255,.94); border: 1px solid rgba(148,163,184,.22); box-shadow: 0 12px 28px rgba(15,23,42,.08), inset 0 1px 0 rgba(255,255,255,.76); }
+html[data-theme="dark"] .eva-ai-input-shell, body[data-theme="dark"] .eva-ai-input-shell, html.dark .eva-ai-input-shell, body.dark .eva-ai-input-shell { background: rgba(22,29,43,.94); border-color: rgba(255,255,255,.14); box-shadow: 0 14px 34px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.08); }
+.eva-ai-input-shell textarea { width: 100%; min-height: 42px; max-height: 112px; padding: 11px 0; resize: none; border: 0 !important; outline: 0; background: transparent !important; box-shadow: none !important; color: var(--ai-text); font: inherit; font-weight: 670; line-height: 1.35; overflow-y: auto; }
 .eva-ai-input-shell textarea::placeholder { color: rgba(16,21,34,.38); }
-html[data-theme="dark"] .eva-ai-input-shell textarea::placeholder,
-body[data-theme="dark"] .eva-ai-input-shell textarea::placeholder,
-html.dark .eva-ai-input-shell textarea::placeholder,
-body.dark .eva-ai-input-shell textarea::placeholder { color: rgba(235,240,255,.48); }
-
-.eva-ai-submit {
-  width: 50px;
-  height: 50px;
-  border-radius: 18px;
-  border: 1px solid rgba(15,23,42,.08);
-  display: grid;
-  place-items: center;
-  background: var(--ai-send);
-  color: #fff;
-  font-size: 1.16rem;
-  font-weight: 950;
-}
+html[data-theme="dark"] .eva-ai-input-shell textarea::placeholder, body[data-theme="dark"] .eva-ai-input-shell textarea::placeholder, html.dark .eva-ai-input-shell textarea::placeholder, body.dark .eva-ai-input-shell textarea::placeholder { color: rgba(235,240,255,.48); }
+.eva-ai-submit { width: 46px; height: 46px; border-radius: 999px; border: 0; display: grid; place-items: center; background: var(--ai-send); color: #fff; font-size: 1.12rem; font-weight: 950; }
+html[data-theme="dark"] .eva-ai-submit, body[data-theme="dark"] .eva-ai-submit, html.dark .eva-ai-submit, body.dark .eva-ai-submit { color: #05070d; }
 
 @media (max-width: 520px) {
-  :root {
-    --ai-pad: 12px;
-    --ai-top: 34px;
-    --ai-header-h: 72px;
-    --ai-composer-h: 96px;
-    --ai-nav-gap: calc(var(--eva-page-nav-clearance, 98px) + 0px);
-  }
+  :root { --ai-pad: 12px; --ai-top: 34px; --ai-header-h: 72px; --ai-composer-h: 96px; --ai-nav-gap: calc(var(--eva-page-nav-clearance, 98px) + 10px); }
   .eva-ai-chat-header { top: calc(env(safe-area-inset-top,0px) + 10px); height: var(--ai-header-h); padding: 8px 10px; border-radius: 23px; }
   .eva-ai-composer { width: calc(100vw - 22px); grid-template-columns: 50px minmax(0,1fr); }
 }
-
-@media (max-width: 390px) {
-  :root { --ai-nav-gap: calc(var(--eva-page-nav-clearance, 92px) - 2px); }
-  .eva-ai-bubble p { font-size: .96rem; }
-}
+@media (max-width: 390px) { :root { --ai-nav-gap: calc(var(--eva-page-nav-clearance, 92px) + 8px); } .eva-ai-bubble p { font-size: .96rem; } }
