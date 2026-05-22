@@ -8,21 +8,17 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
-  <!-- Evaraos App Identity / PWA / Favicons -->
   <link rel="manifest" href="/manifest.json" />
-
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/icon-192.png" />
   <link rel="shortcut icon" href="/favicon.ico" />
-
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" />
 
   <meta name="theme-color" content="#f4f7f6" />
   <meta name="msapplication-TileColor" content="#f4f7f6" />
   <meta name="msapplication-TileImage" content="/assets/img/icon-192.png" />
-
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -42,458 +38,72 @@
   <script src="/assets/js/theme-boot.js?v=1"></script>
 
   <style>
-    html,
-    body { background: #f4f7f6; }
-
-    html[data-theme="dark"],
-    html[data-theme="dark"] body { background: #020307; }
-
-    html.boot-pending body {
-      margin: 0;
-      overflow: hidden;
-      touch-action: none;
-    }
-
-    html.auth-pending body,
-    body.auth-pending {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    body.dashboard-body {
-      margin: 0;
-      min-height: 100vh;
-      background: transparent;
-    }
-
+    html, body { background: #f4f7f6; }
+    html[data-theme="dark"], html[data-theme="dark"] body { background: #020307; }
+    html.boot-pending body { margin: 0; overflow: hidden; touch-action: none; }
+    html.auth-pending body, body.auth-pending { opacity: 0; pointer-events: none; }
+    body.dashboard-body { margin: 0; min-height: 100vh; background: transparent; }
     body.app-loading #appRoot { visibility: hidden; }
     body.app-ready #appRoot { visibility: visible; }
-
-    .customer-page-wrap {
-      width: min(1220px, calc(100% - 32px));
-      margin: 0 auto;
-      padding: 132px 0 56px;
-      position: relative;
-      z-index: 2;
-    }
-
-    .customer-title-row,
-    .section-title-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 18px;
-      flex-wrap: wrap;
-    }
-
-    .customer-kicker {
-      margin: 0 0 8px;
-      color: var(--theme-primary, #ff2f57);
-      font-size: 12px;
-      font-weight: 900;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-    }
-
-    .customer-title {
-      margin: 0;
-      font-size: clamp(2rem, 5vw, 4.5rem);
-      line-height: 0.95;
-      letter-spacing: -0.06em;
-    }
-
-    .customer-copy,
-    .muted {
-      color: var(--text-muted, rgba(255,255,255,0.68));
-      line-height: 1.65;
-    }
-
-    .customer-copy {
-      margin: 14px 0 0;
-      max-width: 760px;
-    }
-
-    .customer-avatar {
-      width: 78px;
-      height: 78px;
-      border-radius: 26px;
-      display: grid;
-      place-items: center;
-      font-size: 26px;
-      font-weight: 950;
-      background:
-        radial-gradient(circle at 28% 18%, rgba(255,255,255,0.55), transparent 34%),
-        linear-gradient(135deg, rgba(255,47,87,0.92), rgba(70,10,26,0.78));
-      border: 1px solid rgba(255,255,255,0.2);
-      box-shadow: 0 24px 60px rgba(0,0,0,0.28);
-    }
-
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      border-radius: 999px;
-      padding: 9px 13px;
-      border: 1px solid rgba(255,255,255,0.14);
-      background: rgba(255,255,255,0.08);
-      color: var(--text-primary, #fff);
-      font-size: 12px;
-      font-weight: 800;
-      white-space: nowrap;
-      margin-right: 6px;
-      margin-bottom: 6px;
-    }
-
-    .customer-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
-      margin-top: 18px;
-    }
-
-    .customer-stat-card,
-    .service-card {
-      border-radius: 22px;
-      padding: 18px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
-    }
-
-    .customer-stat-card h3,
-    .service-card h3 {
-      margin: 0 0 10px;
-    }
-
-    .customer-stat-card p {
-      margin: 0;
-      color: var(--text-muted, rgba(255,255,255,0.68));
-      overflow-wrap: anywhere;
-    }
-
-    .service-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
-      margin-top: 18px;
-    }
-
-    .service-status {
-      display: inline-flex;
-      border-radius: 999px;
-      padding: 7px 10px;
-      background: rgba(45, 255, 159, 0.12);
-      border: 1px solid rgba(45, 255, 159, 0.24);
-      color: #70ffbd;
-      font-size: 12px;
-      font-weight: 900;
-      margin-bottom: 12px;
-    }
-
-    .service-status.inactive {
-      background: rgba(255,255,255,0.08);
-      border-color: rgba(255,255,255,0.14);
-      color: var(--text-muted, rgba(255,255,255,0.68));
-    }
-
-    .service-title {
-      margin: 0;
-      font-size: 18px;
-    }
-
-    .service-meta {
-      margin-top: 10px;
-      color: var(--text-muted, rgba(255,255,255,0.68));
-      line-height: 1.55;
-      font-size: 14px;
-    }
-
-    .empty-state {
-      border-radius: 20px;
-      padding: 18px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
-      color: var(--text-muted, rgba(255,255,255,0.68));
-      line-height: 1.6;
-    }
-
-    @media (max-width: 960px) {
-      .customer-grid,
-      .service-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (max-width: 760px) {
-      .customer-page-wrap {
-        width: min(100% - 20px, 1220px);
-        padding-top: 112px;
-      }
-
-      .customer-grid,
-      .service-grid {
-        grid-template-columns: 1fr;
-      }
-    }
+    .customer-page-wrap { width: min(1220px, calc(100% - 32px)); margin: 0 auto; padding: 132px 0 56px; position: relative; z-index: 2; }
+    .customer-title-row, .section-title-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; flex-wrap: wrap; }
+    .customer-kicker { margin: 0 0 8px; color: var(--theme-primary, #ff2f57); font-size: 12px; font-weight: 900; letter-spacing: 0.18em; text-transform: uppercase; }
+    .customer-title { margin: 0; font-size: clamp(2rem, 5vw, 4.5rem); line-height: 0.95; letter-spacing: -0.06em; }
+    .customer-copy, .muted { color: var(--text-muted, rgba(255,255,255,0.68)); line-height: 1.65; }
+    .customer-copy { margin: 14px 0 0; max-width: 760px; }
+    .customer-avatar { width: 78px; height: 78px; border-radius: 26px; display: grid; place-items: center; font-size: 26px; font-weight: 950; background: radial-gradient(circle at 28% 18%, rgba(255,255,255,0.55), transparent 34%), linear-gradient(135deg, rgba(255,47,87,0.92), rgba(70,10,26,0.78)); border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 24px 60px rgba(0,0,0,0.28); }
+    .chip { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 9px 13px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.08); color: var(--text-primary, #fff); font-size: 12px; font-weight: 800; white-space: nowrap; margin-right: 6px; margin-bottom: 6px; }
+    .customer-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
+    .customer-stat-card, .service-card { border-radius: 22px; padding: 18px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); }
+    .customer-stat-card h3, .service-card h3 { margin: 0 0 10px; }
+    .customer-stat-card p { margin: 0; color: var(--text-muted, rgba(255,255,255,0.68)); overflow-wrap: anywhere; }
+    .service-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
+    .service-status { display: inline-flex; border-radius: 999px; padding: 7px 10px; background: rgba(45, 255, 159, 0.12); border: 1px solid rgba(45, 255, 159, 0.24); color: #70ffbd; font-size: 12px; font-weight: 900; margin-bottom: 12px; }
+    .service-status.inactive { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.14); color: var(--text-muted, rgba(255,255,255,0.68)); }
+    .service-title { margin: 0; font-size: 18px; }
+    .service-meta { margin-top: 10px; color: var(--text-muted, rgba(255,255,255,0.68)); line-height: 1.55; font-size: 14px; }
+    .empty-state { border-radius: 20px; padding: 18px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color: var(--text-muted, rgba(255,255,255,0.68)); line-height: 1.6; }
+    @media (max-width: 960px) { .customer-grid, .service-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 760px) { .customer-page-wrap { width: min(100% - 20px, 1220px); padding-top: 112px; } .customer-grid, .service-grid { grid-template-columns: 1fr; } }
   </style>
 
   <link rel="stylesheet" href="/assets/css/base.css?v=34" />
   <link rel="stylesheet" href="/assets/css/theme.css?v=36" />
-  <link rel="stylesheet" href="/assets/css/nav.css?v=20260503-final" />
+  <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v4" />
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=34" />
   <link rel="stylesheet" href="/assets/css/app-system.css?v=simple-glass" />
 </head>
-
 <body class="dashboard-body auth-pending app-loading" data-route-guard="private">
   <div id="universalNavRoot"></div>
-  <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
 
   <div id="appRoot">
     <div class="page-grid-overlay"></div>
-
     <main class="customer-page-wrap">
-      <section class="glass-card aurora-card active-glow beam-target">
-        <div class="customer-title-row">
-          <div>
-            <p class="customer-kicker">CUSTOMER PORTAL</p>
-            <h1 class="customer-title" id="welcomeTitle">Welcome</h1>
-            <p class="customer-copy" id="welcomeSubtext">
-              Loading your customer portal...
-            </p>
-
-            <div style="margin-top:16px;">
-              <span class="chip" id="customerHandleChip">@user</span>
-              <span class="chip" id="customerStatusChip">Portal Active</span>
-            </div>
-          </div>
-
-          <div class="customer-avatar" id="customerAvatar">C</div>
-        </div>
-      </section>
-
-      <section class="customer-grid">
-        <article class="customer-stat-card aurora-card active-glow beam-target">
-          <h3>Customer Name</h3>
-          <p id="customerName">Loading...</p>
-        </article>
-
-        <article class="customer-stat-card aurora-card active-glow beam-target">
-          <h3>Email</h3>
-          <p id="customerEmail">Loading...</p>
-        </article>
-
-        <article class="customer-stat-card aurora-card active-glow beam-target">
-          <h3>Company</h3>
-          <p id="customerCompany">Loading...</p>
-        </article>
-      </section>
-
-      <section class="glass-card aurora-card active-glow beam-target" style="margin-top:18px;">
-        <div class="section-title-row">
-          <div>
-            <p class="customer-kicker">Services</p>
-            <h2 style="margin:0;">Your Services</h2>
-          </div>
-
-          <a href="/settings.html" class="btn btn-theme-secondary beam-target">Open Settings</a>
-        </div>
-
-        <div id="servicesList" class="service-grid">
-          <div class="empty-state">Loading services...</div>
-        </div>
-      </section>
+      <section class="glass-card aurora-card active-glow beam-target"><div class="customer-title-row"><div><p class="customer-kicker">CUSTOMER PORTAL</p><h1 class="customer-title" id="welcomeTitle">Welcome</h1><p class="customer-copy" id="welcomeSubtext">Loading your customer portal...</p><div style="margin-top:16px;"><span class="chip" id="customerHandleChip">@user</span><span class="chip" id="customerStatusChip">Portal Active</span></div></div><div class="customer-avatar" id="customerAvatar">C</div></div></section>
+      <section class="customer-grid"><article class="customer-stat-card aurora-card active-glow beam-target"><h3>Customer Name</h3><p id="customerName">Loading...</p></article><article class="customer-stat-card aurora-card active-glow beam-target"><h3>Email</h3><p id="customerEmail">Loading...</p></article><article class="customer-stat-card aurora-card active-glow beam-target"><h3>Company</h3><p id="customerCompany">Loading...</p></article></section>
+      <section class="glass-card aurora-card active-glow beam-target" style="margin-top:18px;"><div class="section-title-row"><div><p class="customer-kicker">Services</p><h2 style="margin:0;">Your Services</h2></div><a href="/settings.html" class="btn btn-theme-secondary beam-target">Open Settings</a></div><div id="servicesList" class="service-grid"><div class="empty-state">Loading services...</div></div></section>
     </main>
   </div>
 
-  <script src="/assets/js/loader.js?v=35"></script>
+  <script src="/assets/js/loader.js?v=3"></script>
   <script type="module" src="/assets/js/firebase.js?v=36"></script>
   <script type="module" src="/assets/js/theme.js?v=37"></script>
-  <script src="/assets/js/theme-css-loader.js?v=1"></script>
-  <script type="module" src="/assets/js/route-guard.js?v=35"></script>
-  <script type="module" src="/assets/js/nav.js?v=20260503-final"></script>
-
+  <script src="/assets/js/theme-css-loader.js?v=2"></script>
+  <script type="module" src="/assets/js/route-guard.js?v=36"></script>
+  <script type="module" src="/assets/js/nav.js?v=nav-v4"></script>
   <script type="module">
-    import {
-      requireAuth,
-      loadCompany,
-      hasPermission,
-      fetchAllCollection
-    } from "/assets/js/app.js";
-
-    function normalize(value = "") {
-      return String(value || "").trim().toLowerCase();
-    }
-
-    function escapeHtml(value = "") {
-      return String(value || "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
-
-    function initials(name) {
-      const parts = String(name || "").trim().split(" ").filter(Boolean);
-      if (!parts.length) return "C";
-      return parts.slice(0, 2).map((part) => part[0]?.toUpperCase()).join("");
-    }
-
-    function displayName(user = {}) {
-      return user.name || user.fullName || user.displayName || user.username || user.email || "Customer";
-    }
-
-    function getHandle(user = {}) {
-      if (user.handle) return user.handle;
-      if (user.username) return `@${user.username}`;
-      if (user.email) return `@${String(user.email).split("@")[0]}`;
-      return "@user";
-    }
-
-    async function fetchCustomerServices(user = {}) {
-      const possibleCollections = ["customer_services", "services", "subscriptions", "jobs"];
-      const allMatches = [];
-
-      for (const collectionName of possibleCollections) {
-        try {
-          const docs = await fetchAllCollection(collectionName, { max: 500 });
-
-          const matches = docs.filter((item) => {
-            const possibleIds = [
-              item.customerId,
-              item.customerUid,
-              item.userId,
-              item.uid,
-              item.ownerId,
-              item.clientId
-            ].map(normalize);
-
-            const possibleEmails = [
-              item.customerEmail,
-              item.email,
-              item.clientEmail
-            ].map(normalize);
-
-            return (
-              possibleIds.includes(normalize(user.id)) ||
-              possibleIds.includes(normalize(user.uid)) ||
-              possibleEmails.includes(normalize(user.email))
-            );
-          });
-
-          matches.forEach((item) => {
-            allMatches.push({
-              ...item,
-              sourceCollection: collectionName
-            });
-          });
-        } catch (error) {
-          console.warn(`Could not load ${collectionName}:`, error);
-        }
-      }
-
-      return allMatches;
-    }
-
-    function serviceName(service = {}) {
-      return (
-        service.name ||
-        service.serviceName ||
-        service.title ||
-        service.type ||
-        service.jobType ||
-        "Customer Service"
-      );
-    }
-
-    function serviceBilling(service = {}) {
-      return (
-        service.billingType ||
-        service.billing ||
-        service.plan ||
-        service.frequency ||
-        service.subscriptionType ||
-        "Standard"
-      );
-    }
-
-    function servicePolicy(service = {}) {
-      return (
-        service.cancellationPolicy ||
-        service.policy ||
-        service.notes ||
-        service.description ||
-        "Service details will appear here once configured."
-      );
-    }
-
-    function serviceStatus(service = {}) {
-      return normalize(service.status || service.state || "active");
-    }
-
-    function renderServices(services = []) {
-      const root = document.getElementById("servicesList");
-      if (!root) return;
-
-      if (!services.length) {
-        root.innerHTML = `
-          <div class="empty-state">
-            No customer services are attached to this account yet. Once services, subscriptions,
-            or jobs are assigned to your profile, they will appear here.
-          </div>
-        `;
-        return;
-      }
-
-      root.innerHTML = services.map((service) => {
-        const status = serviceStatus(service);
-        const active = ["active", "scheduled", "booked", "in_progress", "completed"].includes(status);
-
-        return `
-          <article class="service-card aurora-card active-glow beam-target">
-            <div class="service-status ${active ? "" : "inactive"}">
-              ${active ? "Active Service" : "Inactive Service"}
-            </div>
-
-            <h3 class="service-title">${escapeHtml(serviceName(service))}</h3>
-
-            <div class="service-meta">
-              Billing: ${escapeHtml(serviceBilling(service))}<br>
-              Status: ${escapeHtml(status || "active")}<br>
-              Source: ${escapeHtml(service.sourceCollection || "services")}<br>
-              ${escapeHtml(servicePolicy(service))}
-            </div>
-          </article>
-        `;
-      }).join("");
-    }
-
-    requireAuth(async (user) => {
-      if (!hasPermission(user, "customer_dashboard")) {
-        window.location.href = "/dashboard.html";
-        return;
-      }
-
-      const company = await loadCompany(user.companyId);
-      const name = displayName(user);
-      const services = await fetchCustomerServices(user);
-
-      document.getElementById("welcomeTitle").textContent = `Welcome, ${name}`;
-      document.getElementById("welcomeSubtext").textContent =
-        `You are viewing your customer portal for ${company?.name || user.companyId || "Evaraos"}.`;
-
-      document.getElementById("customerHandleChip").textContent = getHandle(user);
-      document.getElementById("customerAvatar").textContent = initials(name);
-      document.getElementById("customerName").textContent = name;
-      document.getElementById("customerEmail").textContent = user.email || "No email";
-      document.getElementById("customerCompany").textContent = company?.name || user.companyId || "No company";
-      document.getElementById("customerStatusChip").textContent = `${services.length} Service${services.length === 1 ? "" : "s"}`;
-
-      renderServices(services);
-    });
+    import { requireAuth, loadCompany, hasPermission, fetchAllCollection } from "/assets/js/app.js";
+    function normalize(value = "") { return String(value || "").trim().toLowerCase(); }
+    function escapeHtml(value = "") { return String(value || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
+    function initials(name) { const parts = String(name || "").trim().split(" ").filter(Boolean); if (!parts.length) return "C"; return parts.slice(0, 2).map((part) => part[0]?.toUpperCase()).join(""); }
+    function displayName(user = {}) { return user.name || user.fullName || user.displayName || user.username || user.email || "Customer"; }
+    function getHandle(user = {}) { if (user.handle) return user.handle; if (user.username) return `@${user.username}`; if (user.email) return `@${String(user.email).split("@")[0]}`; return "@user"; }
+    async function fetchCustomerServices(user = {}) { const possibleCollections = ["customer_services", "services", "subscriptions", "jobs"]; const allMatches = []; for (const collectionName of possibleCollections) { try { const docs = await fetchAllCollection(collectionName, { max: 500 }); const matches = docs.filter((item) => { const possibleIds = [item.customerId, item.customerUid, item.userId, item.uid, item.ownerId, item.clientId].map(normalize); const possibleEmails = [item.customerEmail, item.email, item.clientEmail].map(normalize); return possibleIds.includes(normalize(user.id)) || possibleIds.includes(normalize(user.uid)) || possibleEmails.includes(normalize(user.email)); }); matches.forEach((item) => allMatches.push({ ...item, sourceCollection: collectionName })); } catch (error) { console.warn(`Could not load ${collectionName}:`, error); } } return allMatches; }
+    function serviceName(service = {}) { return service.name || service.serviceName || service.title || service.type || service.jobType || "Customer Service"; }
+    function serviceBilling(service = {}) { return service.billingType || service.billing || service.plan || service.frequency || service.subscriptionType || "Standard"; }
+    function renderServices(services = []) { const root = document.getElementById("servicesList"); if (!root) return; if (!services.length) { root.innerHTML = '<div class="empty-state">No linked services found yet. Once your services, jobs, or subscriptions are attached to your account, they will appear here.</div>'; return; } root.innerHTML = services.slice(0, 12).map((service) => `<article class="service-card aurora-card active-glow beam-target"><span class="service-status ${service.status === "inactive" ? "inactive" : ""}">${escapeHtml(service.status || "Active")}</span><h3 class="service-title">${escapeHtml(serviceName(service))}</h3><p class="service-meta">${escapeHtml(serviceBilling(service))} • ${escapeHtml(service.sourceCollection || "Evaraos")}</p></article>`).join(""); }
+    async function initCustomerPortal() { try { const { userProfile } = await requireAuth({ allowedRoles: ["customer", "owner", "admin", "super_admin", "operations_manager", "sales_manager", "technician", "cleaner", "staff"] }); const user = userProfile || {}; const name = displayName(user); document.getElementById("welcomeTitle").textContent = `Welcome, ${name}`; document.getElementById("welcomeSubtext").textContent = "Your customer portal keeps services, messages, billing, and account activity connected to your Evaraos profile."; document.getElementById("customerName").textContent = name; document.getElementById("customerEmail").textContent = user.email || "Not available"; document.getElementById("customerHandleChip").textContent = getHandle(user); document.getElementById("customerAvatar").textContent = initials(name); let companyLabel = user.companyId || user.companyName || "Evaraos"; try { if (user.companyId) { const company = await loadCompany(user.companyId); companyLabel = company?.name || companyLabel; } } catch {} document.getElementById("customerCompany").textContent = companyLabel; const canSeeAdmin = hasPermission(user.role, "admin"); if (canSeeAdmin) document.getElementById("customerStatusChip").textContent = "Admin View"; const services = await fetchCustomerServices(user); renderServices(services); } catch (error) { console.error("Customer portal failed:", error); document.getElementById("welcomeTitle").textContent = "Customer Portal"; document.getElementById("welcomeSubtext").textContent = "We could not load your account details. Please log in again."; } }
+    initCustomerPortal();
   </script>
-
-<!-- EVARAOS BOTTOM DOT NAV + ABOVE DROPDOWN TUNE -->
-<!-- /EVARAOS BOTTOM DOT NAV + ABOVE DROPDOWN TUNE -->
-
 </body>
 </html>
