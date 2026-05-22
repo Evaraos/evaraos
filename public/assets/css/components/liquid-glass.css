@@ -250,9 +250,13 @@ html[data-theme="dark"] .aurora-card span {
 }
 
 .liquid-control,
-input,
-textarea,
-select {
+.form-control,
+.input-shell input,
+.input-shell textarea,
+.input-shell select,
+.password-wrap input,
+.password-wrap textarea,
+.password-wrap select {
   backdrop-filter: blur(14px) saturate(135%);
   -webkit-backdrop-filter: blur(14px) saturate(135%);
 }
@@ -268,18 +272,6 @@ select {
   .dashboard-stat-card,
   .dashboard-list-item,
   .dashboard-feed-item {
-    border-radius: var(--surface-radius-md);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .liquid-glass,
-  .glass-card,
-  .glass-shell,
-  .aurora-card,
-  .glass,
-  .eva-menu-card,
-  .eva-bottom-nav {
-    transition: none;
+    transform: none;
   }
 }
