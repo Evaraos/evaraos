@@ -1,4 +1,4 @@
-const NAV_BUILD = "nav-source-clean-20260520-fast-menu-lite";
+const NAV_BUILD = "nav-source-clean-20260520-fast-menu-lite-idle";
 
 let NAV_STATE;
 let getNavShell;
@@ -29,10 +29,12 @@ function ensureAppRoot() {
 }
 
 async function loadCoreNav() {
-  const config = await import(`./nav-config.js?v=${NAV_BUILD}`);
-  const utils = await import(`./nav-utils.js?v=${NAV_BUILD}`);
-  const renderer = await import(`./nav-render.js?v=${NAV_BUILD}`);
-  const scroll = await import(`./nav-scroll.js?v=${NAV_BUILD}`);
+  const [config, utils, renderer, scroll] = await Promise.all([
+    import(`./nav-config.js?v=${NAV_BUILD}`),
+    import(`./nav-utils.js?v=${NAV_BUILD}`),
+    import(`./nav-render.js?v=${NAV_BUILD}`),
+    import(`./nav-scroll.js?v=${NAV_BUILD}`)
+  ]);
 
   NAV_STATE = config.NAV_STATE;
   getNavShell = utils.getNavShell;
@@ -48,6 +50,14 @@ async function loadCoreNav() {
 async function safeImport(path) {
   try { return await import(`${path}?v=${NAV_BUILD}`); }
   catch (error) { console.warn("Optional nav module failed:", path, error); return null; }
+}
+
+function runWhenIdle(callback) {
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(callback, { timeout: 900 });
+    return;
+  }
+  window.setTimeout(callback, 120);
 }
 
 function bootReadySignal() {
@@ -132,12 +142,14 @@ function bindDelegatedThemeToggle() {
 }
 
 async function bindOptionalSystems() {
-  const menu = await safeImport("./nav-menu.js");
+  const [menu, events, session] = await Promise.all([
+    safeImport("./nav-menu.js"),
+    safeImport("./nav-events.js"),
+    safeImport("./nav-session.js")
+  ]);
   menuApi = menu;
-  const events = await safeImport("./nav-events.js");
-  const session = await safeImport("./nav-session.js");
-  try { if (events && events.bindAllNavEvents) events.bindAllNavEvents(); } catch (error) { console.warn("Nav events failed:", error); }
   try { if (menu && menu.bindMenu) menu.bindMenu(); } catch (error) { console.warn("Nav menu failed:", error); }
+  try { if (events && events.bindAllNavEvents) events.bindAllNavEvents(); } catch (error) { console.warn("Nav events failed:", error); }
   try { if (bindScrollBehavior) bindScrollBehavior(); } catch (error) { console.warn("Nav scroll failed:", error); }
   try { if (session && session.bindRuntimeRefresh) session.bindRuntimeRefresh(); } catch (error) { console.warn("Nav session refresh failed:", error); }
   syncNavThemeVisual();
@@ -176,7 +188,7 @@ export async function initNav() {
     try { applyProgress(1); } catch (error) { console.warn("Nav progress failed:", error); }
     try { animateNav(); } catch (error) { console.warn("Nav animation failed:", error); }
     bootReadySignal();
-    bindOptionalSystems();
+    runWhenIdle(() => bindOptionalSystems());
   } catch (error) {
     console.error("Evaraos nav failed to boot:", error);
     bootReadySignal();
