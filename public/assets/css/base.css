@@ -68,7 +68,7 @@ button, input, textarea, select { font: inherit; }
   overflow-x: clip;
 }
 
-/* AI pages are app-style workspaces. Base owns this reset so global home/hero/page styles never bleed into AI. */
+/* AI pages are app-style workspaces. Base only isolates the route shell; AI page CSS owns all AI visuals. */
 body.ai-page {
   overflow: hidden;
 }
@@ -79,19 +79,9 @@ body.ai-page #appRoot {
   overflow: hidden;
 }
 
-body.ai-page .home-shell,
-body.ai-page .hero-home,
-body.ai-page .hero-content,
-body.ai-page .hero-title,
-body.ai-page .hero-subtitle,
-body.ai-page .hero-actions,
-body.ai-page .section-panel,
-body.ai-page .section-head,
-body.ai-page .glass-card,
-body.ai-page .aurora-card,
-body.ai-page .panel,
-body.ai-page .card {
-  all: revert-layer;
+body.ai-page .eva-ai-app-root,
+body.ai-page .eva-ai-page-shell {
+  max-width: none;
 }
 
 body:not(.home-page):not(.ai-page) #appRoot > main,
