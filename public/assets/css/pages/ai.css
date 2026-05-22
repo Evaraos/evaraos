@@ -3,7 +3,8 @@
   --ai-pad: 16px;
   --ai-top: 44px;
   --ai-header-h: 76px;
-  --ai-bottom: calc(var(--eva-page-nav-clearance, 104px) + 18px);
+  --ai-composer-h: 132px;
+  --ai-bottom-nav-gap: calc(var(--eva-page-nav-clearance, 104px) + 18px);
   --ai-bg: #f7f8fb;
   --ai-text: #101522;
   --ai-muted: rgba(16, 21, 34, .58);
@@ -58,13 +59,11 @@ body.ai-page * {
   padding:
     calc(var(--ai-top) + env(safe-area-inset-top, 0px) + var(--ai-header-h) + 14px)
     var(--ai-pad)
-    calc(var(--ai-bottom) + env(safe-area-inset-bottom, 0px));
+    calc(var(--ai-composer-h) + var(--ai-bottom-nav-gap) + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   gap: 14px;
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
   background: radial-gradient(circle at 50% -20%, rgba(59, 130, 246, .08), transparent 42%);
 }
 
@@ -161,11 +160,14 @@ body.ai-page * {
 
 .eva-ai-thread {
   flex: 1 1 auto;
-  min-height: 34svh;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 14px;
   padding: 0 0 8px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .eva-ai-message-card {
@@ -270,7 +272,12 @@ body.ai-page * {
 }
 
 .eva-ai-quick-row {
-  flex: 0 0 auto;
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--ai-bottom-nav-gap) + 82px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 45;
+  width: min(calc(100vw - (var(--ai-pad) * 2)), calc(var(--ai-max) - (var(--ai-pad) * 2)));
   display: flex;
   gap: 10px;
   overflow-x: auto;
@@ -297,12 +304,17 @@ body.ai-page * {
 }
 
 .eva-ai-composer {
-  flex: 0 0 auto;
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--ai-bottom-nav-gap) + 12px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 45;
+  width: min(calc(100vw - (var(--ai-pad) * 2)), calc(var(--ai-max) - (var(--ai-pad) * 2)));
   display: grid;
   grid-template-columns: 50px minmax(0, 1fr);
   align-items: center;
   gap: 10px;
-  margin-bottom: 4px;
+  margin: 0;
 }
 
 .eva-ai-plus {
@@ -391,7 +403,8 @@ body.dark .eva-ai-attachment-card {
     --ai-pad: 12px;
     --ai-top: 34px;
     --ai-header-h: 72px;
-    --ai-bottom: calc(var(--eva-page-nav-clearance, 98px) + 14px);
+    --ai-composer-h: 124px;
+    --ai-bottom-nav-gap: calc(var(--eva-page-nav-clearance, 98px) + 14px);
   }
 
   .eva-ai-page-shell {
@@ -420,8 +433,11 @@ body.dark .eva-ai-attachment-card {
   }
 
   .eva-ai-thread {
-    min-height: 32svh;
     gap: 12px;
+  }
+
+  .eva-ai-quick-row {
+    bottom: calc(var(--ai-bottom-nav-gap) + 78px + env(safe-area-inset-bottom, 0px));
   }
 
   .eva-ai-quick-row button {
@@ -453,7 +469,7 @@ body.dark .eva-ai-attachment-card {
 @media (max-width: 390px) {
   :root {
     --ai-top: 30px;
-    --ai-bottom: calc(var(--eva-page-nav-clearance, 92px) + 12px);
+    --ai-bottom-nav-gap: calc(var(--eva-page-nav-clearance, 92px) + 12px);
   }
 
   .eva-ai-title-block h1 {
