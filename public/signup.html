@@ -38,84 +38,28 @@
 
   <title>Sign Up • Evaraos Inc</title>
 
-  <script>
-    (function () {
-      try {
-        var raw = localStorage.getItem("evaraos-appearance");
-        var theme = "light";
-
-        if (raw) {
-          var appearance = JSON.parse(raw);
-
-          if (appearance.mode === "light") theme = "light";
-          else if (appearance.mode === "custom") {
-            if (appearance.baseFamily === "light") theme = "light";
-            else theme = "dark";
-          }
-        }
-
-        document.documentElement.setAttribute("data-theme", theme);
-      } catch {
-        document.documentElement.setAttribute("data-theme", "light");
-      }
-
-      document.documentElement.classList.add("boot-pending", "auth-pending");
-    })();
-  </script>
+  <script src="/assets/js/theme-boot.js?v=1"></script>
 
   <style>
-    html,
-    body {
-      background: #f4f7f6;
-    }
-
-    html[data-theme="light"],
-    html[data-theme="light"] body {
-      background: #f4f7f6;
-    }
-
-    html[data-theme="dark"],
-    html[data-theme="dark"] body {
-      background: #050311;
-    }
-
-    html.boot-pending body {
-      margin: 0;
-      overflow: hidden;
-      touch-action: none;
-    }
-
-    html.auth-pending body,
-    body.auth-pending {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    body.signup-page {
-      margin: 0;
-      min-height: 100vh;
-      background: transparent;
-    }
-
-    body.app-loading #appRoot {
-      visibility: hidden;
-    }
-
-    body.app-ready #appRoot {
-      visibility: visible;
-    }
+    html, body { background: #f4f7f6; }
+    html[data-theme="light"], html[data-theme="light"] body { background: #f4f7f6; }
+    html[data-theme="dark"], html[data-theme="dark"] body { background: #050311; }
+    html.boot-pending body { margin: 0; overflow: hidden; touch-action: none; }
+    html.auth-pending body, body.auth-pending { opacity: 0; pointer-events: none; }
+    body.signup-page { margin: 0; min-height: 100vh; background: transparent; }
+    body.app-loading #appRoot { visibility: hidden; }
+    body.app-ready #appRoot { visibility: visible; }
   </style>
 
   <link rel="stylesheet" href="/assets/css/base.css?v=34" />
   <link rel="stylesheet" href="/assets/css/theme.css?v=36" />
-  <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v1" />
+  <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v4" />
   <link rel="stylesheet" href="/assets/css/auth.css?v=34" />
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=34" />
   <link rel="stylesheet" href="/assets/css/app-system.css?v=simple-glass" />
 </head>
 <body class="signup-page auth-pending app-loading" data-route-guard="auth">
   <div id="universalNavRoot"></div>
-  <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
 
   <div id="appRoot">
     <div class="page-grid-overlay"></div>
@@ -123,161 +67,43 @@
     <main class="signup-shell">
       <section class="login-panel glass-card aurora-card auth-panel auth-panel-signup active-glow beam-target">
         <div class="login-badge-wrap">
-          <img
-            src="/assets/img/evaraos_logo.png"
-            alt="Evaraos logo"
-            class="login-badge auth-badge auth-badge-large"
-            loading="eager"
-            decoding="async"
-            fetchpriority="high"
-          />
+          <img src="/assets/img/evaraos_logo.png" alt="Evaraos logo" class="login-badge auth-badge auth-badge-large" loading="eager" decoding="async" fetchpriority="high" />
         </div>
 
         <h1 class="login-title">Create Account</h1>
-        <p class="login-subtitle">
-          Create your secure Evaraos account and choose a username for platform access.
-        </p>
+        <p class="login-subtitle">Create your secure Evaraos account and choose a username for platform access.</p>
 
         <form id="signupForm" class="login-form" novalidate>
           <div class="form-grid-2">
-            <div class="form-group">
-              <label class="field-label" for="signupName">Full Name</label>
-              <div class="input-shell aurora-card beam-target">
-                <input
-                  id="signupName"
-                  name="name"
-                  type="text"
-                  class="input"
-                  placeholder="Enter your full name"
-                  autocomplete="name"
-                  required
-                />
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label class="field-label" for="signupUsername">Username</label>
-              <div class="input-shell aurora-card beam-target">
-                <input
-                  id="signupUsername"
-                  name="username"
-                  type="text"
-                  class="input"
-                  placeholder="Choose a username"
-                  autocomplete="username"
-                  required
-                />
-              </div>
-            </div>
+            <div class="form-group"><label class="field-label" for="signupName">Full Name</label><div class="input-shell aurora-card beam-target"><input id="signupName" name="name" type="text" class="input" placeholder="Enter your full name" autocomplete="name" required /></div></div>
+            <div class="form-group"><label class="field-label" for="signupUsername">Username</label><div class="input-shell aurora-card beam-target"><input id="signupUsername" name="username" type="text" class="input" placeholder="Choose a username" autocomplete="username" required /></div></div>
           </div>
 
           <div class="form-grid-2">
-            <div class="form-group">
-              <label class="field-label" for="signupEmail">Email</label>
-              <div class="input-shell aurora-card beam-target">
-                <input
-                  id="signupEmail"
-                  name="email"
-                  type="email"
-                  class="input"
-                  placeholder="Enter your email"
-                  autocomplete="email"
-                  required
-                />
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label class="field-label" for="signupPassword">Create Password</label>
-              <div class="password-wrap aurora-card beam-target">
-                <input
-                  id="signupPassword"
-                  name="password"
-                  type="password"
-                  class="input"
-                  placeholder="Create your password"
-                  autocomplete="new-password"
-                  required
-                />
-                <button
-                  type="button"
-                  class="password-toggle"
-                  id="signupPasswordToggle"
-                  aria-label="Show password"
-                >
-                  <svg viewBox="0 0 24 24" class="password-eye-icon eye-open" aria-hidden="true">
-                    <path d="M12 5c5.5 0 9.5 5.1 10.7 6.9.2.3.2.8 0 1.1C21.5 14.9 17.5 20 12 20S2.5 14.9 1.3 13.1a1 1 0 0 1 0-1.1C2.5 10.1 6.5 5 12 5Zm0 2C8 7 4.8 10.3 3.4 12 4.8 13.7 8 17 12 17s7.2-3.3 8.6-5C19.2 10.3 16 7 12 7Zm0 1.8A3.2 3.2 0 1 1 8.8 12 3.2 3.2 0 0 1 12 8.8Zm0 2A1.2 1.2 0 1 0 13.2 12 1.2 1.2 0 0 0 12 10.8Z"></path>
-                  </svg>
-                  <svg viewBox="0 0 24 24" class="password-eye-icon eye-closed" aria-hidden="true">
-                    <path d="M3.3 4.7 19.3 20.7l1.4-1.4-2.2-2.2c1.8-1.2 3.2-2.8 4.2-4.2a1 1 0 0 0 0-1.1C21.5 10.1 17.5 5 12 5c-1.8 0-3.5.5-5.1 1.2L4.7 3.3 3.3 4.7Zm5.1 5.1 1.5 1.5a2.2 2.2 0 0 0 2.8 2.8l1.5 1.5A4.2 4.2 0 0 1 8.4 9.8ZM12 7c4 0 7.2 3.3 8.6 5-1 1.3-2.8 3.2-5.1 4.3l-1.6-1.6a4.2 4.2 0 0 0-4.6-4.6L7.8 8.5C9.1 7.6 10.5 7 12 7ZM5.3 8.3C3.9 9.4 2.8 10.8 1.3 12.9a1 1 0 0 0 0 1.1C2.5 15.9 6.5 21 12 21c1.8 0 3.6-.5 5.1-1.3l-1.5-1.5A8.6 8.6 0 0 1 12 19c-4 0-7.2-3.3-8.6-5 .9-1.1 2.2-2.5 3.7-3.6L5.3 8.3Z"></path>
-                  </svg>
-                </button>
-              </div>
-            </div>
+            <div class="form-group"><label class="field-label" for="signupEmail">Email</label><div class="input-shell aurora-card beam-target"><input id="signupEmail" name="email" type="email" class="input" placeholder="Enter your email" autocomplete="email" required /></div></div>
+            <div class="form-group"><label class="field-label" for="signupPassword">Create Password</label><div class="password-wrap aurora-card beam-target"><input id="signupPassword" name="password" type="password" class="input" placeholder="Create your password" autocomplete="new-password" required /><button type="button" class="password-toggle" id="signupPasswordToggle" aria-label="Show password">👁</button></div></div>
           </div>
 
           <div class="form-grid-2">
-            <div class="form-group">
-              <label class="field-label" for="signupPasswordConfirm">Confirm Password</label>
-              <div class="password-wrap aurora-card beam-target">
-                <input
-                  id="signupPasswordConfirm"
-                  name="passwordConfirm"
-                  type="password"
-                  class="input"
-                  placeholder="Confirm your password"
-                  autocomplete="new-password"
-                  required
-                />
-                <button
-                  type="button"
-                  class="password-toggle"
-                  id="signupPasswordConfirmToggle"
-                  aria-label="Show password confirmation"
-                >
-                  <svg viewBox="0 0 24 24" class="password-eye-icon eye-open" aria-hidden="true">
-                    <path d="M12 5c5.5 0 9.5 5.1 10.7 6.9.2.3.2.8 0 1.1C21.5 14.9 17.5 20 12 20S2.5 14.9 1.3 13.1a1 1 0 0 1 0-1.1C2.5 10.1 6.5 5 12 5Zm0 2C8 7 4.8 10.3 3.4 12 4.8 13.7 8 17 12 17s7.2-3.3 8.6-5C19.2 10.3 16 7 12 7Zm0 1.8A3.2 3.2 0 1 1 8.8 12 3.2 3.2 0 0 1 12 8.8Zm0 2A1.2 1.2 0 1 0 13.2 12 1.2 1.2 0 0 0 12 10.8Z"></path>
-                  </svg>
-                  <svg viewBox="0 0 24 24" class="password-eye-icon eye-closed" aria-hidden="true">
-                    <path d="M3.3 4.7 19.3 20.7l1.4-1.4-2.2-2.2c1.8-1.2 3.2-2.8 4.2-4.2a1 1 0 0 0 0-1.1C21.5 10.1 17.5 5 12 5c-1.8 0-3.5.5-5.1 1.2L4.7 3.3 3.3 4.7Zm5.1 5.1 1.5 1.5a2.2 2.2 0 0 0 2.8 2.8l1.5 1.5A4.2 4.2 0 0 1 8.4 9.8ZM12 7c4 0 7.2 3.3 8.6 5-1 1.3-2.8 3.2-5.1 4.3l-1.6-1.6a4.2 4.2 0 0 0-4.6-4.6L7.8 8.5C9.1 7.6 10.5 7 12 7ZM5.3 8.3C3.9 9.4 2.8 10.8 1.3 12.9a1 1 0 0 0 0 1.1C2.5 15.9 6.5 21 12 21c1.8 0 3.6-.5 5.1-1.3l-1.5-1.5A8.6 8.6 0 0 1 12 19c-4 0-7.2-3.3-8.6-5 .9-1.1 2.2-2.5 3.7-3.6L5.3 8.3Z"></path>
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label class="field-label" for="signupRememberDevice">Session</label>
-              <div class="remember-row aurora-card beam-target">
-                <label class="remember-check" for="signupRememberDevice">
-                  <input id="signupRememberDevice" name="rememberDevice" type="checkbox" checked />
-                  <span>Keep me signed in on this device</span>
-                </label>
-              </div>
-            </div>
+            <div class="form-group"><label class="field-label" for="signupPasswordConfirm">Confirm Password</label><div class="password-wrap aurora-card beam-target"><input id="signupPasswordConfirm" name="passwordConfirm" type="password" class="input" placeholder="Confirm your password" autocomplete="new-password" required /><button type="button" class="password-toggle" id="signupPasswordConfirmToggle" aria-label="Show password confirmation">👁</button></div></div>
+            <div class="form-group"><label class="field-label" for="signupRememberDevice">Session</label><div class="remember-row aurora-card beam-target"><label class="remember-check" for="signupRememberDevice"><input id="signupRememberDevice" name="rememberDevice" type="checkbox" checked /><span>Keep me signed in on this device</span></label></div></div>
           </div>
 
-          <div class="login-actions-row">
-            <button type="submit" class="btn btn-theme-primary premium-red-btn">Create Account</button>
-            <a href="/login.html" class="btn btn-theme-secondary">Already Have Login</a>
-          </div>
-
+          <div class="login-actions-row"><button type="submit" class="btn btn-theme-primary premium-red-btn">Create Account</button><a href="/login.html" class="btn btn-theme-secondary">Already Have Login</a></div>
           <p id="signupMessage" class="login-message" aria-live="polite"></p>
         </form>
 
-        <div class="auth-footer-links">
-          <span>Already registered?</span>
-          <a href="/login.html">Sign in</a>
-        </div>
+        <div class="auth-footer-links"><span>Already registered?</span><a href="/login.html">Sign in</a></div>
       </section>
     </main>
   </div>
 
-  <script src="/assets/js/loader.js?v=35"></script>
+  <script src="/assets/js/loader.js?v=3"></script>
   <script type="module" src="/assets/js/firebase.js?v=36"></script>
   <script type="module" src="/assets/js/theme.js?v=37"></script>
-  <script src="/assets/js/theme-css-loader.js?v=1"></script>
-  <script type="module" src="/assets/js/route-guard.js?v=35"></script>
-  <script type="module" src="/assets/js/auth.js?v=35"></script>
-  <script type="module" src="/assets/js/nav.js?v=nav-v1"></script>
+  <script src="/assets/js/theme-css-loader.js?v=2"></script>
+  <script type="module" src="/assets/js/route-guard.js?v=36"></script>
+  <script type="module" src="/assets/js/auth.js?v=38"></script>
+  <script type="module" src="/assets/js/nav.js?v=nav-v4"></script>
 </body>
 </html>
