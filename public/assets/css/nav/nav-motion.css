@@ -38,7 +38,8 @@ body:not(.login-page) #appRoot {
   box-sizing: border-box;
 }
 
-body.login-page #appRoot {
+body.login-page #appRoot,
+body.ai-page #appRoot {
   padding-top: 0 !important;
   padding-bottom: 0 !important;
 }
@@ -180,6 +181,14 @@ body.app-ready #appRoot {
   will-change: opacity, transform, filter;
 }
 
+body.ai-page.app-ready #appRoot,
+body.ai-page #appRoot {
+  animation: none !important;
+  transform: none !important;
+  filter: none !important;
+  will-change: auto !important;
+}
+
 html.eva-route-leaving #appRoot,
 body.eva-route-leaving #appRoot {
   animation: evaPageLeave .18s ease both;
@@ -191,10 +200,23 @@ body.app-loading #appRoot {
   filter: saturate(.96) blur(.2px);
 }
 
+html.eva-transitioning body.ai-page #appRoot,
+body.ai-page.app-loading #appRoot {
+  filter: none !important;
+}
+
 body.app-ready .glass-card,
 body.app-ready .aurora-card,
 body.app-ready .beam-target {
   animation: evaSurfaceSettle .48s cubic-bezier(.16, 1, .3, 1) both;
+}
+
+body.ai-page.app-ready .glass-card,
+body.ai-page.app-ready .aurora-card,
+body.ai-page.app-ready .beam-target {
+  animation: none !important;
+  transform: none !important;
+  filter: none !important;
 }
 
 body.app-ready .glass-card:nth-of-type(2),
