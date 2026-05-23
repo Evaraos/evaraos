@@ -82,9 +82,10 @@ export function getAppearanceTheme() {
     const raw = localStorage.getItem("evaraos-appearance");
     if (raw) {
       const appearance = JSON.parse(raw);
-      if (appearance.mode === "light") return "light";
       if (appearance.mode === "dark") return "dark";
-      if (appearance.mode === "custom") return appearance.baseFamily === "light" ? "light" : "dark";
+      if (appearance.mode === "system") {
+        return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ? "dark" : "light";
+      }
     }
   } catch {}
 
@@ -100,9 +101,21 @@ export function setTheme(theme) {
 }
 
 export function syncThemeLabel() {
-  const mode = getAppearanceTheme();
-  const text = mode === "light" ? "Light mode" : "Dark mode";
-  const icon = mode === "light" ? "☀" : "☾";
+  let text = "System mode";
+  let icon = "◐";
+
+  try {
+    const raw = localStorage.getItem("evaraos-appearance");
+    const appearance = raw ? JSON.parse(raw) : {};
+
+    if (appearance.mode === "light") {
+      text = "Light mode";
+      icon = "☀";
+    } else if (appearance.mode === "dark") {
+      text = "Dark mode";
+      icon = "☾";
+    }
+  } catch {}
 
   document.querySelectorAll("[data-theme-label]").forEach((node) => {
     const labelNode = node.querySelector?.("[data-theme-text]");
@@ -114,7 +127,6 @@ export function syncThemeLabel() {
     if (iconNode) iconNode.textContent = icon;
 
     node.setAttribute("aria-label", `Switch theme. Current: ${text}`);
-    node.dataset.themeMode = mode;
   });
 }
 
