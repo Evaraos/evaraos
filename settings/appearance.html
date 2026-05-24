@@ -38,32 +38,7 @@
 
   <title>Appearance Settings • Evaraos Inc</title>
 
-  <script>
-    (function () {
-      try {
-        var raw = localStorage.getItem("evaraos-appearance");
-        var theme = "light";
-
-        if (raw) {
-          var appearance = JSON.parse(raw);
-
-          if (appearance.mode === "light") theme = "light";
-          else if (appearance.mode === "galaxy") theme = "galaxy";
-          else if (appearance.mode === "custom") {
-            if (appearance.baseFamily === "light") theme = "light";
-            else if (appearance.baseFamily === "galaxy") theme = "galaxy";
-            else theme = "dark";
-          }
-        }
-
-        document.documentElement.setAttribute("data-theme", theme);
-      } catch {
-        document.documentElement.setAttribute("data-theme", "light");
-      }
-
-      document.documentElement.classList.add("boot-pending", "auth-pending");
-    })();
-  </script>
+  <script src="/assets/js/theme-boot.js?v=2"></script>
 
   <style>
     html,
@@ -72,8 +47,8 @@
     html[data-theme="light"],
     html[data-theme="light"] body { background: #f4f7f6; }
 
-    html[data-theme="galaxy"],
-    html[data-theme="galaxy"] body { background: #050311; }
+    html[data-theme="dark"],
+    html[data-theme="dark"] body { background: #020307; }
 
     html.boot-pending body {
       margin: 0;
@@ -110,7 +85,6 @@
 
   <div id="appRoot">
     <div class="page-aurora"></div>
-    <div id="galaxyEngine" class="galaxy-engine" aria-hidden="true"></div>
     <div class="page-grid-overlay"></div>
 
     <main class="settings-shell">
@@ -118,8 +92,7 @@
         <p class="settings-kicker">APPEARANCE</p>
         <h1>Control the Evaraos visual system.</h1>
         <p>
-          Choose dark, light, galaxy, or custom mode. Galaxy stays special, light mode keeps liquid glass,
-          and custom mode lets you tune the core colors.
+          Choose Light, Dark, or System mode. System follows your device appearance automatically.
         </p>
 
         <div class="settings-section-nav">
@@ -131,14 +104,13 @@
         <div class="settings-head">
           <p class="settings-kicker">Mode</p>
           <h2>Appearance Mode</h2>
-          <p>Current mode: <strong id="appearanceModeLabel">Dark</strong></p>
+          <p>Current mode: <strong id="appearanceModeLabel">Light</strong></p>
         </div>
 
         <div class="appearance-choice-grid">
-          <button class="settings-chip beam-target" type="button" data-appearance-mode="dark">Dark</button>
           <button class="settings-chip beam-target" type="button" data-appearance-mode="light">Light</button>
-          <button class="settings-chip beam-target" type="button" data-appearance-mode="galaxy">Galaxy</button>
-          <button class="settings-chip beam-target" type="button" data-appearance-mode="custom">Custom</button>
+          <button class="settings-chip beam-target" type="button" data-appearance-mode="dark">Dark</button>
+          <button class="settings-chip beam-target" type="button" data-appearance-mode="system">System</button>
         </div>
       </section>
 
@@ -146,7 +118,7 @@
         <div class="settings-head">
           <p class="settings-kicker">Preview</p>
           <h2>Liquid Glass Surface Preview</h2>
-          <p>The same design language should apply to nav, cards, buttons, forms, and action panels.</p>
+          <p>The same design language applies to nav, cards, buttons, forms, and action panels.</p>
         </div>
 
         <div class="settings-preview">
@@ -170,62 +142,16 @@
           <div class="settings-grid-2">
             <article class="settings-preview-card glass-card aurora-card active-glow beam-target">
               <h3>Premium Button</h3>
-              <p>Light mode should feel like iPhone liquid glass with dark text. Dark and galaxy keep bright text.</p>
-              <button class="settings-preview-btn btn btn-apple beam-target" type="button">Liquid Glass Button</button>
+              <p>Light mode keeps a clean iOS-style surface with dark text and soft depth.</p>
+              <button class="settings-preview-btn btn btn-apple beam-target" type="button">Light Glass Button</button>
             </article>
 
             <article class="settings-preview-card glass-card aurora-card active-glow beam-target">
-              <h3>Galaxy Surface</h3>
-              <p>Galaxy mode keeps cinematic nebula depth while avoiding heavy overloaded DOM layers.</p>
-              <button class="settings-preview-btn btn btn-apple beam-target" type="button">Galaxy Glass Button</button>
+              <h3>Dark Surface</h3>
+              <p>Dark mode keeps the Evaraos OS feeling sharp, premium, and focused.</p>
+              <button class="settings-preview-btn btn btn-apple beam-target" type="button">Dark Glass Button</button>
             </article>
           </div>
-        </div>
-      </section>
-
-      <section class="settings-block glass-card aurora-card active-glow beam-target">
-        <div class="settings-head">
-          <p class="settings-kicker">Custom Colors</p>
-          <h2>Custom Mode Controls</h2>
-          <p>These values save into localStorage and can later expand into Firestore-backed preferences.</p>
-        </div>
-
-        <div class="settings-grid-2">
-          <label class="settings-color-field glass-card aurora-card beam-target">
-            <span>Card Tint</span>
-            <input type="color" id="customCardTint" value="#ffffff" />
-          </label>
-
-          <label class="settings-color-field glass-card aurora-card beam-target">
-            <span>Button Tint</span>
-            <input type="color" id="customButtonTint" value="#ffffff" />
-          </label>
-
-          <label class="settings-color-field glass-card aurora-card beam-target">
-            <span>Beam Color</span>
-            <input type="color" id="customBeamColor" value="#7c3aed" />
-          </label>
-
-          <label class="settings-color-field glass-card aurora-card beam-target">
-            <span>Background Glow</span>
-            <input type="color" id="customBackgroundGlow" value="#7c3aed" />
-          </label>
-        </div>
-      </section>
-
-      <section class="settings-block glass-card aurora-card active-glow beam-target">
-        <div class="settings-head">
-          <p class="settings-kicker">Beam</p>
-          <h2>Beam Behavior</h2>
-          <p>Rainbow beam is available for light, dark, and custom. Galaxy stays its own nebula system.</p>
-        </div>
-
-        <div class="settings-toggle-row">
-          <div class="settings-toggle-copy">
-            <strong>Rainbow Beam</strong>
-            <span>Enable animated rainbow beam for non-galaxy modes.</span>
-          </div>
-          <input id="rainbowBeamToggle" class="settings-switch beam-target" type="checkbox" />
         </div>
       </section>
 
@@ -245,9 +171,8 @@
 
   <script src="/assets/js/loader.js?v=35"></script>
   <script type="module" src="/assets/js/firebase.js?v=36"></script>
-  <script type="module" src="/assets/js/theme.js?v=36"></script>
+  <script type="module" src="/assets/js/theme.js?v=39"></script>
   <script src="/assets/js/theme-css-loader.js?v=1"></script>
-  <script src="/assets/js/galaxy.js?v=2"></script>
   <script type="module" src="/assets/js/route-guard.js?v=35"></script>
   <script type="module" src="/assets/js/nav.js?v=37"></script>
 
