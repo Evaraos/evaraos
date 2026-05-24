@@ -1,13 +1,9 @@
 export const APPEARANCE_STORAGE_KEY = "evaraos-appearance";
+export const VALID_MODES = ["light", "dark", "system"];
 
 export const DEFAULT_APPEARANCE = {
-  mode: "dark",
-  baseFamily: "dark",
-  cardTint: "#ffffff",
-  buttonTint: "#ffffff",
-  beamColor: "#7c3aed",
-  backgroundGlow: "#7c3aed",
-  rainbowBeam: false
+  mode: "light",
+  updatedAt: null
 };
 
 export function safeJsonParse(value, fallback = null) {
@@ -18,18 +14,31 @@ export function safeJsonParse(value, fallback = null) {
   }
 }
 
+export function normalizeMode(mode) {
+  return VALID_MODES.includes(mode) ? mode : "light";
+}
+
+export function systemTheme() {
+  try {
+    return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ? "dark" : "light";
+  } catch {
+    return "light";
+  }
+}
+
 export function getAppearance() {
   const stored = safeJsonParse(localStorage.getItem(APPEARANCE_STORAGE_KEY), null);
+
   return {
-    ...DEFAULT_APPEARANCE,
-    ...(stored || {})
+    mode: normalizeMode(stored?.mode),
+    updatedAt: stored?.updatedAt || null
   };
 }
 
 export function saveAppearance(nextAppearance) {
   const merged = {
-    ...DEFAULT_APPEARANCE,
-    ...(nextAppearance || {})
+    mode: normalizeMode(nextAppearance?.mode),
+    updatedAt: new Date().toISOString()
   };
 
   localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify(merged));
@@ -44,40 +53,27 @@ export function resetAppearance() {
 }
 
 export function getThemeFromAppearance(appearance) {
-  const safe = {
-    ...DEFAULT_APPEARANCE,
-    ...(appearance || {})
-  };
-
-  if (safe.mode === "light") return "light";
-
-  if (safe.mode === "custom") {
-    if (safe.baseFamily === "light") return "light";
-    return "dark";
-  }
-
-  return "dark";
+  const mode = normalizeMode(appearance?.mode);
+  return mode === "system" ? systemTheme() : mode;
 }
 
 export function applyAppearance(appearance) {
   const safe = {
-    ...DEFAULT_APPEARANCE,
-    ...(appearance || {})
+    mode: normalizeMode(appearance?.mode),
+    updatedAt: appearance?.updatedAt || null
   };
 
   const theme = getThemeFromAppearance(safe);
+
   document.documentElement.setAttribute("data-theme", theme);
+  document.documentElement.setAttribute("data-theme-mode", safe.mode);
+  document.documentElement.style.colorScheme = theme;
+  document.documentElement.setAttribute("data-beam-mode", "default");
 
-  document.documentElement.style.setProperty("--user-card-tint", safe.cardTint);
-  document.documentElement.style.setProperty("--user-button-tint", safe.buttonTint);
-  document.documentElement.style.setProperty("--user-beam-color", safe.beamColor);
-  document.documentElement.style.setProperty("--user-background-glow", safe.backgroundGlow);
-
-  if (safe.rainbowBeam && theme !== "dark") {
-    document.documentElement.setAttribute("data-beam-mode", "rainbow");
-  } else {
-    document.documentElement.setAttribute("data-beam-mode", "default");
-  }
+  document.documentElement.style.removeProperty("--user-card-tint");
+  document.documentElement.style.removeProperty("--user-button-tint");
+  document.documentElement.style.removeProperty("--user-beam-color");
+  document.documentElement.style.removeProperty("--user-background-glow");
 
   return safe;
 }
@@ -103,5 +99,13 @@ export function markSettingsReady() {
     document.body?.classList.add("app-ready");
   }
 }
+
+try {
+  window.matchMedia?.("(prefers-color-scheme: dark)")?.addEventListener?.("change", () => {
+    if (getAppearance().mode === "system") {
+      applyAppearance(getAppearance());
+    }
+  });
+} catch {}
 
 applyAppearance(getAppearance());
