@@ -121,9 +121,9 @@ export function bindLinks() {
 async function toggleThemeFromEngine() {
   try {
     const themeModule = await import("../theme.js?v=38");
-    const appearance = themeModule.toggleTheme?.();
-    const mode = appearance?.mode || themeModule.getTheme?.() || getAppearanceTheme();
-    setTheme(mode);
+    themeModule.toggleTheme?.();
+    const resolvedTheme = themeModule.getTheme?.() || getAppearanceTheme();
+    setTheme(resolvedTheme);
     syncThemeLabel();
     return;
   } catch (error) {
@@ -137,14 +137,15 @@ async function toggleThemeFromEngine() {
     const raw = localStorage.getItem("evaraos-appearance");
     const appearance = raw ? JSON.parse(raw) : {};
     appearance.mode = next;
-    appearance.baseFamily = next;
     appearance.updatedAt = new Date().toISOString();
+    delete appearance.baseFamily;
+    delete appearance.accent;
     localStorage.setItem("evaraos-appearance", JSON.stringify(appearance));
   } catch {}
 
   setTheme(next);
   syncThemeLabel();
-  window.dispatchEvent(new CustomEvent("evara:appearance-updated", { detail: { mode: next, baseFamily: next } }));
+  window.dispatchEvent(new CustomEvent("evara:appearance-updated", { detail: { mode: next } }));
 }
 
 export function bindThemeToggle() {
