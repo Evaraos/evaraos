@@ -1,4 +1,4 @@
-const NAV_BUILD = "nav-v1";
+const NAV_BUILD = "nav-v2";
 
 let NAV_STATE;
 let getNavShell;
