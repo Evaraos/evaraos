@@ -47,11 +47,9 @@
           var appearance = JSON.parse(raw);
 
           if (appearance.mode === "light") theme = "light";
-          else if (appearance.mode === "galaxy") theme = "galaxy";
-          else if (appearance.mode === "custom") {
-            if (appearance.baseFamily === "light") theme = "light";
-            else if (appearance.baseFamily === "galaxy") theme = "galaxy";
-            else theme = "dark";
+          else if (appearance.mode === "dark") theme = "dark";
+          else if (appearance.mode === "system") {
+            theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
           }
         }
 
@@ -71,8 +69,6 @@
     html[data-theme="light"],
     html[data-theme="light"] body { background: #f4f7f6; }
 
-    html[data-theme="galaxy"],
-    html[data-theme="galaxy"] body { background: #050311; }
 
     html.boot-pending body {
       margin: 0;
@@ -109,7 +105,6 @@
 
   <div id="appRoot">
     <div class="page-aurora"></div>
-    <div id="galaxyEngine" class="galaxy-engine" aria-hidden="true"></div>
     <div class="page-grid-overlay"></div>
 
     <main class="settings-shell">
@@ -176,11 +171,10 @@
     </main>
   </div>
 
-  <script src="/assets/js/loader.js?v=35"></script>
+  <script src="/assets/js/loader.js?v=36"></script>
   <script type="module" src="/assets/js/firebase.js?v=36"></script>
   <script type="module" src="/assets/js/theme.js?v=36"></script>
   <script src="/assets/js/theme-css-loader.js?v=1"></script>
-  <script src="/assets/js/galaxy.js?v=2"></script>
   <script type="module" src="/assets/js/route-guard.js?v=35"></script>
   <script type="module" src="/assets/js/nav.js?v=37"></script>
 

@@ -103,6 +103,7 @@ export function setTheme(theme) {
 export function syncThemeLabel() {
   let text = "System mode";
   let icon = "◐";
+  let mode = "system";
 
   try {
     const raw = localStorage.getItem("evaraos-appearance");
@@ -111,9 +112,11 @@ export function syncThemeLabel() {
     if (appearance.mode === "light") {
       text = "Light mode";
       icon = "☀";
+      mode = "light";
     } else if (appearance.mode === "dark") {
       text = "Dark mode";
       icon = "☾";
+      mode = "dark";
     }
   } catch {}
 
@@ -125,6 +128,7 @@ export function syncThemeLabel() {
     else if (!node.children.length) node.textContent = text;
 
     if (iconNode) iconNode.textContent = icon;
+    node.setAttribute("data-theme-mode", mode);
 
     node.setAttribute("aria-label", `Switch theme. Current: ${text}`);
   });

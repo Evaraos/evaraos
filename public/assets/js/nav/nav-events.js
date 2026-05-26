@@ -80,16 +80,56 @@ function openNavHref(href, options = {}) {
 
 function openGroupPrimary(button) {
   if (!button) return;
+  const stack = button.closest(".eva-control-row-stack");
+  if (!stack) return;
+
+  const existing = stack.querySelector(".eva-group-viewer");
+  if (existing && existing.dataset.owner === button.getAttribute("data-nav-group")) {
+    existing.remove();
+    button.classList.remove("is-expanded");
+    return;
+  }
+
+  stack.querySelectorAll(".eva-group-viewer").forEach((node) => node.remove());
+  stack.querySelectorAll("[data-nav-group].is-expanded").forEach((node) => node.classList.remove("is-expanded"));
 
   try {
     const apps = JSON.parse(button.getAttribute("data-group-apps") || "[]");
-    const first = apps.find((app) => app.route);
-    if (first?.route) {
-      openNavHref(first.route, {
-        title: `Opening ${button.textContent.trim()}`,
-        subtitle: "Launching the first tool in this Evaraos group."
+    if (!apps.length) return;
+
+    const viewer = document.createElement("div");
+    viewer.className = "eva-group-viewer glass-card";
+    viewer.dataset.owner = button.getAttribute("data-nav-group") || "";
+    viewer.innerHTML = `
+      <div class="eva-group-viewer-head">
+        <strong>Quick Viewer</strong>
+        <button type="button" class="eva-group-live-btn" data-group-live>Live View</button>
+      </div>
+      <div class="eva-group-viewer-links">
+        ${apps.slice(0, 4).map((app) => `<button type="button" data-group-route="${clean(app.route)}">${clean(app.title)}</button>`).join("")}
+      </div>
+    `;
+
+    button.insertAdjacentElement("afterend", viewer);
+    button.classList.add("is-expanded");
+
+    viewer.querySelectorAll("[data-group-route]").forEach((node) => {
+      node.addEventListener("click", (event) => {
+        stopEvent(event);
+        openNavHref(node.getAttribute("data-group-route"), {
+          title: "Opening tool",
+          subtitle: "Launching from quick viewer."
+        });
       });
-    }
+    });
+
+    const liveBtn = viewer.querySelector("[data-group-live]");
+    liveBtn?.addEventListener("click", (event) => {
+      stopEvent(event);
+      const first = apps.find((app) => app.route);
+      if (!first?.route) return;
+      openNavHref(first.route, { title: "Opening Live View", subtitle: "Launching full page view." });
+    });
   } catch (error) {
     console.warn("Unable to open nav group:", error);
   }
@@ -119,19 +159,16 @@ export function bindLinks() {
 }
 
 async function toggleThemeFromEngine() {
-  try {
-    const themeModule = await import("../theme.js?v=theme-system-v1");
-    themeModule.toggleTheme?.();
-    const resolvedTheme = themeModule.getTheme?.() || getAppearanceTheme();
-    setTheme(resolvedTheme);
-    syncThemeLabel();
-    return;
-  } catch (error) {
-    console.warn("Theme engine import failed; using nav fallback.", error);
-  }
-
-  const current = getAppearanceTheme();
-  const next = current === "light" ? "dark" : "light";
+  const rawTheme = (() => {
+    try {
+      const raw = localStorage.getItem("evaraos-appearance");
+      return raw ? JSON.parse(raw)?.mode : null;
+    } catch {
+      return null;
+    }
+  })();
+  const current = rawTheme || (getAppearanceTheme() === "dark" ? "dark" : "light");
+  const next = current === "light" ? "dark" : current === "dark" ? "system" : "light";
 
   try {
     const raw = localStorage.getItem("evaraos-appearance");
@@ -143,7 +180,10 @@ async function toggleThemeFromEngine() {
     localStorage.setItem("evaraos-appearance", JSON.stringify(appearance));
   } catch {}
 
-  setTheme(next);
+  const resolved = next === "system"
+    ? (window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ? "dark" : "light")
+    : next;
+  setTheme(resolved);
   syncThemeLabel();
   window.dispatchEvent(new CustomEvent("evara:appearance-updated", { detail: { mode: next } }));
 }

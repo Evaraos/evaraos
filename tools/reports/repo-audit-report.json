@@ -1,0 +1,607 @@
+{
+  "generatedAt": "2026-05-26T12:09:15.579Z",
+  "mode": "audit",
+  "totals": {
+    "passed": 563,
+    "total": 603
+  },
+  "repairedFiles": [],
+  "files": [
+    {
+      "file": "audit.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "org.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "performance.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "profile.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/ai_command.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/alerts-dashboard.html",
+      "score": "7/9",
+      "passed": 7,
+      "total": 9,
+      "status": "review",
+      "issues": [
+        "universal nav mount present",
+        "repo absolute asset paths"
+      ]
+    },
+    {
+      "file": "public/analytics-dashboard.html",
+      "score": "7/9",
+      "passed": 7,
+      "total": 9,
+      "status": "review",
+      "issues": [
+        "universal nav mount present",
+        "repo absolute asset paths"
+      ]
+    },
+    {
+      "file": "public/analytics.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/anomaly-dashboard.html",
+      "score": "7/9",
+      "passed": 7,
+      "total": 9,
+      "status": "review",
+      "issues": [
+        "universal nav mount present",
+        "repo absolute asset paths"
+      ]
+    },
+    {
+      "file": "public/applications.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/audit-dashboard.html",
+      "score": "7/9",
+      "passed": 7,
+      "total": 9,
+      "status": "review",
+      "issues": [
+        "universal nav mount present",
+        "repo absolute asset paths"
+      ]
+    },
+    {
+      "file": "public/companies.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/company_intelligence.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/customer-commerce.html",
+      "score": "7/9",
+      "passed": 7,
+      "total": 9,
+      "status": "review",
+      "issues": [
+        "universal nav mount present",
+        "repo absolute asset paths"
+      ]
+    },
+    {
+      "file": "public/customer-messaging.html",
+      "score": "7/9",
+      "passed": 7,
+      "total": 9,
+      "status": "review",
+      "issues": [
+        "universal nav mount present",
+        "repo absolute asset paths"
+      ]
+    },
+    {
+      "file": "public/customer-service-history.html",
+      "score": "7/9",
+      "passed": 7,
+      "total": 9,
+      "status": "review",
+      "issues": [
+        "universal nav mount present",
+        "repo absolute asset paths"
+      ]
+    },
+    {
+      "file": "public/customer_bills.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/customer_dashboard.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/customer_portal.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/dashboard.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/dispatch.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/dispatch_intelligence.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/dispatch_map.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/enterprise-finance-dashboard.html",
+      "score": "7/9",
+      "passed": 7,
+      "total": 9,
+      "status": "review",
+      "issues": [
+        "universal nav mount present",
+        "repo absolute asset paths"
+      ]
+    },
+    {
+      "file": "public/executive-queue.html",
+      "score": "7/9",
+      "passed": 7,
+      "total": 9,
+      "status": "review",
+      "issues": [
+        "universal nav mount present",
+        "repo absolute asset paths"
+      ]
+    },
+    {
+      "file": "public/field.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/governance-analytics.html",
+      "score": "7/9",
+      "passed": 7,
+      "total": 9,
+      "status": "review",
+      "issues": [
+        "universal nav mount present",
+        "repo absolute asset paths"
+      ]
+    },
+    {
+      "file": "public/governance-dashboard.html",
+      "score": "7/9",
+      "passed": 7,
+      "total": 9,
+      "status": "review",
+      "issues": [
+        "universal nav mount present",
+        "repo absolute asset paths"
+      ]
+    },
+    {
+      "file": "public/index.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/job_billing.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/jobs.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/leads.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/ledger.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/live-operations-command.html",
+      "score": "7/9",
+      "passed": 7,
+      "total": 9,
+      "status": "review",
+      "issues": [
+        "universal nav mount present",
+        "repo absolute asset paths"
+      ]
+    },
+    {
+      "file": "public/login.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/marketplace-payouts.html",
+      "score": "7/9",
+      "passed": 7,
+      "total": 9,
+      "status": "review",
+      "issues": [
+        "universal nav mount present",
+        "repo absolute asset paths"
+      ]
+    },
+    {
+      "file": "public/messages.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/notifications.html",
+      "score": "7/9",
+      "passed": 7,
+      "total": 9,
+      "status": "review",
+      "issues": [
+        "universal nav mount present",
+        "repo absolute asset paths"
+      ]
+    },
+    {
+      "file": "public/notifications_center.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/onboarding.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/operations-visibility.html",
+      "score": "7/9",
+      "passed": 7,
+      "total": 9,
+      "status": "review",
+      "issues": [
+        "universal nav mount present",
+        "repo absolute asset paths"
+      ]
+    },
+    {
+      "file": "public/operations_map.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/org.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/payment_ops.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/payroll.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/predictive_ops.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/presence.html",
+      "score": "7/9",
+      "passed": 7,
+      "total": 9,
+      "status": "review",
+      "issues": [
+        "universal nav mount present",
+        "repo absolute asset paths"
+      ]
+    },
+    {
+      "file": "public/proximity_dispatch.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/qa.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/replay-dashboard.html",
+      "score": "7/9",
+      "passed": 7,
+      "total": 9,
+      "status": "review",
+      "issues": [
+        "universal nav mount present",
+        "repo absolute asset paths"
+      ]
+    },
+    {
+      "file": "public/reset.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/revenue.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/schedule.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/settings.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/signup.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/staff_application.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/territories.html",
+      "score": "7/9",
+      "passed": 7,
+      "total": 9,
+      "status": "review",
+      "issues": [
+        "universal nav mount present",
+        "repo absolute asset paths"
+      ]
+    },
+    {
+      "file": "public/territory-map.html",
+      "score": "7/9",
+      "passed": 7,
+      "total": 9,
+      "status": "review",
+      "issues": [
+        "universal nav mount present",
+        "repo absolute asset paths"
+      ]
+    },
+    {
+      "file": "public/territory_intelligence.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/users.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "public/workflow-monitor-dashboard.html",
+      "score": "7/9",
+      "passed": 7,
+      "total": 9,
+      "status": "review",
+      "issues": [
+        "universal nav mount present",
+        "repo absolute asset paths"
+      ]
+    },
+    {
+      "file": "sales_reps.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "security.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "settings/account.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "settings/appearance.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "settings/notifications.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "file": "settings/workspace.html",
+      "score": "9/9",
+      "passed": 9,
+      "total": 9,
+      "status": "pass",
+      "issues": []
+    }
+  ]
+}

@@ -81,8 +81,8 @@ html[data-theme="light"] {
   color: inherit;
   background:
     radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--liquid-specular) 48%, transparent), transparent 36%),
-    linear-gradient(145deg, color-mix(in srgb, var(--card-bg-top, rgba(255,255,255,0.12)) 92%, transparent), color-mix(in srgb, var(--card-bg-bottom, rgba(255,255,255,0.04)) 94%, transparent) 72%);
-  border: 1px solid color-mix(in srgb, var(--card-border, rgba(255,255,255,0.16)) 86%, var(--liquid-edge-light));
+    linear-gradient(145deg, color-mix(in srgb, var(--card-bg-top, var(--glass-bg, rgba(255,255,255,0.12))) 92%, transparent), color-mix(in srgb, var(--card-bg-bottom, var(--glass-bg, rgba(255,255,255,0.04))) 94%, transparent) 72%);
+  border: 1px solid color-mix(in srgb, var(--card-border, var(--glass-border, rgba(255,255,255,0.16))) 86%, var(--liquid-edge-light));
   box-shadow:
     var(--liquid-depth-shadow),
     inset 0 1px 0 var(--liquid-edge-light),

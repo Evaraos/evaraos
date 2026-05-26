@@ -14,12 +14,12 @@ import { APP_CATEGORIES, appsByCategory } from "../navigation/app-registry.js";
 const NAV_RENDER_BUILD = "nav-v1-ai-send-controls";
 
 const CATEGORY_LABELS = Object.freeze({
-  operations: { title: "Operations", subtitle: "Field Ops, Dispatch, Jobs & More", icon: "▣" },
-  organizations: { title: "Organizations", subtitle: "Companies, Offices, Vendors & Teams", icon: "▥" },
-  finance: { title: "Finance", subtitle: "Billing, Payroll, Revenue & Accounting", icon: "$" },
-  customer: { title: "Customer", subtitle: "Customer Portal & Support Tools", icon: "♙" },
-  intelligence: { title: "Executive", subtitle: "AI Command, Analytics & Intelligence", icon: "ϟ" },
-  system: { title: "System", subtitle: "Administration & System Tools", icon: "♢" }
+  operations: { title: "Operations", subtitle: "Field Ops, Dispatch, Jobs & More", icon: "⌁" },
+  organizations: { title: "Organizations", subtitle: "Companies, Offices, Vendors & Teams", icon: "⌂" },
+  finance: { title: "Finance", subtitle: "Billing, Payroll, Revenue & Accounting", icon: "◍" },
+  customer: { title: "Customer", subtitle: "Customer Portal & Support Tools", icon: "◌" },
+  intelligence: { title: "Executive", subtitle: "AI Command, Analytics & Intelligence", icon: "✦" },
+  system: { title: "System", subtitle: "Administration & System Tools", icon: "◎" }
 });
 
 const CATEGORY_ORDER = Object.freeze([
@@ -99,13 +99,13 @@ function navigationSection() {
   const mapHref = buildHref("operations_map.html");
   return `
     <section class="eva-menu-top-block eva-navigation-block" data-nav-section="Navigation">
-      <div class="eva-top-block-head"><span class="eva-top-block-icon">↗</span><div><p>NAVIGATION</p><h3>Go to dashboards & core areas</h3></div><span class="eva-top-block-arrow">›</span></div>
+      <div class="eva-top-block-head"><span class="eva-top-block-icon">⌁</span><div><p>NAVIGATION</p><h3>Go to dashboards & core areas</h3></div><span class="eva-top-block-arrow">›</span></div>
       <div class="eva-quick-strip">
         <a href="${homeHref}" data-menu-link="${homeHref}" data-label="home" data-group="navigation" data-page="index.html"${activeAttrs(homeHref)}><span>⌂</span><strong>Home</strong><small>Dashboard</small></a>
-        <a href="${dashboardHref}" data-menu-link="${dashboardHref}" data-label="dashboards" data-group="navigation" data-page="dashboard.html"${activeAttrs(dashboardHref)}><span>▦</span><strong>Dashboards</strong><small>All Dashboards</small></a>
+        <a href="${dashboardHref}" data-menu-link="${dashboardHref}" data-label="dashboards" data-group="navigation" data-page="dashboard.html"${activeAttrs(dashboardHref)}><span>◫</span><strong>Dashboards</strong><small>All Dashboards</small></a>
         <a href="${mapHref}" data-menu-link="${mapHref}" data-label="map view" data-group="navigation" data-page="operations_map.html"${activeAttrs(mapHref)}><span>◉</span><strong>Map View</strong><small>Live Operations</small></a>
-        <a href="${dashboardHref}" data-menu-link="${dashboardHref}" data-label="bookmarks" data-group="navigation" data-page="bookmarks"><span>★</span><strong>Bookmarks</strong><small>Quick Access</small></a>
-        <a href="${dashboardHref}" data-menu-link="${dashboardHref}" data-label="recent" data-group="navigation" data-page="recent"><span>◷</span><strong>Recent</strong><small>History</small></a>
+        <a href="${dashboardHref}" data-menu-link="${dashboardHref}" data-label="bookmarks" data-group="navigation" data-page="bookmarks"><span>✧</span><strong>Bookmarks</strong><small>Quick Access</small></a>
+        <a href="${dashboardHref}" data-menu-link="${dashboardHref}" data-label="recent" data-group="navigation" data-page="recent"><span>◴</span><strong>Recent</strong><small>History</small></a>
       </div>
     </section>`;
 }
@@ -116,13 +116,13 @@ function accountSection(authed = false) {
   const notificationsHref = buildHref("notifications.html");
   return `
     <section class="eva-menu-top-block eva-account-tools-block" data-nav-section="Account Tools">
-      <div class="eva-top-block-head"><span class="eva-top-block-icon">♙</span><div><p>ACCOUNT TOOLS</p><h3>Profile, settings & preferences</h3></div><span class="eva-top-block-arrow">›</span></div>
+      <div class="eva-top-block-head"><span class="eva-top-block-icon">◌</span><div><p>ACCOUNT TOOLS</p><h3>Profile, settings & preferences</h3></div><span class="eva-top-block-arrow">›</span></div>
       <div class="eva-account-strip">
-        <a href="${settingsHref}" data-menu-link="${settingsHref}" data-label="profile" data-group="account" data-page="settings.html"${activeAttrs(settingsHref)}><span>♙</span><strong>Profile</strong></a>
-        <a href="${settingsHref}" data-menu-link="${settingsHref}" data-label="settings" data-group="account" data-page="settings.html"${activeAttrs(settingsHref)}><span>⚙</span><strong>Settings</strong></a>
-        <a href="${notificationsHref}" data-menu-link="${notificationsHref}" data-label="notifications" data-group="account" data-page="notifications.html"${activeAttrs(notificationsHref)}><span>♧</span><strong>Alerts</strong></a>
-        <a href="${settingsHref}" data-menu-link="${settingsHref}" data-label="security" data-group="account" data-page="settings.html"${activeAttrs(settingsHref)}><span>♢</span><strong>Security</strong></a>
-        <a href="#logout" id="evaLogoutBtn" data-action="logout" data-label="logout" data-group="account" data-page="logout"><span>⇥</span><strong>Logout</strong></a>
+        <a href="${settingsHref}" data-menu-link="${settingsHref}" data-label="profile" data-group="account" data-page="settings.html"${activeAttrs(settingsHref)}><span>◌</span><strong>Profile</strong></a>
+        <a href="${settingsHref}" data-menu-link="${settingsHref}" data-label="settings" data-group="account" data-page="settings.html"${activeAttrs(settingsHref)}><span>◎</span><strong>Settings</strong></a>
+        <a href="${notificationsHref}" data-menu-link="${notificationsHref}" data-label="notifications" data-group="account" data-page="notifications.html"${activeAttrs(notificationsHref)}><span>◉</span><strong>Alerts</strong></a>
+        <a href="${settingsHref}" data-menu-link="${settingsHref}" data-label="security" data-group="account" data-page="settings.html"${activeAttrs(settingsHref)}><span>◇</span><strong>Security</strong></a>
+        <a href="#logout" id="evaLogoutBtn" data-action="logout" data-label="logout" data-group="account" data-page="logout"><span>↗</span><strong>Logout</strong></a>
       </div>
     </section>`;
 }
