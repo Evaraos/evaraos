@@ -120,7 +120,7 @@ export function bindLinks() {
 
 async function toggleThemeFromEngine() {
   try {
-    const themeModule = await import("../theme.js?v=38");
+    const themeModule = await import("../theme.js?v=theme-system-v1");
     themeModule.toggleTheme?.();
     const resolvedTheme = themeModule.getTheme?.() || getAppearanceTheme();
     setTheme(resolvedTheme);
