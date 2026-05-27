@@ -225,6 +225,55 @@ html[data-theme="dark"] .eva-control-row {
   border-color: rgba(59,130,246,0.32);
 }
 
+.eva-control-row.is-expanded {
+  border-color: rgba(59,130,246,0.32);
+}
+
+.eva-group-viewer {
+  margin: -2px 2px 10px;
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(148,163,184,0.2);
+  background: rgba(255,255,255,0.58);
+  display: grid;
+  gap: 10px;
+}
+
+html[data-theme="dark"] .eva-group-viewer {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.12);
+}
+
+.eva-group-viewer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.eva-group-live-btn,
+.eva-group-viewer-links button {
+  border: 1px solid rgba(148,163,184,0.2);
+  background: rgba(255,255,255,0.72);
+  border-radius: 12px;
+  min-height: 36px;
+  padding: 0 10px;
+  font-weight: 800;
+}
+
+html[data-theme="dark"] .eva-group-live-btn,
+html[data-theme="dark"] .eva-group-viewer-links button {
+  color: #f8fbff;
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.12);
+}
+
+.eva-group-viewer-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
 .eva-control-row-copy {
   display: grid;
   min-width: 0;

@@ -7,7 +7,7 @@
   const NAV_FAST_DELAY = 350;
   const NAV_FULL_DELAY = 1200;
   const INITIAL_FAST_DELAY = 0;
-  const INITIAL_FULL_DELAY = 850;
+  const INITIAL_FULL_DELAY = 1600;
   const FORCE_UNLOCK_DELAY = 4200;
   const EXIT_DURATION = 180;
 
@@ -99,6 +99,8 @@
             <p class="evara-loader-title" id="evaraLoaderTitle">Opening Evaraos</p>
             <p class="evara-loader-subtitle" id="evaraLoaderSubtitle">Loading your secure operating system.</p>
           </div>
+
+          <p class="evara-loader-signature">from Evaraos Inc</p>
         </div>
       `;
       document.body.appendChild(global);
@@ -201,10 +203,12 @@
       showFastLoader();
     }, fastDelay);
 
-    fullTimer = setTimeout(() => {
-      if (!isStillPending()) return;
-      showFullLoader(options);
-    }, fullDelay);
+    if (mode !== "initial") {
+      fullTimer = setTimeout(() => {
+        if (!isStillPending()) return;
+        showFullLoader(options);
+      }, fullDelay);
+    }
 
     forceTimer = setTimeout(() => hideAllLoaders(true), FORCE_UNLOCK_DELAY);
   }
