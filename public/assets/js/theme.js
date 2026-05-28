@@ -72,7 +72,6 @@ function updateThemeControls() {
     }
 
     if (iconNode) iconNode.textContent = icon;
-
     node.setAttribute("aria-label", label);
     node.setAttribute("title", label);
   });
@@ -92,13 +91,7 @@ export function applyTheme(theme = getTheme()) {
   );
 
   updateThemeControls();
-
-  window.dispatchEvent(
-    new CustomEvent("evara:theme-applied", {
-      detail: { theme: safeTheme, mode }
-    })
-  );
-
+  window.dispatchEvent(new CustomEvent("evara:theme-applied", { detail: { theme: safeTheme, mode } }));
   return safeTheme;
 }
 
@@ -107,13 +100,7 @@ export function saveAppearance(nextAppearance = {}) {
   localStorage.setItem(APPEARANCE_KEY, JSON.stringify(appearance));
 
   const theme = applyTheme(resolvedTheme(appearance.mode));
-
-  window.dispatchEvent(
-    new CustomEvent("evara:appearance-updated", {
-      detail: { ...appearance, theme }
-    })
-  );
-
+  window.dispatchEvent(new CustomEvent("evara:appearance-updated", { detail: { ...appearance, theme } }));
   return appearance;
 }
 
@@ -126,7 +113,6 @@ export function setThemeMode(mode = "light") {
 
 export function toggleTheme() {
   const current = getThemeMode();
-
   const next = current === "light"
     ? "dark"
     : current === "dark"
@@ -136,34 +122,25 @@ export function toggleTheme() {
   return setThemeMode(next);
 }
 
-function bindDirectThemeButtons() {
-  document.querySelectorAll("#evaThemeToggle, #evaThemePillToggle").forEach((button) => {
-    if (button.dataset.themeBound === "true") return;
+function bindThemeControls() {
+  if (window.__EVARA_THEME_BOUND__) return;
+  window.__EVARA_THEME_BOUND__ = true;
 
-    button.dataset.themeBound = "true";
-    button.setAttribute("type", "button");
+  document.addEventListener("click", (event) => {
+    const trigger = event.target.closest("#evaThemeToggle, #evaThemePillToggle, [data-theme-toggle]");
+    if (!trigger) return;
 
-    const handler = (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation?.();
+    event.preventDefault();
+    event.stopPropagation();
+    toggleTheme();
+  }, true);
 
-      toggleTheme();
-
-      return false;
-    };
-
-    button.addEventListener("click", handler, { passive: false });
-    button.addEventListener("pointerdown", handler, { passive: false });
-    button.addEventListener("touchstart", handler, { passive: false });
+  window.addEventListener("storage", (event) => {
+    if (event.key === APPEARANCE_KEY) {
+      applyTheme();
+    }
   });
 }
-
-window.addEventListener("storage", (event) => {
-  if (event.key === APPEARANCE_KEY) {
-    applyTheme();
-  }
-});
 
 try {
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
@@ -171,9 +148,16 @@ try {
   });
 } catch {}
 
-window.addEventListener("DOMContentLoaded", bindDirectThemeButtons);
-window.addEventListener("evara:theme-applied", bindDirectThemeButtons);
-window.addEventListener("evara:appearance-updated", bindDirectThemeButtons);
+window.EvaraTheme = {
+  getAppearance,
+  getThemeMode,
+  getTheme,
+  applyTheme,
+  saveAppearance,
+  setThemeMode,
+  toggleTheme,
+  updateThemeControls
+};
 
+bindThemeControls();
 applyTheme();
-bindDirectThemeButtons();
