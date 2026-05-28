@@ -1,11 +1,3 @@
-import {
-  buildHref,
-  getAppearanceTheme,
-  setTheme,
-  syncThemeLabel,
-  getBrandBlock
-} from "./nav-utils.js";
-
 import { closeMenu } from "./nav-menu.js";
 import { navigateWithLoader } from "./nav-navigation.js";
 import { logoutAndRedirect, functions, httpsCallable } from "../firebase.js";
@@ -158,7 +150,6 @@ export function bindLinks() {
   });
 }
 
-async function toggleThemeFromEngine() {
   const rawTheme = (() => {
     try {
       const raw = localStorage.getItem("evaraos-appearance");
@@ -188,14 +179,6 @@ async function toggleThemeFromEngine() {
   window.dispatchEvent(new CustomEvent("evara:appearance-updated", { detail: { mode: next } }));
 }
 
-export function bindThemeToggle() {
-  Array.from(document.querySelectorAll("#evaThemeToggle, #evaThemePillToggle")).forEach((toggle) => {
-    bindOnce(toggle, "click", async (event) => {
-      stopEvent(event);
-      await toggleThemeFromEngine();
-    });
-  });
-}
 
 function currentRole() {
   const nav = document.getElementById("evaLinks");
@@ -397,13 +380,4 @@ function bindMenuCloseButton() {
     stopEvent(event);
     closeMenu(true);
   });
-}
-
-export function bindAllNavEvents() {
-  bindBrandHome();
-  bindLinks();
-  bindThemeToggle();
-  bindSearch();
-  bindMenuCloseButton();
-  syncThemeLabel();
 }
