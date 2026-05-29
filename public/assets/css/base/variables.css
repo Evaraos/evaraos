@@ -1,107 +1,126 @@
 :root {
   /* ===============================
-     UNIVERSAL FOUNDATION TOKENS
+     EVARAOS LIQUID GLASS TOKENS
+     Light mode = light glass + dark text
+     Dark mode = dark glass + light text
      =============================== */
-  --bg-primary: #f7f9f8;
-  --bg-secondary: #eef4f1;
 
-  --text-primary: #12251f;
-  --text-secondary: rgba(26, 47, 39, 0.66);
-
-  --glass-bg: rgba(255, 255, 255, 0.20);
-  --glass-border: rgba(255, 255, 255, 0.18);
-  --glass-shadow: rgba(0, 0, 0, 0.12);
-
-  /* ===============================
-     BACKGROUNDS
-     =============================== */
-  --bg-dark: #050812;
-  --bg-dark-2: #091120;
-  --bg-dark-3: #151b2c;
-  --bg-dark-4: #202b44;
-
-  --bg-light: #f7f9f8;
-  --bg-light-2: #eef4f1;
-
-  /* ===============================
-     TEXT
-     =============================== */
-  --text-dark: #f5f7ff;
-  --muted-dark: rgba(230, 236, 255, 0.72);
-
-  --text-light: #12251f;
-  --muted-light: rgba(26, 47, 39, 0.66);
-
-  /* ===============================
-     GLOBAL THEME TOKENS
-     =============================== */
-  --tint-rgb: 255, 255, 255;
-  --theme-glow-rgb: 255, 255, 255;
-  --theme-soft-rgb: 220, 226, 240;
-  --beam-halo-rgb: 139, 92, 246;
-
-  /* ===============================
-     UI SYSTEM
-     =============================== */
   --page-transition-ms: 180ms;
 
-  --liquid-text: #ffffff;
-  --liquid-bg-top: rgba(255, 255, 255, 0.20);
-  --liquid-bg-bottom: rgba(255, 255, 255, 0.06);
-  --liquid-border: rgba(255, 255, 255, 0.18);
-  --liquid-shadow: rgba(0, 0, 0, 0.12);
+  --bg-light: #f7fbff;
+  --bg-light-2: #eef6fb;
+  --bg-light-3: #e4eff7;
 
-  --card-border: rgba(255, 255, 255, 0.14);
-  --card-bg-top: rgba(255, 255, 255, 0.12);
-  --card-bg-bottom: rgba(255, 255, 255, 0.045);
-}
+  --bg-dark: #03070d;
+  --bg-dark-2: #07111c;
+  --bg-dark-3: #0d1a2b;
+  --bg-dark-4: #14233a;
 
-/* ===============================
-   GLOBAL TINT OVERRIDES
-   =============================== */
+  --text-light: #061a16;
+  --muted-light: rgba(6, 26, 22, 0.66);
+  --soft-light: rgba(6, 26, 22, 0.48);
 
-html[data-theme="dark"],
-html[data-theme="light"] {
+  --text-dark: #f6fbff;
+  --muted-dark: rgba(234, 244, 255, 0.74);
+  --soft-dark: rgba(234, 244, 255, 0.52);
+
+  --accent-red: #e50935;
+  --accent-red-2: #ff3b5f;
+  --accent-blue: #4ea1ff;
+  --accent-cyan: #74e5ff;
+  --accent-violet: #8b5cf6;
+
+  --bg-primary: var(--bg-light);
+  --bg-secondary: var(--bg-light-2);
+  --text-primary: var(--text-light);
+  --text-secondary: var(--muted-light);
+  --text-soft: var(--soft-light);
+
   --tint-rgb: 255, 255, 255;
   --theme-glow-rgb: 255, 255, 255;
-  --theme-soft-rgb: 220, 226, 240;
-  --beam-halo-rgb: 139, 92, 246;
+  --theme-soft-rgb: 213, 228, 240;
+  --beam-halo-rgb: 78, 161, 255;
+
+  --glass-bg: rgba(255, 255, 255, 0.58);
+  --glass-bg-strong: rgba(255, 255, 255, 0.76);
+  --glass-border: rgba(255, 255, 255, 0.82);
+  --glass-shadow: rgba(44, 67, 82, 0.14);
+
+  --liquid-text: var(--text-light);
+  --liquid-muted: var(--muted-light);
+  --liquid-bg-top: rgba(255, 255, 255, 0.72);
+  --liquid-bg-bottom: rgba(238, 247, 255, 0.46);
+  --liquid-border: rgba(255, 255, 255, 0.82);
+  --liquid-hairline: rgba(7, 27, 36, 0.08);
+  --liquid-shadow: rgba(48, 70, 82, 0.16);
+  --liquid-highlight: rgba(255, 255, 255, 0.90);
+  --liquid-refraction: rgba(104, 172, 255, 0.12);
+
+  --card-border: rgba(255, 255, 255, 0.82);
+  --card-bg-top: rgba(255, 255, 255, 0.68);
+  --card-bg-bottom: rgba(238, 247, 255, 0.42);
 }
 
 html[data-theme="dark"] {
   --bg-primary: var(--bg-dark);
   --bg-secondary: var(--bg-dark-2);
-
   --text-primary: var(--text-dark);
   --text-secondary: var(--muted-dark);
+  --text-soft: var(--soft-dark);
 
-  --glass-bg: var(--liquid-bg-top);
-  --glass-border: var(--liquid-border);
-  --glass-shadow: var(--liquid-shadow);
+  --tint-rgb: 13, 28, 46;
+  --theme-glow-rgb: 112, 181, 255;
+  --theme-soft-rgb: 12, 25, 42;
+  --beam-halo-rgb: 88, 166, 255;
+
+  --glass-bg: rgba(10, 18, 30, 0.56);
+  --glass-bg-strong: rgba(12, 22, 36, 0.76);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-shadow: rgba(0, 0, 0, 0.44);
+
+  --liquid-text: var(--text-dark);
+  --liquid-muted: var(--muted-dark);
+  --liquid-bg-top: rgba(30, 45, 66, 0.56);
+  --liquid-bg-bottom: rgba(5, 12, 22, 0.38);
+  --liquid-border: rgba(255, 255, 255, 0.16);
+  --liquid-hairline: rgba(255, 255, 255, 0.10);
+  --liquid-shadow: rgba(0, 0, 0, 0.46);
+  --liquid-highlight: rgba(255, 255, 255, 0.20);
+  --liquid-refraction: rgba(80, 156, 255, 0.16);
+
+  --card-border: rgba(255, 255, 255, 0.15);
+  --card-bg-top: rgba(26, 40, 60, 0.58);
+  --card-bg-bottom: rgba(7, 14, 25, 0.44);
 }
-
-/* ===============================
-   LIGHT MODE OVERRIDES
-   =============================== */
 
 html[data-theme="light"] {
   --bg-primary: var(--bg-light);
   --bg-secondary: var(--bg-light-2);
-
   --text-primary: var(--text-light);
   --text-secondary: var(--muted-light);
+  --text-soft: var(--soft-light);
 
-  --glass-bg: var(--liquid-bg-top);
-  --glass-border: var(--liquid-border);
-  --glass-shadow: var(--liquid-shadow);
+  --tint-rgb: 255, 255, 255;
+  --theme-glow-rgb: 255, 255, 255;
+  --theme-soft-rgb: 213, 228, 240;
+  --beam-halo-rgb: 78, 161, 255;
 
-  --liquid-text: #0f1f1a;
-  --liquid-bg-top: rgba(255, 255, 255, 0.96);
-  --liquid-bg-bottom: rgba(248, 250, 250, 0.78);
-  --liquid-border: rgba(255, 255, 255, 0.94);
-  --liquid-shadow: rgba(88, 108, 98, 0.10);
+  --glass-bg: rgba(255, 255, 255, 0.58);
+  --glass-bg-strong: rgba(255, 255, 255, 0.76);
+  --glass-border: rgba(255, 255, 255, 0.82);
+  --glass-shadow: rgba(44, 67, 82, 0.14);
 
-  --card-border: rgba(255, 255, 255, 0.84);
-  --card-bg-top: rgba(255, 255, 255, 0.98);
-  --card-bg-bottom: rgba(249, 250, 249, 0.94);
+  --liquid-text: var(--text-light);
+  --liquid-muted: var(--muted-light);
+  --liquid-bg-top: rgba(255, 255, 255, 0.72);
+  --liquid-bg-bottom: rgba(238, 247, 255, 0.46);
+  --liquid-border: rgba(255, 255, 255, 0.82);
+  --liquid-hairline: rgba(7, 27, 36, 0.08);
+  --liquid-shadow: rgba(48, 70, 82, 0.16);
+  --liquid-highlight: rgba(255, 255, 255, 0.90);
+  --liquid-refraction: rgba(104, 172, 255, 0.12);
+
+  --card-border: rgba(255, 255, 255, 0.82);
+  --card-bg-top: rgba(255, 255, 255, 0.68);
+  --card-bg-bottom: rgba(238, 247, 255, 0.42);
 }
