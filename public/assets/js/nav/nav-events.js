@@ -1,3 +1,9 @@
+import {
+  buildHref,
+  getAppearanceTheme,
+  getBrandBlock
+} from "./nav-utils.js";
+
 import { closeMenu } from "./nav-menu.js";
 import { navigateWithLoader } from "./nav-navigation.js";
 import { logoutAndRedirect, functions, httpsCallable } from "../firebase.js";
@@ -115,8 +121,7 @@ function openGroupPrimary(button) {
       });
     });
 
-    const liveBtn = viewer.querySelector("[data-group-live]");
-    liveBtn?.addEventListener("click", (event) => {
+    viewer.querySelector("[data-group-live]")?.addEventListener("click", (event) => {
       stopEvent(event);
       const first = apps.find((app) => app.route);
       if (!first?.route) return;
@@ -150,35 +155,12 @@ export function bindLinks() {
   });
 }
 
-  const rawTheme = (() => {
-    try {
-      const raw = localStorage.getItem("evaraos-appearance");
-      return raw ? JSON.parse(raw)?.mode : null;
-    } catch {
-      return null;
-    }
-  })();
-  const current = rawTheme || (getAppearanceTheme() === "dark" ? "dark" : "light");
-  const next = current === "light" ? "dark" : current === "dark" ? "system" : "light";
-
-  try {
-    const raw = localStorage.getItem("evaraos-appearance");
-    const appearance = raw ? JSON.parse(raw) : {};
-    appearance.mode = next;
-    appearance.updatedAt = new Date().toISOString();
-    delete appearance.baseFamily;
-    delete appearance.accent;
-    localStorage.setItem("evaraos-appearance", JSON.stringify(appearance));
-  } catch {}
-
-  const resolved = next === "system"
-    ? (window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ? "dark" : "light")
-    : next;
-  setTheme(resolved);
-  syncThemeLabel();
-  window.dispatchEvent(new CustomEvent("evara:appearance-updated", { detail: { mode: next } }));
+export function bindThemeToggle() {
+  document.querySelectorAll("#evaThemeToggle, #evaThemePillToggle").forEach((toggle) => {
+    toggle.setAttribute("type", "button");
+    toggle.setAttribute("data-theme-toggle", "true");
+  });
 }
-
 
 function currentRole() {
   const nav = document.getElementById("evaLinks");
@@ -218,7 +200,7 @@ function renderSearchResults(root, items = [], query = "") {
   }
 
   root.innerHTML = items.map((app) => {
-    return '<button type="button" class="eva-search-result" data-search-link="' + clean(app.route) + '"><strong>' + clean(app.title) + '</strong><span>' + clean(label(app.category || 'App')) + ' • ' + clean(app.route) + '</span></button>';
+    return '<button type="button" class="eva-search-result" data-search-link="' + clean(app.route) + '"><strong>' + clean(app.title) + '</strong><span>' + clean(label(app.category || "App")) + ' • ' + clean(app.route) + '</span></button>';
   }).join("");
   root.classList.add("active");
 }
@@ -380,4 +362,12 @@ function bindMenuCloseButton() {
     stopEvent(event);
     closeMenu(true);
   });
+}
+
+export function bindAllNavEvents() {
+  bindBrandHome();
+  bindLinks();
+  bindThemeToggle();
+  bindSearch();
+  bindMenuCloseButton();
 }
