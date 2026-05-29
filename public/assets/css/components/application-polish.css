@@ -1,128 +1,105 @@
 /* ===============================
-   EVARAOS APPLICATIONS POLISH
-   Stronger light-mode contrast + premium application UI.
+   EVARAOS APPLICATIONS STRUCTURAL UI
+   This file no longer owns page backgrounds or glass card themes.
+   Universal layout, Liquid Glass, text, and theme inversion are owned globally.
    =============================== */
 
-html[data-theme="light"] body.applications-page,
-html[data-theme="light"] body.staff-application-page {
-  background:
-    radial-gradient(circle at 18% 0%, rgba(229, 31, 79, 0.08), transparent 34%),
-    radial-gradient(circle at 92% 8%, rgba(255, 255, 255, 0.9), transparent 32%),
-    linear-gradient(180deg, #f8fafc 0%, #eef3f4 100%) !important;
-  color: #10231d;
+body.applications-page .applications-hero > .glass-card,
+body.staff-application-page .application-hero > .glass-card,
+body.applications-page .applications-stat-grid {
+  min-height: 0;
 }
 
-html[data-theme="light"] .applications-wrap,
-html[data-theme="light"] .application-wrap {
-  padding-top: clamp(118px, 15vw, 156px);
+body.applications-page .applications-hero > article,
+body.staff-application-page .application-hero > article {
+  padding: clamp(22px, 4vw, 36px);
 }
 
-html[data-theme="light"] body.applications-page .glass-card,
-html[data-theme="light"] body.staff-application-page .glass-card,
-html[data-theme="light"] body.applications-page .aurora-card,
-html[data-theme="light"] body.staff-application-page .aurora-card {
-  background: rgba(255, 255, 255, 0.94) !important;
-  border: 1px solid rgba(15, 23, 42, 0.08) !important;
-  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.86) !important;
-  color: #10231d !important;
-  backdrop-filter: blur(18px);
+.applications-kicker,
+.application-kicker {
+  color: var(--accent-red);
+  text-shadow: none;
 }
 
-html[data-theme="light"] body.applications-page .page-aurora,
-html[data-theme="light"] body.staff-application-page .page-aurora,
-html[data-theme="light"] body.applications-page .page-grid-overlay,
-html[data-theme="light"] body.staff-application-page .page-grid-overlay {
-  opacity: 0.22;
+.applications-title,
+.application-title,
+.application-card h3,
+.form-section-title,
+.stat-mini strong,
+.detail-box span,
+.step-card strong,
+.empty-card h3 {
+  color: var(--text-primary);
+  text-shadow: none;
 }
 
-html[data-theme="light"] body.applications-page .applications-hero > .glass-card,
-html[data-theme="light"] body.staff-application-page .application-hero > .glass-card,
-html[data-theme="light"] body.applications-page .applications-stat-grid {
-  min-height: 0 !important;
+.applications-copy,
+.application-copy,
+.muted,
+.application-muted,
+.step-card span,
+.application-message,
+.empty-card,
+.empty-card p,
+.stat-mini span,
+.detail-box strong,
+.application-field label,
+.form-subnote {
+  color: var(--text-secondary);
 }
 
-html[data-theme="light"] body.applications-page .applications-hero > article,
-html[data-theme="light"] body.staff-application-page .application-hero > article {
-  padding: clamp(22px, 4vw, 36px) !important;
+.stat-mini,
+.step-card,
+.detail-box,
+.empty-card {
+  background: linear-gradient(180deg, var(--liquid-bg-top), var(--liquid-bg-bottom));
+  border: 1px solid var(--liquid-border);
+  box-shadow:
+    0 10px 24px var(--liquid-shadow),
+    inset 0 1px 0 var(--liquid-highlight);
+  backdrop-filter: blur(var(--liquid-blur-soft, 18px)) saturate(165%);
+  -webkit-backdrop-filter: blur(var(--liquid-blur-soft, 18px)) saturate(165%);
 }
 
-html[data-theme="light"] .applications-kicker,
-html[data-theme="light"] .application-kicker {
-  color: #e51f4f !important;
-  text-shadow: none !important;
+.applications-toolbar input,
+.applications-toolbar select,
+.application-field input,
+.application-field select,
+.application-field textarea,
+.review-box select,
+.review-box textarea {
+  background: linear-gradient(180deg, var(--liquid-bg-top), var(--liquid-bg-bottom));
+  color: var(--text-primary);
+  border: 1px solid var(--liquid-border);
+  box-shadow:
+    inset 0 1px 0 var(--liquid-highlight),
+    0 8px 20px var(--liquid-shadow);
+  backdrop-filter: blur(var(--liquid-blur-soft, 18px)) saturate(165%);
+  -webkit-backdrop-filter: blur(var(--liquid-blur-soft, 18px)) saturate(165%);
 }
 
-html[data-theme="light"] .applications-title,
-html[data-theme="light"] .application-title,
-html[data-theme="light"] .application-card h3,
-html[data-theme="light"] .form-section-title,
-html[data-theme="light"] .stat-mini strong,
-html[data-theme="light"] .detail-box span,
-html[data-theme="light"] .step-card strong,
-html[data-theme="light"] .empty-card h3 {
-  color: #10231d !important;
-  text-shadow: none !important;
+.applications-toolbar input::placeholder,
+.application-field input::placeholder,
+.application-field textarea::placeholder,
+.review-box textarea::placeholder {
+  color: var(--text-soft);
 }
 
-html[data-theme="light"] .applications-copy,
-html[data-theme="light"] .application-copy,
-html[data-theme="light"] .muted,
-html[data-theme="light"] .application-muted,
-html[data-theme="light"] .step-card span,
-html[data-theme="light"] .application-message,
-html[data-theme="light"] .empty-card,
-html[data-theme="light"] .empty-card p,
-html[data-theme="light"] .stat-mini span,
-html[data-theme="light"] .detail-box strong,
-html[data-theme="light"] .application-field label,
-html[data-theme="light"] .form-subnote {
-  color: rgba(16, 35, 29, 0.66) !important;
+.application-notice {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent-red) 10%, var(--liquid-bg-top)), var(--liquid-bg-bottom));
+  border: 1px solid color-mix(in srgb, var(--accent-red) 24%, var(--liquid-border));
+  color: var(--text-primary);
 }
 
-html[data-theme="light"] .stat-mini,
-html[data-theme="light"] .step-card,
-html[data-theme="light"] .detail-box,
-html[data-theme="light"] .empty-card {
-  background: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.045) !important;
+.pill {
+  background: linear-gradient(180deg, var(--liquid-bg-top), var(--liquid-bg-bottom));
+  color: var(--text-secondary);
+  border: 1px solid var(--liquid-border);
 }
 
-html[data-theme="light"] .applications-toolbar input,
-html[data-theme="light"] .applications-toolbar select,
-html[data-theme="light"] .application-field input,
-html[data-theme="light"] .application-field select,
-html[data-theme="light"] .application-field textarea,
-html[data-theme="light"] .review-box select,
-html[data-theme="light"] .review-box textarea {
-  background: #ffffff !important;
-  color: #10231d !important;
-  border: 1px solid #d8e0dc !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 8px 20px rgba(15, 23, 42, 0.035) !important;
-}
-
-html[data-theme="light"] .applications-toolbar input::placeholder,
-html[data-theme="light"] .application-field input::placeholder,
-html[data-theme="light"] .application-field textarea::placeholder,
-html[data-theme="light"] .review-box textarea::placeholder {
-  color: rgba(16, 35, 29, 0.44) !important;
-}
-
-html[data-theme="light"] .application-notice {
-  background: #fff1f4 !important;
-  border: 1px solid #ffd4dd !important;
-  color: #6b2d38 !important;
-}
-
-html[data-theme="light"] .pill {
-  background: #f8fafc !important;
-  color: #40524a !important;
-  border: 1px solid #dbe4df !important;
-}
-
-html[data-theme="light"] .pill.success { color: #087a4d !important; background: #ecfdf5 !important; border-color: #bfead5 !important; }
-html[data-theme="light"] .pill.warning { color: #9b5c00 !important; background: #fffbeb !important; border-color: #fde4aa !important; }
-html[data-theme="light"] .pill.error { color: #a62d24 !important; background: #fff3f2 !important; border-color: #fecdca !important; }
+.pill.success { color: #10b981; border-color: color-mix(in srgb, #10b981 34%, var(--liquid-border)); }
+.pill.warning { color: #f59e0b; border-color: color-mix(in srgb, #f59e0b 34%, var(--liquid-border)); }
+.pill.error { color: #ef4444; border-color: color-mix(in srgb, #ef4444 34%, var(--liquid-border)); }
 
 .role-pill-container,
 .application-role-pills {
@@ -135,38 +112,46 @@ html[data-theme="light"] .pill.error { color: #a62d24 !important; background: #f
 .role-pill-option {
   min-height: 52px;
   border-radius: 999px;
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  background: #ffffff;
-  color: #10231d;
+  border: 1px solid var(--liquid-border);
+  background: linear-gradient(180deg, var(--liquid-bg-top), var(--liquid-bg-bottom));
+  color: var(--text-primary);
   font-weight: 950;
   letter-spacing: -0.02em;
   cursor: pointer;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.055);
+  box-shadow:
+    inset 0 1px 0 var(--liquid-highlight),
+    0 10px 24px var(--liquid-shadow);
   transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   padding: 12px 14px;
+  backdrop-filter: blur(var(--liquid-blur-soft, 18px)) saturate(165%);
+  -webkit-backdrop-filter: blur(var(--liquid-blur-soft, 18px)) saturate(165%);
 }
 
 .role-pill:hover,
 .role-pill-option:hover {
   transform: translateY(-1px);
-  border-color: rgba(228, 20, 66, 0.34);
-  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+  border-color: color-mix(in srgb, var(--accent-red) 34%, var(--liquid-border));
+  box-shadow:
+    inset 0 1px 0 var(--liquid-highlight),
+    0 14px 30px var(--liquid-shadow);
 }
 
 .role-pill.active,
 .role-pill-option.active {
-  background: linear-gradient(135deg, #ff2f57, #b8002a) !important;
-  color: #ffffff !important;
-  border-color: rgba(228, 20, 66, 0.38) !important;
-  box-shadow: 0 16px 34px rgba(228, 20, 66, 0.24) !important;
+  background: linear-gradient(135deg, var(--accent-red-2), var(--accent-red) 52%, #9f0025);
+  color: #ffffff;
+  border-color: color-mix(in srgb, var(--accent-red) 38%, rgba(255,255,255,0.34));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.46),
+    0 16px 34px color-mix(in srgb, var(--accent-red) 28%, transparent);
 }
 
 .role-pill-option input {
-  display: none !important;
+  display: none;
 }
 
 .form-subnote {
@@ -178,7 +163,7 @@ html[data-theme="light"] .pill.error { color: #a62d24 !important; background: #f
 
 .application-section-divider {
   height: 1px;
-  background: rgba(15, 23, 42, 0.08);
+  background: var(--liquid-hairline);
   margin: 20px 0;
 }
 
@@ -197,17 +182,36 @@ html[data-theme="light"] .pill.error { color: #a62d24 !important; background: #f
   font-weight: 750;
 }
 
+.beam-target::after,
+.active-glow::after {
+  inset: -8% -5%;
+  opacity: 0.58;
+  filter: blur(18px);
+  background:
+    linear-gradient(115deg, transparent 18%, color-mix(in srgb, var(--liquid-highlight) 24%, transparent) 34%, var(--liquid-highlight) 48%, color-mix(in srgb, var(--liquid-highlight) 24%, transparent) 62%, transparent 78%),
+    radial-gradient(circle at 22% 6%, var(--liquid-highlight), transparent 30%),
+    radial-gradient(circle at 92% 12%, var(--liquid-refraction), transparent 32%);
+}
+
+.active-card-glow,
+.active-glow {
+  box-shadow:
+    0 18px 42px var(--liquid-shadow),
+    0 0 0 1px var(--liquid-border),
+    inset 0 1px 0 var(--liquid-highlight);
+}
+
 @media (max-width: 980px) {
-  html[data-theme="light"] .applications-title,
-  html[data-theme="light"] .application-title {
-    font-size: clamp(2.45rem, 10.8vw, 4rem) !important;
-    line-height: 0.95 !important;
+  .applications-title,
+  .application-title {
+    font-size: clamp(2.45rem, 10.8vw, 4rem);
+    line-height: 0.95;
   }
 
-  .applications-toolbar { justify-content: stretch !important; }
+  .applications-toolbar { justify-content: stretch; }
   .applications-toolbar input,
   .applications-toolbar select,
-  .applications-toolbar button { width: 100% !important; }
+  .applications-toolbar button { width: 100%; }
   .role-pill-container,
   .application-role-pills { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -215,24 +219,4 @@ html[data-theme="light"] .pill.error { color: #a62d24 !important; background: #f
 @media (max-width: 520px) {
   .role-pill-container,
   .application-role-pills { grid-template-columns: 1fr; }
-}
-
-/* Global light-mode liquid beam correction */
-html[data-theme="light"] .beam-target::after,
-html[data-theme="light"] .active-glow::after,
-  inset: -8% -5% !important;
-  opacity: 0.68 !important;
-  filter: blur(18px) !important;
-  background:
-    linear-gradient(115deg, transparent 18%, rgba(255,255,255,0.18) 34%, rgba(255,255,255,0.72) 48%, rgba(255,255,255,0.18) 62%, transparent 78%),
-    radial-gradient(circle at 22% 6%, rgba(255,255,255,0.86), transparent 30%),
-    radial-gradient(circle at 92% 12%, rgba(225,232,236,0.56), transparent 32%) !important;
-}
-
-html[data-theme="light"] .active-card-glow,
-html[data-theme="light"] .active-glow,
-  box-shadow:
-    0 18px 42px rgba(15, 23, 42, 0.08),
-    0 0 0 1px rgba(255,255,255,0.78),
-    inset 0 1px 0 rgba(255,255,255,0.96) !important;
 }
