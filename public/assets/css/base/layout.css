@@ -1,58 +1,40 @@
 html {
   min-height: 100%;
   background:
-    radial-gradient(circle at 18% 16%, rgba(72, 125, 255, 0.08), transparent 26%),
-    radial-gradient(circle at 82% 14%, rgba(var(--tint-rgb), 0.07), transparent 24%),
-    radial-gradient(circle at 16% 82%, rgba(64, 225, 172, 0.05), transparent 24%),
-    linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-dark-2) 100%);
+    radial-gradient(circle at 18% 16%, rgba(var(--beam-halo-rgb), 0.16), transparent 26%),
+    radial-gradient(circle at 82% 14%, rgba(var(--theme-glow-rgb), 0.10), transparent 24%),
+    radial-gradient(circle at 16% 82%, rgba(var(--beam-halo-rgb), 0.08), transparent 24%),
+    linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  color: var(--text-dark);
+  color: var(--text-primary);
   background: inherit;
   background-attachment: fixed;
-
-  transition:
-    background var(--page-transition-ms) ease,
-    color var(--page-transition-ms) ease;
+  transition: background var(--page-transition-ms) ease, color var(--page-transition-ms) ease;
 }
-
-/* ===============================
-   LIGHT MODE
-   =============================== */
 
 html[data-theme="light"] body {
-  color: var(--text-light);
-  background:
-    radial-gradient(circle at 16% 12%, rgba(255, 255, 255, 0.48), transparent 24%),
-    radial-gradient(circle at 84% 18%, rgba(255, 255, 255, 0.14), transparent 24%),
-    radial-gradient(circle at 20% 78%, rgba(185, 220, 255, 0.14), transparent 24%),
-    linear-gradient(180deg, #fafcfb 0%, #f2f7f4 56%, #ebf2ee 100%);
+  color: var(--text-primary);
 }
-
-/* ===============================
-   GRID OVERLAY
-   =============================== */
 
 .page-grid-overlay {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.12;
-
+  opacity: 0.08;
   background:
-    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
-
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
   background-size: 56px 56px;
 }
 
-/* ===============================
-   LAYERING FIX
-   =============================== */
+html[data-theme="light"] .page-grid-overlay {
+  opacity: 0.04;
+}
 
 #universalNav,
 #universalNavRoot,
