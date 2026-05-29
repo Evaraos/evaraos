@@ -2,9 +2,7 @@ const NAV_BUILD = "nav-v3";
 
 let NAV_STATE;
 let getNavShell;
-let setTheme;
 let getAppearanceTheme;
-let syncThemeLabel;
 let renderNav;
 let applyProgress;
 let bindScrollBehavior;
@@ -18,9 +16,7 @@ async function loadCoreNav() {
 
   NAV_STATE = config.NAV_STATE;
   getNavShell = utils.getNavShell;
-  setTheme = utils.setTheme;
   getAppearanceTheme = utils.getAppearanceTheme;
-  syncThemeLabel = utils.syncThemeLabel;
   renderNav = renderer.renderNav;
   applyProgress = scroll.applyProgress;
   bindScrollBehavior = scroll.bindScrollBehavior;
@@ -54,6 +50,15 @@ function shouldStartGlobalNotifications() {
   return document.body?.dataset?.routeGuard === "private";
 }
 
+function syncThemeFromEngine() {
+  try {
+    window.EvaraTheme?.applyTheme?.();
+    window.EvaraTheme?.updateThemeControls?.();
+  } catch (error) {
+    console.warn("Theme engine sync failed:", error);
+  }
+}
+
 async function bindOptionalSystems() {
   const menu = await safeImport("./nav-menu.js");
   const events = await safeImport("./nav-events.js");
@@ -65,7 +70,8 @@ async function bindOptionalSystems() {
   try { interactions?.bindNavInteractions?.(); } catch (error) { console.warn("Nav interactions failed:", error); }
   try { bindScrollBehavior?.(); } catch (error) { console.warn("Nav scroll failed:", error); }
   try { session?.bindRuntimeRefresh?.(); } catch (error) { console.warn("Nav session refresh failed:", error); }
-  try { syncThemeLabel?.(); } catch (error) { console.warn("Nav theme label failed:", error); }
+
+  syncThemeFromEngine();
 
   if (shouldStartGlobalNotifications()) {
     const notifications = await safeImport("../notifications-dropdown.js");
@@ -91,7 +97,7 @@ export async function initNav() {
     window.EVARAOS_NAV_BUILD = NAV_BUILD;
     document.documentElement.dataset.evaraosNavBuild = NAV_BUILD;
 
-    setTheme(getAppearanceTheme());
+    document.documentElement.setAttribute("data-theme", getAppearanceTheme() === "dark" ? "dark" : document.documentElement.getAttribute("data-theme") || "light");
 
     const rendered = renderNav();
     if (!rendered) {
