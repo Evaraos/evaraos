@@ -1,11 +1,10 @@
-/* EVARAOS UNIVERSAL LIQUID GLASS THEME */
 @import url("./base/variables.css?v=52");
 @import url("./base/layout.css?v=52");
 @import url("./themes/theme-light.css?v=52");
 @import url("./themes/theme-dark.css?v=52");
 @import url("./themes/first-paint-light.css?v=52");
 @import url("./effects/apple-settings-background.css?v=52");
-@import url("./components/liquid-glass.css?v=52");
+@import url("./components/liquid-glass.css?v=53");
 @import url("./components/buttons.css?v=52");
 @import url("./components/forms.css?v=52");
 @import url("./components/pills.css?v=52");
