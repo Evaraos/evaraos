@@ -1,0 +1,27 @@
+name: Activate dashboard and leads
+on:
+  push:
+    branches: [evaraos]
+    paths: [.github/workflows/activate-dashboard-leads-entry.yml]
+permissions:
+  contents: write
+jobs:
+  activate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: evaraos
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node tools/activate-dashboard-leads-entry.js
+      - shell: bash
+        run: |
+          if git diff --quiet -- public/dashboard.html public/leads.html; then exit 0; fi
+          git config user.name "Evaraos Migration"
+          git config user.email "actions@users.noreply.github.com"
+          git add public/dashboard.html public/leads.html
+          git commit -m "Activate role dashboard and full lead CRM"
+          git push origin HEAD:evaraos
