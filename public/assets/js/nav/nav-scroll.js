@@ -4,7 +4,7 @@ import { getNavShell, getBrandBlock } from "./nav-utils.js";
 let scrollTicking = false;
 
 export function atTopOfPage() {
-  return (window.scrollY || 0) <= 4;
+  return (window.scrollY || 0) <= 18;
 }
 
 export function atBottomOfPage() {
@@ -14,7 +14,7 @@ export function atBottomOfPage() {
 }
 
 export function isCompact() {
-  return false;
+  return !atTopOfPage() && !document.body.classList.contains("nav-menu-open");
 }
 
 export function applyProgress() {
@@ -22,45 +22,36 @@ export function applyProgress() {
   const brand = getBrandBlock();
   if (!shell) return;
 
-  NAV_STATE.progress = 1;
-  NAV_STATE.targetProgress = 1;
-  NAV_STATE.motionMode = "stable";
+  const compact = isCompact();
+  const progress = compact ? 0 : 1;
+  NAV_STATE.progress = progress;
+  NAV_STATE.targetProgress = progress;
+  NAV_STATE.motionMode = compact ? "compact" : "expanded";
   NAV_STATE.lastY = window.scrollY || 0;
 
-  shell.style.setProperty("--nav-progress", "1.0000");
-  shell.dataset.navProgress = "1.0000";
-  shell.classList.add("expanded");
-  shell.classList.remove("compact", "quick-pressing");
+  shell.style.setProperty("--nav-progress", progress.toFixed(4));
+  shell.dataset.navProgress = progress.toFixed(4);
+  shell.classList.toggle("compact", compact);
+  shell.classList.toggle("expanded", !compact);
+  shell.classList.remove("quick-pressing");
 
-  document.body.classList.add("eva-nav-expanded");
-  document.body.classList.remove("eva-nav-compact", "eva-pressing-nav");
+  document.body.classList.toggle("eva-nav-compact", compact);
+  document.body.classList.toggle("eva-nav-expanded", !compact);
+  document.body.classList.remove("eva-pressing-nav");
 
   if (brand) {
-    brand.removeAttribute("aria-disabled");
     brand.setAttribute("tabindex", "0");
     brand.style.pointerEvents = "auto";
   }
 }
 
-export function setTarget() {
-  NAV_STATE.targetProgress = 1;
-  NAV_STATE.motionMode = "stable";
-}
-
-export function expandNav() {
-  NAV_STATE.navPinnedOpen = true;
-  setTarget();
-  applyProgress();
-}
-
-export function compactNav() {
-  expandNav();
-}
-
+export function setTarget() { applyProgress(); }
+export function expandNav() { NAV_STATE.navPinnedOpen = true; applyProgress(); }
+export function compactNav() { NAV_STATE.navPinnedOpen = false; applyProgress(); }
 export function scheduleCompact() {}
 export function clearCompactTimer() {}
 export function clearScrollSettleTimer() {}
-export function settleAfterScroll() {}
+export function settleAfterScroll() { applyProgress(); }
 export function hideQuickBubbles() {}
 export function showQuickBubbles() {}
 
@@ -78,8 +69,9 @@ export function bindScrollBehavior() {
   NAV_STATE.scrollBehaviorBound = true;
   applyProgress();
   window.addEventListener("scroll", requestScrollUpdate, { passive: true });
+  window.addEventListener("resize", requestScrollUpdate, { passive: true });
+  window.addEventListener("evara:menu-open", applyProgress);
+  window.addEventListener("evara:menu-close", applyProgress);
 }
 
-export function animateNav() {
-  applyProgress();
-}
+export function animateNav() { applyProgress(); }
