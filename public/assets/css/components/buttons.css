@@ -19,33 +19,29 @@ button:not(.plain-btn):not(.unstyled) {
   isolation: isolate;
   border-radius: 999px;
   min-height: 44px;
-  color: var(--text-primary, var(--liquid-text)) !important;
+  color: var(--text-primary, var(--liquid-text));
   font-weight: 900;
   letter-spacing: -0.02em;
-
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--user-button-tint, rgba(var(--tint-rgb), 1)) 8%, var(--glass-bg, var(--liquid-bg-top))),
-      color-mix(in srgb, var(--user-button-tint, rgba(var(--tint-rgb), 1)) 4%, var(--glass-bg, var(--liquid-bg-bottom)))
-    ) !important;
-
-  border: 1px solid var(--glass-border, var(--liquid-border)) !important;
-
+      color-mix(in srgb, var(--user-button-tint, rgba(var(--tint-rgb), 1)) 8%, var(--liquid-bg-top)),
+      color-mix(in srgb, var(--user-button-tint, rgba(var(--tint-rgb), 1)) 4%, var(--liquid-bg-bottom))
+    );
+  border: 1px solid var(--liquid-border);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.34),
-    inset 0 -1px 0 rgba(255,255,255,0.06),
-    0 12px 22px var(--glass-shadow, var(--liquid-shadow)),
-    0 0 0 1px color-mix(in srgb, var(--user-button-tint, rgba(var(--tint-rgb), 1)) 5%, transparent) !important;
-
-  backdrop-filter: blur(22px) saturate(170%) !important;
-  -webkit-backdrop-filter: blur(22px) saturate(170%) !important;
-
+    inset 0 1px 0 var(--liquid-highlight),
+    inset 0 -1px 0 var(--liquid-hairline),
+    0 12px 22px var(--liquid-shadow),
+    0 0 0 1px color-mix(in srgb, var(--user-button-tint, rgba(var(--tint-rgb), 1)) 5%, transparent);
+  backdrop-filter: blur(var(--liquid-blur-soft, 18px)) saturate(170%);
+  -webkit-backdrop-filter: blur(var(--liquid-blur-soft, 18px)) saturate(170%);
   transform: translateZ(0);
   transition:
     background var(--page-transition-ms, 220ms) ease,
     box-shadow var(--page-transition-ms, 220ms) ease,
     border-color var(--page-transition-ms, 220ms) ease,
+    color var(--page-transition-ms, 220ms) ease,
     transform 0.16s ease,
     filter 0.16s ease;
 }
@@ -72,9 +68,9 @@ button:not(.plain-btn):not(.unstyled)::before {
   border-radius: inherit;
   pointer-events: none;
   background:
-    radial-gradient(circle at 28% 0%, rgba(255,255,255,0.72), transparent 36%),
-    linear-gradient(135deg, rgba(255,255,255,0.42), rgba(255,255,255,0.12) 34%, transparent 62%);
-  opacity: 0.96;
+    radial-gradient(circle at 28% 0%, var(--liquid-highlight), transparent 36%),
+    linear-gradient(135deg, color-mix(in srgb, var(--liquid-highlight) 62%, transparent), color-mix(in srgb, var(--liquid-highlight) 22%, transparent) 34%, transparent 62%);
+  opacity: 0.9;
   z-index: 0;
 }
 
@@ -101,9 +97,9 @@ button:not(.plain-btn):not(.unstyled)::after {
   right: 14%;
   height: 42%;
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.50), rgba(255,255,255,0.10));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--liquid-highlight) 72%, transparent), color-mix(in srgb, var(--liquid-highlight) 14%, transparent));
   pointer-events: none;
-  opacity: 0.74;
+  opacity: 0.7;
   z-index: 0;
   filter: blur(0.2px);
 }
@@ -167,58 +163,32 @@ button:not(.plain-btn):not(.unstyled):active {
   transform: translateY(1px) scale(0.985) translateZ(0);
 }
 
-html[data-theme="light"] .btn,
-html[data-theme="light"] .btn-apple,
-html[data-theme="light"] .btn-theme-secondary,
-html[data-theme="light"] .settings-preview-btn,
-html[data-theme="light"] .settings-chip,
-html[data-theme="light"] .settings-section-link,
-html[data-theme="light"] .settings-color-open,
-html[data-theme="light"] .settings-color-sheet-close,
-html[data-theme="light"] .settings-color-sheet-btn,
-html[data-theme="light"] .custom-sheet-item-btn,
-html[data-theme="light"] .appearance-launch-btn,
-html[data-theme="light"] .eva-chip,
-html[data-theme="light"] .eva-link,
-html[data-theme="light"] .eva-menu-btn,
-html[data-theme="light"] button:not(.plain-btn):not(.unstyled) {
-  color: #10231d !important;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.92), rgba(245,248,250,0.72)) !important;
-  border-color: rgba(15, 23, 42, 0.10) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.94),
-    inset 0 -1px 0 rgba(15,23,42,0.04),
-    0 16px 32px rgba(15, 23, 42, 0.08),
-    0 0 0 1px rgba(255,255,255,0.70) !important;
-}
-
-html[data-theme="light"] .btn-theme-primary,
-html[data-theme="light"] .premium-red-btn,
-html[data-theme="light"] .role-pill.active,
-html[data-theme="light"] .role-pill-option.active {
-  color: #ffffff !important;
+.btn-theme-primary,
+.premium-red-btn,
+.role-pill.active,
+.role-pill-option.active {
+  color: #ffffff;
   background:
     radial-gradient(circle at 28% 0%, rgba(255,255,255,0.42), transparent 34%),
-    linear-gradient(135deg, #ff3b5f, #d71945 52%, #9f0025) !important;
-  border-color: rgba(255,255,255,0.34) !important;
+    linear-gradient(135deg, var(--accent-red-2), var(--accent-red) 52%, #9f0025);
+  border-color: color-mix(in srgb, var(--accent-red) 38%, rgba(255,255,255,0.34));
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.48),
     inset 0 -1px 0 rgba(0,0,0,0.12),
-    0 18px 34px rgba(216, 25, 69, 0.26),
-    0 0 0 1px rgba(216,25,69,0.18) !important;
+    0 18px 34px color-mix(in srgb, var(--accent-red) 28%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent-red) 18%, transparent);
 }
 
-html[data-theme="light"] .btn:focus-visible,
-html[data-theme="light"] .btn-apple:focus-visible,
-html[data-theme="light"] .btn-theme-primary:focus-visible,
-html[data-theme="light"] .btn-theme-secondary:focus-visible,
-html[data-theme="light"] button:not(.plain-btn):not(.unstyled):focus-visible {
+.btn:focus-visible,
+.btn-apple:focus-visible,
+.btn-theme-primary:focus-visible,
+.btn-theme-secondary:focus-visible,
+button:not(.plain-btn):not(.unstyled):focus-visible {
   outline: none;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.96),
-    0 0 0 4px rgba(255,47,87,0.16),
-    0 18px 36px rgba(15,23,42,0.10) !important;
+    inset 0 1px 0 var(--liquid-highlight),
+    0 0 0 4px color-mix(in srgb, var(--accent-red-2) 18%, transparent),
+    0 18px 36px var(--liquid-shadow);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -227,6 +197,6 @@ html[data-theme="light"] button:not(.plain-btn):not(.unstyled):focus-visible {
   .btn-theme-primary,
   .btn-theme-secondary,
   button:not(.plain-btn):not(.unstyled) {
-    transition: none !important;
+    transition: none;
   }
 }
