@@ -1,0 +1,172 @@
+/* EVARAOS HOME LAYOUT
+   Structure only. Appearance comes from the universal theme.
+*/
+
+.home-shell {
+  width: min(1280px, calc(100% - 24px));
+  margin: 0 auto 72px;
+  padding-top: max(132px, var(--eva-page-top-space, 116px));
+  padding-bottom: 28px;
+  display: grid;
+  gap: 22px;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-home {
+  padding: 0 6px 4px;
+  min-height: 560px;
+  display: grid;
+  align-items: center;
+  position: relative;
+  isolation: isolate;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.18fr) minmax(340px, .82fr);
+  gap: 22px;
+  align-items: stretch;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-content {
+  display: grid;
+  gap: 20px;
+  align-content: center;
+  position: relative;
+  z-index: 1;
+  padding-right: 8px;
+}
+
+.hero-actions,
+.cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.hero-side,
+.stats-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.hero-side { align-content: stretch; position: relative; z-index: 1; }
+
+.stats-card {
+  padding: 18px;
+  border-radius: 28px;
+  min-height: 126px;
+  display: grid;
+  align-content: space-between;
+  gap: 12px;
+}
+
+.section-panel,
+.cta-panel {
+  padding: 24px;
+  border-radius: 32px;
+  display: grid;
+  gap: 18px;
+}
+
+.section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.features-grid,
+.services-grid,
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.services-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.category-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.feature-card,
+.service-card,
+.category-card,
+.info-card {
+  min-height: 198px;
+  padding: 20px;
+  border-radius: 28px;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.site-footer {
+  width: min(1280px, calc(100% - 24px));
+  margin: 0 auto 38px;
+  position: relative;
+  z-index: 1;
+}
+
+.site-footer-inner {
+  min-height: 84px;
+  padding: 18px 22px;
+  border-radius: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.site-footer-left,
+.site-footer-right {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+@media (max-width: 1080px) {
+  .hero-grid,
+  .category-split { grid-template-columns: 1fr; }
+  .features-grid,
+  .services-grid,
+  .services-grid-3,
+  .info-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 680px) {
+  .home-shell {
+    width: min(calc(100% - 16px), 100%);
+    margin-bottom: 56px;
+    padding-top: 24px;
+    padding-bottom: 96px;
+  }
+
+  .section-panel,
+  .cta-panel { padding: 18px; border-radius: 26px; }
+  .hero-home { padding: 0; min-height: auto; display: block; margin-top: -4px; }
+  .hero-grid { display: block; }
+  .hero-content { display: grid; align-content: start; gap: 18px; padding: 0; margin: 0; }
+  .hero-side { margin-top: 18px; }
+  .features-grid,
+  .services-grid,
+  .services-grid-3,
+  .info-grid { grid-template-columns: 1fr; }
+  .hero-title { max-width: 100%; }
+  .hero-actions,
+  .cta-actions { display: grid; }
+  .site-footer { width: min(calc(100% - 16px), 100%); }
+}
