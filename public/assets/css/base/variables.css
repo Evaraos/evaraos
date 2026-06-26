@@ -1,28 +1,17 @@
 :root {
-  /* ===============================
-     EVARAOS LIQUID GLASS TOKENS
-     Light mode = light glass + dark text
-     Dark mode = dark glass + light text
-     =============================== */
-
   --page-transition-ms: 180ms;
 
   --bg-light: #f7fbff;
   --bg-light-2: #eef6fb;
   --bg-light-3: #e4eff7;
 
-  --bg-dark: #03070d;
-  --bg-dark-2: #07111c;
-  --bg-dark-3: #0d1a2b;
-  --bg-dark-4: #14233a;
-
   --text-light: #061a16;
-  --muted-light: rgba(6, 26, 22, 0.66);
-  --soft-light: rgba(6, 26, 22, 0.48);
+  --muted-light: rgba(6,26,22,.66);
+  --soft-light: rgba(6,26,22,.48);
 
-  --text-dark: #f6fbff;
-  --muted-dark: rgba(234, 244, 255, 0.74);
-  --soft-dark: rgba(234, 244, 255, 0.52);
+  --text-dark: rgba(255,255,255,.96);
+  --muted-dark: rgba(235,235,245,.68);
+  --soft-dark: rgba(235,235,245,.46);
 
   --accent-red: #e50935;
   --accent-red-2: #ff3b5f;
@@ -36,61 +25,29 @@
   --text-secondary: var(--muted-light);
   --text-soft: var(--soft-light);
 
-  --tint-rgb: 255, 255, 255;
-  --theme-glow-rgb: 255, 255, 255;
-  --theme-soft-rgb: 213, 228, 240;
-  --beam-halo-rgb: 78, 161, 255;
+  --tint-rgb: 255,255,255;
+  --theme-glow-rgb: 255,255,255;
+  --theme-soft-rgb: 213,228,240;
+  --beam-halo-rgb: 78,161,255;
 
-  --glass-bg: rgba(255, 255, 255, 0.58);
-  --glass-bg-strong: rgba(255, 255, 255, 0.76);
-  --glass-border: rgba(255, 255, 255, 0.82);
-  --glass-shadow: rgba(44, 67, 82, 0.14);
+  --glass-bg: rgba(255,255,255,.58);
+  --glass-bg-strong: rgba(255,255,255,.76);
+  --glass-border: rgba(255,255,255,.82);
+  --glass-shadow: rgba(44,67,82,.14);
 
   --liquid-text: var(--text-light);
   --liquid-muted: var(--muted-light);
-  --liquid-bg-top: rgba(255, 255, 255, 0.72);
-  --liquid-bg-bottom: rgba(238, 247, 255, 0.46);
-  --liquid-border: rgba(255, 255, 255, 0.82);
-  --liquid-hairline: rgba(7, 27, 36, 0.08);
-  --liquid-shadow: rgba(48, 70, 82, 0.16);
-  --liquid-highlight: rgba(255, 255, 255, 0.90);
-  --liquid-refraction: rgba(104, 172, 255, 0.12);
+  --liquid-bg-top: rgba(255,255,255,.72);
+  --liquid-bg-bottom: rgba(238,247,255,.46);
+  --liquid-border: rgba(255,255,255,.82);
+  --liquid-hairline: rgba(7,27,36,.08);
+  --liquid-shadow: rgba(48,70,82,.16);
+  --liquid-highlight: rgba(255,255,255,.90);
+  --liquid-refraction: rgba(104,172,255,.12);
 
-  --card-border: rgba(255, 255, 255, 0.82);
-  --card-bg-top: rgba(255, 255, 255, 0.68);
-  --card-bg-bottom: rgba(238, 247, 255, 0.42);
-}
-
-html[data-theme="dark"] {
-  --bg-primary: var(--bg-dark);
-  --bg-secondary: var(--bg-dark-2);
-  --text-primary: var(--text-dark);
-  --text-secondary: var(--muted-dark);
-  --text-soft: var(--soft-dark);
-
-  --tint-rgb: 13, 28, 46;
-  --theme-glow-rgb: 112, 181, 255;
-  --theme-soft-rgb: 12, 25, 42;
-  --beam-halo-rgb: 88, 166, 255;
-
-  --glass-bg: rgba(10, 18, 30, 0.56);
-  --glass-bg-strong: rgba(12, 22, 36, 0.76);
-  --glass-border: rgba(255, 255, 255, 0.14);
-  --glass-shadow: rgba(0, 0, 0, 0.44);
-
-  --liquid-text: var(--text-dark);
-  --liquid-muted: var(--muted-dark);
-  --liquid-bg-top: rgba(30, 45, 66, 0.56);
-  --liquid-bg-bottom: rgba(5, 12, 22, 0.38);
-  --liquid-border: rgba(255, 255, 255, 0.16);
-  --liquid-hairline: rgba(255, 255, 255, 0.10);
-  --liquid-shadow: rgba(0, 0, 0, 0.46);
-  --liquid-highlight: rgba(255, 255, 255, 0.20);
-  --liquid-refraction: rgba(80, 156, 255, 0.16);
-
-  --card-border: rgba(255, 255, 255, 0.15);
-  --card-bg-top: rgba(26, 40, 60, 0.58);
-  --card-bg-bottom: rgba(7, 14, 25, 0.44);
+  --card-border: rgba(255,255,255,.82);
+  --card-bg-top: rgba(255,255,255,.68);
+  --card-bg-bottom: rgba(238,247,255,.42);
 }
 
 html[data-theme="light"] {
@@ -99,28 +56,24 @@ html[data-theme="light"] {
   --text-primary: var(--text-light);
   --text-secondary: var(--muted-light);
   --text-soft: var(--soft-light);
-
-  --tint-rgb: 255, 255, 255;
-  --theme-glow-rgb: 255, 255, 255;
-  --theme-soft-rgb: 213, 228, 240;
-  --beam-halo-rgb: 78, 161, 255;
-
-  --glass-bg: rgba(255, 255, 255, 0.58);
-  --glass-bg-strong: rgba(255, 255, 255, 0.76);
-  --glass-border: rgba(255, 255, 255, 0.82);
-  --glass-shadow: rgba(44, 67, 82, 0.14);
-
+  --tint-rgb: 255,255,255;
+  --theme-glow-rgb: 255,255,255;
+  --theme-soft-rgb: 213,228,240;
+  --beam-halo-rgb: 78,161,255;
+  --glass-bg: rgba(255,255,255,.58);
+  --glass-bg-strong: rgba(255,255,255,.76);
+  --glass-border: rgba(255,255,255,.82);
+  --glass-shadow: rgba(44,67,82,.14);
   --liquid-text: var(--text-light);
   --liquid-muted: var(--muted-light);
-  --liquid-bg-top: rgba(255, 255, 255, 0.72);
-  --liquid-bg-bottom: rgba(238, 247, 255, 0.46);
-  --liquid-border: rgba(255, 255, 255, 0.82);
-  --liquid-hairline: rgba(7, 27, 36, 0.08);
-  --liquid-shadow: rgba(48, 70, 82, 0.16);
-  --liquid-highlight: rgba(255, 255, 255, 0.90);
-  --liquid-refraction: rgba(104, 172, 255, 0.12);
-
-  --card-border: rgba(255, 255, 255, 0.82);
-  --card-bg-top: rgba(255, 255, 255, 0.68);
-  --card-bg-bottom: rgba(238, 247, 255, 0.42);
+  --liquid-bg-top: rgba(255,255,255,.72);
+  --liquid-bg-bottom: rgba(238,247,255,.46);
+  --liquid-border: rgba(255,255,255,.82);
+  --liquid-hairline: rgba(7,27,36,.08);
+  --liquid-shadow: rgba(48,70,82,.16);
+  --liquid-highlight: rgba(255,255,255,.90);
+  --liquid-refraction: rgba(104,172,255,.12);
+  --card-border: rgba(255,255,255,.82);
+  --card-bg-top: rgba(255,255,255,.68);
+  --card-bg-bottom: rgba(238,247,255,.42);
 }
