@@ -1,6 +1,6 @@
 /* ===============================
    EVARAOS APPLE SETTINGS BACKGROUND COMPATIBILITY
-   Structural safety only. Global page color and background are owned by layout.css.
+   Structural safety only. Global page color, background, and wallpaper are owned by layout.css.
    =============================== */
 
 html,
@@ -12,13 +12,6 @@ body {
   position: relative;
   isolation: isolate;
   overflow-x: hidden;
-}
-
-body::before,
-body::after {
-  content: none;
-  display: none;
-  animation: none;
 }
 
 body > :not(script):not(style) {
