@@ -1,0 +1,49 @@
+/* EVARAOS LIQUID BEAM EFFECTS
+   Shared beam and active-glow rendering for every appearance mode.
+*/
+
+.beam-target,
+.active-glow,
+.active-card-glow {
+  position: relative;
+  isolation: isolate;
+}
+
+.beam-target::after,
+.active-glow::after {
+  content: "";
+  position: absolute;
+  inset: -8% -5%;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: .42;
+  filter: blur(18px);
+  background:
+    linear-gradient(115deg, transparent 18%, color-mix(in srgb, var(--liquid-highlight) 24%, transparent) 34%, var(--liquid-highlight) 48%, color-mix(in srgb, var(--liquid-highlight) 24%, transparent) 62%, transparent 78%),
+    radial-gradient(circle at 22% 6%, var(--liquid-highlight), transparent 30%),
+    radial-gradient(circle at 92% 12%, var(--liquid-refraction), transparent 32%);
+  animation: beamFloat 12s ease-in-out infinite;
+}
+
+.active-card-glow,
+.active-glow {
+  box-shadow:
+    0 18px 42px var(--liquid-shadow),
+    0 0 0 1px var(--liquid-border),
+    inset 0 1px 0 var(--liquid-highlight);
+}
+
+.beam-target > *,
+.active-glow > *,
+.active-card-glow > * {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beam-target::after,
+  .active-glow::after {
+    animation: none;
+  }
+}
