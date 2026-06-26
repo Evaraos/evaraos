@@ -30,6 +30,20 @@ html[data-theme="dark"] {
   --card-bg-bottom: rgba(7, 10, 16, 0.30);
 }
 
+html[data-has-wallpaper] {
+  --glass-bg: rgba(10, 14, 21, 0.44);
+  --glass-bg-strong: rgba(12, 17, 26, 0.64);
+  --glass-border: rgba(255, 255, 255, 0.22);
+  --liquid-bg-top: rgba(34, 43, 57, 0.48);
+  --liquid-bg-bottom: rgba(5, 8, 13, 0.32);
+  --liquid-border: rgba(255, 255, 255, 0.23);
+  --liquid-highlight: rgba(255, 255, 255, 0.28);
+  --liquid-refraction: rgba(112, 190, 255, 0.20);
+  --card-border: var(--liquid-border);
+  --card-bg-top: rgba(29, 38, 51, 0.50);
+  --card-bg-bottom: rgba(5, 8, 13, 0.32);
+}
+
 html[data-theme="dark"] body {
   color: var(--text-primary);
 }
