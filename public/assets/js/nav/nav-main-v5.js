@@ -1,4 +1,4 @@
-const NAV_BUILD="nav-v9-corner-controls";
+const NAV_BUILD="nav-v12-drawer-cleanup";
 let NAV_STATE,getNavShell,renderNav,applyProgress,bindScrollBehavior,animateNav;
 async function loadCore(){const config=await import(`./nav-config.js?v=${NAV_BUILD}`);const utils=await import(`./nav-utils.js?v=${NAV_BUILD}`);const renderer=await import(`./nav-render.js?v=${NAV_BUILD}`);const scroll=await import(`./nav-scroll.js?v=${NAV_BUILD}`);NAV_STATE=config.NAV_STATE;getNavShell=utils.getNavShell;renderNav=renderer.renderNav;applyProgress=scroll.applyProgress;bindScrollBehavior=scroll.bindScrollBehavior;animateNav=scroll.animateNav}
 async function optional(path){try{return await import(`${path}?v=${NAV_BUILD}`)}catch(error){console.warn("Optional nav module failed:",path,error);return null}}
