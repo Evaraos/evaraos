@@ -77,6 +77,11 @@ function updateThemeControls() {
   });
 }
 
+function completeThemeHydration() {
+  document.documentElement.setAttribute("data-evara-theme-ready", "true");
+  document.documentElement.classList.remove("boot-pending");
+}
+
 export function applyTheme(theme = getTheme()) {
   const safeTheme = theme === "dark" ? "dark" : "light";
   const mode = getThemeMode();
@@ -91,6 +96,7 @@ export function applyTheme(theme = getTheme()) {
   );
 
   updateThemeControls();
+  completeThemeHydration();
   window.dispatchEvent(new CustomEvent("evara:theme-applied", { detail: { theme: safeTheme, mode } }));
   return safeTheme;
 }
