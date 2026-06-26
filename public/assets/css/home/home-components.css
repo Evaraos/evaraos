@@ -1,0 +1,144 @@
+/* EVARAOS HOME COMPONENTS */
+
+.hero-home::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: .56;
+  background:
+    radial-gradient(circle at 78% 18%, color-mix(in srgb, var(--liquid-highlight) 18%, transparent), transparent 22%),
+    radial-gradient(circle at 14% 82%, color-mix(in srgb, var(--liquid-refraction) 16%, transparent), transparent 24%);
+}
+
+.hero-kicker {
+  margin: 0;
+  font-size: .92rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .18em;
+  color: var(--text-secondary);
+}
+
+.hero-title {
+  margin: 0;
+  font-size: clamp(3rem, 7vw, 6.6rem);
+  line-height: .94;
+  letter-spacing: -.056em;
+  max-width: 11.5ch;
+  text-wrap: balance;
+  color: var(--text-primary);
+}
+
+.hero-subtitle {
+  margin: 0;
+  font-size: clamp(1.05rem, 2vw, 1.34rem);
+  line-height: 1.74;
+  max-width: 68ch;
+  color: var(--text-secondary);
+  text-wrap: pretty;
+}
+
+.btn-apple {
+  min-height: 58px;
+  padding: 0 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 1rem;
+}
+
+.stats-card p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+.stats-card h3 {
+  margin: 0;
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  line-height: 1.04;
+  letter-spacing: -.03em;
+  text-wrap: balance;
+  color: var(--text-primary);
+}
+
+.section-head h2,
+.cta-panel h2 {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.8rem);
+  line-height: 1;
+  letter-spacing: -.03em;
+  text-wrap: balance;
+  color: var(--text-primary);
+}
+
+.section-head p,
+.cta-panel p {
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  max-width: 70ch;
+  line-height: 1.74;
+  text-wrap: pretty;
+}
+
+.cta-panel p { margin: 0; }
+
+.feature-card h3,
+.service-card h3,
+.category-card h3,
+.info-card h3 {
+  margin: 0;
+  font-size: 1.12rem;
+  line-height: 1.14;
+  letter-spacing: -.02em;
+  color: var(--text-primary);
+}
+
+.feature-card p,
+.service-card p,
+.category-card p,
+.info-card p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.64;
+  text-wrap: pretty;
+}
+
+.service-meta,
+.card-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: .84rem;
+  font-weight: 800;
+  letter-spacing: .02em;
+  color: var(--text-secondary);
+  background: linear-gradient(180deg, var(--liquid-bg-top), var(--liquid-bg-bottom));
+  border: 1px solid var(--liquid-border);
+  box-shadow: inset 0 1px 0 var(--liquid-highlight);
+  width: fit-content;
+}
+
+.site-footer-left span { color: var(--text-secondary); }
+
+.site-footer-right a {
+  text-decoration: none;
+  color: var(--text-primary);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@media (max-width: 680px) {
+  .hero-title { font-size: clamp(2.7rem, 13vw, 4.2rem); }
+  .btn-apple { width: 100%; }
+}
