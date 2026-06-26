@@ -1,5 +1,5 @@
 // Evaraos universal nav entrypoint
-// Single source of truth for the nav-v1 runtime.
-import "./nav/nav-main.js?v=nav-v3";
+import "./nav/nav-main.js?v=nav-v5";
+import "./nav/nav-essential.js?v=nav-v5";
 
-window.EVARAOS_NAV_ENTRY_VERSION = "nav-v3";
+window.EVARAOS_NAV_ENTRY_VERSION = "nav-v5";
