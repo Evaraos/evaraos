@@ -3,23 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <title>Notifications • Evaraos Inc</title>
-  <script src="/assets/js/theme-boot.js?v=50"></script>
-  <link rel="stylesheet" href="/assets/css/base.css?v=50" />
-  <link rel="stylesheet" href="/assets/css/theme.css?v=50" />
-  <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v4" />
-  <link rel="stylesheet" href="/assets/css/app-system.css?v=50" />
+  <script src="/assets/js/theme-boot.js?v=51"></script>
+  <link rel="stylesheet" href="/assets/css/base.css?v=51" />
+  <link rel="stylesheet" href="/assets/css/theme.css?v=51" />
+  <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v5" />
+  <link rel="stylesheet" href="/assets/css/app-system.css?v=51" />
   <style>
-    body{margin:0;background:transparent}.wrap{width:min(1180px,calc(100% - 28px));margin:0 auto;padding:128px 0 70px}.panel{border-radius:32px;padding:24px;border:1px solid var(--liquid-border);background:linear-gradient(180deg,var(--liquid-bg-top),var(--liquid-bg-bottom));margin-bottom:18px}h1{font-size:clamp(2rem,5vw,5rem);line-height:.9;letter-spacing:-.08em;margin:0}.list{display:grid;gap:12px}.item{border-radius:22px;padding:16px;border:1px solid var(--liquid-border);background:linear-gradient(180deg,var(--liquid-bg-top),var(--liquid-bg-bottom))}.muted{color:var(--text-secondary);line-height:1.6}.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.pill{border-radius:999px;padding:7px 10px;border:1px solid var(--liquid-border);font-size:12px;font-weight:900;color:var(--text-secondary)}@media(max-width:900px){.wrap{padding-top:112px}}
+    html.auth-pending body,body.auth-pending{opacity:0;pointer-events:none}body{margin:0;background:transparent}.wrap{width:min(1180px,calc(100% - 28px));margin:0 auto;padding:118px 0 100px}.panel{border-radius:32px;padding:24px;margin-bottom:18px}h1{font-size:clamp(2rem,5vw,5rem);line-height:.92;letter-spacing:-.07em;margin:0;color:var(--text-primary)}.list{display:grid;gap:12px}.item{border-radius:22px;padding:16px;border:1px solid var(--liquid-border);background:linear-gradient(180deg,var(--liquid-bg-top),var(--liquid-bg-bottom));color:var(--text-primary)}.muted{color:var(--text-secondary);line-height:1.6}.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.pill{border-radius:999px;padding:7px 10px;border:1px solid var(--liquid-border);font-size:12px;font-weight:900;color:var(--text-secondary)}@media(max-width:900px){.wrap{padding-top:98px}}
   </style>
 </head>
 <body class="auth-pending app-loading" data-route-guard="private">
-  <div id="universalNavRoot"></div><div id="appRoot"><main class="wrap"><section class="panel glass-card aurora-card"><p class="muted">NOTIFICATION CENTER</p><h1>Live operational alerts.</h1><p class="muted">Track dispatch updates, HR items, payment activity, payroll alerts, and executive system events from one feed.</p><p class="muted"><span id="noticeCount">0</span> notifications loaded.</p></section><section class="panel glass-card aurora-card"><h2>Feed</h2><div id="noticeList" class="list"><div class="item muted">Loading...</div></div></section></main></div>
-  <script src="/assets/js/loader.js"></script>
-  <script type="module" src="/assets/js/firebase.js"></script>
-  <script type="module" src="/assets/js/theme.js?v=50"></script>
-  <script type="module" src="/assets/js/route-guard.js"></script>
-  <script type="module" src="/assets/js/nav.js?v=50"></script>
-  <script type="module" src="/assets/js/notifications-center.js"></script>
+  <div id="universalNavRoot"></div>
+  <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
+  <div id="appRoot"><main class="wrap"><section class="panel glass-card active-glow"><p class="muted">NOTIFICATION CENTER</p><h1>Live operational alerts.</h1><p class="muted">Track dispatch updates, HR items, payment activity, payroll alerts, and executive system events from one feed.</p><p class="muted"><span id="noticeCount">0</span> notifications loaded.</p></section><section class="panel glass-card active-glow"><h2>Feed</h2><div id="noticeList" class="list"><div class="item muted">Loading...</div></div></section></main></div>
+  <script src="/assets/js/loader.js?v=36"></script>
+  <script type="module" src="/assets/js/firebase.js?v=36"></script>
+  <script type="module" src="/assets/js/theme.js?v=51"></script>
+  <script type="module" src="/assets/js/route-guard.js?v=35"></script>
+  <script type="module" src="/assets/js/nav.js?v=51"></script>
+  <script type="module" src="/assets/js/notifications-center.js?v=2"></script>
 </body>
 </html>
