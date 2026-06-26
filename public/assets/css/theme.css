@@ -1,31 +1,16 @@
-/* ===============================
-   EVARAOS THEME CORE
-   Central four-mode Liquid Glass stack
-   =============================== */
-
-/* Base */
-@import url("./base/variables.css?v=50");
-@import url("./base/layout.css?v=50");
-
-/* Appearance Modes */
-@import url("./themes/theme-light.css?v=50");
-@import url("./themes/theme-dark.css?v=50");
-@import url("./themes/first-paint-light.css?v=50");
-
-/* Structural compatibility */
-@import url("./effects/apple-settings-background.css?v=50");
-
-/* Universal Components */
-@import url("./components/liquid-glass.css?v=50");
-@import url("./components/buttons.css?v=50");
-@import url("./components/forms.css?v=50");
-@import url("./components/pills.css?v=50");
-@import url("./components/compact-surfaces.css?v=1");
-
-/* Motion and effects */
-@import url("./effects/animations.css?v=50");
-@import url("./effects/liquid-beam.css?v=1");
-
-/* Loader */
+/* EVARAOS UNIVERSAL LIQUID GLASS THEME */
+@import url("./base/variables.css?v=52");
+@import url("./base/layout.css?v=52");
+@import url("./themes/theme-light.css?v=52");
+@import url("./themes/theme-dark.css?v=52");
+@import url("./themes/first-paint-light.css?v=52");
+@import url("./effects/apple-settings-background.css?v=52");
+@import url("./components/liquid-glass.css?v=52");
+@import url("./components/buttons.css?v=52");
+@import url("./components/forms.css?v=52");
+@import url("./components/pills.css?v=52");
+@import url("./components/compact-surfaces.css?v=2");
+@import url("./effects/animations.css?v=52");
+@import url("./effects/liquid-beam.css?v=2");
 @import url("./loaders/loader.css?v=loader-v2");
 @import url("./loaders/loader-viewport.css?v=loader-v2");
