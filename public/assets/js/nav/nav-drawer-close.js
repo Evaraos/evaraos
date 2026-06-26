@@ -1,16 +1,33 @@
 import { closeMenu } from "./nav-menu.js";
 
-function bindDrawerClose() {
-  const closeButton = document.getElementById("evaMenuCloseBtn");
-  if (closeButton && closeButton.dataset.bound !== "true") {
-    closeButton.dataset.bound = "true";
-    closeButton.addEventListener("click", () => closeMenu(true));
-  }
+let escapeBound = false;
 
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && document.body.classList.contains("nav-menu-open")) closeMenu(true);
+function bindCloseButton() {
+  const button = document.getElementById("evaMenuCloseBtn");
+  if (!button || button.dataset.drawerCloseBound === "true") return false;
+  button.dataset.drawerCloseBound = "true";
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    closeMenu(true);
   });
+  return true;
 }
 
-if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bindDrawerClose, { once: true });
-else bindDrawerClose();
+function start() {
+  bindCloseButton();
+  if (!escapeBound) {
+    escapeBound = true;
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && document.body.classList.contains("nav-menu-open")) closeMenu(true);
+    });
+  }
+  const observer = new MutationObserver(() => {
+    if (bindCloseButton()) observer.disconnect();
+  });
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+  window.setTimeout(() => observer.disconnect(), 12000);
+}
+
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once: true });
+else start();
