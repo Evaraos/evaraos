@@ -20,18 +20,20 @@
   }
 
   function loadAppearance() {
-    var fallback = { mode: "light", imageTheme: "dark", imageUrl: "", imagePosition: "center center", imageOverlay: 0.36 };
+    var fallback = { mode: "light", imageTheme: "dark", imageUrl: "", imagePosition: "center center", imageOverlay: 0.36, glassTransparency: 0.72 };
     try {
       var raw = localStorage.getItem("evaraos-appearance");
       if (!raw) return fallback;
       var stored = JSON.parse(raw) || {};
       var overlay = Number(stored.imageOverlay);
+      var transparency = Number(stored.glassTransparency);
       return {
         mode: VALID_MODES.indexOf(stored.mode) >= 0 ? stored.mode : "light",
         imageTheme: VALID_IMAGE_THEMES.indexOf(stored.imageTheme) >= 0 ? stored.imageTheme : "dark",
         imageUrl: validImageUrl(stored.imageUrl),
         imagePosition: VALID_POSITIONS.indexOf(stored.imagePosition) >= 0 ? stored.imagePosition : "center center",
-        imageOverlay: Number.isFinite(overlay) ? Math.min(0.72, Math.max(0.08, overlay)) : 0.36
+        imageOverlay: Number.isFinite(overlay) ? Math.min(0.72, Math.max(0.08, overlay)) : 0.36,
+        glassTransparency: Number.isFinite(transparency) ? Math.min(1, Math.max(0.28, transparency)) : 0.72
       };
     } catch { return fallback; }
   }
@@ -54,5 +56,7 @@
   root.style.setProperty("--evara-wallpaper-image", appearance.imageUrl ? "url(" + JSON.stringify(appearance.imageUrl) + ")" : "none");
   root.style.setProperty("--evara-wallpaper-position", appearance.imagePosition);
   root.style.setProperty("--evara-wallpaper-overlay", String(appearance.imageOverlay));
+  root.style.setProperty("--evara-glass-strength", Math.round(appearance.glassTransparency * 100) + "%");
+  root.style.setProperty("--evara-glass-strength-soft", Math.round(Math.max(0.18, appearance.glassTransparency * 0.72) * 100) + "%");
   root.classList.add("boot-pending");
 })();
