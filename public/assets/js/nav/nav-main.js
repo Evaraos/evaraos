@@ -1,8 +1,7 @@
-const NAV_BUILD = "nav-v3";
+const NAV_BUILD = "nav-v4-appearance";
 
 let NAV_STATE;
 let getNavShell;
-let getAppearanceTheme;
 let renderNav;
 let applyProgress;
 let bindScrollBehavior;
@@ -16,7 +15,6 @@ async function loadCoreNav() {
 
   NAV_STATE = config.NAV_STATE;
   getNavShell = utils.getNavShell;
-  getAppearanceTheme = utils.getAppearanceTheme;
   renderNav = renderer.renderNav;
   applyProgress = scroll.applyProgress;
   bindScrollBehavior = scroll.bindScrollBehavior;
@@ -52,7 +50,7 @@ function shouldStartGlobalNotifications() {
 
 function syncThemeFromEngine() {
   try {
-    window.EvaraTheme?.applyTheme?.();
+    window.EvaraTheme?.applyAppearance?.();
     window.EvaraTheme?.updateThemeControls?.();
   } catch (error) {
     console.warn("Theme engine sync failed:", error);
@@ -96,8 +94,6 @@ export async function initNav() {
 
     window.EVARAOS_NAV_BUILD = NAV_BUILD;
     document.documentElement.dataset.evaraosNavBuild = NAV_BUILD;
-
-    document.documentElement.setAttribute("data-theme", getAppearanceTheme() === "dark" ? "dark" : document.documentElement.getAttribute("data-theme") || "light");
 
     const rendered = renderNav();
     if (!rendered) {
