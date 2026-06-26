@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png" />
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" />
+  <meta name="theme-color" content="#f4f7f6" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Evaraos AI</title>
+  <script src="/assets/js/theme-boot.js?v=52"></script>
+  <style>html.boot-pending body{margin:0;overflow:hidden}html.auth-pending body,body.auth-pending{opacity:0;pointer-events:none}body{margin:0;min-height:100vh;background:transparent}body.app-loading #appRoot{visibility:hidden}body.app-ready #appRoot{visibility:visible}</style>
+  <link rel="stylesheet" href="/assets/css/base.css?v=53" />
+  <link rel="stylesheet" href="/assets/css/theme.css?v=53" />
+  <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v13" />
+  <link rel="stylesheet" href="/assets/css/pages/ai-chat.css?v=1" />
+</head>
+<body class="auth-pending app-loading" data-route-guard="private">
+  <div id="universalNavRoot"></div>
+  <div id="appRoot">
+    <main class="evara-ai-shell">
+      <header class="evara-ai-header glass-card">
+        <div><h1>Evaraos AI</h1><p>Your conversational assistant for work, operations, and ideas.</p></div>
+        <button id="evaraAiClear" type="button" class="btn btn-theme-secondary evara-ai-clear">New chat</button>
+      </header>
+      <section id="evaraAiThread" class="evara-ai-thread" aria-live="polite"></section>
+      <div aria-hidden="true"></div>
+    </main>
+  </div>
+  <div class="evara-ai-composer-wrap">
+    <form id="evaraAiForm" class="evara-ai-composer" autocomplete="off">
+      <textarea id="evaraAiInput" class="evara-ai-input" rows="1" placeholder="Message Evaraos AI"></textarea>
+      <button id="evaraAiSend" class="evara-ai-send" type="submit" aria-label="Send message"><svg class="eva-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M7 10l5-5 5 5"/></svg></button>
+      <span id="evaraAiStatus" class="evara-ai-status" aria-live="polite"></span>
+    </form>
+  </div>
+  <script src="/assets/js/loader.js?v=37"></script>
+  <script type="module" src="/assets/js/firebase.js?v=36"></script>
+  <script type="module" src="/assets/js/theme.js?v=52"></script>
+  <script type="module" src="/assets/js/route-guard.js?v=35"></script>
+  <script type="module" src="/assets/js/nav.js?v=53"></script>
+  <script type="module" src="/assets/js/ai-chat.js?v=1"></script>
+</body>
+</html>
