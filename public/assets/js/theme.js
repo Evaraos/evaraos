@@ -1,42 +1,77 @@
-const APPEARANCE_KEY = "evaraos-appearance";
-const VALID_MODES = ["light", "dark", "system"];
+export const APPEARANCE_KEY = "evaraos-appearance";
+export const VALID_MODES = Object.freeze(["light", "dark", "system", "image"]);
+export const IMAGE_POSITIONS = Object.freeze([
+  "center center",
+  "center top",
+  "center bottom",
+  "left center",
+  "right center"
+]);
 
-const DEFAULT_APPEARANCE = {
+export const DEFAULT_APPEARANCE = Object.freeze({
   mode: "light",
+  imageUrl: "",
+  imagePosition: "center center",
+  imageOverlay: 0.36,
   updatedAt: null
-};
+});
 
-function systemTheme() {
+export function systemTheme() {
   try {
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    return media.matches ? "dark" : "light";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   } catch {
     return "light";
   }
 }
 
-function normalizeMode(mode) {
+export function normalizeMode(mode) {
   return VALID_MODES.includes(mode) ? mode : "light";
 }
 
-function resolvedTheme(mode) {
-  const safeMode = normalizeMode(mode);
-  return safeMode === "system" ? systemTheme() : safeMode;
+function normalizeImageUrl(value) {
+  const source = String(value || "").trim();
+  if (!source) return "";
+  if (/^data:image\/(?:avif|gif|jpeg|jpg|png|webp);base64,/i.test(source)) return source;
+
+  try {
+    const url = new URL(source, window.location.origin);
+    return ["https:", "http:"].includes(url.protocol) ? url.href : "";
+  } catch {
+    return "";
+  }
 }
 
-function normalizeAppearance(value = {}) {
-  const mode = normalizeMode(value.mode);
+function normalizePosition(value) {
+  return IMAGE_POSITIONS.includes(value) ? value : DEFAULT_APPEARANCE.imagePosition;
+}
+
+function normalizeOverlay(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return DEFAULT_APPEARANCE.imageOverlay;
+  return Math.min(0.72, Math.max(0.16, number));
+}
+
+export function normalizeAppearance(value = {}) {
   return {
-    mode,
-    updatedAt: value.updatedAt || new Date().toISOString()
+    mode: normalizeMode(value.mode),
+    imageUrl: normalizeImageUrl(value.imageUrl),
+    imagePosition: normalizePosition(value.imagePosition),
+    imageOverlay: normalizeOverlay(value.imageOverlay),
+    updatedAt: value.updatedAt || null
   };
+}
+
+export function resolvedTheme(mode) {
+  const safeMode = normalizeMode(mode);
+  if (safeMode === "system") return systemTheme();
+  if (safeMode === "image") return "dark";
+  return safeMode;
 }
 
 export function getAppearance() {
   try {
     const raw = localStorage.getItem(APPEARANCE_KEY);
-    if (!raw) return { ...DEFAULT_APPEARANCE };
-    return normalizeAppearance(JSON.parse(raw));
+    return raw ? normalizeAppearance(JSON.parse(raw)) : { ...DEFAULT_APPEARANCE };
   } catch {
     return { ...DEFAULT_APPEARANCE };
   }
@@ -50,82 +85,126 @@ export function getTheme() {
   return resolvedTheme(getThemeMode());
 }
 
-function updateThemeControls() {
-  const mode = getThemeMode();
-  const resolved = getTheme();
+function cssUrl(value) {
+  return value ? `url(${JSON.stringify(value)})` : "none";
+}
+
+function applyWallpaper(appearance) {
+  const root = document.documentElement;
+  const hasImage = appearance.mode === "image" && Boolean(appearance.imageUrl);
+
+  root.toggleAttribute("data-has-wallpaper", hasImage);
+  root.style.setProperty("--evara-wallpaper-image", cssUrl(appearance.imageUrl));
+  root.style.setProperty("--evara-wallpaper-position", appearance.imagePosition);
+  root.style.setProperty("--evara-wallpaper-overlay", String(appearance.imageOverlay));
+}
+
+function controlLabel(mode) {
+  if (mode === "dark") return { label: "Dark mode", icon: "☾" };
+  if (mode === "system") return { label: "System mode", icon: "◐" };
+  if (mode === "image") return { label: "Image mode", icon: "▧" };
+  return { label: "Light mode", icon: "☀" };
+}
+
+export function updateThemeControls() {
+  const appearance = getAppearance();
+  const resolved = resolvedTheme(appearance.mode);
+  const { label, icon } = controlLabel(appearance.mode);
 
   document.querySelectorAll("#evaThemeToggle, #evaThemePillToggle, [data-theme-toggle], [data-theme-label]").forEach((node) => {
-    node.setAttribute("data-theme-mode", mode);
+    node.setAttribute("data-theme-mode", appearance.mode);
     node.setAttribute("data-theme-resolved", resolved);
 
     const iconNode = node.querySelector(".eva-theme-nav-icon");
-
-    let label = "System mode";
-    let icon = "◐";
-
-    if (mode === "light") {
-      label = "Light mode";
-      icon = "☀";
-    } else if (mode === "dark") {
-      label = "Dark mode";
-      icon = "☾";
-    }
-
+    const textNode = node.querySelector("[data-theme-text]");
     if (iconNode) iconNode.textContent = icon;
-    node.setAttribute("aria-label", label);
+    if (textNode) textNode.textContent = label;
+
+    node.setAttribute("aria-label", `Switch appearance. Current: ${label}`);
     node.setAttribute("title", label);
   });
 }
 
 function completeThemeHydration() {
-  document.documentElement.setAttribute("data-evara-theme-ready", "true");
-  document.documentElement.classList.remove("boot-pending");
+  const root = document.documentElement;
+  root.setAttribute("data-evara-theme-ready", "true");
+  root.classList.remove("boot-pending");
 }
 
-export function applyTheme(theme = getTheme()) {
-  const safeTheme = theme === "dark" ? "dark" : "light";
-  const mode = getThemeMode();
+export function applyAppearance(value = getAppearance()) {
+  const appearance = normalizeAppearance(value);
+  const theme = resolvedTheme(appearance.mode);
+  const root = document.documentElement;
 
-  document.documentElement.setAttribute("data-theme", safeTheme);
-  document.documentElement.setAttribute("data-theme-mode", mode);
-  document.documentElement.style.colorScheme = safeTheme;
+  root.setAttribute("data-theme", theme);
+  root.setAttribute("data-theme-mode", appearance.mode);
+  root.style.colorScheme = theme;
+  applyWallpaper(appearance);
 
   document.querySelector('meta[name="theme-color"]')?.setAttribute(
     "content",
-    safeTheme === "dark" ? "#060814" : "#f4f7f6"
+    appearance.mode === "image" ? "#10141d" : theme === "dark" ? "#060814" : "#f4f7f6"
   );
 
   updateThemeControls();
   completeThemeHydration();
-  window.dispatchEvent(new CustomEvent("evara:theme-applied", { detail: { theme: safeTheme, mode } }));
-  return safeTheme;
+  window.dispatchEvent(new CustomEvent("evara:theme-applied", {
+    detail: { theme, ...appearance }
+  }));
+
+  return appearance;
+}
+
+export function applyTheme(theme = getTheme()) {
+  const appearance = getAppearance();
+  const safeTheme = theme === "dark" ? "dark" : "light";
+  return applyAppearance({
+    ...appearance,
+    mode: appearance.mode === "system" ? "system" : appearance.mode === "image" ? "image" : safeTheme
+  });
 }
 
 export function saveAppearance(nextAppearance = {}) {
-  const appearance = normalizeAppearance({ ...getAppearance(), ...nextAppearance });
-  localStorage.setItem(APPEARANCE_KEY, JSON.stringify(appearance));
+  const appearance = normalizeAppearance({
+    ...getAppearance(),
+    ...nextAppearance,
+    updatedAt: new Date().toISOString()
+  });
 
-  const theme = applyTheme(resolvedTheme(appearance.mode));
-  window.dispatchEvent(new CustomEvent("evara:appearance-updated", { detail: { ...appearance, theme } }));
+  localStorage.setItem(APPEARANCE_KEY, JSON.stringify(appearance));
+  applyAppearance(appearance);
+  window.dispatchEvent(new CustomEvent("evara:appearance-updated", {
+    detail: { theme: resolvedTheme(appearance.mode), ...appearance }
+  }));
+  return appearance;
+}
+
+export function resetAppearance() {
+  const appearance = { ...DEFAULT_APPEARANCE, updatedAt: new Date().toISOString() };
+  localStorage.setItem(APPEARANCE_KEY, JSON.stringify(appearance));
+  applyAppearance(appearance);
+  window.dispatchEvent(new CustomEvent("evara:appearance-updated", {
+    detail: { theme: "light", ...appearance }
+  }));
   return appearance;
 }
 
 export function setThemeMode(mode = "light") {
+  return saveAppearance({ mode: normalizeMode(mode) });
+}
+
+export function setThemeImage(imageUrl, options = {}) {
   return saveAppearance({
-    mode: normalizeMode(mode),
-    updatedAt: new Date().toISOString()
+    mode: "image",
+    imageUrl,
+    imagePosition: options.imagePosition,
+    imageOverlay: options.imageOverlay
   });
 }
 
 export function toggleTheme() {
-  const current = getThemeMode();
-  const next = current === "light"
-    ? "dark"
-    : current === "dark"
-      ? "system"
-      : "light";
-
-  return setThemeMode(next);
+  const currentIndex = VALID_MODES.indexOf(getThemeMode());
+  return setThemeMode(VALID_MODES[(currentIndex + 1) % VALID_MODES.length]);
 }
 
 function bindThemeControls() {
@@ -135,35 +214,39 @@ function bindThemeControls() {
   document.addEventListener("click", (event) => {
     const trigger = event.target.closest("#evaThemeToggle, #evaThemePillToggle, [data-theme-toggle]");
     if (!trigger) return;
-
     event.preventDefault();
     event.stopPropagation();
     toggleTheme();
   }, true);
 
   window.addEventListener("storage", (event) => {
-    if (event.key === APPEARANCE_KEY) {
-      applyTheme();
-    }
+    if (event.key === APPEARANCE_KEY) applyAppearance();
   });
 }
 
 try {
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
-    if (getThemeMode() === "system") applyTheme(systemTheme());
+    if (getThemeMode() === "system") applyAppearance();
   });
 } catch {}
 
 window.EvaraTheme = {
+  APPEARANCE_KEY,
+  VALID_MODES,
+  DEFAULT_APPEARANCE,
   getAppearance,
   getThemeMode,
   getTheme,
+  normalizeAppearance,
+  applyAppearance,
   applyTheme,
   saveAppearance,
+  resetAppearance,
   setThemeMode,
+  setThemeImage,
   toggleTheme,
   updateThemeControls
 };
 
 bindThemeControls();
-applyTheme();
+applyAppearance();
