@@ -1,21 +1,12 @@
 import { getSavedUserProfile, normalizeRole } from "./firebase.js";
+import { iconSvg } from "./ui/icons.js";
 
 const ROLE_CONTROLS = {
-  owner: [
-    ["Companies", "/companies.html", "⌂"], ["Users", "/users.html", "◉"], ["Finance", "/enterprise-finance-dashboard.html", "◍"], ["Dispatch", "/dispatch.html", "⌁"], ["AI Command", "/ai_command.html", "✦"], ["Settings", "/settings.html", "⚙"]
-  ],
-  admin: [
-    ["Users", "/users.html", "◉"], ["Leads", "/leads.html", "◎"], ["Jobs", "/jobs.html", "◇"], ["Dispatch", "/dispatch.html", "⌁"], ["Applications", "/applications.html", "◐"], ["Settings", "/settings.html", "⚙"]
-  ],
-  hr: [
-    ["Users", "/users.html", "◉"], ["Applications", "/applications.html", "◐"], ["Onboarding", "/onboarding.html", "＋"], ["Payroll", "/payroll.html", "◍"], ["Messages", "/messages.html", "◌"], ["Settings", "/settings.html", "⚙"]
-  ],
-  staff: [
-    ["My Jobs", "/jobs.html", "◇"], ["My Leads", "/leads.html", "◎"], ["Schedule", "/schedule.html", "◫"], ["Field", "/field.html", "⌁"], ["Messages", "/messages.html", "◌"], ["Settings", "/settings.html", "⚙"]
-  ],
-  customer: [
-    ["My Services", "/customer_dashboard.html", "⌂"], ["Bills", "/customer_bills.html", "◍"], ["History", "/customer-service-history.html", "◫"], ["Messages", "/customer-messaging.html", "◌"], ["Notifications", "/notifications_center.html", "◎"], ["Settings", "/settings.html", "⚙"]
-  ]
+  owner: [["Companies","/companies.html","company"],["Users","/users.html","users"],["Finance","/enterprise-finance-dashboard.html","finance"],["Dispatch","/dispatch.html","dispatch"],["AI Command","/ai_command.html","ai"],["Settings","/settings.html","settings"]],
+  admin: [["Users","/users.html","users"],["Leads","/leads.html","leads"],["Jobs","/jobs.html","jobs"],["Dispatch","/dispatch.html","dispatch"],["Applications","/applications.html","applications"],["Settings","/settings.html","settings"]],
+  hr: [["Users","/users.html","users"],["Applications","/applications.html","applications"],["Onboarding","/onboarding.html","signup"],["Payroll","/payroll.html","payroll"],["Messages","/messages.html","messages"],["Settings","/settings.html","settings"]],
+  staff: [["My Jobs","/jobs.html","jobs"],["My Leads","/leads.html","leads"],["Schedule","/schedule.html","schedule"],["Field","/field.html","field"],["Messages","/messages.html","messages"],["Settings","/settings.html","settings"]],
+  customer: [["My Services","/customer_dashboard.html","dashboard"],["Bills","/customer_bills.html","payments"],["History","/customer-service-history.html","history"],["Messages","/customer-messaging.html","messages"],["Notifications","/notifications_center.html","bell"],["Settings","/settings.html","settings"]]
 };
 
 function roleBucket() {
@@ -37,7 +28,8 @@ function mountControlCenter() {
   const section = document.createElement("section");
   section.id = "dashboardControlCenter";
   section.className = "dashboard-control-center glass-card";
-  section.innerHTML = `<div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Control Center</p><h2>${role === "owner" ? "Executive Controls" : role === "admin" ? "Administration Controls" : role === "hr" ? "People Operations" : role === "staff" ? "My Work Center" : "Customer Center"}</h2></div><button id="dashboardEditToggle" type="button" class="btn btn-theme-secondary">Customize</button></div><div class="dashboard-control-grid">${controls.map(([label,href,icon])=>`<a class="dashboard-control-tile glass-card" href="${href}" data-control-id="${label.toLowerCase().replace(/\s+/g,"-")}"><span>${icon}</span><strong>${label}</strong><small>Open</small></a>`).join("")}</div>`;
+  const title = role === "owner" ? "Executive Controls" : role === "admin" ? "Administration Controls" : role === "hr" ? "People Operations" : role === "staff" ? "My Work Center" : "Customer Center";
+  section.innerHTML = `<div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Control Center</p><h2>${title}</h2></div><button id="dashboardEditToggle" type="button" class="btn btn-theme-secondary">Customize</button></div><div class="dashboard-control-grid">${controls.map(([label,href,icon])=>`<a class="dashboard-control-tile glass-card" href="${href}" data-control-id="${label.toLowerCase().replace(/\s+/g,"-")}">${iconSvg(icon)}<strong>${label}</strong><small>Open</small></a>`).join("")}</div>`;
   hero.insertAdjacentElement("afterend", section);
   bindCustomize(section, role);
 }
@@ -66,7 +58,7 @@ function injectStyles() {
   if (document.getElementById("dashboardControlCenterStyles")) return;
   const style = document.createElement("style");
   style.id = "dashboardControlCenterStyles";
-  style.textContent = `.dashboard-control-center{padding:20px;border-radius:30px;display:grid;gap:16px}.dashboard-control-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}.dashboard-control-tile{min-height:128px;padding:16px;border-radius:24px;display:grid;align-content:space-between;text-decoration:none;color:var(--text-primary)}.dashboard-control-tile>span{font-size:1.6rem}.dashboard-control-tile strong{font-size:.94rem}.dashboard-control-tile small{color:var(--text-secondary)}.dashboard-control-center.is-editing .dashboard-control-tile{outline:1px dashed var(--accent-blue)}.dashboard-control-center.is-editing .dashboard-control-tile::after{content:"Tap to show/hide";font-size:.68rem;color:var(--text-secondary)}.dashboard-control-tile.is-disabled{opacity:.38}@media(max-width:980px){.dashboard-control-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:620px){.dashboard-control-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-control-tile{min-height:112px}}`;
+  style.textContent = `.dashboard-control-center{padding:20px;border-radius:30px;display:grid;gap:16px}.dashboard-control-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}.dashboard-control-tile{min-height:128px;padding:16px;border-radius:24px;display:grid;align-content:space-between;text-decoration:none;color:var(--text-primary)}.dashboard-control-tile>.eva-icon{width:30px;height:30px}.dashboard-control-tile strong{font-size:.94rem}.dashboard-control-tile small{color:var(--text-secondary)}.dashboard-control-center.is-editing .dashboard-control-tile{outline:1px dashed var(--accent-blue)}.dashboard-control-center.is-editing .dashboard-control-tile::after{content:"Tap to show/hide";font-size:.68rem;color:var(--text-secondary)}.dashboard-control-tile.is-disabled{opacity:.38}@media(max-width:980px){.dashboard-control-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:620px){.dashboard-control-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-control-tile{min-height:112px}}`;
   document.head.appendChild(style);
 }
 
