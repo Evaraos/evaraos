@@ -3,310 +3,107 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-
-  <!-- Evaraos App Identity / PWA / Favicons -->
   <link rel="manifest" href="/manifest.json" />
-
-  <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png" />
-  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/icon-192.png" />
-  <link rel="shortcut icon" href="/favicon.ico" />
-
-  <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" />
-
   <meta name="theme-color" content="#f4f7f6" />
-  <meta name="msapplication-TileColor" content="#f4f7f6" />
-  <meta name="msapplication-TileImage" content="/assets/img/icon-192.png" />
-
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Evaraos" />
-  <meta name="application-name" content="Evaraos" />
-
-  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
-  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
-  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin />
-  <link rel="dns-prefetch" href="https://www.gstatic.com" />
-  <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
-  <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com" />
-  <link rel="preload" as="image" href="/assets/img/evaraos_logo.png" />
-
   <title>Customer Portal • Evaraos Inc</title>
-
-  <script src="/assets/js/theme-boot.js?v=50"></script>
-
-  <style>
-    html.boot-pending body{margin:0;overflow:hidden;touch-action:none}
-    html.auth-pending body,body.auth-pending{opacity:0;pointer-events:none}
-    body.dashboard-body{margin:0;min-height:100vh;background:transparent}
-    body.app-loading #appRoot{visibility:hidden}
-    body.app-ready #appRoot{visibility:visible}
-  </style>
-
-  <link rel="stylesheet" href="/assets/css/base.css?v=50" />
-  <link rel="stylesheet" href="/assets/css/theme.css?v=50" />
-  <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v5" />
-  <link rel="stylesheet" href="/assets/css/dashboard.css?v=50" />
-  <link rel="stylesheet" href="/assets/css/app-system.css?v=50" />
-  <link rel="stylesheet" href="/assets/css/pages/customer-portal.css?v=1" />
+  <script src="/assets/js/theme-boot.js?v=52"></script>
+  <style>html.boot-pending body{margin:0;overflow:hidden;touch-action:none}html.auth-pending body,body.auth-pending{opacity:0;pointer-events:none}body.dashboard-body{margin:0;min-height:100vh;background:transparent}body.app-loading #appRoot{visibility:hidden}body.app-ready #appRoot{visibility:visible}</style>
+  <link rel="stylesheet" href="/assets/css/base.css?v=53" />
+  <link rel="stylesheet" href="/assets/css/theme.css?v=53" />
+  <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v16" />
+  <link rel="stylesheet" href="/assets/css/pages/customer-portal.css?v=2" />
 </head>
-
 <body class="dashboard-body auth-pending app-loading" data-route-guard="private">
   <div id="universalNavRoot"></div>
   <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
 
   <div id="appRoot">
     <div class="page-grid-overlay"></div>
-
     <main class="customer-page-wrap">
-      <section class="glass-card aurora-card active-glow beam-target">
-        <div class="customer-title-row">
+      <section class="customer-hero glass-card">
+        <div class="customer-hero-row">
           <div>
             <p class="customer-kicker">CUSTOMER PORTAL</p>
-            <h1 class="customer-title" id="welcomeTitle">Welcome</h1>
-            <p class="customer-copy" id="welcomeSubtext">
-              Loading your customer portal...
-            </p>
-
-            <div style="margin-top:16px;">
-              <span class="chip" id="customerHandleChip">@user</span>
-              <span class="chip" id="customerStatusChip">Portal Active</span>
-            </div>
+            <h1 class="customer-title">Welcome, <span id="customerWelcomeName">Customer</span></h1>
+            <p class="customer-copy">Track who accepted your service, which company they represent, where they are in the process, and the full before-and-after record of every visit.</p>
           </div>
-
-          <div class="customer-avatar" id="customerAvatar">C</div>
+          <div class="customer-avatar" id="customerAvatar"><span>C</span></div>
         </div>
+        <div id="customerActiveNotice" class="customer-live-notice" hidden></div>
       </section>
 
-      <section class="customer-grid">
-        <article class="customer-stat-card aurora-card active-glow beam-target">
-          <h3>Customer Name</h3>
-          <p id="customerName">Loading...</p>
-        </article>
-
-        <article class="customer-stat-card aurora-card active-glow beam-target">
-          <h3>Email</h3>
-          <p id="customerEmail">Loading...</p>
-        </article>
-
-        <article class="customer-stat-card aurora-card active-glow beam-target">
-          <h3>Company</h3>
-          <p id="customerCompany">Loading...</p>
-        </article>
+      <section class="customer-summary-grid" aria-label="Customer service summary">
+        <article class="customer-summary-card"><span>Email</span><strong id="customerPortalEmail">Loading…</strong></article>
+        <article class="customer-summary-card"><span>Phone</span><strong id="customerPortalPhone">Loading…</strong></article>
+        <article class="customer-summary-card"><span>Total services</span><strong class="customer-number" id="customerPortalCount">0</strong></article>
+        <article class="customer-summary-card"><span>Completed</span><strong class="customer-number" id="customerPortalCompleted">0</strong></article>
       </section>
 
-      <section class="glass-card aurora-card active-glow beam-target" style="margin-top:18px;">
-        <div class="section-title-row">
+      <section class="customer-profile-panel glass-card">
+        <div class="customer-profile-head">
           <div>
-            <p class="customer-kicker">Services</p>
-            <h2 style="margin:0;">Your Services</h2>
+            <p class="customer-kicker">YOUR DETAILS</p>
+            <h2>Customer information</h2>
+            <p>You can update your contact information and service notes. Service records cannot be deleted.</p>
           </div>
-
-          <a href="/settings.html" class="btn btn-theme-secondary beam-target">Open Settings</a>
+          <button id="customerEditProfile" type="button" class="btn btn-theme-secondary">Edit details</button>
         </div>
 
-        <div id="servicesList" class="service-grid">
-          <div class="empty-state">Loading services...</div>
+        <div id="customerProfileView" class="customer-profile-view">
+          <div class="customer-profile-field"><span>Name</span><strong id="customerProfileName">Saved to your account</strong></div>
+          <div class="customer-profile-field"><span>Phone</span><strong id="customerProfilePhone">Saved to your account</strong></div>
+          <div class="customer-profile-field"><span>Service notes</span><strong id="customerProfileNotes">No notes added</strong></div>
+        </div>
+
+        <form id="customerProfileForm" class="customer-profile-form" hidden>
+          <div class="customer-form-grid">
+            <div class="customer-form-field"><label for="customerEditName">Full name</label><input id="customerEditName" type="text" autocomplete="name" required /></div>
+            <div class="customer-form-field"><label for="customerEditPhone">Phone</label><input id="customerEditPhone" type="tel" autocomplete="tel" /></div>
+            <div class="customer-form-field full"><label for="customerEditNotes">Service notes</label><textarea id="customerEditNotes" rows="4" placeholder="Gate codes, access instructions, pets, preferred contact details…"></textarea></div>
+          </div>
+          <div class="customer-form-actions">
+            <button id="customerCancelEdit" type="button" class="btn btn-theme-secondary">Cancel</button>
+            <button id="customerSaveProfile" type="submit" class="btn btn-theme-primary">Save changes</button>
+          </div>
+        </form>
+        <p class="customer-no-delete-note">Your service timeline is a permanent activity record. Customers can edit profile details, but cannot remove completed or active service history.</p>
+      </section>
+
+      <section class="customer-timeline-panel glass-card">
+        <div class="customer-timeline-head">
+          <div>
+            <p class="customer-kicker">SERVICE HISTORY</p>
+            <h2>Companies and professionals who helped</h2>
+            <p>Staff are not selected by the customer. The first qualified professional who accepts the job becomes the assigned provider and appears here with their role, company, timestamps, location, and photos.</p>
+          </div>
+        </div>
+        <div id="customerServiceTimeline" class="customer-service-timeline">
+          <div class="customer-empty-state glass-card"><h3>Loading your service history…</h3></div>
         </div>
       </section>
     </main>
   </div>
 
-  <script src="/assets/js/loader.js?v=36"></script>
+  <div id="customerPhotoModal" class="customer-photo-modal" hidden>
+    <div class="customer-photo-modal-inner">
+      <img src="" alt="Service documentation preview" />
+      <button type="button" data-close-photo aria-label="Close photo">×</button>
+    </div>
+  </div>
+
+  <script src="/assets/js/loader.js?v=37"></script>
   <script type="module" src="/assets/js/firebase.js?v=36"></script>
-  <script type="module" src="/assets/js/theme.js?v=50"></script>
+  <script type="module" src="/assets/js/theme.js?v=52"></script>
   <script type="module" src="/assets/js/route-guard.js?v=35"></script>
-  <script type="module" src="/assets/js/nav.js?v=51"></script>
-
-  <script type="module">
-    import {
-      requireAuth,
-      loadCompany,
-      hasPermission,
-      fetchAllCollection
-    } from "/assets/js/app.js";
-
-    function normalize(value = "") {
-      return String(value || "").trim().toLowerCase();
-    }
-
-    function escapeHtml(value = "") {
-      return String(value || "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
-
-    function initials(name) {
-      const parts = String(name || "").trim().split(" ").filter(Boolean);
-      if (!parts.length) return "C";
-      return parts.slice(0, 2).map((part) => part[0]?.toUpperCase()).join("");
-    }
-
-    function displayName(user = {}) {
-      return user.name || user.fullName || user.displayName || user.username || user.email || "Customer";
-    }
-
-    function getHandle(user = {}) {
-      if (user.handle) return user.handle;
-      if (user.username) return `@${user.username}`;
-      if (user.email) return `@${String(user.email).split("@")[0]}`;
-      return "@user";
-    }
-
-    async function fetchCustomerServices(user = {}) {
-      const possibleCollections = ["customer_services", "services", "subscriptions", "jobs"];
-      const allMatches = [];
-
-      for (const collectionName of possibleCollections) {
-        try {
-          const docs = await fetchAllCollection(collectionName, { max: 500 });
-
-          const matches = docs.filter((item) => {
-            const possibleIds = [
-              item.customerId,
-              item.customerUid,
-              item.userId,
-              item.uid,
-              item.ownerId,
-              item.clientId
-            ].map(normalize);
-
-            const possibleEmails = [
-              item.customerEmail,
-              item.email,
-              item.clientEmail
-            ].map(normalize);
-
-            return (
-              possibleIds.includes(normalize(user.id)) ||
-              possibleIds.includes(normalize(user.uid)) ||
-              possibleEmails.includes(normalize(user.email))
-            );
-          });
-
-          matches.forEach((item) => {
-            allMatches.push({
-              ...item,
-              sourceCollection: collectionName
-            });
-          });
-        } catch (error) {
-          console.warn(`Could not load ${collectionName}:`, error);
-        }
-      }
-
-      return allMatches;
-    }
-
-    function serviceName(service = {}) {
-      return (
-        service.name ||
-        service.serviceName ||
-        service.title ||
-        service.type ||
-        service.jobType ||
-        "Customer Service"
-      );
-    }
-
-    function serviceBilling(service = {}) {
-      return (
-        service.billingType ||
-        service.billing ||
-        service.plan ||
-        service.frequency ||
-        service.subscriptionType ||
-        "Standard"
-      );
-    }
-
-    function servicePolicy(service = {}) {
-      return (
-        service.cancellationPolicy ||
-        service.policy ||
-        service.notes ||
-        service.description ||
-        "Service details will appear here once configured."
-      );
-    }
-
-    function serviceStatus(service = {}) {
-      return normalize(service.status || service.state || "active");
-    }
-
-    function renderServices(services = []) {
-      const root = document.getElementById("servicesList");
-      if (!root) return;
-
-      if (!services.length) {
-        root.innerHTML = `
-          <div class="empty-state">
-            No customer services are attached to this account yet. Once services, subscriptions,
-            or jobs are assigned to your profile, they will appear here.
-          </div>
-        `;
-        return;
-      }
-
-      root.innerHTML = services.map((service) => {
-        const status = serviceStatus(service);
-        const active = ["active", "scheduled", "booked", "in_progress", "completed"].includes(status);
-
-        return `
-          <article class="service-card aurora-card active-glow beam-target">
-            <div class="service-status ${active ? "" : "inactive"}">
-              ${active ? "Active Service" : "Inactive Service"}
-            </div>
-
-            <h3 class="service-title">${escapeHtml(serviceName(service))}</h3>
-
-            <div class="service-meta">
-              Billing: ${escapeHtml(serviceBilling(service))}<br>
-              Status: ${escapeHtml(status || "active")}<br>
-              Source: ${escapeHtml(service.sourceCollection || "services")}<br>
-              ${escapeHtml(servicePolicy(service))}
-            </div>
-          </article>
-        `;
-      }).join("");
-    }
-
-    requireAuth(async (user) => {
-      if (!hasPermission(user, "customer_dashboard")) {
-        window.location.href = "/dashboard.html";
-        return;
-      }
-
-      const company = await loadCompany(user.companyId);
-      const name = displayName(user);
-      const services = await fetchCustomerServices(user);
-
-      document.getElementById("welcomeTitle").textContent = `Welcome, ${name}`;
-      document.getElementById("welcomeSubtext").textContent =
-        `You are viewing your customer portal for ${company?.name || user.companyId || "Evaraos"}.`;
-
-      document.getElementById("customerHandleChip").textContent = getHandle(user);
-      document.getElementById("customerAvatar").textContent = initials(name);
-      document.getElementById("customerName").textContent = name;
-      document.getElementById("customerEmail").textContent = user.email || "No email";
-      document.getElementById("customerCompany").textContent = company?.name || user.companyId || "No company";
-      document.getElementById("customerStatusChip").textContent = `${services.length} Service${services.length === 1 ? "" : "s"}`;
-
-      renderServices(services);
-    });
-  </script>
-
-<!-- EVARAOS BOTTOM DOT NAV + ABOVE DROPDOWN TUNE -->
-<!-- /EVARAOS BOTTOM DOT NAV + ABOVE DROPDOWN TUNE -->
-
+  <script type="module" src="/assets/js/nav.js?v=53"></script>
+  <script type="module" src="/assets/js/customer-portal-v2.js?v=1"></script>
 </body>
 </html>
