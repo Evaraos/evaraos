@@ -1,7 +1,8 @@
 /* =========================================================
-   EVARAOS LIQUID GLASS ENGINE — PHASE 2
+   EVARAOS LIQUID GLASS ENGINE — PHASE 3
    Universal glass authority for cards, panels, nav surfaces,
    modals, launchers, controls, and premium light/dark rendering.
+   Theme inversion is provided exclusively through shared tokens.
    ========================================================= */
 
 :root {
@@ -78,11 +79,15 @@ html[data-theme="light"] {
   overflow: hidden;
   isolation: isolate;
   border-radius: var(--liquid-radius-lg);
-  color: inherit;
+  color: var(--text-primary);
   background:
     radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--liquid-specular) 48%, transparent), transparent 36%),
-    linear-gradient(145deg, color-mix(in srgb, var(--card-bg-top, var(--glass-bg, rgba(255,255,255,0.12))) 92%, transparent), color-mix(in srgb, var(--card-bg-bottom, var(--glass-bg, rgba(255,255,255,0.04))) 94%, transparent) 72%);
-  border: 1px solid color-mix(in srgb, var(--card-border, var(--glass-border, rgba(255,255,255,0.16))) 86%, var(--liquid-edge-light));
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--card-bg-top, var(--glass-bg, var(--liquid-bg-top))) 92%, transparent),
+      color-mix(in srgb, var(--card-bg-bottom, var(--glass-bg, var(--liquid-bg-bottom))) 94%, transparent) 72%
+    );
+  border: 1px solid color-mix(in srgb, var(--card-border, var(--glass-border, var(--liquid-border))) 86%, var(--liquid-edge-light));
   box-shadow:
     var(--liquid-depth-shadow),
     inset 0 1px 0 var(--liquid-edge-light),
@@ -95,6 +100,7 @@ html[data-theme="light"] {
     box-shadow 180ms ease,
     border-color 180ms ease,
     background 220ms ease,
+    color var(--page-transition-ms, 180ms) ease,
     filter 180ms ease;
 }
 
@@ -143,8 +149,8 @@ html[data-theme="light"] {
   pointer-events: none;
   z-index: 0;
   background:
-    linear-gradient(135deg, var(--liquid-inner-light), transparent 38%, rgba(255,255,255,0.06) 62%, transparent),
-    radial-gradient(circle at 72% 18%, color-mix(in srgb, var(--user-card-tint, #d61f42) 10%, transparent), transparent 34%);
+    linear-gradient(135deg, var(--liquid-inner-light), transparent 38%, color-mix(in srgb, var(--liquid-highlight) 10%, transparent) 62%, transparent),
+    radial-gradient(circle at 72% 18%, color-mix(in srgb, var(--user-card-tint, var(--accent-red)) 10%, transparent), transparent 34%);
   opacity: 0.78;
 }
 
@@ -167,7 +173,7 @@ html[data-theme="light"] {
   z-index: 0;
   opacity: 0.22;
   transform: rotate(18deg) translateX(-120%);
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.46), transparent);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--liquid-highlight) 52%, transparent), transparent);
   filter: blur(6px);
   transition: transform 520ms cubic-bezier(.19,1,.22,1), opacity 220ms ease;
 }
@@ -184,7 +190,7 @@ html[data-theme="light"] {
   transform: translateY(-1px) translateZ(0);
   filter: saturate(1.04);
   box-shadow:
-    0 30px 82px color-mix(in srgb, var(--user-card-tint, #d61f42) 10%, rgba(0,0,0,0.26)),
+    0 30px 82px color-mix(in srgb, var(--user-card-tint, var(--accent-red)) 10%, var(--liquid-shadow)),
     inset 0 1px 0 var(--liquid-edge-light),
     inset 0 -1px 0 var(--liquid-inner-dark);
 }
@@ -245,60 +251,6 @@ html[data-theme="light"] {
 .eva-bottom-nav > * {
   position: relative;
   z-index: 1;
-}
-
-html[data-theme="light"] .liquid-glass,
-html[data-theme="light"] .glass-card,
-html[data-theme="light"] .glass-shell,
-html[data-theme="light"] .aurora-card,
-html[data-theme="light"] .glass {
-  color: #10231d;
-  background:
-    radial-gradient(circle at 18% 0%, rgba(255,255,255,0.78), transparent 36%),
-    linear-gradient(145deg, rgba(255,255,255,0.86), rgba(248,250,252,0.68) 72%);
-  border-color: rgba(15, 23, 42, 0.08);
-  box-shadow:
-    0 16px 36px rgba(92,114,124,0.10),
-    inset 0 1px 0 rgba(255,255,255,0.92),
-    inset 0 -1px 0 rgba(15,23,42,0.035);
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
-}
-
-html[data-theme="light"] .liquid-glass::before,
-html[data-theme="light"] .glass-card::before,
-html[data-theme="light"] .glass-shell::before,
-html[data-theme="light"] .aurora-card::before,
-html[data-theme="light"] .glass::before {
-  background: linear-gradient(135deg, rgba(255,255,255,0.72), transparent 48%, rgba(225,232,236,0.30));
-  opacity: 0.8;
-}
-
-html[data-theme="light"] .liquid-glass:hover,
-html[data-theme="light"] .glass-card:hover,
-html[data-theme="light"] .glass-shell:hover,
-html[data-theme="light"] .aurora-card:hover,
-html[data-theme="light"] .glass:hover {
-  transform: translateY(-1px);
-  box-shadow:
-    0 20px 42px rgba(92,114,124,0.13),
-    inset 0 1px 0 rgba(255,255,255,0.94);
-}
-
-html[data-theme="light"] .glass-card h1,
-html[data-theme="light"] .glass-card h2,
-html[data-theme="light"] .glass-card h3,
-html[data-theme="light"] .aurora-card h1,
-html[data-theme="light"] .aurora-card h2,
-html[data-theme="light"] .aurora-card h3 {
-  color: #10231d;
-}
-
-html[data-theme="light"] .glass-card p,
-html[data-theme="light"] .glass-card span,
-html[data-theme="light"] .aurora-card p,
-html[data-theme="light"] .aurora-card span {
-  text-shadow: none;
 }
 
 .liquid-control,
