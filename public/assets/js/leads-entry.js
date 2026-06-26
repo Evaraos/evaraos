@@ -1,5 +1,6 @@
 import "./leads.js?v=3";
 import "./lead-job-conversion.js?v=2";
+import "./leads-map-v2.js?v=1";
 
 function mountTools() {
   if (document.getElementById("leadsUtilityBar")) return true;
