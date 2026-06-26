@@ -1,3 +1,35 @@
+html[data-theme="dark"] {
+  --bg-primary: #05070b;
+  --bg-secondary: #0a0e15;
+  --text-primary: #f7fbff;
+  --text-secondary: rgba(237, 245, 255, 0.76);
+  --text-soft: rgba(237, 245, 255, 0.54);
+
+  --tint-rgb: 16, 23, 34;
+  --theme-glow-rgb: 116, 184, 255;
+  --theme-soft-rgb: 13, 20, 31;
+  --beam-halo-rgb: 88, 166, 255;
+
+  --glass-bg: rgba(13, 18, 27, 0.44);
+  --glass-bg-strong: rgba(18, 25, 37, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --glass-shadow: rgba(0, 0, 0, 0.48);
+
+  --liquid-text: var(--text-primary);
+  --liquid-muted: var(--text-secondary);
+  --liquid-bg-top: rgba(35, 45, 60, 0.48);
+  --liquid-bg-bottom: rgba(7, 10, 16, 0.30);
+  --liquid-border: rgba(255, 255, 255, 0.20);
+  --liquid-hairline: rgba(255, 255, 255, 0.11);
+  --liquid-shadow: rgba(0, 0, 0, 0.50);
+  --liquid-highlight: rgba(255, 255, 255, 0.24);
+  --liquid-refraction: rgba(94, 174, 255, 0.18);
+
+  --card-border: var(--liquid-border);
+  --card-bg-top: rgba(31, 41, 55, 0.48);
+  --card-bg-bottom: rgba(7, 10, 16, 0.30);
+}
+
 html[data-theme="dark"] body {
-  color: var(--text-dark);
+  color: var(--text-primary);
 }
