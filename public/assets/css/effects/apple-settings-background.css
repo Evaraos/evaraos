@@ -1,13 +1,7 @@
 /* ===============================
-   EVARAOS APPLE SETTINGS BACKGROUND
+   EVARAOS APPLE SETTINGS BACKGROUND COMPATIBILITY
+   Structural safety only. Global page color and background are owned by layout.css.
    =============================== */
-
-:root {
-  --evara-page-light: #f2f2f7;
-  --evara-page-light-2: #f7f7fb;
-  --evara-page-dark: #000000;
-  --evara-page-dark-2: #070707;
-}
 
 html,
 body {
@@ -22,33 +16,14 @@ body {
 
 body::before,
 body::after {
-  content: none !important;
-  display: none !important;
-  animation: none !important;
+  content: none;
+  display: none;
+  animation: none;
 }
 
 body > :not(script):not(style) {
   position: relative;
   z-index: 1;
-}
-
-html[data-theme="light"] body,
-  background: var(--evara-page-light) !important;
-  color: #000000;
-}
-
-html[data-theme="dark"] body,
-  background: var(--evara-page-dark) !important;
-  color: #f5f5f7;
-}
-
-html[data-theme="light"] .page-aurora,
-html[data-theme="light"] .page-grid-overlay,
-html[data-theme="dark"] .page-aurora,
-html[data-theme="dark"] .page-grid-overlay,
-  opacity: 0 !important;
-  display: none !important;
-  animation: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
