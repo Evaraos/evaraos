@@ -6,7 +6,6 @@
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-
   <link rel="manifest" href="/manifest.json" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png" />
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" />
@@ -17,251 +16,40 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Evaraos" />
   <meta name="application-name" content="Evaraos" />
-
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
   <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin />
   <link rel="preload" as="image" href="/assets/img/evaraos_logo.png" />
-
   <title>Staff Applications • Evaraos Inc</title>
-
-  <script src="/assets/js/theme-boot.js?v=1"></script>
-
+  <script src="/assets/js/theme-boot.js?v=50"></script>
   <style>
-    html, body { background: #f4f7f6; }
-    html[data-theme="dark"], html[data-theme="dark"] body { background: #020307; }
-    html.boot-pending body { margin: 0; overflow-x: hidden; }
-    html.auth-pending body, body.auth-pending { opacity: 0; pointer-events: none; }
-    body.applications-page { margin: 0; min-height: 100vh; background: transparent; }
-    body.app-loading #appRoot { visibility: hidden; }
-    body.app-ready #appRoot { visibility: visible; }
-
-    .applications-wrap {
-      width: min(1260px, calc(100% - 32px));
-      margin: 0 auto;
-      padding: 132px 0 64px;
-      position: relative;
-      z-index: 2;
-    }
-
-    .applications-hero {
-      display: grid;
-      grid-template-columns: 1.15fr 0.85fr;
-      gap: 18px;
-      align-items: stretch;
-      margin-bottom: 18px;
-    }
-
-    .applications-kicker {
-      margin: 0 0 10px;
-      color: var(--theme-primary, #ff2f57);
-      font-size: 12px;
-      font-weight: 950;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-    }
-
-    .applications-title {
-      margin: 0;
-      font-size: clamp(2.2rem, 6vw, 5rem);
-      line-height: 0.94;
-      letter-spacing: -0.065em;
-    }
-
-    .applications-copy,
-    .muted {
-      color: var(--text-muted, rgba(255,255,255,0.68));
-      line-height: 1.65;
-    }
-
-    .applications-copy { max-width: 780px; margin: 16px 0 0; }
-
-    .applications-stat-grid {
-      display: grid;
-      gap: 10px;
-    }
-
-    .stat-mini {
-      border-radius: 22px;
-      padding: 16px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
-    }
-
-    .stat-mini strong { display: block; font-size: 28px; letter-spacing: -0.05em; }
-    .stat-mini span { color: var(--text-muted, rgba(255,255,255,0.68)); font-weight: 800; }
-
-    .applications-toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-      padding: 16px;
-      margin-bottom: 18px;
-    }
-
-    .applications-toolbar input,
-    .applications-toolbar select {
-      min-height: 44px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.14);
-      background: rgba(255,255,255,0.08);
-      color: var(--text-primary, #fff);
-      padding: 0 15px;
-      outline: none;
-      font: inherit;
-    }
-
-    .applications-toolbar select option { color: #111; }
-
-    .applications-list {
-      display: grid;
-      gap: 14px;
-    }
-
-    .application-card {
-      padding: 18px;
-      border-radius: 28px;
-      display: grid;
-      gap: 14px;
-    }
-
-    .application-card-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
-
-    .application-card h3 { margin: 0; font-size: 22px; letter-spacing: -0.04em; }
-    .application-card p { margin: 6px 0 0; }
-
-    .pill-row,
-    .attachment-row,
-    .review-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .pill {
-      border-radius: 999px;
-      padding: 7px 10px;
-      border: 1px solid rgba(255,255,255,0.14);
-      background: rgba(255,255,255,0.07);
-      color: var(--text-muted, rgba(255,255,255,0.72));
-      font-size: 12px;
-      font-weight: 900;
-    }
-
-    .pill.success { color: #70ffbd; border-color: rgba(112,255,189,0.24); background: rgba(112,255,189,0.10); }
-    .pill.warning { color: #ffd27a; border-color: rgba(255,210,122,0.24); background: rgba(255,210,122,0.10); }
-    .pill.error { color: #ff9b8f; border-color: rgba(255,155,143,0.24); background: rgba(255,155,143,0.10); }
-
-    .application-details {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-    }
-
-    .detail-box {
-      border-radius: 18px;
-      padding: 12px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.045);
-      overflow-wrap: anywhere;
-    }
-
-    .detail-box strong {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 11px;
-      color: var(--text-muted, rgba(255,255,255,0.62));
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .detail-box span { font-weight: 800; }
-
-    .attachment-row a {
-      color: var(--theme-primary, #ff2f57);
-      text-decoration: none;
-      font-weight: 900;
-    }
-
-    .review-box {
-      display: grid;
-      grid-template-columns: minmax(180px, 260px) 1fr auto auto auto;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .review-box select,
-    .review-box textarea {
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.14);
-      background: rgba(255,255,255,0.08);
-      color: var(--text-primary, #fff);
-      padding: 12px 13px;
-      outline: none;
-      font: inherit;
-    }
-
-    .review-box select option { color: #111; }
-    .review-box textarea { min-height: 46px; resize: vertical; }
-
-    .empty-card {
-      border-radius: 24px;
-      padding: 22px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
-      color: var(--text-muted, rgba(255,255,255,0.68));
-      line-height: 1.6;
-      font-weight: 800;
-    }
-
-    @media (max-width: 980px) {
-      .applications-hero,
-      .application-details,
-      .review-box { grid-template-columns: 1fr; }
-      .applications-wrap { width: min(100% - 20px, 1260px); padding-top: 112px; }
-    }
+    html.boot-pending body{margin:0;overflow-x:hidden}html.auth-pending body,body.auth-pending{opacity:0;pointer-events:none}body.applications-page{margin:0;min-height:100vh}body.app-loading #appRoot{visibility:hidden}body.app-ready #appRoot{visibility:visible}
   </style>
-
-  <link rel="stylesheet" href="/assets/css/base.css?v=34" />
-  <link rel="stylesheet" href="/assets/css/theme.css?v=36" />
-  <link rel="stylesheet" href="/assets/css/nav.css?v=20260503-final" />
-  <link rel="stylesheet" href="/assets/css/dashboard.css?v=34" />
-  <link rel="stylesheet" href="/assets/css/app-system.css?v=simple-glass" />
+  <link rel="stylesheet" href="/assets/css/base.css?v=50" />
+  <link rel="stylesheet" href="/assets/css/theme.css?v=50" />
+  <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v4" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css?v=50" />
+  <link rel="stylesheet" href="/assets/css/app-system.css?v=50" />
+  <link rel="stylesheet" href="/assets/css/pages/applications-layout.css?v=1" />
 </head>
 <body class="applications-page auth-pending app-loading" data-route-guard="private">
   <div id="universalNavRoot"></div>
   <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
-
   <div id="appRoot">
     <div class="page-grid-overlay"></div>
-
-    <main class="applications-wrap">
+    <main class="page-shell applications-wrap">
       <section class="applications-hero">
         <article class="glass-card aurora-card active-glow beam-target">
           <p class="applications-kicker">STAFF APPLICATIONS</p>
           <h1 class="applications-title">Review, verify, and approve staff.</h1>
-          <p class="applications-copy">
-            Review identity attachments, role requests, experience, transportation, and availability before approving access.
-            Approval activates the applicant’s user profile with the selected staff role.
-          </p>
+          <p class="applications-copy">Review identity attachments, role requests, experience, transportation, and availability before approving access. Approval activates the applicant’s user profile with the selected staff role.</p>
         </article>
-
         <aside class="glass-card aurora-card active-glow beam-target applications-stat-grid">
           <div class="stat-mini"><strong id="appsTotal">—</strong><span>Total applications</span></div>
           <div class="stat-mini"><strong id="appsPending">—</strong><span>Pending review</span></div>
           <div class="stat-mini"><strong id="appsApproved">—</strong><span>Approved</span></div>
         </aside>
       </section>
-
       <section class="glass-card aurora-card active-glow beam-target applications-toolbar">
         <input id="applicationsSearch" type="search" placeholder="Search applicant, role, company, city..." />
         <select id="applicationsStatusFilter">
@@ -273,23 +61,14 @@
         </select>
         <button id="applicationsRefreshBtn" type="button" class="btn btn-theme-secondary beam-target">Refresh</button>
       </section>
-
-      <section id="applicationsList" class="applications-list">
-        <div class="empty-card">Loading staff applications...</div>
-      </section>
+      <section id="applicationsList" class="applications-list"><div class="empty-card">Loading staff applications...</div></section>
     </main>
   </div>
-
   <script src="/assets/js/loader.js?v=36"></script>
   <script type="module" src="/assets/js/firebase.js?v=36"></script>
-  <script type="module" src="/assets/js/theme.js?v=38"></script>
-  <script src="/assets/js/theme-css-loader.js?v=1"></script>
+  <script type="module" src="/assets/js/theme.js?v=50"></script>
   <script type="module" src="/assets/js/route-guard.js?v=36"></script>
-  <script type="module" src="/assets/js/nav.js?v=20260503-final"></script>
-  <script type="module" src="/assets/js/applications.js?v=1"></script>
-
-<!-- EVARAOS BOTTOM DOT NAV + ABOVE DROPDOWN TUNE -->
-<!-- /EVARAOS BOTTOM DOT NAV + ABOVE DROPDOWN TUNE -->
-
+  <script type="module" src="/assets/js/nav.js?v=50"></script>
+  <script type="module" src="/assets/js/applications.js?v=2"></script>
 </body>
 </html>
