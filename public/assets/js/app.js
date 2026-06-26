@@ -19,9 +19,8 @@ import {
 } from "./firebase.js";
 
 const BASE_PATH = "/evaraos";
-const THEME_KEY = "evara-theme";
 
-const ROLE_PERMISSIONS = {
+const ROLE_PERMISSIONS = Object.freeze({
   owner: ["all"],
   super_admin: ["all"],
   admin: ["dashboard", "companies", "users", "applications", "sales_reps", "leads", "jobs", "audit", "org", "performance", "customer_dashboard"],
@@ -33,11 +32,11 @@ const ROLE_PERMISSIONS = {
   hr: ["dashboard", "users", "applications"],
   customer: ["customer_dashboard", "self"],
   guest: []
-};
+});
 
 export function getAssetPath(path = "") {
   if (!path) return "#";
-  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  if (/^https?:\/\//i.test(path)) return path;
   if (path.startsWith(BASE_PATH)) return path;
   if (path.startsWith("/")) return `${BASE_PATH}${path}`;
   return `${BASE_PATH}/${path}`;
@@ -45,25 +44,20 @@ export function getAssetPath(path = "") {
 
 export function normalizeRole(role = "") {
   const value = String(role || "").trim().toLowerCase();
-  if (value === "tech") return "technician";
-  return value || "guest";
+  return value === "tech" ? "technician" : value || "guest";
 }
 
 export function hasPermission(user, section) {
-  const role = normalizeRole(user?.role);
-  const permissions = ROLE_PERMISSIONS[role] || [];
-  return permissions.includes("all") || permissions.includes(section);
+  return canAccess(user?.role, section);
 }
 
 export function canAccess(role, section) {
-  const normalizedRole = normalizeRole(role);
-  const permissions = ROLE_PERMISSIONS[normalizedRole] || [];
+  const permissions = ROLE_PERMISSIONS[normalizeRole(role)] || [];
   return permissions.includes("all") || permissions.includes(section);
 }
 
 export function renderSidebar(role, active = "") {
   const normalizedRole = normalizeRole(role);
-
   const links = [
     { key: "dashboard", href: "/dashboard.html", label: "Dashboard", roles: ["owner", "super_admin", "admin", "manager", "sales_rep", "technician", "operations_coordinator", "hr"] },
     { key: "companies", href: "/companies.html", label: "Companies", roles: ["owner", "super_admin", "admin"] },
@@ -78,31 +72,24 @@ export function renderSidebar(role, active = "") {
     { key: "customer_dashboard", href: "/customer_dashboard.html", label: "Customer Portal", roles: ["customer", "owner", "super_admin", "admin"] }
   ];
 
-  const filtered = links.filter(link => link.roles.includes(normalizedRole));
-
   return `
     <div class="sidebar-inner">
       <a class="sidebar-logo-wrap" href="${getAssetPath("index.html")}">
         <img src="${getAssetPath("assets/img/evaraos_logo.png")}" alt="Evaraos Logo" class="sidebar-logo" />
       </a>
       <nav class="sidebar-nav">
-        ${filtered.map(link => `
-          <a href="${link.href}" class="sidebar-link ${active === link.key ? "active" : ""}">
-            ${link.label}
-          </a>
+        ${links.filter((link) => link.roles.includes(normalizedRole)).map((link) => `
+          <a href="${link.href}" class="sidebar-link ${active === link.key ? "active" : ""}">${link.label}</a>
         `).join("")}
       </nav>
-    </div>
-  `;
+    </div>`;
 }
 
 export async function loadCompany(companyId) {
   if (!companyId) return null;
-
   try {
     const snap = await getDoc(doc(db, "companies", companyId));
-    if (!snap.exists()) return { id: companyId, name: companyId };
-    return { id: snap.id, ...snap.data() };
+    return snap.exists() ? { id: snap.id, ...snap.data() } : { id: companyId, name: companyId };
   } catch (error) {
     console.error("Failed to load company:", error);
     return { id: companyId, name: companyId };
@@ -111,10 +98,8 @@ export async function loadCompany(companyId) {
 
 export async function hydrateCurrentUser(firebaseUser) {
   if (!firebaseUser) return null;
-
   try {
     const snap = await getDoc(doc(db, "users", firebaseUser.uid));
-
     if (!snap.exists()) {
       return {
         id: firebaseUser.uid,
@@ -139,10 +124,10 @@ export async function hydrateCurrentUser(firebaseUser) {
   }
 }
 
-export async function requireAuth(callback, options = {}) {
+export function requireAuth(callback, options = {}) {
   const { allowRoles = null, redirectTo = "/login.html" } = options;
 
-  onAuthStateChanged(auth, async (firebaseUser) => {
+  return onAuthStateChanged(auth, async (firebaseUser) => {
     if (!firebaseUser) {
       window.location.href = redirectTo;
       return;
@@ -154,11 +139,7 @@ export async function requireAuth(callback, options = {}) {
     if (Array.isArray(allowRoles) && allowRoles.length) {
       const allowed = allowRoles.map(normalizeRole);
       if (!allowed.includes(normalizeRole(user.role))) {
-        if (normalizeRole(user.role) === "customer") {
-          window.location.href = "/customer_dashboard.html";
-        } else {
-          window.location.href = "/dashboard.html";
-        }
+        window.location.href = normalizeRole(user.role) === "customer" ? "/customer_dashboard.html" : "/dashboard.html";
         return;
       }
     }
@@ -184,71 +165,42 @@ export async function bindTopbar(user, title = "Dashboard") {
           <span class="brand-text">Evaraos</span>
         </a>
       </div>
-
-      <div class="topbar-center">
-        <h1 class="page-title">${title}</h1>
-      </div>
-
+      <div class="topbar-center"><h1 class="page-title">${title}</h1></div>
       <div class="topbar-right">
-        ${renderThemeSwitcher()}
+        <button type="button" class="theme-btn" data-theme-toggle data-theme-label="true"><span data-theme-text>Appearance</span></button>
         <div class="user-pill">
           <span>${user?.name || user?.username || user?.email || "User"}</span>
           <span class="user-role">${normalizeRole(user?.role || "guest")}</span>
         </div>
         <button id="logoutBtn" class="btn btn-outline" type="button">Logout</button>
       </div>
-    </div>
-  `;
+    </div>`;
 
-  initThemeUI(topbar);
-
-  document.getElementById("logoutBtn")?.addEventListener("click", async () => {
-    await logoutUser();
-  });
+  window.EvaraTheme?.updateThemeControls?.();
+  document.getElementById("logoutBtn")?.addEventListener("click", logoutUser);
 }
 
-/* ---------- Firestore helpers ---------- */
-
 export async function fetchAllCollection(collectionName, options = {}) {
-  const {
-    filters = [],
-    orderByField = "",
-    orderDirection = "asc",
-    max = 500
-  } = options;
-
+  const { filters = [], orderByField = "", orderDirection = "asc", max = 500 } = options;
   try {
     const constraints = [];
-
     for (const filter of filters) {
-      if (!filter?.field) continue;
-      constraints.push(where(filter.field, filter.op || "==", filter.value));
+      if (filter?.field) constraints.push(where(filter.field, filter.op || "==", filter.value));
     }
-
-    if (orderByField) {
-      constraints.push(orderBy(orderByField, orderDirection));
-    }
-
-    if (max) {
-      constraints.push(limit(max));
-    }
+    if (orderByField) constraints.push(orderBy(orderByField, orderDirection));
+    if (max) constraints.push(limit(max));
 
     const ref = collection(db, collectionName);
-    const q = constraints.length ? query(ref, ...constraints) : query(ref, limit(max));
-    const snap = await getDocs(q);
-
-    return snap.docs.map(item => ({
-      id: item.id,
-      ...item.data()
-    }));
+    const result = await getDocs(constraints.length ? query(ref, ...constraints) : query(ref, limit(max)));
+    return result.docs.map((item) => ({ id: item.id, ...item.data() }));
   } catch (error) {
     console.error(`Failed to fetch collection "${collectionName}":`, error);
     throw error;
   }
 }
 
-export async function fetchUsersByCompany(companyId) {
-  if (!companyId) return [];
+export function fetchUsersByCompany(companyId) {
+  if (!companyId) return Promise.resolve([]);
   return fetchAllCollection("users", {
     filters: [{ field: "companyId", op: "==", value: companyId }],
     max: 500
@@ -256,49 +208,32 @@ export async function fetchUsersByCompany(companyId) {
 }
 
 export async function createDocument(collectionName, payload = {}) {
-  const ref = collection(db, collectionName);
-  const finalPayload = {
-    ...payload,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
-  };
-  const created = await addDoc(ref, finalPayload);
+  const finalPayload = { ...payload, createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
+  const created = await addDoc(collection(db, collectionName), finalPayload);
   return { id: created.id, ...finalPayload };
 }
 
 export async function updateDocument(collectionName, id, payload = {}) {
-  const ref = doc(db, collectionName, id);
-  await updateDoc(ref, {
-    ...payload,
-    updatedAt: serverTimestamp()
-  });
+  await updateDoc(doc(db, collectionName, id), { ...payload, updatedAt: serverTimestamp() });
   return true;
 }
 
 export async function deleteDocument(collectionName, id) {
-  const ref = doc(db, collectionName, id);
-  await deleteDoc(ref);
+  await deleteDoc(doc(db, collectionName, id));
   return true;
 }
 
 export async function saveUserProfile(uid, payload = {}) {
-  const ref = doc(db, "users", uid);
-  await setDoc(ref, {
-    ...payload,
-    updatedAt: serverTimestamp()
-  }, { merge: true });
+  await setDoc(doc(db, "users", uid), { ...payload, updatedAt: serverTimestamp() }, { merge: true });
   return true;
 }
 
 export async function createSalesRep(payload = {}, currentUser = null) {
   const cleanUsername = String(payload.username || "").trim().toLowerCase();
   const cleanName = String(payload.fullName || payload.name || "").trim();
+  if (!cleanName || !cleanUsername) throw new Error("Full name and username are required.");
 
-  if (!cleanName || !cleanUsername) {
-    throw new Error("Full name and username are required.");
-  }
-
-  const userPayload = {
+  return createDocument("users", {
     name: cleanName,
     username: cleanUsername,
     email: String(payload.email || "").trim().toLowerCase(),
@@ -310,18 +245,13 @@ export async function createSalesRep(payload = {}, currentUser = null) {
     companyId: currentUser?.companyId || payload.companyId || "",
     reportsTo: currentUser?.uid || payload.reportsTo || "",
     approvalStatus: "approved"
-  };
-
-  return createDocument("users", userPayload);
+  });
 }
 
 export async function updateSalesRep(id, payload = {}) {
   const cleanUsername = String(payload.username || "").trim().toLowerCase();
   const cleanName = String(payload.fullName || payload.name || "").trim();
-
-  if (!cleanName || !cleanUsername) {
-    throw new Error("Full name and username are required.");
-  }
+  if (!cleanName || !cleanUsername) throw new Error("Full name and username are required.");
 
   return updateDocument("users", id, {
     name: cleanName,
@@ -333,121 +263,3 @@ export async function updateSalesRep(id, payload = {}) {
     notes: String(payload.notes || "").trim()
   });
 }
-
-/* ---------- Theme ---------- */
-
-function renderThemeSwitcher() {
-  return `
-    <div class="theme-switcher" aria-label="Theme switcher">
-      <button type="button" class="theme-btn" data-theme-choice="light">Light</button>
-      <button type="button" class="theme-btn" data-theme-choice="dark">Dark</button>
-      <button type="button" class="theme-btn" data-theme-choice="system">System</button>
-    </div>
-  `;
-}
-
-function getStoredTheme() {
-  return localStorage.getItem(THEME_KEY) || "system";
-}
-
-function getResolvedTheme(choice) {
-  if (choice === "system") {
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  }
-  return choice;
-}
-
-function applyTheme(choice) {
-  const resolved = getResolvedTheme(choice);
-  document.documentElement.setAttribute("data-theme", resolved);
-  document.documentElement.setAttribute("data-theme-choice", choice);
-  syncThemeButtons(choice);
-}
-
-function syncThemeButtons(choice = getStoredTheme()) {
-  document.querySelectorAll(".theme-btn").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.themeChoice === choice);
-  });
-}
-
-function initThemeUI(scope = document) {
-  scope.querySelectorAll(".theme-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const choice = btn.dataset.themeChoice || "system";
-      localStorage.setItem(THEME_KEY, choice);
-      applyTheme(choice);
-    });
-  });
-
-  syncThemeButtons();
-}
-
-function initLandingThemeSwitcher() {
-  const navTargets = document.querySelectorAll(".landing-nav");
-
-  navTargets.forEach(nav => {
-    if (nav.querySelector(".theme-switcher")) return;
-    nav.insertAdjacentHTML("beforeend", renderThemeSwitcher());
-  });
-
-  initThemeUI(document);
-}
-
-function initDropdowns() {
-  document.querySelectorAll(".nav-dropdown-toggle").forEach(toggle => {
-    toggle.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const dropdown = toggle.closest(".nav-dropdown");
-      if (!dropdown) return;
-
-      document.querySelectorAll(".nav-dropdown.open").forEach(item => {
-        if (item !== dropdown) item.classList.remove("open");
-      });
-
-      dropdown.classList.toggle("open");
-    });
-  });
-
-  document.addEventListener("click", (event) => {
-    document.querySelectorAll(".nav-dropdown.open").forEach(dropdown => {
-      if (!dropdown.contains(event.target)) {
-        dropdown.classList.remove("open");
-      }
-    });
-  });
-}
-
-function initModalBackdrops() {
-  document.querySelectorAll(".modal-backdrop").forEach(modal => {
-    modal.addEventListener("click", (event) => {
-      if (event.target === modal) {
-        modal.classList.remove("open");
-      }
-    });
-  });
-}
-
-function initThemeBoot() {
-  applyTheme(getStoredTheme());
-
-  const media = window.matchMedia("(prefers-color-scheme: dark)");
-  if (typeof media.addEventListener === "function") {
-    media.addEventListener("change", () => {
-      if (getStoredTheme() === "system") applyTheme("system");
-    });
-  } else if (typeof media.addListener === "function") {
-    media.addListener(() => {
-      if (getStoredTheme() === "system") applyTheme("system");
-    });
-  }
-}
-
-function initSharedUI() {
-  initThemeBoot();
-  initLandingThemeSwitcher();
-  initDropdowns();
-  initModalBackdrops();
-}
-
-document.addEventListener("DOMContentLoaded", initSharedUI);
