@@ -1,16 +1,6 @@
 import { NAV_STATE } from "./nav-config.js";
-
-import {
-  setTheme,
-  getAppearanceTheme,
-  syncThemeLabel
-} from "./nav-utils.js";
-
-import {
-  applyProgress,
-  atTopOfPage
-} from "./nav-scroll.js";
-
+import { syncThemeLabel } from "./nav-utils.js";
+import { applyProgress, atTopOfPage } from "./nav-scroll.js";
 import { renderNav } from "./nav-render.js";
 import { bindMenu, openMenu, closeMenu } from "./nav-menu.js";
 import { bindAllNavEvents } from "./nav-events.js";
@@ -45,15 +35,16 @@ export function bindRuntimeRefresh() {
   window.addEventListener("evara:session-ready", refreshNav);
 
   window.addEventListener("storage", (event) => {
-    if (["evaraos-user", "evaraos-role", "evaraos-appearance"].includes(event.key)) refreshNav();
+    if (["evaraos-user", "evaraos-role"].includes(event.key)) refreshNav();
+    if (event.key === "evaraos-appearance") syncThemeLabel();
   });
 
-  window.addEventListener("evara:theme-ready", syncThemeLabel);
-  window.addEventListener("evara:theme-changed", syncThemeLabel);
+  window.addEventListener("evara:theme-applied", syncThemeLabel);
+  window.addEventListener("evara:appearance-updated", syncThemeLabel);
 
   window.addEventListener("pageshow", () => {
     NAV_STATE.isNavigating = false;
-    setTheme(getAppearanceTheme());
+    window.EvaraTheme?.applyAppearance?.();
     applyProgress(1);
 
     if (window.EvaraLoader && typeof window.EvaraLoader.completeNavigationLoad === "function") {
