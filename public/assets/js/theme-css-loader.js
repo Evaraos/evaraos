@@ -1,38 +1,19 @@
+/*
+ * Legacy compatibility bridge.
+ * Theme resolution, persistence, controls, and DOM state are owned by theme.js.
+ */
 (function () {
-  const THEME_LINK_ID = "evaraos-theme-css";
-
-  function systemTheme() {
+  function syncFromThemeEngine() {
     try {
-      return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    } catch {
-      return "light";
+      window.EvaraTheme?.applyTheme?.();
+    } catch (error) {
+      console.warn("Theme compatibility sync failed:", error);
     }
   }
 
-  function resolveTheme() {
-    try {
-      const raw = localStorage.getItem("evaraos-appearance");
-      if (!raw) return "light";
-
-      const appearance = JSON.parse(raw);
-      if (appearance && appearance.mode === "dark") return "dark";
-      if (appearance && appearance.mode === "system") return systemTheme();
-      return "light";
-    } catch {
-      return "light";
-    }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", syncFromThemeEngine, { once: true });
+  } else {
+    queueMicrotask(syncFromThemeEngine);
   }
-
-  function applyTheme() {
-    const theme = resolveTheme();
-    document.documentElement.setAttribute("data-theme", theme);
-    document.documentElement.style.colorScheme = theme;
-
-    const stale = document.getElementById(THEME_LINK_ID);
-    if (stale) stale.remove();
-  }
-
-  applyTheme();
-  window.addEventListener("storage", applyTheme);
-  window.addEventListener("evara:appearance-updated", applyTheme);
 })();
