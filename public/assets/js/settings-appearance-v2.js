@@ -3,6 +3,8 @@ import { VALID_MODES, getAppearance, saveAppearance, resetAppearance, applyAppea
 const MAX_SOURCE_BYTES = 12 * 1024 * 1024;
 const MAX_STORED_LENGTH = 3_600_000;
 let draft = cleanDraft(getAppearance());
+let saveTimer = 0;
+let toastTimer = 0;
 
 function cleanDraft(value = {}) {
   return {
@@ -11,6 +13,7 @@ function cleanDraft(value = {}) {
     imageUrl: String(value.imageUrl || ""),
     imagePosition: value.imagePosition || "center center",
     imageOverlay: Number.isFinite(Number(value.imageOverlay)) ? Number(value.imageOverlay) : 0.36,
+    glassTransparency: Number.isFinite(Number(value.glassTransparency)) ? Math.min(1, Math.max(.28, Number(value.glassTransparency))) : .72,
     updatedAt: value.updatedAt || null
   };
 }
@@ -23,12 +26,24 @@ function sourceSheet(open) {
   sheet.setAttribute("aria-hidden", open ? "false" : "true");
   document.body.classList.toggle("appearance-source-open", open);
 }
-function savePanel(open, message = "Unsaved appearance changes.") {
+function toast(message) {
   const panel = document.getElementById("appearanceSavePanel");
   if (!panel) return;
-  panel.hidden = !open;
-  panel.classList.toggle("is-visible", open);
+  const actions = panel.querySelector(".settings-footer-actions");
+  if (actions) actions.hidden = true;
+  panel.hidden = false;
   setMessage("appearanceSaveMessage", message);
+  clearTimeout(toastTimer);
+  toastTimer = window.setTimeout(() => { panel.hidden = true; }, 1200);
+}
+function ensureTransparencyControl() {
+  if (document.getElementById("appearanceGlassTransparency")) return;
+  const modeSection = document.querySelector(".appearance-choice-grid")?.closest(".settings-block");
+  if (!modeSection) return;
+  const control = document.createElement("div");
+  control.className = "settings-transparency-control";
+  control.innerHTML = `<div class="settings-range-head"><label for="appearanceGlassTransparency">Liquid Glass transparency</label><strong id="appearanceGlassTransparencyValue">72%</strong></div><input id="appearanceGlassTransparency" type="range" min="28" max="100" step="1" value="72"><p class="settings-help-text">Lower values are more transparent. Higher values create a denser Apple-style material.</p>`;
+  modeSection.appendChild(control);
 }
 function preview() {
   const node = document.getElementById("appearanceImagePreview");
@@ -48,13 +63,28 @@ function sync() {
   const overlay = document.getElementById("appearanceImageOverlay");
   if (overlay) overlay.value = String(Math.round(draft.imageOverlay * 100));
   setText("appearanceImageOverlayValue", `${Math.round(draft.imageOverlay * 100)}%`);
+  const transparency = document.getElementById("appearanceGlassTransparency");
+  if (transparency) transparency.value = String(Math.round(draft.glassTransparency * 100));
+  setText("appearanceGlassTransparencyValue", `${Math.round(draft.glassTransparency * 100)}%`);
   preview();
   applyAppearance(draft);
 }
-function change(patch) {
+function persistSoon(message = "Appearance saved automatically.") {
+  clearTimeout(saveTimer);
+  saveTimer = window.setTimeout(() => {
+    try {
+      draft = saveAppearance(draft);
+      sync();
+      toast(message);
+    } catch (error) {
+      toast(error?.name === "QuotaExceededError" ? "Image is too large for browser storage." : "Appearance could not be saved.");
+    }
+  }, 220);
+}
+function change(patch, message) {
   draft = cleanDraft({ ...draft, ...patch, updatedAt: new Date().toISOString() });
   sync();
-  savePanel(true);
+  persistSoon(message);
 }
 function readFile(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result || "")); reader.onerror = () => reject(new Error("The image could not be read.")); reader.readAsDataURL(file); }); }
 function loadImage(source) { return new Promise((resolve, reject) => { const image = new Image(); image.onload = () => resolve(image); image.onerror = () => reject(new Error("Choose a readable image.")); image.src = source; }); }
@@ -81,16 +111,20 @@ async function prepare(file) {
 async function consume(input) {
   const file = input?.files?.[0];
   if (!file) return;
-  try { sourceSheet(false); savePanel(true, "Preparing image..."); change({ mode: "image", imageUrl: await prepare(file) }); }
-  catch (error) { savePanel(true, error.message || "Unable to use this image."); }
+  try {
+    sourceSheet(false);
+    toast("Preparing image...");
+    change({ mode: "image", imageUrl: await prepare(file) }, "Image background saved.");
+  } catch (error) { toast(error.message || "Unable to use this image."); }
   finally { input.value = ""; }
 }
 function bind() {
+  ensureTransparencyControl();
   document.querySelectorAll("[data-appearance-mode]").forEach((button) => button.addEventListener("click", () => {
-    change({ mode: button.dataset.appearanceMode });
+    change({ mode: button.dataset.appearanceMode }, `${label(button.dataset.appearanceMode)} mode saved.`);
     if (button.dataset.appearanceMode === "image" && !draft.imageUrl) sourceSheet(true);
   }));
-  document.querySelectorAll("[data-image-theme]").forEach((button) => button.addEventListener("click", () => change({ mode: "image", imageTheme: button.dataset.imageTheme })));
+  document.querySelectorAll("[data-image-theme]").forEach((button) => button.addEventListener("click", () => change({ mode: "image", imageTheme: button.dataset.imageTheme }, `${label(button.dataset.imageTheme)} glass saved for Image mode.`)));
   const photo = document.getElementById("appearancePhotoInput");
   const camera = document.getElementById("appearanceCameraInput");
   const files = document.getElementById("appearanceFileInput");
@@ -101,19 +135,14 @@ function bind() {
   document.querySelector("[data-source-action='photos']")?.addEventListener("click", () => photo?.click());
   document.querySelector("[data-source-action='camera']")?.addEventListener("click", () => camera?.click());
   document.querySelector("[data-source-action='files']")?.addEventListener("click", () => files?.click());
-  document.getElementById("appearanceImagePosition")?.addEventListener("change", (event) => change({ imagePosition: event.target.value }));
-  document.getElementById("appearanceImageOverlay")?.addEventListener("input", (event) => change({ imageOverlay: Number(event.target.value) / 100 }));
-  document.getElementById("clearAppearanceImageBtn")?.addEventListener("click", () => { change({ imageUrl: "" }); sourceSheet(true); });
-  document.getElementById("saveAppearanceBtn")?.addEventListener("click", () => {
-    if (draft.mode === "image" && !draft.imageUrl) return sourceSheet(true);
-    draft = saveAppearance(draft);
-    sync();
-    savePanel(true, "Appearance saved.");
-    window.setTimeout(() => savePanel(false), 1100);
-  });
-  document.getElementById("resetAppearanceBtn")?.addEventListener("click", () => { draft = resetAppearance(); sync(); savePanel(false); sourceSheet(false); });
+  document.getElementById("appearanceImagePosition")?.addEventListener("change", (event) => change({ imagePosition: event.target.value }, "Image position saved."));
+  document.getElementById("appearanceImageOverlay")?.addEventListener("input", (event) => change({ imageOverlay: Number(event.target.value) / 100 }, "Image overlay saved."));
+  document.getElementById("appearanceGlassTransparency")?.addEventListener("input", (event) => change({ glassTransparency: Number(event.target.value) / 100 }, "Liquid Glass transparency saved."));
+  document.getElementById("clearAppearanceImageBtn")?.addEventListener("click", () => { change({ imageUrl: "" }, "Image removed."); sourceSheet(true); });
+  document.getElementById("saveAppearanceBtn")?.addEventListener("click", () => persistSoon("Appearance saved."));
+  document.getElementById("resetAppearanceBtn")?.addEventListener("click", () => { draft = resetAppearance(); sync(); sourceSheet(false); toast("Appearance reset."); });
   document.addEventListener("keydown", (event) => { if (event.key === "Escape") sourceSheet(false); });
 }
 
-function init() { bind(); sync(); savePanel(false); markSettingsReady(); }
+function init() { bind(); sync(); document.getElementById("appearanceSavePanel")?.setAttribute("hidden", ""); markSettingsReady(); }
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true }); else init();
