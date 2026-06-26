@@ -1,49 +1,47 @@
 html[data-theme="dark"] {
-  --bg-primary: #05070b;
-  --bg-secondary: #0a0e15;
-  --text-primary: #f7fbff;
-  --text-secondary: rgba(237, 245, 255, 0.76);
-  --text-soft: rgba(237, 245, 255, 0.54);
+  --bg-primary: #080808;
+  --bg-secondary: #111113;
+  --text-primary: rgba(255,255,255,.96);
+  --text-secondary: rgba(235,235,245,.68);
+  --text-soft: rgba(235,235,245,.46);
 
-  --tint-rgb: 16, 23, 34;
-  --theme-glow-rgb: 116, 184, 255;
-  --theme-soft-rgb: 13, 20, 31;
-  --beam-halo-rgb: 88, 166, 255;
+  --tint-rgb: 20,20,22;
+  --theme-glow-rgb: 255,255,255;
+  --theme-soft-rgb: 28,28,30;
+  --beam-halo-rgb: 255,255,255;
 
-  --glass-bg: rgba(13, 18, 27, 0.44);
-  --glass-bg-strong: rgba(18, 25, 37, 0.62);
-  --glass-border: rgba(255, 255, 255, 0.18);
-  --glass-shadow: rgba(0, 0, 0, 0.48);
+  --glass-bg: rgba(28,28,30,.42);
+  --glass-bg-strong: rgba(30,30,32,.58);
+  --glass-border: rgba(255,255,255,.16);
+  --glass-shadow: rgba(0,0,0,.42);
 
   --liquid-text: var(--text-primary);
   --liquid-muted: var(--text-secondary);
-  --liquid-bg-top: rgba(35, 45, 60, 0.48);
-  --liquid-bg-bottom: rgba(7, 10, 16, 0.30);
-  --liquid-border: rgba(255, 255, 255, 0.20);
-  --liquid-hairline: rgba(255, 255, 255, 0.11);
-  --liquid-shadow: rgba(0, 0, 0, 0.50);
-  --liquid-highlight: rgba(255, 255, 255, 0.24);
-  --liquid-refraction: rgba(94, 174, 255, 0.18);
+  --liquid-bg-top: rgba(255,255,255,.105);
+  --liquid-bg-bottom: rgba(255,255,255,.045);
+  --liquid-border: rgba(255,255,255,.16);
+  --liquid-hairline: rgba(255,255,255,.08);
+  --liquid-shadow: rgba(0,0,0,.42);
+  --liquid-highlight: rgba(255,255,255,.18);
+  --liquid-refraction: rgba(255,255,255,.08);
 
   --card-border: var(--liquid-border);
-  --card-bg-top: rgba(31, 41, 55, 0.48);
-  --card-bg-bottom: rgba(7, 10, 16, 0.30);
+  --card-bg-top: rgba(255,255,255,.095);
+  --card-bg-bottom: rgba(255,255,255,.04);
 }
 
 html[data-has-wallpaper] {
-  --glass-bg: rgba(10, 14, 21, 0.44);
-  --glass-bg-strong: rgba(12, 17, 26, 0.64);
-  --glass-border: rgba(255, 255, 255, 0.22);
-  --liquid-bg-top: rgba(34, 43, 57, 0.48);
-  --liquid-bg-bottom: rgba(5, 8, 13, 0.32);
-  --liquid-border: rgba(255, 255, 255, 0.23);
-  --liquid-highlight: rgba(255, 255, 255, 0.28);
-  --liquid-refraction: rgba(112, 190, 255, 0.20);
+  --glass-bg: rgba(20,20,22,.38);
+  --glass-bg-strong: rgba(24,24,26,.54);
+  --glass-border: rgba(255,255,255,.18);
+  --liquid-bg-top: rgba(255,255,255,.12);
+  --liquid-bg-bottom: rgba(255,255,255,.045);
+  --liquid-border: rgba(255,255,255,.18);
+  --liquid-highlight: rgba(255,255,255,.19);
+  --liquid-refraction: rgba(255,255,255,.08);
   --card-border: var(--liquid-border);
-  --card-bg-top: rgba(29, 38, 51, 0.50);
-  --card-bg-bottom: rgba(5, 8, 13, 0.32);
+  --card-bg-top: rgba(255,255,255,.105);
+  --card-bg-bottom: rgba(255,255,255,.04);
 }
 
-html[data-theme="dark"] body {
-  color: var(--text-primary);
-}
+html[data-theme="dark"] body { color: var(--text-primary); }
