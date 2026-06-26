@@ -4,34 +4,59 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png" />
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" />
   <meta name="theme-color" content="#f4f7f6" />
   <title>Messages • Evaraos Inc</title>
-  <script src="/assets/js/theme-boot.js?v=50"></script>
-  <style>
-    html.boot-pending body{margin:0;overflow-x:hidden}html.auth-pending body,body.auth-pending{opacity:0;pointer-events:none}body.messages-page{margin:0;min-height:100vh;background:transparent}body.app-loading #appRoot{visibility:hidden}body.app-ready #appRoot{visibility:visible}.messages-wrap{width:min(1280px,calc(100% - 28px));margin:0 auto;padding:128px 0 78px;position:relative;z-index:2}.messages-hero{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;margin-bottom:18px}.messages-hero .glass-card,.messages-shell{border-radius:34px!important;padding:clamp(18px,3vw,32px)!important}.messages-kicker{margin:0 0 10px;color:var(--accent-red);font-size:12px;font-weight:950;letter-spacing:.2em;text-transform:uppercase}.messages-title{margin:0;font-size:clamp(2.25rem,5.8vw,5.15rem);line-height:.9;letter-spacing:-.075em}.messages-copy,.muted{color:var(--text-secondary);line-height:1.65}.messages-copy{max-width:740px;margin:16px 0 0}.messages-stats{display:grid;gap:10px}.message-stat{border-radius:22px;padding:16px;border:1px solid var(--liquid-border);background:linear-gradient(180deg,var(--liquid-bg-top),var(--liquid-bg-bottom));box-shadow:inset 0 1px 0 rgba(255,255,255,.28)}.message-stat strong{display:block;font-size:30px;letter-spacing:-.055em}.message-stat span{color:var(--text-secondary);font-weight:850}.messages-layout{display:grid;grid-template-columns:280px 1fr;gap:16px;min-height:620px}.channel-list{display:grid;gap:10px;align-content:start}.channel-btn{min-height:54px;border-radius:22px;border:1px solid var(--liquid-border);background:rgba(255,255,255,.075);color:inherit;text-align:left;padding:12px 14px;font-weight:950;box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}.channel-btn.active,.channel-btn:hover{border-color:rgba(255,47,87,.42);background:linear-gradient(135deg,rgba(255,47,87,.18),rgba(255,255,255,.08));transform:translateY(-1px)}.chat-panel{display:grid;grid-template-rows:auto 1fr auto;min-height:620px;border-radius:30px;border:1px solid var(--liquid-border);background:linear-gradient(180deg,var(--liquid-bg-top),var(--liquid-bg-bottom));overflow:hidden}.chat-head{padding:18px;border-bottom:1px solid rgba(255,255,255,.12)}.chat-head h2{margin:0;font-size:22px;letter-spacing:-.045em}.chat-feed{padding:18px;overflow:auto;display:grid;gap:12px;align-content:start}.chat-message{max-width:78%;border-radius:22px;padding:13px 15px;border:1px solid var(--liquid-border);background:linear-gradient(180deg,var(--liquid-bg-top),var(--liquid-bg-bottom));box-shadow:inset 0 1px 0 rgba(255,255,255,.24)}.chat-message.mine{justify-self:end;background:linear-gradient(135deg,rgba(255,47,87,.22),rgba(255,255,255,.10));border-color:rgba(255,47,87,.28)}.chat-message strong{display:block;font-size:12px;letter-spacing:.02em;margin-bottom:5px}.chat-message p{margin:0;line-height:1.48;font-weight:760;color:var(--text-muted,rgba(255,255,255,.76));white-space:pre-wrap}.chat-message time{display:block;margin-top:7px;font-size:11px;color:var(--text-muted,rgba(255,255,255,.5));font-weight:850}.chat-form{display:grid;grid-template-columns:1fr auto;gap:10px;padding:16px;border-top:1px solid rgba(255,255,255,.12)}.chat-form textarea{min-height:54px;max-height:140px;resize:vertical;border-radius:22px;border:1px solid var(--liquid-border);background:rgba(255,255,255,.10);color:var(--text-primary);padding:14px 16px;outline:none;font:inherit;font-weight:800}.chat-form button{border-radius:999px;padding-inline:22px;font-weight:950}.empty-card{border-radius:22px;padding:20px;border:1px solid var(--liquid-border);background:linear-gradient(180deg,var(--liquid-bg-top),var(--liquid-bg-bottom));font-weight:850;color:var(--text-secondary);line-height:1.6}@media(max-width:920px){.messages-hero,.messages-layout{grid-template-columns:1fr}.messages-wrap{width:min(100% - 20px,1280px);padding-top:112px}.messages-layout,.chat-panel{min-height:560px}.chat-message{max-width:92%}.chat-form{grid-template-columns:1fr}.chat-form button{width:100%;min-height:48px}}
-  </style>
-  <link rel="stylesheet" href="/assets/css/base.css?v=50" />
-  <link rel="stylesheet" href="/assets/css/theme.css?v=50" />
-  <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v5" />
-  <link rel="stylesheet" href="/assets/css/dashboard.css?v=50" />
-  <link rel="stylesheet" href="/assets/css/app-system.css?v=50" />
+  <script src="/assets/js/theme-boot.js?v=53"></script>
+  <style>html.boot-pending body{margin:0;overflow:hidden}html.auth-pending body,body.auth-pending{opacity:0;pointer-events:none}body.messages-page{margin:0;min-height:100vh;background:transparent}body.app-loading #appRoot{visibility:hidden}body.app-ready #appRoot{visibility:visible}</style>
+  <link rel="stylesheet" href="/assets/css/base.css?v=53" />
+  <link rel="stylesheet" href="/assets/css/theme.css?v=53" />
+  <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v16" />
+  <link rel="stylesheet" href="/assets/css/pages/messages-imessage.css?v=1" />
 </head>
 <body class="messages-page auth-pending app-loading" data-route-guard="private">
-  <div id="universalNavRoot"></div><div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
-  <div id="appRoot"><div class="page-grid-overlay"></div><main class="messages-wrap">
-    <section class="messages-hero"><article class="glass-card aurora-card active-glow beam-target"><p class="messages-kicker">INTERNAL MESSAGING</p><h1 class="messages-title">Keep crews and operations connected.</h1><p class="messages-copy">Real-time company channels for dispatch, field crews, HR, support, and leadership communication.</p></article><aside class="glass-card aurora-card active-glow beam-target messages-stats"><div class="message-stat"><strong id="messagesCount">—</strong><span>Messages loaded</span></div><div class="message-stat"><strong id="activeChannelLabel">Ops</strong><span>Active channel</span></div><div class="message-stat"><strong id="messageRoleLabel">—</strong><span>Your role</span></div></aside></section>
-    <section class="glass-card aurora-card active-glow beam-target messages-shell"><div class="messages-layout"><aside class="channel-list" id="channelList"></aside><section class="chat-panel"><header class="chat-head"><h2 id="chatTitle">Operations</h2><p class="muted" id="chatSubtitle">Live operational notes and dispatch updates.</p></header><div id="chatFeed" class="chat-feed"><div class="empty-card">Loading messages...</div></div><form id="chatForm" class="chat-form"><textarea id="chatInput" placeholder="Type a message for the team..." required></textarea><button class="btn btn-theme-primary beam-target" type="submit">Send</button></form></section></div></section>
-  </main></div>
-  <script src="/assets/js/loader.js"></script>
-  <script type="module" src="/assets/js/firebase.js"></script>
-  <script type="module" src="/assets/js/theme.js?v=50"></script>
-  <script type="module" src="/assets/js/route-guard.js"></script>
-  <script type="module" src="/assets/js/nav.js?v=51"></script>
-  <script type="module" src="/assets/js/messages.js"></script>
+  <div id="universalNavRoot"></div>
+  <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
+  <div id="appRoot">
+    <main class="messages-app">
+      <aside class="messages-sidebar glass-card">
+        <div class="messages-sidebar-head"><h1>Messages</h1><button id="newGroupBtn" class="messages-compose btn btn-theme-secondary" type="button" aria-label="New group chat">＋</button></div>
+        <label class="messages-search"><span>⌕</span><input id="conversationSearch" type="search" placeholder="Search conversations" /></label>
+        <div id="conversationList" class="conversation-list"><div class="messages-empty">Loading conversations…</div></div>
+      </aside>
+      <section class="messages-chat glass-card">
+        <header class="messages-chat-head">
+          <button id="showConversationList" class="messages-icon-button btn btn-theme-secondary" type="button" aria-label="Show conversations">‹</button>
+          <div id="chatAvatar" class="conversation-avatar"><span>E</span></div>
+          <div><h2 id="chatTitle">Messages</h2><p id="chatSubtitle">Select a conversation</p></div>
+          <div class="messages-head-actions"><button id="editGroupBtn" class="messages-icon-button btn btn-theme-secondary" type="button" aria-label="Edit group" hidden>•••</button></div>
+        </header>
+        <div id="chatFeed" class="messages-feed"><div class="messages-empty">Select a conversation to begin.</div></div>
+        <form id="messageForm" class="messages-composer"><div class="messages-composer-shell"><textarea id="messageInput" rows="1" placeholder="iMessage" required></textarea></div><button class="messages-send" type="submit" aria-label="Send message">↑</button></form>
+      </section>
+    </main>
+  </div>
+
+  <section id="groupSheet" class="group-sheet" hidden>
+    <form id="groupForm" class="group-card glass-card">
+      <div class="group-card-head"><h2 id="groupSheetTitle">New group</h2><button id="closeGroupSheet" class="messages-icon-button btn btn-theme-secondary" type="button" aria-label="Close">×</button></div>
+      <input id="groupConversationId" type="hidden" />
+      <div class="group-image-editor"><div id="groupImagePreview" class="group-image-preview"><span>G</span></div><div style="flex:1"><label for="groupImageUrl">Group image URL</label><input id="groupImageUrl" type="url" placeholder="https://…" /></div></div>
+      <div class="group-form">
+        <label>Group name<input id="groupName" type="text" required maxlength="80" /></label>
+        <label>Members<div id="groupMembers" class="member-picker"></div></label>
+        <div class="group-actions"><button id="cancelGroupBtn" class="btn btn-theme-secondary" type="button" onclick="document.getElementById('groupSheet').hidden=true">Cancel</button><button class="btn btn-theme-primary" type="submit">Save group</button></div>
+      </div>
+    </form>
+  </section>
+
+  <script src="/assets/js/loader.js?v=38"></script>
+  <script type="module" src="/assets/js/firebase.js?v=36"></script>
+  <script type="module" src="/assets/js/theme.js?v=53"></script>
+  <script type="module" src="/assets/js/route-guard.js?v=35"></script>
+  <script type="module" src="/assets/js/nav.js?v=53"></script>
+  <script type="module" src="/assets/js/messages-v2.js?v=1"></script>
 </body>
 </html>
