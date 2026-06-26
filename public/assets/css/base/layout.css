@@ -1,23 +1,44 @@
 html {
   min-height: 100%;
-  background:
+  background-color: var(--bg-primary);
+  background-image:
     radial-gradient(circle at 18% 16%, rgba(var(--beam-halo-rgb), 0.16), transparent 26%),
     radial-gradient(circle at 82% 14%, rgba(var(--theme-glow-rgb), 0.10), transparent 24%),
     radial-gradient(circle at 16% 82%, rgba(var(--beam-halo-rgb), 0.08), transparent 24%),
     linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  background-attachment: fixed;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
   color: var(--text-primary);
-  background: inherit;
-  background-attachment: fixed;
-  transition: background var(--page-transition-ms) ease, color var(--page-transition-ms) ease;
+  background: transparent;
+  transition: color var(--page-transition-ms) ease;
 }
 
-html[data-theme="light"] body {
-  color: var(--text-primary);
+body::before {
+  content: none;
+}
+
+html[data-theme-mode="image"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: #080b11;
+  background-image:
+    linear-gradient(
+      rgba(3, 6, 11, var(--evara-wallpaper-overlay, 0.36)),
+      rgba(3, 6, 11, var(--evara-wallpaper-overlay, 0.36))
+    ),
+    var(--evara-wallpaper-image, none),
+    radial-gradient(circle at 20% 0%, rgba(78, 161, 255, 0.24), transparent 42%),
+    linear-gradient(180deg, #111827, #05070b);
+  background-size: cover, cover, cover, cover;
+  background-position: center, var(--evara-wallpaper-position, center center), center, center;
+  background-repeat: no-repeat;
 }
 
 .page-grid-overlay {
@@ -25,21 +46,23 @@ html[data-theme="light"] body {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.08;
+  opacity: 0.06;
   background:
-    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    linear-gradient(var(--liquid-hairline) 1px, transparent 1px),
+    linear-gradient(90deg, var(--liquid-hairline) 1px, transparent 1px);
   background-size: 56px 56px;
 }
 
-html[data-theme="light"] .page-grid-overlay {
-  opacity: 0.04;
+html[data-theme-mode="image"] .page-grid-overlay {
+  opacity: 0.10;
 }
 
 #universalNav,
 #universalNavRoot,
 main,
-.site-footer {
+.site-footer,
+body > #appRoot,
+body > .dashboard-shell {
   position: relative;
   z-index: 1;
 }
