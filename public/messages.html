@@ -12,21 +12,22 @@
   <script src="/assets/js/theme-boot.js?v=53"></script>
   <style>html.boot-pending body{margin:0;overflow:hidden}html.auth-pending body,body.auth-pending{opacity:0;pointer-events:none}body.messages-page{margin:0;min-height:100vh;background:transparent}body.app-loading #appRoot{visibility:hidden}body.app-ready #appRoot{visibility:visible}</style>
   <link rel="stylesheet" href="/assets/css/base.css?v=53" />
-  <link rel="stylesheet" href="/assets/css/theme.css?v=53" />
+  <link rel="stylesheet" href="/assets/css/theme.css?v=54" />
   <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v16" />
   <link rel="stylesheet" href="/assets/css/pages/messages-imessage.css?v=1" />
+  <link rel="stylesheet" href="/assets/css/pages/messages-fullscreen.css?v=1" />
 </head>
 <body class="messages-page auth-pending app-loading" data-route-guard="private">
   <div id="universalNavRoot"></div>
   <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
   <div id="appRoot">
     <main class="messages-app">
-      <aside class="messages-sidebar glass-card">
+      <aside class="messages-sidebar">
         <div class="messages-sidebar-head"><h1>Messages</h1><button id="newGroupBtn" class="messages-compose btn btn-theme-secondary" type="button" aria-label="New group chat">＋</button></div>
         <label class="messages-search"><span>⌕</span><input id="conversationSearch" type="search" placeholder="Search conversations" /></label>
         <div id="conversationList" class="conversation-list"><div class="messages-empty">Loading conversations…</div></div>
       </aside>
-      <section class="messages-chat glass-card">
+      <section class="messages-chat">
         <header class="messages-chat-head">
           <button id="showConversationList" class="messages-icon-button btn btn-theme-secondary" type="button" aria-label="Show conversations">‹</button>
           <div id="chatAvatar" class="conversation-avatar"><span>E</span></div>
@@ -34,7 +35,7 @@
           <div class="messages-head-actions"><button id="editGroupBtn" class="messages-icon-button btn btn-theme-secondary" type="button" aria-label="Edit group" hidden>•••</button></div>
         </header>
         <div id="chatFeed" class="messages-feed"><div class="messages-empty">Select a conversation to begin.</div></div>
-        <form id="messageForm" class="messages-composer"><div class="messages-composer-shell"><textarea id="messageInput" rows="1" placeholder="iMessage" required></textarea></div><button class="messages-send" type="submit" aria-label="Send message">↑</button></form>
+        <form id="messageForm" class="messages-composer"><div class="messages-composer-shell"><textarea id="messageInput" rows="1" placeholder="Message" required></textarea></div><button class="messages-send" type="submit" aria-label="Send message">↑</button></form>
       </section>
     </main>
   </div>
@@ -56,7 +57,7 @@
   <script type="module" src="/assets/js/firebase.js?v=36"></script>
   <script type="module" src="/assets/js/theme.js?v=53"></script>
   <script type="module" src="/assets/js/route-guard.js?v=35"></script>
-  <script type="module" src="/assets/js/nav.js?v=53"></script>
-  <script type="module" src="/assets/js/messages-v2.js?v=1"></script>
+  <script type="module" src="/assets/js/nav.js?v=54"></script>
+  <script type="module" src="/assets/js/messages-v2.js?v=2"></script>
 </body>
 </html>
