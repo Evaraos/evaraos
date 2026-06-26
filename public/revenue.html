@@ -4,19 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Revenue Ops • Evaraos Inc</title>
-  <link rel="stylesheet" href="/assets/css/base.css" />
-  <link rel="stylesheet" href="/assets/css/theme.css" />
-  <link rel="stylesheet" href="/assets/css/nav.css" />
-  <link rel="stylesheet" href="/assets/css/app-system.css" />
+  <script src="/assets/js/theme-boot.js?v=50"></script>
+  <link rel="stylesheet" href="/assets/css/base.css?v=50" />
+  <link rel="stylesheet" href="/assets/css/theme.css?v=50" />
+  <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v4" />
+  <link rel="stylesheet" href="/assets/css/app-system.css?v=50" />
   <style>
-    body{margin:0;background:#f4f7f6}.wrap{width:min(1180px,calc(100% - 28px));margin:0 auto;padding:128px 0 70px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.panel{border-radius:32px;padding:24px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08)}h1{font-size:clamp(2rem,5vw,5rem);line-height:.9;letter-spacing:-.08em;margin:0}.list{display:grid;gap:12px}.item{border-radius:22px;padding:16px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07)}.muted{color:rgba(255,255,255,.68);line-height:1.6}@media(max-width:900px){.grid{grid-template-columns:1fr}.wrap{padding-top:112px}}
+    body{margin:0;background:transparent}.wrap{width:min(1180px,calc(100% - 28px));margin:0 auto;padding:128px 0 70px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.panel{border-radius:32px;padding:24px;border:1px solid var(--liquid-border);background:linear-gradient(180deg,var(--liquid-bg-top),var(--liquid-bg-bottom))}h1{font-size:clamp(2rem,5vw,5rem);line-height:.9;letter-spacing:-.08em;margin:0}.list{display:grid;gap:12px}.item{border-radius:22px;padding:16px;border:1px solid var(--liquid-border);background:linear-gradient(180deg,var(--liquid-bg-top),var(--liquid-bg-bottom))}.muted{color:var(--text-secondary);line-height:1.6}@media(max-width:900px){.grid{grid-template-columns:1fr}.wrap{padding-top:112px}}
   </style>
 </head>
 <body class="auth-pending app-loading" data-route-guard="private"><div id="universalNavRoot"></div><div id="appRoot"><main class="wrap"><section class="grid"><article class="panel glass-card aurora-card"><p class="muted">REVENUE OPS</p><h1>Revenue command center.</h1><p class="muted">Track service revenue, company allocation, platform share, and staff payout readiness.</p></article><article class="panel glass-card aurora-card"><h2 id="revenueTotal">$0.00</h2><p class="muted"><span id="revenueCount">0</span> records loaded.</p></article></section><section class="panel glass-card aurora-card" style="margin-top:18px"><h2>Records</h2><div id="revenueList" class="list"><div class="item muted">Loading...</div></div></section></main></div>
   <script src="/assets/js/loader.js"></script>
   <script type="module" src="/assets/js/firebase.js"></script>
+  <script type="module" src="/assets/js/theme.js?v=50"></script>
   <script type="module" src="/assets/js/route-guard.js"></script>
-  <script type="module" src="/assets/js/nav.js"></script>
+  <script type="module" src="/assets/js/nav.js?v=50"></script>
   <script type="module" src="/assets/js/revenue.js"></script>
 </body>
 </html>
