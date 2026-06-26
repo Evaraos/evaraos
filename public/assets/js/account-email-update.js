@@ -1,0 +1,6 @@
+import { auth } from "./firebase.js";
+import { verifyBeforeUpdateEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+function status(text){const node=document.getElementById("accountSaveMessage");if(node)node.textContent=text}
+function start(){const field=document.getElementById("accountEmail");if(!field)return;field.disabled=false;const original=auth.currentUser?.email||field.value||"";document.getElementById("saveAccountBtn")?.addEventListener("click",async()=>{const next=field.value.trim();if(!next||next.toLowerCase()===original.toLowerCase())return;try{if(!auth.currentUser)throw new Error("No active account session.");status("Sending a confirmation link to the new email address…");await verifyBeforeUpdateEmail(auth.currentUser,next);status("Confirmation sent. Open the new email address to finish the change.")}catch(error){status(error?.code==="auth/requires-recent-login"?"Sign in again before changing your email.":"Email change could not be started.")}})}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start,{once:true});else start();
