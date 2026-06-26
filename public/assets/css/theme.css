@@ -17,13 +17,17 @@
 /* Plain Apple Settings background */
 @import url("./effects/apple-settings-background.css?v=1");
 
-/* Core Components */
-@import url("./components/liquid-glass.css?v=2");
-@import url("./components/buttons.css");
-@import url("./components/application-polish.css?v=1");
+/* Universal Components */
+@import url("./components/liquid-glass.css?v=3");
+@import url("./components/buttons.css?v=2");
+@import url("./components/forms.css?v=1");
+@import url("./components/pills.css?v=1");
+
+/* Transitional application compatibility; scheduled for deletion after inline page cleanup */
+@import url("./components/application-polish.css?v=2");
 
 /* Scoped Settings Glass */
-@import url("./components/apple-settings-glass.css?v=3");
+@import url("./components/apple-settings-glass.css?v=4");
 
 /* Motion only */
 @import url("./effects/animations.css");
