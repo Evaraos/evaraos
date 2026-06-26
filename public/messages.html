@@ -14,9 +14,7 @@
   <link rel="stylesheet" href="/assets/css/base.css?v=53" />
   <link rel="stylesheet" href="/assets/css/theme.css?v=54" />
   <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v16" />
-  <link rel="stylesheet" href="/assets/css/pages/messages-imessage.css?v=1" />
-  <link rel="stylesheet" href="/assets/css/pages/messages-fullscreen.css?v=1" />
-  <link rel="stylesheet" href="/assets/css/pages/messages-polish.css?v=1" />
+  <link rel="stylesheet" href="/assets/css/pages/messages-imessage.css?v=2" />
 </head>
 <body class="messages-page auth-pending app-loading" data-route-guard="private">
   <div id="universalNavRoot"></div>
@@ -24,8 +22,11 @@
   <div id="appRoot">
     <main class="messages-app">
       <aside class="messages-sidebar">
-        <div class="messages-sidebar-head"><h1>Messages</h1><button id="newGroupBtn" class="messages-compose btn btn-theme-secondary" type="button" aria-label="New group chat">＋</button></div>
-        <label class="messages-search"><span>⌕</span><input id="conversationSearch" type="search" placeholder="Search conversations" /></label>
+        <div class="messages-sidebar-head"><h1>Messages</h1></div>
+        <div class="messages-toolbar">
+          <label class="messages-search"><span>⌕</span><input id="conversationSearch" type="search" placeholder="Search conversations" /></label>
+          <button id="newGroupBtn" class="messages-compose btn btn-theme-secondary" type="button" aria-label="New group chat">＋</button>
+        </div>
         <div id="conversationList" class="conversation-list"><div class="messages-empty">Loading conversations…</div></div>
       </aside>
       <section class="messages-chat">
