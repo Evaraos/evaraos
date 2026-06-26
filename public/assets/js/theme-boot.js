@@ -44,6 +44,14 @@
     return appearance.mode === "dark" ? "dark" : "light";
   }
 
+  function injectCriticalNavigation() {
+    if (document.getElementById("evaraCriticalNavStyle")) return;
+    var style = document.createElement("style");
+    style.id = "evaraCriticalNavStyle";
+    style.textContent = ".legacy-nav,.topbar,.navbar,.dashboard-topbar,.old-nav-shell{visibility:hidden!important;opacity:0!important}#universalNavRoot{position:fixed;inset:0;z-index:2147483647;pointer-events:none}#universalNavRoot:empty:before,#universalNavRoot:empty:after{content:'';position:fixed;top:calc(env(safe-area-inset-top,0px) + 9px);width:48px;height:48px;z-index:2147483647;pointer-events:none}#universalNavRoot:empty:before{left:max(12px,env(safe-area-inset-left));border-radius:999px;background:linear-gradient(145deg,rgba(255,255,255,.42),rgba(255,255,255,.18));border:1px solid rgba(255,255,255,.48);box-shadow:0 12px 30px rgba(0,0,0,.14);backdrop-filter:blur(20px)}#universalNavRoot:empty:after{right:max(14px,env(safe-area-inset-right));background:radial-gradient(circle,currentColor 0 22%,transparent 24%);opacity:.82}html[data-theme='dark'] #universalNavRoot:empty:before{background:linear-gradient(145deg,rgba(30,30,30,.74),rgba(18,18,18,.56));border-color:rgba(255,255,255,.16)}";
+    document.head.appendChild(style);
+  }
+
   var appearance = loadAppearance();
   var theme = resolvedTheme(appearance);
   var root = document.documentElement;
@@ -58,5 +66,6 @@
   root.style.setProperty("--evara-wallpaper-overlay", String(appearance.imageOverlay));
   root.style.setProperty("--evara-glass-strength", Math.round(appearance.glassTransparency * 100) + "%");
   root.style.setProperty("--evara-glass-strength-soft", Math.round(Math.max(0.18, appearance.glassTransparency * 0.72) * 100) + "%");
+  injectCriticalNavigation();
   root.classList.add("boot-pending");
 })();
