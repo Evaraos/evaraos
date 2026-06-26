@@ -1,0 +1,222 @@
+/* ===============================
+   EVARAOS APPLICATIONS STRUCTURAL UI
+   This file no longer owns page backgrounds or glass card themes.
+   Universal layout, Liquid Glass, text, and theme inversion are owned globally.
+   =============================== */
+
+body.applications-page .applications-hero > .glass-card,
+body.staff-application-page .application-hero > .glass-card,
+body.applications-page .applications-stat-grid {
+  min-height: 0;
+}
+
+body.applications-page .applications-hero > article,
+body.staff-application-page .application-hero > article {
+  padding: clamp(22px, 4vw, 36px);
+}
+
+.applications-kicker,
+.application-kicker {
+  color: var(--accent-red);
+  text-shadow: none;
+}
+
+.applications-title,
+.application-title,
+.application-card h3,
+.form-section-title,
+.stat-mini strong,
+.detail-box span,
+.step-card strong,
+.empty-card h3 {
+  color: var(--text-primary);
+  text-shadow: none;
+}
+
+.applications-copy,
+.application-copy,
+.muted,
+.application-muted,
+.step-card span,
+.application-message,
+.empty-card,
+.empty-card p,
+.stat-mini span,
+.detail-box strong,
+.application-field label,
+.form-subnote {
+  color: var(--text-secondary);
+}
+
+.stat-mini,
+.step-card,
+.detail-box,
+.empty-card {
+  background: linear-gradient(180deg, var(--liquid-bg-top), var(--liquid-bg-bottom));
+  border: 1px solid var(--liquid-border);
+  box-shadow:
+    0 10px 24px var(--liquid-shadow),
+    inset 0 1px 0 var(--liquid-highlight);
+  backdrop-filter: blur(var(--liquid-blur-soft, 18px)) saturate(165%);
+  -webkit-backdrop-filter: blur(var(--liquid-blur-soft, 18px)) saturate(165%);
+}
+
+.applications-toolbar input,
+.applications-toolbar select,
+.application-field input,
+.application-field select,
+.application-field textarea,
+.review-box select,
+.review-box textarea {
+  background: linear-gradient(180deg, var(--liquid-bg-top), var(--liquid-bg-bottom));
+  color: var(--text-primary);
+  border: 1px solid var(--liquid-border);
+  box-shadow:
+    inset 0 1px 0 var(--liquid-highlight),
+    0 8px 20px var(--liquid-shadow);
+  backdrop-filter: blur(var(--liquid-blur-soft, 18px)) saturate(165%);
+  -webkit-backdrop-filter: blur(var(--liquid-blur-soft, 18px)) saturate(165%);
+}
+
+.applications-toolbar input::placeholder,
+.application-field input::placeholder,
+.application-field textarea::placeholder,
+.review-box textarea::placeholder {
+  color: var(--text-soft);
+}
+
+.application-notice {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent-red) 10%, var(--liquid-bg-top)), var(--liquid-bg-bottom));
+  border: 1px solid color-mix(in srgb, var(--accent-red) 24%, var(--liquid-border));
+  color: var(--text-primary);
+}
+
+.pill {
+  background: linear-gradient(180deg, var(--liquid-bg-top), var(--liquid-bg-bottom));
+  color: var(--text-secondary);
+  border: 1px solid var(--liquid-border);
+}
+
+.pill.success { color: #10b981; border-color: color-mix(in srgb, #10b981 34%, var(--liquid-border)); }
+.pill.warning { color: #f59e0b; border-color: color-mix(in srgb, #f59e0b 34%, var(--liquid-border)); }
+.pill.error { color: #ef4444; border-color: color-mix(in srgb, #ef4444 34%, var(--liquid-border)); }
+
+.role-pill-container,
+.application-role-pills {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.role-pill,
+.role-pill-option {
+  min-height: 52px;
+  border-radius: 999px;
+  border: 1px solid var(--liquid-border);
+  background: linear-gradient(180deg, var(--liquid-bg-top), var(--liquid-bg-bottom));
+  color: var(--text-primary);
+  font-weight: 950;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 var(--liquid-highlight),
+    0 10px 24px var(--liquid-shadow);
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px 14px;
+  backdrop-filter: blur(var(--liquid-blur-soft, 18px)) saturate(165%);
+  -webkit-backdrop-filter: blur(var(--liquid-blur-soft, 18px)) saturate(165%);
+}
+
+.role-pill:hover,
+.role-pill-option:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--accent-red) 34%, var(--liquid-border));
+  box-shadow:
+    inset 0 1px 0 var(--liquid-highlight),
+    0 14px 30px var(--liquid-shadow);
+}
+
+.role-pill.active,
+.role-pill-option.active {
+  background: linear-gradient(135deg, var(--accent-red-2), var(--accent-red) 52%, #9f0025);
+  color: #ffffff;
+  border-color: color-mix(in srgb, var(--accent-red) 38%, rgba(255,255,255,0.34));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.46),
+    0 16px 34px color-mix(in srgb, var(--accent-red) 28%, transparent);
+}
+
+.role-pill-option input {
+  display: none;
+}
+
+.form-subnote {
+  margin: -4px 0 14px;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.55;
+}
+
+.application-section-divider {
+  height: 1px;
+  background: var(--liquid-hairline);
+  margin: 20px 0;
+}
+
+.empty-card {
+  text-align: center;
+}
+
+.empty-card h3 {
+  margin: 0 0 8px;
+  font-size: 24px;
+  letter-spacing: -0.04em;
+}
+
+.empty-card p {
+  margin: 0;
+  font-weight: 750;
+}
+
+.beam-target::after,
+.active-glow::after {
+  inset: -8% -5%;
+  opacity: 0.58;
+  filter: blur(18px);
+  background:
+    linear-gradient(115deg, transparent 18%, color-mix(in srgb, var(--liquid-highlight) 24%, transparent) 34%, var(--liquid-highlight) 48%, color-mix(in srgb, var(--liquid-highlight) 24%, transparent) 62%, transparent 78%),
+    radial-gradient(circle at 22% 6%, var(--liquid-highlight), transparent 30%),
+    radial-gradient(circle at 92% 12%, var(--liquid-refraction), transparent 32%);
+}
+
+.active-card-glow,
+.active-glow {
+  box-shadow:
+    0 18px 42px var(--liquid-shadow),
+    0 0 0 1px var(--liquid-border),
+    inset 0 1px 0 var(--liquid-highlight);
+}
+
+@media (max-width: 980px) {
+  .applications-title,
+  .application-title {
+    font-size: clamp(2.45rem, 10.8vw, 4rem);
+    line-height: 0.95;
+  }
+
+  .applications-toolbar { justify-content: stretch; }
+  .applications-toolbar input,
+  .applications-toolbar select,
+  .applications-toolbar button { width: 100%; }
+  .role-pill-container,
+  .application-role-pills { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 520px) {
+  .role-pill-container,
+  .application-role-pills { grid-template-columns: 1fr; }
+}
