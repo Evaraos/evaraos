@@ -1,14 +1,20 @@
 /* ===============================
-   EVARAOS LIGHT-FIRST BOOT GUARD
-   Keeps old dark-first HTML boot snippets from flashing a dark page before
-   the real saved theme finishes hydrating.
+   EVARAOS FIRST-PAINT THEME GUARD
+   Provides a valid token-based background until theme hydration completes.
    =============================== */
 
-  background: #f4f7f6 !important;
+html:not([data-evara-theme-ready="true"]):not([data-theme="dark"]) {
+  background: var(--bg-light, #f4f7f6);
   color-scheme: light;
 }
 
-  background: transparent !important;
+html:not([data-evara-theme-ready="true"])[data-theme="dark"] {
+  background: var(--bg-dark, #020307);
+  color-scheme: dark;
+}
+
+html:not([data-evara-theme-ready="true"]) body {
+  background: transparent;
 }
 
 html:not([data-evara-theme-ready="true"])[data-theme="dark"] .page-aurora {
