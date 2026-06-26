@@ -1,9 +1,7 @@
 /* EVARAOS NAV SYSTEM */
-@import url("./nav/nav-shell.css?v=nav-v5");
-@import url("./nav/nav-actions.css?v=nav-v5");
-@import url("./nav/nav-essential.css?v=nav-v5");
-@import url("./nav/nav-menu-liquid.css?v=nav-v5");
-@import url("./nav/nav-app-tiles.css?v=nav-v5");
-@import url("./nav/nav-effects.css?v=nav-v5");
-@import url("./nav/nav-motion.css?v=nav-v5");
-@import url("./nav/nav-quick-bubbles.css?v=nav-v5");
+@import url("./nav/nav-shell.css?v=nav-v6");
+@import url("./nav/nav-actions.css?v=nav-v6");
+@import url("./nav/nav-menu-liquid.css?v=nav-v6");
+@import url("./nav/nav-app-tiles.css?v=nav-v6");
+@import url("./nav/nav-effects.css?v=nav-v6");
+@import url("./nav/nav-motion.css?v=nav-v6");
