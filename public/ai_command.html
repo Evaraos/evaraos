@@ -33,70 +33,14 @@
   <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v4" />
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=50" />
   <link rel="stylesheet" href="/assets/css/app-system.css?v=50" />
+  <link rel="stylesheet" href="/assets/css/pages/ai-command.css?v=1" />
 
   <style>
-    body {
-      margin: 0;
-      background: #f4f7f6;
-    }
-
-    .ai-command-shell {
-      display: grid;
-      gap: 18px;
-      width: 100%;
-    }
-
-    .ai-command-stats {
-      display: grid;
-      grid-template-columns: repeat(4,minmax(0,1fr));
-      gap: 14px;
-    }
-
-    .ai-command-grid {
-      display: grid;
-      grid-template-columns: repeat(2,minmax(0,1fr));
-      gap: 18px;
-    }
-
-    .list {
-      display: grid;
-      gap: 12px;
-    }
-
-    .item {
-      border-radius: 22px;
-      padding: 16px;
-      border: 1px solid rgba(255,255,255,.16);
-      background: rgba(255,255,255,.07);
-    }
-
-    .muted {
-      color: rgba(255,255,255,.68);
-      line-height: 1.6;
-    }
-
-    .row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 10px;
-    }
-
-    .pill {
-      border-radius: 999px;
-      padding: 7px 10px;
-      border: 1px solid rgba(255,255,255,.18);
-      font-size: 12px;
-      font-weight: 900;
-      color: rgba(255,255,255,.74);
-    }
-
-    @media(max-width:980px) {
-      .ai-command-stats,
-      .ai-command-grid {
-        grid-template-columns: 1fr;
-      }
-    }
+    html.boot-pending body{margin:0;overflow:hidden;touch-action:none}
+    html.auth-pending body,body.auth-pending{opacity:0;pointer-events:none}
+    body.dashboard-body{margin:0;min-height:100vh;background:transparent}
+    body.app-loading #appRoot{visibility:hidden}
+    body.app-ready #appRoot{visibility:visible}
   </style>
 </head>
 
@@ -174,6 +118,7 @@
 
   <script src="/assets/js/loader.js?v=36"></script>
   <script type="module" src="/assets/js/firebase.js?v=38"></script>
+  <script type="module" src="/assets/js/theme.js?v=50"></script>
   <script type="module" src="/assets/js/route-guard.js?v=36"></script>
   <script type="module" src="/assets/js/nav.js?v=50"></script>
   <script type="module" src="/assets/js/ai-command.js?v=1"></script>
