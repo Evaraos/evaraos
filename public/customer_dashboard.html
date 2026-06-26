@@ -24,7 +24,6 @@
 <body class="dashboard-body auth-pending app-loading" data-route-guard="private">
   <div id="universalNavRoot"></div>
   <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
-
   <div id="appRoot">
     <div class="page-grid-overlay"></div>
     <main class="customer-page-wrap">
@@ -56,13 +55,11 @@
           </div>
           <button id="customerEditProfile" type="button" class="btn btn-theme-secondary">Edit details</button>
         </div>
-
         <div id="customerProfileView" class="customer-profile-view">
           <div class="customer-profile-field"><span>Name</span><strong id="customerProfileName">Saved to your account</strong></div>
           <div class="customer-profile-field"><span>Phone</span><strong id="customerProfilePhone">Saved to your account</strong></div>
           <div class="customer-profile-field"><span>Service notes</span><strong id="customerProfileNotes">No notes added</strong></div>
         </div>
-
         <form id="customerProfileForm" class="customer-profile-form" hidden>
           <div class="customer-form-grid">
             <div class="customer-form-field"><label for="customerEditName">Full name</label><input id="customerEditName" type="text" autocomplete="name" required /></div>
@@ -105,5 +102,6 @@
   <script type="module" src="/assets/js/route-guard.js?v=35"></script>
   <script type="module" src="/assets/js/nav.js?v=53"></script>
   <script type="module" src="/assets/js/customer-portal-v2.js?v=1"></script>
+  <script type="module" src="/assets/js/customer-portal-profile-sync.js?v=1"></script>
 </body>
 </html>
