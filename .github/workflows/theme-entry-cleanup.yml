@@ -1,0 +1,30 @@
+name: Theme entry cleanup
+
+on:
+  push:
+    branches: [evaraos]
+    paths: [.github/workflows/theme-entry-cleanup.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: evaraos
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node tools/theme-entry-cleanup.js
+      - shell: bash
+        run: |
+          if git diff --quiet -- public/assets/css/theme.css; then exit 0; fi
+          git config user.name "Evaraos Migration"
+          git config user.email "actions@users.noreply.github.com"
+          git add public/assets/css/theme.css
+          git commit -m "Remove dead settings glass import"
+          git push origin HEAD:evaraos
