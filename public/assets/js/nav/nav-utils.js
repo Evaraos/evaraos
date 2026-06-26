@@ -78,60 +78,23 @@ export function getDisplayName() {
 }
 
 export function getAppearanceTheme() {
-  try {
-    const raw = localStorage.getItem("evaraos-appearance");
-    if (raw) {
-      const appearance = JSON.parse(raw);
-      if (appearance.mode === "dark") return "dark";
-      if (appearance.mode === "system") {
-        return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ? "dark" : "light";
-      }
-    }
-  } catch {}
-
-  const docTheme = document.documentElement.getAttribute("data-theme");
-  return docTheme === "dark" ? "dark" : "light";
+  return window.EvaraTheme?.getTheme?.() ||
+    (document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light");
 }
 
+export function getAppearanceMode() {
+  return window.EvaraTheme?.getThemeMode?.() ||
+    document.documentElement.getAttribute("data-theme-mode") ||
+    "light";
+}
+
+// Compatibility exports for older nav modules. They no longer own theme state.
 export function setTheme(theme) {
-  const safe = theme === "dark" ? "dark" : "light";
-  document.documentElement.setAttribute("data-theme", safe);
-  document.documentElement.style.colorScheme = safe;
-  syncThemeLabel();
+  window.EvaraTheme?.applyTheme?.(theme);
 }
 
 export function syncThemeLabel() {
-  let text = "System mode";
-  let icon = "◐";
-  let mode = "system";
-
-  try {
-    const raw = localStorage.getItem("evaraos-appearance");
-    const appearance = raw ? JSON.parse(raw) : {};
-
-    if (appearance.mode === "light") {
-      text = "Light mode";
-      icon = "☀";
-      mode = "light";
-    } else if (appearance.mode === "dark") {
-      text = "Dark mode";
-      icon = "☾";
-      mode = "dark";
-    }
-  } catch {}
-
-  document.querySelectorAll("[data-theme-label]").forEach((node) => {
-    const labelNode = node.querySelector?.("[data-theme-text]");
-    const iconNode = node.querySelector?.(".eva-theme-nav-icon");
-
-    if (labelNode) labelNode.textContent = text;
-    else if (!node.children.length) node.textContent = text;
-
-    if (iconNode) iconNode.textContent = icon;
-    node.setAttribute("data-theme-mode", mode);
-
-    node.setAttribute("aria-label", `Switch theme. Current: ${text}`);
-  });
+  window.EvaraTheme?.updateThemeControls?.();
 }
 
 export function forcePageVisible() {
