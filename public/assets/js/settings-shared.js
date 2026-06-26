@@ -1,10 +1,18 @@
-export const APPEARANCE_STORAGE_KEY = "evaraos-appearance";
-export const VALID_MODES = ["light", "dark", "system"];
+import {
+  APPEARANCE_KEY,
+  VALID_MODES,
+  DEFAULT_APPEARANCE,
+  getAppearance,
+  saveAppearance,
+  resetAppearance,
+  applyAppearance,
+  normalizeAppearance,
+  resolvedTheme,
+  systemTheme
+} from "./theme.js";
 
-export const DEFAULT_APPEARANCE = {
-  mode: "light",
-  updatedAt: null
-};
+export const APPEARANCE_STORAGE_KEY = APPEARANCE_KEY;
+export { VALID_MODES, DEFAULT_APPEARANCE, getAppearance, saveAppearance, resetAppearance, applyAppearance, systemTheme };
 
 export function safeJsonParse(value, fallback = null) {
   try {
@@ -18,70 +26,13 @@ export function normalizeMode(mode) {
   return VALID_MODES.includes(mode) ? mode : "light";
 }
 
-export function systemTheme() {
-  try {
-    return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ? "dark" : "light";
-  } catch {
-    return "light";
-  }
-}
-
-export function getAppearance() {
-  const stored = safeJsonParse(localStorage.getItem(APPEARANCE_STORAGE_KEY), null);
-
-  return {
-    mode: normalizeMode(stored?.mode),
-    updatedAt: stored?.updatedAt || null
-  };
-}
-
-export function saveAppearance(nextAppearance) {
-  const merged = {
-    mode: normalizeMode(nextAppearance?.mode),
-    updatedAt: new Date().toISOString()
-  };
-
-  localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify(merged));
-  applyAppearance(merged);
-  return merged;
-}
-
-export function resetAppearance() {
-  localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify(DEFAULT_APPEARANCE));
-  applyAppearance(DEFAULT_APPEARANCE);
-  return { ...DEFAULT_APPEARANCE };
-}
-
 export function getThemeFromAppearance(appearance) {
-  const mode = normalizeMode(appearance?.mode);
-  return mode === "system" ? systemTheme() : mode;
-}
-
-export function applyAppearance(appearance) {
-  const safe = {
-    mode: normalizeMode(appearance?.mode),
-    updatedAt: appearance?.updatedAt || null
-  };
-
-  const theme = getThemeFromAppearance(safe);
-
-  document.documentElement.setAttribute("data-theme", theme);
-  document.documentElement.setAttribute("data-theme-mode", safe.mode);
-  document.documentElement.style.colorScheme = theme;
-  document.documentElement.setAttribute("data-beam-mode", "default");
-
-  document.documentElement.style.removeProperty("--user-card-tint");
-  document.documentElement.style.removeProperty("--user-button-tint");
-  document.documentElement.style.removeProperty("--user-beam-color");
-  document.documentElement.style.removeProperty("--user-background-glow");
-
-  return safe;
+  return resolvedTheme(normalizeAppearance(appearance).mode);
 }
 
 export function setText(id, value) {
   const el = document.getElementById(id);
-  if (!el) return;
-  el.textContent = value;
+  if (el) el.textContent = value;
 }
 
 export function setMessage(id, value) {
@@ -99,13 +50,3 @@ export function markSettingsReady() {
     document.body?.classList.add("app-ready");
   }
 }
-
-try {
-  window.matchMedia?.("(prefers-color-scheme: dark)")?.addEventListener?.("change", () => {
-    if (getAppearance().mode === "system") {
-      applyAppearance(getAppearance());
-    }
-  });
-} catch {}
-
-applyAppearance(getAppearance());
