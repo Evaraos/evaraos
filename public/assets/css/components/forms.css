@@ -1,0 +1,103 @@
+/* =========================================================
+   EVARAOS UNIVERSAL FORMS
+   Shared controls, labels, notices, and validation surfaces.
+   ========================================================= */
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+textarea,
+select {
+  width: 100%;
+  min-height: 44px;
+  color: var(--text-primary);
+  background: linear-gradient(180deg, var(--liquid-bg-top), var(--liquid-bg-bottom));
+  border: 1px solid var(--liquid-border);
+  border-radius: var(--liquid-radius-sm, 18px);
+  box-shadow:
+    inset 0 1px 0 var(--liquid-highlight),
+    0 8px 20px var(--liquid-shadow);
+  padding: 12px 14px;
+  outline: none;
+  font: inherit;
+  transition:
+    border-color var(--page-transition-ms, 180ms) ease,
+    box-shadow var(--page-transition-ms, 180ms) ease,
+    background var(--page-transition-ms, 180ms) ease,
+    color var(--page-transition-ms, 180ms) ease;
+  backdrop-filter: blur(var(--liquid-blur-soft, 18px)) saturate(165%);
+  -webkit-backdrop-filter: blur(var(--liquid-blur-soft, 18px)) saturate(165%);
+}
+
+textarea {
+  resize: vertical;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+textarea:focus,
+select:focus {
+  border-color: color-mix(in srgb, var(--accent-red) 42%, var(--liquid-border));
+  box-shadow:
+    inset 0 1px 0 var(--liquid-highlight),
+    0 0 0 4px color-mix(in srgb, var(--accent-red-2) 14%, transparent),
+    0 12px 28px var(--liquid-shadow);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-soft);
+  opacity: 1;
+}
+
+select option {
+  color: var(--text-primary);
+  background: var(--bg-primary);
+}
+
+.form-field label,
+.application-field label,
+.review-box label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.form-subnote {
+  margin: -4px 0 14px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.55;
+}
+
+.form-notice,
+.application-notice {
+  border-radius: 20px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent-red) 24%, var(--liquid-border));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent-red) 10%, var(--liquid-bg-top)), var(--liquid-bg-bottom));
+  color: var(--text-secondary);
+  line-height: 1.55;
+  font-weight: 700;
+}
+
+.form-divider,
+.application-section-divider {
+  height: 1px;
+  margin: 20px 0;
+  background: var(--liquid-hairline);
+}
+
+input[type="file"] {
+  padding: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  input,
+  textarea,
+  select {
+    transition: none;
+  }
+}
