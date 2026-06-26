@@ -11,7 +11,7 @@ const BUILTIN = [
 ];
 
 const REGISTRY_CHANNEL = "_group_registry";
-const state = { user:null, profile:{}, conversations:[], active:null, unsubscribe:null, allUsers:[], search:"" };
+const state = { user:null, profile:{}, conversations:[], active:null, unsubscribe:null, allUsers:[], search:"", groupImage:"" };
 const $ = (id) => document.getElementById(id);
 function esc(value=""){return String(value??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
 function normalize(value=""){return String(value||"").trim().toLowerCase()}
@@ -25,115 +25,32 @@ function avatarMarkup(conversation){return conversation.imageUrl?`<img src="${es
 function canSee(conversation){if(conversation.builtin)return conversation.roles.includes(role());const uid=state.user?.uid||"";return isAdmin()||conversation.memberUids?.includes(uid)||conversation.adminUids?.includes(uid)||conversation.allowedRoles?.includes(role())}
 function canEdit(conversation){const uid=state.user?.uid||"";return isAdmin()||conversation.adminUids?.includes(uid)}
 
-async function loadUsers(){
-  try{const snap=await getDocs(collection(db,"users"));state.allUsers=snap.docs.map(d=>({id:d.id,...d.data()}))}
-  catch(error){console.warn("Users unavailable for group creation",error);state.allUsers=[]}
-}
-
-async function loadGroupRegistry(){
-  try{
-    const snap=await getDocs(collection(db,"channels",REGISTRY_CHANNEL,"messages"));
-    return snap.docs.map(d=>({id:d.id,...d.data()})).filter(item=>item.kind==="group_meta"&&item.groupId);
-  }catch(error){console.warn("Group registry unavailable",error);return[]}
-}
-
-async function loadConversations(){
-  const dynamic=await loadGroupRegistry();
-  const builtin=BUILTIN.map(item=>({...item,builtin:true,type:"role",imageUrl:"",memberUids:[],adminUids:[]}));
-  const merged=[...builtin,...dynamic.map(item=>({...item,id:item.groupId,type:"group",builtin:false}))].filter(canSee);
-  state.conversations=merged;
-  if(!state.active||!merged.some(item=>item.id===state.active.id))state.active=merged[0]||null;
-  renderConversations();
-  openConversation(state.active?.id);
-}
-
-function renderConversations(){
-  const root=$("conversationList");if(!root)return;
-  const queryText=normalize(state.search);
-  const items=state.conversations.filter(item=>!queryText||normalize(item.name).includes(queryText)||normalize(item.description).includes(queryText));
-  root.innerHTML=items.length?items.map(item=>`<button class="conversation-item ${state.active?.id===item.id?"is-active":""}" type="button" data-conversation="${esc(item.id)}"><span class="conversation-avatar">${avatarMarkup(item)}</span><span class="conversation-copy"><strong>${esc(item.name)}</strong><span>${esc(item.lastMessage||item.description||"No messages yet")}</span></span><span class="conversation-meta">${item.type==="group"?"Group":"Role"}</span></button>`).join(""):`<div class="messages-empty">No conversations match your search.</div>`;
-}
-
-function renderHeader(){
-  const c=state.active;if(!c)return;
-  $("chatAvatar").innerHTML=avatarMarkup(c);
-  $("chatTitle").textContent=c.name;
-  $("chatSubtitle").textContent=c.type==="group"?`${c.memberUids?.length||0} members`:c.description||"Role channel";
-  $("editGroupBtn").hidden=!canEdit(c)||c.builtin;
-}
-
-function renderMessages(messages=[]){
-  const root=$("chatFeed");if(!root)return;
-  const visible=messages.filter(message=>message.kind!=="group_meta");
-  root.innerHTML=visible.length?visible.map(message=>{const mine=message.senderUid===state.user?.uid;return `<div class="message-row ${mine?"mine":""}">${mine?"":`<span class="message-sender-avatar">${esc(initials(message.senderName||"U"))}</span>`}<div>${mine?"":`<p class="message-author">${esc(message.senderName||"Unknown")} <span class="role-badge">${esc(String(message.senderRole||"staff").replaceAll("_"," "))}</span></p>`}<div class="message-bubble">${esc(message.text||"")}</div><div class="message-time">${esc(timeLabel(message.createdAt))}</div></div></div>`}).join(""):`<div class="messages-empty">Start the conversation.</div>`;
-  root.scrollTop=root.scrollHeight;
-}
-
-function subscribe(){
-  state.unsubscribe?.();if(!state.active)return;
-  const q=query(collection(db,"channels",state.active.id,"messages"),orderBy("createdAt","asc"));
-  state.unsubscribe=onSnapshot(q,snap=>renderMessages(snap.docs.map(d=>({id:d.id,...d.data()}))),error=>{$("chatFeed").innerHTML=`<div class="messages-empty">${esc(error.message||"Unable to load messages")}</div>`});
-}
-
-function openConversation(id){
-  const conversation=state.conversations.find(item=>item.id===id);if(!conversation)return;
-  state.active=conversation;renderConversations();renderHeader();subscribe();document.querySelector(".messages-app")?.classList.remove("show-list");
-}
-
-async function sendMessage(){
-  const input=$("messageInput"),text=input.value.trim();if(!text||!state.active)return;
-  await addDoc(collection(db,"channels",state.active.id,"messages"),{text,senderUid:state.user.uid,senderName:nameOf(state.profile)||state.user.email,senderRole:state.profile.role||"staff",companyId:state.profile.companyId||"",createdAt:serverTimestamp()});
-  input.value="";autoSize();
-}
-
+async function loadUsers(){try{const snap=await getDocs(collection(db,"users"));state.allUsers=snap.docs.map(d=>({id:d.id,...d.data()}))}catch(error){console.warn("Users unavailable for group creation",error);state.allUsers=[]}}
+async function loadGroupRegistry(){try{const snap=await getDocs(collection(db,"channels",REGISTRY_CHANNEL,"messages"));return snap.docs.map(d=>({id:d.id,...d.data()})).filter(item=>item.kind==="group_meta"&&item.groupId)}catch(error){console.warn("Group registry unavailable",error);return[]}}
+async function loadConversations(){const dynamic=await loadGroupRegistry();const builtin=BUILTIN.map(item=>({...item,builtin:true,type:"role",imageUrl:"",memberUids:[],adminUids:[]}));const merged=[...builtin,...dynamic.map(item=>({...item,id:item.groupId,type:"group",builtin:false}))].filter(canSee);state.conversations=merged;if(!state.active||!merged.some(item=>item.id===state.active.id))state.active=merged[0]||null;renderConversations();openConversation(state.active?.id)}
+function renderConversations(){const root=$("conversationList");if(!root)return;const q=normalize(state.search);const items=state.conversations.filter(item=>!q||normalize(item.name).includes(q)||normalize(item.description).includes(q));root.innerHTML=items.length?items.map(item=>`<button class="conversation-item ${state.active?.id===item.id?"is-active":""}" type="button" data-conversation="${esc(item.id)}"><span class="conversation-avatar">${avatarMarkup(item)}</span><span class="conversation-copy"><strong>${esc(item.name)}</strong><span>${esc(item.lastMessage||item.description||"No messages yet")}</span></span><span class="conversation-meta">${item.type==="group"?"Group":"Role"}</span></button>`).join(""):`<div class="messages-empty">No conversations match your search.</div>`}
+function renderHeader(){const c=state.active;if(!c)return;$("chatAvatar").innerHTML=avatarMarkup(c);$("chatTitle").textContent=c.name;$("chatSubtitle").textContent=c.type==="group"?`${c.memberUids?.length||0} members`:c.description||"Role channel";$("editGroupBtn").hidden=!canEdit(c)||c.builtin}
+function renderMessages(messages=[]){const root=$("chatFeed");if(!root)return;const visible=messages.filter(message=>message.kind!=="group_meta");root.innerHTML=visible.length?visible.map(message=>{const mine=message.senderUid===state.user?.uid;return `<div class="message-row ${mine?"mine":""}">${mine?"":`<span class="message-sender-avatar">${esc(initials(message.senderName||"U"))}</span>`}<div>${mine?"":`<p class="message-author">${esc(message.senderName||"Unknown")} <span class="role-badge">${esc(String(message.senderRole||"staff").replaceAll("_"," "))}</span></p>`}<div class="message-bubble">${esc(message.text||"")}</div><div class="message-time">${esc(timeLabel(message.createdAt))}</div></div></div>`}).join(""):`<div class="messages-empty">Start the conversation.</div>`;root.scrollTop=root.scrollHeight}
+function subscribe(){state.unsubscribe?.();if(!state.active)return;const q=query(collection(db,"channels",state.active.id,"messages"),orderBy("createdAt","asc"));state.unsubscribe=onSnapshot(q,snap=>renderMessages(snap.docs.map(d=>({id:d.id,...d.data()}))),error=>{$("chatFeed").innerHTML=`<div class="messages-empty">${esc(error.message||"Unable to load messages")}</div>`})}
+function openConversation(id){const conversation=state.conversations.find(item=>item.id===id);if(!conversation)return;state.active=conversation;renderConversations();renderHeader();subscribe();document.querySelector(".messages-app")?.classList.remove("show-list")}
+async function sendMessage(){const input=$("messageInput"),text=input.value.trim();if(!text||!state.active)return;await addDoc(collection(db,"channels",state.active.id,"messages"),{text,senderUid:state.user.uid,senderName:nameOf(state.profile)||state.user.email,senderRole:state.profile.role||"staff",companyId:state.profile.companyId||"",createdAt:serverTimestamp()});input.value="";autoSize()}
 function autoSize(){const input=$("messageInput");if(!input)return;input.style.height="auto";input.style.height=`${Math.min(130,input.scrollHeight)}px`}
-
-function groupForm(conversation=null){
-  const selected=new Set(conversation?.memberUids||[state.user?.uid].filter(Boolean));
-  $("groupSheetTitle").textContent=conversation?"Edit group":"New group";
-  $("groupName").value=conversation?.name||"";
-  $("groupImageUrl").value=conversation?.imageUrl||"";
-  $("groupImagePreview").innerHTML=conversation?.imageUrl?`<img src="${esc(conversation.imageUrl)}" alt="Group"/>`:`<span>${esc(initials(conversation?.name||"New Group"))}</span>`;
-  $("groupConversationId").value=conversation?.id||"";
-  const allowed=state.allUsers.filter(user=>user.active!==false&&user.id!==state.user?.uid);
-  $("groupMembers").innerHTML=allowed.map(user=>`<label class="member-option"><input type="checkbox" value="${esc(user.id)}" ${selected.has(user.id)?"checked":""}/><span>${esc(nameOf(user))}<small>${esc(String(user.role||"staff").replaceAll("_"," "))}</small></span></label>`).join("")||`<p class="messages-empty">No additional users are available.</p>`;
-  $("groupSheet").hidden=false;
-}
-
-async function saveGroup(event){
-  event.preventDefault();
-  const id=$("groupConversationId").value||`group-${crypto.randomUUID()}`;
-  const members=[state.user.uid,...[...$("groupMembers").querySelectorAll("input:checked")].map(input=>input.value)];
-  const existing=state.conversations.find(item=>item.id===id);
-  const payload={kind:"group_meta",groupId:id,name:$("groupName").value.trim(),imageUrl:$("groupImageUrl").value.trim(),description:"Group conversation",memberUids:[...new Set(members)],adminUids:existing?.adminUids?.length?existing.adminUids:[state.user.uid],allowedRoles:[],companyId:state.profile.companyId||"",createdBy:existing?.createdBy||state.user.uid,createdAt:existing?.createdAt||serverTimestamp(),updatedAt:serverTimestamp()};
-  if(!payload.name)throw new Error("Group name is required.");
-  await setDoc(doc(db,"channels",REGISTRY_CHANNEL,"messages",id),payload,{merge:true});
-  $("groupSheet").hidden=true;
-  await loadConversations();
-  openConversation(id);
-}
-
+function renderGroupImage(name="Group"){const preview=$("groupImagePreview");if(!preview)return;preview.innerHTML=state.groupImage?`<img src="${esc(state.groupImage)}" alt="Group"/>`:`<span>${esc(initials(name))}</span>`;$("groupImageValue").value=state.groupImage}
+function groupForm(conversation=null){const selected=new Set(conversation?.memberUids||[state.user?.uid].filter(Boolean));state.groupImage=conversation?.imageUrl||"";$("groupSheetTitle").textContent=conversation?"Edit group":"New group";$("groupName").value=conversation?.name||"";$("groupConversationId").value=conversation?.id||"";renderGroupImage(conversation?.name||"New Group");const allowed=state.allUsers.filter(user=>user.active!==false&&user.id!==state.user?.uid);$("groupMembers").innerHTML=allowed.map(user=>`<label class="member-option"><span>${esc(nameOf(user))}<small>${esc(String(user.role||"staff").replaceAll("_"," "))}</small></span><input type="checkbox" value="${esc(user.id)}" ${selected.has(user.id)?"checked":""}/></label>`).join("")||`<p class="messages-empty">No additional users are available.</p>`;$("groupSheet").hidden=false}
+async function compressImage(file){if(!file?.type?.startsWith("image/"))throw new Error("Choose an image file.");if(file.size>8*1024*1024)throw new Error("Choose an image smaller than 8 MB.");const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||""));reader.onerror=()=>reject(new Error("Image could not be read."));reader.readAsDataURL(file)});const image=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(new Error("Image could not be opened."));img.src=data});const size=512,scale=Math.max(size/image.naturalWidth,size/image.naturalHeight),canvas=document.createElement("canvas");canvas.width=canvas.height=size;canvas.getContext("2d").drawImage(image,(size-image.naturalWidth*scale)/2,(size-image.naturalHeight*scale)/2,image.naturalWidth*scale,image.naturalHeight*scale);return canvas.toDataURL("image/webp",.78)}
+async function useImageInput(input){const file=input.files?.[0];if(!file)return;try{state.groupImage=await compressImage(file);renderGroupImage($("groupName").value||"Group");$("groupImageSourceSheet").hidden=true}catch(error){alert(error.message||"Unable to use image")}finally{input.value=""}}
+async function saveGroup(event){event.preventDefault();const id=$("groupConversationId").value||`group-${crypto.randomUUID()}`;const members=[state.user.uid,...[...$("groupMembers").querySelectorAll("input:checked")].map(input=>input.value)];const existing=state.conversations.find(item=>item.id===id);const payload={kind:"group_meta",groupId:id,name:$("groupName").value.trim(),imageUrl:state.groupImage,description:"Group conversation",memberUids:[...new Set(members)],adminUids:existing?.adminUids?.length?existing.adminUids:[state.user.uid],allowedRoles:[],companyId:state.profile.companyId||"",createdBy:existing?.createdBy||state.user.uid,createdAt:existing?.createdAt||serverTimestamp(),updatedAt:serverTimestamp()};if(!payload.name)throw new Error("Group name is required.");await setDoc(doc(db,"channels",REGISTRY_CHANNEL,"messages",id),payload,{merge:true});$("groupSheet").hidden=true;await loadConversations();openConversation(id)}
 function bind(){
   $("conversationList")?.addEventListener("click",e=>{const button=e.target.closest("[data-conversation]");if(button)openConversation(button.dataset.conversation)});
   $("conversationSearch")?.addEventListener("input",e=>{state.search=e.target.value;renderConversations()});
-  $("newGroupBtn")?.addEventListener("click",()=>groupForm());
-  $("editGroupBtn")?.addEventListener("click",()=>groupForm(state.active));
-  $("closeGroupSheet")?.addEventListener("click",()=>$('groupSheet').hidden=true);
+  $("newGroupBtn")?.addEventListener("click",()=>groupForm());$("editGroupBtn")?.addEventListener("click",()=>groupForm(state.active));
+  $("closeGroupSheet")?.addEventListener("click",()=>$("groupSheet").hidden=true);$("cancelGroupBtn")?.addEventListener("click",()=>$("groupSheet").hidden=true);
   $("groupForm")?.addEventListener("submit",e=>saveGroup(e).catch(error=>alert(error.message||"Unable to save group")));
-  $("groupImageUrl")?.addEventListener("input",e=>{$("groupImagePreview").innerHTML=e.target.value?`<img src="${esc(e.target.value)}" alt="Group"/>`:`<span>${esc(initials($("groupName").value||"G"))}</span>`});
-  $("messageForm")?.addEventListener("submit",e=>{e.preventDefault();sendMessage().catch(error=>alert(error.message||"Message failed"))});
-  $("messageInput")?.addEventListener("input",autoSize);
-  $("messageInput")?.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("messageForm")?.requestSubmit()}});
-  $("showConversationList")?.addEventListener("click",()=>document.querySelector(".messages-app")?.classList.add("show-list"));
+  $("groupName")?.addEventListener("input",()=>{if(!state.groupImage)renderGroupImage($("groupName").value||"Group")});
+  $("openGroupImageSource")?.addEventListener("click",()=>$("groupImageSourceSheet").hidden=false);$("closeGroupImageSource")?.addEventListener("click",()=>$("groupImageSourceSheet").hidden=true);$("removeGroupImage")?.addEventListener("click",()=>{state.groupImage="";renderGroupImage($("groupName").value||"Group")});
+  document.querySelectorAll("[data-group-image-source]").forEach(button=>button.addEventListener("click",()=>{const map={photos:"groupPhotoInput",camera:"groupCameraInput",files:"groupFileInput"};$(map[button.dataset.groupImageSource])?.click()}));
+  ["groupPhotoInput","groupCameraInput","groupFileInput"].forEach(id=>$(id)?.addEventListener("change",()=>useImageInput($(id))));
+  $("messageForm")?.addEventListener("submit",e=>{e.preventDefault();sendMessage().catch(error=>alert(error.message||"Message failed"))});$("messageInput")?.addEventListener("input",autoSize);$("messageInput")?.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("messageForm")?.requestSubmit()}});$("showConversationList")?.addEventListener("click",()=>document.querySelector(".messages-app")?.classList.add("show-list"));
 }
-
-function init(){
-  bind();
-  onAuthStateChanged(auth,async user=>{
-    if(!user){location.assign("/login.html");return}
-    state.user=user;state.profile=getSavedUserProfile()||{};
-    await loadUsers();await loadConversations();
-    document.body.classList.remove("auth-pending","app-loading");document.body.classList.add("app-ready");window.EvaraLoader?.markAppReady?.();
-  });
-}
+function init(){bind();onAuthStateChanged(auth,async user=>{if(!user){location.assign("/login.html");return}state.user=user;state.profile=getSavedUserProfile()||{};await loadUsers();await loadConversations();document.body.classList.remove("auth-pending","app-loading");document.body.classList.add("app-ready");window.EvaraLoader?.markAppReady?.()})}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
