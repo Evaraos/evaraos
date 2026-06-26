@@ -39,37 +39,10 @@
 
   <title>Sales Reps • Evaraos Inc</title>
 
-  <script>
-    (function () {
-      try {
-        var raw = localStorage.getItem("evaraos-appearance");
-        var theme = "light";
-
-        if (raw) {
-          var appearance = JSON.parse(raw);
-
-          if (appearance.mode === "light") theme = "light";
-          else if (appearance.mode === "galaxy") theme = "galaxy";
-          else if (appearance.mode === "custom") {
-            if (appearance.baseFamily === "light") theme = "light";
-            else if (appearance.baseFamily === "galaxy") theme = "galaxy";
-            else theme = "dark";
-          }
-        }
-
-        document.documentElement.setAttribute("data-theme", theme);
-      } catch {
-        document.documentElement.setAttribute("data-theme", "light");
-      }
-
-      document.documentElement.classList.add("boot-pending", "auth-pending");
-    })();
-  </script>
+  <script src="/assets/js/theme-boot.js?v=50"></script>
+  <script>document.documentElement.classList.add("auth-pending");</script>
 
   <style>
-
-    html[data-theme="light"],
-    html[data-theme="light"] body { background: #f4f7f6; }
 
     html[data-theme="galaxy"],
     html[data-theme="galaxy"] body { background: #050311; }
@@ -277,7 +250,7 @@
   <link rel="stylesheet" href="/assets/css/base.css?v=50" />
   <link rel="stylesheet" href="/assets/css/theme.css?v=50" />
   <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v4" />
-  <link rel="stylesheet" href="/assets/css/dashboard.css?v=34" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css?v=50" />
 </head>
 
 <body class="dashboard-body auth-pending app-loading" data-route-guard="private">
@@ -373,7 +346,7 @@
   <script type="module" src="/assets/js/theme.js?v=50"></script>
   <script src="/assets/js/galaxy.js?v=2"></script>
   <script type="module" src="/assets/js/route-guard.js?v=35"></script>
-  <script type="module" src="/assets/js/nav.js?v=20260503-final"></script>
+  <script type="module" src="/assets/js/nav.js?v=50"></script>
   <script type="module" src="/assets/js/sales_reps.js?v=1"></script>
 
 <!-- EVARAOS BOTTOM DOT NAV + ABOVE DROPDOWN TUNE -->

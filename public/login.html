@@ -38,37 +38,10 @@
 
   <title>Login • Evaraos Inc</title>
 
-  <script>
-    (function () {
-      function systemTheme() {
-        try {
-          return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-        } catch {
-          return "light";
-        }
-      }
-
-      try {
-        var raw = localStorage.getItem("evaraos-appearance");
-        var theme = "light";
-
-        if (raw) {
-          var appearance = JSON.parse(raw);
-          if (appearance.mode === "dark") theme = "dark";
-          else if (appearance.mode === "system") theme = systemTheme();
-        }
-
-        document.documentElement.setAttribute("data-theme", theme);
-      } catch {
-        document.documentElement.setAttribute("data-theme", "light");
-      }
-
-      document.documentElement.classList.add("boot-pending", "auth-pending");
-    })();
-  </script>
+  <script src="/assets/js/theme-boot.js?v=50"></script>
+  <script>document.documentElement.classList.add("auth-pending");</script>
 
   <style>
-    html[data-theme="light"], html[data-theme="light"] body { background: #f4f7f6; }
     html.boot-pending body { margin: 0; overflow: hidden; touch-action: none; }
     html.auth-pending body, body.auth-pending { opacity: 0; pointer-events: none; }
     body.login-page { margin: 0; min-height: 100vh; background: transparent; }
@@ -79,9 +52,9 @@
   <link rel="stylesheet" href="/assets/css/base.css?v=50" />
   <link rel="stylesheet" href="/assets/css/theme.css?v=50" />
   <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v4" />
-  <link rel="stylesheet" href="/assets/css/auth.css?v=34" />
-  <link rel="stylesheet" href="/assets/css/dashboard.css?v=34" />
-  <link rel="stylesheet" href="/assets/css/app-system.css?v=phase-a" />
+  <link rel="stylesheet" href="/assets/css/auth.css?v=50" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css?v=50" />
+  <link rel="stylesheet" href="/assets/css/app-system.css?v=50" />
 </head>
 <body class="login-page auth-pending app-loading" data-route-guard="auth">
   <div id="universalNavRoot"></div>
@@ -146,6 +119,6 @@
   <script type="module" src="/assets/js/theme.js?v=50"></script>
   <script type="module" src="/assets/js/route-guard.js?v=36"></script>
   <script type="module" src="/assets/js/auth.js?v=38"></script>
-  <script type="module" src="/assets/js/nav.js?v=meca-nav-20260518a"></script>
+  <script type="module" src="/assets/js/nav.js?v=50"></script>
 </body>
 </html>
