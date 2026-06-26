@@ -1,11 +1,15 @@
+#!/usr/bin/env node
 /**
- * Evaraos Repo Audit + Repair Script
+ * Evaraos architecture audit.
  *
- * Audit only:
+ * Audit:
  *   node tools/repo-audit.js
  *
- * Apply safe light-first HTML repairs:
+ * Safe HTML cleanup:
  *   node tools/repo-audit.js --fix
+ *
+ * The fix mode only removes deprecated theme loader tags, stale exact
+ * first-paint backgrounds, and old cache versions. It never rewrites app logic.
  */
 
 const fs = require("fs");
@@ -14,255 +18,176 @@ const path = require("path");
 const ROOT = path.resolve(__dirname, "..");
 const REPORT_DIR = path.join(ROOT, "tools", "reports");
 const FIX_MODE = process.argv.includes("--fix");
+const IGNORE = new Set([".git", "node_modules", "tools/reports"]);
+const AUTHORIZED_THEME_WRITERS = new Set([
+  "public/assets/js/theme.js",
+  "public/assets/js/theme-boot.js"
+]);
 
-const IGNORE_DIRS = new Set([".git", "node_modules", "tools/reports"]);
-const HTML_REPAIR_FILES = [];
-
-function walk(dir, output = []) {
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const absolute = path.join(dir, entry.name);
+function walk(directory, output = []) {
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    const absolute = path.join(directory, entry.name);
     const relative = path.relative(ROOT, absolute).replace(/\\/g, "/");
-
     if (entry.isDirectory()) {
-      if (IGNORE_DIRS.has(relative) || IGNORE_DIRS.has(entry.name)) continue;
+      if (IGNORE.has(entry.name) || IGNORE.has(relative)) continue;
       walk(absolute, output);
-      continue;
+    } else {
+      output.push(relative);
     }
-
-    output.push(relative);
   }
-
   return output;
 }
 
-function read(relative) {
-  return fs.readFileSync(path.join(ROOT, relative), "utf8");
+function read(file) {
+  return fs.readFileSync(path.join(ROOT, file), "utf8");
 }
 
-function write(relative, content) {
-  fs.writeFileSync(path.join(ROOT, relative), content, "utf8");
+function write(file, content) {
+  fs.writeFileSync(path.join(ROOT, file), content, "utf8");
 }
 
-function repairHtml(relative, content) {
-  let next = content;
-
-  next = next.replace(/<html([^>]*?)data-theme="dark"([^>]*?)>/i, "<html$1data-theme=\"light\"$2>");
-  next = next.replace(/var\s+theme\s*=\s*"dark";/g, "var theme = \"light\";");
-  next = next.replace(/setAttribute\("data-theme",\s*"dark"\)/g, "setAttribute(\"data-theme\", \"light\")");
-  next = next.replace(/background:\s*#060814;/gi, "background: #f4f7f6;");
-  next = next.replace(/<meta\s+name="theme-color"\s+content="#050311"\s*\/>/gi, '<meta name="theme-color" content="#f4f7f6" />');
-  next = next.replace(/<meta\s+name="msapplication-TileColor"\s+content="#050311"\s*\/>/gi, '<meta name="msapplication-TileColor" content="#f4f7f6" />');
-
-  if (next !== content) {
-    HTML_REPAIR_FILES.push(relative);
-  }
-
-  return next;
+function exists(file) {
+  return fs.existsSync(path.join(ROOT, file));
 }
 
-function checkHtml(relative, content) {
-  const checks = [];
-
-  checks.push({
-    label: "DOCTYPE present",
-    pass: /<!DOCTYPE html>/i.test(content)
-  });
-
-  checks.push({
-    label: "light-first html theme",
-    pass: !/<html[^>]*data-theme="dark"/i.test(content)
-  });
-
-  checks.push({
-    label: "light-first boot variable",
-    pass: !/var\s+theme\s*=\s*"dark";/.test(content)
-  });
-
-  checks.push({
-    label: "light fallback theme",
-    pass: !/setAttribute\("data-theme",\s*"dark"\)/.test(content)
-  });
-
-  checks.push({
-    label: "light first-paint background",
-    pass: !/background:\s*#060814;/i.test(content)
-  });
-
-  checks.push({
-    label: "light browser theme meta",
-    pass: !/<meta\s+name="theme-color"\s+content="#050311"/i.test(content)
-  });
-
-  checks.push({
-    label: "light tile color meta",
-    pass: !/<meta\s+name="msapplication-TileColor"\s+content="#050311"/i.test(content)
-  });
-
-  checks.push({
-    label: "universal nav mount present",
-    pass: /id="universalNavRoot"|id="universalNav"/.test(content)
-  });
-
-  checks.push({
-    label: "repo absolute asset paths",
-    pass: !/(href|src)="\.\//.test(content)
-  });
-
-  return checks;
+function safeHtmlFix(content) {
+  return content
+    .replace(/\s*<script\s+src="\/assets\/js\/theme-css-loader\.js\?v=[^"]+"><\/script>/gi, "")
+    .replace(/<script\s+src="\/assets\/js\/theme-boot\.js\?v=[^"]+"><\/script>/gi, '<script src="/assets/js/theme-boot.js?v=50"></script>')
+    .replace(/<script\s+type="module"\s+src="\/assets\/js\/theme\.js\?v=[^"]+"><\/script>/gi, '<script type="module" src="/assets/js/theme.js?v=50"></script>')
+    .replace(/href="\/assets\/css\/theme\.css\?v=[^"]+"/gi, 'href="/assets/css/theme.css?v=50"')
+    .replace(/href="\/assets\/css\/base\.css\?v=[^"]+"/gi, 'href="/assets/css/base.css?v=50"')
+    .replace(/href="\/assets\/css\/nav\.css\?v=[^"]+"/gi, 'href="/assets/css/nav.css?v=nav-v4"')
+    .replace(/\s*html\s*,\s*body\s*\{\s*background:\s*#f4f7f6;\s*\}/gi, "")
+    .replace(/\s*html\[data-theme="dark"\]\s*,?\s*html\[data-theme="dark"\]\s+body\s*\{\s*background:\s*#020307;\s*\}/gi, "");
 }
 
-function checkTextFile(relative, content, checks) {
-  if (relative === "assets/js/nav/nav-main.js") {
-    checks.push({
-      label: "logo home override bound",
-      pass: /bindAlwaysHomeLogo/.test(content)
-    });
+function addIssue(issues, file, rule, detail = "") {
+  issues.push({ file, rule, detail });
+}
+
+function auditHtml(file, content, issues) {
+  if (!/<!DOCTYPE html>/i.test(content)) addIssue(issues, file, "missing-doctype");
+  if (!/\/assets\/js\/theme-boot\.js\?v=50/.test(content)) addIssue(issues, file, "stale-theme-boot");
+  if (!/\/assets\/css\/theme\.css\?v=50/.test(content)) addIssue(issues, file, "stale-theme-css");
+  if (!/\/assets\/css\/nav\.css\?v=(?:nav-v4|50)/.test(content)) addIssue(issues, file, "stale-nav-css");
+  if (/theme-css-loader\.js/.test(content)) addIssue(issues, file, "deprecated-theme-loader");
+  if (/html\s*,\s*body\s*\{\s*background:\s*#f4f7f6/i.test(content)) addIssue(issues, file, "inline-light-background");
+  if (/html\[data-theme="dark"\][^\{]*\{\s*background:\s*#020307/i.test(content)) addIssue(issues, file, "inline-dark-background");
+  if (/localStorage\.(?:getItem|setItem)\(["']evara-theme["']/.test(content)) addIssue(issues, file, "obsolete-theme-key");
+}
+
+function auditJavaScript(file, content, issues) {
+  if (/setAttribute\(["']data-theme["']/.test(content) && !AUTHORIZED_THEME_WRITERS.has(file)) {
+    addIssue(issues, file, "unauthorized-theme-writer");
+  }
+  if (/localStorage\.(?:getItem|setItem)\(["']evara-theme["']/.test(content)) {
+    addIssue(issues, file, "obsolete-theme-key");
+  }
+  if (/VALID_MODES\s*=\s*\[[^\]]*light[^\]]*dark[^\]]*system[^\]]*\]/s.test(content) && !/image/.test(content)) {
+    addIssue(issues, file, "three-mode-only-runtime");
+  }
+}
+
+function auditCss(file, content, issues) {
+  if (/application-polish\.css|nav-menu\.css|liquid-ui-overrides\.css/.test(content)) {
+    addIssue(issues, file, "removed-stylesheet-import");
+  }
+  if (/,[\t ]*\n[\t ]*[a-z-]+\s*:/i.test(content)) addIssue(issues, file, "probable-missing-selector-brace");
+  if (/html\[data-theme="(?:light|dark)"\]\s+body\s*\{[^}]*background\s*:/s.test(content) && file !== "public/assets/css/base/layout.css") {
+    addIssue(issues, file, "duplicate-page-background-authority");
+  }
+}
+
+function auditCore(issues) {
+  const themeFile = "public/assets/js/theme.js";
+  const bootFile = "public/assets/js/theme-boot.js";
+  const appearancePage = "settings/appearance.html";
+
+  for (const file of [themeFile, bootFile, appearancePage]) {
+    if (!exists(file)) addIssue(issues, file, "missing-core-file");
   }
 
-  if (relative === "assets/js/theme-css-loader.js") {
-    checks.push({
-      label: "theme hydration marker present",
-      pass: /data-evara-theme-ready/.test(content)
-    });
-
-    checks.push({
-      label: "theme css loader light fallback",
-      pass: /return document\.documentElement\.getAttribute\("data-theme"\) \|\| "light";/.test(content)
-    });
+  if (exists(themeFile)) {
+    const source = read(themeFile);
+    for (const mode of ["light", "dark", "system", "image"]) {
+      if (!source.includes(`"${mode}"`)) addIssue(issues, themeFile, `missing-mode-${mode}`);
+    }
+    if (!source.includes("imageUrl") || !source.includes("imageOverlay")) addIssue(issues, themeFile, "missing-image-appearance-model");
   }
 
-  if (relative === "assets/css/theme.css") {
-    checks.push({
-      label: "first-paint light guard imported",
-      pass: /first-paint-light\.css/.test(content)
-    });
-  }
-
-  if (relative === "manifest.json") {
-    checks.push({
-      label: "manifest light background",
-      pass: /"background_color"\s*:\s*"#f4f7f6"/.test(content)
-    });
-
-    checks.push({
-      label: "manifest light theme color",
-      pass: /"theme_color"\s*:\s*"#f4f7f6"/.test(content)
-    });
+  if (exists(appearancePage) && !/data-appearance-mode="image"/.test(read(appearancePage))) {
+    addIssue(issues, appearancePage, "missing-image-mode-control");
   }
 }
 
 function main() {
   const files = walk(ROOT);
-  const htmlFiles = files.filter((file) => file.endsWith(".html") && !file.startsWith("tools/"));
-  const coreFiles = [
-    "assets/js/nav/nav-main.js",
-    "assets/js/theme-css-loader.js",
-    "assets/css/theme.css",
-    "assets/css/themes/first-paint-light.css",
-    "manifest.json"
-  ].filter((file) => fs.existsSync(path.join(ROOT, file)));
+  const repaired = [];
 
   if (FIX_MODE) {
-    for (const file of htmlFiles) {
-      const content = read(file);
-      const repaired = repairHtml(file, content);
-      if (repaired !== content) write(file, repaired);
+    for (const file of files.filter((name) => name.endsWith(".html"))) {
+      const before = read(file);
+      const after = safeHtmlFix(before);
+      if (after !== before) {
+        write(file, after);
+        repaired.push(file);
+      }
     }
   }
 
-  const results = [];
-
-  for (const file of htmlFiles) {
+  const issues = [];
+  for (const file of files) {
+    if (!/\.(?:html|js|css)$/.test(file)) continue;
     const content = read(file);
-    const checks = checkHtml(file, content);
-    results.push({ file, checks });
+    if (file.endsWith(".html")) auditHtml(file, content, issues);
+    if (file.endsWith(".js")) auditJavaScript(file, content, issues);
+    if (file.endsWith(".css")) auditCss(file, content, issues);
   }
+  auditCore(issues);
 
-  for (const file of coreFiles) {
-    const content = read(file);
-    const checks = [];
-    checkTextFile(file, content, checks);
-    results.push({ file, checks });
-  }
-
-  const filesSummary = results.map((result) => {
-    const passed = result.checks.filter((check) => check.pass).length;
-    const total = result.checks.length;
-    const issues = result.checks.filter((check) => !check.pass).map((check) => check.label);
-
-    return {
-      file: result.file,
-      score: `${passed}/${total}`,
-      passed,
-      total,
-      status: total && passed === total ? "pass" : "review",
-      issues
-    };
-  });
-
-  const totals = filesSummary.reduce(
-    (acc, item) => {
-      acc.passed += item.passed;
-      acc.total += item.total;
-      return acc;
-    },
-    { passed: 0, total: 0 }
-  );
+  const grouped = issues.reduce((map, issue) => {
+    if (!map[issue.file]) map[issue.file] = [];
+    map[issue.file].push(issue);
+    return map;
+  }, {});
 
   const report = {
     generatedAt: new Date().toISOString(),
-    mode: FIX_MODE ? "fix" : "audit",
-    totals,
-    repairedFiles: HTML_REPAIR_FILES,
-    files: filesSummary
+    mode: FIX_MODE ? "safe-fix-and-audit" : "audit",
+    filesScanned: files.length,
+    repairedFiles: repaired,
+    issueCount: issues.length,
+    issues
   };
 
   fs.mkdirSync(REPORT_DIR, { recursive: true });
-  fs.writeFileSync(path.join(REPORT_DIR, "repo-audit-report.json"), JSON.stringify(report, null, 2), "utf8");
+  fs.writeFileSync(path.join(REPORT_DIR, "repo-audit-report.json"), JSON.stringify(report, null, 2));
 
   const markdown = [
-    "# Evaraos Repo Audit Report",
+    "# Evaraos Four-Mode Architecture Audit",
     "",
     `Generated: ${report.generatedAt}`,
-    `Mode: ${report.mode}`,
-    `Overall Score: ${totals.passed}/${totals.total}`,
-    "",
-    FIX_MODE ? `Repaired Files: ${HTML_REPAIR_FILES.length}` : "Repaired Files: 0",
-    "",
-    ...filesSummary.flatMap((item) => [
-      `## ${item.file}`,
-      "",
-      `Score: ${item.score}`,
-      "",
-      ...(item.issues.length ? item.issues.map((issue) => `- [ ] ${issue}`) : ["- All checks passed"]),
-      ""
-    ])
+    `Files scanned: ${report.filesScanned}`,
+    `Issues: ${report.issueCount}`,
+    `Safely repaired: ${repaired.length}`,
+    ""
   ];
 
-  fs.writeFileSync(path.join(REPORT_DIR, "repo-audit-report.md"), markdown.join("\n"), "utf8");
-
-  console.log("\nEvaraos Repo Audit");
-  console.log(`Mode: ${report.mode}`);
-  console.log(`Overall Score: ${totals.passed}/${totals.total}`);
-
-  if (FIX_MODE) {
-    console.log(`Repaired HTML files: ${HTML_REPAIR_FILES.length}`);
-    HTML_REPAIR_FILES.forEach((file) => console.log(`  - ${file}`));
+  for (const [file, fileIssues] of Object.entries(grouped)) {
+    markdown.push(`## ${file}`, "");
+    for (const issue of fileIssues) markdown.push(`- [ ] ${issue.rule}${issue.detail ? ` — ${issue.detail}` : ""}`);
+    markdown.push("");
   }
 
-  const failing = filesSummary.filter((item) => item.issues.length);
-  if (failing.length) {
-    console.log("\nNeeds Review:");
-    failing.forEach((item) => {
-      console.log(`- ${item.file}: ${item.issues.join(", ")}`);
-    });
-  } else {
-    console.log("\nAll checks passed.");
-  }
+  if (!issues.length) markdown.push("All four-mode architecture checks passed.", "");
+  fs.writeFileSync(path.join(REPORT_DIR, "repo-audit-report.md"), markdown.join("\n"));
 
-  console.log("\nReports written:");
-  console.log("- tools/reports/repo-audit-report.json");
-  console.log("- tools/reports/repo-audit-report.md\n");
+  console.log(`Evaraos audit: ${issues.length} issue(s), ${repaired.length} safely repaired.`);
+  if (issues.length) {
+    for (const issue of issues) console.log(`- ${issue.file}: ${issue.rule}`);
+    process.exitCode = 1;
+  }
 }
 
 main();
