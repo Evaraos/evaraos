@@ -12,5 +12,6 @@
 @import url("./components/compact-surfaces.css?v=2");
 @import url("./effects/animations.css?v=52");
 @import url("./effects/liquid-beam.css?v=2");
+@import url("./effects/page-transitions.css?v=1");
 @import url("./loaders/loader.css?v=loader-v2");
 @import url("./loaders/loader-viewport.css?v=loader-v2");
