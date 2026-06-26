@@ -1,18 +1,16 @@
-import {
-  APPEARANCE_KEY,
-  VALID_MODES,
-  DEFAULT_APPEARANCE,
-  getAppearance,
-  saveAppearance,
-  resetAppearance,
-  applyAppearance,
-  normalizeAppearance,
-  resolvedTheme,
-  systemTheme
-} from "./theme.js";
+export const APPEARANCE_STORAGE_KEY = "evaraos-appearance";
+export const VALID_MODES = Object.freeze(["light", "dark", "system", "image"]);
+export const DEFAULT_APPEARANCE = Object.freeze({
+  mode: "light",
+  imageUrl: "",
+  imagePosition: "center center",
+  imageOverlay: 0.36,
+  updatedAt: null
+});
 
-export const APPEARANCE_STORAGE_KEY = APPEARANCE_KEY;
-export { VALID_MODES, DEFAULT_APPEARANCE, getAppearance, saveAppearance, resetAppearance, applyAppearance, systemTheme };
+function engine() {
+  return window.EvaraTheme || null;
+}
 
 export function safeJsonParse(value, fallback = null) {
   try {
@@ -26,8 +24,35 @@ export function normalizeMode(mode) {
   return VALID_MODES.includes(mode) ? mode : "light";
 }
 
+export function systemTheme() {
+  try {
+    return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ? "dark" : "light";
+  } catch {
+    return "light";
+  }
+}
+
+export function getAppearance() {
+  return engine()?.getAppearance?.() || { ...DEFAULT_APPEARANCE };
+}
+
+export function saveAppearance(value) {
+  return engine()?.saveAppearance?.(value) || { ...DEFAULT_APPEARANCE };
+}
+
+export function resetAppearance() {
+  return engine()?.resetAppearance?.() || { ...DEFAULT_APPEARANCE };
+}
+
+export function applyAppearance(value) {
+  return engine()?.applyAppearance?.(value) || value;
+}
+
 export function getThemeFromAppearance(appearance) {
-  return resolvedTheme(normalizeAppearance(appearance).mode);
+  const mode = normalizeMode(appearance?.mode);
+  if (mode === "system") return systemTheme();
+  if (mode === "image") return "dark";
+  return mode;
 }
 
 export function setText(id, value) {
