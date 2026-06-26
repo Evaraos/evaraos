@@ -1,0 +1,254 @@
+/* EVARAOS AUTH LAYOUT
+   Dimensions and responsive structure only.
+*/
+
+:root {
+  --auth-shell-max: 920px;
+  --auth-panel-radius: 38px;
+  --auth-panel-pad: 36px;
+  --auth-panel-pad-mobile: 22px;
+  --auth-logo-size: 78px;
+  --auth-title-size: clamp(2.6rem, 6vw, 4.8rem);
+  --auth-subtitle-size: 1.06rem;
+  --auth-input-height: 64px;
+  --auth-input-radius: 999px;
+  --auth-btn-height: 64px;
+  --auth-btn-radius: 999px;
+}
+
+.login-page,
+.signup-page,
+.reset-page {
+  min-height: 100vh;
+}
+
+.login-shell,
+.signup-shell,
+.reset-shell {
+  width: min(var(--auth-shell-max), calc(100% - 24px));
+  margin: 104px auto 64px;
+  position: relative;
+  z-index: 2;
+}
+
+.auth-panel,
+.login-panel,
+.signup-panel,
+.reset-panel {
+  padding: var(--auth-panel-pad);
+  border-radius: var(--auth-panel-radius);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-badge-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-badge,
+.login-badge {
+  width: var(--auth-logo-size);
+  height: var(--auth-logo-size);
+  object-fit: contain;
+}
+
+.auth-badge-large {
+  width: 90px;
+  height: 90px;
+}
+
+.login-title,
+.signup-title,
+.reset-title {
+  margin: 0;
+  text-align: center;
+  font-size: var(--auth-title-size);
+  line-height: .94;
+  letter-spacing: -.055em;
+  position: relative;
+  z-index: 1;
+}
+
+.login-subtitle,
+.signup-subtitle,
+.reset-subtitle {
+  margin: 16px auto 28px;
+  max-width: 760px;
+  text-align: center;
+  font-size: var(--auth-subtitle-size);
+  line-height: 1.58;
+  position: relative;
+  z-index: 1;
+}
+
+.login-form,
+.signup-form,
+.reset-form {
+  display: grid;
+  gap: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.form-group {
+  display: grid;
+  gap: 8px;
+}
+
+.input-shell,
+.password-wrap,
+.remember-row {
+  position: relative;
+  min-height: var(--auth-input-height);
+  border-radius: var(--auth-input-radius);
+  overflow: hidden;
+}
+
+.input {
+  width: 100%;
+  min-height: var(--auth-input-height);
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  padding: 0 18px;
+  box-sizing: border-box;
+}
+
+textarea.input {
+  min-height: 120px;
+  padding-top: 16px;
+  resize: vertical;
+}
+
+.password-wrap {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.password-toggle {
+  display: grid;
+  place-items: center;
+  margin: 6px;
+  border-radius: 16px;
+  min-height: calc(var(--auth-input-height) - 12px);
+  min-width: 48px;
+}
+
+.password-eye-icon {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+.password-eye-icon.eye-closed { display: none; }
+.password-toggle.is-open .eye-open { display: none; }
+.password-toggle.is-open .eye-closed { display: block; }
+
+.remember-row {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+}
+
+.remember-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: .98rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.remember-check input {
+  width: 18px;
+  height: 18px;
+}
+
+.login-actions-row,
+.signup-actions-row,
+.reset-actions-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.login-actions-row .btn,
+.signup-actions-row .btn,
+.reset-actions-row .btn {
+  min-height: var(--auth-btn-height);
+  border-radius: var(--auth-btn-radius);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.login-message,
+.signup-message,
+.reset-message {
+  min-height: 24px;
+  margin: 4px 2px 0;
+  font-size: .98rem;
+  line-height: 1.45;
+}
+
+.auth-footer-links {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;
+  z-index: 1;
+  font-size: .98rem;
+}
+
+@media (max-width: 640px) {
+  .login-shell,
+  .signup-shell,
+  .reset-shell {
+    width: min(calc(100% - 16px), 100%);
+    margin: 92px auto 56px;
+  }
+
+  .auth-panel,
+  .login-panel,
+  .signup-panel,
+  .reset-panel {
+    padding: var(--auth-panel-pad-mobile);
+    border-radius: 28px;
+  }
+
+  .login-title,
+  .signup-title,
+  .reset-title {
+    font-size: clamp(2.1rem, 9vw, 3.1rem);
+  }
+
+  .login-subtitle,
+  .signup-subtitle,
+  .reset-subtitle {
+    margin: 14px auto 24px;
+    font-size: 1rem;
+    line-height: 1.52;
+  }
+
+  .login-actions-row,
+  .signup-actions-row,
+  .reset-actions-row {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-footer-links {
+    font-size: .95rem;
+  }
+}
