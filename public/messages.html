@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v16" />
   <link rel="stylesheet" href="/assets/css/pages/messages-imessage.css?v=1" />
   <link rel="stylesheet" href="/assets/css/pages/messages-fullscreen.css?v=1" />
+  <link rel="stylesheet" href="/assets/css/pages/messages-polish.css?v=1" />
 </head>
 <body class="messages-page auth-pending app-loading" data-route-guard="private">
   <div id="universalNavRoot"></div>
@@ -44,13 +45,29 @@
     <form id="groupForm" class="group-card glass-card">
       <div class="group-card-head"><h2 id="groupSheetTitle">New group</h2><button id="closeGroupSheet" class="messages-icon-button btn btn-theme-secondary" type="button" aria-label="Close">×</button></div>
       <input id="groupConversationId" type="hidden" />
-      <div class="group-image-editor"><div id="groupImagePreview" class="group-image-preview"><span>G</span></div><div style="flex:1"><label for="groupImageUrl">Group image URL</label><input id="groupImageUrl" type="url" placeholder="https://…" /></div></div>
+      <input id="groupImageValue" type="hidden" />
+      <div class="group-image-editor">
+        <div id="groupImagePreview" class="group-image-preview"><span>G</span></div>
+        <div class="group-image-copy"><strong>Group photo</strong><span>Choose from Photos, Camera, or Files.</span><div class="group-image-actions"><button id="openGroupImageSource" type="button" class="btn btn-theme-secondary">Change photo</button><button id="removeGroupImage" type="button" class="btn btn-theme-secondary">Remove</button></div></div>
+      </div>
+      <input id="groupPhotoInput" class="group-hidden-input" type="file" accept="image/*" />
+      <input id="groupCameraInput" class="group-hidden-input" type="file" accept="image/*" capture="environment" />
+      <input id="groupFileInput" class="group-hidden-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" />
       <div class="group-form">
         <label>Group name<input id="groupName" type="text" required maxlength="80" /></label>
         <label>Members<div id="groupMembers" class="member-picker"></div></label>
-        <div class="group-actions"><button id="cancelGroupBtn" class="btn btn-theme-secondary" type="button" onclick="document.getElementById('groupSheet').hidden=true">Cancel</button><button class="btn btn-theme-primary" type="submit">Save group</button></div>
+        <div class="group-actions"><button id="cancelGroupBtn" class="btn btn-theme-secondary" type="button">Cancel</button><button class="btn btn-theme-primary" type="submit">Save group</button></div>
       </div>
     </form>
+  </section>
+
+  <section id="groupImageSourceSheet" class="group-image-source-sheet" hidden>
+    <div class="group-image-source-card glass-card">
+      <button type="button" class="btn btn-theme-secondary" data-group-image-source="photos">Choose from Photos</button>
+      <button type="button" class="btn btn-theme-secondary" data-group-image-source="camera">Take a Picture</button>
+      <button type="button" class="btn btn-theme-secondary" data-group-image-source="files">Browse Files</button>
+      <button id="closeGroupImageSource" type="button" class="btn btn-theme-secondary">Cancel</button>
+    </div>
   </section>
 
   <script src="/assets/js/loader.js?v=38"></script>
@@ -58,6 +75,6 @@
   <script type="module" src="/assets/js/theme.js?v=53"></script>
   <script type="module" src="/assets/js/route-guard.js?v=35"></script>
   <script type="module" src="/assets/js/nav.js?v=54"></script>
-  <script type="module" src="/assets/js/messages-v2.js?v=2"></script>
+  <script type="module" src="/assets/js/messages-v2.js?v=3"></script>
 </body>
 </html>
