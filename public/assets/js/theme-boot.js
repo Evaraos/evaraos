@@ -1,6 +1,9 @@
-// Evaraos shared first-paint theme boot
-// Supports only light, dark, and system.
+// Evaraos shared first-paint appearance boot.
+// Supports light, dark, system, and image modes before module hydration.
 (function () {
+  var VALID_MODES = ["light", "dark", "system", "image"];
+  var VALID_POSITIONS = ["center center", "center top", "center bottom", "left center", "right center"];
+
   function systemTheme() {
     try {
       return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
@@ -9,20 +12,61 @@
     }
   }
 
-  function resolveTheme() {
+  function validImageUrl(value) {
+    var source = String(value || "").trim();
+    if (!source) return "";
+    if (/^data:image\/(?:avif|gif|jpeg|jpg|png|webp);base64,/i.test(source)) return source;
+
     try {
-      var raw = localStorage.getItem("evaraos-appearance");
-      if (!raw) return "light";
-      var appearance = JSON.parse(raw);
-      if (appearance && appearance.mode === "dark") return "dark";
-      if (appearance && appearance.mode === "system") return systemTheme();
-      return "light";
-    } catch (error) {
-      return "light";
+      var url = new URL(source, window.location.origin);
+      return url.protocol === "https:" || url.protocol === "http:" ? url.href : "";
+    } catch {
+      return "";
     }
   }
 
-  var theme = resolveTheme();
-  document.documentElement.setAttribute("data-theme", theme);
-  document.documentElement.classList.add("boot-pending");
+  function loadAppearance() {
+    var fallback = {
+      mode: "light",
+      imageUrl: "",
+      imagePosition: "center center",
+      imageOverlay: 0.36
+    };
+
+    try {
+      var raw = localStorage.getItem("evaraos-appearance");
+      if (!raw) return fallback;
+      var stored = JSON.parse(raw) || {};
+      var overlay = Number(stored.imageOverlay);
+
+      return {
+        mode: VALID_MODES.indexOf(stored.mode) >= 0 ? stored.mode : "light",
+        imageUrl: validImageUrl(stored.imageUrl),
+        imagePosition: VALID_POSITIONS.indexOf(stored.imagePosition) >= 0 ? stored.imagePosition : "center center",
+        imageOverlay: Number.isFinite(overlay) ? Math.min(0.72, Math.max(0.16, overlay)) : 0.36
+      };
+    } catch {
+      return fallback;
+    }
+  }
+
+  function resolvedTheme(mode) {
+    if (mode === "system") return systemTheme();
+    if (mode === "image") return "dark";
+    return mode === "dark" ? "dark" : "light";
+  }
+
+  var appearance = loadAppearance();
+  var theme = resolvedTheme(appearance.mode);
+  var root = document.documentElement;
+  var hasImage = appearance.mode === "image" && Boolean(appearance.imageUrl);
+
+  root.setAttribute("data-theme", theme);
+  root.setAttribute("data-theme-mode", appearance.mode);
+  root.toggleAttribute("data-has-wallpaper", hasImage);
+  root.style.colorScheme = theme;
+  root.style.setProperty("--evara-wallpaper-image", appearance.imageUrl ? "url(" + JSON.stringify(appearance.imageUrl) + ")" : "none");
+  root.style.setProperty("--evara-wallpaper-position", appearance.imagePosition);
+  root.style.setProperty("--evara-wallpaper-overlay", String(appearance.imageOverlay));
+  root.classList.add("boot-pending");
 })();
