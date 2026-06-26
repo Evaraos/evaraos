@@ -27,7 +27,7 @@ jobs:
           node-version: 20
 
       - name: Apply safe appearance migration
-        run: node tools/migrate-inline-theme.js && node tools/migrate-customer-portal-style.js && node tools/repo-audit.js --fix || true
+        run: node tools/migrate-inline-theme.js && node tools/migrate-customer-portal-style.js && node tools/page-style-migration.js && node tools/repo-audit.js --fix || true
 
       - name: Remove generated audit reports from migration commit
         run: rm -rf tools/reports
