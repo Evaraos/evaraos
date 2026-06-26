@@ -11,7 +11,7 @@ const ITEMS = [
 export function mountEssentialNav() {
   const pill = document.getElementById("evaNavPill");
   const menuZone = document.getElementById("evaMenuZone");
-  if (!pill || !menuZone || pill.querySelector(".eva-essential-nav")) return;
+  if (!pill || !menuZone || pill.querySelector(".eva-essential-nav")) return false;
 
   const nav = document.createElement("nav");
   nav.className = "eva-essential-nav";
@@ -23,4 +23,17 @@ export function mountEssentialNav() {
   }).join("");
 
   pill.insertBefore(nav, menuZone);
+  return true;
 }
+
+function startMounting() {
+  if (mountEssentialNav()) return;
+  const observer = new MutationObserver(() => {
+    if (mountEssentialNav()) observer.disconnect();
+  });
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+  window.setTimeout(() => observer.disconnect(), 12000);
+}
+
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", startMounting, { once: true });
+else startMounting();
