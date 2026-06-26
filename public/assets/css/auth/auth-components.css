@@ -1,0 +1,146 @@
+/* EVARAOS AUTH COMPONENTS
+   Authentication surfaces consume the universal four-mode appearance tokens.
+*/
+
+.auth-panel,
+.login-panel,
+.signup-panel,
+.reset-panel {
+  color: var(--text-primary);
+  background:
+    radial-gradient(circle at 82% 18%, color-mix(in srgb, var(--accent-red) 12%, transparent), transparent 24%),
+    radial-gradient(circle at 12% 84%, color-mix(in srgb, var(--accent-blue) 12%, transparent), transparent 24%),
+    linear-gradient(145deg, var(--card-bg-top), var(--card-bg-bottom));
+  border: 1px solid var(--liquid-border);
+  box-shadow:
+    0 28px 70px var(--liquid-shadow),
+    inset 0 1px 0 var(--liquid-highlight),
+    inset 0 -1px 0 var(--liquid-hairline);
+  backdrop-filter: blur(var(--liquid-blur-deep, 42px)) saturate(185%);
+  -webkit-backdrop-filter: blur(var(--liquid-blur-deep, 42px)) saturate(185%);
+}
+
+.auth-badge,
+.login-badge {
+  filter:
+    drop-shadow(0 10px 18px color-mix(in srgb, var(--accent-red) 20%, transparent))
+    drop-shadow(0 2px 8px color-mix(in srgb, var(--liquid-highlight) 14%, transparent));
+}
+
+.login-title,
+.signup-title,
+.reset-title {
+  color: var(--text-primary);
+}
+
+.login-subtitle,
+.signup-subtitle,
+.reset-subtitle {
+  color: var(--text-secondary);
+}
+
+.field-label,
+.remember-check,
+.auth-footer-links span {
+  color: var(--text-primary);
+}
+
+.input-shell,
+.password-wrap,
+.remember-row {
+  color: var(--text-primary);
+  background: linear-gradient(180deg, var(--liquid-bg-top), var(--liquid-bg-bottom));
+  border: 1px solid var(--liquid-border);
+  box-shadow:
+    inset 0 1px 0 var(--liquid-highlight),
+    0 8px 20px var(--liquid-shadow);
+  backdrop-filter: blur(var(--liquid-blur-soft, 18px)) saturate(165%);
+  -webkit-backdrop-filter: blur(var(--liquid-blur-soft, 18px)) saturate(165%);
+  transition:
+    border-color var(--page-transition-ms, 180ms) ease,
+    box-shadow var(--page-transition-ms, 180ms) ease,
+    background var(--page-transition-ms, 180ms) ease;
+}
+
+.input-shell:focus-within,
+.password-wrap:focus-within,
+.remember-row:focus-within {
+  border-color: color-mix(in srgb, var(--accent-blue) 42%, var(--liquid-border));
+  box-shadow:
+    inset 0 1px 0 var(--liquid-highlight),
+    0 0 0 4px color-mix(in srgb, var(--accent-blue) 14%, transparent),
+    0 12px 28px var(--liquid-shadow);
+}
+
+.input-shell .input,
+.password-wrap .input {
+  color: var(--text-primary);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.input-shell .input::placeholder,
+.password-wrap .input::placeholder,
+textarea.input::placeholder {
+  color: var(--text-soft);
+  opacity: 1;
+}
+
+.password-toggle {
+  border: 1px solid var(--liquid-border);
+  outline: 0;
+  color: var(--text-primary);
+  background: linear-gradient(180deg, var(--liquid-bg-top), var(--liquid-bg-bottom));
+  box-shadow: inset 0 1px 0 var(--liquid-highlight);
+  cursor: pointer;
+}
+
+.password-toggle:hover {
+  border-color: color-mix(in srgb, var(--accent-blue) 36%, var(--liquid-border));
+}
+
+.remember-check input {
+  accent-color: var(--accent-red-2);
+}
+
+.login-actions-row .btn,
+.signup-actions-row .btn,
+.reset-actions-row .btn {
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.login-message,
+.signup-message,
+.reset-message {
+  color: var(--text-secondary);
+}
+
+.login-message[data-state="error"],
+.signup-message[data-state="error"],
+.reset-message[data-state="error"] {
+  color: #fb7185;
+}
+
+.login-message[data-state="success"],
+.signup-message[data-state="success"],
+.reset-message[data-state="success"] {
+  color: #34d399;
+}
+
+.auth-footer-links a {
+  color: var(--accent-blue);
+  text-decoration: none;
+  font-weight: 800;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .input-shell,
+  .password-wrap,
+  .remember-row {
+    transition: none;
+  }
+}
