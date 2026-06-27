@@ -1,5 +1,3 @@
-import './ios27-auto-glass.js?v=1';
-
 export const APPEARANCE_KEY = "evaraos-appearance";
 export const VALID_MODES = Object.freeze(["light", "dark", "system", "image"]);
 export const VALID_IMAGE_THEMES = Object.freeze(["light", "dark"]);
@@ -11,7 +9,7 @@ export const DEFAULT_APPEARANCE = Object.freeze({
   imageUrl: "",
   imagePosition: "center center",
   imageOverlay: 0.28,
-  glassTransparency: 0.68,
+  glassTransparency: 0.62,
   updatedAt: null
 });
 
@@ -21,7 +19,6 @@ export function normalizeImageTheme(theme) { return VALID_IMAGE_THEMES.includes(
 function normalizeImageUrl(value) {
   const source = String(value || "").trim();
   if (!source) return "";
-  if (/^data:image\/(?:avif|gif|jpeg|jpg|png|webp);base64,/i.test(source)) return source;
   try { const url = new URL(source, window.location.origin); return ["https:", "http:"].includes(url.protocol) ? url.href : ""; } catch { return ""; }
 }
 function normalizePosition(value) { return IMAGE_POSITIONS.includes(value) ? value : DEFAULT_APPEARANCE.imagePosition; }
@@ -34,7 +31,7 @@ export function normalizeAppearance(value = {}) {
     imageUrl: normalizeImageUrl(value.imageUrl),
     imagePosition: normalizePosition(value.imagePosition),
     imageOverlay: clamp(value.imageOverlay, 0.08, 0.72, DEFAULT_APPEARANCE.imageOverlay),
-    glassTransparency: clamp(value.glassTransparency, 0.34, 0.88, DEFAULT_APPEARANCE.glassTransparency),
+    glassTransparency: clamp(value.glassTransparency, 0.42, 0.78, DEFAULT_APPEARANCE.glassTransparency),
     updatedAt: value.updatedAt || null
   };
 }
@@ -57,7 +54,7 @@ function applyVisualVariables(appearance) {
   root.style.setProperty("--evara-wallpaper-position", appearance.imagePosition);
   root.style.setProperty("--evara-wallpaper-overlay", String(appearance.imageOverlay));
   root.style.setProperty("--evara-glass-strength", `${Math.round(appearance.glassTransparency * 100)}%`);
-  root.style.setProperty("--evara-glass-strength-soft", `${Math.round(Math.max(.24, appearance.glassTransparency * .66) * 100)}%`);
+  root.style.setProperty("--evara-glass-strength-soft", `${Math.round(Math.max(.30, appearance.glassTransparency * .72) * 100)}%`);
 }
 
 function applyWallpaper(appearance) {
@@ -101,7 +98,7 @@ export function applyAppearance(value = getAppearance()) {
   root.setAttribute("data-ios27", "active");
   root.style.colorScheme = theme;
   applyWallpaper(appearance);
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#090d0c" : "#edf1ef");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#000000" : "#f2f2f4");
   updateThemeControls();
   completeThemeHydration();
   window.dispatchEvent(new CustomEvent("evara:theme-applied", { detail: { theme, ...appearance } }));
