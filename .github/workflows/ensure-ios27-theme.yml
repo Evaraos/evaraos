@@ -1,0 +1,36 @@
+name: Ensure iOS 27 theme
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [evaraos]
+    paths:
+      - "tools/ensure-ios27-theme.js"
+      - "public/assets/css/theme.css"
+      - "public/assets/css/components/ios27-master.css"
+      - "public/assets/js/theme.js"
+      - "public/assets/js/ios27-auto-glass.js"
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: evaraos
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node tools/ensure-ios27-theme.js
+      - name: Commit migrated pages
+        run: |
+          if git diff --quiet -- public; then exit 0; fi
+          git config user.name "Evaraos Theme Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add public
+          git commit -m "Connect iOS 27 theme to every page"
+          git push origin HEAD:evaraos
