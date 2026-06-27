@@ -1,1 +1,1 @@
-.beam-target,.active-glow,.active-card-glow{position:relative;isolation:isolate}.beam-target::after,.active-glow::after,.active-card-glow::after{content:none}.active-card-glow,.active-glow{box-shadow:0 16px 38px var(--liquid-shadow),0 0 0 1px var(--liquid-border),inset 0 1px 0 var(--liquid-highlight)}.beam-target>*,.active-glow>*,.active-card-glow>*{position:relative;z-index:1}
+/* Intentionally empty. Liquid Glass is defined only in /assets/css/theme.css. */
