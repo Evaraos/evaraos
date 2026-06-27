@@ -100,6 +100,19 @@ service firebase.storage {
       allow delete: if isOwnerOrAdmin();
     }
 
+    match /messages/{conversationId}/{fileName} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && isSafeImage()
+        && request.resource.metadata.ownerUid == request.auth.uid;
+      allow update: if signedIn()
+        && isSafeImage()
+        && resource.metadata.ownerUid == request.auth.uid
+        && request.resource.metadata.ownerUid == request.auth.uid;
+      allow delete: if signedIn()
+        && (resource.metadata.ownerUid == request.auth.uid || isOwnerOrAdmin());
+    }
+
     match /staff_applications/{applicationId}/{fileName} {
       allow read: if signedIn() && (request.auth.uid == applicationId || isOperationsPlus());
       allow create, update: if signedIn() && request.auth.uid == applicationId && isSafeApplicationAttachment();
