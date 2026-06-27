@@ -1,132 +1,25 @@
-export const APPEARANCE_KEY = "evaraos-appearance";
-export const VALID_MODES = Object.freeze(["light", "dark", "system", "image"]);
-export const VALID_IMAGE_THEMES = Object.freeze(["light", "dark"]);
-export const IMAGE_POSITIONS = Object.freeze(["center center", "center top", "center bottom", "left center", "right center"]);
-
-export const DEFAULT_APPEARANCE = Object.freeze({
-  mode: "light",
-  imageTheme: "light",
-  imageUrl: "",
-  imagePosition: "center center",
-  imageOverlay: 0.28,
-  glassTransparency: 0.62,
-  updatedAt: null
-});
-
-export function systemTheme() { try { return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; } catch { return "light"; } }
-export function normalizeMode(mode) { return VALID_MODES.includes(mode) ? mode : "light"; }
-export function normalizeImageTheme(theme) { return VALID_IMAGE_THEMES.includes(theme) ? theme : "light"; }
-function normalizeImageUrl(value) {
-  const source = String(value || "").trim();
-  if (!source) return "";
-  try { const url = new URL(source, window.location.origin); return ["https:", "http:"].includes(url.protocol) ? url.href : ""; } catch { return ""; }
-}
-function normalizePosition(value) { return IMAGE_POSITIONS.includes(value) ? value : DEFAULT_APPEARANCE.imagePosition; }
-function clamp(value, min, max, fallback) { const number = Number(value); return Number.isFinite(number) ? Math.min(max, Math.max(min, number)) : fallback; }
-
-export function normalizeAppearance(value = {}) {
-  return {
-    mode: normalizeMode(value.mode),
-    imageTheme: normalizeImageTheme(value.imageTheme),
-    imageUrl: normalizeImageUrl(value.imageUrl),
-    imagePosition: normalizePosition(value.imagePosition),
-    imageOverlay: clamp(value.imageOverlay, 0.08, 0.72, DEFAULT_APPEARANCE.imageOverlay),
-    glassTransparency: clamp(value.glassTransparency, 0.42, 0.78, DEFAULT_APPEARANCE.glassTransparency),
-    updatedAt: value.updatedAt || null
-  };
-}
-
-export function resolvedTheme(mode, imageTheme = "light") {
-  const safeMode = normalizeMode(mode);
-  if (safeMode === "system") return systemTheme();
-  if (safeMode === "image") return normalizeImageTheme(imageTheme);
-  return safeMode;
-}
-
-export function getAppearance() { try { const raw = localStorage.getItem(APPEARANCE_KEY); return raw ? normalizeAppearance(JSON.parse(raw)) : { ...DEFAULT_APPEARANCE }; } catch { return { ...DEFAULT_APPEARANCE }; } }
-export function getThemeMode() { return getAppearance().mode; }
-export function getTheme() { const appearance = getAppearance(); return resolvedTheme(appearance.mode, appearance.imageTheme); }
-function cssUrl(value) { return value ? `url(${JSON.stringify(value)})` : "none"; }
-
-function applyVisualVariables(appearance) {
-  const root = document.documentElement;
-  root.style.setProperty("--evara-wallpaper-image", cssUrl(appearance.imageUrl));
-  root.style.setProperty("--evara-wallpaper-position", appearance.imagePosition);
-  root.style.setProperty("--evara-wallpaper-overlay", String(appearance.imageOverlay));
-  root.style.setProperty("--evara-glass-strength", `${Math.round(appearance.glassTransparency * 100)}%`);
-  root.style.setProperty("--evara-glass-strength-soft", `${Math.round(Math.max(.30, appearance.glassTransparency * .72) * 100)}%`);
-}
-
-function applyWallpaper(appearance) {
-  const root = document.documentElement;
-  const hasImage = appearance.mode === "image" && Boolean(appearance.imageUrl);
-  root.toggleAttribute("data-has-wallpaper", hasImage);
-  root.setAttribute("data-image-theme", appearance.imageTheme);
-  applyVisualVariables(appearance);
-}
-
-function controlLabel(mode) {
-  if (mode === "dark") return { label: "Dark mode", icon: "☾" };
-  if (mode === "system") return { label: "System mode", icon: "◐" };
-  if (mode === "image") return { label: "Image mode", icon: "▧" };
-  return { label: "Light mode", icon: "☀" };
-}
-
-export function updateThemeControls() {
-  const appearance = getAppearance();
-  const resolved = resolvedTheme(appearance.mode, appearance.imageTheme);
-  const { label, icon } = controlLabel(appearance.mode);
-  document.querySelectorAll("#evaThemeToggle, #evaThemePillToggle, [data-theme-toggle], [data-theme-label]").forEach((node) => {
-    node.setAttribute("data-theme-mode", appearance.mode);
-    node.setAttribute("data-theme-resolved", resolved);
-    const iconNode = node.querySelector(".eva-theme-nav-icon");
-    const textNode = node.querySelector("[data-theme-text]");
-    if (iconNode) iconNode.textContent = icon;
-    if (textNode) textNode.textContent = label;
-    node.setAttribute("aria-label", `Switch appearance. Current: ${label}`);
-    node.setAttribute("title", label);
-  });
-}
-
-function completeThemeHydration() { const root = document.documentElement; root.setAttribute("data-evara-theme-ready", "true"); root.classList.remove("boot-pending"); }
-export function applyAppearance(value = getAppearance()) {
-  const appearance = normalizeAppearance(value);
-  const theme = resolvedTheme(appearance.mode, appearance.imageTheme);
-  const root = document.documentElement;
-  root.setAttribute("data-theme", theme);
-  root.setAttribute("data-theme-mode", appearance.mode);
-  root.setAttribute("data-ios27", "active");
-  root.style.colorScheme = theme;
-  applyWallpaper(appearance);
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#000000" : "#f2f2f4");
-  updateThemeControls();
-  completeThemeHydration();
-  window.dispatchEvent(new CustomEvent("evara:theme-applied", { detail: { theme, ...appearance } }));
-  return appearance;
-}
-
-export function applyTheme(theme = getTheme()) {
-  const appearance = getAppearance();
-  const safeTheme = theme === "dark" ? "dark" : "light";
-  return applyAppearance({ ...appearance, imageTheme: appearance.mode === "image" ? safeTheme : appearance.imageTheme, mode: appearance.mode === "system" ? "system" : appearance.mode === "image" ? "image" : safeTheme });
-}
-export function saveAppearance(nextAppearance = {}) {
-  const appearance = normalizeAppearance({ ...getAppearance(), ...nextAppearance, updatedAt: new Date().toISOString() });
-  localStorage.setItem(APPEARANCE_KEY, JSON.stringify(appearance));
-  applyAppearance(appearance);
-  window.dispatchEvent(new CustomEvent("evara:appearance-updated", { detail: { theme: resolvedTheme(appearance.mode, appearance.imageTheme), ...appearance } }));
-  return appearance;
-}
-export function resetAppearance() { const appearance = { ...DEFAULT_APPEARANCE, updatedAt: new Date().toISOString() }; localStorage.setItem(APPEARANCE_KEY, JSON.stringify(appearance)); applyAppearance(appearance); window.dispatchEvent(new CustomEvent("evara:appearance-updated", { detail: { theme: "light", ...appearance } })); return appearance; }
-
-if (typeof window !== "undefined") {
-  const EvaraTheme = { APPEARANCE_KEY, VALID_MODES, VALID_IMAGE_THEMES, IMAGE_POSITIONS, DEFAULT_APPEARANCE, systemTheme, normalizeMode, normalizeImageTheme, normalizeAppearance, resolvedTheme, getAppearance, getThemeMode, getTheme, applyAppearance, applyTheme, saveAppearance, resetAppearance, updateThemeControls };
-  window.EvaraTheme = Object.assign(window.EvaraTheme || {}, EvaraTheme);
-  applyAppearance();
-  try {
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-    media.addEventListener('change', () => { if (getAppearance().mode === 'system') applyAppearance(); });
-    window.addEventListener('storage', (event) => { if (event.key === APPEARANCE_KEY) applyAppearance(); });
-    window.addEventListener('pageshow', () => applyAppearance());
-  } catch {}
-}
+export const APPEARANCE_KEY="evaraos-appearance";
+export const VALID_MODES=Object.freeze(["light","dark","system","image"]);
+export const VALID_IMAGE_THEMES=Object.freeze(["light","dark"]);
+export const IMAGE_POSITIONS=Object.freeze(["center center","center top","center bottom","left center","right center"]);
+export const DEFAULT_APPEARANCE=Object.freeze({mode:"light",imageTheme:"light",imageUrl:"",imagePosition:"center center",imageOverlay:.28,glassTransparency:.62,updatedAt:null});
+export function systemTheme(){try{return window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}catch{return"light"}}
+export function normalizeMode(v){return VALID_MODES.includes(v)?v:"light"}
+export function normalizeImageTheme(v){return VALID_IMAGE_THEMES.includes(v)?v:"light"}
+function clamp(v,min,max,fallback){const n=Number(v);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):fallback}
+function normalizeImageUrl(v){const s=String(v||"").trim();if(!s)return"";try{const u=new URL(s,location.origin);return["http:","https:"].includes(u.protocol)?u.href:""}catch{return""}}
+function normalizePosition(v){return IMAGE_POSITIONS.includes(v)?v:DEFAULT_APPEARANCE.imagePosition}
+export function normalizeAppearance(v={}){return{mode:normalizeMode(v.mode),imageTheme:normalizeImageTheme(v.imageTheme),imageUrl:normalizeImageUrl(v.imageUrl),imagePosition:normalizePosition(v.imagePosition),imageOverlay:clamp(v.imageOverlay,.08,.72,.28),glassTransparency:clamp(v.glassTransparency,.42,.78,.62),updatedAt:v.updatedAt||null}}
+export function resolvedTheme(mode,imageTheme="light"){const m=normalizeMode(mode);return m==="system"?systemTheme():m==="image"?normalizeImageTheme(imageTheme):m}
+export function getAppearance(){try{return normalizeAppearance(JSON.parse(localStorage.getItem(APPEARANCE_KEY)||"{}"))}catch{return{...DEFAULT_APPEARANCE}}}
+export function getThemeMode(){return getAppearance().mode}
+export function getTheme(){const a=getAppearance();return resolvedTheme(a.mode,a.imageTheme)}
+function ensureSingleThemeLink(){const links=[...document.querySelectorAll('link[rel="stylesheet"][href*="/assets/css/theme.css"]')];const active=links.pop();links.forEach(x=>x.remove());if(active&&active.parentNode===document.head&&active!==document.head.lastElementChild)document.head.appendChild(active)}
+function cssUrl(v){return v?`url(${JSON.stringify(v)})`:"none"}
+function applyVars(a){const r=document.documentElement;r.style.setProperty("--evara-wallpaper-image",cssUrl(a.imageUrl));r.style.setProperty("--evara-wallpaper-position",a.imagePosition);r.style.setProperty("--evara-wallpaper-overlay",String(a.imageOverlay));r.style.setProperty("--evara-glass-strength",`${Math.round(a.glassTransparency*100)}%`);r.style.setProperty("--evara-glass-strength-soft",`${Math.round(Math.max(.3,a.glassTransparency*.72)*100)}%`)}
+export function updateThemeControls(){const a=getAppearance(),t=resolvedTheme(a.mode,a.imageTheme);document.querySelectorAll("#evaThemeToggle,#evaThemePillToggle,[data-theme-toggle],[data-theme-label]").forEach(n=>{n.dataset.themeMode=a.mode;n.dataset.themeResolved=t;n.title=`${a.mode} mode`;n.setAttribute("aria-label",`Switch appearance. Current: ${a.mode} mode`)})}
+export function applyAppearance(v=getAppearance()){ensureSingleThemeLink();const a=normalizeAppearance(v),t=resolvedTheme(a.mode,a.imageTheme),r=document.documentElement;r.dataset.theme=t;r.dataset.themeMode=a.mode;r.dataset.imageTheme=a.imageTheme;r.toggleAttribute("data-has-wallpaper",a.mode==="image"&&Boolean(a.imageUrl));r.style.colorScheme=t;applyVars(a);document.querySelector('meta[name="theme-color"]')?.setAttribute("content",t==="dark"?"#000000":"#f2f2f4");r.dataset.evaraThemeReady="true";r.classList.remove("boot-pending");updateThemeControls();window.dispatchEvent(new CustomEvent("evara:theme-applied",{detail:{theme:t,...a}}));return a}
+export function applyTheme(theme=getTheme()){const a=getAppearance(),t=theme==="dark"?"dark":"light";return applyAppearance({...a,mode:a.mode==="system"?"system":a.mode==="image"?"image":t,imageTheme:a.mode==="image"?t:a.imageTheme})}
+export function saveAppearance(v={}){const a=normalizeAppearance({...getAppearance(),...v,updatedAt:new Date().toISOString()});localStorage.setItem(APPEARANCE_KEY,JSON.stringify(a));applyAppearance(a);return a}
+export function resetAppearance(){const a={...DEFAULT_APPEARANCE,updatedAt:new Date().toISOString()};localStorage.setItem(APPEARANCE_KEY,JSON.stringify(a));applyAppearance(a);return a}
+if(typeof window!=="undefined"){window.EvaraTheme={...(window.EvaraTheme||{}),APPEARANCE_KEY,VALID_MODES,VALID_IMAGE_THEMES,IMAGE_POSITIONS,DEFAULT_APPEARANCE,systemTheme,normalizeMode,normalizeImageTheme,normalizeAppearance,resolvedTheme,getAppearance,getThemeMode,getTheme,applyAppearance,applyTheme,saveAppearance,resetAppearance,updateThemeControls};const run=()=>applyAppearance();document.readyState==="loading"?document.addEventListener("DOMContentLoaded",run,{once:true}):run();try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(getAppearance().mode==="system")run()});addEventListener("storage",e=>{if(e.key===APPEARANCE_KEY)run()});addEventListener("pageshow",run)}catch{}}
