@@ -1,0 +1,33 @@
+name: Patch messaging Firestore rules
+
+on:
+  push:
+    branches: [evaraos]
+    paths:
+      - "tools/patch-messaging-firestore-rules.js"
+      - ".github/workflows/patch-messaging-firestore-rules.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: evaraos
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node tools/patch-messaging-firestore-rules.js
+      - name: Commit patched rules
+        run: |
+          if git diff --quiet -- firebase/firestore.rules; then exit 0; fi
+          git config user.name "Evaraos Rules Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add firebase/firestore.rules
+          git commit -m "Secure messaging Firestore rules"
+          git push origin HEAD:evaraos
