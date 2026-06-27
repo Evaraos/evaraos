@@ -1,3 +1,5 @@
+import './ios27-auto-glass.js?v=1';
+
 export const APPEARANCE_KEY = "evaraos-appearance";
 export const VALID_MODES = Object.freeze(["light", "dark", "system", "image"]);
 export const VALID_IMAGE_THEMES = Object.freeze(["light", "dark"]);
@@ -9,7 +11,7 @@ export const DEFAULT_APPEARANCE = Object.freeze({
   imageUrl: "",
   imagePosition: "center center",
   imageOverlay: 0.28,
-  glassTransparency: 0.72,
+  glassTransparency: 0.68,
   updatedAt: null
 });
 
@@ -32,7 +34,7 @@ export function normalizeAppearance(value = {}) {
     imageUrl: normalizeImageUrl(value.imageUrl),
     imagePosition: normalizePosition(value.imagePosition),
     imageOverlay: clamp(value.imageOverlay, 0.08, 0.72, DEFAULT_APPEARANCE.imageOverlay),
-    glassTransparency: clamp(value.glassTransparency, 0.28, 1, DEFAULT_APPEARANCE.glassTransparency),
+    glassTransparency: clamp(value.glassTransparency, 0.34, 0.88, DEFAULT_APPEARANCE.glassTransparency),
     updatedAt: value.updatedAt || null
   };
 }
@@ -55,7 +57,7 @@ function applyVisualVariables(appearance) {
   root.style.setProperty("--evara-wallpaper-position", appearance.imagePosition);
   root.style.setProperty("--evara-wallpaper-overlay", String(appearance.imageOverlay));
   root.style.setProperty("--evara-glass-strength", `${Math.round(appearance.glassTransparency * 100)}%`);
-  root.style.setProperty("--evara-glass-strength-soft", `${Math.round(Math.max(.18, appearance.glassTransparency * .72) * 100)}%`);
+  root.style.setProperty("--evara-glass-strength-soft", `${Math.round(Math.max(.24, appearance.glassTransparency * .66) * 100)}%`);
 }
 
 function applyWallpaper(appearance) {
@@ -96,9 +98,10 @@ export function applyAppearance(value = getAppearance()) {
   const root = document.documentElement;
   root.setAttribute("data-theme", theme);
   root.setAttribute("data-theme-mode", appearance.mode);
+  root.setAttribute("data-ios27", "active");
   root.style.colorScheme = theme;
   applyWallpaper(appearance);
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#080808" : "#f3f4f3");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#090d0c" : "#edf1ef");
   updateThemeControls();
   completeThemeHydration();
   window.dispatchEvent(new CustomEvent("evara:theme-applied", { detail: { theme, ...appearance } }));
@@ -123,4 +126,10 @@ if (typeof window !== "undefined") {
   const EvaraTheme = { APPEARANCE_KEY, VALID_MODES, VALID_IMAGE_THEMES, IMAGE_POSITIONS, DEFAULT_APPEARANCE, systemTheme, normalizeMode, normalizeImageTheme, normalizeAppearance, resolvedTheme, getAppearance, getThemeMode, getTheme, applyAppearance, applyTheme, saveAppearance, resetAppearance, updateThemeControls };
   window.EvaraTheme = Object.assign(window.EvaraTheme || {}, EvaraTheme);
   applyAppearance();
+  try {
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    media.addEventListener('change', () => { if (getAppearance().mode === 'system') applyAppearance(); });
+    window.addEventListener('storage', (event) => { if (event.key === APPEARANCE_KEY) applyAppearance(); });
+    window.addEventListener('pageshow', () => applyAppearance());
+  } catch {}
 }
