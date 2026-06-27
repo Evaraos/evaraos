@@ -20,7 +20,7 @@
   }
 
   function loadAppearance() {
-    var fallback = { mode: "light", imageTheme: "dark", imageUrl: "", imagePosition: "center center", imageOverlay: 0.36, glassTransparency: 0.72 };
+    var fallback = { mode: "light", imageTheme: "light", imageUrl: "", imagePosition: "center center", imageOverlay: 0.28, glassTransparency: 0.72 };
     try {
       var raw = localStorage.getItem("evaraos-appearance");
       if (!raw) return fallback;
@@ -29,10 +29,10 @@
       var transparency = Number(stored.glassTransparency);
       return {
         mode: VALID_MODES.indexOf(stored.mode) >= 0 ? stored.mode : "light",
-        imageTheme: VALID_IMAGE_THEMES.indexOf(stored.imageTheme) >= 0 ? stored.imageTheme : "dark",
+        imageTheme: VALID_IMAGE_THEMES.indexOf(stored.imageTheme) >= 0 ? stored.imageTheme : "light",
         imageUrl: validImageUrl(stored.imageUrl),
         imagePosition: VALID_POSITIONS.indexOf(stored.imagePosition) >= 0 ? stored.imagePosition : "center center",
-        imageOverlay: Number.isFinite(overlay) ? Math.min(0.72, Math.max(0.08, overlay)) : 0.36,
+        imageOverlay: Number.isFinite(overlay) ? Math.min(0.72, Math.max(0.08, overlay)) : 0.28,
         glassTransparency: Number.isFinite(transparency) ? Math.min(1, Math.max(0.28, transparency)) : 0.72
       };
     } catch { return fallback; }
