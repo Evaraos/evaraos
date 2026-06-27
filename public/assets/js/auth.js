@@ -49,6 +49,10 @@ function bindPasswordToggle(buttonId, inputId) {
 function authErrorMessage(error, fallback = "Something went wrong. Try again.") {
   const code = String(error?.code || "");
   const message = String(error?.message || "");
+  const normalized = `${code} ${message}`.toLowerCase();
+  if (normalized.includes("securetoken.googleapis.com") || normalized.includes("granttoken-are-blocked")) {
+    return "Authentication is temporarily blocked by the Google Cloud API-key restrictions. Enable the Secure Token API and Identity Toolkit API for the Evaraos web API key, then try again.";
+  }
   if (code.includes("invalid-credential") || code.includes("wrong-password") || code.includes("user-not-found")) return "Login failed. Check your email and password.";
   if (code.includes("too-many-requests")) return "Too many attempts. Wait a moment, then try again.";
   if (code.includes("email-already-in-use")) return "That email already has an account. Use login or reset password.";
