@@ -5,17 +5,17 @@ export const IMAGE_POSITIONS = Object.freeze(["center center", "center top", "ce
 
 export const DEFAULT_APPEARANCE = Object.freeze({
   mode: "light",
-  imageTheme: "dark",
+  imageTheme: "light",
   imageUrl: "",
   imagePosition: "center center",
-  imageOverlay: 0.36,
+  imageOverlay: 0.28,
   glassTransparency: 0.72,
   updatedAt: null
 });
 
 export function systemTheme() { try { return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; } catch { return "light"; } }
 export function normalizeMode(mode) { return VALID_MODES.includes(mode) ? mode : "light"; }
-export function normalizeImageTheme(theme) { return VALID_IMAGE_THEMES.includes(theme) ? theme : "dark"; }
+export function normalizeImageTheme(theme) { return VALID_IMAGE_THEMES.includes(theme) ? theme : "light"; }
 function normalizeImageUrl(value) {
   const source = String(value || "").trim();
   if (!source) return "";
@@ -37,7 +37,7 @@ export function normalizeAppearance(value = {}) {
   };
 }
 
-export function resolvedTheme(mode, imageTheme = "dark") {
+export function resolvedTheme(mode, imageTheme = "light") {
   const safeMode = normalizeMode(mode);
   if (safeMode === "system") return systemTheme();
   if (safeMode === "image") return normalizeImageTheme(imageTheme);
@@ -98,7 +98,7 @@ export function applyAppearance(value = getAppearance()) {
   root.setAttribute("data-theme-mode", appearance.mode);
   root.style.colorScheme = theme;
   applyWallpaper(appearance);
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#080808" : "#f4f7f6");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#080808" : "#f3f4f3");
   updateThemeControls();
   completeThemeHydration();
   window.dispatchEvent(new CustomEvent("evara:theme-applied", { detail: { theme, ...appearance } }));
@@ -118,24 +118,9 @@ export function saveAppearance(nextAppearance = {}) {
   return appearance;
 }
 export function resetAppearance() { const appearance = { ...DEFAULT_APPEARANCE, updatedAt: new Date().toISOString() }; localStorage.setItem(APPEARANCE_KEY, JSON.stringify(appearance)); applyAppearance(appearance); window.dispatchEvent(new CustomEvent("evara:appearance-updated", { detail: { theme: "light", ...appearance } })); return appearance; }
-export function setThemeMode(mode = "light") { return saveAppearance({ mode: normalizeMode(mode) }); }
-export function setThemeImage(imageUrl, options = {}) { return saveAppearance({ mode: "image", imageTheme: options.imageTheme, imageUrl, imagePosition: options.imagePosition, imageOverlay: options.imageOverlay }); }
-export function toggleTheme() { const currentIndex = VALID_MODES.indexOf(getThemeMode()); return setThemeMode(VALID_MODES[(currentIndex + 1) % VALID_MODES.length]); }
 
-function bindThemeControls() {
-  if (window.__EVARA_THEME_BOUND__) return;
-  window.__EVARA_THEME_BOUND__ = true;
-  document.addEventListener("click", (event) => {
-    const trigger = event.target.closest("#evaThemeToggle, #evaThemePillToggle, [data-theme-toggle]");
-    if (!trigger) return;
-    event.preventDefault();
-    event.stopPropagation();
-    toggleTheme();
-  }, true);
-  window.addEventListener("storage", (event) => { if (event.key === APPEARANCE_KEY) applyAppearance(); });
+if (typeof window !== "undefined") {
+  const EvaraTheme = { APPEARANCE_KEY, VALID_MODES, VALID_IMAGE_THEMES, IMAGE_POSITIONS, DEFAULT_APPEARANCE, systemTheme, normalizeMode, normalizeImageTheme, normalizeAppearance, resolvedTheme, getAppearance, getThemeMode, getTheme, applyAppearance, applyTheme, saveAppearance, resetAppearance, updateThemeControls };
+  window.EvaraTheme = Object.assign(window.EvaraTheme || {}, EvaraTheme);
+  applyAppearance();
 }
-try { window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (getThemeMode() === "system") applyAppearance(); }); } catch {}
-
-window.EvaraTheme = { APPEARANCE_KEY, VALID_MODES, VALID_IMAGE_THEMES, DEFAULT_APPEARANCE, getAppearance, getThemeMode, getTheme, normalizeAppearance, applyAppearance, applyTheme, saveAppearance, resetAppearance, setThemeMode, setThemeImage, toggleTheme, updateThemeControls };
-bindThemeControls();
-applyAppearance();
