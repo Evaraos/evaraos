@@ -667,8 +667,10 @@ service cloud.firestore {
       allow read: if signedIn();
       allow create: if signedIn()
         && request.resource.data.senderUid == request.auth.uid
-        && request.resource.data.text is string
-        && request.resource.data.text.size() <= 10000;
+        && (
+          (request.resource.data.text is string && request.resource.data.text.size() <= 10000)
+          || request.resource.data.imageUrl is string
+        );
       allow update: if isOwnerOrAdmin() || (
         signedIn()
         && resource.data.senderUid == request.auth.uid
@@ -677,6 +679,15 @@ service cloud.firestore {
       allow delete: if isOwnerOrAdmin() || (
         signedIn() && resource.data.senderUid == request.auth.uid
       );
+
+      match /reactions/{userId} {
+        allow read: if signedIn();
+        allow create, update: if signedIn()
+          && request.auth.uid == userId
+          && request.resource.data.userUid == request.auth.uid
+          && request.resource.data.emoji is string;
+        allow delete: if signedIn() && (request.auth.uid == userId || isOwnerOrAdmin());
+      }
     }
 
     match /channels/_group_registry/messages/{conversationId} {
