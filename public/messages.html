@@ -12,9 +12,9 @@
   <script src="/assets/js/theme-boot.js?v=53"></script>
   <style>html.boot-pending body{margin:0;overflow:hidden}html.auth-pending body,body.auth-pending{opacity:0;pointer-events:none}body.messages-page{margin:0;min-height:100vh;background:transparent}body.app-loading #appRoot{visibility:hidden}body.app-ready #appRoot{visibility:visible}</style>
   <link rel="stylesheet" href="/assets/css/base.css?v=53" />
-  <link rel="stylesheet" href="/assets/css/theme.css?v=54" />
+  <link rel="stylesheet" href="/assets/css/theme.css?v=55" />
   <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v16" />
-  <link rel="stylesheet" href="/assets/css/pages/messages-imessage.css?v=2" />
+  <link rel="stylesheet" href="/assets/css/pages/messages-imessage.css?v=3" />
 </head>
 <body class="messages-page auth-pending app-loading" data-route-guard="private">
   <div id="universalNavRoot"></div>
@@ -49,7 +49,7 @@
       <input id="groupImageValue" type="hidden" />
       <div class="group-image-editor">
         <div id="groupImagePreview" class="group-image-preview"><span>G</span></div>
-        <div class="group-image-copy"><strong>Group photo</strong><span>Choose from Photos, Camera, or Files.</span><div class="group-image-actions"><button id="openGroupImageSource" type="button" class="btn btn-theme-secondary">Change photo</button><button id="removeGroupImage" type="button" class="btn btn-theme-secondary">Remove</button></div></div>
+        <div class="group-image-copy"><strong>Group photo</strong><span>Choose from Photos, Camera, or Files. Existing groups save photo changes automatically.</span><div class="group-image-actions"><button id="openGroupImageSource" type="button" class="btn btn-theme-secondary">Change photo</button><button id="removeGroupImage" type="button" class="btn btn-theme-secondary">Remove</button></div></div>
       </div>
       <input id="groupPhotoInput" class="group-hidden-input" type="file" accept="image/*" />
       <input id="groupCameraInput" class="group-hidden-input" type="file" accept="image/*" capture="environment" />
@@ -71,11 +71,13 @@
     </div>
   </section>
 
+  <div id="messagesSaveToast" class="messages-save-toast" role="status" aria-live="polite">Saved</div>
+
   <script src="/assets/js/loader.js?v=38"></script>
   <script type="module" src="/assets/js/firebase.js?v=36"></script>
   <script type="module" src="/assets/js/theme.js?v=53"></script>
   <script type="module" src="/assets/js/route-guard.js?v=35"></script>
   <script type="module" src="/assets/js/nav.js?v=54"></script>
-  <script type="module" src="/assets/js/messages-v2.js?v=3"></script>
+  <script type="module" src="/assets/js/messages-v2.js?v=4"></script>
 </body>
 </html>
