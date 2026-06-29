@@ -1,5 +1,31 @@
-const MODES=new Set(["light","dark","system","image"]);
-function sync(){const current=window.EvaraTheme?.getAppearance?.()||{mode:"light"};document.querySelectorAll("[data-appearance-mode]").forEach(button=>{const active=button.dataset.appearanceMode===current.mode;button.classList.toggle("is-active",active);button.setAttribute("aria-pressed",String(active))});const label=document.getElementById("appearanceModeLabel");if(label)label.textContent=current.mode.charAt(0).toUpperCase()+current.mode.slice(1);const panel=document.getElementById("appearanceImagePanel");if(panel)panel.hidden=current.mode!=="image"}
-function activate(mode){if(!MODES.has(mode)||!window.EvaraTheme)return;window.EvaraTheme.setThemeMode(mode);sync();if(mode==="image"&&!window.EvaraTheme.getAppearance()?.imageUrl)document.getElementById("openAppearanceSourceBtn")?.click()}
-function init(){document.querySelectorAll(".settings-block").forEach(section=>{if(section.querySelector(".settings-preview"))section.remove()});document.addEventListener("click",event=>{const button=event.target.closest("[data-appearance-mode]");if(!button)return;event.preventDefault();event.stopImmediatePropagation();activate(button.dataset.appearanceMode)},true);window.addEventListener("evara:appearance-updated",sync);window.addEventListener("evara:theme-applied",sync);sync()}
-if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
+// Compatibility shim only. The appearance page is owned by settings-appearance-v2.js
+// and the universal API in theme.js. Do not intercept mode button clicks here.
+function syncAppearanceCompatibility() {
+  const appearance = window.EvaraTheme?.getAppearance?.() || { mode: "light" };
+  document.querySelectorAll("[data-appearance-mode]").forEach(button => {
+    const active = button.dataset.appearanceMode === appearance.mode;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+
+  const label = document.getElementById("appearanceModeLabel");
+  if (label) label.textContent = appearance.mode.charAt(0).toUpperCase() + appearance.mode.slice(1);
+
+  const panel = document.getElementById("appearanceImagePanel");
+  if (panel) panel.hidden = appearance.mode !== "image";
+}
+
+function initAppearanceCompatibility() {
+  document.querySelectorAll(".settings-block").forEach(section => {
+    if (section.querySelector(".settings-preview")) section.querySelector(".settings-preview")?.remove();
+  });
+  window.addEventListener("evara:appearance-updated", syncAppearanceCompatibility);
+  window.addEventListener("evara:theme-applied", syncAppearanceCompatibility);
+  syncAppearanceCompatibility();
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initAppearanceCompatibility, { once: true });
+} else {
+  initAppearanceCompatibility();
+}
