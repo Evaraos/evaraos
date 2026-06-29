@@ -211,6 +211,80 @@ function installOpticalResponse() {
   }, { passive: true });
 }
 
+function syncAppearancePageControls() {
+  if (!document.querySelector("[data-appearance-mode]")) return;
+  const appearance = getAppearance();
+  const modeLabel = appearance.mode.charAt(0).toUpperCase() + appearance.mode.slice(1);
+
+  document.querySelectorAll("[data-appearance-mode]").forEach(button => {
+    const active = button.dataset.appearanceMode === appearance.mode;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+  document.querySelectorAll("[data-image-theme]").forEach(button => {
+    const active = button.dataset.imageTheme === appearance.imageTheme;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+
+  const label = document.getElementById("appearanceModeLabel");
+  if (label) label.textContent = modeLabel;
+  const panel = document.getElementById("appearanceImagePanel");
+  if (panel) panel.hidden = appearance.mode !== "image";
+
+  const density = document.getElementById("appearanceGlassTransparency");
+  if (density) density.value = String(Math.round(appearance.glassTransparency * 100));
+  const densityValue = document.getElementById("appearanceGlassTransparencyValue");
+  if (densityValue) densityValue.textContent = `${Math.round(appearance.glassTransparency * 100)}%`;
+
+  const overlay = document.getElementById("appearanceImageOverlay");
+  if (overlay) overlay.value = String(Math.round(appearance.imageOverlay * 100));
+  const overlayValue = document.getElementById("appearanceImageOverlayValue");
+  if (overlayValue) overlayValue.textContent = `${Math.round(appearance.imageOverlay * 100)}%`;
+
+  const position = document.getElementById("appearanceImagePosition");
+  if (position) position.value = appearance.imagePosition;
+}
+
+function installAppearancePageAuthority() {
+  if (!document.querySelector("[data-appearance-mode]")) return;
+
+  document.addEventListener("input", event => {
+    const target = event.target;
+    if (target?.id === "appearanceGlassTransparency") {
+      event.stopImmediatePropagation();
+      saveAppearance({ glassTransparency: Number(target.value) / 100 });
+      syncAppearancePageControls();
+    }
+    if (target?.id === "appearanceImageOverlay") {
+      event.stopImmediatePropagation();
+      saveAppearance({ imageOverlay: Number(target.value) / 100 });
+      syncAppearancePageControls();
+    }
+  }, true);
+
+  document.addEventListener("change", event => {
+    const target = event.target;
+    if (target?.id !== "appearanceImagePosition") return;
+    event.stopImmediatePropagation();
+    saveAppearance({ imagePosition: target.value });
+    syncAppearancePageControls();
+  }, true);
+
+  document.addEventListener("click", event => {
+    const clear = event.target.closest?.("#clearAppearanceImageBtn");
+    if (!clear) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    saveAppearance({ imageUrl: "" });
+    syncAppearancePageControls();
+  }, true);
+
+  window.addEventListener("evara:theme-applied", syncAppearancePageControls);
+  window.addEventListener("evara:appearance-updated", syncAppearancePageControls);
+  syncAppearancePageControls();
+}
+
 if (typeof window !== "undefined") {
   window.EvaraTheme = {
     ...(window.EvaraTheme || {}),
@@ -236,7 +310,11 @@ if (typeof window !== "undefined") {
     updateThemeControls
   };
   const run = () => applyAppearance();
-  const init = () => { run(); installOpticalResponse(); };
+  const init = () => {
+    run();
+    installOpticalResponse();
+    installAppearancePageAuthority();
+  };
   document.readyState === "loading"
     ? document.addEventListener("DOMContentLoaded", init, { once: true })
     : init();
