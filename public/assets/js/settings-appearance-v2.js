@@ -1,21 +1,245 @@
-import { VALID_MODES, getAppearance, saveAppearance, resetAppearance, applyAppearance } from "./theme.js";
+import {
+  VALID_MODES,
+  DEFAULT_APPEARANCE,
+  normalizeAppearance,
+  getAppearance,
+  saveAppearance,
+  resetAppearance,
+  applyAppearance
+} from "./theme.js";
 import { setText, setMessage, markSettingsReady } from "./settings-shared.js";
 
-const MAX_SOURCE_BYTES=12*1024*1024,MAX_STORED_LENGTH=3600000;let draft=cleanDraft(getAppearance()),saveTimer=0,toastTimer=0;
-function cleanDraft(value={}){return{mode:VALID_MODES.includes(value.mode)?value.mode:"light",imageTheme:value.imageTheme==="light"?"light":"dark",imageUrl:String(value.imageUrl||""),imagePosition:value.imagePosition||"center center",imageOverlay:Number.isFinite(Number(value.imageOverlay))?Number(value.imageOverlay):.36,glassTransparency:Number.isFinite(Number(value.glassTransparency))?Math.min(1,Math.max(.28,Number(value.glassTransparency))):.72,updatedAt:value.updatedAt||null}}
-function label(mode){return mode==="dark"?"Dark":mode==="system"?"System":mode==="image"?"Image":"Light"}
-function sourceSheet(open){const sheet=document.getElementById("appearanceSourceSheet");if(!sheet)return;sheet.hidden=!open;sheet.setAttribute("aria-hidden",open?"false":"true");document.body.classList.toggle("appearance-source-open",open)}
-function toast(message){const panel=document.getElementById("appearanceSavePanel");if(!panel)return;panel.querySelector(".settings-footer-actions")?.setAttribute("hidden","");panel.hidden=false;setMessage("appearanceSaveMessage",message);clearTimeout(toastTimer);toastTimer=setTimeout(()=>panel.hidden=true,1100)}
-function ensureTransparencyControl(){if(document.getElementById("appearanceGlassTransparency"))return;const modeSection=document.querySelector(".appearance-choice-grid")?.closest(".settings-block");if(!modeSection)return;const control=document.createElement("div");control.className="settings-transparency-control";control.innerHTML='<div class="settings-range-head"><label for="appearanceGlassTransparency">Liquid Glass transparency</label><strong id="appearanceGlassTransparencyValue">72%</strong></div><input id="appearanceGlassTransparency" type="range" min="28" max="100" step="1" value="72"><p class="settings-help-text">Lower values are clearer. Higher values create a denser material.</p>';modeSection.appendChild(control)}
-function preview(){const node=document.getElementById("appearanceImagePreview");if(!node)return;node.style.backgroundImage=draft.imageUrl?`linear-gradient(rgba(0,0,0,.12),rgba(0,0,0,.12)),url(${JSON.stringify(draft.imageUrl)})`:"linear-gradient(145deg,#dbeafe,#111827)";node.style.backgroundPosition=draft.imagePosition}
-function sync(){draft=cleanDraft(draft);setText("appearanceModeLabel",label(draft.mode));document.querySelectorAll("[data-appearance-mode]").forEach(button=>{button.classList.toggle("is-active",button.dataset.appearanceMode===draft.mode);button.setAttribute("aria-pressed",String(button.dataset.appearanceMode===draft.mode))});document.querySelectorAll("[data-image-theme]").forEach(button=>button.classList.toggle("is-active",button.dataset.imageTheme===draft.imageTheme));const panel=document.getElementById("appearanceImagePanel");if(panel)panel.hidden=draft.mode!=="image";const position=document.getElementById("appearanceImagePosition");if(position)position.value=draft.imagePosition;const overlay=document.getElementById("appearanceImageOverlay");if(overlay)overlay.value=String(Math.round(draft.imageOverlay*100));setText("appearanceImageOverlayValue",`${Math.round(draft.imageOverlay*100)}%`);const transparency=document.getElementById("appearanceGlassTransparency");if(transparency)transparency.value=String(Math.round(draft.glassTransparency*100));setText("appearanceGlassTransparencyValue",`${Math.round(draft.glassTransparency*100)}%`);preview();applyAppearance(draft)}
-function persistSoon(message="Appearance saved automatically."){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{try{draft=saveAppearance(draft);sync();toast(message)}catch(error){toast(error?.name==="QuotaExceededError"?"Image is too large for browser storage.":"Appearance could not be saved.")}},120)}
-function change(patch,message){draft=cleanDraft({...draft,...patch,updatedAt:new Date().toISOString()});sync();persistSoon(message)}
-function readFile(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||""));reader.onerror=()=>reject(new Error("The image could not be read."));reader.readAsDataURL(file)})}
-function loadImage(source){return new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error("Choose a readable image."));image.src=source})}
-function compress(image,max,quality){const ratio=Math.min(1,max/Math.max(image.naturalWidth,image.naturalHeight)),canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(image.naturalWidth*ratio));canvas.height=Math.max(1,Math.round(image.naturalHeight*ratio));const context=canvas.getContext("2d",{alpha:false});if(!context)throw new Error("Image processing is unavailable.");context.drawImage(image,0,0,canvas.width,canvas.height);return canvas.toDataURL("image/webp",quality)}
-async function prepare(file){if(!file?.type?.startsWith("image/"))throw new Error("Choose an image file.");if(file.size>MAX_SOURCE_BYTES)throw new Error("Choose an image smaller than 12 MB.");const image=await loadImage(await readFile(file));let output=compress(image,1920,.84);if(output.length>MAX_STORED_LENGTH)output=compress(image,1440,.74);if(output.length>MAX_STORED_LENGTH)output=compress(image,1080,.66);if(output.length>MAX_STORED_LENGTH)throw new Error("Choose a smaller image.");return output}
-async function consume(input){const file=input?.files?.[0];if(!file)return;try{sourceSheet(false);toast("Preparing image…");change({mode:"image",imageUrl:await prepare(file)},"Image background saved.")}catch(error){toast(error.message||"Unable to use this image.")}finally{input.value=""}}
-function bind(){ensureTransparencyControl();document.querySelectorAll("[data-appearance-mode]").forEach(button=>button.addEventListener("click",event=>{event.preventDefault();event.stopPropagation();const mode=button.dataset.appearanceMode;change({mode},`${label(mode)} mode saved.`);if(mode==="image"&&!draft.imageUrl)sourceSheet(true)}));document.querySelectorAll("[data-image-theme]").forEach(button=>button.addEventListener("click",()=>change({mode:"image",imageTheme:button.dataset.imageTheme},`${label(button.dataset.imageTheme)} glass saved.`)));const photo=document.getElementById("appearancePhotoInput"),camera=document.getElementById("appearanceCameraInput"),files=document.getElementById("appearanceFileInput");[photo,camera,files].forEach(input=>input?.addEventListener("change",()=>consume(input)));document.getElementById("openAppearanceSourceBtn")?.addEventListener("click",()=>sourceSheet(true));document.getElementById("appearanceSourceClose")?.addEventListener("click",()=>sourceSheet(false));document.getElementById("appearanceSourceBackdrop")?.addEventListener("click",()=>sourceSheet(false));document.querySelector("[data-source-action='photos']")?.addEventListener("click",()=>photo?.click());document.querySelector("[data-source-action='camera']")?.addEventListener("click",()=>camera?.click());document.querySelector("[data-source-action='files']")?.addEventListener("click",()=>files?.click());document.getElementById("appearanceImagePosition")?.addEventListener("change",event=>change({imagePosition:event.target.value},"Image position saved."));document.getElementById("appearanceImageOverlay")?.addEventListener("input",event=>change({imageOverlay:Number(event.target.value)/100},"Image overlay saved."));document.getElementById("appearanceGlassTransparency")?.addEventListener("input",event=>change({glassTransparency:Number(event.target.value)/100},"Liquid Glass transparency saved."));document.getElementById("clearAppearanceImageBtn")?.addEventListener("click",()=>{change({imageUrl:""},"Image removed.");sourceSheet(true)});document.getElementById("saveAppearanceBtn")?.addEventListener("click",()=>persistSoon("Appearance saved."));document.getElementById("resetAppearanceBtn")?.addEventListener("click",()=>{draft=resetAppearance();sync();sourceSheet(false);toast("Appearance reset.")});document.addEventListener("keydown",event=>{if(event.key==="Escape")sourceSheet(false)})}
-function init(){bind();draft=cleanDraft(getAppearance());sync();document.getElementById("appearanceSavePanel")?.setAttribute("hidden","");markSettingsReady()}
-if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
+const MAX_SOURCE_BYTES = 12 * 1024 * 1024;
+const MAX_STORED_LENGTH = 3600000;
+let draft = cleanDraft(getAppearance());
+let saveTimer = 0;
+let toastTimer = 0;
+
+function cleanDraft(value = {}) {
+  const normalized = normalizeAppearance({ ...DEFAULT_APPEARANCE, ...value });
+  return {
+    ...normalized,
+    mode: VALID_MODES.includes(normalized.mode) ? normalized.mode : DEFAULT_APPEARANCE.mode
+  };
+}
+
+function label(mode) {
+  return mode === "dark" ? "Dark" : mode === "system" ? "System" : mode === "image" ? "Image" : "Light";
+}
+
+function sourceSheet(open) {
+  const sheet = document.getElementById("appearanceSourceSheet");
+  if (!sheet) return;
+  sheet.hidden = !open;
+  sheet.setAttribute("aria-hidden", open ? "false" : "true");
+  document.body.classList.toggle("appearance-source-open", open);
+}
+
+function toast(message) {
+  const panel = document.getElementById("appearanceSavePanel");
+  if (!panel) return;
+  panel.querySelector(".settings-footer-actions")?.setAttribute("hidden", "");
+  panel.hidden = false;
+  setMessage("appearanceSaveMessage", message);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { panel.hidden = true; }, 1100);
+}
+
+function ensureTransparencyControl() {
+  if (document.getElementById("appearanceGlassTransparency")) return;
+  const modeSection = document.querySelector(".appearance-choice-grid")?.closest(".settings-block");
+  if (!modeSection) return;
+
+  const control = document.createElement("div");
+  control.className = "settings-transparency-control";
+  control.innerHTML = `
+    <div class="settings-range-head">
+      <label for="appearanceGlassTransparency">Liquid Glass density</label>
+      <strong id="appearanceGlassTransparencyValue">62%</strong>
+    </div>
+    <input id="appearanceGlassTransparency" type="range" min="42" max="82" step="1" value="62">
+    <p class="settings-help-text">Lower is clearer. Higher is more tinted. The same material density applies across Light, Dark, System, and Image.</p>`;
+  modeSection.appendChild(control);
+}
+
+function preview() {
+  const node = document.getElementById("appearanceImagePreview");
+  if (!node) return;
+  node.style.backgroundImage = draft.imageUrl
+    ? `linear-gradient(rgba(0,0,0,.12),rgba(0,0,0,.12)),url(${JSON.stringify(draft.imageUrl)})`
+    : "linear-gradient(145deg,#dbeafe,#111827)";
+  node.style.backgroundPosition = draft.imagePosition;
+}
+
+function sync() {
+  draft = cleanDraft(draft);
+  setText("appearanceModeLabel", label(draft.mode));
+
+  document.querySelectorAll("[data-appearance-mode]").forEach(button => {
+    const active = button.dataset.appearanceMode === draft.mode;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+
+  document.querySelectorAll("[data-image-theme]").forEach(button => {
+    const active = button.dataset.imageTheme === draft.imageTheme;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+
+  const panel = document.getElementById("appearanceImagePanel");
+  if (panel) panel.hidden = draft.mode !== "image";
+
+  const position = document.getElementById("appearanceImagePosition");
+  if (position) position.value = draft.imagePosition;
+
+  const overlay = document.getElementById("appearanceImageOverlay");
+  if (overlay) overlay.value = String(Math.round(draft.imageOverlay * 100));
+  setText("appearanceImageOverlayValue", `${Math.round(draft.imageOverlay * 100)}%`);
+
+  const transparency = document.getElementById("appearanceGlassTransparency");
+  if (transparency) transparency.value = String(Math.round(draft.glassTransparency * 100));
+  setText("appearanceGlassTransparencyValue", `${Math.round(draft.glassTransparency * 100)}%`);
+
+  preview();
+  applyAppearance(draft);
+}
+
+function persistSoon(message = "Appearance saved automatically.") {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try {
+      draft = saveAppearance(draft);
+      sync();
+      toast(message);
+    } catch (error) {
+      toast(error?.name === "QuotaExceededError" ? "Image is too large for browser storage." : "Appearance could not be saved.");
+    }
+  }, 120);
+}
+
+function change(patch, message) {
+  draft = cleanDraft({ ...draft, ...patch, updatedAt: new Date().toISOString() });
+  sync();
+  persistSoon(message);
+}
+
+function readFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("The image could not be read."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadImage(source) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Choose a readable image."));
+    image.src = source;
+  });
+}
+
+function compress(image, max, quality) {
+  const ratio = Math.min(1, max / Math.max(image.naturalWidth, image.naturalHeight));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(image.naturalWidth * ratio));
+  canvas.height = Math.max(1, Math.round(image.naturalHeight * ratio));
+  const context = canvas.getContext("2d", { alpha: false });
+  if (!context) throw new Error("Image processing is unavailable.");
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL("image/webp", quality);
+}
+
+async function prepare(file) {
+  if (!file?.type?.startsWith("image/")) throw new Error("Choose an image file.");
+  if (file.size > MAX_SOURCE_BYTES) throw new Error("Choose an image smaller than 12 MB.");
+  const image = await loadImage(await readFile(file));
+  let output = compress(image, 1920, .84);
+  if (output.length > MAX_STORED_LENGTH) output = compress(image, 1440, .74);
+  if (output.length > MAX_STORED_LENGTH) output = compress(image, 1080, .66);
+  if (output.length > MAX_STORED_LENGTH) throw new Error("Choose a smaller image.");
+  return output;
+}
+
+async function consume(input) {
+  const file = input?.files?.[0];
+  if (!file) return;
+  try {
+    sourceSheet(false);
+    toast("Preparing image…");
+    change({ mode: "image", imageUrl: await prepare(file) }, "Image background saved.");
+  } catch (error) {
+    toast(error.message || "Unable to use this image.");
+  } finally {
+    input.value = "";
+  }
+}
+
+function bind() {
+  ensureTransparencyControl();
+
+  document.querySelectorAll("[data-appearance-mode]").forEach(button => {
+    button.addEventListener("click", event => {
+      event.preventDefault();
+      const mode = button.dataset.appearanceMode;
+      change({ mode }, `${label(mode)} mode saved.`);
+      if (mode === "image" && !draft.imageUrl) sourceSheet(true);
+    });
+  });
+
+  document.querySelectorAll("[data-image-theme]").forEach(button => {
+    button.addEventListener("click", () => change(
+      { mode: "image", imageTheme: button.dataset.imageTheme },
+      `${label(button.dataset.imageTheme)} glass saved.`
+    ));
+  });
+
+  const photo = document.getElementById("appearancePhotoInput");
+  const camera = document.getElementById("appearanceCameraInput");
+  const files = document.getElementById("appearanceFileInput");
+  [photo, camera, files].forEach(input => input?.addEventListener("change", () => consume(input)));
+
+  document.getElementById("openAppearanceSourceBtn")?.addEventListener("click", () => sourceSheet(true));
+  document.getElementById("appearanceSourceClose")?.addEventListener("click", () => sourceSheet(false));
+  document.getElementById("appearanceSourceBackdrop")?.addEventListener("click", () => sourceSheet(false));
+  document.querySelector("[data-source-action='photos']")?.addEventListener("click", () => photo?.click());
+  document.querySelector("[data-source-action='camera']")?.addEventListener("click", () => camera?.click());
+  document.querySelector("[data-source-action='files']")?.addEventListener("click", () => files?.click());
+
+  document.getElementById("appearanceImagePosition")?.addEventListener("change", event => {
+    change({ imagePosition: event.target.value }, "Image position saved.");
+  });
+  document.getElementById("appearanceImageOverlay")?.addEventListener("input", event => {
+    change({ imageOverlay: Number(event.target.value) / 100 }, "Image overlay saved.");
+  });
+  document.getElementById("appearanceGlassTransparency")?.addEventListener("input", event => {
+    change({ glassTransparency: Number(event.target.value) / 100 }, "Liquid Glass density saved.");
+  });
+
+  document.getElementById("clearAppearanceImageBtn")?.addEventListener("click", () => {
+    change({ imageUrl: "" }, "Image removed.");
+    sourceSheet(true);
+  });
+  document.getElementById("saveAppearanceBtn")?.addEventListener("click", () => persistSoon("Appearance saved."));
+  document.getElementById("resetAppearanceBtn")?.addEventListener("click", () => {
+    draft = resetAppearance();
+    sync();
+    sourceSheet(false);
+    toast("Appearance reset.");
+  });
+  document.addEventListener("keydown", event => { if (event.key === "Escape") sourceSheet(false); });
+}
+
+function init() {
+  bind();
+  draft = cleanDraft(getAppearance());
+  sync();
+  document.getElementById("appearanceSavePanel")?.setAttribute("hidden", "");
+  markSettingsReady();
+}
+
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });
+else init();
