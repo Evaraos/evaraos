@@ -6,10 +6,10 @@ on:
     branches:
       - evaraos
     paths:
-      - "**/*.html"
-      - "assets/**"
-      - "manifest.json"
-      - "sw.js"
+      - "public/**/*.html"
+      - "public/assets/**"
+      - "public/manifest.json"
+      - "public/sw.js"
       - "firebase.json"
       - ".firebaserc"
       - ".github/workflows/firebase-hosting-production.yml"
