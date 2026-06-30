@@ -1,1 +1,2 @@
-export * from "./theme-core-adaptive.js?v=adaptive-liquid-v3";
+// Stable adaptive image theme entry.
+export * from "./theme-core-adaptive.js?v=adaptive-liquid-v4";
