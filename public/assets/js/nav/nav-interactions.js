@@ -1,7 +1,8 @@
 const ROW_SELECTOR = [
-  ".eva-menu-folder-shell",
+  ".eva-menu-control",
+  ".eva-app-link",
   ".eva-menu-top-block",
-  ".eva-menu-app-launcher",
+  ".eva-menu-search-bottom",
   ".eva-quick-strip a",
   ".eva-account-strip a"
 ].join(",");
@@ -23,34 +24,30 @@ export function bindNavInteractions() {
 
   panel.dataset.interactionsBound = "true";
 
-  panel.addEventListener("pointerover", (event) => {
+  panel.addEventListener("pointerover", event => {
     const target = event.target.closest(ROW_SELECTOR);
     if (!target || !panel.contains(target)) return;
     activate(target);
   }, { passive: true });
 
-  panel.addEventListener("pointerout", (event) => {
+  panel.addEventListener("pointerout", event => {
     const target = event.target.closest(ROW_SELECTOR);
     deactivate(target);
   }, { passive: true });
 
-  panel.addEventListener("pointerdown", (event) => {
+  panel.addEventListener("pointerdown", event => {
     const target = event.target.closest(ROW_SELECTOR);
-    if (!target) return;
+    if (!target || !panel.contains(target)) return;
     target.classList.add("is-pressed");
   }, { passive: true });
 
-  panel.addEventListener("pointerup", (event) => {
+  panel.addEventListener("pointerup", event => {
     const target = event.target.closest(ROW_SELECTOR);
     if (!target) return;
-
-    window.setTimeout(() => {
-      target.classList.remove("is-pressed");
-    }, 120);
+    window.setTimeout(() => target.classList.remove("is-pressed"), 140);
   }, { passive: true });
 
-  panel.addEventListener("pointercancel", (event) => {
-    const target = event.target.closest(ROW_SELECTOR);
-    deactivate(target);
+  panel.addEventListener("pointercancel", event => {
+    deactivate(event.target.closest(ROW_SELECTOR));
   }, { passive: true });
 }
