@@ -2,7 +2,7 @@ import { getMount, buildHref, getVisibleLinks, isCurrentPage } from "./nav-utils
 import { APP_CATEGORIES, appsByCategory } from "../navigation/app-registry.js";
 import { iconSvg, iconNameForApp, iconNameForCategory } from "../ui/icons.js";
 
-const NAV_RENDER_BUILD = "nav-v21-adaptive-glass-menu";
+const NAV_RENDER_BUILD = "nav-v22-clean-adaptive-menu";
 const CATEGORY_ORDER = [APP_CATEGORIES.operations, APP_CATEGORIES.organizations, APP_CATEGORIES.finance, APP_CATEGORIES.customer, APP_CATEGORIES.intelligence, APP_CATEGORIES.system];
 const CATEGORY_TITLES = { operations: "Operations", organizations: "Organizations", finance: "Finance", customer: "Customer", intelligence: "Executive", system: "System" };
 
@@ -55,13 +55,13 @@ function accountLinks(authed) {
     return `<section class="eva-menu-top-block" data-glass="card"><div class="eva-top-block-head"><span class="eva-top-block-icon">${iconSvg("account")}</span><div><p>ACCESS</p><h3>Enter Evaraos</h3></div></div><div class="eva-account-strip eva-access-strip">${[["Login", "login.html", "login"], ["Signup", "signup.html", "signup"], ["Apply", "staff_application.html", "applications"]].map(item => linkTile(...item, false)).join("")}</div></section>`;
   }
 
-  return `<section class="eva-menu-top-block" data-glass="card"><div class="eva-top-block-head"><span class="eva-top-block-icon">${iconSvg("account")}</span><div><p>ACCOUNT</p><h3>Your Evaraos controls</h3></div></div><div class="eva-account-strip">${[["Account", "settings/account.html", "account"], ["Appearance", "settings/appearance.html", "appearance"], ["Alerts", "notifications_center.html", "bell"], ["Workspace", "settings/workspace.html", "workspace"]].map(item => linkTile(...item)).join("")}<a class="eva-menu-control eva-logout-control" data-glass="control" href="#logout" id="evaLogoutBtn" data-action="logout"><span class="eva-menu-icon">${iconSvg("logout")}</span><strong>Logout</strong></a></div></section>`;
+  return `<section class="eva-menu-top-block" data-glass="card"><div class="eva-top-block-head"><span class="eva-top-block-icon">${iconSvg("account")}</span><div><p>ACCOUNT</p><h3>Your Evaraos controls</h3></div></div><div class="eva-account-strip">${[["Account", "settings/account.html", "account"], ["Settings", "settings.html", "settings"], ["Alerts", "notifications_center.html", "bell"], ["Workspace", "settings/workspace.html", "workspace"]].map(item => linkTile(...item)).join("")}<a class="eva-menu-control eva-logout-control" data-glass="control" href="#logout" id="evaLogoutBtn" data-action="logout"><span class="eva-menu-icon">${iconSvg("logout")}</span><strong>Logout</strong></a></div></section>`;
 }
 
 function appSections(role) {
   const groups = appsByCategory(normalizeRole(role));
   return CATEGORY_ORDER.map(category => {
-    const apps = groups[category] || [];
+    const apps = (groups[category] || []).filter(app => app.id !== "settings");
     if (!apps.length) return "";
     return `<section class="eva-app-section" data-glass="card"><div class="eva-app-section-head"><span>${iconSvg(iconNameForCategory(category))}</span><strong>${clean(CATEGORY_TITLES[category] || category)}</strong><small>${apps.length}</small></div><div class="eva-app-list">${apps.map(app => {
       const href = buildHref(app.route);
