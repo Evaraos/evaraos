@@ -113,11 +113,11 @@ function textStopColor(wrapper,xFactor,surface,prior){
 function applyTextGradient(wrapper){
   if(!(wrapper instanceof HTMLElement)||wrapper.hidden)return;
   const rect=wrapper.getBoundingClientRect();if(!rect.width||!rect.height||rect.bottom<-100||rect.top>innerHeight+100)return;
-  const surface=wrapper.closest(ADAPTIVE_SELECTOR),prior=(wrapper.dataset.evaraTextTones||"").padEnd(TEXT_X.length,"-").slice(0,TEXT_X.length),stops=[],tones=[];
-  TEXT_X.forEach((x,index)=>{const ink=textStopColor(wrapper,x,surface,prior[index]);tones.push(ink.tone);stops.push(`${ink.color} ${Math.round(x*100)}%`)});
+  const surface=wrapper.closest(ADAPTIVE_SELECTOR),prior=(wrapper.dataset.evaraTextTones||"").padEnd(TEXT_X.length,"-").slice(0,TEXT_X.length),colors=[],tones=[];
+  TEXT_X.forEach((x,index)=>{const ink=textStopColor(wrapper,x,surface,prior[index]);tones.push(ink.tone);colors.push(ink.color)});
   const toneKey=tones.join("");if(wrapper.dataset.evaraTextTones===toneKey)return;
   wrapper.dataset.evaraTextTones=toneKey;
-  wrapper.style.setProperty("--adaptive-text-gradient",`linear-gradient(90deg,${stops.join(",")})`)
+  colors.forEach((color,index)=>wrapper.style.setProperty(`--adaptive-text-c${index}`,color))
 }
 function adapt(){
   frame=0;
@@ -132,7 +132,7 @@ function adapt(){
 export function refreshAdaptiveGlass(){if(!frame)frame=requestAnimationFrame(adapt)}
 function install(){
   if(installed)return;installed=true;
-  new MutationObserver(refreshAdaptiveGlass).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:["class","hidden","aria-current","aria-expanded","data-active"]});
+  new MutationObserver(refreshAdaptiveGlass).observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:["class","hidden","aria-current","aria-expanded","data-active"]});
   addEventListener("scroll",refreshAdaptiveGlass,{passive:true});addEventListener("resize",refreshAdaptiveGlass,{passive:true});addEventListener("orientationchange",refreshAdaptiveGlass,{passive:true});
   if("PointerEvent"in window&&!matchMedia("(prefers-reduced-motion: reduce)").matches){
     let pointerFrame=0,pending=null;
