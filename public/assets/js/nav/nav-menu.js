@@ -4,18 +4,15 @@ import {
   getMenuBtn,
   getMenuPanel
 } from "./nav-utils.js";
-
 import { expandNav } from "./nav-scroll.js";
 
 export function updateMenuViewportFit() {
   const panel = getMenuPanel();
   if (!panel) return;
-
   const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
   const bottomInset = 14;
   const menuBottom = Math.max(88, 76 + (window.visualViewport ? window.visualViewport.offsetTop : 0));
   const maxHeight = Math.max(260, viewportHeight - menuBottom - bottomInset);
-
   panel.style.setProperty("--eva-menu-max-height", `${maxHeight}px`);
 }
 
@@ -41,11 +38,15 @@ export function openMenu() {
 
   updateMenuViewportFit();
   lockBodyScroll();
-
   document.body.classList.add("nav-menu-open");
   zone.classList.add("open");
   btn.setAttribute("aria-expanded", "true");
   expandNav(true, "tap");
+
+  requestAnimationFrame(() => {
+    window.EvaraTheme?.refreshAdaptiveGlass?.();
+    requestAnimationFrame(() => window.EvaraTheme?.refreshAdaptiveGlass?.());
+  });
 }
 
 export function closeMenu(keepExpanded = true) {
@@ -56,7 +57,6 @@ export function closeMenu(keepExpanded = true) {
   document.body.classList.remove("nav-menu-open");
   zone.classList.remove("open");
   btn.setAttribute("aria-expanded", "false");
-
   unlockBodyScroll();
 
   if (keepExpanded) {
@@ -74,35 +74,37 @@ export function bindMenu() {
   if (!zone || !btn || !panel || !backdrop || btn.dataset.menuBound === "true") return;
   btn.dataset.menuBound = "true";
 
-  btn.addEventListener("click", (event) => {
+  btn.addEventListener("click", event => {
     event.preventDefault();
     event.stopPropagation();
     if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
-
     if (document.body.classList.contains("nav-menu-open")) closeMenu(true);
     else openMenu();
   }, true);
 
-  panel.addEventListener("click", (event) => event.stopPropagation());
+  panel.addEventListener("click", event => event.stopPropagation());
   backdrop.addEventListener("click", () => closeMenu(true));
 
-  document.addEventListener("click", (event) => {
+  document.addEventListener("click", event => {
     const target = event.target;
     const clickedMenuButton = btn.contains(target);
     const clickedMenuPanel = panel.contains(target);
-
-    if (!clickedMenuButton && !clickedMenuPanel && document.body.classList.contains("nav-menu-open")) {
-      closeMenu(true);
-    }
+    if (!clickedMenuButton && !clickedMenuPanel && document.body.classList.contains("nav-menu-open")) closeMenu(true);
   });
 
   window.addEventListener("resize", () => {
-    if (document.body.classList.contains("nav-menu-open")) updateMenuViewportFit();
+    if (document.body.classList.contains("nav-menu-open")) {
+      updateMenuViewportFit();
+      window.EvaraTheme?.refreshAdaptiveGlass?.();
+    }
   });
 
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", () => {
-      if (document.body.classList.contains("nav-menu-open")) updateMenuViewportFit();
+      if (document.body.classList.contains("nav-menu-open")) {
+        updateMenuViewportFit();
+        window.EvaraTheme?.refreshAdaptiveGlass?.();
+      }
     });
   }
 }
