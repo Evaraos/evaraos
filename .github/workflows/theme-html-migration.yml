@@ -1,27 +1,40 @@
-name: Consolidate repository history
+name: Evaraos interface audit
 
 on:
+  workflow_dispatch:
   push:
     branches: [evaraos]
-    paths: [.github/workflows/theme-html-migration.yml]
+    paths:
+      - "public/assets/css/theme/**"
+      - "public/assets/css/theme.css"
+      - "public/assets/css/nav/**"
+      - "public/assets/css/nav.css"
+      - "public/assets/js/theme*.js"
+      - "public/assets/js/nav.js"
+      - "public/assets/js/nav/**"
+      - "tools/interface-audit.js"
+      - ".github/workflows/theme-html-migration.yml"
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: evaraos-interface-audit
+  cancel-in-progress: true
 
 jobs:
-  consolidate:
+  audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out evaraos
+        uses: actions/checkout@v4
         with:
           ref: evaraos
-          fetch-depth: 0
-      - name: Preserve temporary history in evaraos
-        run: |
-          git config user.name "Evaraos Repository"
-          git config user.email "actions@users.noreply.github.com"
-          git fetch origin codex/ios27-liquid-glass-unified
-          git merge --strategy=ours --no-ff origin/codex/ios27-liquid-glass-unified -m "Preserve Liquid Glass development history"
-          git push origin HEAD:evaraos
-      - name: Remove temporary branch
-        run: git push origin --delete codex/ios27-liquid-glass-unified
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Audit navigation and adaptive appearance
+        run: node tools/interface-audit.js
