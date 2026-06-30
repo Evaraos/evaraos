@@ -1,1 +1,8 @@
-/* final nav stability layer */
+/* Final navigation authority: X-style transform-only drawer and selected-only bubbles. */
+.eva-menu-panel{opacity:1!important;visibility:visible!important;pointer-events:none!important;transform:translate3d(-101%,0,0)!important;transition:transform .32s cubic-bezier(.16,1,.3,1)!important;will-change:transform;contain:layout paint;overscroll-behavior:contain;height:100dvh!important;min-height:100vh}
+body.nav-menu-open .eva-menu-panel{pointer-events:auto!important;transform:translate3d(0,0,0)!important}
+.eva-backdrop{visibility:visible!important;opacity:0!important;pointer-events:none!important;transition:opacity .22s ease!important}
+body.nav-menu-open .eva-backdrop{opacity:1!important;pointer-events:auto!important}
+.eva-bottom-link:not(.is-active):not([aria-current="page"]):not(.is-pressed),.eva-menu-control:not([data-active="true"]):not(.is-pressed),.eva-app-link:not([data-active="true"]):not(.is-pressed){border-color:transparent!important;background:transparent!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+#evaMenuBtn:not([aria-expanded="true"]),.eva-profile-trigger:not([aria-expanded="true"]),.eva-top-alert:not([aria-expanded="true"]){border-color:transparent!important;background:transparent!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+@media(prefers-reduced-motion:reduce){.eva-menu-panel,.eva-backdrop{transition:none!important}}
