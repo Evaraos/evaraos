@@ -1,0 +1,1 @@
+(function(){var root=document.documentElement;root.dataset.theme="adaptive";root.dataset.themeMode="image";root.dataset.appearance="adaptive-image";root.dataset.adaptiveContrast="on";root.setAttribute("data-has-wallpaper","");root.style.colorScheme="only light";root.classList.add("boot-pending")})();
