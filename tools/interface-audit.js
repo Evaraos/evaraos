@@ -76,4 +76,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`Interface audit passed: ${javascriptFiles.length} JavaScript files and 14 architecture checks.`);
+console.log(`Interface audit passed: ${javascriptFiles.length} JavaScript files and 15 architecture checks.`);
