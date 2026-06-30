@@ -1,1 +1,1 @@
-export * from "./theme-core-adaptive.js?v=adaptive-liquid-v2";
+export * from "./theme-core-adaptive.js?v=adaptive-liquid-v3";
