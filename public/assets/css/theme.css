@@ -1,5 +1,5 @@
 /* EVARAOS adaptive Liquid Glass authority.
-   One image environment. One material. Local text and tint adaptation. */
-@import url("/assets/css/theme/adaptive-tokens.css?v=1");
-@import url("/assets/css/theme/adaptive-material.css?v=1");
-@import url("/assets/css/theme/adaptive-components.css?v=1");
+   One image environment. One material. Local black-or-white text inversion. */
+@import url("/assets/css/theme/adaptive-tokens.css?v=2");
+@import url("/assets/css/theme/adaptive-material.css?v=2");
+@import url("/assets/css/theme/adaptive-components.css?v=2");
