@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 const { execFileSync } = require("child_process");
 
@@ -15,10 +16,14 @@ function check(name, condition, detail) {
 }
 
 function syntax(relative) {
+  const temporary = path.join(os.tmpdir(), `evaraos-${path.basename(relative, ".js")}-${process.pid}.mjs`);
   try {
-    execFileSync(process.execPath, ["--check", path.join(ROOT, relative)], { stdio: "pipe" });
+    fs.writeFileSync(temporary, read(relative), "utf8");
+    execFileSync(process.execPath, ["--check", temporary], { stdio: "pipe" });
   } catch (error) {
     failures.push(`${relative}: JavaScript syntax check failed\n${String(error.stderr || error.message)}`);
+  } finally {
+    try { fs.rmSync(temporary, { force: true }); } catch {}
   }
 }
 
