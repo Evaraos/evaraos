@@ -10,7 +10,7 @@ const ADAPTIVE_SELECTOR=[
 const SURFACE_POINTS=[[.18,.18],[.5,.16],[.82,.18],[.18,.5],[.5,.5],[.82,.5],[.18,.82],[.5,.84],[.82,.82]];
 const TEXT_X=[.04,.27,.5,.73,.96];
 const TEXT_Y=[.3,.5,.7];
-let fallbackUrl="",image=null,canvas=null,context=null,appearance=null,frame=0,installed=false;
+let fallbackUrl="",image=null,canvas=null,pixels=null,appearance=null,frame=0,installed=false;
 const clamp=(value,min,max)=>Math.min(max,Math.max(min,value));
 
 function defaultWallpaper(){
@@ -33,12 +33,14 @@ export const getEffectiveWallpaper=url=>url||defaultWallpaper();
 
 function load(url){return new Promise((resolve,reject)=>{const pic=new Image();if(/^https?:/i.test(url))pic.crossOrigin="anonymous";pic.onload=()=>resolve(pic);pic.onerror=reject;pic.src=url})}
 async function prepare(url){
-  image=canvas=context=null;
+  image=canvas=pixels=null;
   try{
     const pic=await load(url),scale=Math.min(1,720/Math.max(pic.naturalWidth,pic.naturalHeight)),c=document.createElement("canvas");
     c.width=Math.max(1,Math.round(pic.naturalWidth*scale));c.height=Math.max(1,Math.round(pic.naturalHeight*scale));
-    const x=c.getContext("2d",{willReadFrequently:true});if(!x)return;x.drawImage(pic,0,0,c.width,c.height);image=pic;canvas=c;context=x
-  }catch{}
+    const x=c.getContext("2d",{willReadFrequently:true});if(!x)return;
+    x.drawImage(pic,0,0,c.width,c.height);
+    image=pic;canvas=c;pixels=x.getImageData(0,0,c.width,c.height).data
+  }catch{image=canvas=pixels=null}
 }
 function positionFactor(value){const [h="center",v="center"]=String(value||"center center").split(/\s+/);return{x:h==="left"?0:h==="right"?1:.5,y:v==="top"?0:v==="bottom"?1:.5}}
 function mapPoint(x,y){
@@ -49,15 +51,16 @@ function mapPoint(x,y){
 function linearChannel(value){value/=255;return value<=.04045?value/12.92:((value+.055)/1.055)**2.4}
 function luminance({r,g,b}){return.2126*linearChannel(r)+.7152*linearChannel(g)+.0722*linearChannel(b)}
 function readPatch(point){
-  if(!context||!canvas||!point)return null;
-  const radius=2,x=Math.max(0,Math.round(point.x)-radius),y=Math.max(0,Math.round(point.y)-radius),w=Math.min(5,canvas.width-x),h=Math.min(5,canvas.height-y);
-  try{
-    const data=context.getImageData(x,y,w,h).data;let r=0,g=0,b=0,count=0;
-    for(let i=0;i<data.length;i+=4){r+=data[i];g+=data[i+1];b+=data[i+2];count++}
-    if(!count)return null;
-    const dim=clamp(Number(appearance?.wallpaperDim)||0,0,.34);
-    return{r:Math.round((r/count)*(1-dim)+4*dim),g:Math.round((g/count)*(1-dim)+8*dim),b:Math.round((b/count)*(1-dim)+18*dim)}
-  }catch{return null}
+  if(!pixels||!canvas||!point)return null;
+  const radius=1,cx=Math.round(point.x),cy=Math.round(point.y);let r=0,g=0,b=0,count=0;
+  for(let y=Math.max(0,cy-radius);y<=Math.min(canvas.height-1,cy+radius);y++){
+    for(let x=Math.max(0,cx-radius);x<=Math.min(canvas.width-1,cx+radius);x++){
+      const index=(y*canvas.width+x)*4;r+=pixels[index];g+=pixels[index+1];b+=pixels[index+2];count++
+    }
+  }
+  if(!count)return null;
+  const dim=clamp(Number(appearance?.wallpaperDim)||0,0,.34);
+  return{r:Math.round((r/count)*(1-dim)+4*dim),g:Math.round((g/count)*(1-dim)+8*dim),b:Math.round((b/count)*(1-dim)+18*dim)}
 }
 function averageColors(colors){
   if(!colors.length)return{r:38,g:48,b:68};
@@ -82,11 +85,11 @@ function effectiveColor(sampleColor,surface){
 }
 function chooseInk(color,prior=""){
   const luma=luminance(color),black=(luma+.05)/.05,white=1.05/(luma+.05),difference=Math.abs(black-white);
-  let dark=black>white;if(difference<.9&&prior)dark=prior==="d";
+  let dark=black>white;if(difference<1.05&&prior)dark=prior==="d";
   return{tone:dark?"d":"l",color:dark?"rgb(18 20 24)":"rgb(255 255 255)",contrast:Math.max(black,white)}
 }
 function sampleSurface(element){
-  if(!context||!canvas)return{r:38,g:48,b:68};
+  if(!pixels||!canvas)return{r:38,g:48,b:68};
   const rect=element.getBoundingClientRect();if(!rect.width||!rect.height)return{r:38,g:48,b:68};
   const colors=[];
   for(const [px,py] of SURFACE_POINTS){const color=readPatch(mapPoint(rect.left+rect.width*px,rect.top+rect.height*py));if(color)colors.push(color)}
@@ -102,17 +105,18 @@ function applySurfaceTone(element){
   element.style.setProperty("--adaptive-luma",luminance(effective).toFixed(3));
   element.style.setProperty("--adaptive-contrast",ink.contrast.toFixed(2))
 }
-function textStopColor(wrapper,xFactor,yFactors,surface,prior){
+function textStopColor(wrapper,xFactor,surface,prior){
   const rect=wrapper.getBoundingClientRect(),colors=[];
-  for(const yFactor of yFactors){const color=readPatch(mapPoint(rect.left+rect.width*xFactor,rect.top+rect.height*yFactor));if(color)colors.push(color)}
+  for(const yFactor of TEXT_Y){const color=readPatch(mapPoint(rect.left+rect.width*xFactor,rect.top+rect.height*yFactor));if(color)colors.push(color)}
   return chooseInk(effectiveColor(averageColors(colors),surface),prior)
 }
 function applyTextGradient(wrapper){
   if(!(wrapper instanceof HTMLElement)||wrapper.hidden)return;
   const rect=wrapper.getBoundingClientRect();if(!rect.width||!rect.height||rect.bottom<-100||rect.top>innerHeight+100)return;
   const surface=wrapper.closest(ADAPTIVE_SELECTOR),prior=(wrapper.dataset.evaraTextTones||"").padEnd(TEXT_X.length,"-").slice(0,TEXT_X.length),stops=[],tones=[];
-  TEXT_X.forEach((x,index)=>{const ink=textStopColor(wrapper,x,TEXT_Y,surface,prior[index]);tones.push(ink.tone);stops.push(`${ink.color} ${Math.round(x*100)}%`) });
-  wrapper.dataset.evaraTextTones=tones.join("");
+  TEXT_X.forEach((x,index)=>{const ink=textStopColor(wrapper,x,surface,prior[index]);tones.push(ink.tone);stops.push(`${ink.color} ${Math.round(x*100)}%`)});
+  const toneKey=tones.join("");if(wrapper.dataset.evaraTextTones===toneKey)return;
+  wrapper.dataset.evaraTextTones=toneKey;
   wrapper.style.setProperty("--adaptive-text-gradient",`linear-gradient(90deg,${stops.join(",")})`)
 }
 function adapt(){
