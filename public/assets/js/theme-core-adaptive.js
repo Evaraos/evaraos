@@ -1,10 +1,11 @@
-import { initAdaptiveGlass, refreshAdaptiveGlass, getEffectiveWallpaper } from "./theme-adaptive.js";
+import { initAdaptiveGlass, refreshAdaptiveGlass, getEffectiveWallpaper } from "./theme-adaptive.js?v=adaptive-liquid-v3";
+import { installUniversalTextInversion } from "./theme-text-inversion.js?v=adaptive-liquid-v3";
 
 export const APPEARANCE_KEY="evaraos-appearance";
 export const VALID_MODES=Object.freeze(["image"]);
 export const IMAGE_POSITIONS=Object.freeze(["center center","center top","center bottom","left center","right center"]);
 export const DEFAULT_APPEARANCE=Object.freeze({mode:"image",imageUrl:"",imagePosition:"center center",wallpaperDim:.08,glassTint:.46,adaptiveContrast:true,updatedAt:null});
-const THEME_STYLESHEET="/assets/css/theme.css?v=adaptive-liquid-v2";
+const THEME_STYLESHEET="/assets/css/theme.css?v=adaptive-liquid-v3";
 const clamp=(value,min,max,fallback)=>{const n=Number(value);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):fallback};
 
 function normalizeImageUrl(value){
@@ -56,7 +57,7 @@ export async function applyAppearance(value=getAppearance()){
   root.style.setProperty("--evara-glass-tint",String(appearance.glassTint));
   root.style.setProperty("--evara-glass-tint-pct",`${Math.round(appearance.glassTint*100)}%`);
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content","#111827");
-  updateThemeControls();await initAdaptiveGlass(appearance,wallpaperUrl);
+  updateThemeControls();installUniversalTextInversion();await initAdaptiveGlass(appearance,wallpaperUrl);
   root.dataset.evaraThemeReady="true";root.classList.remove("boot-pending");
   const detail={...appearance,theme:"adaptive",wallpaperUrl};
   dispatchEvent(new CustomEvent("evara:theme-applied",{detail}));dispatchEvent(new CustomEvent("evara:appearance-updated",{detail}));
@@ -71,7 +72,7 @@ export function resetAppearance(){localStorage.removeItem(APPEARANCE_KEY);const 
 
 if(typeof window!=="undefined"){
   window.EvaraTheme={...(window.EvaraTheme||{}),APPEARANCE_KEY,VALID_MODES,IMAGE_POSITIONS,DEFAULT_APPEARANCE,normalizeAppearance,resolvedTheme,systemTheme,getAppearance,getThemeMode,getTheme,applyAppearance,applyTheme,saveAppearance,setThemeMode,setImageTheme,resetAppearance,updateThemeControls,refreshAdaptiveGlass};
-  const init=()=>void applyAppearance();
+  const init=()=>{installUniversalTextInversion();void applyAppearance()};
   document.readyState==="loading"?document.addEventListener("DOMContentLoaded",init,{once:true}):init();
   addEventListener("storage",event=>{if(event.key===APPEARANCE_KEY)void applyAppearance()});
   addEventListener("pageshow",init)
