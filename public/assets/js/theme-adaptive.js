@@ -7,8 +7,9 @@ const ADAPTIVE_SELECTOR=[
   ".messages-icon-button",".messages-camera",".messages-send",".messages-compose",".eva-account-action",".eva-profile-trigger",
   "#evaMenuBtn",".eva-top-alert",".eva-bottom-link","button:not(.appearance-source-backdrop)","[data-glass]"
 ].join(",");
-const POINTS=[[.22,.22],[.78,.22],[.5,.5],[.22,.78],[.78,.78]];
+const POINTS=[[.18,.18],[.5,.16],[.82,.18],[.18,.5],[.5,.5],[.82,.5],[.18,.82],[.5,.84],[.82,.82]];
 let fallbackUrl="",image=null,canvas=null,context=null,appearance=null,frame=0,installed=false;
+const clamp=(value,min,max)=>Math.min(max,Math.max(min,value));
 
 function defaultWallpaper(){
   if(fallbackUrl)return fallbackUrl;
@@ -41,32 +42,55 @@ function positionFactor(value){const [h="center",v="center"]=String(value||"cent
 function mapPoint(x,y){
   if(!image||!canvas)return null;
   const vw=Math.max(1,innerWidth),vh=Math.max(1,innerHeight),scale=Math.max(vw/image.naturalWidth,vh/image.naturalHeight),rw=image.naturalWidth*scale,rh=image.naturalHeight*scale,p=positionFactor(appearance?.imagePosition),ox=(vw-rw)*p.x,oy=(vh-rh)*p.y;
-  return{x:Math.max(0,Math.min(canvas.width-1,((x-ox)/scale)*(canvas.width/image.naturalWidth))),y:Math.max(0,Math.min(canvas.height-1,((y-oy)/scale)*(canvas.height/image.naturalHeight)))}
+  return{x:clamp(((x-ox)/scale)*(canvas.width/image.naturalWidth),0,canvas.width-1),y:clamp(((y-oy)/scale)*(canvas.height/image.naturalHeight),0,canvas.height-1)}
 }
-function luminance(r,g,b){const f=v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4};return.2126*f(r)+.7152*f(g)+.0722*f(b)}
+function channel(value){value/=255;return value<=.04045?value/12.92:((value+.055)/1.055)**2.4}
+function luminance(r,g,b){return.2126*channel(r)+.7152*channel(g)+.0722*channel(b)}
 function sample(element){
-  if(!context||!canvas)return.25;
-  const rect=element.getBoundingClientRect();if(!rect.width||!rect.height)return.25;
-  let total=0,count=0;
+  const fallback={r:38,g:48,b:68,luma:.03};
+  if(!context||!canvas)return fallback;
+  const rect=element.getBoundingClientRect();if(!rect.width||!rect.height)return fallback;
+  let r=0,g=0,b=0,weightTotal=0;
   for(const [px,py] of POINTS){
     const point=mapPoint(rect.left+rect.width*px,rect.top+rect.height*py);if(!point)continue;
-    try{const d=context.getImageData(Math.round(point.x),Math.round(point.y),1,1).data;total+=luminance(d[0],d[1],d[2]);count++}catch{return.25}
+    try{
+      const data=context.getImageData(Math.round(point.x),Math.round(point.y),1,1).data;
+      const center=1-Math.min(1,Math.hypot(px-.5,py-.5)),weight=.55+center;
+      r+=data[0]*weight;g+=data[1]*weight;b+=data[2]*weight;weightTotal+=weight
+    }catch{return fallback}
   }
-  return count?total/count:.25
+  if(!weightTotal)return fallback;
+  r=Math.round(r/weightTotal);g=Math.round(g/weightTotal);b=Math.round(b/weightTotal);
+  return{r,g,b,luma:luminance(r,g,b)}
 }
-function tone(element,luma){
-  const bright=appearance?.adaptiveContrast!==false&&luma>.42;
-  element.dataset.evaraTone=bright?"dark-ink":"light-ink";
-  element.style.setProperty("--adaptive-ink-rgb",bright?"18,20,24":"255,255,255");
-  element.style.setProperty("--adaptive-shadow-rgb",bright?"255,255,255":"0,0,0");
-  element.style.setProperty("--adaptive-luma",luma.toFixed(3));
-  element.style.setProperty("--adaptive-tint-bias",String(luma>.7?.11:bright?.07:.03))
+function mix(a,b,amount){return Math.round(a*(1-amount)+b*amount)}
+function tone(element,sampleColor){
+  const tint=clamp(Number(appearance?.glassTint)||.46,.18,.76);
+  const towardLight=sampleColor.luma>.34;
+  const target=towardLight?244:20;
+  const materialAmount=.34+tint*.42;
+  const glass={r:mix(sampleColor.r,target,materialAmount),g:mix(sampleColor.g,target,materialAmount),b:mix(sampleColor.b,target,materialAmount)};
+  const effective={r:mix(sampleColor.r,glass.r,tint),g:mix(sampleColor.g,glass.g,tint),b:mix(sampleColor.b,glass.b,tint)};
+  const effectiveLuma=luminance(effective.r,effective.g,effective.b);
+  const blackContrast=(effectiveLuma+.05)/.05,whiteContrast=1.05/(effectiveLuma+.05);
+  const prior=element.dataset.evaraTone;
+  let darkInk=blackContrast>whiteContrast;
+  if(Math.abs(blackContrast-whiteContrast)<.72&&prior)darkInk=prior==="dark-ink";
+  const ink=darkInk?"18,20,24":"255,255,255";
+  element.dataset.evaraTone=darkInk?"dark-ink":"light-ink";
+  element.style.setProperty("--adaptive-ink-rgb",ink);
+  element.style.setProperty("--adaptive-shadow-rgb",darkInk?"255,255,255":"0,0,0");
+  element.style.setProperty("--adaptive-glass-rgb",`${glass.r},${glass.g},${glass.b}`);
+  element.style.setProperty("--adaptive-ambient-rgb",`${sampleColor.r},${sampleColor.g},${sampleColor.b}`);
+  element.style.setProperty("--adaptive-luma",effectiveLuma.toFixed(3));
+  element.style.setProperty("--adaptive-contrast",Math.max(blackContrast,whiteContrast).toFixed(2));
+  element.style.setProperty("--adaptive-tint-bias",String(clamp(.025+Math.abs(sampleColor.luma-.5)*.12,.025,.085)))
 }
 function adapt(){
   frame=0;
   for(const el of document.querySelectorAll(ADAPTIVE_SELECTOR)){
     if(!(el instanceof HTMLElement)||el.hidden)continue;
-    const r=el.getBoundingClientRect();if(r.bottom<-100||r.top>innerHeight+100)continue;
+    const rect=el.getBoundingClientRect();if(rect.bottom<-100||rect.top>innerHeight+100)continue;
     tone(el,sample(el))
   }
   tone(document.documentElement,sample(document.documentElement))
@@ -84,9 +108,9 @@ function install(){
       pending={target,x:event.clientX,y:event.clientY};if(pointerFrame)return;
       pointerFrame=requestAnimationFrame(()=>{
         pointerFrame=0;if(!pending?.target?.isConnected)return;
-        const r=pending.target.getBoundingClientRect();
-        pending.target.style.setProperty("--glass-x",`${Math.max(0,Math.min(100,((pending.x-r.left)/r.width)*100)).toFixed(1)}%`);
-        pending.target.style.setProperty("--glass-y",`${Math.max(0,Math.min(100,((pending.y-r.top)/r.height)*100)).toFixed(1)}%`)
+        const rect=pending.target.getBoundingClientRect();
+        pending.target.style.setProperty("--glass-x",`${clamp(((pending.x-rect.left)/rect.width)*100,0,100).toFixed(1)}%`);
+        pending.target.style.setProperty("--glass-y",`${clamp(((pending.y-rect.top)/rect.height)*100,0,100).toFixed(1)}%`)
       })
     },{passive:true})
   }
