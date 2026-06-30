@@ -1,47 +1,27 @@
-name: Four-mode HTML migration
+name: Consolidate repository history
 
 on:
-  workflow_dispatch:
   push:
-    branches:
-      - evaraos
-    paths:
-      - .github/workflows/theme-html-migration.yml
+    branches: [evaraos]
+    paths: [.github/workflows/theme-html-migration.yml]
 
 permissions:
   contents: write
 
 jobs:
-  migrate-html:
+  consolidate:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: evaraos
           fetch-depth: 0
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Apply safe appearance migration
-        run: node tools/migrate-inline-theme.js && node tools/migrate-customer-portal-style.js && node tools/page-style-migration.js && node tools/repo-audit.js --fix || true
-
-      - name: Remove generated audit reports from migration commit
-        run: rm -rf tools/reports
-
-      - name: Commit migrated HTML
-        shell: bash
+      - name: Preserve temporary history in evaraos
         run: |
-          if git diff --quiet -- '*.html'; then
-            echo "No HTML migration changes were needed."
-            exit 0
-          fi
-
-          git config user.name "Evaraos Theme Migration"
+          git config user.name "Evaraos Repository"
           git config user.email "actions@users.noreply.github.com"
-          git add -- '*.html'
-          git commit -m "Migrate pages to four-mode appearance assets"
+          git fetch origin codex/ios27-liquid-glass-unified
+          git merge --strategy=ours --no-ff origin/codex/ios27-liquid-glass-unified -m "Preserve Liquid Glass development history"
           git push origin HEAD:evaraos
+      - name: Remove temporary branch
+        run: git push origin --delete codex/ios27-liquid-glass-unified
