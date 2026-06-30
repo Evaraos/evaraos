@@ -1,2 +1,3 @@
-/* EVARAOS X-STYLE DRAWER */
-.eva-menu-panel{width:min(420px,76vw)}body.nav-menu-open #appRoot{box-shadow:-20px 0 70px rgba(0,0,0,.32);outline:1px solid var(--liquid-border)}body.nav-menu-open #appRoot::after{content:"";position:fixed;inset:0;z-index:2147483644;border-radius:inherit;background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(0,0,0,.14));pointer-events:none}@media(max-width:680px){.eva-menu-panel{width:76vw;max-width:420px}}
+/* The menu is a top-anchored Liquid Glass folder, never a side drawer. */
+body.nav-menu-open #appRoot{transform:none!important;box-shadow:none!important;outline:0!important}
+body.nav-menu-open #appRoot::after{content:none!important}
