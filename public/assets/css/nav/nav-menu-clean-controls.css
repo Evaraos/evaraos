@@ -1,0 +1,11 @@
+/* Clean icon-first menu controls. Only selected or pressed items receive a glass capsule. */
+.eva-menu-panel::before{content:none!important;background-image:none!important}
+.eva-menu-control,.eva-account-strip a,.eva-app-link{border-color:transparent!important;background:transparent!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.eva-account-strip .eva-menu-icon,.eva-app-link>span,.eva-app-section-head>span,.eva-top-block-icon{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
+.eva-menu-control:hover,.eva-account-strip a:hover,.eva-app-link:hover{transform:none!important;border-color:transparent!important;background:rgba(var(--adaptive-ink-rgb),.035)!important;box-shadow:none!important}
+.eva-menu-control.is-pressed,.eva-account-strip a.is-pressed,.eva-app-link.is-pressed,.eva-menu-control[data-active="true"],.eva-account-strip a[data-active="true"],.eva-app-link[data-active="true"]{border-color:rgba(var(--adaptive-ink-rgb),.18)!important;background:radial-gradient(120% 90% at 24% 0%,rgba(255,255,255,.22),transparent 48%),linear-gradient(180deg,rgba(var(--adaptive-ink-rgb),.11),rgba(var(--adaptive-ink-rgb),.035))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.26),0 8px 20px rgba(var(--adaptive-shadow-rgb),.11)!important;backdrop-filter:blur(18px) saturate(170%)!important;-webkit-backdrop-filter:blur(18px) saturate(170%)!important}
+.eva-menu-control.is-pressed,.eva-account-strip a.is-pressed,.eva-app-link.is-pressed{transform:scale(.97)!important}
+.eva-logout-control{color:var(--text-primary)!important}
+.eva-logout-control .eva-menu-icon,.eva-logout-control strong{color:inherit!important}
+.eva-menu-panel [data-evara-tone="dark-ink"]{--text-primary:rgba(18,20,24,.98);--text-secondary:rgba(18,20,24,.70);--text-tertiary:rgba(18,20,24,.48)}
+.eva-menu-panel [data-evara-tone="light-ink"]{--text-primary:rgba(255,255,255,.98);--text-secondary:rgba(255,255,255,.72);--text-tertiary:rgba(255,255,255,.50)}
