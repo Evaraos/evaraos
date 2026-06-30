@@ -1,11 +1,11 @@
-import { initAdaptiveGlass, refreshAdaptiveGlass, getEffectiveWallpaper } from "./theme-adaptive.js?v=adaptive-liquid-v5";
-import { installUniversalTextInversion } from "./theme-text-inversion.js?v=adaptive-liquid-v5";
+import { initAdaptiveGlass, refreshAdaptiveGlass, getEffectiveWallpaper } from "./theme-adaptive.js?v=adaptive-liquid-v6";
+import { installUniversalTextInversion } from "./theme-text-inversion.js?v=adaptive-liquid-v6";
 
 export const APPEARANCE_KEY="evaraos-appearance";
 export const VALID_MODES=Object.freeze(["image"]);
 export const IMAGE_POSITIONS=Object.freeze(["center center","center top","center bottom","left center","right center"]);
 export const DEFAULT_APPEARANCE=Object.freeze({mode:"image",imageUrl:"",imagePosition:"center center",wallpaperDim:.08,glassTint:.46,adaptiveContrast:true,updatedAt:null});
-const THEME_STYLESHEET="/assets/css/theme.css?v=adaptive-liquid-v5";
+const THEME_STYLESHEET="/assets/css/theme.css?v=adaptive-liquid-v6";
 const clamp=(value,min,max,fallback)=>{const n=Number(value);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):fallback};
 
 function normalizeImageUrl(value){
@@ -19,7 +19,7 @@ export function normalizeAppearance(value={}){
   const oldOverlay=Number(value.imageOverlay),oldDensity=Number(value.glassTransparency);
   const migratedDim=Number.isFinite(oldOverlay)?Math.min(.28,Math.max(0,oldOverlay*.34)):DEFAULT_APPEARANCE.wallpaperDim;
   const migratedTint=Number.isFinite(oldDensity)?Math.min(.76,Math.max(.18,oldDensity*.74)):DEFAULT_APPEARANCE.glassTint;
-  return{mode:"image",imageUrl:normalizeImageUrl(value.imageUrl),imagePosition:IMAGE_POSITIONS.includes(value.imagePosition)?value.imagePosition:DEFAULT_APPEARANCE.imagePosition,wallpaperDim:clamp(value.wallpaperDim,0,.34,migratedDim),glassTint:clamp(value.glassTint,.18,.76,migratedTint),adaptiveContrast:value.adaptiveContrast!==false,updatedAt:value.updatedAt||null};
+  return{mode:"image",imageUrl:normalizeImageUrl(value.imageUrl),imagePosition:IMAGE_POSITIONS.includes(value.imagePosition)?value.imagePosition:DEFAULT_APPEARANCE.imagePosition,wallpaperDim:clamp(value.wallpaperDim,0,.34,migratedDim),glassTint:clamp(value.glassTint,.18,.76,migratedTint),adaptiveContrast:true,updatedAt:value.updatedAt||null};
 }
 
 export function getAppearance(){try{return normalizeAppearance(JSON.parse(localStorage.getItem(APPEARANCE_KEY)||"{}"))}catch{return{...DEFAULT_APPEARANCE}}}
@@ -49,8 +49,8 @@ export function updateThemeControls(){
 export async function applyAppearance(value=getAppearance()){
   ensureThemeLink();
   const appearance=normalizeAppearance(value),wallpaperUrl=getEffectiveWallpaper(appearance.imageUrl),root=document.documentElement;
-  root.dataset.theme="adaptive";root.dataset.themeMode="image";root.dataset.appearance="adaptive-image";
-  root.dataset.adaptiveContrast=appearance.adaptiveContrast?"on":"off";root.setAttribute("data-has-wallpaper","");root.style.colorScheme="only light";
+  root.dataset.theme="adaptive";root.dataset.themeMode="image";root.dataset.appearance="adaptive-image";root.dataset.adaptiveContrast="on";
+  root.setAttribute("data-has-wallpaper","");root.style.colorScheme="normal";
   root.style.setProperty("--evara-wallpaper-image",cssUrl(wallpaperUrl));
   root.style.setProperty("--evara-wallpaper-position",appearance.imagePosition);
   root.style.setProperty("--evara-wallpaper-dim",String(appearance.wallpaperDim));
@@ -58,7 +58,9 @@ export async function applyAppearance(value=getAppearance()){
   root.style.setProperty("--evara-glass-tint-pct",`${Math.round(appearance.glassTint*100)}%`);
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content","#111827");
   updateThemeControls();installUniversalTextInversion();await initAdaptiveGlass(appearance,wallpaperUrl);
-  root.dataset.evaraThemeReady="true";root.classList.remove("boot-pending");
+  root.dataset.evaraThemeReady="true";
+  root.classList.remove("boot-pending","evara-boot-lock");
+  root.classList.add("evara-theme-painted");
   const detail={...appearance,theme:"adaptive",wallpaperUrl};
   dispatchEvent(new CustomEvent("evara:theme-applied",{detail}));dispatchEvent(new CustomEvent("evara:appearance-updated",{detail}));
   return appearance
