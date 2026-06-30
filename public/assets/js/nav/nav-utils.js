@@ -78,19 +78,15 @@ export function getDisplayName() {
 }
 
 export function getAppearanceTheme() {
-  return window.EvaraTheme?.getTheme?.() ||
-    (document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light");
+  return window.EvaraTheme?.getTheme?.() || "adaptive";
 }
 
 export function getAppearanceMode() {
-  return window.EvaraTheme?.getThemeMode?.() ||
-    document.documentElement.getAttribute("data-theme-mode") ||
-    "light";
+  return window.EvaraTheme?.getThemeMode?.() || "image";
 }
 
-// Compatibility exports for older nav modules. They no longer own theme state.
-export function setTheme(theme) {
-  window.EvaraTheme?.applyTheme?.(theme);
+export function setTheme() {
+  window.EvaraTheme?.applyAppearance?.();
 }
 
 export function syncThemeLabel() {
@@ -98,7 +94,9 @@ export function syncThemeLabel() {
 }
 
 export function forcePageVisible() {
-  document.documentElement.classList.remove("auth-pending", "boot-pending");
+  const root = document.documentElement;
+  root.classList.remove("auth-pending", "boot-pending", "evara-boot-lock");
+  root.classList.add("evara-theme-painted");
   document.body?.classList.remove("auth-pending", "app-loading");
   document.body?.classList.add("app-ready");
 }
