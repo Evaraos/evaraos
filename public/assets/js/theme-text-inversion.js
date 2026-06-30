@@ -1,48 +1,43 @@
-const TEXT_ELEMENTS="h1,h2,h3,h4,h5,h6,p,label,legend,caption,small,strong,b,em,i,span,li,dt,dd,td,th,blockquote,figcaption,code,kbd,time,mark,summary,a,button,[role='button']";
-const INTERACTIVE="a,button,[role='button']";
+const BLOCKED_PARENT="script,style,template,noscript,option,svg,path,use,canvas,video,audio,picture,img,input,textarea,select";
 let observer=null;
 
-function excluded(element){
-  return !element||element.closest("[data-no-adaptive-text],script,style,template,option,[contenteditable='true']");
+function blocked(node){
+  const parent=node.parentElement;
+  if(!parent)return true;
+  if(parent.classList.contains("evara-adaptive-text-node"))return true;
+  if(parent.matches(BLOCKED_PARENT))return true;
+  if(parent.closest("[data-no-adaptive-text],[contenteditable='true']"))return true;
+  return !node.textContent.trim();
 }
 
-function ownTextNodes(element){
-  return [...element.childNodes].filter(node=>node.nodeType===Node.TEXT_NODE&&node.textContent.trim().length>0);
+function wrap(node){
+  if(blocked(node))return;
+  const parent=node.parentElement;
+  parent?.removeAttribute("data-adaptive-text");
+  const span=document.createElement("span");
+  span.className="evara-adaptive-text-node";
+  span.dataset.adaptiveText="pixel";
+  node.replaceWith(span);
+  span.appendChild(node);
 }
 
-function wrapInteractiveText(element){
-  for(const node of ownTextNodes(element)){
-    const wrapper=document.createElement("span");
-    wrapper.className="evara-adaptive-text-node";
-    wrapper.dataset.adaptiveText="pixel";
-    node.replaceWith(wrapper);
-    wrapper.appendChild(node);
-  }
-}
-
-function markElement(element){
-  if(!(element instanceof HTMLElement)||excluded(element))return;
-  if(element.matches(INTERACTIVE)){
-    wrapInteractiveText(element);
-    return;
-  }
-  if(!ownTextNodes(element).length)return;
-  element.dataset.adaptiveText="pixel";
-}
-
-function scan(root=document){
-  if(root instanceof HTMLElement&&root.matches(TEXT_ELEMENTS))markElement(root);
-  root.querySelectorAll?.(TEXT_ELEMENTS).forEach(markElement);
+function scan(root=document.body){
+  if(!root)return;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(node){return blocked(node)?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT}});
+  const nodes=[];
+  while(walker.nextNode())nodes.push(walker.currentNode);
+  nodes.forEach(wrap);
 }
 
 export function installUniversalTextInversion(){
   if(observer)return;
   const start=()=>{
-    scan(document);
+    scan(document.body);
     observer=new MutationObserver(records=>{
       for(const record of records){
         for(const node of record.addedNodes){
-          if(node instanceof HTMLElement)scan(node);
+          if(node.nodeType===Node.TEXT_NODE)wrap(node);
+          else if(node instanceof HTMLElement)scan(node);
         }
       }
     });
