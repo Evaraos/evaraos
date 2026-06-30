@@ -1,4 +1,4 @@
-name: Evaraos interface audit
+name: Evaraos runtime consolidation
 
 on:
   workflow_dispatch:
@@ -10,31 +10,49 @@ on:
       - "public/assets/css/nav/**"
       - "public/assets/css/nav.css"
       - "public/assets/js/theme*.js"
+      - "public/assets/js/adaptive-appearance-boot.js"
       - "public/assets/js/nav.js"
       - "public/assets/js/nav/**"
+      - "tools/ensure-universal-nav.js"
       - "tools/interface-audit.js"
       - ".github/workflows/theme-html-migration.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
-  group: evaraos-interface-audit
+  group: evaraos-runtime-consolidation
   cancel-in-progress: true
 
 jobs:
-  audit:
+  consolidate-and-audit:
     runs-on: ubuntu-latest
     steps:
       - name: Check out evaraos
         uses: actions/checkout@v4
         with:
           ref: evaraos
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Audit navigation and adaptive appearance
+      - name: Consolidate every public HTML entry point
+        run: node tools/ensure-universal-nav.js
+
+      - name: Audit startup, navigation and adaptive text
         run: node tools/interface-audit.js
+
+      - name: Commit migrated HTML pages
+        run: |
+          if git diff --quiet; then
+            echo "No HTML migration changes required."
+            exit 0
+          fi
+          git config user.name "Evaraos Runtime Audit"
+          git config user.email "actions@users.noreply.github.com"
+          git add public/*.html public/**/*.html
+          git commit -m "Consolidate pages on adaptive runtime v6"
+          git push origin HEAD:evaraos
