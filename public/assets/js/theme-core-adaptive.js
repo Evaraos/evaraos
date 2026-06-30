@@ -1,11 +1,11 @@
-import { initAdaptiveGlass, refreshAdaptiveGlass, getEffectiveWallpaper } from "./theme-adaptive.js?v=adaptive-liquid-v4";
-import { installUniversalTextInversion } from "./theme-text-inversion.js?v=adaptive-liquid-v4";
+import { initAdaptiveGlass, refreshAdaptiveGlass, getEffectiveWallpaper } from "./theme-adaptive.js?v=adaptive-liquid-v5";
+import { installUniversalTextInversion } from "./theme-text-inversion.js?v=adaptive-liquid-v5";
 
 export const APPEARANCE_KEY="evaraos-appearance";
 export const VALID_MODES=Object.freeze(["image"]);
 export const IMAGE_POSITIONS=Object.freeze(["center center","center top","center bottom","left center","right center"]);
 export const DEFAULT_APPEARANCE=Object.freeze({mode:"image",imageUrl:"",imagePosition:"center center",wallpaperDim:.08,glassTint:.46,adaptiveContrast:true,updatedAt:null});
-const THEME_STYLESHEET="/assets/css/theme.css?v=adaptive-liquid-v4";
+const THEME_STYLESHEET="/assets/css/theme.css?v=adaptive-liquid-v5";
 const clamp=(value,min,max,fallback)=>{const n=Number(value);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):fallback};
 
 function normalizeImageUrl(value){
