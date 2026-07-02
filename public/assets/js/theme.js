@@ -12,6 +12,13 @@ function enforceUniversalTheme(detail={}){
   root.dataset.environment=environment;
   root.dataset.themeMode=appearance.mode;
   root.dataset.appearance=`adaptive-${appearance.mode}`;
+  if(window.EvaraTheme)window.EvaraTheme.getTheme=()=>"adaptive";
 }
+
+const root=document.documentElement;
+new MutationObserver(()=>{
+  if(root.dataset.theme!=="adaptive")enforceUniversalTheme();
+}).observe(root,{attributes:true,attributeFilter:["data-theme"]});
+
 addEventListener("evara:theme-applied",event=>enforceUniversalTheme(event.detail));
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>enforceUniversalTheme(),{once:true});else enforceUniversalTheme();
