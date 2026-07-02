@@ -42,6 +42,11 @@ const BUILTIN_CONVERSATIONS = [
 
 const REGISTRY_CHANNEL = "_group_registry";
 const ADMIN_ROLES = new Set(["owner", "super_admin", "admin", "manager", "operations_manager", "hr_manager"]);
+const GROUPS = [
+  { key: "direct", title: "Direct Messages" },
+  { key: "group", title: "Groups" },
+  { key: "role", title: "Teams" }
+];
 
 const state = {
   user: null,
@@ -49,23 +54,19 @@ const state = {
   conversations: [],
   active: null,
   unsubscribe: null,
-  search: "",
-  editing: false
+  search: ""
 };
 
 const elements = {
   app: document.querySelector(".messages-app"),
   conversationList: document.getElementById("conversationList"),
   conversationSearch: document.getElementById("conversationSearch"),
-  editButton: document.getElementById("editConversations"),
-  menuButton: document.getElementById("messageMenuButton"),
-  chatMenuButton: document.getElementById("chatMenuButton"),
   newConversationButton: document.getElementById("newConversationButton"),
-  voiceSearchButton: document.getElementById("voiceSearchButton"),
   refreshButton: document.getElementById("refreshConversations"),
   closeMenuButton: document.getElementById("closeMessagesMenu"),
   menu: document.getElementById("messagesMenu"),
   menuBackdrop: document.querySelector(".messages-sheet-backdrop"),
+  chatMenuButton: document.getElementById("chatMenuButton"),
   backButton: document.getElementById("showConversationList"),
   chatAvatar: document.getElementById("chatAvatar"),
   chatTitle: document.getElementById("chatTitle"),
@@ -113,9 +114,9 @@ function timeLabel(value) {
   if (!date) return "";
 
   const now = new Date();
-  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startMessageDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const dayDifference = Math.round((startToday - startMessageDay) / 86400000);
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const messageDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const dayDifference = Math.round((today - messageDay) / 86400000);
 
   if (dayDifference === 0) {
     return new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(date);
@@ -125,6 +126,37 @@ function timeLabel(value) {
     return new Intl.DateTimeFormat(undefined, { month: "numeric", day: "numeric" }).format(date);
   }
   return new Intl.DateTimeFormat(undefined, { month: "numeric", day: "numeric", year: "2-digit" }).format(date);
+}
+
+function messageTimeLabel(value) {
+  const date = toDate(value);
+  if (!date) return "";
+  return new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(date);
+}
+
+function dayKey(value) {
+  const date = toDate(value);
+  if (!date) return "unknown";
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+
+function dayLabel(value) {
+  const date = toDate(value);
+  if (!date) return "";
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const messageDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const dayDifference = Math.round((today - messageDay) / 86400000);
+
+  if (dayDifference === 0) return "Today";
+  if (dayDifference === 1) return "Yesterday";
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    ...(date.getFullYear() === now.getFullYear() ? {} : { year: "numeric" })
+  }).format(date);
 }
 
 function canSee(conversation) {
@@ -195,6 +227,22 @@ function createConversationRow(conversation) {
   return button;
 }
 
+function createConversationGroup(title, conversations) {
+  const section = document.createElement("section");
+  section.className = "messages-conversation-group";
+
+  const heading = document.createElement("h2");
+  heading.className = "messages-section-title";
+  heading.textContent = title;
+
+  const list = document.createElement("div");
+  list.className = "messages-section-list";
+  list.replaceChildren(...conversations.map(createConversationRow));
+
+  section.append(heading, list);
+  return section;
+}
+
 function sortedConversations(items) {
   return [...items].sort((left, right) => {
     const timeDifference = timestampValue(right.lastMessageAt || right.updatedAt) - timestampValue(left.lastMessageAt || left.updatedAt);
@@ -222,7 +270,15 @@ function renderConversations() {
     return;
   }
 
-  elements.conversationList.replaceChildren(...visible.map(createConversationRow));
+  const sections = GROUPS
+    .map((group) => ({
+      ...group,
+      conversations: visible.filter((conversation) => conversation.type === group.key)
+    }))
+    .filter((group) => group.conversations.length)
+    .map((group) => createConversationGroup(group.title, group.conversations));
+
+  elements.conversationList.replaceChildren(...sections);
 }
 
 async function loadRegistry() {
@@ -273,11 +329,14 @@ async function loadPreview(conversation) {
     const previewQuery = query(
       collection(db, "channels", conversation.id, "messages"),
       orderBy("createdAt", "desc"),
-      limit(1)
+      limit(8)
     );
     const snapshot = await getDocs(previewQuery);
-    const message = snapshot.docs[0]?.data();
-    if (!message || ["group_meta", "direct_meta", "role_meta"].includes(message.kind)) return conversation;
+    const message = snapshot.docs
+      .map((entry) => entry.data())
+      .find((entry) => !["group_meta", "direct_meta", "role_meta"].includes(entry.kind));
+
+    if (!message) return conversation;
 
     return {
       ...conversation,
@@ -296,8 +355,7 @@ async function loadConversations() {
   state.conversations = mergeConversations(registryEntries);
   renderConversations();
 
-  const previews = await Promise.all(state.conversations.map(loadPreview));
-  state.conversations = previews;
+  state.conversations = await Promise.all(state.conversations.map(loadPreview));
   renderConversations();
 }
 
@@ -309,6 +367,41 @@ function showMessageCenter() {
   elements.app?.classList.add("show-list");
   document.documentElement.dataset.messagesView = "center";
   renderConversations();
+}
+
+function createDateDivider(value) {
+  const divider = document.createElement("div");
+  divider.className = "message-date-divider";
+  divider.textContent = dayLabel(value);
+  return divider;
+}
+
+function createMessageRow(message) {
+  const mine = message.senderUid === state.user?.uid;
+  const row = document.createElement("article");
+  row.className = `message-row${mine ? " mine" : ""}`;
+
+  const stack = document.createElement("div");
+  stack.className = "message-stack";
+
+  if (!mine && state.active?.type !== "direct" && message.senderName) {
+    const author = document.createElement("div");
+    author.className = "message-author";
+    author.textContent = message.senderName;
+    stack.append(author);
+  }
+
+  const bubble = document.createElement("div");
+  bubble.className = "message-bubble";
+  bubble.textContent = message.text || "";
+
+  const time = document.createElement("div");
+  time.className = "message-time";
+  time.textContent = messageTimeLabel(message.createdAt);
+
+  stack.append(bubble, time);
+  row.append(stack);
+  return row;
 }
 
 function renderMessages(snapshot) {
@@ -326,19 +419,19 @@ function renderMessages(snapshot) {
     return;
   }
 
-  const rows = messages.map((message) => {
-    const row = document.createElement("article");
-    row.className = `message-row${message.senderUid === state.user?.uid ? " mine" : ""}`;
+  const nodes = [];
+  let previousDay = "";
 
-    const bubble = document.createElement("div");
-    bubble.className = "message-bubble";
-    bubble.textContent = message.text || "";
+  for (const message of messages) {
+    const currentDay = dayKey(message.createdAt);
+    if (currentDay !== previousDay) {
+      nodes.push(createDateDivider(message.createdAt));
+      previousDay = currentDay;
+    }
+    nodes.push(createMessageRow(message));
+  }
 
-    row.append(bubble);
-    return row;
-  });
-
-  elements.chatFeed.replaceChildren(...rows);
+  elements.chatFeed.replaceChildren(...nodes);
   elements.chatFeed.scrollTop = elements.chatFeed.scrollHeight;
 
   const latest = messages.at(-1);
@@ -369,7 +462,7 @@ function openConversation(conversationId) {
       ? "Direct message"
       : conversation.type === "group"
         ? `${conversation.memberUids?.length || 0} members`
-        : conversation.description || "Role channel";
+        : conversation.description || "Team channel";
   }
 
   state.unsubscribe?.();
@@ -425,42 +518,11 @@ function autoSizeMessageInput() {
 function openMenu() {
   if (!elements.menu) return;
   elements.menu.hidden = false;
-  elements.menuButton?.setAttribute("aria-expanded", "true");
 }
 
 function closeMenu() {
   if (!elements.menu) return;
   elements.menu.hidden = true;
-  elements.menuButton?.setAttribute("aria-expanded", "false");
-}
-
-function toggleEditing() {
-  state.editing = !state.editing;
-  elements.app?.classList.toggle("is-editing", state.editing);
-  if (elements.editButton) {
-    elements.editButton.textContent = state.editing ? "Done" : "Edit";
-    elements.editButton.setAttribute("aria-pressed", String(state.editing));
-  }
-}
-
-function startVoiceSearch() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    elements.conversationSearch?.focus();
-    return;
-  }
-
-  const recognition = new SpeechRecognition();
-  recognition.lang = document.documentElement.lang || "en-US";
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-  recognition.addEventListener("result", (event) => {
-    const transcript = event.results?.[0]?.[0]?.transcript || "";
-    if (elements.conversationSearch) elements.conversationSearch.value = transcript;
-    state.search = transcript;
-    renderConversations();
-  }, { once: true });
-  recognition.start();
 }
 
 function bindEvents() {
@@ -474,11 +536,8 @@ function bindEvents() {
     renderConversations();
   });
 
-  elements.editButton?.addEventListener("click", toggleEditing);
-  elements.menuButton?.addEventListener("click", openMenu);
-  elements.chatMenuButton?.addEventListener("click", openMenu);
   elements.newConversationButton?.addEventListener("click", openMenu);
-  elements.voiceSearchButton?.addEventListener("click", startVoiceSearch);
+  elements.chatMenuButton?.addEventListener("click", openMenu);
   elements.backButton?.addEventListener("click", showMessageCenter);
   elements.closeMenuButton?.addEventListener("click", closeMenu);
   elements.menuBackdrop?.addEventListener("click", closeMenu);
