@@ -54,7 +54,7 @@ function applyDrawerAvatar(node, photoURL, displayName) {
 }
 
 function applyAvatar(photoURL, displayName = "Evaraos User") {
-  document.querySelectorAll(".eva-profile-trigger").forEach((node) => applyTopAvatar(node, photoURL, displayName));
+  document.querySelectorAll(".eva-profile-trigger,#evaMenuBtn").forEach((node) => applyTopAvatar(node, photoURL, displayName));
   document.querySelectorAll(".eva-drawer-avatar").forEach((node) => applyDrawerAvatar(node, photoURL, displayName));
 }
 
@@ -72,14 +72,17 @@ export async function syncUniversalAvatar() {
       if (snapshot.exists()) profile = { ...stored, ...snapshot.data(), uid, id: uid };
     }
 
-    const photoURL = profile.photoURL || profile.profilePhoto || profile.profilePhotoUrl || "";
+    const photoURL = profile.photoURL || profile.photoUrl || profile.avatarUrl || profile.avatar || profile.profilePhoto || profile.profilePhotoUrl || user?.photoURL || "";
     const displayName = profile.displayName || profile.fullName || profile.name || profile.username || user?.displayName || user?.email || "Evaraos User";
     writeStoredProfile({ ...profile, photoURL, displayName });
     applyAvatar(photoURL, displayName);
   } catch (error) {
     console.warn("Universal avatar sync skipped:", error);
     const stored = readStoredProfile();
-    applyAvatar(stored.photoURL || "", stored.displayName || stored.fullName || stored.name || "Evaraos User");
+    applyAvatar(
+      stored.photoURL || stored.photoUrl || stored.avatarUrl || stored.avatar || stored.profilePhoto || stored.profilePhotoUrl || "",
+      stored.displayName || stored.fullName || stored.name || stored.username || "Evaraos User"
+    );
   } finally {
     syncing = false;
   }
