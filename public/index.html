@@ -1,48 +1,40 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="adaptive" data-theme-mode="image" data-appearance="adaptive-image">
+<html lang="en" data-theme="adaptive" data-environment="light" data-theme-mode="system" data-appearance="adaptive-system">
 <head>
   <meta charset="UTF-8" />
-  <script src="/assets/js/adaptive-appearance-boot.js?v=1"></script>
+  <script src="/assets/js/adaptive-appearance-boot.js?v=2"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-
   <link rel="manifest" href="/manifest.json" />
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/icon-192.png" />
   <link rel="shortcut icon" href="/favicon.ico" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
-  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" />
-
-  <meta name="theme-color" content="#111827" />
-  <meta name="msapplication-TileColor" content="#111827" />
-  <meta name="msapplication-TileImage" content="/assets/img/icon-192.png" />
+  <meta name="theme-color" content="#eef5fb" />
+  <meta name="msapplication-TileColor" content="#eef5fb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Evaraos" />
   <meta name="application-name" content="Evaraos" />
-
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
   <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin />
   <link rel="preload" as="image" href="/assets/img/evaraos_logo.png" />
-
   <title>Evaraos Inc</title>
-
   <style>
-    html.boot-pending body { margin: 0; overflow: hidden; touch-action: none; }
-    body.home-page { margin: 0; min-height: 100vh; }
-    body.app-loading #appRoot { visibility: hidden; }
-    body.app-ready #appRoot { visibility: visible; }
-    .install-cta-wrap { display: flex; justify-content: center; margin-top: 12px; }
-    #installBtn { display: none; }
+    html.boot-pending body{margin:0;overflow:hidden;touch-action:none}
+    body.home-page{margin:0;min-height:100vh}
+    body.app-loading #appRoot{visibility:hidden}
+    body.app-ready #appRoot{visibility:visible}
+    .install-cta-wrap{display:flex;justify-content:center;margin-top:12px}
+    #installBtn{display:none}
   </style>
-
-  <link rel="stylesheet" href="/assets/css/base.css?v=53" />
-  <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v1" />
+  <link rel="stylesheet" href="/assets/css/base.css?v=54" />
+  <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v7" />
   <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v25-x-drawer" />
   <link rel="stylesheet" href="/assets/css/home.css?v=50" />
   <link rel="stylesheet" href="/assets/css/app-system.css?v=50" />
@@ -50,40 +42,25 @@
 <body class="home-page app-loading">
   <div id="universalNavRoot"></div>
   <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
-
   <div id="appRoot">
     <div class="page-grid-overlay"></div>
-
     <main class="home-shell">
       <section class="hero-home">
         <div class="hero-grid">
           <div class="hero-content">
             <p class="hero-kicker">Subsidiaries Allocation SaaS</p>
             <h1 class="hero-title">Run companies like a world-class operating system.</h1>
-            <p class="hero-subtitle">
-              Evaraos Inc is built to power multiple subsidiaries, teams, customer portals,
-              leads, jobs, reporting, approvals, and operations from one premium control center.
-              One platform. Multiple categories. Scalable infrastructure.
-            </p>
-
-            <div class="hero-actions">
-              <a href="/login.html" class="btn btn-apple active-glow beam-target">Enter Platform</a>
-              <a href="/signup.html" class="btn btn-apple active-glow beam-target">Create Account</a>
-            </div>
-
+            <p class="hero-subtitle">Evaraos Inc is built to power multiple subsidiaries, teams, customer portals, leads, jobs, reporting, approvals, and operations from one premium control center. One platform. Multiple categories. Scalable infrastructure.</p>
+            <div class="hero-actions"><a href="/login.html" class="btn btn-apple active-glow beam-target">Enter Platform</a><a href="/signup.html" class="btn btn-apple active-glow beam-target">Create Account</a></div>
             <div class="install-cta-wrap"><button id="installBtn" class="btn btn-apple active-glow beam-target" type="button">Download App</button></div>
           </div>
-
-          <div class="hero-side">
-            <div class="stats-stack">
-              <article class="stats-card glass-card active-glow beam-target"><p>Core Mission</p><h3>Operate multiple brands from one premium system.</h3></article>
-              <article class="stats-card glass-card active-glow beam-target"><p>Live Categories</p><h3>Exterior cleaning, interior cleaning, leads, jobs, and user management.</h3></article>
-              <article class="stats-card glass-card active-glow beam-target"><p>Built For</p><h3>Owners, management, reps, technicians, and customers.</h3></article>
-            </div>
-          </div>
+          <div class="hero-side"><div class="stats-stack">
+            <article class="stats-card glass-card active-glow beam-target"><p>Core Mission</p><h3>Operate multiple brands from one premium system.</h3></article>
+            <article class="stats-card glass-card active-glow beam-target"><p>Live Categories</p><h3>Exterior cleaning, interior cleaning, leads, jobs, and user management.</h3></article>
+            <article class="stats-card glass-card active-glow beam-target"><p>Built For</p><h3>Owners, management, reps, technicians, and customers.</h3></article>
+          </div></div>
         </div>
       </section>
-
       <section class="section-panel glass-card active-glow beam-target">
         <div class="section-head"><div><h2>What Evaraos Powers</h2><p>The platform is designed to organize subsidiaries, vendors, service categories, users, field activity, and customer flow in a single connected ecosystem.</p></div></div>
         <div class="features-grid">
@@ -93,52 +70,16 @@
           <article class="feature-card glass-card active-glow beam-target"><span class="card-tag">Jobs</span><h3>Execution Control</h3><p>Monitor active jobs, completion status, dispatch logic, and service accountability.</p></article>
         </div>
       </section>
-
-      <section class="section-panel glass-card active-glow beam-target">
-        <div class="section-head"><div><h2>Supreme True Clean</h2><p>Supreme True Clean is the exterior cleaning category within the Evaraos ecosystem, focused on practical recurring service and scalable field operations.</p></div></div>
-        <div class="services-grid-3">
-          <article class="service-card glass-card active-glow beam-target"><span class="service-meta">Exterior Cleaning</span><h3>Trash Bin Cleaning</h3><p>Residential bin sanitizing designed for recurring subscription service, route density, and customer retention.</p></article>
-          <article class="service-card glass-card active-glow beam-target"><span class="service-meta">Surface Washing</span><h3>Driveways & Sidewalks</h3><p>Pressure washing for curb appeal, maintenance, and property presentation with scalable pricing models.</p></article>
-          <article class="service-card glass-card active-glow beam-target"><span class="service-meta">Home Exterior</span><h3>House Washing</h3><p>Exterior wall and surface cleaning focused on visual restoration and long-term service relationships.</p></article>
-        </div>
-      </section>
-
-      <section class="section-panel glass-card active-glow beam-target">
-        <div class="section-head"><div><h2>OneofOne Cleaning</h2><p>OneofOne Cleaning represents the interior cleaning side of the ecosystem, built for category expansion, vendor coordination, and future marketplace-style assignment flow.</p></div></div>
-        <div class="category-split">
-          <article class="category-card glass-card active-glow beam-target"><span class="card-tag">Interior Cleaning</span><h3>Residential & Recurring Service</h3><p>Structured for repeat service, clean vendor coordination, customer-facing trust, and long-term category expansion inside the platform.</p></article>
-          <article class="category-card glass-card active-glow beam-target"><span class="card-tag">Marketplace Ready</span><h3>Lead Vendor + Service Vendor Model</h3><p>Designed to support lead generation partners, service vendors, dispatch logic, payouts, and assignment visibility as the ecosystem scales.</p></article>
-        </div>
-      </section>
-
-      <section class="section-panel glass-card active-glow beam-target">
-        <div class="section-head"><div><h2>Why This Home Page Matters</h2><p>This page is not just a placeholder. It is the front door to the system, the explanation of what Evaraos is, and the bridge into the platform experience.</p></div></div>
-        <div class="info-grid">
-          <article class="info-card glass-card active-glow beam-target"><h3>Useful for New Visitors</h3><p>Explains the platform, the categories, and what lives inside the operating system.</p></article>
-          <article class="info-card glass-card active-glow beam-target"><h3>Useful for Investors</h3><p>Shows how one system can support multiple brands, services, and scalable operations.</p></article>
-          <article class="info-card glass-card active-glow beam-target"><h3>Useful for Team Members</h3><p>Gives context before login so staff, reps, and vendors understand the ecosystem quickly.</p></article>
-          <article class="info-card glass-card active-glow beam-target"><h3>Useful for Design Customization</h3><p>Provides enough premium surfaces for theme colors and beam effects to actually show off.</p></article>
-        </div>
-      </section>
-
-      <section class="cta-panel glass-card active-glow beam-target">
-        <h2>Start inside the ecosystem.</h2>
-        <p>Access the platform or create your account to begin using Evaraos.</p>
-        <div class="cta-actions"><a href="/login.html" class="btn btn-apple active-glow beam-target">Login</a><a href="/signup.html" class="btn btn-apple active-glow beam-target">Sign Up</a></div>
-      </section>
+      <section class="section-panel glass-card active-glow beam-target"><div class="section-head"><div><h2>Supreme True Clean</h2><p>Supreme True Clean is the exterior cleaning category within the Evaraos ecosystem, focused on practical recurring service and scalable field operations.</p></div></div><div class="services-grid-3"><article class="service-card glass-card active-glow beam-target"><span class="service-meta">Exterior Cleaning</span><h3>Trash Bin Cleaning</h3><p>Residential bin sanitizing designed for recurring subscription service, route density, and customer retention.</p></article><article class="service-card glass-card active-glow beam-target"><span class="service-meta">Surface Washing</span><h3>Driveways & Sidewalks</h3><p>Pressure washing for curb appeal, maintenance, and property presentation with scalable pricing models.</p></article><article class="service-card glass-card active-glow beam-target"><span class="service-meta">Home Exterior</span><h3>House Washing</h3><p>Exterior wall and surface cleaning focused on visual restoration and long-term service relationships.</p></article></div></section>
+      <section class="section-panel glass-card active-glow beam-target"><div class="section-head"><div><h2>OneofOne Cleaning</h2><p>OneofOne Cleaning represents the interior cleaning side of the ecosystem, built for category expansion, vendor coordination, and future marketplace-style assignment flow.</p></div></div><div class="category-split"><article class="category-card glass-card active-glow beam-target"><span class="card-tag">Interior Cleaning</span><h3>Residential & Recurring Service</h3><p>Structured for repeat service, clean vendor coordination, customer-facing trust, and long-term category expansion inside the platform.</p></article><article class="category-card glass-card active-glow beam-target"><span class="card-tag">Marketplace Ready</span><h3>Lead Vendor + Service Vendor Model</h3><p>Designed to support lead generation partners, service vendors, dispatch logic, payouts, and assignment visibility as the ecosystem scales.</p></article></div></section>
+      <section class="section-panel glass-card active-glow beam-target"><div class="section-head"><div><h2>Why This Home Page Matters</h2><p>This page is the front door to the system, the explanation of what Evaraos is, and the bridge into the platform experience.</p></div></div><div class="info-grid"><article class="info-card glass-card active-glow beam-target"><h3>Useful for New Visitors</h3><p>Explains the platform, the categories, and what lives inside the operating system.</p></article><article class="info-card glass-card active-glow beam-target"><h3>Useful for Investors</h3><p>Shows how one system can support multiple brands, services, and scalable operations.</p></article><article class="info-card glass-card active-glow beam-target"><h3>Useful for Team Members</h3><p>Gives context before login so staff, reps, and vendors understand the ecosystem quickly.</p></article><article class="info-card glass-card active-glow beam-target"><h3>Useful for Design Customization</h3><p>Provides enough premium surfaces for theme colors and beam effects to actually show off.</p></article></div></section>
+      <section class="cta-panel glass-card active-glow beam-target"><h2>Start inside the ecosystem.</h2><p>Access the platform or create your account to begin using Evaraos.</p><div class="cta-actions"><a href="/login.html" class="btn btn-apple active-glow beam-target">Login</a><a href="/signup.html" class="btn btn-apple active-glow beam-target">Sign Up</a></div></section>
     </main>
-
-    <footer class="site-footer">
-      <div class="site-footer-inner glass-card active-glow beam-target">
-        <div class="site-footer-left"><strong>© 2026 Evaraos Inc</strong><span>Built to power multi-company operations from one system.</span></div>
-        <div class="site-footer-right"><a href="https://instagram.com/evaraos.inc" target="_blank" rel="noopener noreferrer">◎ Instagram</a><a href="https://x.com/evaraos_inc" target="_blank" rel="noopener noreferrer">◉ X</a><a href="https://tiktok.com/@evaraos.inc" target="_blank" rel="noopener noreferrer">◌ TikTok</a></div>
-      </div>
-    </footer>
+    <footer class="site-footer"><div class="site-footer-inner glass-card active-glow beam-target"><div class="site-footer-left"><strong>© 2026 Evaraos Inc</strong><span>Built to power multi-company operations from one system.</span></div><div class="site-footer-right"><a href="https://instagram.com/evaraos.inc" target="_blank" rel="noopener noreferrer">◎ Instagram</a><a href="https://x.com/evaraos_inc" target="_blank" rel="noopener noreferrer">◉ X</a><a href="https://tiktok.com/@evaraos.inc" target="_blank" rel="noopener noreferrer">◌ TikTok</a></div></div></footer>
   </div>
-
-  <script src="/assets/js/loader.js?v=36"></script>
+  <script src="/assets/js/loader.js?v=39"></script>
   <script type="module" src="/assets/js/firebase.js?v=36"></script>
-  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v1"></script>
+  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v7"></script>
   <script type="module" src="/assets/js/nav.js?v=nav-v25-x-drawer"></script>
 </body>
 </html>
