@@ -1,696 +1,110 @@
-import {
-  auth,
-  db,
-  onAuthStateChanged,
-  collection,
-  getDocs,
-  addDoc,
-  query,
-  orderBy,
-  limit,
-  onSnapshot,
-  serverTimestamp,
-  getSavedUserProfile
-} from "./firebase.js";
+import { auth, db, onAuthStateChanged, collection, getDocs, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp, getSavedUserProfile } from "./firebase.js";
 
-const BUILTIN_CONVERSATIONS = [
-  {
-    id: "operations",
-    name: "Operations",
-    description: "Dispatch, scheduling, and daily operations.",
-    roles: ["owner", "super_admin", "admin", "manager", "operations_manager", "operations_coordinator", "sales_rep", "technician", "cleaner", "staff", "field_staff", "crew_lead"]
-  },
-  {
-    id: "field-crews",
-    name: "Field Crews",
-    description: "Technicians, cleaners, and field teams.",
-    roles: ["owner", "super_admin", "admin", "manager", "operations_manager", "operations_coordinator", "technician", "cleaner", "staff", "field_staff", "crew_lead"]
-  },
-  {
-    id: "hr-support",
-    name: "HR + Support",
-    description: "Hiring, onboarding, payroll, and support.",
-    roles: ["owner", "super_admin", "admin", "hr", "hr_manager", "customer_support"]
-  },
-  {
-    id: "leadership",
-    name: "Leadership",
-    description: "Executive and management communication.",
-    roles: ["owner", "super_admin", "admin", "manager", "operations_manager"]
-  }
+const BUILTINS = [
+  { id:"operations", name:"Operations", description:"Dispatch, scheduling, and daily operations.", roles:["owner","super_admin","admin","manager","operations_manager","operations_coordinator","sales_rep","technician","cleaner","staff","field_staff","crew_lead"] },
+  { id:"field-crews", name:"Field Crews", description:"Technicians, cleaners, and field teams.", roles:["owner","super_admin","admin","manager","operations_manager","operations_coordinator","technician","cleaner","staff","field_staff","crew_lead"] },
+  { id:"hr-support", name:"HR + Support", description:"Hiring, onboarding, payroll, and support.", roles:["owner","super_admin","admin","hr","hr_manager","customer_support"] },
+  { id:"leadership", name:"Leadership", description:"Executive and management communication.", roles:["owner","super_admin","admin","manager","operations_manager"] }
 ];
-
-const REGISTRY_CHANNEL = "_group_registry";
-const GROUP_STORAGE_KEY = "evaraos-message-group-state";
-const ADMIN_ROLES = new Set(["owner", "super_admin", "admin", "manager", "operations_manager", "hr_manager"]);
+const REGISTRY = "_group_registry";
+const GROUP_KEY = "evaraos-message-group-state";
+const MUTE_KEY = "evaraos-muted-conversations";
+const HIDDEN_KEY = "evaraos-hidden-conversations";
+const ADMIN = new Set(["owner","super_admin","admin","manager","operations_manager","hr_manager"]);
 const GROUPS = [
-  { key: "direct", title: "Direct Messages", subtitle: "Private conversations" },
-  { key: "group", title: "Groups", subtitle: "Shared conversations" },
-  { key: "role", title: "Teams", subtitle: "Only visible to assigned members" }
+  { key:"direct", title:"Direct Messages", subtitle:"Private conversations" },
+  { key:"group", title:"Groups", subtitle:"Shared conversations" },
+  { key:"role", title:"Teams", subtitle:"Only visible to assigned members" }
 ];
 
-const state = {
-  user: null,
-  profile: {},
-  conversations: [],
-  active: null,
-  unsubscribe: null,
-  search: "",
-  editing: false,
-  collapsed: loadCollapsedGroups()
-};
+const loadSet = (key, fallback=[]) => { try { const v=JSON.parse(localStorage.getItem(key)||"null"); return new Set(Array.isArray(v)?v:fallback); } catch { return new Set(fallback); } };
+const saveSet = (key,set) => { try { localStorage.setItem(key,JSON.stringify([...set])); } catch {} };
+const state = { user:null, profile:{}, conversations:[], active:null, off:null, search:"", collapsed:loadSet(GROUP_KEY,["role"]), muted:loadSet(MUTE_KEY), hidden:loadSet(HIDDEN_KEY), menuContext:"global" };
+const el = Object.fromEntries([
+  "conversationList","conversationSearch","editConversations","newConversationButton","voiceSearchButton","refreshConversations","closeMessagesMenu","messagesMenu","messagesMenuTitle","viewConversationPhoto","muteConversation","conversationInfo","editConversation","deleteConversation","backToDashboard","chatMenuButton","showConversationList","chatAvatar","chatTitle","chatSubtitle","chatFeed","messageForm","messageInput","conversationPhotoViewer","conversationPhotoImage","conversationPhotoCaption","closePhotoViewer"
+].map(id=>[id,document.getElementById(id)]));
+el.app=document.querySelector(".messages-app"); el.menuBackdrop=document.querySelector(".messages-sheet-backdrop");
 
-const elements = {
-  app: document.querySelector(".messages-app"),
-  conversationList: document.getElementById("conversationList"),
-  conversationSearch: document.getElementById("conversationSearch"),
-  editButton: document.getElementById("editConversations"),
-  newConversationButton: document.getElementById("newConversationButton"),
-  voiceSearchButton: document.getElementById("voiceSearchButton"),
-  refreshButton: document.getElementById("refreshConversations"),
-  closeMenuButton: document.getElementById("closeMessagesMenu"),
-  menu: document.getElementById("messagesMenu"),
-  menuBackdrop: document.querySelector(".messages-sheet-backdrop"),
-  chatMenuButton: document.getElementById("chatMenuButton"),
-  backButton: document.getElementById("showConversationList"),
-  chatAvatar: document.getElementById("chatAvatar"),
-  chatTitle: document.getElementById("chatTitle"),
-  chatSubtitle: document.getElementById("chatSubtitle"),
-  chatFeed: document.getElementById("chatFeed"),
-  messageForm: document.getElementById("messageForm"),
-  messageInput: document.getElementById("messageInput")
-};
+const normalize=v=>String(v||"").trim().toLowerCase();
+const role=()=>normalize(state.profile.role||"customer");
+const isAdmin=()=>ADMIN.has(role());
+const initials=v=>String(v||"").trim().split(/\s+/).slice(0,2).map(p=>p[0]?.toUpperCase()).join("")||"E";
+const toDate=v=>{ if(!v)return null; if(typeof v?.toDate==="function")return v.toDate(); if(typeof v?.seconds==="number")return new Date(v.seconds*1000); const d=new Date(v); return Number.isNaN(d.getTime())?null:d; };
+const stamp=v=>toDate(v)?.getTime()||0;
+function timeLabel(v){ const d=toDate(v); if(!d)return""; const n=new Date(),t=new Date(n.getFullYear(),n.getMonth(),n.getDate()),m=new Date(d.getFullYear(),d.getMonth(),d.getDate()),diff=Math.round((t-m)/86400000); if(diff===0)return new Intl.DateTimeFormat(undefined,{hour:"numeric",minute:"2-digit"}).format(d); if(diff===1)return"Yesterday"; return new Intl.DateTimeFormat(undefined,d.getFullYear()===n.getFullYear()?{month:"numeric",day:"numeric"}:{month:"numeric",day:"numeric",year:"2-digit"}).format(d); }
+function dayLabel(v){ const d=toDate(v); if(!d)return""; const n=new Date(),t=new Date(n.getFullYear(),n.getMonth(),n.getDate()),m=new Date(d.getFullYear(),d.getMonth(),d.getDate()),diff=Math.round((t-m)/86400000); if(diff===0)return"Today"; if(diff===1)return"Yesterday"; return new Intl.DateTimeFormat(undefined,{weekday:"short",month:"short",day:"numeric"}).format(d); }
+const dayKey=v=>{ const d=toDate(v); return d?`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`:"unknown"; };
+function canSee(c){ if(state.hidden.has(c.id))return false; if(c.builtin)return c.roles.includes(role()); const uid=state.user?.uid||""; return isAdmin()||c.memberUids?.includes(uid)||c.adminUids?.includes(uid)||c.allowedRoles?.includes(role()); }
+function ready(){ document.documentElement.classList.remove("auth-pending","boot-pending","evara-boot-lock"); document.body.classList.remove("auth-pending","app-loading"); document.body.classList.add("app-ready"); window.EvaraLoader?.markAppReady?.(); }
+function avatar(container,c){ if(!container)return; container.replaceChildren(); if(c?.imageUrl){ const img=document.createElement("img"); img.src=c.imageUrl; img.alt=c.name||"Conversation"; img.loading="lazy"; container.append(img); } else { const s=document.createElement("span"); s.textContent=initials(c?.name||"Evaraos"); container.append(s); } }
 
-function loadCollapsedGroups() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(GROUP_STORAGE_KEY) || "null");
-    if (Array.isArray(saved)) return new Set(saved);
-  } catch {}
-  return new Set(["role"]);
+function conversationButton(c){
+  const b=document.createElement("button"); b.type="button"; b.className=`conversation-item${state.active?.id===c.id?" is-active":""}`; b.dataset.conversation=c.id;
+  const a=document.createElement("span"); a.className="conversation-avatar"; avatar(a,c);
+  const copy=document.createElement("span"); copy.className="conversation-copy";
+  const title=document.createElement("strong"); title.textContent=c.name||"Conversation";
+  if(state.muted.has(c.id)){ const badge=document.createElement("span"); badge.className="conversation-muted-badge"; badge.textContent="◐"; title.append(badge); }
+  const preview=document.createElement("span"); preview.textContent=`${c.lastSenderUid===state.user?.uid&&c.lastMessage?"You: ":""}${c.lastMessage||c.description||"No messages yet"}`;
+  copy.append(title,preview);
+  const meta=document.createElement("span"); meta.className="conversation-meta"; meta.textContent=timeLabel(c.lastMessageAt||c.updatedAt||c.createdAt);
+  const chevron=document.createElement("span"); chevron.className="conversation-chevron";
+  b.append(a,copy,meta,chevron); return b;
 }
-
-function saveCollapsedGroups() {
-  try {
-    localStorage.setItem(GROUP_STORAGE_KEY, JSON.stringify([...state.collapsed]));
-  } catch {}
+function conversationRow(c){
+  const wrap=document.createElement("div"); wrap.className="conversation-swipe-row"; wrap.dataset.swipeConversation=c.id;
+  const actions=document.createElement("div"); actions.className="conversation-swipe-actions";
+  const mute=document.createElement("button"); mute.type="button"; mute.className="conversation-swipe-action mute"; mute.dataset.muteConversation=c.id; mute.textContent=state.muted.has(c.id)?"Unmute":"DND";
+  const remove=document.createElement("button"); remove.type="button"; remove.className="conversation-swipe-action delete"; remove.dataset.removeConversation=c.id; remove.textContent="Delete";
+  actions.append(mute,remove); wrap.append(actions,conversationButton(c)); return wrap;
 }
-
-function normalize(value = "") {
-  return String(value || "").trim().toLowerCase();
+function groupSection(group,items){
+  const collapsed=!state.search&&state.collapsed.has(group.key),section=document.createElement("section"); section.className=`messages-conversation-group${collapsed?" is-collapsed":""}`;
+  const toggle=document.createElement("button"); toggle.type="button"; toggle.className="messages-section-toggle"; toggle.dataset.groupToggle=group.key; toggle.setAttribute("aria-expanded",String(!collapsed));
+  const arrow=document.createElement("span"); arrow.className="messages-section-chevron";
+  const copy=document.createElement("span"); copy.className="messages-section-copy"; const strong=document.createElement("strong"); strong.textContent=group.title; const sub=document.createElement("span"); sub.textContent=group.subtitle; copy.append(strong,sub);
+  const count=document.createElement("span"); count.className="messages-section-count"; count.textContent=String(items.length); toggle.append(arrow,copy,count);
+  const list=document.createElement("div"); list.className="messages-section-list"; list.replaceChildren(...items.map(conversationRow)); section.append(toggle,list); return section;
 }
-
-function currentRole() {
-  return normalize(state.profile.role || "customer");
+function renderConversations(){
+  if(!el.conversationList)return; const q=normalize(state.search); const visible=[...state.conversations].filter(c=>!q||normalize(c.name).includes(q)||normalize(c.lastMessage).includes(q)||normalize(c.description).includes(q)).sort((a,b)=>stamp(b.lastMessageAt||b.updatedAt)-stamp(a.lastMessageAt||a.updatedAt)||(a.order??99)-(b.order??99));
+  if(!visible.length){ const empty=document.createElement("div"); empty.className="messages-empty"; empty.textContent=q?"No conversations match your search.":"No conversations are available for this account."; el.conversationList.replaceChildren(empty); return; }
+  el.conversationList.replaceChildren(...GROUPS.map(g=>({...g,items:visible.filter(c=>c.type===g.key)})).filter(g=>g.items.length).map(g=>groupSection(g,g.items)));
 }
+async function registry(){ try{ const s=await getDocs(collection(db,"channels",REGISTRY,"messages")); return s.docs.map(d=>({registryDocId:d.id,...d.data()})).filter(x=>["group_meta","direct_meta","role_meta"].includes(x.kind)&&x.groupId); }catch(e){ console.warn("Conversation registry unavailable",e); return[]; } }
+function merge(entries){ const overrides=new Map(entries.filter(x=>x.kind==="role_meta").map(x=>[x.groupId,x])); const builtins=BUILTINS.map((base,order)=>({...base,...(overrides.get(base.id)||{}),id:base.id,builtin:true,type:"role",order,memberUids:[],adminUids:[]})); const custom=entries.filter(x=>x.kind!=="role_meta").map((x,i)=>({...x,id:x.groupId,builtin:false,type:x.kind==="direct_meta"?"direct":"group",order:BUILTINS.length+i})); return[...builtins,...custom].filter(canSee); }
+async function preview(c){ try{ const s=await getDocs(query(collection(db,"channels",c.id,"messages"),orderBy("createdAt","desc"),limit(8))); const m=s.docs.map(d=>d.data()).find(x=>!["group_meta","direct_meta","role_meta"].includes(x.kind)); return m?{...c,lastMessage:m.text||c.lastMessage||"",lastMessageAt:m.createdAt||c.lastMessageAt||null,lastSenderUid:m.senderUid||""}:c; }catch{return c;} }
+async function loadConversations(){ state.conversations=merge(await registry()); renderConversations(); state.conversations=await Promise.all(state.conversations.map(preview)); renderConversations(); }
 
-function isAdmin() {
-  return ADMIN_ROLES.has(currentRole());
+function center(){ state.off?.(); state.off=null; state.active=null; document.body.classList.remove("messages-chat-active","keyboard-open"); el.app?.classList.add("show-list"); document.documentElement.dataset.messagesView="center"; syncViewport(); renderConversations(); }
+function dateDivider(v){ const d=document.createElement("div"); d.className="message-date-divider"; d.textContent=dayLabel(v); return d; }
+function messageRow(m){ const mine=m.senderUid===state.user?.uid,row=document.createElement("article"); row.className=`message-row${mine?" mine":""}`; const stack=document.createElement("div"); stack.className="message-stack"; if(!mine&&state.active?.type!=="direct"&&m.senderName){ const author=document.createElement("div"); author.className="message-author"; author.textContent=m.senderName; stack.append(author); } const bubble=document.createElement("div"); bubble.className="message-bubble"; bubble.textContent=m.text||""; const time=document.createElement("div"); time.className="message-time"; time.textContent=toDate(m.createdAt)?new Intl.DateTimeFormat(undefined,{hour:"numeric",minute:"2-digit"}).format(toDate(m.createdAt)):""; stack.append(bubble,time); row.append(stack); return row; }
+function renderMessages(snapshot){ if(!el.chatFeed||!state.active)return; const messages=snapshot.docs.map(d=>({id:d.id,...d.data()})).filter(m=>!["group_meta","direct_meta","role_meta"].includes(m.kind)); if(!messages.length){ const empty=document.createElement("div"); empty.className="messages-empty"; empty.textContent="Start the conversation."; el.chatFeed.replaceChildren(empty); return; } const nodes=[]; let previous=""; for(const m of messages){ const key=dayKey(m.createdAt); if(key!==previous){ nodes.push(dateDivider(m.createdAt)); previous=key; } nodes.push(messageRow(m)); } el.chatFeed.replaceChildren(...nodes); requestAnimationFrame(()=>{el.chatFeed.scrollTop=el.chatFeed.scrollHeight;}); }
+function openConversation(id){ const c=state.conversations.find(x=>x.id===id); if(!c)return; state.active=c; el.app?.classList.remove("show-list"); document.body.classList.add("messages-chat-active"); document.documentElement.dataset.messagesView="chat"; syncViewport(); avatar(el.chatAvatar,c); el.chatTitle.textContent=c.name||"Conversation"; el.chatSubtitle.textContent=c.type==="direct"?"Direct message":c.type==="group"?`${c.memberUids?.length||0} members`:c.description||"Team channel"; state.off?.(); state.off=onSnapshot(query(collection(db,"channels",c.id,"messages"),orderBy("createdAt","asc")),renderMessages,e=>{ const empty=document.createElement("div"); empty.className="messages-empty"; empty.textContent=e.message||"Unable to load messages."; el.chatFeed.replaceChildren(empty); }); renderConversations(); }
+async function sendMessage(){ const text=String(el.messageInput?.value||"").trim(); if(!text||!state.active||!state.user)return; el.messageInput.value=""; autoSize(); await addDoc(collection(db,"channels",state.active.id,"messages"),{text,senderUid:state.user.uid,senderName:state.profile.displayName||state.profile.fullName||state.profile.name||state.user.displayName||state.user.email||"User",senderRole:state.profile.role||"customer",companyId:state.profile.companyId||"",createdAt:serverTimestamp()}); }
+function autoSize(){ if(!el.messageInput)return; el.messageInput.style.height="auto"; el.messageInput.style.height=`${Math.min(128,el.messageInput.scrollHeight)}px`; }
+
+function toggleGroup(key){ state.collapsed.has(key)?state.collapsed.delete(key):state.collapsed.add(key); saveSet(GROUP_KEY,state.collapsed); renderConversations(); }
+function toggleEdit(){ state.editing=!state.editing; el.editConversations.textContent=state.editing?"Done":"Edit"; el.editConversations.setAttribute("aria-pressed",String(state.editing)); if(state.editing)state.collapsed.clear(); else if(!state.collapsed.size)state.collapsed.add("role"); saveSet(GROUP_KEY,state.collapsed); renderConversations(); }
+function toggleMute(id){ state.muted.has(id)?state.muted.delete(id):state.muted.add(id); saveSet(MUTE_KEY,state.muted); renderConversations(); updateMenu(); }
+function hideConversation(id){ const c=state.conversations.find(x=>x.id===id); if(!c||!window.confirm(`Remove ${c.name} from your Messages list?`))return; state.hidden.add(id); saveSet(HIDDEN_KEY,state.hidden); state.conversations=state.conversations.filter(x=>x.id!==id); if(state.active?.id===id)center(); renderConversations(); closeMenu(); }
+function renameActive(){ if(!state.active)return; const name=window.prompt("Conversation name",state.active.name||""); if(!name?.trim())return; state.active.name=name.trim(); const item=state.conversations.find(x=>x.id===state.active.id); if(item)item.name=name.trim(); el.chatTitle.textContent=name.trim(); renderConversations(); closeMenu(); }
+
+function updateMenu(){ const active=state.active,conversation=state.menuContext!=="global"&&active; el.messagesMenuTitle.textContent=conversation?active.name:"Messages"; [el.viewConversationPhoto,el.muteConversation,el.conversationInfo,el.editConversation,el.deleteConversation].forEach(b=>{if(b)b.hidden=!conversation;}); if(el.refreshConversations)el.refreshConversations.hidden=Boolean(conversation); if(el.backToDashboard)el.backToDashboard.hidden=Boolean(conversation); if(el.muteConversation&&active)el.muteConversation.textContent=state.muted.has(active.id)?"Turn On Notifications":"Do Not Disturb"; }
+function openMenu(context="global"){ state.menuContext=context; updateMenu(); el.messagesMenu.hidden=false; }
+function closeMenu(){ el.messagesMenu.hidden=true; }
+function viewPhoto(){ if(!state.active)return; el.conversationPhotoCaption.textContent=state.active.name||"Conversation"; el.conversationPhotoImage.src=state.active.imageUrl||"/assets/img/apple-touch-icon.png"; closeMenu(); el.conversationPhotoViewer.hidden=false; }
+function closePhoto(){ el.conversationPhotoViewer.hidden=true; }
+function info(){ if(!state.active)return; closeMenu(); const members=state.active.memberUids?.length||0; window.alert(`${state.active.name}\n${state.active.description||"Conversation"}\n${state.active.type==="direct"?"Direct message":`${members} members`}`); }
+function voice(){ const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR){el.conversationSearch?.focus();return;} const r=new SR(); r.lang=document.documentElement.lang||"en-US"; r.interimResults=false; r.maxAlternatives=1; r.addEventListener("result",e=>{const text=e.results?.[0]?.[0]?.transcript||""; el.conversationSearch.value=text; state.search=text; renderConversations();},{once:true}); r.start(); }
+function syncViewport(){ const v=window.visualViewport,height=Math.round(v?.height||window.innerHeight),top=Math.round(v?.offsetTop||0),layout=Math.max(window.innerHeight,document.documentElement.clientHeight||0),open=document.body.classList.contains("messages-chat-active")&&layout-height>120; document.documentElement.style.setProperty("--messages-viewport-height",`${height}px`); document.documentElement.style.setProperty("--messages-viewport-top",`${top}px`); document.body.classList.toggle("keyboard-open",open); if(open&&el.chatFeed)requestAnimationFrame(()=>{el.chatFeed.scrollTop=el.chatFeed.scrollHeight;}); }
+function swipe(){ let x=0,y=0,row=null; el.conversationList?.addEventListener("pointerdown",e=>{row=e.target.closest(".conversation-swipe-row"); if(!row)return; x=e.clientX;y=e.clientY;}); el.conversationList?.addEventListener("pointerup",e=>{if(!row)return; const dx=e.clientX-x,dy=e.clientY-y; if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)){el.conversationList.querySelectorAll(".conversation-swipe-row.is-revealed").forEach(r=>{if(r!==row)r.classList.remove("is-revealed");}); row.classList.toggle("is-revealed",dx>0);} row=null;}); }
+
+function bind(){
+  el.conversationList?.addEventListener("click",e=>{ const group=e.target.closest("[data-group-toggle]"); if(group){toggleGroup(group.dataset.groupToggle);return;} const mute=e.target.closest("[data-mute-conversation]"); if(mute){toggleMute(mute.dataset.muteConversation);return;} const remove=e.target.closest("[data-remove-conversation]"); if(remove){hideConversation(remove.dataset.removeConversation);return;} const row=e.target.closest("[data-conversation]"); if(row&&!row.closest(".conversation-swipe-row")?.classList.contains("is-revealed"))openConversation(row.dataset.conversation); });
+  el.conversationSearch?.addEventListener("input",e=>{state.search=e.target.value;renderConversations();});
+  el.editConversations?.addEventListener("click",toggleEdit); el.newConversationButton?.addEventListener("click",()=>openMenu("global")); el.voiceSearchButton?.addEventListener("click",voice); el.chatMenuButton?.addEventListener("click",()=>openMenu("conversation")); el.chatAvatar?.addEventListener("click",()=>openMenu("avatar")); el.showConversationList?.addEventListener("click",center); el.closeMessagesMenu?.addEventListener("click",closeMenu); el.menuBackdrop?.addEventListener("click",closeMenu); el.closePhotoViewer?.addEventListener("click",closePhoto); el.viewConversationPhoto?.addEventListener("click",viewPhoto); el.muteConversation?.addEventListener("click",()=>{if(state.active)toggleMute(state.active.id);closeMenu();}); el.conversationInfo?.addEventListener("click",info); el.editConversation?.addEventListener("click",renameActive); el.deleteConversation?.addEventListener("click",()=>{if(state.active)hideConversation(state.active.id);}); el.refreshConversations?.addEventListener("click",async()=>{closeMenu();await loadConversations();});
+  el.messageForm?.addEventListener("submit",e=>{e.preventDefault();sendMessage().catch(console.error);}); el.messageInput?.addEventListener("input",autoSize); el.messageInput?.addEventListener("focus",()=>{setTimeout(syncViewport,80);setTimeout(syncViewport,280);}); el.messageInput?.addEventListener("blur",()=>setTimeout(syncViewport,120)); el.messageInput?.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();el.messageForm?.requestSubmit();}});
+  window.visualViewport?.addEventListener("resize",syncViewport,{passive:true}); window.visualViewport?.addEventListener("scroll",syncViewport,{passive:true}); window.addEventListener("orientationchange",()=>setTimeout(syncViewport,150),{passive:true}); window.addEventListener("pagehide",()=>state.off?.(),{once:true}); swipe();
 }
-
-function initials(value = "") {
-  return String(value || "")
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("") || "E";
-}
-
-function toDate(value) {
-  if (!value) return null;
-  if (typeof value?.toDate === "function") return value.toDate();
-  if (typeof value?.seconds === "number") return new Date(value.seconds * 1000);
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function timestampValue(value) {
-  return toDate(value)?.getTime() || 0;
-}
-
-function timeLabel(value) {
-  const date = toDate(value);
-  if (!date) return "";
-
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const messageDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const dayDifference = Math.round((today - messageDay) / 86400000);
-
-  if (dayDifference === 0) return new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(date);
-  if (dayDifference === 1) return "Yesterday";
-  if (date.getFullYear() === now.getFullYear()) return new Intl.DateTimeFormat(undefined, { month: "numeric", day: "numeric" }).format(date);
-  return new Intl.DateTimeFormat(undefined, { month: "numeric", day: "numeric", year: "2-digit" }).format(date);
-}
-
-function messageTimeLabel(value) {
-  const date = toDate(value);
-  if (!date) return "";
-  return new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(date);
-}
-
-function dayKey(value) {
-  const date = toDate(value);
-  return date ? `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}` : "unknown";
-}
-
-function dayLabel(value) {
-  const date = toDate(value);
-  if (!date) return "";
-
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const messageDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const dayDifference = Math.round((today - messageDay) / 86400000);
-
-  if (dayDifference === 0) return "Today";
-  if (dayDifference === 1) return "Yesterday";
-  return new Intl.DateTimeFormat(undefined, {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    ...(date.getFullYear() === now.getFullYear() ? {} : { year: "numeric" })
-  }).format(date);
-}
-
-function canSee(conversation) {
-  if (conversation.builtin) return conversation.roles.includes(currentRole());
-  const uid = state.user?.uid || "";
-  return isAdmin()
-    || conversation.memberUids?.includes(uid)
-    || conversation.adminUids?.includes(uid)
-    || conversation.allowedRoles?.includes(currentRole());
-}
-
-function setPageReady() {
-  document.documentElement.classList.remove("auth-pending", "boot-pending", "evara-boot-lock");
-  document.body.classList.remove("auth-pending", "app-loading");
-  document.body.classList.add("app-ready");
-  window.EvaraLoader?.markAppReady?.();
-}
-
-function setAvatar(container, conversation) {
-  if (!container) return;
-  container.replaceChildren();
-
-  if (conversation?.imageUrl) {
-    const image = document.createElement("img");
-    image.src = conversation.imageUrl;
-    image.alt = conversation.name || "Conversation";
-    image.loading = "lazy";
-    container.append(image);
-    return;
-  }
-
-  const text = document.createElement("span");
-  text.textContent = initials(conversation?.name || "Evaraos");
-  container.append(text);
-}
-
-function createConversationRow(conversation) {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = `conversation-item${state.active?.id === conversation.id ? " is-active" : ""}`;
-  button.dataset.conversation = conversation.id;
-  button.setAttribute("role", "listitem");
-
-  const avatar = document.createElement("span");
-  avatar.className = "conversation-avatar";
-  setAvatar(avatar, conversation);
-
-  const copy = document.createElement("span");
-  copy.className = "conversation-copy";
-
-  const name = document.createElement("strong");
-  name.textContent = conversation.name || "Conversation";
-
-  const preview = document.createElement("span");
-  const senderPrefix = conversation.lastSenderUid === state.user?.uid && conversation.lastMessage ? "You: " : "";
-  preview.textContent = `${senderPrefix}${conversation.lastMessage || conversation.description || "No messages yet"}`;
-
-  const meta = document.createElement("span");
-  meta.className = "conversation-meta";
-  meta.textContent = timeLabel(conversation.lastMessageAt || conversation.updatedAt || conversation.createdAt);
-
-  const chevron = document.createElement("span");
-  chevron.className = "conversation-chevron";
-  chevron.setAttribute("aria-hidden", "true");
-
-  copy.append(name, preview);
-  button.append(avatar, copy, meta, chevron);
-  return button;
-}
-
-function createConversationGroup(group, conversations) {
-  const collapsed = !state.search && state.collapsed.has(group.key);
-  const section = document.createElement("section");
-  section.className = `messages-conversation-group${collapsed ? " is-collapsed" : ""}`;
-  section.dataset.group = group.key;
-
-  const toggle = document.createElement("button");
-  toggle.type = "button";
-  toggle.className = "messages-section-toggle";
-  toggle.dataset.groupToggle = group.key;
-  toggle.setAttribute("aria-expanded", String(!collapsed));
-
-  const chevron = document.createElement("span");
-  chevron.className = "messages-section-chevron";
-  chevron.setAttribute("aria-hidden", "true");
-
-  const copy = document.createElement("span");
-  copy.className = "messages-section-copy";
-  const title = document.createElement("strong");
-  title.textContent = group.title;
-  const subtitle = document.createElement("span");
-  subtitle.textContent = group.subtitle;
-  copy.append(title, subtitle);
-
-  const count = document.createElement("span");
-  count.className = "messages-section-count";
-  count.textContent = String(conversations.length);
-
-  toggle.append(chevron, copy, count);
-
-  const list = document.createElement("div");
-  list.className = "messages-section-list";
-  list.replaceChildren(...conversations.map(createConversationRow));
-
-  section.append(toggle, list);
-  return section;
-}
-
-function sortedConversations(items) {
-  return [...items].sort((left, right) => {
-    const timeDifference = timestampValue(right.lastMessageAt || right.updatedAt) - timestampValue(left.lastMessageAt || left.updatedAt);
-    if (timeDifference) return timeDifference;
-    return (left.order ?? 99) - (right.order ?? 99);
-  });
-}
-
-function renderConversations() {
-  if (!elements.conversationList) return;
-
-  const search = normalize(state.search);
-  const visible = sortedConversations(state.conversations).filter((conversation) => {
-    if (!search) return true;
-    return normalize(conversation.name).includes(search)
-      || normalize(conversation.lastMessage).includes(search)
-      || normalize(conversation.description).includes(search);
-  });
-
-  if (!visible.length) {
-    const empty = document.createElement("div");
-    empty.className = "messages-empty";
-    empty.textContent = search ? "No conversations match your search." : "No conversations are available for this account.";
-    elements.conversationList.replaceChildren(empty);
-    return;
-  }
-
-  const sections = GROUPS
-    .map((group) => ({ ...group, conversations: visible.filter((conversation) => conversation.type === group.key) }))
-    .filter((group) => group.conversations.length)
-    .map((group) => createConversationGroup(group, group.conversations));
-
-  elements.conversationList.replaceChildren(...sections);
-}
-
-async function loadRegistry() {
-  try {
-    const snapshot = await getDocs(collection(db, "channels", REGISTRY_CHANNEL, "messages"));
-    return snapshot.docs
-      .map((entry) => ({ id: entry.id, ...entry.data() }))
-      .filter((entry) => ["group_meta", "direct_meta", "role_meta"].includes(entry.kind) && entry.groupId);
-  } catch (error) {
-    console.warn("Conversation registry unavailable:", error);
-    return [];
-  }
-}
-
-function mergeConversations(registryEntries) {
-  const roleOverrides = new Map(
-    registryEntries
-      .filter((entry) => entry.kind === "role_meta")
-      .map((entry) => [entry.groupId, entry])
-  );
-
-  const builtins = BUILTIN_CONVERSATIONS.map((base, order) => ({
-    ...base,
-    ...(roleOverrides.get(base.id) || {}),
-    id: base.id,
-    builtin: true,
-    type: "role",
-    order,
-    memberUids: [],
-    adminUids: []
-  }));
-
-  const custom = registryEntries
-    .filter((entry) => entry.kind !== "role_meta")
-    .map((entry, index) => ({
-      ...entry,
-      id: entry.groupId,
-      builtin: false,
-      type: entry.kind === "direct_meta" ? "direct" : "group",
-      order: BUILTIN_CONVERSATIONS.length + index
-    }));
-
-  return [...builtins, ...custom].filter(canSee);
-}
-
-async function loadPreview(conversation) {
-  try {
-    const previewQuery = query(
-      collection(db, "channels", conversation.id, "messages"),
-      orderBy("createdAt", "desc"),
-      limit(8)
-    );
-    const snapshot = await getDocs(previewQuery);
-    const message = snapshot.docs
-      .map((entry) => entry.data())
-      .find((entry) => !["group_meta", "direct_meta", "role_meta"].includes(entry.kind));
-
-    if (!message) return conversation;
-
-    return {
-      ...conversation,
-      lastMessage: message.text || conversation.lastMessage || "",
-      lastMessageAt: message.createdAt || conversation.lastMessageAt || null,
-      lastSenderUid: message.senderUid || ""
-    };
-  } catch (error) {
-    console.warn(`Preview unavailable for ${conversation.id}:`, error);
-    return conversation;
-  }
-}
-
-async function loadConversations() {
-  const registryEntries = await loadRegistry();
-  state.conversations = mergeConversations(registryEntries);
-  renderConversations();
-  state.conversations = await Promise.all(state.conversations.map(loadPreview));
-  renderConversations();
-}
-
-function showMessageCenter() {
-  state.unsubscribe?.();
-  state.unsubscribe = null;
-  state.active = null;
-  document.body.classList.remove("messages-chat-active", "keyboard-open");
-  elements.app?.classList.add("show-list");
-  document.documentElement.dataset.messagesView = "center";
-  syncViewport();
-  renderConversations();
-}
-
-function createDateDivider(value) {
-  const divider = document.createElement("div");
-  divider.className = "message-date-divider";
-  divider.textContent = dayLabel(value);
-  return divider;
-}
-
-function createMessageRow(message) {
-  const mine = message.senderUid === state.user?.uid;
-  const row = document.createElement("article");
-  row.className = `message-row${mine ? " mine" : ""}`;
-
-  const stack = document.createElement("div");
-  stack.className = "message-stack";
-
-  if (!mine && state.active?.type !== "direct" && message.senderName) {
-    const author = document.createElement("div");
-    author.className = "message-author";
-    author.textContent = message.senderName;
-    stack.append(author);
-  }
-
-  const bubble = document.createElement("div");
-  bubble.className = "message-bubble";
-  bubble.textContent = message.text || "";
-
-  const time = document.createElement("div");
-  time.className = "message-time";
-  time.textContent = messageTimeLabel(message.createdAt);
-
-  stack.append(bubble, time);
-  row.append(stack);
-  return row;
-}
-
-function renderMessages(snapshot) {
-  if (!elements.chatFeed || !state.active) return;
-
-  const messages = snapshot.docs
-    .map((entry) => ({ id: entry.id, ...entry.data() }))
-    .filter((message) => !["group_meta", "direct_meta", "role_meta"].includes(message.kind));
-
-  if (!messages.length) {
-    const empty = document.createElement("div");
-    empty.className = "messages-empty";
-    empty.textContent = "Start the conversation.";
-    elements.chatFeed.replaceChildren(empty);
-    return;
-  }
-
-  const nodes = [];
-  let previousDay = "";
-  for (const message of messages) {
-    const currentDay = dayKey(message.createdAt);
-    if (currentDay !== previousDay) {
-      nodes.push(createDateDivider(message.createdAt));
-      previousDay = currentDay;
-    }
-    nodes.push(createMessageRow(message));
-  }
-
-  elements.chatFeed.replaceChildren(...nodes);
-  requestAnimationFrame(() => {
-    elements.chatFeed.scrollTop = elements.chatFeed.scrollHeight;
-  });
-
-  const latest = messages.at(-1);
-  const index = state.conversations.findIndex((conversation) => conversation.id === state.active.id);
-  if (index >= 0 && latest) {
-    state.conversations[index] = {
-      ...state.conversations[index],
-      lastMessage: latest.text || "",
-      lastMessageAt: latest.createdAt || null,
-      lastSenderUid: latest.senderUid || ""
-    };
-  }
-}
-
-function openConversation(conversationId) {
-  const conversation = state.conversations.find((item) => item.id === conversationId);
-  if (!conversation) return;
-
-  state.active = conversation;
-  elements.app?.classList.remove("show-list");
-  document.body.classList.add("messages-chat-active");
-  document.documentElement.dataset.messagesView = "chat";
-  syncViewport();
-
-  setAvatar(elements.chatAvatar, conversation);
-  if (elements.chatTitle) elements.chatTitle.textContent = conversation.name || "Conversation";
-  if (elements.chatSubtitle) {
-    elements.chatSubtitle.textContent = conversation.type === "direct"
-      ? "Direct message"
-      : conversation.type === "group"
-        ? `${conversation.memberUids?.length || 0} members`
-        : conversation.description || "Team channel";
-  }
-
-  state.unsubscribe?.();
-  state.unsubscribe = onSnapshot(
-    query(collection(db, "channels", conversation.id, "messages"), orderBy("createdAt", "asc")),
-    renderMessages,
-    (error) => {
-      console.error("Message subscription failed:", error);
-      const empty = document.createElement("div");
-      empty.className = "messages-empty";
-      empty.textContent = error.message || "Unable to load messages.";
-      elements.chatFeed?.replaceChildren(empty);
-    }
-  );
-
-  renderConversations();
-}
-
-async function sendMessage() {
-  const text = String(elements.messageInput?.value || "").trim();
-  if (!text || !state.active || !state.user) return;
-
-  elements.messageInput.value = "";
-  autoSizeMessageInput();
-
-  await addDoc(collection(db, "channels", state.active.id, "messages"), {
-    text,
-    senderUid: state.user.uid,
-    senderName:
-      state.profile.displayName
-      || state.profile.fullName
-      || state.profile.name
-      || state.user.displayName
-      || state.user.email
-      || "User",
-    senderRole: state.profile.role || "customer",
-    companyId: state.profile.companyId || "",
-    createdAt: serverTimestamp()
-  });
-}
-
-function autoSizeMessageInput() {
-  if (!elements.messageInput) return;
-  elements.messageInput.style.height = "auto";
-  elements.messageInput.style.height = `${Math.min(128, elements.messageInput.scrollHeight)}px`;
-}
-
-function toggleGroup(groupKey) {
-  if (state.collapsed.has(groupKey)) state.collapsed.delete(groupKey);
-  else state.collapsed.add(groupKey);
-  saveCollapsedGroups();
-  renderConversations();
-}
-
-function toggleEditing() {
-  state.editing = !state.editing;
-  elements.editButton.textContent = state.editing ? "Done" : "Edit";
-  elements.editButton.setAttribute("aria-pressed", String(state.editing));
-
-  if (state.editing) {
-    state.collapsed.clear();
-  } else if (![...state.collapsed].length) {
-    state.collapsed.add("role");
-  }
-  saveCollapsedGroups();
-  renderConversations();
-}
-
-function openMenu() {
-  if (elements.menu) elements.menu.hidden = false;
-}
-
-function closeMenu() {
-  if (elements.menu) elements.menu.hidden = true;
-}
-
-function startVoiceSearch() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    elements.conversationSearch?.focus();
-    return;
-  }
-
-  const recognition = new SpeechRecognition();
-  recognition.lang = document.documentElement.lang || "en-US";
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-  recognition.addEventListener("result", (event) => {
-    const transcript = event.results?.[0]?.[0]?.transcript || "";
-    if (elements.conversationSearch) elements.conversationSearch.value = transcript;
-    state.search = transcript;
-    renderConversations();
-  }, { once: true });
-  recognition.start();
-}
-
-function syncViewport() {
-  const viewport = window.visualViewport;
-  const height = Math.round(viewport?.height || window.innerHeight);
-  const top = Math.round(viewport?.offsetTop || 0);
-  const layoutHeight = Math.max(window.innerHeight, document.documentElement.clientHeight || 0);
-  const keyboardOpen = document.body.classList.contains("messages-chat-active") && layoutHeight - height > 120;
-
-  document.documentElement.style.setProperty("--messages-viewport-height", `${height}px`);
-  document.documentElement.style.setProperty("--messages-viewport-top", `${top}px`);
-  document.body.classList.toggle("keyboard-open", keyboardOpen);
-
-  if (keyboardOpen && elements.chatFeed) {
-    requestAnimationFrame(() => {
-      elements.chatFeed.scrollTop = elements.chatFeed.scrollHeight;
-    });
-  }
-}
-
-function bindEvents() {
-  elements.conversationList?.addEventListener("click", (event) => {
-    const groupToggle = event.target.closest("[data-group-toggle]");
-    if (groupToggle) {
-      toggleGroup(groupToggle.dataset.groupToggle);
-      return;
-    }
-
-    const row = event.target.closest("[data-conversation]");
-    if (row) openConversation(row.dataset.conversation);
-  });
-
-  elements.conversationSearch?.addEventListener("input", (event) => {
-    state.search = event.target.value;
-    renderConversations();
-  });
-
-  elements.editButton?.addEventListener("click", toggleEditing);
-  elements.newConversationButton?.addEventListener("click", openMenu);
-  elements.voiceSearchButton?.addEventListener("click", startVoiceSearch);
-  elements.chatMenuButton?.addEventListener("click", openMenu);
-  elements.backButton?.addEventListener("click", showMessageCenter);
-  elements.closeMenuButton?.addEventListener("click", closeMenu);
-  elements.menuBackdrop?.addEventListener("click", closeMenu);
-
-  elements.refreshButton?.addEventListener("click", async () => {
-    closeMenu();
-    await loadConversations();
-  });
-
-  elements.messageForm?.addEventListener("submit", (event) => {
-    event.preventDefault();
-    sendMessage().catch((error) => console.error("Message send failed:", error));
-  });
-
-  elements.messageInput?.addEventListener("input", autoSizeMessageInput);
-  elements.messageInput?.addEventListener("focus", () => {
-    setTimeout(syncViewport, 80);
-    setTimeout(syncViewport, 280);
-  });
-  elements.messageInput?.addEventListener("blur", () => setTimeout(syncViewport, 120));
-  elements.messageInput?.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      elements.messageForm?.requestSubmit();
-    }
-  });
-
-  window.visualViewport?.addEventListener("resize", syncViewport, { passive: true });
-  window.visualViewport?.addEventListener("scroll", syncViewport, { passive: true });
-  window.addEventListener("orientationchange", () => setTimeout(syncViewport, 150), { passive: true });
-  window.addEventListener("pagehide", () => state.unsubscribe?.(), { once: true });
-}
-
-function init() {
-  bindEvents();
-  showMessageCenter();
-  syncViewport();
-
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      window.location.replace("/login.html");
-      return;
-    }
-
-    state.user = user;
-    state.profile = getSavedUserProfile() || {};
-    state.conversations = BUILTIN_CONVERSATIONS
-      .map((conversation, order) => ({ ...conversation, order, builtin: true, type: "role" }))
-      .filter(canSee);
-
-    renderConversations();
-    setPageReady();
-    await loadConversations();
-  });
-}
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init, { once: true });
-} else {
-  init();
-}
+function init(){ bind(); center(); syncViewport(); onAuthStateChanged(auth,async user=>{if(!user){window.location.replace("/login.html");return;} state.user=user; state.profile=getSavedUserProfile()||{}; state.conversations=BUILTINS.map((c,order)=>({...c,order,builtin:true,type:"role"})).filter(canSee); renderConversations(); ready(); await loadConversations();}); }
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
