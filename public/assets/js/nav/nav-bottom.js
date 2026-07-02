@@ -6,7 +6,7 @@ const REGISTRY = {
   dashboard: { label: "Dashboard", page: "dashboard.html", icon: "dashboard" },
   leads: { label: "Leads", page: "leads.html", icon: "leads" },
   jobs: { label: "Jobs", page: "jobs.html", icon: "jobs" },
-  messages: { label: "Messages", page: "messages.html?view=center", icon: "messages" },
+  messages: { label: "Messages", page: "messages.html", icon: "messages" },
   schedule: { label: "Schedule", page: "schedule.html", icon: "schedule" },
   map: { label: "Map", page: "operations_map.html", icon: "map" },
   settings: { label: "Settings", page: "settings-v2.html", icon: "settings" }
@@ -45,7 +45,7 @@ function start() {
   if (!mountBottomNav()) {
     const observer = new MutationObserver(() => { if (mountBottomNav()) observer.disconnect(); });
     observer.observe(document.documentElement, { childList: true, subtree: true });
-    window.setTimeout(() => observer.disconnect(), 2500);
+    window.setTimeout(() => observer.disconnect(), 12000);
   }
   window.addEventListener("evara:workspace-updated", () => mountBottomNav(true));
   window.addEventListener("storage", (event) => { if (event.key === "evaraos-workspace") mountBottomNav(true); });
