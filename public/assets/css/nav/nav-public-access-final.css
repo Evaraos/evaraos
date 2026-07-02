@@ -1,0 +1,59 @@
+/* Final drawer-only correction. Bottom navigation is not targeted. */
+.eva-menu-panel .eva-public-access-block{
+  margin:0 0 16px!important;
+  padding:0 0 16px!important;
+  border:0!important;
+  border-bottom:1px solid rgba(var(--adaptive-ink-rgb),.11)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+.eva-menu-panel .eva-public-access-block::before,
+.eva-menu-panel .eva-public-access-block::after{content:none!important;display:none!important}
+.eva-menu-panel .eva-access-strip,
+.eva-menu-panel .eva-access-strip .eva-menu-control,
+.eva-menu-panel .eva-access-strip .eva-menu-control:hover,
+.eva-menu-panel .eva-access-strip .eva-menu-control.is-hovered,
+.eva-menu-panel .eva-access-strip .eva-menu-control.is-pressed,
+.eva-menu-panel .eva-access-strip .eva-menu-control[data-active="true"],
+.eva-menu-panel .eva-access-strip .eva-menu-control[aria-current="page"]{
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  transform:none!important;
+}
+.eva-menu-panel .eva-access-strip .eva-menu-control::before,
+.eva-menu-panel .eva-access-strip .eva-menu-control::after,
+.eva-menu-panel .eva-access-strip .eva-menu-icon::before,
+.eva-menu-panel .eva-access-strip .eva-menu-icon::after{content:none!important;display:none!important}
+
+.eva-menu-panel .eva-menu-search-bottom{
+  position:relative!important;
+  overflow:hidden!important;
+  margin:4px 0 14px!important;
+  padding:12px!important;
+  border:1px solid rgba(var(--adaptive-ink-rgb),.14)!important;
+  border-radius:24px!important;
+  background:radial-gradient(115% 82% at 18% 0%,rgba(255,255,255,.18),transparent 48%),linear-gradient(180deg,rgba(var(--adaptive-ink-rgb),.075),rgba(var(--adaptive-ink-rgb),.025))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.24),0 12px 34px rgba(var(--adaptive-shadow-rgb),.10)!important;
+  backdrop-filter:blur(22px) saturate(170%)!important;
+  -webkit-backdrop-filter:blur(22px) saturate(170%)!important;
+}
+.eva-menu-panel .eva-ai-orb{
+  background:linear-gradient(145deg,rgba(84,167,255,.20),rgba(255,255,255,.06))!important;
+  border:1px solid rgba(var(--adaptive-ink-rgb),.13)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.24)!important;
+}
+.eva-menu-panel .eva-search-shell{
+  border-radius:20px!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.10),transparent 46%),var(--lg-fill-clear)!important;
+  border:1px solid var(--lg-edge-soft)!important;
+  box-shadow:0 8px 22px var(--lg-shadow-soft),inset 0 1px 0 rgba(255,255,255,.56)!important;
+  backdrop-filter:blur(8px) saturate(180%)!important;
+  -webkit-backdrop-filter:blur(8px) saturate(180%)!important;
+}
