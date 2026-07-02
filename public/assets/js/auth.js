@@ -20,6 +20,7 @@ const DEFAULT_PUBLIC_APPROVAL = "pending";
 function byId(id) { return document.getElementById(id); }
 function setMessage(el, message, type = "info") { if (el) { el.textContent = message || ""; el.dataset.state = type; } }
 function normalizeUsername(value) { return String(value || "").trim().toLowerCase(); }
+function normalizeEmail(value) { return String(value || "").trim().toLowerCase(); }
 function safeProfileName(user) { return user?.displayName || user?.email || "User"; }
 
 function navigateWithLoader(url, options = {}) {
@@ -31,6 +32,7 @@ function setFormBusy(form, isBusy, submitTextBusy, submitTextIdle) {
   const submit = form?.querySelector('button[type="submit"]');
   if (!submit) return;
   submit.disabled = isBusy;
+  submit.setAttribute("aria-busy", String(isBusy));
   submit.textContent = isBusy ? submitTextBusy : submitTextIdle;
 }
 
@@ -50,16 +52,19 @@ function authErrorMessage(error, fallback = "Something went wrong. Try again.") 
   const code = String(error?.code || "");
   const message = String(error?.message || "");
   const normalized = `${code} ${message}`.toLowerCase();
-  if (normalized.includes("securetoken.googleapis.com") || normalized.includes("granttoken-are-blocked")) {
-    return "Authentication is temporarily blocked by the Google Cloud API-key restrictions. Enable the Secure Token API and Identity Toolkit API for the Evaraos web API key, then try again.";
+  if (normalized.includes("securetoken.googleapis.com") || normalized.includes("granttoken-are-blocked") || normalized.includes("api-key-not-valid")) {
+    return "Evaraos authentication is temporarily unavailable because the Firebase authentication API is blocked or misconfigured. Contact support and try again shortly.";
   }
-  if (code.includes("invalid-credential") || code.includes("wrong-password") || code.includes("user-not-found")) return "Login failed. Check your email and password.";
-  if (code.includes("too-many-requests")) return "Too many attempts. Wait a moment, then try again.";
-  if (code.includes("email-already-in-use")) return "That email already has an account. Use login or reset password.";
+  if (code.includes("invalid-email")) return "Enter the full email address connected to the account.";
+  if (code.includes("invalid-credential") || code.includes("wrong-password") || code.includes("user-not-found")) return "The email or password is incorrect. Use Forgot password if needed.";
+  if (code.includes("user-disabled")) return "This account has been disabled. Contact Evaraos support.";
+  if (code.includes("too-many-requests")) return "Too many attempts. Wait a few minutes or reset the password.";
+  if (code.includes("network-request-failed")) return "The login request could not reach Firebase. Check the connection and try again.";
+  if (code.includes("operation-not-allowed")) return "Email/password login is not currently enabled in Firebase Authentication.";
+  if (code.includes("email-already-in-use")) return "That email already has an account. Log in or reset the password.";
   if (code.includes("weak-password")) return "Password must be at least 6 characters.";
   if (code.includes("permission-denied")) return "You signed in, but profile access was blocked. Refresh and try again.";
-  if (message.toLowerCase().includes("username")) return message;
-  return error?.message || fallback;
+  return fallback;
 }
 
 function normalizeUserData(data = {}, user = {}) {
@@ -87,28 +92,9 @@ async function loadOrCreateUserProfile(user, preferredProfile = {}) {
   const userRef = doc(db, "users", user.uid);
   const snap = await getDoc(userRef);
   if (snap.exists()) return normalizeUserData(snap.data() || {}, user);
-
   const fallbackName = preferredProfile.displayName || safeProfileName(user);
   const newProfile = {
-    uid: user.uid,
-    id: user.uid,
-    email: user.email || "",
-    username: preferredProfile.username || "",
-    usernameLower: normalizeUsername(preferredProfile.username || ""),
-    displayName: fallbackName,
-    fullName: fallbackName,
-    name: fallbackName,
-    role: DEFAULT_PUBLIC_ROLE,
-    phone: "",
-    bio: "",
-    status: DEFAULT_PUBLIC_STATUS,
-    approvalStatus: DEFAULT_PUBLIC_APPROVAL,
-    companyId: "",
-    companyName: "",
-    companySlug: "",
-    companyCategory: "",
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
+    uid: user.uid,id: user.uid,email: user.email || "",username: preferredProfile.username || "",usernameLower: normalizeUsername(preferredProfile.username || ""),displayName: fallbackName,fullName: fallbackName,name: fallbackName,role: DEFAULT_PUBLIC_ROLE,phone: "",bio: "",status: DEFAULT_PUBLIC_STATUS,approvalStatus: DEFAULT_PUBLIC_APPROVAL,companyId: "",companyName: "",companySlug: "",companyCategory: "",createdAt: serverTimestamp(),updatedAt: serverTimestamp()
   };
   await setDoc(userRef, newProfile, { merge: true });
   return newProfile;
@@ -116,149 +102,62 @@ async function loadOrCreateUserProfile(user, preferredProfile = {}) {
 
 function syncSafeSession(user, extras = {}) {
   const profile = normalizeUserData(extras, user);
-  syncUserSession(user, profile.role || DEFAULT_PUBLIC_ROLE, {
-    displayName: profile.displayName,
-    fullName: profile.fullName,
-    name: profile.name,
-    username: profile.username,
-    companyId: profile.companyId,
-    companyName: profile.companyName,
-    approvalStatus: profile.approvalStatus,
-    status: profile.status
-  });
+  syncUserSession(user, profile.role || DEFAULT_PUBLIC_ROLE, {displayName: profile.displayName,fullName: profile.fullName,name: profile.name,username: profile.username,companyId: profile.companyId,companyName: profile.companyName,approvalStatus: profile.approvalStatus,status: profile.status});
   return profile;
 }
 
 function redirectForRole(role = DEFAULT_PUBLIC_ROLE) {
   const normalized = String(role || DEFAULT_PUBLIC_ROLE).toLowerCase();
-  if (normalized === "customer") {
-    navigateWithLoader("/customer_dashboard.html", { title: "Opening portal", subtitle: "Loading your customer portal." });
-    return;
-  }
+  if (normalized === "customer") { navigateWithLoader("/customer_dashboard.html", { title: "Opening portal", subtitle: "Loading your customer portal." }); return; }
   navigateWithLoader("/dashboard.html", { title: "Opening dashboard", subtitle: "Loading your Evaraos workspace." });
 }
 
 function resolveLoginEmail(loginValue) {
-  const raw = String(loginValue || "").trim();
-  if (!raw) return "";
-  if (!raw.includes("@")) throw new Error("Username login is temporarily disabled. Use your email to log in.");
-  return raw;
+  const email = normalizeEmail(loginValue);
+  if (!email) return "";
+  if (!email.includes("@") || !email.includes(".")) throw new Error("Enter the full email address connected to the account.");
+  return email;
 }
 
 async function handleLoginSubmit(event) {
   event.preventDefault();
-  const form = byId("loginForm");
-  const emailInput = byId("loginEmail");
-  const passwordInput = byId("loginPassword");
-  const rememberInput = byId("rememberDevice");
-  const messageEl = byId("loginMessage");
-  const email = emailInput?.value?.trim() || "";
-  const password = passwordInput?.value || "";
-  const rememberDevice = !!rememberInput?.checked;
-
-  if (!email || !password) { setMessage(messageEl, "Enter your email and password.", "error"); return; }
-
+  const form = byId("loginForm"), emailInput = byId("loginEmail"), passwordInput = byId("loginPassword"), rememberInput = byId("rememberDevice"), messageEl = byId("loginMessage");
+  const email = normalizeEmail(emailInput?.value), password = passwordInput?.value || "", rememberDevice = !!rememberInput?.checked;
+  if (!email || !password) { setMessage(messageEl, "Enter your account email and password.", "error"); return; }
   try {
-    setFormBusy(form, true, "Signing In...", "Login");
-    setMessage(messageEl, "Signing you in securely...", "info");
+    setFormBusy(form, true, "Signing In…", "Login");
+    setMessage(messageEl, "Signing you in securely…", "info");
     await setAuthPersistence(rememberDevice);
     const resolvedEmail = resolveLoginEmail(email);
     const result = await signInWithEmailAndPassword(auth, resolvedEmail, password);
     const user = result.user;
     let profile = syncSafeSession(user, { email: user.email || resolvedEmail, displayName: user.displayName || user.email || email, status: DEFAULT_PUBLIC_STATUS, approvalStatus: DEFAULT_PUBLIC_APPROVAL });
-    try {
-      profile = await loadOrCreateUserProfile(user);
-      syncSafeSession(user, profile);
-    } catch (profileError) { console.warn("Profile sync skipped after login:", profileError); }
-    setMessage(messageEl, "Login successful. Redirecting...", "success");
+    try { profile = await loadOrCreateUserProfile(user); syncSafeSession(user, profile); } catch (profileError) { console.warn("Profile sync skipped after login:", profileError); }
+    setMessage(messageEl, "Login successful. Redirecting…", "success");
     redirectForRole(profile.role);
   } catch (error) {
     console.error("Login failed:", error);
-    setMessage(messageEl, authErrorMessage(error, "Login failed. Check your email and password."), "error");
-  } finally {
-    setFormBusy(form, false, "Signing In...", "Login");
-  }
+    setMessage(messageEl, authErrorMessage(error, error?.message || "Login failed. Check the email and password."), "error");
+  } finally { setFormBusy(form, false, "Signing In…", "Login"); }
 }
 
 async function handleSignupSubmit(event) {
   event.preventDefault();
-  const form = byId("signupForm");
-  const nameInput = byId("signupName");
-  const usernameInput = byId("signupUsername");
-  const emailInput = byId("signupEmail");
-  const passwordInput = byId("signupPassword");
-  const confirmInput = byId("signupPasswordConfirm");
-  const rememberInput = byId("signupRememberDevice");
-  const messageEl = byId("signupMessage");
-  const fullName = nameInput?.value?.trim() || "";
-  const username = usernameInput?.value?.trim() || "";
-  const usernameLower = normalizeUsername(username);
-  const email = emailInput?.value?.trim() || "";
-  const password = passwordInput?.value || "";
-  const confirmPassword = confirmInput?.value || "";
-  const rememberDevice = !!rememberInput?.checked;
-
-  if (!fullName || !username || !email || !password || !confirmPassword) { setMessage(messageEl, "Fill out every field before creating your account.", "error"); return; }
-  if (password !== confirmPassword) { setMessage(messageEl, "Passwords do not match.", "error"); return; }
-  if (password.length < 6) { setMessage(messageEl, "Password must be at least 6 characters.", "error"); return; }
-
-  try {
-    setFormBusy(form, true, "Creating Account...", "Create Account");
-    setMessage(messageEl, "Creating your customer account...", "info");
-    await setAuthPersistence(rememberDevice);
-    const result = await createUserWithEmailAndPassword(auth, email, password);
-    const user = result.user;
-    await updateProfile(user, { displayName: fullName });
-    const userDoc = { uid: user.uid, id: user.uid, email, username, usernameLower, displayName: fullName, fullName, name: fullName, role: DEFAULT_PUBLIC_ROLE, phone: "", bio: "", status: DEFAULT_PUBLIC_STATUS, approvalStatus: DEFAULT_PUBLIC_APPROVAL, companyId: "", companyName: "", companySlug: "", companyCategory: "", createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
-    await setDoc(doc(db, "users", user.uid), userDoc, { merge: true });
-    syncUserSession(user, DEFAULT_PUBLIC_ROLE, { displayName: fullName, fullName, name: fullName, username, companyId: "", companyName: "", approvalStatus: DEFAULT_PUBLIC_APPROVAL, status: DEFAULT_PUBLIC_STATUS });
-    setMessage(messageEl, "Account created. Your customer portal is opening while approval stays pending.", "success");
-    navigateWithLoader("/customer_dashboard.html", { title: "Opening portal", subtitle: "Loading your customer account." });
-  } catch (error) {
-    console.error("Signup failed:", error);
-    setMessage(messageEl, authErrorMessage(error, "Could not create account. Try again."), "error");
-  } finally {
-    setFormBusy(form, false, "Creating Account...", "Create Account");
-  }
+  const form=byId("signupForm"),nameInput=byId("signupName"),usernameInput=byId("signupUsername"),emailInput=byId("signupEmail"),passwordInput=byId("signupPassword"),confirmInput=byId("signupPasswordConfirm"),rememberInput=byId("signupRememberDevice"),messageEl=byId("signupMessage");
+  const fullName=nameInput?.value?.trim()||"",username=usernameInput?.value?.trim()||"",usernameLower=normalizeUsername(username),email=normalizeEmail(emailInput?.value),password=passwordInput?.value||"",confirmPassword=confirmInput?.value||"",rememberDevice=!!rememberInput?.checked;
+  if (!fullName||!username||!email||!password||!confirmPassword){setMessage(messageEl,"Fill out every field before creating your account.","error");return;}
+  if(password!==confirmPassword){setMessage(messageEl,"Passwords do not match.","error");return;}
+  if(password.length<6){setMessage(messageEl,"Password must be at least 6 characters.","error");return;}
+  try{
+    setFormBusy(form,true,"Creating Account…","Create Account");setMessage(messageEl,"Creating your customer account…","info");await setAuthPersistence(rememberDevice);
+    const result=await createUserWithEmailAndPassword(auth,email,password),user=result.user;await updateProfile(user,{displayName:fullName});
+    const userDoc={uid:user.uid,id:user.uid,email,username,usernameLower,displayName:fullName,fullName,name:fullName,role:DEFAULT_PUBLIC_ROLE,phone:"",bio:"",status:DEFAULT_PUBLIC_STATUS,approvalStatus:DEFAULT_PUBLIC_APPROVAL,companyId:"",companyName:"",companySlug:"",companyCategory:"",createdAt:serverTimestamp(),updatedAt:serverTimestamp()};
+    await setDoc(doc(db,"users",user.uid),userDoc,{merge:true});syncUserSession(user,DEFAULT_PUBLIC_ROLE,{displayName:fullName,fullName,name:fullName,username,companyId:"",companyName:"",approvalStatus:DEFAULT_PUBLIC_APPROVAL,status:DEFAULT_PUBLIC_STATUS});
+    setMessage(messageEl,"Account created. Opening your customer portal…","success");navigateWithLoader("/customer_dashboard.html",{title:"Opening portal",subtitle:"Loading your customer account."});
+  }catch(error){console.error("Signup failed:",error);setMessage(messageEl,authErrorMessage(error,"Could not create account. Try again."),"error");}finally{setFormBusy(form,false,"Creating Account…","Create Account");}
 }
 
-async function handleResetSubmit(event) {
-  event.preventDefault();
-  const form = byId("resetForm");
-  const emailInput = byId("resetEmail");
-  const messageEl = byId("resetMessage");
-  const email = emailInput?.value?.trim() || "";
-  if (!email) { setMessage(messageEl, "Enter your account email.", "error"); return; }
-  try {
-    setFormBusy(form, true, "Sending Reset Link...", "Send Reset Link");
-    setMessage(messageEl, "Sending reset email...", "info");
-    await sendPasswordResetEmail(auth, email);
-    setMessage(messageEl, "Password reset email sent. Check your inbox.", "success");
-  } catch (error) {
-    console.error("Reset failed:", error);
-    setMessage(messageEl, authErrorMessage(error, "Could not send reset email. Try again."), "error");
-  } finally {
-    setFormBusy(form, false, "Sending Reset Link...", "Send Reset Link");
-  }
-}
+function initLoginPage(){const form=byId("loginForm");if(!form)return;bindPasswordToggle("loginPasswordToggle","loginPassword");form.addEventListener("submit",handleLoginSubmit);}
+function initSignupPage(){const form=byId("signupForm");if(!form)return;bindPasswordToggle("signupPasswordToggle","signupPassword");bindPasswordToggle("signupPasswordConfirmToggle","signupPasswordConfirm");form.addEventListener("submit",handleSignupSubmit);}
 
-function injectProtectionNote(form, anchorSelector = ".auth-actions") {
-  if (!form || form.querySelector(".evaraos-app-check-note")) return;
-  const note = document.createElement("p");
-  note.className = "evaraos-app-check-note";
-  note.textContent = "Protected by Evaraos App Check and reCAPTCHA Enterprise.";
-  note.style.margin = "12px 0 0";
-  note.style.fontSize = "12px";
-  note.style.fontWeight = "800";
-  note.style.opacity = "0.68";
-  note.style.lineHeight = "1.4";
-  const anchor = form.querySelector(anchorSelector) || form.lastElementChild;
-  if (anchor?.parentElement) anchor.parentElement.insertBefore(note, anchor.nextSibling);
-  else form.appendChild(note);
-}
-
-function initLoginPage() { const form = byId("loginForm"); if (!form) return; bindPasswordToggle("loginPasswordToggle", "loginPassword"); form.addEventListener("submit", handleLoginSubmit); }
-function initSignupPage() { const form = byId("signupForm"); if (!form) return; bindPasswordToggle("signupPasswordToggle", "signupPassword"); bindPasswordToggle("signupPasswordConfirmToggle", "signupPasswordConfirm"); injectProtectionNote(form); form.addEventListener("submit", handleSignupSubmit); }
-function initResetPage() { const form = byId("resetForm"); if (!form) return; form.addEventListener("submit", handleResetSubmit); }
-
-document.addEventListener("DOMContentLoaded", () => { initLoginPage(); initSignupPage(); initResetPage(); });
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>{initLoginPage();initSignupPage();},{once:true});else{initLoginPage();initSignupPage();}
