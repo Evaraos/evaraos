@@ -7,6 +7,13 @@ const ROW_SELECTOR = [
   ".eva-account-strip a"
 ].join(",");
 
+const THEME_ICON = Object.freeze({
+  system: "themeSystem",
+  light: "themeLight",
+  dark: "themeDark",
+  image: "themeImage"
+});
+
 function activate(node) {
   if (!node) return;
   node.classList.add("is-hovered");
@@ -18,10 +25,22 @@ function deactivate(node) {
   node.classList.remove("is-pressed");
 }
 
+function syncThemeButton(button, mode) {
+  const value = THEME_ICON[mode] ? mode : "system";
+  const icon = window.EvaraIcons?.iconSvg?.(THEME_ICON[value]);
+  if (icon) button.innerHTML = icon;
+  button.dataset.themeMode = value;
+  button.title = `Appearance: ${value}`;
+  button.setAttribute("aria-label", `Appearance: ${value}. Click to change.`);
+}
+
 function bindThemeButton(panel) {
   const button = panel.querySelector("#evaMenuThemeBtn");
   if (!button || button.dataset.themeBound === "true") return;
   button.dataset.themeBound = "true";
+
+  syncThemeButton(button, window.EvaraTheme?.getThemeMode?.() || "system");
+
   button.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
@@ -29,9 +48,11 @@ function bindThemeButton(panel) {
     const current = window.EvaraTheme?.getThemeMode?.() || "system";
     const next = modes[(modes.indexOf(current) + 1) % modes.length];
     window.EvaraTheme?.setThemeMode?.(next);
-    button.dataset.themeMode = next;
-    button.title = `Appearance: ${next}`;
-    button.setAttribute("aria-label", `Appearance: ${next}. Click to change.`);
+    syncThemeButton(button, next);
+  });
+
+  window.addEventListener("evara:appearance-updated", (event) => {
+    syncThemeButton(button, event.detail?.mode || window.EvaraTheme?.getThemeMode?.() || "system");
   });
 }
 
