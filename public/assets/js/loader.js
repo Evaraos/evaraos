@@ -33,11 +33,15 @@
   function pending(){return document.documentElement.classList.contains("boot-pending")||document.documentElement.classList.contains("auth-pending")||document.body?.classList.contains("auth-pending")||document.body?.classList.contains("app-loading")||isTransitioning}
   function beginNavigationLoad(){if(isTransitioning)return;isTransitioning=true;clearTimers();ensure();document.body?.classList.add("eva-page-leaving");transition()?.classList.add("active");timer=setTimeout(()=>{if(pending())show()},NAV_DELAY);forceTimer=setTimeout(()=>hideAll(true),FORCE_UNLOCK)}
   function shouldIntercept(anchor){if(!anchor)return false;const href=anchor.getAttribute("href")||"";if(!href||href.startsWith("#")||href.startsWith("mailto:")||href.startsWith("tel:")||anchor.hasAttribute("download")||(anchor.target&&anchor.target!=="_self"))return false;try{const url=new URL(anchor.href,location.origin);return url.origin===location.origin&&!(url.pathname===location.pathname&&url.hash)}catch{return false}}
+  function resetLeavingFrame(){clearTimers();transition()?.classList.remove("active");hide(true);document.body?.classList.remove("eva-page-leaving");isTransitioning=false}
   function init(){
     ensure();document.getElementById("evaraGlobalLoader")?.remove();
     window.EvaraLoader={beginNavigationLoad,completeNavigationLoad:()=>hideAll(false),showFastLoader:show,hideFastLoader:hide,showFullLoader:show,hideFullLoader:hide,hideAllLoaders:hideAll,markAppReady:()=>hideAll(false),getState:()=>({isTransitioning,appPending:pending(),loadersCreated:created})};
     document.addEventListener("click",event=>{if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;const anchor=event.target.closest("a[href]");if(!shouldIntercept(anchor))return;event.preventDefault();beginNavigationLoad();setTimeout(()=>location.assign(anchor.href),80)});
-    addEventListener("evara:session-ready",()=>hideAll(false));addEventListener("load",()=>{if(!pending())hideAll(false)});addEventListener("pageshow",()=>hideAll(true));
+    addEventListener("evara:session-ready",()=>hideAll(false));
+    addEventListener("load",()=>{if(!pending())hideAll(false)});
+    addEventListener("pageshow",()=>hideAll(true));
+    addEventListener("pagehide",resetLeavingFrame);
     forceTimer=setTimeout(()=>hideAll(true),FORCE_UNLOCK);
   }
   document.readyState==="loading"?document.addEventListener("DOMContentLoaded",init,{once:true}):init();
