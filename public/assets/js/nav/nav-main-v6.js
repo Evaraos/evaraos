@@ -1,4 +1,4 @@
-const NAV_BUILD="nav-v28-stable-avatar";
+const NAV_BUILD="nav-v29-stability-fix";
 let NAV_STATE,getNavShell,renderNav,applyProgress,bindScrollBehavior,animateNav;
 
 async function loadCore(){
@@ -42,7 +42,6 @@ async function bindSystems(){
   try{bindScrollBehavior?.()}catch{}
   try{session?.bindRuntimeRefresh?.()}catch{}
   try{
-    window.EvaraTheme?.applyAppearance?.();
     window.EvaraTheme?.updateThemeControls?.();
     window.EvaraTheme?.refreshAdaptiveGlass?.();
   }catch{}
