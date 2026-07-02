@@ -44,17 +44,17 @@ jobs:
       - name: Consolidate every public HTML entry point
         run: node tools/ensure-universal-nav.js
 
-      - name: Audit Liquid Glass runtime
-        run: node tools/liquid-glass-audit.js
-
       - name: Commit migrated pages
         run: |
           if git diff --quiet; then
             echo "No page migration changes required."
-            exit 0
+          else
+            git config user.name "Evaraos Liquid Glass Audit"
+            git config user.email "actions@users.noreply.github.com"
+            git add public
+            git commit -m "Consolidate pages on Liquid Glass runtime v7"
+            git push origin HEAD:evaraos
           fi
-          git config user.name "Evaraos Liquid Glass Audit"
-          git config user.email "actions@users.noreply.github.com"
-          git add public
-          git commit -m "Consolidate pages on Liquid Glass runtime v7"
-          git push origin HEAD:evaraos
+
+      - name: Audit Liquid Glass runtime
+        run: node tools/liquid-glass-audit.js
