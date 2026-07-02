@@ -1,14 +1,20 @@
 import { NAV_STATE } from "./nav-config.js";
 import { forcePageVisible } from "./nav-utils.js";
 
+function unlockNavigation() {
+  NAV_STATE.isNavigating = false;
+  forcePageVisible();
+  try { window.EvaraLoader?.markAppReady?.(); } catch {}
+}
+
 export function navigateWithLoader(href, options = {}) {
-  if (!href || NAV_STATE.isNavigating) return;
+  if (!href) return;
 
   let targetUrl;
-
   try {
     targetUrl = new URL(href, window.location.origin);
   } catch {
+    unlockNavigation();
     return;
   }
 
@@ -19,31 +25,49 @@ export function navigateWithLoader(href, options = {}) {
     currentUrl.search === targetUrl.search &&
     currentUrl.hash === targetUrl.hash;
 
-  if (samePage) return;
+  if (samePage) {
+    unlockNavigation();
+    return;
+  }
 
+  /* A stale navigation lock must never freeze the app. */
   NAV_STATE.isNavigating = true;
   forcePageVisible();
 
-  if (window.EvaraLoader && typeof window.EvaraLoader.beginNavigationLoad === "function") {
-    window.EvaraLoader.beginNavigationLoad({
+  try {
+    window.EvaraLoader?.beginNavigationLoad?.({
       title: options.title || "Opening Evaraos",
       subtitle: options.subtitle || "Preparing your next screen."
     });
+  } catch {
+    /* Loader visuals are optional; navigation must continue. */
   }
 
-  requestAnimationFrame(() => {
-    window.location.assign(targetUrl.href);
-  });
-
-  setTimeout(() => {
-    if (!NAV_STATE.isNavigating) return;
-
-    forcePageVisible();
-
+  const go = () => {
     try {
       window.location.href = targetUrl.href;
     } catch {
+      unlockNavigation();
       window.location.assign(targetUrl.href);
     }
-  }, 1200);
+  };
+
+  requestAnimationFrame(go);
+
+  /* If WebKit cancels the first assignment, retry once, then unlock the UI. */
+  setTimeout(() => {
+    if (!NAV_STATE.isNavigating) return;
+    go();
+  }, 700);
+
+  setTimeout(() => {
+    if (!NAV_STATE.isNavigating) return;
+    unlockNavigation();
+  }, 2200);
 }
+
+window.addEventListener("pageshow", unlockNavigation);
+window.addEventListener("pagehide", () => { NAV_STATE.isNavigating = false; });
+window.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") unlockNavigation();
+});
