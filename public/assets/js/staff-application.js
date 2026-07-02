@@ -1,27 +1,9 @@
 import {
-  auth,
-  db,
-  setAuthPersistence,
-  createUserWithEmailAndPassword,
-  updateProfile,
-  syncUserSession,
-  doc,
-  setDoc,
-  collection,
-  getDocs,
-  query,
-  where,
-  limit,
-  serverTimestamp
+  auth, db, setAuthPersistence, createUserWithEmailAndPassword, updateProfile,
+  syncUserSession, doc, setDoc, serverTimestamp
 } from "./firebase.js";
-
 import { getApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getStorage,
-  ref as storageRef,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 const DEFAULT_PUBLIC_ROLE = "customer";
 const DEFAULT_PUBLIC_STATUS = "pending";
@@ -29,457 +11,146 @@ const DEFAULT_PUBLIC_APPROVAL = "pending";
 const MAX_ATTACHMENT_BYTES = 15 * 1024 * 1024;
 
 const AVAILABLE_STAFF_ROLES = [
-  { value: "sales_rep", label: "Sales Rep" },
-  { value: "technician", label: "Technician" },
-  { value: "cleaner", label: "Cleaner" },
-  { value: "staff", label: "General Staff" }
+  { value:"sales_rep", label:"Sales Representative", summary:"Generate leads, educate customers, and close service opportunities in assigned territories." },
+  { value:"lead_generator", label:"Lead Generator", summary:"Create qualified opportunities through field, digital, referral, or partner outreach." },
+  { value:"sales_manager", label:"Sales Manager", summary:"Coach representatives, oversee pipelines, territories, goals, and sales performance." },
+  { value:"technician", label:"Technician", summary:"Complete assigned field services, document work, and maintain quality and safety standards." },
+  { value:"lead_technician", label:"Lead Technician", summary:"Lead crews, verify job quality, manage equipment, and support field training." },
+  { value:"cleaner", label:"Cleaner", summary:"Perform residential or commercial cleaning services using Evaraos job workflows." },
+  { value:"lead_cleaner", label:"Lead Cleaner", summary:"Coordinate cleaning teams, inspect completed work, and maintain customer standards." },
+  { value:"crew_lead", label:"Crew Lead", summary:"Coordinate a field crew, assignments, arrival times, materials, and completion reporting." },
+  { value:"dispatcher", label:"Dispatcher", summary:"Assign jobs, coordinate schedules, communicate with staff, and resolve route conflicts." },
+  { value:"operations_coordinator", label:"Operations Coordinator", summary:"Support scheduling, customer communication, documentation, and daily operating flow." },
+  { value:"field_manager", label:"Field Manager", summary:"Oversee field teams, quality, route execution, safety, and service accountability." },
+  { value:"quality_control", label:"Quality Control", summary:"Review job evidence, inspect results, document issues, and protect service standards." },
+  { value:"customer_support", label:"Customer Support", summary:"Help customers with bookings, updates, billing questions, and service recovery." },
+  { value:"hr", label:"Human Resources", summary:"Support hiring, onboarding, records, policies, and staff communication." },
+  { value:"staff", label:"General Staff", summary:"Join the operating team in a flexible role based on experience and business needs." }
 ];
 
 const form = document.getElementById("staffApplicationForm");
 const submitBtn = document.getElementById("staffApplicationSubmit");
 const messageEl = document.getElementById("staffApplicationMessage");
+const byId = id => document.getElementById(id);
+const value = id => String(byId(id)?.value || "").trim();
+const checked = id => Boolean(byId(id)?.checked);
+const fileValue = id => byId(id)?.files?.[0] || null;
 
-function byId(id) {
-  return document.getElementById(id);
+function fullName(){ return [value("appFirstName"),value("appMiddleName"),value("appLastName")].filter(Boolean).join(" "); }
+function normalizeUsername(email=""){ return String(email).trim().toLowerCase().split("@")[0].replace(/[^a-z0-9._-]+/g,"").slice(0,40); }
+function sanitizeRole(role=""){ const v=String(role).trim().toLowerCase(); return AVAILABLE_STAFF_ROLES.some(r=>r.value===v)?v:""; }
+function setMessage(text="",state=""){ if(messageEl){messageEl.textContent=text;messageEl.dataset.state=state;} }
+function setBusy(busy,text="Submit Staff Application"){ if(submitBtn){submitBtn.disabled=busy;submitBtn.textContent=busy?text:"Submit Staff Application";} }
+
+function validateAttachment(file,label,required=false){
+  if(!file){if(required)throw new Error(`${label} is required.`);return;}
+  if(!(file.type.startsWith("image/")||file.type==="application/pdf"))throw new Error(`${label} must be an image or PDF.`);
+  if(file.size>MAX_ATTACHMENT_BYTES)throw new Error(`${label} must be under 15MB.`);
 }
 
-function value(id) {
-  return String(byId(id)?.value || "").trim();
-}
-
-function checkboxValue(id) {
-  return Boolean(byId(id)?.checked);
-}
-
-function fileValue(id) {
-  return byId(id)?.files?.[0] || null;
-}
-
-function setMessage(message = "", state = "") {
-  if (!messageEl) return;
-  messageEl.textContent = message;
-  messageEl.dataset.state = state;
-}
-
-function setBusy(isBusy, text = "Submit Staff Application") {
-  if (!submitBtn) return;
-  submitBtn.disabled = isBusy;
-  submitBtn.textContent = isBusy ? text : "Submit Staff Application";
-}
-
-function normalizeUsername(email = "") {
-  return String(email || "").trim().toLowerCase().split("@")[0].replace(/[^a-z0-9._-]+/g, "").slice(0, 40);
-}
-
-function sanitizeRole(role = "") {
-  const cleaned = String(role || "").trim().toLowerCase();
-  return AVAILABLE_STAFF_ROLES.some((item) => item.value === cleaned) ? cleaned : "";
-}
-
-function validateAttachment(file, label, required = false) {
-  if (!file) {
-    if (required) throw new Error(`${label} is required.`);
-    return;
-  }
-
-  const isAllowed = file.type.startsWith("image/") || file.type === "application/pdf";
-  if (!isAllowed) throw new Error(`${label} must be an image or PDF.`);
-  if (file.size > MAX_ATTACHMENT_BYTES) throw new Error(`${label} must be under 15MB.`);
-}
-
-function validateForm() {
-  const required = [
-    ["appFullName", "Full legal name"],
-    ["appEmail", "Email"],
-    ["appPassword", "Password"],
-    ["appRole", "Role"],
-    ["appPhone", "Phone"],
-    ["appDob", "Date of birth"],
-    ["appAddress", "Street address"],
-    ["appCity", "City"],
-    ["appState", "State"],
-    ["appZip", "ZIP"],
-    ["appWorkAuth", "Work authorization"],
-    ["appDriversLicense", "Driver’s license answer"],
-    ["appTransportation", "Transportation answer"],
-    ["appAvailability", "Availability"],
-    ["appEmploymentType", "Employment type"],
-    ["appEarliestStartDate", "Earliest start date"],
-    ["appBackgroundConsent", "Background check consent"],
-    ["appIdType", "Document type"],
-    ["appEmergencyName", "Emergency contact name"],
-    ["appEmergencyPhone", "Emergency contact phone"]
+function validateForm(){
+  const required=[
+    ["appFirstName","First name"],["appLastName","Last name"],["appEmail","Email"],["appPassword","Password"],
+    ["appRole","Role"],["appPathway","Work pathway"],["appDesiredCompany","Preferred company or program"],
+    ["appCampaign","Preferred campaign"],["appPreferredCity","Preferred city"],["appPhone","Phone"],["appDob","Date of birth"],
+    ["appAddress","Street address"],["appCity","City"],["appState","State"],["appZip","ZIP"],["appWorkAuth","Work authorization"],
+    ["appDriversLicense","Driver’s license answer"],["appTransportation","Transportation answer"],["appAvailability","Availability"],
+    ["appEmploymentType","Employment type"],["appEarliestStartDate","Earliest start date"],["appBackgroundConsent","Background-check consent"],
+    ["appIdType","Document type"],["appEmergencyName","Emergency contact name"],["appEmergencyPhone","Emergency contact phone"],["appEmergencyEmail","Emergency contact email"]
   ];
-
-  for (const [id, label] of required) {
-    if (!value(id)) throw new Error(`${label} is required.`);
-  }
-
-  if (!sanitizeRole(value("appRole"))) {
-    throw new Error("Select a valid role to apply for.");
-  }
-
-  if (value("appPassword").length < 6) {
-    throw new Error("Password must be at least 6 characters.");
-  }
-
-  if (!value("appPasswordConfirm")) {
-    throw new Error("Confirm your password before submitting.");
-  }
-
-  if (value("appPassword") !== value("appPasswordConfirm")) {
-    throw new Error("Passwords do not match.");
-  }
-
-  if (!checkboxValue("appConsentAccurate")) {
-    throw new Error("Confirm that the application information is accurate before submitting.");
-  }
-
-  validateAttachment(fileValue("appIdFront"), "Identity document", true);
-  validateAttachment(fileValue("appIdBack"), "Back side attachment", false);
-  validateAttachment(fileValue("appResume"), "Resume / extra proof", false);
-  validateAttachment(fileValue("appProfilePhoto"), "Profile photo", false);
+  for(const [id,label] of required){if(!value(id))throw new Error(`${label} is required.`);}
+  if(!sanitizeRole(value("appRole")))throw new Error("Select a valid role.");
+  if(value("appPassword").length<6)throw new Error("Password must be at least 6 characters.");
+  if(value("appPassword")!==value("appPasswordConfirm"))throw new Error("Passwords do not match.");
+  if(value("appDriversLicense")==="yes"&&!value("appDriversNumber"))throw new Error("Driver’s license number is required when you have a license.");
+  if(!checked("appConsentAccurate"))throw new Error("Confirm that the application information is accurate.");
+  validateAttachment(fileValue("appIdFront"),"Identity document",true);
+  validateAttachment(fileValue("appIdBack"),"Back side attachment");
+  validateAttachment(fileValue("appResume"),"Résumé or extra proof");
+  validateAttachment(fileValue("appProfilePhoto"),"Profile photo");
 }
 
-async function usernameAvailable() {
-  return true;
+function fileExtension(file={}){const n=String(file.name||"");return (n.includes(".")?n.split(".").pop():"file").toLowerCase().replace(/[^a-z0-9]+/g,"")||"file";}
+async function uploadAttachment(uid,file,kind){
+  if(!file)return null;
+  const ref=storageRef(getStorage(getApp()),`staff_applications/${uid}/${Date.now()}_${kind}.${fileExtension(file)}`);
+  await uploadBytes(ref,file,{contentType:file.type,customMetadata:{ownerUid:uid,applicationId:uid,kind}});
+  return {kind,name:file.name,size:file.size,type:file.type,path:ref.fullPath,downloadURL:await getDownloadURL(ref),verified:false,uploadedAt:new Date().toISOString()};
 }
 
-function fileExtension(file = {}) {
-  const name = String(file.name || "");
-  const ext = name.includes(".") ? name.split(".").pop() : "file";
-  return ext.toLowerCase().replace(/[^a-z0-9]+/g, "") || "file";
-}
-
-async function uploadAttachment(uid, file, kind) {
-  if (!file) return null;
-
-  const storage = getStorage(getApp());
-  const safeKind = String(kind || "attachment").replace(/[^a-z0-9_-]+/gi, "_");
-  const path = `staff_applications/${uid}/${Date.now()}_${safeKind}.${fileExtension(file)}`;
-  const ref = storageRef(storage, path);
-
-  await uploadBytes(ref, file, {
-    contentType: file.type,
-    customMetadata: {
-      ownerUid: uid,
-      applicationId: uid,
-      kind: safeKind
-    }
-  });
-
-  const downloadURL = await getDownloadURL(ref);
-
+function buildPayload(user,attachments){
+  const email=value("appEmail").toLowerCase(),role=sanitizeRole(value("appRole")),name=fullName();
+  const photo=attachments.find(x=>x.kind==="profile_photo");
   return {
-    kind: safeKind,
-    name: file.name,
-    size: file.size,
-    type: file.type,
-    path,
-    downloadURL,
-    verified: false,
-    uploadedAt: new Date().toISOString()
+    applicantUid:user.uid,applicantEmail:email,firstName:value("appFirstName"),middleName:value("appMiddleName"),lastName:value("appLastName"),fullName:name,
+    username:normalizeUsername(email),roleRequested:role,desiredRole:role,workPathway:value("appPathway"),preferredCompanyCategory:value("appCompanyCategory"),
+    desiredCompany:value("appDesiredCompany"),preferredCampaign:value("appCampaign"),preferredCity:value("appPreferredCity"),phone:value("appPhone"),
+    address:value("appAddress"),city:value("appCity"),state:value("appState"),zip:value("appZip"),dateOfBirth:value("appDob"),workAuthorization:value("appWorkAuth"),
+    hasDriversLicense:value("appDriversLicense"),driversLicenseState:value("appDriversState"),driversLicenseNumber:value("appDriversNumber"),driversLicenseExpiration:value("appDriversExpiration"),
+    hasReliableTransportation:value("appTransportation"),availability:value("appAvailability"),preferredSchedule:value("appPreferredSchedule"),employmentType:value("appEmploymentType"),
+    earliestStartDate:value("appEarliestStartDate"),payExpectation:value("appPayExpectation"),equipmentExperience:value("appEquipmentExperience"),backgroundConsent:value("appBackgroundConsent"),
+    consentAccurate:checked("appConsentAccurate"),experienceSummary:value("appExperience"),idDocumentType:value("appIdType"),emergencyContactName:value("appEmergencyName"),
+    emergencyContactPhone:value("appEmergencyPhone"),emergencyContactEmail:value("appEmergencyEmail"),attachments,attachmentCount:attachments.length,
+    profilePhotoUploaded:Boolean(photo),profilePhotoURL:photo?.downloadURL||"",status:"submitted",verificationStatus:"pending_review",reviewNotes:"",
+    createdAt:serverTimestamp(),submittedAt:serverTimestamp(),updatedAt:serverTimestamp(),
+    searchText:[name,email,role,value("appDesiredCompany"),value("appCampaign"),value("appPreferredCity"),value("appPhone"),value("appCity"),value("appState")].filter(Boolean).join(" ").toLowerCase()
   };
 }
 
-function buildApplicationPayload(user, attachments = []) {
-  const email = value("appEmail").toLowerCase();
-  const roleRequested = sanitizeRole(value("appRole"));
-  const profilePhoto = attachments.find((item) => item.kind === "profile_photo");
-
-  return {
-    applicantUid: user.uid,
-    applicantEmail: email,
-    fullName: value("appFullName"),
-    username: normalizeUsername(email),
-    roleRequested,
-    desiredRole: roleRequested,
-    desiredCompany: value("appDesiredCompany"),
-    desiredMarket: value("appDesiredMarket"),
-    phone: value("appPhone"),
-    address: value("appAddress"),
-    city: value("appCity"),
-    state: value("appState"),
-    zip: value("appZip"),
-    dateOfBirth: value("appDob"),
-    workAuthorization: value("appWorkAuth"),
-    hasDriversLicense: value("appDriversLicense"),
-    driversLicenseState: value("appDriversState"),
-    hasReliableTransportation: value("appTransportation"),
-    availability: value("appAvailability"),
-    preferredSchedule: value("appPreferredSchedule"),
-    employmentType: value("appEmploymentType"),
-    earliestStartDate: value("appEarliestStartDate"),
-    payExpectation: value("appPayExpectation"),
-    equipmentExperience: value("appEquipmentExperience"),
-    backgroundConsent: value("appBackgroundConsent"),
-    consentAccurate: checkboxValue("appConsentAccurate"),
-    experienceSummary: value("appExperience"),
-    idDocumentType: value("appIdType"),
-    emergencyContactName: value("appEmergencyName"),
-    emergencyContactPhone: value("appEmergencyPhone"),
-    attachments,
-    attachmentCount: attachments.length,
-    profilePhotoUploaded: Boolean(profilePhoto),
-    profilePhotoURL: profilePhoto?.downloadURL || "",
-    status: "submitted",
-    verificationStatus: "pending_review",
-    reviewNotes: "",
-    createdAt: serverTimestamp(),
-    submittedAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-    searchText: [
-      value("appFullName"),
-      email,
-      roleRequested,
-      value("appDesiredCompany"),
-      value("appDesiredMarket"),
-      value("appPhone"),
-      value("appCity"),
-      value("appState"),
-      value("appEmploymentType")
-    ].filter(Boolean).join(" ").toLowerCase()
-  };
-}
-
-async function handleSubmit(event) {
+async function handleSubmit(event){
   event.preventDefault();
-
-  try {
-    validateForm();
-    setBusy(true, "Creating secure account...");
-    setMessage("Creating your secure applicant account...", "");
-
-    const email = value("appEmail").toLowerCase();
-    const usernameLower = normalizeUsername(email);
+  try{
+    validateForm();setBusy(true,"Creating secure account…");setMessage("Creating your secure applicant account…","info");
+    const email=value("appEmail").toLowerCase(),name=fullName(),username=normalizeUsername(email);
     await setAuthPersistence(true);
-    const result = await createUserWithEmailAndPassword(auth, email, value("appPassword"));
-    const user = result.user;
-
-    await updateProfile(user, { displayName: value("appFullName") });
-
-    const userDoc = {
-      uid: user.uid,
-      id: user.uid,
-      email,
-      username: usernameLower,
-      usernameLower,
-      displayName: value("appFullName"),
-      fullName: value("appFullName"),
-      name: value("appFullName"),
-      role: DEFAULT_PUBLIC_ROLE,
-      phone: value("appPhone"),
-      bio: "Staff applicant pending review.",
-      status: DEFAULT_PUBLIC_STATUS,
-      approvalStatus: DEFAULT_PUBLIC_APPROVAL,
-      staffApplicationStatus: "submitted",
-      staffApplicationRoleRequested: sanitizeRole(value("appRole")),
-      companyId: "",
-      companyName: value("appDesiredCompany"),
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    };
-
-    await setDoc(doc(db, "users", user.uid), userDoc, { merge: true });
-
-    syncUserSession(user, DEFAULT_PUBLIC_ROLE, {
-      displayName: value("appFullName"),
-      fullName: value("appFullName"),
-      name: value("appFullName"),
-      username: usernameLower,
-      companyName: value("appDesiredCompany"),
-      approvalStatus: DEFAULT_PUBLIC_APPROVAL,
-      status: DEFAULT_PUBLIC_STATUS
-    });
-
-    setBusy(true, "Uploading verification...");
-    setMessage("Uploading verification attachments...", "");
-
-    const uploads = [];
-    const profilePhoto = await uploadAttachment(user.uid, fileValue("appProfilePhoto"), "profile_photo");
-    if (profilePhoto) uploads.push(profilePhoto);
-
-    const idFront = await uploadAttachment(user.uid, fileValue("appIdFront"), "id_front");
-    if (idFront) uploads.push(idFront);
-
-    const idBack = await uploadAttachment(user.uid, fileValue("appIdBack"), "id_back");
-    if (idBack) uploads.push(idBack);
-
-    const resume = await uploadAttachment(user.uid, fileValue("appResume"), "resume_or_extra_proof");
-    if (resume) uploads.push(resume);
-
-    setBusy(true, "Submitting application...");
-    setMessage("Saving your staff application for review...", "");
-
-    await setDoc(doc(db, "staff_applications", user.uid), buildApplicationPayload(user, uploads), { merge: false });
-
-    setMessage("Application submitted. Leadership will review your verification and approve your role if accepted.", "success");
-    form?.reset();
-    document.querySelectorAll(".role-pill").forEach((pill) => pill.classList.remove("active"));
-
-    setTimeout(() => {
-      window.location.assign("/customer_dashboard.html");
-    }, 900);
-  } catch (error) {
-    console.error("Staff application failed:", error);
-    setMessage(error.message || "Could not submit staff application.", "error");
-  } finally {
-    setBusy(false);
-  }
+    const {user}=await createUserWithEmailAndPassword(auth,email,value("appPassword"));
+    await updateProfile(user,{displayName:name});
+    await setDoc(doc(db,"users",user.uid),{uid:user.uid,id:user.uid,email,username,usernameLower:username,displayName:name,fullName:name,name,firstName:value("appFirstName"),middleName:value("appMiddleName"),lastName:value("appLastName"),role:DEFAULT_PUBLIC_ROLE,phone:value("appPhone"),bio:"Staff applicant pending review.",status:DEFAULT_PUBLIC_STATUS,approvalStatus:DEFAULT_PUBLIC_APPROVAL,staffApplicationStatus:"submitted",staffApplicationRoleRequested:sanitizeRole(value("appRole")),companyId:"",companyName:value("appDesiredCompany"),createdAt:serverTimestamp(),updatedAt:serverTimestamp()},{merge:true});
+    syncUserSession(user,DEFAULT_PUBLIC_ROLE,{displayName:name,fullName:name,name,username,companyName:value("appDesiredCompany"),approvalStatus:DEFAULT_PUBLIC_APPROVAL,status:DEFAULT_PUBLIC_STATUS});
+    setBusy(true,"Uploading verification…");setMessage("Uploading verification attachments…","info");
+    const uploads=[];
+    for(const [id,kind] of [["appProfilePhoto","profile_photo"],["appIdFront","id_front"],["appIdBack","id_back"],["appResume","resume_or_extra_proof"]]){const item=await uploadAttachment(user.uid,fileValue(id),kind);if(item)uploads.push(item);}
+    setBusy(true,"Submitting application…");
+    await setDoc(doc(db,"staff_applications",user.uid),buildPayload(user,uploads),{merge:false});
+    setMessage("Application submitted. Leadership will review your information and contact you with next steps.","success");
+    form.reset();document.querySelectorAll(".role-choice").forEach(x=>x.classList.remove("active"));
+    setTimeout(()=>window.location.assign("/customer_dashboard.html"),1000);
+  }catch(error){console.error("Staff application failed:",error);setMessage(error.message||"Could not submit staff application.","error");}
+  finally{setBusy(false);}
 }
 
-function injectConfirmPasswordField() {
-  if (document.getElementById("appPasswordConfirm")) return;
+function upgradePage(){
+  const oldName=byId("appFullName")?.closest(".application-field");
+  if(oldName){oldName.className="application-field full name-grid-host";oldName.innerHTML=`<div class="name-grid"><div class="application-field"><label for="appFirstName">First name *</label><input id="appFirstName" autocomplete="given-name" required></div><div class="application-field"><label for="appMiddleName">Middle name <small>Optional</small></label><input id="appMiddleName" autocomplete="additional-name"></div><div class="application-field"><label for="appLastName">Last name *</label><input id="appLastName" autocomplete="family-name" required></div></div>`;}
 
-  const passwordField = byId("appPassword")?.closest(".application-field");
-  if (!passwordField?.parentElement) return;
+  const roleField=byId("appRole")?.closest(".application-field");
+  if(roleField){byId("appRole").innerHTML=`<option value="">Select role</option>${AVAILABLE_STAFF_ROLES.map(r=>`<option value="${r.value}">${r.label}</option>`).join("")}`;roleField.insertAdjacentHTML("beforebegin",`<div class="application-field full role-explorer"><label>Roles you may apply for</label><p class="form-subnote">Select a role card to view its responsibilities and set it as your preferred role.</p><div class="role-choice-grid">${AVAILABLE_STAFF_ROLES.map(r=>`<button type="button" class="role-choice" data-role="${r.value}" aria-expanded="false"><span><strong>${r.label}</strong><small>View role</small></span><p>${r.summary}</p></button>`).join("")}</div></div>`);}
 
-  const confirmField = document.createElement("div");
-  confirmField.className = "application-field";
-  confirmField.innerHTML = `
-    <label for="appPasswordConfirm">Confirm password</label>
-    <input id="appPasswordConfirm" type="password" autocomplete="new-password" minlength="6" required />
-  `;
+  const company=byId("appDesiredCompany");
+  if(company){company.outerHTML=`<select id="appDesiredCompany" required><option value="">Select company or pathway</option><optgroup label="Evaraos in-house companies"><option>Supreme True Clean</option><option>OneofOne Cleaning</option><option>Solar Bright</option><option>Evaraos Inc</option></optgroup><optgroup label="Programs and marketplace pathways"><option value="Evaraos Independent Service Program">Evaraos Independent Service Program</option><option value="Evaraos Lead Vendor Program">Evaraos Lead Vendor Program</option><option value="Evaraos Service Vendor Program">Evaraos Service Vendor Program</option><option value="Independent Freelancer / Contractor">Independent Freelancer / Contractor</option></optgroup><optgroup label="Established third-party businesses"><option value="Third-Party Business — Operations Platform Only">Third-Party Business — Operations Platform Only</option><option value="Third-Party Service Vendor">Third-Party Service Vendor</option><option value="Third-Party Lead Vendor">Third-Party Lead Vendor</option></optgroup></select>`;}
+  const companyField=byId("appDesiredCompany")?.closest(".application-field");
+  companyField?.insertAdjacentHTML("beforebegin",`<div class="application-field"><label for="appPathway">Work pathway *</label><select id="appPathway" required><option value="">Select pathway</option><option value="in_house">Evaraos in-house team</option><option value="program">Evaraos program participant</option><option value="independent">Independent freelancer / contractor</option><option value="third_party">Established third-party business</option></select></div>`);
+  companyField?.insertAdjacentHTML("afterend",`<div class="application-field"><label for="appCompanyCategory">Company category</label><select id="appCompanyCategory"><option value="">Select category</option><option value="in_house">In-house company</option><option value="program">Program / marketplace</option><option value="independent">Independent contractor</option><option value="third_party">Third-party business</option></select></div>`);
 
-  passwordField.parentElement.insertBefore(confirmField, passwordField.nextSibling);
+  const market=byId("appDesiredMarket")?.closest(".application-field");
+  if(market){market.className="application-field";market.innerHTML=`<label for="appCampaign">Preferred campaign or service *</label><select id="appCampaign" required><option value="">Select campaign</option><option>Pressure Washing</option><option>Trash Bin Cleaning</option><option>House Washing</option><option>Driveway & Sidewalk Cleaning</option><option>Interior Residential Cleaning</option><option>Commercial Cleaning</option><option>Solar Panel Cleaning</option><option>Mobile Car Wash & Detailing</option><option>Lead Generation</option><option>Customer Support</option><option>Operations & Dispatch</option><option>Platform / Data Operations</option></select>`;market.insertAdjacentHTML("afterend",`<div class="application-field"><label for="appPreferredCity">Preferred work city *</label><input id="appPreferredCity" placeholder="Jacksonville, FL" required></div>`);}
+
+  byId("appDriversState")?.closest(".application-field")?.insertAdjacentHTML("afterend",`<div class="application-field"><label for="appDriversNumber">Driver’s license number</label><input id="appDriversNumber" autocomplete="off"></div><div class="application-field"><label for="appDriversExpiration">License expiration date</label><input id="appDriversExpiration" type="date"></div>`);
+  byId("appEmergencyPhone")?.closest(".application-field")?.insertAdjacentHTML("afterend",`<div class="application-field full"><label for="appEmergencyEmail">Contact email *</label><input id="appEmergencyEmail" type="email" autocomplete="email" inputmode="email" required></div>`);
+
+  document.querySelectorAll('.application-field input[type="file"]').forEach(input=>input.closest(".application-field")?.classList.add("file-field"));
+  document.querySelectorAll(".role-choice").forEach(button=>button.addEventListener("click",()=>{const active=button.classList.toggle("active");button.setAttribute("aria-expanded",String(active));if(active){document.querySelectorAll(".role-choice").forEach(other=>{if(other!==button){other.classList.remove("active");other.setAttribute("aria-expanded","false");}});byId("appRole").value=button.dataset.role||"";}}));
+  byId("appRole")?.addEventListener("change",event=>document.querySelectorAll(".role-choice").forEach(button=>button.classList.toggle("active",button.dataset.role===event.target.value)));
+  byId("appDriversLicense")?.addEventListener("change",event=>{const disabled=event.target.value!=="yes";["appDriversState","appDriversNumber","appDriversExpiration"].forEach(id=>{const node=byId(id);if(node){node.disabled=disabled;if(disabled)node.value="";}});});
 }
 
-function injectAppCheckNotice() {
-  if (!form || document.getElementById("staffAppCheckNotice")) return;
-
-  const notice = document.createElement("p");
-  notice.id = "staffAppCheckNotice";
-  notice.className = "application-notice";
-  notice.textContent = "Protected by Evaraos App Check and reCAPTCHA Enterprise. Submit only accurate information for review.";
-
-  const actions = document.querySelector(".application-actions");
-  if (actions?.parentElement) actions.parentElement.insertBefore(notice, actions);
-  else form.appendChild(notice);
+function addFooter(){
+  if(document.querySelector(".site-footer"))return;
+  document.getElementById("appRoot")?.insertAdjacentHTML("beforeend",`<footer class="site-footer"><div class="site-footer-inner glass-card"><div class="site-footer-left"><strong>© 2026 Evaraos Inc</strong><span>Built to power multi-company operations from one system.</span></div><nav class="site-footer-right" aria-label="Evaraos social media"><a class="social-link social-instagram" href="https://instagram.com/evaraos.inc" target="_blank" rel="noopener noreferrer">Instagram</a><a class="social-link social-x" href="https://x.com/evaraos_inc" target="_blank" rel="noopener noreferrer">X</a><a class="social-link social-tiktok" href="https://tiktok.com/@evaraos.inc" target="_blank" rel="noopener noreferrer">TikTok</a></nav></div></footer>`);
 }
 
-function removeStaffInviteField() {
-  const inviteField = byId("appInviteCode")?.closest(".application-field");
-  inviteField?.remove();
+function init(){
+  if(!form)return;upgradePage();addFooter();form.addEventListener("submit",handleSubmit);
+  window.EvaraLoader?.markAppReady?.();document.body.classList.remove("app-loading");document.body.classList.add("app-ready");document.documentElement.classList.remove("boot-pending");
 }
-
-function upgradeRolePicker() {
-  const roleSelect = byId("appRole");
-  if (!roleSelect || document.getElementById("appRolePills")) return;
-
-  const wrapper = document.createElement("div");
-  wrapper.className = "application-field full";
-  wrapper.innerHTML = `
-    <label>Role you want to apply for</label>
-    <p class="form-subnote">Pick the role you want. Leadership can approve, deny, or move you into a better fit after review.</p>
-    <div id="appRolePills" class="role-pill-container">
-      ${AVAILABLE_STAFF_ROLES.map((role) => `<button type="button" class="role-pill" data-role="${role.value}">${role.label}</button>`).join("")}
-    </div>
-  `;
-
-  const roleField = roleSelect.closest(".application-field");
-  roleField?.parentElement?.insertBefore(wrapper, roleField);
-  roleSelect.type = "hidden";
-  roleField.style.display = "none";
-
-  wrapper.querySelectorAll(".role-pill").forEach((pill) => {
-    pill.addEventListener("click", () => {
-      wrapper.querySelectorAll(".role-pill").forEach((item) => item.classList.remove("active"));
-      pill.classList.add("active");
-      roleSelect.value = pill.dataset.role || "";
-    });
-  });
-}
-
-function injectDetailedApplicationFields() {
-  if (document.getElementById("appEmploymentType")) return;
-
-  const transportationSection = byId("appExperience")?.closest(".form-section");
-  const identitySection = byId("appIdType")?.closest(".form-section");
-  if (!transportationSection || !identitySection) return;
-
-  const details = document.createElement("div");
-  details.className = "form-section";
-  details.innerHTML = `
-    <h2 class="form-section-title">Work Preferences + Screening</h2>
-    <p class="form-subnote">This helps Evaraos route you to the right company, crew, schedule, and onboarding path.</p>
-    <div class="application-grid">
-      <div class="application-field">
-        <label for="appEmploymentType">Employment type desired</label>
-        <select id="appEmploymentType" required>
-          <option value="">Select</option>
-          <option value="1099_contractor">1099 Contractor</option>
-          <option value="w2_employee">W-2 Employee</option>
-          <option value="part_time">Part-Time</option>
-          <option value="full_time">Full-Time</option>
-        </select>
-      </div>
-      <div class="application-field">
-        <label for="appEarliestStartDate">Earliest start date</label>
-        <input id="appEarliestStartDate" type="date" required />
-      </div>
-      <div class="application-field">
-        <label for="appPayExpectation">Pay expectation</label>
-        <input id="appPayExpectation" type="text" placeholder="$18/hr, commission, per job, negotiable..." />
-      </div>
-      <div class="application-field">
-        <label for="appBackgroundConsent">Background check consent</label>
-        <select id="appBackgroundConsent" required>
-          <option value="">Select</option>
-          <option value="yes">Yes, I consent if required</option>
-          <option value="no">No</option>
-        </select>
-      </div>
-      <div class="application-field full">
-        <label for="appPreferredSchedule">Preferred schedule details</label>
-        <textarea id="appPreferredSchedule" rows="3" placeholder="Best days, blocked times, weekly availability, travel range..."></textarea>
-      </div>
-      <div class="application-field full">
-        <label for="appEquipmentExperience">Equipment / field experience</label>
-        <textarea id="appEquipmentExperience" rows="4" placeholder="Pressure washer, truck/trailer, cleaning chemicals, D2D sales, CRM apps, route work, customer service..."></textarea>
-      </div>
-    </div>
-  `;
-
-  identitySection.parentElement.insertBefore(details, identitySection);
-
-  const photoField = document.createElement("div");
-  photoField.className = "application-field";
-  photoField.innerHTML = `
-    <label for="appProfilePhoto">Profile photo</label>
-    <input id="appProfilePhoto" type="file" accept="image/*" />
-  `;
-  identitySection.querySelector(".application-grid")?.prepend(photoField);
-
-  const consent = document.createElement("div");
-  consent.className = "application-notice";
-  consent.innerHTML = `
-    <label style="display:flex;gap:10px;align-items:flex-start;font-weight:900;color:inherit;">
-      <input id="appConsentAccurate" type="checkbox" style="width:auto;margin-top:4px;" />
-      <span>I confirm this application is accurate, my documents belong to me, and Evaraos may review my information for staff onboarding.</span>
-    </label>
-  `;
-  form?.insertBefore(consent, document.querySelector(".application-actions"));
-}
-
-function init() {
-  if (!form) return;
-  removeStaffInviteField();
-  injectConfirmPasswordField();
-  upgradeRolePicker();
-  injectDetailedApplicationFields();
-  injectAppCheckNotice();
-  form.addEventListener("submit", handleSubmit);
-
-  if (window.EvaraLoader?.markAppReady) {
-    window.EvaraLoader.markAppReady();
-  }
-  document.body?.classList.remove("app-loading");
-  document.body?.classList.add("app-ready");
-  document.documentElement.classList.remove("boot-pending");
-}
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init, { once: true });
-} else {
-  init();
-}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
