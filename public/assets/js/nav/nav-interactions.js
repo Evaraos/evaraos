@@ -18,11 +18,29 @@ function deactivate(node) {
   node.classList.remove("is-pressed");
 }
 
+function bindThemeButton(panel) {
+  const button = panel.querySelector("#evaMenuThemeBtn");
+  if (!button || button.dataset.themeBound === "true") return;
+  button.dataset.themeBound = "true";
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const modes = ["system", "light", "dark", "image"];
+    const current = window.EvaraTheme?.getThemeMode?.() || "system";
+    const next = modes[(modes.indexOf(current) + 1) % modes.length];
+    window.EvaraTheme?.setThemeMode?.(next);
+    button.dataset.themeMode = next;
+    button.title = `Appearance: ${next}`;
+    button.setAttribute("aria-label", `Appearance: ${next}. Click to change.`);
+  });
+}
+
 export function bindNavInteractions() {
   const panel = document.getElementById("evaMenuPanel");
   if (!panel || panel.dataset.interactionsBound === "true") return;
 
   panel.dataset.interactionsBound = "true";
+  bindThemeButton(panel);
 
   panel.addEventListener("pointerover", event => {
     const target = event.target.closest(ROW_SELECTOR);
