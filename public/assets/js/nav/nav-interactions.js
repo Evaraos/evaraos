@@ -61,30 +61,39 @@ export function bindNavInteractions() {
   panel.dataset.interactionsBound = "true";
   bindThemeButton(panel);
 
-  panel.addEventListener("pointerover", event => {
+  panel.addEventListener("pointerover", (event) => {
+    if (event.pointerType && event.pointerType !== "mouse" && event.pointerType !== "pen") return;
     const target = event.target.closest(ROW_SELECTOR);
     if (!target || !panel.contains(target)) return;
     activate(target);
   }, { passive: true });
 
-  panel.addEventListener("pointerout", event => {
+  panel.addEventListener("pointerout", (event) => {
+    if (event.pointerType && event.pointerType !== "mouse" && event.pointerType !== "pen") return;
     const target = event.target.closest(ROW_SELECTOR);
+    const related = event.relatedTarget?.closest?.(ROW_SELECTOR);
+    if (target && target === related) return;
     deactivate(target);
   }, { passive: true });
 
-  panel.addEventListener("pointerdown", event => {
+  panel.addEventListener("pointerdown", (event) => {
     const target = event.target.closest(ROW_SELECTOR);
     if (!target || !panel.contains(target)) return;
+    panel.querySelectorAll(".is-pressed").forEach((node) => {
+      if (node !== target) node.classList.remove("is-pressed");
+    });
     target.classList.add("is-pressed");
   }, { passive: true });
 
-  panel.addEventListener("pointerup", event => {
-    const target = event.target.closest(ROW_SELECTOR);
-    if (!target) return;
-    window.setTimeout(() => target.classList.remove("is-pressed"), 140);
-  }, { passive: true });
+  const releasePressed = () => {
+    panel.querySelectorAll(".is-pressed").forEach((node) => {
+      window.setTimeout(() => node.classList.remove("is-pressed"), 140);
+    });
+  };
 
-  panel.addEventListener("pointercancel", event => {
-    deactivate(event.target.closest(ROW_SELECTOR));
+  window.addEventListener("pointerup", releasePressed, { passive: true });
+  window.addEventListener("pointercancel", releasePressed, { passive: true });
+  panel.addEventListener("pointerleave", () => {
+    panel.querySelectorAll(".is-hovered").forEach((node) => node.classList.remove("is-hovered"));
   }, { passive: true });
 }
