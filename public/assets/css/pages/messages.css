@@ -32,7 +32,7 @@ body.messages-page #appRoot {
   inset: 0;
   width: 100%;
   height: 100dvh;
-  padding: calc(var(--eva-page-nav-clearance, 86px) + 18px) 0 calc(96px + env(safe-area-inset-bottom));
+  padding: calc(var(--eva-page-nav-clearance, 86px) + 30px) 0 calc(80px + env(safe-area-inset-bottom));
   display: grid;
   grid-template-columns: minmax(330px, 390px) minmax(0, 1fr);
   overflow: hidden;
@@ -47,18 +47,19 @@ body.messages-page #appRoot {
 }
 
 .messages-sidebar {
+  position: relative;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   border: 0 !important;
-  background: color-mix(in srgb, var(--glass-bg-strong) 72%, transparent);
+  background: color-mix(in srgb, var(--glass-bg-strong) 70%, transparent);
   box-shadow: none !important;
   backdrop-filter: blur(24px) saturate(155%);
   -webkit-backdrop-filter: blur(24px) saturate(155%);
 }
 
 .messages-center-head {
-  min-height: 72px;
-  padding: 14px 20px 12px;
+  min-height: 74px;
+  padding: 16px 20px 12px;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
@@ -86,8 +87,12 @@ body.messages-page #appRoot {
   -webkit-appearance: none;
   color: var(--text-primary);
   border: 1px solid color-mix(in srgb, var(--text-primary) 15%, transparent) !important;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--glass-bg-strong) 90%, transparent), color-mix(in srgb, var(--glass-bg) 72%, transparent)) !important;
-  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 64%, transparent), 0 8px 20px color-mix(in srgb, #000 12%, transparent) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.13), transparent 48%),
+    color-mix(in srgb, var(--glass-bg-strong) 88%, transparent) !important;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 66%, transparent),
+    0 8px 20px color-mix(in srgb, #000 12%, transparent) !important;
   backdrop-filter: blur(22px) saturate(170%) !important;
   -webkit-backdrop-filter: blur(22px) saturate(170%) !important;
   cursor: pointer;
@@ -96,13 +101,13 @@ body.messages-page #appRoot {
 }
 
 .messages-head-button {
-  min-width: 64px;
-  min-height: 42px;
-  padding: 0 16px;
+  min-width: 66px;
+  min-height: 44px;
+  padding: 0 17px;
   border-radius: 999px !important;
   font: inherit;
   font-size: 0.96rem;
-  font-weight: 560;
+  font-weight: 600;
 }
 
 .messages-head-button:first-child {
@@ -110,8 +115,8 @@ body.messages-page #appRoot {
 }
 
 .messages-menu-button {
-  width: 42px;
-  min-width: 42px;
+  width: 44px;
+  min-width: 44px;
   padding: 0;
   display: grid;
   place-items: center;
@@ -181,12 +186,12 @@ body.messages-page #appRoot {
   appearance: none;
   -webkit-appearance: none;
   width: 100%;
-  min-height: 50px;
-  padding: 0 18px;
+  min-height: 56px;
+  padding: 0 20px;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
+  gap: 13px;
   border: 0 !important;
   border-radius: 0 !important;
   outline: 0 !important;
@@ -232,26 +237,26 @@ body.messages-page #appRoot {
 }
 
 .messages-section-copy strong {
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   font-weight: 780;
 }
 
 .messages-section-copy span {
-  margin-top: 2px;
+  margin-top: 3px;
   color: var(--text-secondary);
-  font-size: 0.67rem;
+  font-size: 0.69rem;
 }
 
 .messages-section-count {
-  min-width: 24px;
-  height: 24px;
-  padding: 0 7px;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 8px;
   display: grid;
   place-items: center;
   border-radius: 999px;
   color: var(--text-secondary);
   background: color-mix(in srgb, var(--text-primary) 5%, transparent);
-  font-size: 0.66rem;
+  font-size: 0.67rem;
   font-weight: 760;
 }
 
@@ -309,13 +314,8 @@ body.messages-page #appRoot {
   stroke-linejoin: round;
 }
 
-.conversation-swipe-action.mute {
-  background: #8e8e93;
-}
-
-.conversation-swipe-action.delete {
-  background: #ff3b30;
-}
+.conversation-swipe-action.mute { background: #8e8e93; }
+.conversation-swipe-action.delete { background: #ff3b30; }
 
 .conversation-bell .bell-slash {
   stroke-dasharray: 24;
@@ -336,7 +336,7 @@ body.messages-page #appRoot {
   width: 100%;
   min-height: 84px;
   margin: 0 !important;
-  padding: 12px 16px;
+  padding: 12px 18px;
   display: grid;
   grid-template-columns: 54px minmax(0, 1fr) auto 10px;
   align-items: center;
@@ -367,8 +367,8 @@ body.messages-page #appRoot {
 .conversation-item::after {
   content: "";
   position: absolute;
-  left: 82px;
-  right: 16px;
+  left: 84px;
+  right: 18px;
   bottom: 0;
   height: 1px;
   background: color-mix(in srgb, var(--text-primary) 8%, transparent);
@@ -467,21 +467,26 @@ body.messages-page #appRoot {
 }
 
 .messages-search-dock {
-  padding: 16px 18px max(24px, env(safe-area-inset-bottom));
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  min-height: 76px;
+  padding: 10px 18px 12px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 50px;
   align-items: center;
   gap: 12px;
   border: 0 !important;
   border-top: 1px solid color-mix(in srgb, var(--text-primary) 7%, transparent) !important;
-  background: color-mix(in srgb, var(--glass-bg-strong) 82%, transparent);
+  background: color-mix(in srgb, var(--glass-bg-strong) 84%, transparent);
   box-shadow: none !important;
-  backdrop-filter: blur(24px) saturate(155%);
-  -webkit-backdrop-filter: blur(24px) saturate(155%);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
 }
 
 .messages-search {
   isolation: isolate;
+  position: relative;
   min-width: 0;
   height: 50px;
   padding: 0 17px;
@@ -489,11 +494,16 @@ body.messages-page #appRoot {
   grid-template-columns: 22px minmax(0, 1fr);
   align-items: center;
   gap: 10px;
+  overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--text-primary) 15%, transparent) !important;
   border-radius: 999px !important;
   color: var(--text-secondary);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--glass-bg-strong) 90%, transparent), color-mix(in srgb, var(--glass-bg) 72%, transparent)) !important;
-  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 64%, transparent), 0 8px 20px color-mix(in srgb, #000 12%, transparent) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.14), transparent 48%),
+    color-mix(in srgb, var(--glass-bg-strong) 88%, transparent) !important;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 66%, transparent),
+    0 8px 20px color-mix(in srgb, #000 12%, transparent) !important;
   backdrop-filter: blur(22px) saturate(170%) !important;
   -webkit-backdrop-filter: blur(22px) saturate(170%) !important;
 }
@@ -506,23 +516,36 @@ body.messages-page #appRoot {
   display: none !important;
 }
 
+.messages-search svg {
+  position: relative;
+  z-index: 2;
+}
+
 .messages-search input {
   appearance: none !important;
   -webkit-appearance: none !important;
+  position: relative;
+  z-index: 2;
   width: 100%;
   min-width: 0;
-  height: 48px;
+  height: 100%;
   margin: 0 !important;
   padding: 0 !important;
   border: 0 !important;
   border-radius: 0 !important;
   outline: 0 !important;
-  box-shadow: none !important;
-  color: var(--text-primary);
+  color: var(--text-primary) !important;
   background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   font: inherit;
-  font-size: 0.94rem;
-  -webkit-text-fill-color: var(--text-primary);
+  font-size: 0.95rem;
+  line-height: 50px;
+  opacity: 1 !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
 }
 
 .messages-search input::-webkit-search-decoration,
@@ -533,9 +556,9 @@ body.messages-page #appRoot {
 }
 
 .messages-search input::placeholder {
-  color: var(--text-secondary);
-  opacity: 0.82;
-  -webkit-text-fill-color: var(--text-secondary);
+  color: var(--text-secondary) !important;
+  opacity: 0.84 !important;
+  -webkit-text-fill-color: var(--text-secondary) !important;
 }
 
 .messages-voice-button {
@@ -705,8 +728,12 @@ body.messages-page #appRoot {
 .messages-composer-shell,
 .messages-send {
   border: 1px solid color-mix(in srgb, var(--text-primary) 18%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--glass-bg-strong) 88%, transparent), color-mix(in srgb, var(--glass-bg) 78%, transparent));
-  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 56%, transparent), 0 7px 18px color-mix(in srgb, #000 12%, transparent);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.13), transparent 48%),
+    color-mix(in srgb, var(--glass-bg-strong) 86%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 58%, transparent),
+    0 7px 18px color-mix(in srgb, #000 12%, transparent);
   backdrop-filter: blur(24px) saturate(170%);
   -webkit-backdrop-filter: blur(24px) saturate(170%);
 }
@@ -783,7 +810,7 @@ body.messages-page #appRoot {
   width: 100%;
   height: 100%;
   border: 0;
-  background: rgba(0, 0, 0, 0.32);
+  background: rgba(0,0,0,.32);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -799,7 +826,7 @@ body.messages-page #appRoot {
   border-radius: 22px;
   color: var(--text-primary);
   background: color-mix(in srgb, var(--glass-bg-strong) 97%, transparent);
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 18px 48px rgba(0,0,0,.2);
 }
 
 .messages-sheet-handle {
@@ -834,17 +861,9 @@ body.messages-page #appRoot {
   text-decoration: none;
 }
 
-.messages-sheet-card [hidden] {
-  display: none !important;
-}
-
-.messages-sheet-card > :last-child {
-  border-bottom: 0;
-}
-
-.messages-destructive-action {
-  color: #ff453a !important;
-}
+.messages-sheet-card [hidden] { display: none !important; }
+.messages-sheet-card > :last-child { border-bottom: 0; }
+.messages-destructive-action { color: #ff453a !important; }
 
 .messages-photo-viewer {
   place-items: center;
@@ -859,7 +878,7 @@ body.messages-page #appRoot {
   padding: 12px;
   border-radius: 28px;
   background: color-mix(in srgb, var(--glass-bg-strong) 94%, transparent);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 24px 70px rgba(0,0,0,.35);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
@@ -898,14 +917,8 @@ body.messages-chat-active .messages-app {
   grid-template-columns: 1fr;
 }
 
-body.messages-chat-active .messages-sidebar {
-  display: none;
-}
-
-body.messages-chat-active .messages-chat {
-  width: 100%;
-  height: 100%;
-}
+body.messages-chat-active .messages-sidebar { display: none; }
+body.messages-chat-active .messages-chat { width: 100%; height: 100%; }
 
 body.messages-chat-active .messages-chat-head {
   min-height: calc(70px + env(safe-area-inset-top));
@@ -923,8 +936,8 @@ body.messages-chat-active.keyboard-open .messages-composer {
 
 @media (max-width: 800px) {
   .messages-app {
-    padding-top: calc(var(--eva-page-nav-clearance, 86px) + 16px);
-    padding-bottom: calc(92px + env(safe-area-inset-bottom));
+    padding-top: calc(var(--eva-page-nav-clearance, 86px) + 28px);
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
     grid-template-columns: 1fr;
   }
 
@@ -932,21 +945,18 @@ body.messages-chat-active.keyboard-open .messages-composer {
     border-right: 0;
   }
 
-  .messages-chat {
-    display: none;
-  }
-
-  .messages-app:not(.show-list) .messages-sidebar {
-    display: none;
-  }
-
-  .messages-app:not(.show-list) .messages-chat {
-    display: grid;
-  }
+  .messages-chat { display: none; }
+  .messages-app:not(.show-list) .messages-sidebar { display: none; }
+  .messages-app:not(.show-list) .messages-chat { display: grid; }
 
   .messages-center-head {
-    min-height: 70px;
-    padding: 13px 20px 11px;
+    min-height: 74px;
+    padding: 15px 20px 12px;
+  }
+
+  .messages-search-dock {
+    min-height: 72px;
+    padding: 9px 18px 10px;
   }
 
   .messages-feed {
@@ -987,13 +997,8 @@ body.messages-chat-active.keyboard-open .messages-composer {
     height: 50px;
   }
 
-  .conversation-copy strong {
-    font-size: 0.91rem;
-  }
-
-  .conversation-copy span {
-    font-size: 0.73rem;
-  }
+  .conversation-copy strong { font-size: 0.91rem; }
+  .conversation-copy span { font-size: 0.73rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
