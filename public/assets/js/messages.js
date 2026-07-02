@@ -41,11 +41,12 @@ const BUILTIN_CONVERSATIONS = [
 ];
 
 const REGISTRY_CHANNEL = "_group_registry";
+const GROUP_STORAGE_KEY = "evaraos-message-group-state";
 const ADMIN_ROLES = new Set(["owner", "super_admin", "admin", "manager", "operations_manager", "hr_manager"]);
 const GROUPS = [
-  { key: "direct", title: "Direct Messages" },
-  { key: "group", title: "Groups" },
-  { key: "role", title: "Teams" }
+  { key: "direct", title: "Direct Messages", subtitle: "Private conversations" },
+  { key: "group", title: "Groups", subtitle: "Shared conversations" },
+  { key: "role", title: "Teams", subtitle: "Only visible to assigned members" }
 ];
 
 const state = {
@@ -54,14 +55,18 @@ const state = {
   conversations: [],
   active: null,
   unsubscribe: null,
-  search: ""
+  search: "",
+  editing: false,
+  collapsed: loadCollapsedGroups()
 };
 
 const elements = {
   app: document.querySelector(".messages-app"),
   conversationList: document.getElementById("conversationList"),
   conversationSearch: document.getElementById("conversationSearch"),
+  editButton: document.getElementById("editConversations"),
   newConversationButton: document.getElementById("newConversationButton"),
+  voiceSearchButton: document.getElementById("voiceSearchButton"),
   refreshButton: document.getElementById("refreshConversations"),
   closeMenuButton: document.getElementById("closeMessagesMenu"),
   menu: document.getElementById("messagesMenu"),
@@ -75,6 +80,20 @@ const elements = {
   messageForm: document.getElementById("messageForm"),
   messageInput: document.getElementById("messageInput")
 };
+
+function loadCollapsedGroups() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(GROUP_STORAGE_KEY) || "null");
+    if (Array.isArray(saved)) return new Set(saved);
+  } catch {}
+  return new Set(["role"]);
+}
+
+function saveCollapsedGroups() {
+  try {
+    localStorage.setItem(GROUP_STORAGE_KEY, JSON.stringify([...state.collapsed]));
+  } catch {}
+}
 
 function normalize(value = "") {
   return String(value || "").trim().toLowerCase();
@@ -118,13 +137,9 @@ function timeLabel(value) {
   const messageDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   const dayDifference = Math.round((today - messageDay) / 86400000);
 
-  if (dayDifference === 0) {
-    return new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(date);
-  }
+  if (dayDifference === 0) return new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(date);
   if (dayDifference === 1) return "Yesterday";
-  if (date.getFullYear() === now.getFullYear()) {
-    return new Intl.DateTimeFormat(undefined, { month: "numeric", day: "numeric" }).format(date);
-  }
+  if (date.getFullYear() === now.getFullYear()) return new Intl.DateTimeFormat(undefined, { month: "numeric", day: "numeric" }).format(date);
   return new Intl.DateTimeFormat(undefined, { month: "numeric", day: "numeric", year: "2-digit" }).format(date);
 }
 
@@ -136,8 +151,7 @@ function messageTimeLabel(value) {
 
 function dayKey(value) {
   const date = toDate(value);
-  if (!date) return "unknown";
-  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  return date ? `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}` : "unknown";
 }
 
 function dayLabel(value) {
@@ -227,19 +241,41 @@ function createConversationRow(conversation) {
   return button;
 }
 
-function createConversationGroup(title, conversations) {
+function createConversationGroup(group, conversations) {
+  const collapsed = !state.search && state.collapsed.has(group.key);
   const section = document.createElement("section");
-  section.className = "messages-conversation-group";
+  section.className = `messages-conversation-group${collapsed ? " is-collapsed" : ""}`;
+  section.dataset.group = group.key;
 
-  const heading = document.createElement("h2");
-  heading.className = "messages-section-title";
-  heading.textContent = title;
+  const toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.className = "messages-section-toggle";
+  toggle.dataset.groupToggle = group.key;
+  toggle.setAttribute("aria-expanded", String(!collapsed));
+
+  const chevron = document.createElement("span");
+  chevron.className = "messages-section-chevron";
+  chevron.setAttribute("aria-hidden", "true");
+
+  const copy = document.createElement("span");
+  copy.className = "messages-section-copy";
+  const title = document.createElement("strong");
+  title.textContent = group.title;
+  const subtitle = document.createElement("span");
+  subtitle.textContent = group.subtitle;
+  copy.append(title, subtitle);
+
+  const count = document.createElement("span");
+  count.className = "messages-section-count";
+  count.textContent = String(conversations.length);
+
+  toggle.append(chevron, copy, count);
 
   const list = document.createElement("div");
   list.className = "messages-section-list";
   list.replaceChildren(...conversations.map(createConversationRow));
 
-  section.append(heading, list);
+  section.append(toggle, list);
   return section;
 }
 
@@ -271,12 +307,9 @@ function renderConversations() {
   }
 
   const sections = GROUPS
-    .map((group) => ({
-      ...group,
-      conversations: visible.filter((conversation) => conversation.type === group.key)
-    }))
+    .map((group) => ({ ...group, conversations: visible.filter((conversation) => conversation.type === group.key) }))
     .filter((group) => group.conversations.length)
-    .map((group) => createConversationGroup(group.title, group.conversations));
+    .map((group) => createConversationGroup(group, group.conversations));
 
   elements.conversationList.replaceChildren(...sections);
 }
@@ -354,7 +387,6 @@ async function loadConversations() {
   const registryEntries = await loadRegistry();
   state.conversations = mergeConversations(registryEntries);
   renderConversations();
-
   state.conversations = await Promise.all(state.conversations.map(loadPreview));
   renderConversations();
 }
@@ -363,9 +395,10 @@ function showMessageCenter() {
   state.unsubscribe?.();
   state.unsubscribe = null;
   state.active = null;
-  document.body.classList.remove("messages-chat-active");
+  document.body.classList.remove("messages-chat-active", "keyboard-open");
   elements.app?.classList.add("show-list");
   document.documentElement.dataset.messagesView = "center";
+  syncViewport();
   renderConversations();
 }
 
@@ -421,7 +454,6 @@ function renderMessages(snapshot) {
 
   const nodes = [];
   let previousDay = "";
-
   for (const message of messages) {
     const currentDay = dayKey(message.createdAt);
     if (currentDay !== previousDay) {
@@ -432,7 +464,9 @@ function renderMessages(snapshot) {
   }
 
   elements.chatFeed.replaceChildren(...nodes);
-  elements.chatFeed.scrollTop = elements.chatFeed.scrollHeight;
+  requestAnimationFrame(() => {
+    elements.chatFeed.scrollTop = elements.chatFeed.scrollHeight;
+  });
 
   const latest = messages.at(-1);
   const index = state.conversations.findIndex((conversation) => conversation.id === state.active.id);
@@ -454,6 +488,7 @@ function openConversation(conversationId) {
   elements.app?.classList.remove("show-list");
   document.body.classList.add("messages-chat-active");
   document.documentElement.dataset.messagesView = "chat";
+  syncViewport();
 
   setAvatar(elements.chatAvatar, conversation);
   if (elements.chatTitle) elements.chatTitle.textContent = conversation.name || "Conversation";
@@ -466,13 +501,8 @@ function openConversation(conversationId) {
   }
 
   state.unsubscribe?.();
-  const messagesQuery = query(
-    collection(db, "channels", conversation.id, "messages"),
-    orderBy("createdAt", "asc")
-  );
-
   state.unsubscribe = onSnapshot(
-    messagesQuery,
+    query(collection(db, "channels", conversation.id, "messages"), orderBy("createdAt", "asc")),
     renderMessages,
     (error) => {
       console.error("Message subscription failed:", error);
@@ -515,18 +545,81 @@ function autoSizeMessageInput() {
   elements.messageInput.style.height = `${Math.min(128, elements.messageInput.scrollHeight)}px`;
 }
 
+function toggleGroup(groupKey) {
+  if (state.collapsed.has(groupKey)) state.collapsed.delete(groupKey);
+  else state.collapsed.add(groupKey);
+  saveCollapsedGroups();
+  renderConversations();
+}
+
+function toggleEditing() {
+  state.editing = !state.editing;
+  elements.editButton.textContent = state.editing ? "Done" : "Edit";
+  elements.editButton.setAttribute("aria-pressed", String(state.editing));
+
+  if (state.editing) {
+    state.collapsed.clear();
+  } else if (![...state.collapsed].length) {
+    state.collapsed.add("role");
+  }
+  saveCollapsedGroups();
+  renderConversations();
+}
+
 function openMenu() {
-  if (!elements.menu) return;
-  elements.menu.hidden = false;
+  if (elements.menu) elements.menu.hidden = false;
 }
 
 function closeMenu() {
-  if (!elements.menu) return;
-  elements.menu.hidden = true;
+  if (elements.menu) elements.menu.hidden = true;
+}
+
+function startVoiceSearch() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    elements.conversationSearch?.focus();
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = document.documentElement.lang || "en-US";
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+  recognition.addEventListener("result", (event) => {
+    const transcript = event.results?.[0]?.[0]?.transcript || "";
+    if (elements.conversationSearch) elements.conversationSearch.value = transcript;
+    state.search = transcript;
+    renderConversations();
+  }, { once: true });
+  recognition.start();
+}
+
+function syncViewport() {
+  const viewport = window.visualViewport;
+  const height = Math.round(viewport?.height || window.innerHeight);
+  const top = Math.round(viewport?.offsetTop || 0);
+  const layoutHeight = Math.max(window.innerHeight, document.documentElement.clientHeight || 0);
+  const keyboardOpen = document.body.classList.contains("messages-chat-active") && layoutHeight - height > 120;
+
+  document.documentElement.style.setProperty("--messages-viewport-height", `${height}px`);
+  document.documentElement.style.setProperty("--messages-viewport-top", `${top}px`);
+  document.body.classList.toggle("keyboard-open", keyboardOpen);
+
+  if (keyboardOpen && elements.chatFeed) {
+    requestAnimationFrame(() => {
+      elements.chatFeed.scrollTop = elements.chatFeed.scrollHeight;
+    });
+  }
 }
 
 function bindEvents() {
   elements.conversationList?.addEventListener("click", (event) => {
+    const groupToggle = event.target.closest("[data-group-toggle]");
+    if (groupToggle) {
+      toggleGroup(groupToggle.dataset.groupToggle);
+      return;
+    }
+
     const row = event.target.closest("[data-conversation]");
     if (row) openConversation(row.dataset.conversation);
   });
@@ -536,7 +629,9 @@ function bindEvents() {
     renderConversations();
   });
 
+  elements.editButton?.addEventListener("click", toggleEditing);
   elements.newConversationButton?.addEventListener("click", openMenu);
+  elements.voiceSearchButton?.addEventListener("click", startVoiceSearch);
   elements.chatMenuButton?.addEventListener("click", openMenu);
   elements.backButton?.addEventListener("click", showMessageCenter);
   elements.closeMenuButton?.addEventListener("click", closeMenu);
@@ -549,12 +644,15 @@ function bindEvents() {
 
   elements.messageForm?.addEventListener("submit", (event) => {
     event.preventDefault();
-    sendMessage().catch((error) => {
-      console.error("Message send failed:", error);
-    });
+    sendMessage().catch((error) => console.error("Message send failed:", error));
   });
 
   elements.messageInput?.addEventListener("input", autoSizeMessageInput);
+  elements.messageInput?.addEventListener("focus", () => {
+    setTimeout(syncViewport, 80);
+    setTimeout(syncViewport, 280);
+  });
+  elements.messageInput?.addEventListener("blur", () => setTimeout(syncViewport, 120));
   elements.messageInput?.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
@@ -562,12 +660,16 @@ function bindEvents() {
     }
   });
 
+  window.visualViewport?.addEventListener("resize", syncViewport, { passive: true });
+  window.visualViewport?.addEventListener("scroll", syncViewport, { passive: true });
+  window.addEventListener("orientationchange", () => setTimeout(syncViewport, 150), { passive: true });
   window.addEventListener("pagehide", () => state.unsubscribe?.(), { once: true });
 }
 
 function init() {
   bindEvents();
   showMessageCenter();
+  syncViewport();
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
