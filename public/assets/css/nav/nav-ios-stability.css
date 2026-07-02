@@ -1,0 +1,97 @@
+/* iOS/PWA navigation authority.
+   Keep fixed controls directly viewport-anchored instead of nesting fixed elements
+   inside another full-screen fixed containing block. Bottom navigation is untouched. */
+.eva-nav-layer{
+  position:static!important;
+  inset:auto!important;
+  width:auto!important;
+  height:auto!important;
+  max-width:none!important;
+  z-index:auto!important;
+  pointer-events:none!important;
+}
+
+.eva-nav-layer::before{
+  z-index:2147483642!important;
+}
+
+.eva-nav-shell{
+  position:fixed!important;
+  z-index:2147483647!important;
+  transform:translateZ(0);
+}
+
+.eva-menu-panel{
+  position:fixed!important;
+  z-index:2147483646!important;
+  top:0!important;
+  bottom:0!important;
+  left:0!important;
+  right:auto!important;
+  width:min(88vw,430px)!important;
+  height:100dvh!important;
+  min-height:100vh!important;
+  max-height:100dvh!important;
+  contain:none!important;
+  isolation:isolate;
+  transform:translate3d(-101%,0,0)!important;
+  background:var(--bg-primary)!important;
+  background:color-mix(in srgb,var(--bg-primary) 94%,transparent)!important;
+  border-right:1px solid rgba(var(--adaptive-ink-rgb),.11)!important;
+  box-shadow:18px 0 48px rgba(var(--adaptive-shadow-rgb),.16)!important;
+  backdrop-filter:blur(16px) saturate(145%)!important;
+  -webkit-backdrop-filter:blur(16px) saturate(145%)!important;
+}
+
+body.nav-menu-open .eva-menu-panel{
+  transform:translate3d(0,0,0)!important;
+}
+
+.eva-backdrop{
+  position:fixed!important;
+  z-index:2147483645!important;
+  inset:0!important;
+  background:rgba(4,7,15,.16)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+
+/* The top-left account control is always a true Liquid Glass circle. */
+.eva-profile-trigger,
+#evaMenuBtn{
+  width:50px!important;
+  height:50px!important;
+  min-width:50px!important;
+  min-height:50px!important;
+  padding:3px!important;
+  border-radius:999px!important;
+  overflow:hidden!important;
+  color:var(--text-primary)!important;
+  border:1px solid var(--lg-edge-soft)!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.14),transparent 46%),var(--lg-fill-clear)!important;
+  box-shadow:0 10px 26px var(--lg-shadow-soft),inset 0 1px 0 rgba(255,255,255,.68)!important;
+  backdrop-filter:blur(10px) saturate(185%)!important;
+  -webkit-backdrop-filter:blur(10px) saturate(185%)!important;
+}
+
+.eva-profile-trigger::before,
+#evaMenuBtn::before{
+  border-radius:999px!important;
+}
+
+.eva-top-avatar{
+  width:100%!important;
+  height:100%!important;
+  border-radius:50%!important;
+  object-fit:cover!important;
+}
+
+@media(max-width:520px){
+  .eva-profile-trigger,
+  #evaMenuBtn{
+    width:46px!important;
+    height:46px!important;
+    min-width:46px!important;
+    min-height:46px!important;
+  }
+}
