@@ -17,13 +17,45 @@ function writeStoredProfile(profile) {
   try { storage.setItem("evaraos-user", JSON.stringify(profile)); } catch {}
 }
 
+function safe(value = "") {
+  return String(value || "").replace(/[<>"']/g, "");
+}
+
+function userIcon(className) {
+  return window.EvaraIcons?.iconSvg?.("account", className)
+    || `<svg class="${className}" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c1.6-4 4.1-6 7.5-6s5.9 2 7.5 6"/></svg>`;
+}
+
+function applyTopAvatar(node, photoURL, displayName) {
+  if (photoURL) {
+    node.classList.add("has-avatar");
+    node.innerHTML = `<img class="eva-top-avatar" src="${safe(photoURL)}" alt="${safe(displayName)}" />`;
+    const image = node.querySelector("img");
+    image?.addEventListener("error", () => {
+      node.classList.remove("has-avatar");
+      node.innerHTML = userIcon("eva-top-action-icon");
+    }, { once: true });
+  } else {
+    node.classList.remove("has-avatar");
+    node.innerHTML = userIcon("eva-top-action-icon");
+  }
+}
+
+function applyDrawerAvatar(node, photoURL, displayName) {
+  if (photoURL) {
+    node.innerHTML = `<img src="${safe(photoURL)}" alt="${safe(displayName)}" />`;
+    const image = node.querySelector("img");
+    image?.addEventListener("error", () => {
+      node.innerHTML = userIcon("eva-drawer-avatar-icon");
+    }, { once: true });
+  } else {
+    node.innerHTML = userIcon("eva-drawer-avatar-icon");
+  }
+}
+
 function applyAvatar(photoURL, displayName = "Evaraos User") {
-  const initial = (String(displayName).trim().charAt(0) || "E").toUpperCase();
-  document.querySelectorAll(".eva-profile-trigger, .eva-drawer-avatar").forEach((node) => {
-    node.innerHTML = photoURL
-      ? `<img src="${photoURL}" alt="${String(displayName).replace(/[<>]/g, "")}" />`
-      : `<span>${initial}</span>`;
-  });
+  document.querySelectorAll(".eva-profile-trigger").forEach((node) => applyTopAvatar(node, photoURL, displayName));
+  document.querySelectorAll(".eva-drawer-avatar").forEach((node) => applyDrawerAvatar(node, photoURL, displayName));
 }
 
 export async function syncUniversalAvatar() {
