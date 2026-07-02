@@ -3,7 +3,7 @@ const SURFACE_SELECTOR=[
   ".dashboard-sidebar-inner",".dashboard-panel",".dashboard-overview",".dashboard-hero",".dashboard-hero-panel",
   ".dashboard-stat-card",".dashboard-list-item",".dashboard-feed-item",".dashboard-role-card",".dashboard-progress-row",".dashboard-state-card",
   ".settings-card",".settings-block",".settings-hub-card",".workspace-block",".qa-card",".application-card",".customer-service-event",
-  ".eva-menu-glass-group",".btn",".settings-chip",".role-pill",".role-pill-option",
+  ".eva-menu-search-bottom",".btn",".settings-chip",".role-pill",".role-pill-option",
   ".messages-icon-button",".messages-camera",".messages-send",".messages-compose",".eva-account-action","[data-glass]:not(.eva-menu-panel)"
 ].join(",");
 
@@ -12,6 +12,13 @@ let active=null;
 let frame=0;
 const clamp=(value,min,max)=>Math.min(max,Math.max(min,value));
 const lerp=(from,to,amount)=>from+(to-from)*amount;
+
+function isAllowed(element){
+  if(!element)return false;
+  const drawer=element.closest?.(".eva-menu-panel");
+  if(!drawer)return true;
+  return Boolean(element.closest?.(".eva-menu-search-bottom"));
+}
 
 function stateFor(element){
   let state=states.get(element);
@@ -49,6 +56,7 @@ function render(){
 
 function schedule(){if(!frame)frame=requestAnimationFrame(render)}
 function activate(element){
+  if(!isAllowed(element))return;
   if(active&&active!==element){const old=stateFor(active);old.targetEnergy=0;old.targetPress=0;active.classList.remove("is-liquid-energized");write(active,old)}
   active=element;
   if(!active)return;
@@ -69,12 +77,12 @@ export function installLiquidInteraction(){
 
   document.addEventListener("pointerover",event=>{
     if(event.pointerType&&event.pointerType!=="mouse"&&event.pointerType!=="pen")return;
-    const element=event.target.closest?.(SURFACE_SELECTOR);if(!element)return;activate(element);
+    const element=event.target.closest?.(SURFACE_SELECTOR);if(!isAllowed(element))return;activate(element);
   },{passive:true});
 
   document.addEventListener("pointermove",event=>{
     if(event.pointerType&&event.pointerType!=="mouse"&&event.pointerType!=="pen")return;
-    const element=event.target.closest?.(SURFACE_SELECTOR);if(!element)return;
+    const element=event.target.closest?.(SURFACE_SELECTOR);if(!isAllowed(element))return;
     if(active!==element)activate(element);
     const rect=element.getBoundingClientRect(),state=stateFor(element);
     const rawX=((event.clientX-rect.left)/Math.max(1,rect.width))*100;
@@ -86,14 +94,14 @@ export function installLiquidInteraction(){
   },{passive:true});
 
   document.addEventListener("pointerout",event=>{
-    const from=event.target.closest?.(SURFACE_SELECTOR);if(!from)return;
+    const from=event.target.closest?.(SURFACE_SELECTOR);if(!from||!isAllowed(from))return;
     const to=event.relatedTarget?.closest?.(SURFACE_SELECTOR);if(to===from)return;
     deactivate(from);
-    if(to)activate(to);
+    if(isAllowed(to))activate(to);
   },{passive:true});
 
   document.addEventListener("pointerdown",event=>{
-    const element=event.target.closest?.(SURFACE_SELECTOR);if(!element)return;activate(element);const state=stateFor(element);state.targetEnergy=1;state.targetPress=1;schedule();
+    const element=event.target.closest?.(SURFACE_SELECTOR);if(!isAllowed(element))return;activate(element);const state=stateFor(element);state.targetEnergy=1;state.targetPress=1;schedule();
   },{passive:true});
 
   const release=()=>{if(!active)return;const state=stateFor(active);state.targetPress=0;state.targetEnergy=.72;schedule()};
