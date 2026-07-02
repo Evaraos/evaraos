@@ -1,6 +1,7 @@
 /* EVARAOS universal Liquid Glass authority.
-   Four environments, one optical material, aligned wallpaper refraction. */
+   Four environments, one optical material, no legacy theme switching. */
 @import url("/assets/css/theme/adaptive-tokens.css?v=7");
 @import url("/assets/css/theme/adaptive-material.css?v=7");
 @import url("/assets/css/theme/adaptive-components.css?v=7");
-@import url("/assets/css/theme/liquid-optics.css?v=1");
+@import url("/assets/css/theme/liquid-optics.css?v=2");
+@import url("/assets/css/theme/liquid-environments.css?v=1");
