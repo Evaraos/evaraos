@@ -150,14 +150,14 @@
 @media (max-width: 680px) {
   .home-shell {
     width: min(calc(100% - 16px), 100%);
-    margin-bottom: 56px;
-    padding-top: 24px;
-    padding-bottom: 96px;
+    margin-bottom: 72px;
+    padding-top: max(112px, calc(var(--eva-page-nav-clearance, 86px) + 26px));
+    padding-bottom: calc(132px + env(safe-area-inset-bottom));
   }
 
   .section-panel,
   .cta-panel { padding: 18px; border-radius: 26px; }
-  .hero-home { padding: 0; min-height: auto; display: block; margin-top: -4px; }
+  .hero-home { padding: 0; min-height: auto; display: block; margin-top: 0; }
   .hero-grid { display: block; }
   .hero-content { display: grid; align-content: start; gap: 18px; padding: 0; margin: 0; }
   .hero-side { margin-top: 18px; }
@@ -168,5 +168,5 @@
   .hero-title { max-width: 100%; }
   .hero-actions,
   .cta-actions { display: grid; }
-  .site-footer { width: min(calc(100% - 16px), 100%); }
+  .site-footer { width: min(calc(100% - 16px), 100%); margin-bottom: calc(112px + env(safe-area-inset-bottom)); }
 }
