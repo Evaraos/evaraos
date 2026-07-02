@@ -7,7 +7,7 @@ export const IMAGE_POSITIONS=Object.freeze(["center center","center top","center
 export const DEFAULT_APPEARANCE=Object.freeze({mode:"system",imageUrl:"",imagePosition:"center center",wallpaperDim:.08,glassTint:.46,adaptiveContrast:true,updatedAt:null});
 const THEME_STYLESHEET="/assets/css/theme.css?v=adaptive-liquid-v7";
 const clamp=(value,min,max,fallback)=>{const n=Number(value);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):fallback};
-let presetCache=new Map();
+const presetCache=new Map();
 
 function normalizeImageUrl(value){
   const source=String(value||"").trim();
@@ -27,21 +27,20 @@ export function normalizeAppearance(value={}){
 export function getAppearance(){try{return normalizeAppearance(JSON.parse(localStorage.getItem(APPEARANCE_KEY)||"{}"))}catch{return{...DEFAULT_APPEARANCE}}}
 export function systemTheme(){return matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}
 export function resolvedTheme(value=getAppearance()){return value.mode==="system"?systemTheme():value.mode}
+export const getTheme=()=>"adaptive";
 export function getThemeMode(){return getAppearance().mode}
-export function getTheme(){return resolvedTheme()==="image"?"adaptive":resolvedTheme()}
 
-function presetWallpaper(mode){
-  const resolved=mode==="system"?systemTheme():mode;
-  if(presetCache.has(resolved))return presetCache.get(resolved);
-  const c=document.createElement("canvas");c.width=1200;c.height=1600;
-  const x=c.getContext("2d",{alpha:false});if(!x)return"";
-  const dark=resolved==="dark";
-  const g=x.createLinearGradient(0,0,c.width,c.height);
-  if(dark){g.addColorStop(0,"#080b12");g.addColorStop(.42,"#151b28");g.addColorStop(.72,"#232b3d");g.addColorStop(1,"#080b12")}else{g.addColorStop(0,"#f7fbff");g.addColorStop(.42,"#dbe9f7");g.addColorStop(.72,"#f6e9ec");g.addColorStop(1,"#eef5fb")}
-  x.fillStyle=g;x.fillRect(0,0,c.width,c.height);
-  const blobs=dark?[[220,280,620,"rgba(71,119,210,.34)"],[1000,460,700,"rgba(117,74,182,.28)"],[650,1380,760,"rgba(201,58,95,.18)"]]:[[180,240,620,"rgba(134,205,255,.48)"],[1020,460,720,"rgba(186,164,255,.34)"],[650,1360,760,"rgba(255,178,190,.32)"]];
-  for(const [cx,cy,r,color] of blobs){const q=x.createRadialGradient(cx,cy,0,cx,cy,r);q.addColorStop(0,color);q.addColorStop(1,"rgba(0,0,0,0)");x.fillStyle=q;x.fillRect(cx-r,cy-r,r*2,r*2)}
-  const url=c.toDataURL("image/webp",.84);presetCache.set(resolved,url);return url
+function presetWallpaper(environment){
+  if(presetCache.has(environment))return presetCache.get(environment);
+  const canvas=document.createElement("canvas");canvas.width=1200;canvas.height=1600;
+  const context=canvas.getContext("2d",{alpha:false});if(!context)return"";
+  const dark=environment==="dark",gradient=context.createLinearGradient(0,0,canvas.width,canvas.height);
+  if(dark){gradient.addColorStop(0,"#080b12");gradient.addColorStop(.42,"#151b28");gradient.addColorStop(.72,"#232b3d");gradient.addColorStop(1,"#080b12")}
+  else{gradient.addColorStop(0,"#f7fbff");gradient.addColorStop(.42,"#dbe9f7");gradient.addColorStop(.72,"#f6e9ec");gradient.addColorStop(1,"#eef5fb")}
+  context.fillStyle=gradient;context.fillRect(0,0,canvas.width,canvas.height);
+  const lights=dark?[[220,280,620,"rgba(71,119,210,.34)"],[1000,460,700,"rgba(117,74,182,.28)"],[650,1380,760,"rgba(201,58,95,.18)"]]:[[180,240,620,"rgba(134,205,255,.48)"],[1020,460,720,"rgba(186,164,255,.34)"],[650,1360,760,"rgba(255,178,190,.32)"]];
+  for(const [x,y,r,color] of lights){const glow=context.createRadialGradient(x,y,0,x,y,r);glow.addColorStop(0,color);glow.addColorStop(1,"rgba(0,0,0,0)");context.fillStyle=glow;context.fillRect(x-r,y-r,r*2,r*2)}
+  let url="";try{url=canvas.toDataURL("image/webp",.84)}catch{url=canvas.toDataURL("image/png")};presetCache.set(environment,url);return url
 }
 
 function ensureThemeLink(){
@@ -55,40 +54,38 @@ function ensureThemeLink(){
 const cssUrl=value=>value?`url(${JSON.stringify(value)})`:"none";
 
 export function updateThemeControls(){
-  const appearance=getAppearance(),resolved=resolvedTheme(appearance);
-  document.querySelectorAll("#evaThemeToggle,#evaThemePillToggle,[data-theme-toggle]").forEach(node=>{
-    node.dataset.themeMode=appearance.mode;node.dataset.themeResolved=resolved;node.title=`Appearance: ${appearance.mode}`;
-    node.setAttribute("aria-label",`Current appearance: ${appearance.mode}`)
-  });
+  const appearance=getAppearance(),environment=resolvedTheme(appearance);
+  document.querySelectorAll("#evaThemeToggle,#evaThemePillToggle,[data-theme-toggle]").forEach(node=>{node.dataset.themeMode=appearance.mode;node.dataset.themeResolved=environment;node.title=`Appearance: ${appearance.mode}`;node.setAttribute("aria-label",`Current appearance: ${appearance.mode}`)});
   document.querySelectorAll("[data-theme-label]").forEach(node=>node.textContent=appearance.mode[0].toUpperCase()+appearance.mode.slice(1))
 }
 
 export async function applyAppearance(value=getAppearance()){
   ensureThemeLink();
-  const appearance=normalizeAppearance(value),resolved=resolvedTheme(appearance),root=document.documentElement;
-  const wallpaperUrl=appearance.mode==="image"?getEffectiveWallpaper(appearance.imageUrl):presetWallpaper(resolved);
-  root.dataset.theme=resolved==="image"?"adaptive":resolved;
+  const appearance=normalizeAppearance(value),environment=resolvedTheme(appearance),root=document.documentElement;
+  const wallpaperUrl=appearance.mode==="image"?getEffectiveWallpaper(appearance.imageUrl):presetWallpaper(environment);
+  root.dataset.theme="adaptive";
+  root.dataset.environment=environment;
   root.dataset.themeMode=appearance.mode;
   root.dataset.appearance=`adaptive-${appearance.mode}`;
   root.dataset.adaptiveContrast=appearance.adaptiveContrast?"on":"off";
   root.toggleAttribute("data-has-wallpaper",appearance.mode==="image");
-  root.style.colorScheme=resolved==="dark"?"dark":"light";
+  root.style.colorScheme=environment==="dark"?"dark":environment==="light"?"light":"light dark";
   root.style.setProperty("--evara-wallpaper-image",cssUrl(wallpaperUrl));
   root.style.setProperty("--evara-wallpaper-position",appearance.mode==="image"?appearance.imagePosition:"center center");
   root.style.setProperty("--evara-wallpaper-dim",String(appearance.mode==="image"?appearance.wallpaperDim:0));
   root.style.setProperty("--evara-glass-tint",String(appearance.glassTint));
   root.style.setProperty("--evara-glass-tint-pct",`${Math.round(appearance.glassTint*100)}%`);
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content",resolved==="dark"?"#0b0f17":"#eef5fb");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content",environment==="dark"?"#0b0f17":environment==="light"?"#eef5fb":"#111827");
   updateThemeControls();installUniversalTextInversion();await initAdaptiveGlass(appearance,wallpaperUrl);
   root.dataset.evaraThemeReady="true";root.classList.remove("boot-pending","evara-boot-lock");root.classList.add("evara-theme-painted");
-  const detail={...appearance,resolved,theme:root.dataset.theme,wallpaperUrl};
+  const detail={...appearance,environment,resolved:environment,theme:"adaptive",wallpaperUrl};
   dispatchEvent(new CustomEvent("evara:theme-applied",{detail}));dispatchEvent(new CustomEvent("evara:appearance-updated",{detail}));
   return appearance
 }
 
 export const applyTheme=mode=>applyAppearance(mode?{...getAppearance(),mode}:getAppearance());
 export function saveAppearance(value={}){const appearance=normalizeAppearance({...getAppearance(),...value,updatedAt:new Date().toISOString()});localStorage.setItem(APPEARANCE_KEY,JSON.stringify(appearance));void applyAppearance(appearance);return appearance}
-export const setThemeMode=mode=>saveAppearance({mode});
+export const setThemeMode=mode=>saveAppearance({mode:VALID_MODES.includes(mode)?mode:"system"});
 export const setImageTheme=imageUrl=>saveAppearance({mode:"image",imageUrl:imageUrl||getAppearance().imageUrl});
 export function resetAppearance(){localStorage.removeItem(APPEARANCE_KEY);const appearance={...DEFAULT_APPEARANCE,updatedAt:new Date().toISOString()};void applyAppearance(appearance);return appearance}
 
