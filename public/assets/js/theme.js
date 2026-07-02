@@ -1,5 +1,5 @@
 import {installLiquidOptics} from "./liquid-optics.js?v=1";
-import {installOnboardingEntry} from "./onboarding-entry.js?v=1";
+import {installOnboardingEntry} from "./onboarding-entry.js?v=2";
 import * as Core from "./theme-core-adaptive.js?v=adaptive-liquid-v7";
 installLiquidOptics();
 installOnboardingEntry();
