@@ -1,0 +1,105 @@
+/* Right-side/side drawer only. Bottom navigation intentionally untouched. */
+.eva-menu-panel .eva-drawer-profile,
+.eva-menu-panel .eva-menu-glass-group,
+.eva-menu-panel .eva-menu-top-block,
+.eva-menu-panel .eva-menu-search-bottom{
+  border-radius:0!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+
+.eva-menu-panel .eva-drawer-profile{
+  margin:0 0 18px!important;
+  padding:8px 2px 16px!important;
+  border-bottom:1px solid rgba(var(--adaptive-ink-rgb),.11)!important;
+}
+
+.eva-menu-panel .eva-menu-glass-group,
+.eva-menu-panel .eva-menu-top-block,
+.eva-menu-panel .eva-menu-search-bottom{
+  margin:0 0 18px!important;
+  padding:0 0 18px!important;
+  border-bottom:1px solid rgba(var(--adaptive-ink-rgb),.11)!important;
+}
+
+.eva-menu-panel .eva-menu-glass-group::before,
+.eva-menu-panel .eva-menu-glass-group::after,
+.eva-menu-panel .eva-menu-top-block::before,
+.eva-menu-panel .eva-menu-top-block::after,
+.eva-menu-panel .eva-menu-search-bottom::before,
+.eva-menu-panel .eva-menu-search-bottom::after{
+  content:none!important;
+}
+
+.eva-menu-panel .eva-drawer-avatar{
+  border-radius:50%!important;
+  background:transparent!important;
+  border:1px solid var(--lg-edge-soft)!important;
+  box-shadow:none!important;
+}
+
+.eva-menu-panel .eva-drawer-avatar-icon{
+  width:22px;
+  height:22px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+.eva-menu-panel .eva-drawer-actions button,
+.eva-menu-panel .eva-search-shell,
+.eva-menu-panel .eva-ai-orb,
+.eva-menu-panel .eva-ai-launch-arrow{
+  background:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+
+.eva-menu-panel .eva-drawer-actions button:hover,
+.eva-menu-panel .eva-ai-launch-arrow:hover{
+  background:rgba(var(--adaptive-ink-rgb),.04)!important;
+}
+
+.eva-menu-panel .eva-search-shell{
+  border-bottom:1px solid rgba(var(--adaptive-ink-rgb),.14)!important;
+  border-radius:0!important;
+}
+
+.eva-menu-panel .eva-menu-control,
+.eva-menu-panel .eva-account-strip a,
+.eva-menu-panel .eva-app-link{
+  border-radius:14px!important;
+  background:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+
+.eva-menu-panel .eva-menu-control:hover,
+.eva-menu-panel .eva-account-strip a:hover,
+.eva-menu-panel .eva-app-link:hover{
+  background:rgba(var(--adaptive-ink-rgb),.035)!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+
+.eva-menu-panel .eva-menu-control[data-active="true"],
+.eva-menu-panel .eva-account-strip a[data-active="true"],
+.eva-menu-panel .eva-app-link[data-active="true"],
+.eva-menu-panel .eva-menu-control[aria-current="page"],
+.eva-menu-panel .eva-account-strip a[aria-current="page"],
+.eva-menu-panel .eva-app-link[aria-current="page"]{
+  background:rgba(var(--adaptive-ink-rgb),.055)!important;
+  border-color:rgba(var(--adaptive-ink-rgb),.08)!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
