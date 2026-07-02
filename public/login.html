@@ -12,10 +12,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/icon-192.png" />
   <link rel="shortcut icon" href="/favicon.ico" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
-  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" />
   <meta name="theme-color" content="#eef5fb" />
-  <meta name="msapplication-TileColor" content="#111827" />
-  <meta name="msapplication-TileImage" content="/assets/img/icon-192.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -24,19 +21,10 @@
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
   <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin />
-  <link rel="dns-prefetch" href="https://www.gstatic.com" />
-  <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
-  <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com" />
   <link rel="preload" as="image" href="/assets/img/evaraos_logo.png" />
   <title>Login • Evaraos Inc</title>
   <script>document.documentElement.classList.add("auth-pending");</script>
-  <style>
-    html.boot-pending body { margin: 0; overflow: hidden; touch-action: none; }
-    html.auth-pending body, body.auth-pending { opacity: 0; pointer-events: none; }
-    body.login-page { margin: 0; min-height: 100vh; background: transparent; }
-    body.app-loading #appRoot { visibility: hidden; }
-    body.app-ready #appRoot { visibility: visible; }
-  </style>
+  <style>html.boot-pending body{margin:0;overflow:hidden;touch-action:none}html.auth-pending body,body.auth-pending{opacity:0;pointer-events:none}body.login-page{margin:0;min-height:100vh;background:transparent}body.app-loading #appRoot{visibility:hidden}body.app-ready #appRoot{visibility:visible}</style>
   <link rel="stylesheet" href="/assets/css/base.css?v=53" />
   <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v7" />
   <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v25-x-drawer" />
@@ -53,22 +41,23 @@
       <section class="auth-panel login-panel glass-card aurora-card active-glow beam-target">
         <div class="login-badge-wrap"><img src="/assets/img/evaraos_logo.png" alt="Evaraos logo" class="login-badge auth-badge auth-badge-large" loading="eager" decoding="async" fetchpriority="high" /></div>
         <h1 class="login-title">Welcome Back</h1>
-        <p class="login-subtitle">Sign in with your email or username to access your Evaraos control center.</p>
+        <p class="login-subtitle">Use the email address connected to your Evaraos account.</p>
         <form id="loginForm" class="login-form" novalidate>
-          <div class="form-group"><label class="field-label" for="loginEmail">Email or Username</label><div class="input-shell aurora-card beam-target"><input id="loginEmail" name="email" type="email" class="input" placeholder="Enter your email or username" autocomplete="username" required /></div></div>
+          <div class="form-group"><label class="field-label" for="loginEmail">Account Email</label><div class="input-shell aurora-card beam-target"><input id="loginEmail" name="email" type="email" class="input" placeholder="name@example.com" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" required /></div></div>
           <div class="form-group"><label class="field-label" for="loginPassword">Password</label><div class="password-wrap aurora-card beam-target"><input id="loginPassword" name="password" type="password" class="input" placeholder="Enter your password" autocomplete="current-password" required /><button type="button" class="password-toggle" id="loginPasswordToggle" aria-label="Show password"><svg viewBox="0 0 24 24" class="password-eye-icon eye-open" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"></path></svg><svg viewBox="0 0 24 24" class="password-eye-icon eye-closed" aria-hidden="true"><path d="M3.3 4.7 19.3 20.7l1.4-1.4-2.2-2.2c1.8-1.2 3.2-2.8 4.2-4.2a1 1 0 0 0 0-1.1C21.5 10.1 17.5 5 12 5c-1.8 0-3.5.5-5.1 1.2L4.7 3.3 3.3 4.7Zm5.1 5.1 1.5 1.5a2.2 2.2 0 0 0 2.8 2.8l1.5 1.5A4.2 4.2 0 0 1 8.4 9.8ZM12 7c4 0 7.2 3.3 8.6 5-1 1.3-2.8 3.2-5.1 4.3l-1.6-1.6a4.2 4.2 0 0 0-4.6-4.6L7.8 8.5C9.1 7.6 10.5 7 12 7ZM5.3 8.3C3.9 9.4 2.8 10.8 1.3 12.9a1 1 0 0 0 0 1.1C2.5 15.9 6.5 21 12 21c1.8 0 3.6-.5 5.1-1.3l-1.5-1.5A8.6 8.6 0 0 1 12 19c-4 0-7.2-3.3-8.6-5 .9-1.1 2.2-2.5 3.7-3.6L5.3 8.3Z"></path></svg></button></div></div>
-          <div class="remember-row aurora-card beam-target"><label class="remember-check" for="rememberDevice"><input id="rememberDevice" name="rememberDevice" type="checkbox" checked /><span>Remember this device</span></label></div>
-          <div class="login-actions-row"><button type="submit" class="btn btn-theme-primary premium-red-btn">Login</button><a href="/reset.html" class="btn btn-theme-secondary">Forgot password?</a></div>
+          <div class="remember-row aurora-card beam-target"><label class="remember-check" for="rememberDevice"><input id="rememberDevice" name="rememberDevice" type="checkbox" checked /><span>Keep me signed in on this device</span></label></div>
+          <div class="login-actions-row"><button type="submit" class="btn btn-theme-primary">Login</button><a href="/reset.html" class="btn btn-theme-secondary">Forgot password?</a></div>
           <p id="loginMessage" class="login-message" aria-live="polite"></p>
         </form>
-        <div class="auth-footer-links"><span>Need an account?</span><a href="/signup.html">Create one</a></div>
+        <div class="auth-footer-links"><span>New to Evaraos?</span><a href="/signup.html">Create an account</a></div>
       </section>
     </main>
   </div>
-  <script src="/assets/js/loader.js?v=36"></script>
+  <script src="/assets/js/loader.js?v=39"></script>
   <script type="module" src="/assets/js/firebase.js?v=38"></script>
   <script type="module" src="/assets/js/route-guard.js?v=36"></script>
-  <script type="module" src="/assets/js/auth.js?v=38"></script>  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v7"></script>
+  <script type="module" src="/assets/js/auth.js?v=39"></script>
+  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v7"></script>
   <script type="module" src="/assets/js/nav.js?v=nav-v25-x-drawer"></script>
 </body>
 </html>
