@@ -14,7 +14,7 @@ for(const file of walk(root)){
   if(!/<body\b/i.test(html))continue;
   const before=html;
 
-  html=html.replace(/<html([^>]*)>/i,(all,attrs)=>`<html${attrs.replace(/\sdata-theme=("[^"]*"|'[^']*')/gi,"").replace(/\sdata-theme-mode=("[^"]*"|'[^']*')/gi,"").replace(/\sdata-appearance=("[^"]*"|'[^']*')/gi,"")} data-theme="light" data-theme-mode="system" data-appearance="adaptive-system">`);
+  html=html.replace(/<html([^>]*)>/i,(all,attrs)=>`<html${attrs.replace(/\sdata-theme=("[^"]*"|'[^']*')/gi,"").replace(/\sdata-environment=("[^"]*"|'[^']*')/gi,"").replace(/\sdata-theme-mode=("[^"]*"|'[^']*')/gi,"").replace(/\sdata-appearance=("[^"]*"|'[^']*')/gi,"")} data-theme="adaptive" data-environment="light" data-theme-mode="system" data-appearance="adaptive-system">`);
   html=strip(html,/\s*<script[^>]+(?:theme-boot|appearance-mode-fix|adaptive-appearance-boot)\.js[^>]*><\/script>\s*/gi);
   html=strip(html,/\s*<script[^>]+src=["']\/assets\/js\/(?:theme|nav|liquid-optics)\.js[^>]*><\/script>\s*/gi);
 
@@ -32,5 +32,5 @@ for(const file of walk(root)){
 
   if(html!==before){fs.writeFileSync(file,html,"utf8");changed.push(path.relative(root,file).replace(/\\/g,"/"))}
 }
-console.log(`Updated ${changed.length} public HTML page(s) for multi-mode optical Liquid Glass v7.`);
+console.log(`Updated ${changed.length} public HTML page(s) for universal Liquid Glass v7.`);
 for(const f of changed)console.log(`- ${f}`);
