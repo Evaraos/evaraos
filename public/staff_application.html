@@ -2,7 +2,8 @@
 <html lang="en" data-theme="adaptive" data-environment="light" data-theme-mode="system" data-appearance="adaptive-system">
 <head>
   <meta charset="UTF-8" />
-  <script src="/assets/js/adaptive-appearance-boot.js?v=2"></script><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <script src="/assets/js/adaptive-appearance-boot.js?v=3"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
@@ -10,15 +11,6 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png" />
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" />
   <meta name="theme-color" content="#eef5fb" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Evaraos" />
-  <meta name="application-name" content="Evaraos" />
-  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
-  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
-  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin />
-  <link rel="preload" as="image" href="/assets/img/evaraos_logo.png" />
   <title>Staff Application • Evaraos Inc</title>
   <style>
     html,body{margin:0;min-height:100%;background:#eef5fb}
@@ -30,158 +22,116 @@
   </style>
   <link rel="stylesheet" href="/assets/css/base.css?v=53" />
   <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v7" />
-  <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v25-x-drawer" />
-  <link rel="stylesheet" href="/assets/css/dashboard.css?v=51" />
+  <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v26-visible-actions" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css?v=52" />
   <link rel="stylesheet" href="/assets/css/app-system.css?v=50" />
 </head>
 <body class="staff-application-page app-loading" data-route-guard="public">
   <div id="universalNavRoot"></div>
   <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
-
   <div id="appRoot">
     <main class="page-shell application-wrap">
       <section class="application-hero" aria-labelledby="applicationTitle">
         <article class="glass-card application-hero-card">
           <p class="application-kicker">Staff application</p>
           <h1 class="application-title" id="applicationTitle">Build your next opportunity through Evaraos.</h1>
-          <p class="application-copy">Create a secure applicant account, choose the role that fits you, and submit the information leadership needs to review your application.</p>
+          <p class="application-copy">Choose how you want to work, the role and campaign that fit you, and the company or independent pathway you want to join.</p>
         </article>
-
         <aside class="glass-card application-steps" aria-label="Application process">
           <div class="step-card" data-step="01"><strong>Create your applicant account</strong><span>Your account remains pending until leadership completes its review.</span></div>
-          <div class="step-card" data-step="02"><strong>Verify your information</strong><span>Submit one valid identity document and any helpful résumé or work proof.</span></div>
-          <div class="step-card" data-step="03"><strong>Receive a decision</strong><span>Approved applicants receive their staff role, company assignment, and onboarding access.</span></div>
+          <div class="step-card" data-step="02"><strong>Choose your pathway</strong><span>Apply in-house, through a program, independently, or as an established third-party business.</span></div>
+          <div class="step-card" data-step="03"><strong>Receive a decision</strong><span>Approved applicants receive their role, company assignment, and onboarding access.</span></div>
         </aside>
       </section>
-
       <section class="glass-card application-form-card">
-        <div class="application-form-head">
-          <div>
-            <h2>Staff application</h2>
-            <p>Complete each required section carefully. You can review everything before submitting.</p>
-          </div>
-          <span class="required-legend"><b>*</b> Required fields</span>
-        </div>
-
+        <div class="application-form-head"><div><h2>Staff application</h2><p>Complete each section carefully. Required fields are marked with an asterisk.</p></div><span class="required-legend"><b>*</b> Required fields</span></div>
         <form id="staffApplicationForm" novalidate>
           <div class="form-section">
             <h2 class="form-section-title">Account + Role</h2>
             <p class="form-subnote">Your email and password create the secure account used to track your application.</p>
             <div class="application-grid">
-              <div class="application-field">
-                <label for="appFullName">Full legal name *</label>
-                <input id="appFullName" type="text" autocomplete="name" placeholder="First and last name" required />
-              </div>
-              <div class="application-field">
-                <label for="appEmail">Email *</label>
-                <input id="appEmail" type="email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" placeholder="name@example.com" required />
-              </div>
-              <div class="application-field">
-                <label for="appPassword">Create password *</label>
-                <input id="appPassword" type="password" autocomplete="new-password" minlength="6" placeholder="At least 6 characters" required />
-              </div>
-              <div class="application-field">
-                <label for="appPasswordConfirm">Confirm password *</label>
-                <input id="appPasswordConfirm" type="password" autocomplete="new-password" minlength="6" placeholder="Re-enter your password" required />
-              </div>
-              <div class="application-field">
-                <label for="appRole">Role applying for *</label>
-                <select id="appRole" required>
-                  <option value="">Select role</option>
-                  <option value="sales_rep">Sales Rep / Lead Generation</option>
-                  <option value="technician">Technician</option>
-                  <option value="cleaner">Cleaner</option>
-                  <option value="staff">General Staff</option>
-                </select>
-              </div>
-              <div class="application-field">
-                <label for="appDesiredCompany">Preferred company</label>
-                <input id="appDesiredCompany" type="text" placeholder="Supreme True Clean, OneofOne Cleaning, Evaraos…" />
-              </div>
-              <div class="application-field full">
-                <label for="appDesiredMarket">Preferred market or city</label>
-                <input id="appDesiredMarket" type="text" placeholder="Jacksonville, FL" />
-              </div>
+              <div class="application-field full name-grid-host"><div class="name-grid">
+                <div class="application-field"><label for="appFirstName">First name *</label><input id="appFirstName" autocomplete="given-name" required /></div>
+                <div class="application-field"><label for="appMiddleName">Middle name <small>Optional</small></label><input id="appMiddleName" autocomplete="additional-name" /></div>
+                <div class="application-field"><label for="appLastName">Last name *</label><input id="appLastName" autocomplete="family-name" required /></div>
+              </div></div>
+              <div class="application-field"><label for="appEmail">Email *</label><input id="appEmail" type="email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" placeholder="name@example.com" required /></div>
+              <div class="application-field"><label for="appPassword">Create password *</label><input id="appPassword" type="password" autocomplete="new-password" minlength="6" required /></div>
+              <div class="application-field"><label for="appPasswordConfirm">Confirm password *</label><input id="appPasswordConfirm" type="password" autocomplete="new-password" minlength="6" required /></div>
+              <div class="application-field"><label for="appRole">Role applying for *</label><select id="appRole" required><option value="">Select role</option></select></div>
+              <div class="application-field"><label for="appPathway">Work pathway *</label><select id="appPathway" required><option value="">Select pathway</option><option value="in_house">Evaraos in-house team</option><option value="program">Evaraos program participant</option><option value="independent">Independent freelancer / contractor</option><option value="third_party">Established third-party business</option></select></div>
+              <div class="application-field"><label for="appDesiredCompany">Preferred company or program *</label><select id="appDesiredCompany" required><option value="">Select company or pathway</option></select></div>
+              <div class="application-field"><label for="appCompanyCategory">Company category</label><select id="appCompanyCategory"><option value="">Select category</option><option value="in_house">In-house company</option><option value="program">Program / marketplace</option><option value="independent">Independent contractor</option><option value="third_party">Third-party business</option></select></div>
+              <div class="application-field"><label for="appCampaign">Preferred campaign or service *</label><select id="appCampaign" required><option value="">Select campaign</option><option>Pressure Washing</option><option>Trash Bin Cleaning</option><option>House Washing</option><option>Driveway & Sidewalk Cleaning</option><option>Interior Residential Cleaning</option><option>Commercial Cleaning</option><option>Solar Panel Cleaning</option><option>Mobile Car Wash & Detailing</option><option>Lead Generation</option><option>Customer Support</option><option>Operations & Dispatch</option><option>Platform / Data Operations</option></select></div>
+              <div class="application-field"><label for="appPreferredCity">Preferred work city *</label><input id="appPreferredCity" placeholder="Jacksonville, FL" required /></div>
             </div>
           </div>
-
           <div class="form-section">
             <h2 class="form-section-title">Personal + Contact Information</h2>
-            <p class="form-subnote">Use current information so the review team can contact and verify you.</p>
             <div class="application-grid">
-              <div class="application-field"><label for="appPhone">Phone *</label><input id="appPhone" type="tel" autocomplete="tel" inputmode="tel" placeholder="(555) 555-5555" required /></div>
+              <div class="application-field"><label for="appPhone">Phone *</label><input id="appPhone" type="tel" autocomplete="tel" inputmode="tel" required /></div>
               <div class="application-field"><label for="appDob">Date of birth *</label><input id="appDob" type="date" autocomplete="bday" required /></div>
-              <div class="application-field full"><label for="appAddress">Street address *</label><input id="appAddress" type="text" autocomplete="street-address" placeholder="Street address" required /></div>
-              <div class="application-field"><label for="appCity">City *</label><input id="appCity" type="text" autocomplete="address-level2" required /></div>
-              <div class="application-field"><label for="appState">State *</label><input id="appState" type="text" autocomplete="address-level1" maxlength="24" required /></div>
-              <div class="application-field"><label for="appZip">ZIP code *</label><input id="appZip" type="text" autocomplete="postal-code" inputmode="numeric" required /></div>
+              <div class="application-field full"><label for="appAddress">Street address *</label><input id="appAddress" autocomplete="street-address" required /></div>
+              <div class="application-field"><label for="appCity">City *</label><input id="appCity" autocomplete="address-level2" required /></div>
+              <div class="application-field"><label for="appState">State *</label><input id="appState" autocomplete="address-level1" required /></div>
+              <div class="application-field"><label for="appZip">ZIP code *</label><input id="appZip" autocomplete="postal-code" inputmode="numeric" required /></div>
               <div class="application-field"><label for="appWorkAuth">Authorized to work? *</label><select id="appWorkAuth" required><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
             </div>
           </div>
-
           <div class="form-section">
             <h2 class="form-section-title">Transportation + Availability</h2>
             <div class="application-grid">
               <div class="application-field"><label for="appDriversLicense">Driver’s license? *</label><select id="appDriversLicense" required><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
-              <div class="application-field"><label for="appDriversState">License state</label><input id="appDriversState" type="text" maxlength="24" /></div>
+              <div class="application-field"><label for="appDriversState">License state</label><input id="appDriversState" /></div>
+              <div class="application-field"><label for="appDriversNumber">Driver’s license number</label><input id="appDriversNumber" autocomplete="off" /></div>
+              <div class="application-field"><label for="appDriversExpiration">License expiration date</label><input id="appDriversExpiration" type="date" /></div>
               <div class="application-field"><label for="appTransportation">Reliable transportation? *</label><select id="appTransportation" required><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
-              <div class="application-field"><label for="appAvailability">Availability *</label><input id="appAvailability" type="text" placeholder="Weekdays, evenings, weekends…" required /></div>
-              <div class="application-field full"><label for="appExperience">Experience summary</label><textarea id="appExperience" rows="5" placeholder="Sales, cleaning, field work, customer service, certifications, or relevant equipment experience…"></textarea></div>
+              <div class="application-field"><label for="appAvailability">Availability *</label><input id="appAvailability" required /></div>
+              <div class="application-field full"><label for="appExperience">Experience summary</label><textarea id="appExperience" rows="5"></textarea></div>
             </div>
           </div>
-
           <div class="form-section">
             <h2 class="form-section-title">Work Preferences + Screening</h2>
-            <p class="form-subnote">This helps Evaraos route you to the right company, crew, schedule, and onboarding path.</p>
             <div class="application-grid">
               <div class="application-field"><label for="appEmploymentType">Employment type desired *</label><select id="appEmploymentType" required><option value="">Select</option><option value="1099_contractor">1099 Contractor</option><option value="w2_employee">W-2 Employee</option><option value="part_time">Part-Time</option><option value="full_time">Full-Time</option></select></div>
               <div class="application-field"><label for="appEarliestStartDate">Earliest start date *</label><input id="appEarliestStartDate" type="date" required /></div>
-              <div class="application-field"><label for="appPayExpectation">Pay expectation</label><input id="appPayExpectation" type="text" placeholder="$18/hr, commission, per job, negotiable…" /></div>
+              <div class="application-field"><label for="appPayExpectation">Pay expectation</label><input id="appPayExpectation" /></div>
               <div class="application-field"><label for="appBackgroundConsent">Background-check consent *</label><select id="appBackgroundConsent" required><option value="">Select</option><option value="yes">Yes, I consent if required</option><option value="no">No</option></select></div>
-              <div class="application-field full"><label for="appPreferredSchedule">Preferred schedule details</label><textarea id="appPreferredSchedule" rows="3" placeholder="Best days, blocked times, weekly availability, or travel range…"></textarea></div>
-              <div class="application-field full"><label for="appEquipmentExperience">Equipment or field experience</label><textarea id="appEquipmentExperience" rows="4" placeholder="Pressure washers, trucks, cleaning equipment, D2D sales, CRM apps, route work, or customer service…"></textarea></div>
+              <div class="application-field full"><label for="appPreferredSchedule">Preferred schedule details</label><textarea id="appPreferredSchedule" rows="3"></textarea></div>
+              <div class="application-field full"><label for="appEquipmentExperience">Equipment or field experience</label><textarea id="appEquipmentExperience" rows="4"></textarea></div>
             </div>
           </div>
-
           <div class="form-section">
             <h2 class="form-section-title">Identity Verification</h2>
-            <p class="application-notice">Upload one valid identity document. Images and PDFs up to 15 MB are accepted. Your documents are used only for applicant verification and staff onboarding review.</p>
+            <p class="application-notice">Upload one valid identity document. Images and PDFs up to 15 MB are accepted.</p>
             <div class="application-grid">
-              <div class="application-field"><label for="appProfilePhoto">Profile photo</label><input id="appProfilePhoto" type="file" accept="image/*" /></div>
+              <div class="application-field file-field"><label for="appProfilePhoto">Profile photo</label><input id="appProfilePhoto" type="file" accept="image/*" /></div>
               <div class="application-field"><label for="appIdType">Document type *</label><select id="appIdType" required><option value="">Select</option><option value="state_id">State ID</option><option value="drivers_license">Driver’s License</option><option value="passport">Passport</option><option value="other">Other Government ID</option></select></div>
-              <div class="application-field"><label for="appIdFront">Identity document *</label><input id="appIdFront" type="file" accept="image/*,application/pdf" required /></div>
-              <div class="application-field"><label for="appIdBack">Back side, if applicable</label><input id="appIdBack" type="file" accept="image/*,application/pdf" /></div>
-              <div class="application-field full"><label for="appResume">Résumé or additional proof</label><input id="appResume" type="file" accept="image/*,application/pdf" /></div>
+              <div class="application-field file-field"><label for="appIdFront">Identity document *</label><input id="appIdFront" type="file" accept="image/*,application/pdf" required /></div>
+              <div class="application-field file-field"><label for="appIdBack">Back side, if applicable</label><input id="appIdBack" type="file" accept="image/*,application/pdf" /></div>
+              <div class="application-field full file-field"><label for="appResume">Résumé or additional proof</label><input id="appResume" type="file" accept="image/*,application/pdf" /></div>
             </div>
           </div>
-
           <div class="form-section">
             <h2 class="form-section-title">Emergency Contact</h2>
             <div class="application-grid">
-              <div class="application-field"><label for="appEmergencyName">Contact name *</label><input id="appEmergencyName" type="text" autocomplete="name" required /></div>
-              <div class="application-field"><label for="appEmergencyPhone">Contact phone *</label><input id="appEmergencyPhone" type="tel" autocomplete="tel" inputmode="tel" required /></div>
+              <div class="application-field"><label for="appEmergencyName">Contact name *</label><input id="appEmergencyName" required /></div>
+              <div class="application-field"><label for="appEmergencyPhone">Contact phone *</label><input id="appEmergencyPhone" type="tel" inputmode="tel" required /></div>
+              <div class="application-field full"><label for="appEmergencyEmail">Contact email *</label><input id="appEmergencyEmail" type="email" inputmode="email" required /></div>
             </div>
           </div>
-
-          <div class="application-consent">
-            <label for="appConsentAccurate"><input id="appConsentAccurate" type="checkbox" required /><span>I confirm that this application is accurate, the documents belong to me, and Evaraos may review this information for staff onboarding.</span></label>
-          </div>
-
-          <p id="staffAppCheckNotice" class="application-notice">Protected by Evaraos App Check and reCAPTCHA Enterprise. Submit only accurate information for review.</p>
-
-          <div class="application-actions">
-            <p id="staffApplicationMessage" class="application-message" aria-live="polite"></p>
-            <button id="staffApplicationSubmit" type="submit" class="btn btn-theme-primary">Submit Staff Application</button>
-          </div>
+          <div class="application-consent"><label for="appConsentAccurate"><input id="appConsentAccurate" type="checkbox" required /><span>I confirm this application is accurate, the documents belong to me, and Evaraos may review this information for staff onboarding.</span></label></div>
+          <p id="staffAppCheckNotice" class="application-notice">Protected by Evaraos App Check and reCAPTCHA Enterprise.</p>
+          <div class="application-actions"><p id="staffApplicationMessage" class="application-message" aria-live="polite"></p><button id="staffApplicationSubmit" type="submit" class="btn btn-theme-primary">Submit Staff Application</button></div>
         </form>
       </section>
     </main>
   </div>
-
   <script src="/assets/js/loader.js?v=39"></script>
   <script type="module" src="/assets/js/firebase.js?v=38"></script>
   <script type="module" src="/assets/js/route-guard.js?v=38"></script>
-  <script type="module" src="/assets/js/staff-application.js?v=3"></script>  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v7"></script>
-  <script type="module" src="/assets/js/nav.js?v=nav-v25-x-drawer"></script>
+  <script type="module" src="/assets/js/staff-application.js?v=4"></script>
+  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v7"></script>
+  <script type="module" src="/assets/js/nav.js?v=nav-v26-visible-actions"></script>
 </body>
 </html>
