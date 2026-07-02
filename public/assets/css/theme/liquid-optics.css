@@ -1,6 +1,7 @@
 /* EVARAOS LIQUID GLASS
    Regular glass is used for floating UI. Nested content is flattened to avoid
-   glass-on-glass. Clear glass is opt-in for compact controls over media. */
+   glass-on-glass. Optical gradients provide refraction without SVG backdrop
+   filters, which are unstable in mobile WebKit compositing. */
 :root{
   --lg-fill:rgba(var(--adaptive-glass-rgb),.13);
   --lg-fill-strong:rgba(var(--adaptive-glass-rgb),.20);
@@ -26,10 +27,6 @@ html[data-theme-mode="image"]{--lg-fill:rgba(var(--adaptive-glass-rgb),.10);--lg
   box-shadow:0 22px 64px var(--lg-shadow),0 3px 12px var(--lg-shadow-soft),inset 0 1px 0 var(--lg-highlight),inset 0 -1px 0 rgba(255,255,255,.07)!important;
   backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-saturation)) contrast(106%)!important;
   -webkit-backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-saturation)) contrast(106%)!important;
-  transform:translateZ(0);
-}
-@supports(backdrop-filter:url("#evara-liquid-refraction")){
-  :where(.glass-card,.glass-shell,.liquid-glass,.aurora-card,.dashboard-sidebar-inner,.dashboard-panel,.dashboard-overview,.dashboard-hero,.dashboard-hero-panel,.dashboard-stat-card,.dashboard-list-item,.dashboard-feed-item,.dashboard-role-card,.dashboard-progress-row,.dashboard-state-card,.settings-card,.settings-block,.settings-hub-card,.workspace-block,.qa-card,.application-card,.customer-service-event,.eva-menu-card,[data-glass="card"],[data-glass="interactive"]){backdrop-filter:url("#evara-liquid-refraction") blur(var(--lg-blur)) saturate(var(--lg-saturation)) contrast(106%)!important}
 }
 :where(.glass-card,.glass-shell,.liquid-glass,.aurora-card,.dashboard-sidebar-inner,.dashboard-panel,.dashboard-overview,.dashboard-hero,.dashboard-hero-panel,.dashboard-stat-card,.dashboard-list-item,.dashboard-feed-item,.dashboard-role-card,.dashboard-progress-row,.dashboard-state-card,.settings-card,.settings-block,.settings-hub-card,.workspace-block,.qa-card,.application-card,.customer-service-event,.eva-menu-card,[data-glass="card"],[data-glass="interactive"])::before{
   content:""!important;position:absolute!important;z-index:0!important;inset:0!important;pointer-events:none!important;border-radius:inherit!important;
