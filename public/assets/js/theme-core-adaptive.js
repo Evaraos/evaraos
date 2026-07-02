@@ -14,7 +14,7 @@ export const DEFAULT_APPEARANCE = Object.freeze({
   updatedAt: null
 });
 
-const THEME_STYLESHEET = "/assets/css/theme.css?v=adaptive-liquid-v8";
+const THEME_STYLESHEET = "/assets/css/theme.css?v=adaptive-liquid-v9";
 const clamp = (value, min, max, fallback) => {
   const number = Number(value);
   return Number.isFinite(number) ? Math.min(max, Math.max(min, number)) : fallback;
