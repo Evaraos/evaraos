@@ -29,8 +29,10 @@ main,footer{position:relative;z-index:1}
 .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}.hero-actions .btn{flex:0 0 auto}
 .section-panel{margin-top:0}.section-head{margin-bottom:0}.section-head h2,.cta-panel h2{text-wrap:balance}.section-head p,.cta-panel p,.info-card p,.service-card p,.category-card p,.feature-card p,.stats-card p{text-wrap:pretty}.feature-card h3,.service-card h3,.category-card h3,.info-card h3{letter-spacing:-.03em}.card-tag,.service-meta{box-shadow:inset 0 1px 0 var(--glass-highlight,rgba(255,255,255,.50))}
 
-.eva-page-transition{position:fixed;inset:0;z-index:calc(var(--loader-z) - 1);pointer-events:none;opacity:0;transition:opacity .12s ease;background:rgba(var(--adaptive-glass-rgb,28,34,46),.06);backdrop-filter:blur(8px) saturate(150%);-webkit-backdrop-filter:blur(8px) saturate(150%)}
-.eva-page-transition.active{opacity:1}
+/* Navigation transitions use a flat tint rather than a full-screen backdrop blur.
+   This avoids stale split-frame tiles in iOS/PWA WebKit while preserving the fade. */
+.eva-page-transition{position:fixed;inset:0;z-index:calc(var(--loader-z) - 1);pointer-events:none;opacity:0;visibility:hidden;transition:opacity .12s ease,visibility 0s linear .12s;background:rgba(var(--adaptive-glass-rgb,28,34,46),.22);backdrop-filter:none!important;-webkit-backdrop-filter:none!important;contain:strict}
+.eva-page-transition.active{opacity:1;visibility:visible;transition-delay:0s}
 html.eva-transitioning body{visibility:hidden}
 html.eva-transitioning,html.eva-transitioning *{transition:none!important}
 html.auth-pending body,body.auth-pending{pointer-events:none!important}
