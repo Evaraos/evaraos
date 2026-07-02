@@ -1,4 +1,4 @@
-/* EVARAOS DASHBOARD SYSTEM
-   Entry point only. No independent light/dark theme authority. */
+/* EVARAOS DASHBOARD SYSTEM */
 @import url("./dashboard/dashboard-layout.css?v=2");
 @import url("./dashboard/dashboard-components.css?v=2");
+@import url("./onboarding-entry.css?v=1");
