@@ -3,8 +3,8 @@ const SURFACE_SELECTOR=[
   ".dashboard-sidebar-inner",".dashboard-panel",".dashboard-overview",".dashboard-hero",".dashboard-hero-panel",
   ".dashboard-stat-card",".dashboard-list-item",".dashboard-feed-item",".dashboard-role-card",".dashboard-progress-row",".dashboard-state-card",
   ".settings-card",".settings-block",".settings-hub-card",".workspace-block",".qa-card",".application-card",".customer-service-event",
-  ".eva-menu-panel",".eva-menu-glass-group",".btn",".settings-chip",".role-pill",".role-pill-option",
-  ".messages-icon-button",".messages-camera",".messages-send",".messages-compose",".eva-account-action","[data-glass]"
+  ".eva-menu-glass-group",".btn",".settings-chip",".role-pill",".role-pill-option",
+  ".messages-icon-button",".messages-camera",".messages-send",".messages-compose",".eva-account-action","[data-glass]:not(.eva-menu-panel)"
 ].join(",");
 
 const states=new WeakMap();
