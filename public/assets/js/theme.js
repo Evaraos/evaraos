@@ -1,13 +1,13 @@
-import {installLiquidOptics} from "./liquid-optics.js?v=1";
+import {installLiquidOptics} from "./liquid-optics.js?v=2";
 import {installOnboardingEntry} from "./onboarding-entry.js?v=2";
 import "./staff-application-dedupe.js?v=2";
 import "./staff-application-experience.js?v=1";
 import "./social-links.js?v=1";
-import * as Core from "./theme-core-adaptive.js?v=adaptive-liquid-v7";
+import * as Core from "./theme-core-adaptive.js?v=adaptive-liquid-v8";
 installLiquidOptics();
 installOnboardingEntry();
-export const EVARAOS_THEME_BUILD="adaptive-liquid-v7";
-export * from "./theme-core-adaptive.js?v=adaptive-liquid-v7";
+export const EVARAOS_THEME_BUILD="adaptive-liquid-v8";
+export * from "./theme-core-adaptive.js?v=adaptive-liquid-v8";
 
 function enforceUniversalTheme(detail={}){
   const root=document.documentElement;
