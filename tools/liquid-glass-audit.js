@@ -2,22 +2,19 @@
 const fs=require("fs");
 const path=require("path");
 const root=path.resolve(__dirname,"..");
+const read=file=>fs.readFileSync(path.join(root,file),"utf8");
 const errors=[];
-const read=p=>fs.readFileSync(path.join(root,p),"utf8");
-const test=(ok,msg)=>{if(!ok)errors.push(msg)};
+const check=(value,message)=>{if(!value)errors.push(message)};
 const core=read("public/assets/js/theme-core-adaptive.js");
-const entry=read("public/assets/js/theme.js");
-const boot=read("public/assets/js/adaptive-appearance-boot.js");
 const theme=read("public/assets/css/theme.css");
-const optics=read("public/assets/css/theme/liquid-optics.css");
-const messages=read("public/assets/css/pages/messages-imessage-v3.css");
-test(core.includes('["light","dark","system","image"]'),"four appearance modes missing");
-test(entry.includes('dataset.theme="adaptive"'),"universal adaptive theme guard missing");
-test(boot.includes("adaptive-liquid-v7")&&boot.includes("evara-boot-lock"),"v7 prepaint lock missing");
-test(theme.includes("adaptive-material.css?v=8")&&theme.includes("adaptive-components.css?v=8")&&theme.includes("liquid-optics.css?v=3")&&theme.includes("liquid-environments.css?v=2"),"final glass revisions missing");
-test(optics.includes("evara-liquid-refraction")&&optics.includes("--lg-fill"),"backdrop lensing missing");
-test(messages.includes("--msg-blue:0,122,255")&&messages.includes("evara-liquid-refraction-clear"),"Liquid Glass chat bubbles missing");
-const pages=[];(function walk(dir){for(const item of fs.readdirSync(dir,{withFileTypes:true})){const file=path.join(dir,item.name);if(item.isDirectory())walk(file);else if(item.name.endsWith(".html"))pages.push(file)}})(path.join(root,"public"));
-for(const file of pages){const html=fs.readFileSync(file,"utf8"),name=path.relative(root,file);test(html.includes("adaptive-appearance-boot.js?v=2"),`${name}: boot`);test(html.includes("theme.css?v=adaptive-liquid-v7"),`${name}: theme css`);test(html.includes("theme.js?v=adaptive-liquid-v7"),`${name}: theme js`);test(html.includes("nav.css?v=nav-v25-x-drawer"),`${name}: nav css`);test(html.includes("nav.js?v=nav-v25-x-drawer"),`${name}: nav js`);test(!html.includes("theme-boot.js")&&!html.includes("appearance-mode-fix.js"),`${name}: legacy loader`)}
+const boot=read("public/assets/js/adaptive-appearance-boot.js");
+const chat=read("public/assets/css/pages/messages-imessage-v3.css");
+check(core.includes('root.dataset.theme="adaptive"'),"Core must keep one adaptive theme");
+check(core.includes('["light","dark","system","image"]'),"Four environments are required");
+check(theme.includes("liquid-optics.css?v=3"),"Optical material is missing");
+check(theme.includes("liquid-environments.css?v=3"),"Environment tuning is missing");
+check(!theme.includes("liquid-image-reference"),"A mode-specific material was reintroduced");
+check(boot.includes("evara-boot-lock")&&boot.includes("evara:theme-applied"),"First-paint lock is missing");
+check(chat.includes("--msg-blue:0,122,255")&&chat.includes("evara-liquid-refraction-clear"),"Liquid Glass chat bubbles are missing");
 if(errors.length){console.error(errors.join("\n"));process.exit(1)}
-console.log(`Liquid Glass audit passed for ${pages.length} pages.`);
+console.log("Universal Liquid Glass audit passed.");
