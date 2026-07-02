@@ -22,6 +22,19 @@ function stateFor(element){
   return state;
 }
 
+function write(element,state){
+  element.style.setProperty("--lg-light-x",`${state.x.toFixed(2)}%`);
+  element.style.setProperty("--lg-light-y",`${state.y.toFixed(2)}%`);
+  element.style.setProperty("--lg-glow-alpha",(0.13+state.energy*0.16).toFixed(3));
+  element.style.setProperty("--lg-control-glow-alpha",(0.17+state.energy*0.20).toFixed(3));
+  element.style.setProperty("--lg-shadow-y",`${(16+state.energy*4).toFixed(2)}px`);
+  element.style.setProperty("--lg-shadow-blur",`${(48+state.energy*10).toFixed(2)}px`);
+  element.style.setProperty("--lg-control-shadow-y",`${(8+state.energy*2).toFixed(2)}px`);
+  element.style.setProperty("--lg-control-shadow-blur",`${(22+state.energy*6).toFixed(2)}px`);
+  element.style.setProperty("--lg-card-scale",(1-state.press*0.004).toFixed(4));
+  element.style.setProperty("--lg-control-scale",(1-state.press*0.012).toFixed(4));
+}
+
 function render(){
   frame=0;
   if(!active?.isConnected)return;
@@ -30,20 +43,17 @@ function render(){
   state.y=lerp(state.y,state.targetY,.12);
   state.energy=lerp(state.energy,state.targetEnergy,.16);
   state.press=lerp(state.press,state.targetPress,.18);
-  active.style.setProperty("--lg-light-x",`${state.x.toFixed(2)}%`);
-  active.style.setProperty("--lg-light-y",`${state.y.toFixed(2)}%`);
-  active.style.setProperty("--lg-energy",state.energy.toFixed(3));
-  active.style.setProperty("--lg-press",state.press.toFixed(3));
+  write(active,state);
   if(Math.abs(state.x-state.targetX)>.08||Math.abs(state.y-state.targetY)>.08||Math.abs(state.energy-state.targetEnergy)>.01||Math.abs(state.press-state.targetPress)>.01)frame=requestAnimationFrame(render);
 }
 
 function schedule(){if(!frame)frame=requestAnimationFrame(render)}
 function activate(element){
-  if(active&&active!==element){const old=stateFor(active);old.targetEnergy=0;old.targetPress=0;active.classList.remove("is-liquid-energized")}
+  if(active&&active!==element){const old=stateFor(active);old.targetEnergy=0;old.targetPress=0;active.classList.remove("is-liquid-energized");write(active,old)}
   active=element;
   if(!active)return;
   active.classList.add("is-liquid-energized");
-  stateFor(active).targetEnergy=1;
+  stateFor(active).targetEnergy=.72;
   schedule();
 }
 function deactivate(element){
@@ -69,8 +79,8 @@ export function installLiquidInteraction(){
     const rect=element.getBoundingClientRect(),state=stateFor(element);
     const rawX=((event.clientX-rect.left)/Math.max(1,rect.width))*100;
     const rawY=((event.clientY-rect.top)/Math.max(1,rect.height))*100;
-    state.targetX=clamp(28+(rawX-50)*.34,10,74);
-    state.targetY=clamp(12+(rawY-50)*.20,4,40);
+    state.targetX=clamp(28+(rawX-50)*.26,14,68);
+    state.targetY=clamp(12+(rawY-50)*.14,5,34);
     state.targetEnergy=.72;
     schedule();
   },{passive:true});
