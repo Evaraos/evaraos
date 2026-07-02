@@ -19,6 +19,13 @@
   transform:translateZ(0);
 }
 
+/* Once the drawer opens, the top shell becomes part of the receding page layer
+   instead of floating above the drawer. */
+body.nav-menu-open .eva-nav-shell{
+  z-index:2147483644!important;
+  pointer-events:none!important;
+}
+
 .eva-menu-panel{
   position:fixed!important;
   z-index:2147483646!important;
