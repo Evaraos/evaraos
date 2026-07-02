@@ -153,11 +153,11 @@ function merge(entries){ const overrides=new Map(entries.filter(entry=>entry.kin
 async function preview(conversation){ try{ const snapshot=await getDocs(query(collection(db,"channels",conversation.id,"messages"),orderBy("createdAt","desc"),limit(8))); const message=snapshot.docs.map(entry=>entry.data()).find(entry=>!["group_meta","direct_meta","role_meta"].includes(entry.kind)); return message?{...conversation,lastMessage:message.text||conversation.lastMessage||"",lastMessageAt:message.createdAt||conversation.lastMessageAt||null,lastSenderUid:message.senderUid||""}:conversation; }catch{return conversation;} }
 async function loadConversations(){ state.conversations=merge(await registry()); renderConversations(); state.conversations=await Promise.all(state.conversations.map(preview)); renderConversations(); }
 
-function center(){ state.off?.(); state.off=null; state.active=null; document.body.classList.remove("messages-chat-active","keyboard-open"); el.app?.classList.add("show-list"); document.documentElement.dataset.messagesView="center"; syncViewport(); renderConversations(); }
+function center(){ state.off?.(); state.off=null; state.active=null; document.body.classList.remove("messages-chat-active","messages-search-active","keyboard-open"); el.app?.classList.add("show-list"); document.documentElement.dataset.messagesView="center"; syncViewport(); renderConversations(); }
 function dateDivider(value){ const divider=document.createElement("div"); divider.className="message-date-divider"; divider.textContent=dayLabel(value); return divider; }
 function messageRow(message){ const mine=message.senderUid===state.user?.uid,row=document.createElement("article"); row.className=`message-row${mine?" mine":""}`; const stack=document.createElement("div"); stack.className="message-stack"; if(!mine&&state.active?.type!=="direct"&&message.senderName){ const author=document.createElement("div"); author.className="message-author"; author.textContent=message.senderName; stack.append(author); } const bubble=document.createElement("div"); bubble.className="message-bubble"; bubble.textContent=message.text||""; const time=document.createElement("div"); time.className="message-time"; time.textContent=toDate(message.createdAt)?new Intl.DateTimeFormat(undefined,{hour:"numeric",minute:"2-digit"}).format(toDate(message.createdAt)):""; stack.append(bubble,time); row.append(stack); return row; }
 function renderMessages(snapshot){ if(!el.chatFeed||!state.active)return; const messages=snapshot.docs.map(entry=>({id:entry.id,...entry.data()})).filter(message=>!["group_meta","direct_meta","role_meta"].includes(message.kind)); if(!messages.length){ const empty=document.createElement("div"); empty.className="messages-empty"; empty.textContent="Start the conversation."; el.chatFeed.replaceChildren(empty); return; } const nodes=[]; let previous=""; for(const message of messages){ const key=dayKey(message.createdAt); if(key!==previous){ nodes.push(dateDivider(message.createdAt)); previous=key; } nodes.push(messageRow(message)); } el.chatFeed.replaceChildren(...nodes); requestAnimationFrame(()=>{el.chatFeed.scrollTop=el.chatFeed.scrollHeight;}); }
-function openConversation(id){ const conversation=state.conversations.find(item=>item.id===id); if(!conversation)return; state.active=conversation; el.app?.classList.remove("show-list"); document.body.classList.add("messages-chat-active"); document.documentElement.dataset.messagesView="chat"; syncViewport(); avatar(el.chatAvatar,conversation); el.chatTitle.textContent=conversation.name||"Conversation"; el.chatSubtitle.textContent=conversation.type==="direct"?"Direct message":conversation.type==="group"?`${conversation.memberUids?.length||0} members`:conversation.description||"Team channel"; state.off?.(); state.off=onSnapshot(query(collection(db,"channels",conversation.id,"messages"),orderBy("createdAt","asc")),renderMessages,error=>{ const empty=document.createElement("div"); empty.className="messages-empty"; empty.textContent=error.message||"Unable to load messages."; el.chatFeed.replaceChildren(empty); }); renderConversations(); }
+function openConversation(id){ const conversation=state.conversations.find(item=>item.id===id); if(!conversation)return; document.body.classList.remove("messages-search-active"); state.active=conversation; el.app?.classList.remove("show-list"); document.body.classList.add("messages-chat-active"); document.documentElement.dataset.messagesView="chat"; syncViewport(); avatar(el.chatAvatar,conversation); el.chatTitle.textContent=conversation.name||"Conversation"; el.chatSubtitle.textContent=conversation.type==="direct"?"Direct message":conversation.type==="group"?`${conversation.memberUids?.length||0} members`:conversation.description||"Team channel"; state.off?.(); state.off=onSnapshot(query(collection(db,"channels",conversation.id,"messages"),orderBy("createdAt","asc")),renderMessages,error=>{ const empty=document.createElement("div"); empty.className="messages-empty"; empty.textContent=error.message||"Unable to load messages."; el.chatFeed.replaceChildren(empty); }); renderConversations(); }
 async function sendMessage(){ const text=String(el.messageInput?.value||"").trim(); if(!text||!state.active||!state.user)return; el.messageInput.value=""; autoSize(); await addDoc(collection(db,"channels",state.active.id,"messages"),{text,senderUid:state.user.uid,senderName:state.profile.displayName||state.profile.fullName||state.profile.name||state.user.displayName||state.user.email||"User",senderRole:state.profile.role||"customer",companyId:state.profile.companyId||"",createdAt:serverTimestamp()}); }
 function autoSize(){ if(!el.messageInput)return; el.messageInput.style.height="auto"; el.messageInput.style.height=`${Math.min(128,el.messageInput.scrollHeight)}px`; }
 
@@ -174,7 +174,33 @@ function viewPhoto(){ if(!state.active)return; el.conversationPhotoCaption.textC
 function closePhoto(){ el.conversationPhotoViewer.hidden=true; }
 function info(){ if(!state.active)return; closeMenu(); const members=state.active.memberUids?.length||0; window.alert(`${state.active.name}\n${state.active.description||"Conversation"}\n${state.active.type==="direct"?"Direct message":`${members} members`}`); }
 function voice(){ const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SpeechRecognition){el.conversationSearch?.focus();return;} const recognition=new SpeechRecognition(); recognition.lang=document.documentElement.lang||"en-US"; recognition.interimResults=false; recognition.maxAlternatives=1; recognition.addEventListener("result",event=>{const text=event.results?.[0]?.[0]?.transcript||""; el.conversationSearch.value=text; state.search=text; renderConversations();},{once:true}); recognition.start(); }
-function syncViewport(){ const viewport=window.visualViewport,height=Math.round(viewport?.height||window.innerHeight),top=Math.round(viewport?.offsetTop||0),layout=Math.max(window.innerHeight,document.documentElement.clientHeight||0),keyboardOpen=document.body.classList.contains("messages-chat-active")&&layout-height>120; document.documentElement.style.setProperty("--messages-viewport-height",`${height}px`); document.documentElement.style.setProperty("--messages-viewport-top",`${top}px`); document.body.classList.toggle("keyboard-open",keyboardOpen); if(keyboardOpen&&el.chatFeed)requestAnimationFrame(()=>{el.chatFeed.scrollTop=el.chatFeed.scrollHeight;}); }
+
+function syncViewport(){
+  const viewport=window.visualViewport;
+  const height=Math.round(viewport?.height||window.innerHeight);
+  const top=Math.round(viewport?.offsetTop||0);
+  const layoutHeight=Math.max(window.innerHeight,document.documentElement.clientHeight||0);
+  const keyboardVisible=layoutHeight-height>120;
+  const chatActive=document.body.classList.contains("messages-chat-active");
+  const searchActive=document.body.classList.contains("messages-search-active");
+  const keyboardOpen=keyboardVisible&&(chatActive||searchActive);
+
+  document.documentElement.style.setProperty("--messages-viewport-height",`${height}px`);
+  document.documentElement.style.setProperty("--messages-viewport-top",`${top}px`);
+  document.body.classList.toggle("keyboard-open",keyboardOpen);
+
+  if(chatActive&&keyboardOpen&&el.chatFeed){
+    requestAnimationFrame(()=>{el.chatFeed.scrollTop=el.chatFeed.scrollHeight;});
+  }
+}
+
+function setSearchMode(active){
+  if(document.body.classList.contains("messages-chat-active"))return;
+  document.body.classList.toggle("messages-search-active",active);
+  requestAnimationFrame(syncViewport);
+  setTimeout(syncViewport,90);
+  setTimeout(syncViewport,280);
+}
 
 function swipe(){
   let startX=0;
@@ -202,6 +228,8 @@ function swipe(){
 function bind(){
   el.conversationList?.addEventListener("click",event=>{ const group=event.target.closest("[data-group-toggle]"); if(group){toggleGroup(group.dataset.groupToggle);return;} const mute=event.target.closest("[data-mute-conversation]"); if(mute){toggleMute(mute.dataset.muteConversation);return;} const remove=event.target.closest("[data-remove-conversation]"); if(remove){hideConversation(remove.dataset.removeConversation);return;} const row=event.target.closest("[data-conversation]"); if(row&&!row.closest(".conversation-swipe-row")?.classList.contains("is-revealed"))openConversation(row.dataset.conversation); });
   el.conversationSearch?.addEventListener("input",event=>{state.search=event.target.value;renderConversations();});
+  el.conversationSearch?.addEventListener("focus",()=>setSearchMode(true));
+  el.conversationSearch?.addEventListener("blur",()=>setTimeout(()=>{if(document.activeElement!==el.conversationSearch)setSearchMode(false);},180));
   el.editConversations?.addEventListener("click",toggleEdit);
   el.newConversationButton?.addEventListener("click",()=>openMenu("global"));
   el.voiceSearchButton?.addEventListener("click",voice);
