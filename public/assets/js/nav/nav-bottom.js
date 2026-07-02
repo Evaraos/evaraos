@@ -27,7 +27,6 @@ function workspaceItems() {
 function openBottomRoute(event) {
   const link = event.target.closest(".eva-bottom-link");
   if (!link) return;
-
   event.preventDefault();
   event.stopPropagation();
 
@@ -40,17 +39,22 @@ function openBottomRoute(event) {
       sessionStorage.setItem("evaraos-messages-view", "center");
     } catch {}
 
-    if (/\/messages\.html$/.test(location.pathname)) {
+    const target = new URL(href, window.location.origin);
+    if (window.location.pathname === target.pathname) {
       document.body.classList.remove("messages-chat-active");
       document.querySelector(".messages-app")?.classList.add("show-list");
       document.documentElement.dataset.messagesView = "center";
+      window.EvaraLoader?.markAppReady?.();
       return;
     }
+
+    window.location.assign(target.href);
+    return;
   }
 
   navigateWithLoader(href, {
-    title: isMessages ? "Opening Messages" : `Opening ${link.getAttribute("aria-label") || "page"}`,
-    subtitle: isMessages ? "Loading your message center." : "Loading your workspace."
+    title: `Opening ${link.getAttribute("aria-label") || "page"}`,
+    subtitle: "Loading your workspace."
   });
 }
 
