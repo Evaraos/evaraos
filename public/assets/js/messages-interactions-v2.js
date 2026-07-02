@@ -1,1 +1,0 @@
-/* Retired. Message interactions now belong to the single Messages runtime. */
