@@ -1,8 +1,6 @@
 const ROW_SELECTOR = [
   ".eva-menu-control",
   ".eva-app-link",
-  ".eva-menu-top-block",
-  ".eva-menu-search-bottom",
   ".eva-quick-strip a",
   ".eva-account-strip a"
 ].join(",");
