@@ -40,74 +40,54 @@
     root.style.removeProperty("--evara-wallpaper-image");
   }
 
+  [
+    "evaraThemeAuthority",
+    "evaraNavAuthority",
+    "evaraOpticsAuthority",
+    "evaraInteractionAuthority",
+    "evaraThemeRuntimeAuthority",
+    "evaraNavRuntimeAuthority"
+  ].forEach((id) => document.getElementById(id)?.remove());
+
   const fallback = environment === "dark"
     ? "linear-gradient(145deg,#080b12,#151b28 48%,#232b3d 72%,#080b12)"
     : "linear-gradient(145deg,#f7fbff,#dbe9f7 48%,#f6e9ec 72%,#eef5fb)";
 
   const prepaint = document.createElement("style");
   prepaint.id = "evaraPrepaintAuthority";
-  prepaint.dataset.evaraAuthority = "1";
-  prepaint.textContent = `html{background:${mode === "image" && imageUrl ? `var(--evara-wallpaper-image),${fallback}` : fallback} center/cover fixed no-repeat!important}html.evara-boot-lock body{visibility:hidden!important}html.evara-theme-painted body{visibility:visible!important}body{background:transparent!important}`;
+  prepaint.textContent = `html{background:${mode === "image" && imageUrl ? `var(--evara-wallpaper-image),${fallback}` : fallback} center/cover no-repeat!important}html.evara-boot-lock body{visibility:hidden!important}html.evara-theme-painted body{visibility:visible!important}body{background:transparent!important}`;
   document.head.appendChild(prepaint);
 
-  const add = (tag, id, url) => {
-    const node = document.createElement(tag);
-    node.id = id;
-    node.dataset.evaraAuthority = "1";
-    if (tag === "link") {
-      node.rel = "stylesheet";
-      node.href = url;
-    } else {
-      node.type = "module";
-      node.src = url;
-    }
-    document.head.appendChild(node);
-    return node;
-  };
-
-  const theme = add("link", "evaraThemeAuthority", "/assets/css/theme.css?v=adaptive-liquid-v7");
-  add("link", "evaraNavAuthority", "/assets/css/nav.css?v=nav-v26-visible-actions");
-  add("script", "evaraOpticsAuthority", "/assets/js/liquid-optics.js?v=1");
-  add("script", "evaraInteractionAuthority", "/assets/js/liquid-interaction.js?v=1");
-  add("script", "evaraThemeRuntimeAuthority", "/assets/js/theme.js?v=adaptive-liquid-v7");
-  add("script", "evaraNavRuntimeAuthority", "/assets/js/nav.js?v=nav-v26-visible-actions");
-
-  const clean = (node) => {
-    if (!(node instanceof Element)) return;
-    const nodes = [node, ...(node.querySelectorAll?.("link[href],script[src]") || [])];
-    nodes.forEach((item) => {
-      if (item.dataset?.evaraAuthority) return;
-      const url = item.getAttribute("href") || item.getAttribute("src") || "";
-      const isLegacy = url.includes("theme-boot.js") || url.includes("appearance-mode-fix.js");
-      const isDuplicate = /\/assets\/(css\/(theme|nav)\.css|js\/(theme|nav|liquid-optics|liquid-interaction)\.js)/.test(url);
-      if (isLegacy || isDuplicate) item.remove();
-    });
-  };
-
-  const observer = new MutationObserver((records) => {
-    records.forEach((record) => record.addedNodes.forEach(clean));
-  });
-  observer.observe(document.documentElement, { childList: true, subtree: true });
-
-  let cssReady = Boolean(theme.sheet);
   let domReady = document.readyState !== "loading";
-  let runtimeReady = false;
+  let runtimeReady = root.dataset.evaraThemeReady === "true";
   let revealed = false;
 
-  const reveal = () => {
-    if (revealed || !cssReady || !domReady || !runtimeReady) return;
-    clean(document.documentElement);
+  const reveal = (force = false) => {
+    if (revealed || (!force && (!domReady || !runtimeReady))) return;
     requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (revealed) return;
       revealed = true;
       root.classList.remove("boot-pending", "evara-boot-lock");
       root.classList.add("evara-theme-painted");
-      observer.disconnect();
+      prepaint.remove();
     }));
   };
 
-  theme.addEventListener("load", () => { cssReady = true; reveal(); }, { once: true });
-  document.addEventListener("DOMContentLoaded", () => { domReady = true; clean(document.documentElement); reveal(); }, { once: true });
-  addEventListener("evara:theme-applied", () => { runtimeReady = true; reveal(); }, { once: true });
-  setTimeout(() => { cssReady = true; domReady = true; runtimeReady = true; reveal(); }, 3000);
+  document.addEventListener("DOMContentLoaded", () => {
+    domReady = true;
+    reveal();
+  }, { once: true });
+
+  addEventListener("evara:theme-applied", () => {
+    runtimeReady = true;
+    reveal();
+  }, { once: true });
+
+  setTimeout(() => {
+    domReady = true;
+    runtimeReady = true;
+    reveal(true);
+  }, 2600);
+
   reveal();
 })();
