@@ -5,18 +5,16 @@ on:
   push:
     branches: [evaraos]
     paths:
-      - "public/assets/css/theme/**"
-      - "public/assets/css/theme.css"
-      - "public/assets/css/nav/**"
-      - "public/assets/css/nav.css"
-      - "public/assets/css/pages/messages-imessage-v3.css"
+      - "public/**/*.html"
+      - "public/assets/css/**"
       - "public/assets/js/theme*.js"
-      - "public/assets/js/liquid-optics.js"
+      - "public/assets/js/liquid-*.js"
       - "public/assets/js/adaptive-appearance-boot.js"
       - "public/assets/js/nav.js"
       - "public/assets/js/nav/**"
       - "tools/ensure-universal-nav.js"
       - "tools/liquid-glass-audit.js"
+      - "tools/theme-deep-audit.js"
       - ".github/workflows/theme-html-migration.yml"
 
 permissions:
@@ -56,5 +54,8 @@ jobs:
             git push origin HEAD:evaraos
           fi
 
-      - name: Audit Liquid Glass runtime
+      - name: Audit runtime architecture
         run: node tools/liquid-glass-audit.js
+
+      - name: Deep scan all public theme code
+        run: node tools/theme-deep-audit.js
