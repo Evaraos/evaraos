@@ -2,7 +2,6 @@
   const FAST_LOADER_ID = "evaraFastLoader";
   const GLOBAL_LOADER_ID = "evaraGlobalLoader";
   const PAGE_TRANSITION_ID = "evaPageTransition";
-  const LOGO_SRC = "/assets/img/evaraos_logo.png";
   const SESSION_KEY = "evaraos-corporate-loader-seen";
   const NAV_FAST_DELAY = 900;
   const NAV_FULL_DELAY = 2500;
@@ -47,10 +46,6 @@
       isTransitioning;
   }
 
-  function logoImage(className) {
-    return `<img class="${className}" src="${LOGO_SRC}" alt="Evaraos" loading="eager" decoding="async" />`;
-  }
-
   function ensureLoaders() {
     if (loadersCreated) return;
 
@@ -67,16 +62,16 @@
       fast.id = FAST_LOADER_ID;
       fast.className = "evara-loader-fast evara-loader-fast--compact";
       fast.setAttribute("aria-hidden", "true");
-      fast.innerHTML = `<div class="evara-loader-fast-wrap">${logoImage("evara-loader-fast-logo evara-loader-logo-image")}</div>`;
+      fast.innerHTML = '<div class="evara-loader-fast-wrap" aria-label="Loading"><span class="evara-loader-dot"></span></div>';
       document.body.appendChild(fast);
     }
 
     if (!document.getElementById(GLOBAL_LOADER_ID)) {
       const global = document.createElement("div");
       global.id = GLOBAL_LOADER_ID;
-      global.className = "evara-global-loader evara-global-loader--logo-first";
+      global.className = "evara-global-loader";
       global.setAttribute("aria-hidden", "true");
-      global.innerHTML = `<div class="evara-loader-box glass-card"><div class="evara-loader-mark evara-loader-mark--premium"><div class="evara-loader-logo-wrap evara-loader-logo-wrap--premium evara-loader-pulse-wrap"><span class="evara-loader-wave wave-1"></span><span class="evara-loader-wave wave-2"></span><span class="evara-loader-wave wave-3"></span>${logoImage("evara-loader-logo evara-loader-logo--premium evara-loader-logo-image")}</div></div><div class="evara-loader-copy"><p class="evara-loader-title" id="evaraLoaderTitle">Evaraos</p><p class="evara-loader-subtitle" id="evaraLoaderSubtitle">Preparing your secure operating system.</p></div><p class="evara-loader-signature">from Evaraos Inc</p></div>`;
+      global.innerHTML = '<div class="evara-loader-box glass-card"><div class="evara-loader-copy"><p class="evara-loader-title" id="evaraLoaderTitle">Evaraos</p><p class="evara-loader-subtitle" id="evaraLoaderSubtitle">Preparing your secure operating system.</p></div></div>';
       document.body.appendChild(global);
     }
 
