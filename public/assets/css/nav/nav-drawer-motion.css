@@ -1,5 +1,8 @@
-/* When the side menu opens, the application and top controls recede together
-   as one background layer. The bottom navigation remains untouched. */
+/* The open drawer sits above the application. The page and its top controls
+   travel together behind it, so the profile trigger never remains inside the
+   drawer's visible area. Bottom navigation is intentionally untouched. */
+:root{--eva-drawer-width:min(88vw,430px)}
+
 #appRoot,
 .eva-nav-shell{
   transform-origin:left center;
@@ -8,7 +11,7 @@
 
 body.nav-menu-open #appRoot,
 body.nav-menu-open .eva-nav-shell{
-  transform:translate3d(clamp(18px,6vw,72px),0,0) scale(.985)!important;
+  transform:translate3d(var(--eva-drawer-width),0,0) scale(.985)!important;
   filter:saturate(.88) brightness(.92);
   opacity:.82;
 }
