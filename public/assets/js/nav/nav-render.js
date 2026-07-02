@@ -2,7 +2,7 @@ import { getMount, buildHref, getVisibleLinks, isCurrentPage } from "./nav-utils
 import { APP_CATEGORIES, appsByCategory } from "../navigation/app-registry.js";
 import { iconSvg, iconNameForApp, iconNameForCategory } from "../ui/icons.js";
 
-const NAV_RENDER_BUILD = "nav-v28-stable-avatar";
+const NAV_RENDER_BUILD = "nav-v30-flat-public-access";
 const CATEGORY_ORDER = [APP_CATEGORIES.operations, APP_CATEGORIES.organizations, APP_CATEGORIES.finance, APP_CATEGORIES.customer, APP_CATEGORIES.intelligence, APP_CATEGORIES.system];
 const CATEGORY_TITLES = { operations: "Operations", organizations: "Organizations", finance: "Finance", customer: "Customer", intelligence: "Executive", system: "System" };
 
@@ -52,7 +52,7 @@ function compactAction(label, page, icon, active = true) {
 
 function accountGroup(authed) {
   if (!authed) {
-    return `<section class="eva-menu-top-block eva-menu-glass-group" data-glass="card"><div class="eva-top-block-head"><span class="eva-top-block-icon">${iconSvg("account")}</span><div><p>ACCESS</p><h3>Enter Evaraos</h3></div></div><div class="eva-account-strip eva-access-strip">${[["Login", "login.html", "login"], ["Signup", "signup.html", "signup"], ["Apply", "staff_application.html", "applications"]].map(item => compactAction(...item, false)).join("")}</div></section>`;
+    return `<section class="eva-menu-top-block eva-public-access-block"><div class="eva-top-block-head"><span class="eva-top-block-icon">${iconSvg("account")}</span><div><p>ACCESS</p><h3>Enter Evaraos</h3></div></div><div class="eva-account-strip eva-access-strip">${[["Login", "login.html", "login"], ["Signup", "signup.html", "signup"], ["Apply", "staff_application.html", "applications"]].map(item => compactAction(...item, false)).join("")}</div></section>`;
   }
   const actions = [["Account", "settings/account.html", "account"], ["Settings", "settings.html", "settings"], ["Alerts", "notifications_center.html", "bell"], ["Workspace", "settings/workspace.html", "workspace"]];
   return `<section class="eva-menu-top-block eva-menu-glass-group" data-glass="card"><div class="eva-top-block-head"><span class="eva-top-block-icon">${iconSvg("account")}</span><div><p>ACCOUNT</p><h3>Your Evaraos controls</h3></div></div><div class="eva-account-strip">${actions.map(item => compactAction(...item)).join("")}<a class="eva-menu-control eva-logout-control" href="#logout" id="evaLogoutBtn" data-action="logout"><span class="eva-menu-icon">${iconSvg("logout")}</span><strong>Logout</strong></a></div></section>`;
