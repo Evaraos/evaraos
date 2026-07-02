@@ -13,7 +13,9 @@ const ICONS = {
   shield:'<path d="M12 3 20 6v5c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6l8-3Z"/><path d="m9 12 2 2 4-4"/>',
   building:'<path d="M4 21V5h10v16M14 9h6v12M7 8h4M7 12h4M7 16h4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
-  check:'<circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/>'
+  check:'<circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/>',
+  eye:'<path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6S2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/>',
+  eyeOff:'<path d="m3 3 18 18M10.6 6.2A10.7 10.7 0 0 1 12 6c6.1 0 9.5 6 9.5 6a17.1 17.1 0 0 1-3 3.7M6.5 6.6C3.8 8.4 2.5 12 2.5 12s3.4 6 9.5 6c1.7 0 3.1-.4 4.4-1M9.9 9.8A3 3 0 0 0 14.2 14"/>'
 };
 
 function svg(name, className="entry-icon") {
@@ -44,6 +46,47 @@ function enhanceLabels(root) {
     label.dataset.entryEnhanced = "true";
     label.classList.add("entry-label");
     label.insertAdjacentHTML("afterbegin", svg(iconFor(input), "entry-label-icon"));
+  });
+}
+
+function passwordButtonMarkup(visible=false) {
+  return `<span class="password-eye-state password-eye-show">${svg("eye","password-eye-svg")}</span><span class="password-eye-state password-eye-hide">${svg("eyeOff","password-eye-svg")}</span><span class="sr-only">${visible ? "Hide password" : "Show password"}</span>`;
+}
+
+function syncPasswordButton(button,input) {
+  const visible=input.type === "text";
+  button.classList.toggle("is-open",visible);
+  button.setAttribute("aria-pressed",String(visible));
+  button.setAttribute("aria-label",visible ? "Hide password" : "Show password");
+  button.innerHTML=passwordButtonMarkup(visible);
+}
+
+function enhancePasswordControls(root) {
+  root.querySelectorAll('input[type="password"],input[data-password-field="true"]').forEach(input => {
+    if (!input.dataset.passwordField) input.dataset.passwordField="true";
+    let button=input.parentElement?.querySelector(":scope > .password-toggle");
+    if (!button) {
+      const shell=document.createElement("div");
+      shell.className="entry-password-shell";
+      input.parentNode.insertBefore(shell,input);
+      shell.appendChild(input);
+      button=document.createElement("button");
+      button.type="button";
+      button.className="password-toggle entry-password-toggle";
+      shell.appendChild(button);
+    } else {
+      button.classList.add("entry-password-toggle");
+    }
+    if (button.dataset.entryPasswordBound !== "true") {
+      button.dataset.entryPasswordBound="true";
+      if (!button.id) {
+        button.addEventListener("click",()=>{
+          input.type=input.type === "password" ? "text" : "password";
+          syncPasswordButton(button,input);
+        });
+      }
+    }
+    syncPasswordButton(button,input);
   });
 }
 
@@ -113,6 +156,7 @@ function enhancePage() {
   if (!body?.matches(ENTRY_BODY) || body.dataset.onboardingEnhanced === "true") return;
   body.dataset.onboardingEnhanced = "true";
   enhanceLabels(body);
+  enhancePasswordControls(body);
   if (body.classList.contains("login-page")) addTrustRow(body.querySelector(".login-panel"), "auth");
   if (body.classList.contains("signup-page")) {
     addTrustRow(body.querySelector(".login-panel"), "auth");
