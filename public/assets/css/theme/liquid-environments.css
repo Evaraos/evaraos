@@ -1,0 +1,3 @@
+html[data-environment="light"]{--lg-fill:rgba(255,255,255,.18);--lg-fill-strong:rgba(255,255,255,.27);--lg-fill-clear:rgba(255,255,255,.09);--lg-edge:rgba(255,255,255,.72);--lg-edge-soft:rgba(255,255,255,.42);--lg-shadow:rgba(34,53,76,.18);--lg-shadow-soft:rgba(34,53,76,.10)}
+html[data-environment="dark"]{--lg-fill:rgba(18,21,28,.15);--lg-fill-strong:rgba(18,21,28,.24);--lg-fill-clear:rgba(18,21,28,.075);--lg-edge:rgba(255,255,255,.24);--lg-edge-soft:rgba(255,255,255,.13);--lg-shadow:rgba(0,0,0,.46);--lg-shadow-soft:rgba(0,0,0,.25)}
+html[data-environment="image"]{--lg-fill:rgba(var(--adaptive-glass-rgb),.10);--lg-fill-strong:rgba(var(--adaptive-glass-rgb),.17);--lg-fill-clear:rgba(var(--adaptive-glass-rgb),.045)}
