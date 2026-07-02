@@ -14,7 +14,7 @@ const messages=read("public/assets/css/pages/messages-imessage-v3.css");
 test(core.includes('["light","dark","system","image"]'),"four appearance modes missing");
 test(entry.includes('dataset.theme="adaptive"'),"universal adaptive theme guard missing");
 test(boot.includes("adaptive-liquid-v7")&&boot.includes("evara-boot-lock"),"v7 prepaint lock missing");
-test(theme.includes("liquid-optics.css?v=2")&&theme.includes("liquid-environments.css?v=1"),"final glass layers missing");
+test(theme.includes("adaptive-material.css?v=8")&&theme.includes("adaptive-components.css?v=8")&&theme.includes("liquid-optics.css?v=3")&&theme.includes("liquid-environments.css?v=2"),"final glass revisions missing");
 test(optics.includes("evara-liquid-refraction")&&optics.includes("--lg-fill"),"backdrop lensing missing");
 test(messages.includes("--msg-blue:0,122,255")&&messages.includes("evara-liquid-refraction-clear"),"Liquid Glass chat bubbles missing");
 const pages=[];(function walk(dir){for(const item of fs.readdirSync(dir,{withFileTypes:true})){const file=path.join(dir,item.name);if(item.isDirectory())walk(file);else if(item.name.endsWith(".html"))pages.push(file)}})(path.join(root,"public"));
