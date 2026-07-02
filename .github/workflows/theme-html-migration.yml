@@ -1,4 +1,4 @@
-name: Evaraos runtime consolidation
+name: Evaraos Liquid Glass consolidation
 
 on:
   workflow_dispatch:
@@ -9,19 +9,21 @@ on:
       - "public/assets/css/theme.css"
       - "public/assets/css/nav/**"
       - "public/assets/css/nav.css"
+      - "public/assets/css/pages/messages-imessage-v3.css"
       - "public/assets/js/theme*.js"
+      - "public/assets/js/liquid-optics.js"
       - "public/assets/js/adaptive-appearance-boot.js"
       - "public/assets/js/nav.js"
       - "public/assets/js/nav/**"
       - "tools/ensure-universal-nav.js"
-      - "tools/interface-audit.js"
+      - "tools/liquid-glass-audit.js"
       - ".github/workflows/theme-html-migration.yml"
 
 permissions:
   contents: write
 
 concurrency:
-  group: evaraos-runtime-consolidation
+  group: evaraos-liquid-glass-consolidation
   cancel-in-progress: true
 
 jobs:
@@ -42,17 +44,17 @@ jobs:
       - name: Consolidate every public HTML entry point
         run: node tools/ensure-universal-nav.js
 
-      - name: Audit startup, navigation and adaptive text
-        run: node tools/interface-audit.js
+      - name: Audit Liquid Glass runtime
+        run: node tools/liquid-glass-audit.js
 
-      - name: Commit migrated HTML pages
+      - name: Commit migrated pages
         run: |
           if git diff --quiet; then
-            echo "No HTML migration changes required."
+            echo "No page migration changes required."
             exit 0
           fi
-          git config user.name "Evaraos Runtime Audit"
+          git config user.name "Evaraos Liquid Glass Audit"
           git config user.email "actions@users.noreply.github.com"
           git add public
-          git commit -m "Consolidate pages on adaptive runtime v6"
+          git commit -m "Consolidate pages on Liquid Glass runtime v7"
           git push origin HEAD:evaraos
