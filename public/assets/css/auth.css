@@ -1,4 +1,4 @@
-/* EVARAOS AUTH SYSTEM
-   Entry point only. No independent light/dark theme authority. */
+/* EVARAOS AUTH SYSTEM */
 @import url("./auth/auth-layout.css?v=2");
 @import url("./auth/auth-components.css?v=2");
+@import url("./onboarding-entry.css?v=1");
