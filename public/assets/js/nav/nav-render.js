@@ -2,7 +2,7 @@ import { getMount, buildHref, getVisibleLinks, isCurrentPage } from "./nav-utils
 import { APP_CATEGORIES, appsByCategory } from "../navigation/app-registry.js";
 import { iconSvg, iconNameForApp, iconNameForCategory } from "../ui/icons.js";
 
-const NAV_RENDER_BUILD = "nav-v24-x-hybrid-drawer";
+const NAV_RENDER_BUILD = "nav-v25-x-flat-drawer";
 const CATEGORY_ORDER = [APP_CATEGORIES.operations, APP_CATEGORIES.organizations, APP_CATEGORIES.finance, APP_CATEGORIES.customer, APP_CATEGORIES.intelligence, APP_CATEGORIES.system];
 const CATEGORY_TITLES = { operations: "Operations", organizations: "Organizations", finance: "Finance", customer: "Customer", intelligence: "Executive", system: "System" };
 
@@ -54,7 +54,6 @@ function accountGroup(authed) {
   if (!authed) {
     return `<section class="eva-menu-top-block eva-menu-glass-group" data-glass="card"><div class="eva-top-block-head"><span class="eva-top-block-icon">${iconSvg("account")}</span><div><p>ACCESS</p><h3>Enter Evaraos</h3></div></div><div class="eva-account-strip eva-access-strip">${[["Login", "login.html", "login"], ["Signup", "signup.html", "signup"], ["Apply", "staff_application.html", "applications"]].map(item => compactAction(...item, false)).join("")}</div></section>`;
   }
-
   const actions = [["Account", "settings/account.html", "account"], ["Settings", "settings.html", "settings"], ["Alerts", "notifications_center.html", "bell"], ["Workspace", "settings/workspace.html", "workspace"]];
   return `<section class="eva-menu-top-block eva-menu-glass-group" data-glass="card"><div class="eva-top-block-head"><span class="eva-top-block-icon">${iconSvg("account")}</span><div><p>ACCOUNT</p><h3>Your Evaraos controls</h3></div></div><div class="eva-account-strip">${actions.map(item => compactAction(...item)).join("")}<a class="eva-menu-control eva-logout-control" href="#logout" id="evaLogoutBtn" data-action="logout"><span class="eva-menu-icon">${iconSvg("logout")}</span><strong>Logout</strong></a></div></section>`;
 }
@@ -79,13 +78,12 @@ function aiGroup(authed) {
 export function renderNav() {
   const mount = getMount();
   if (!mount) return false;
-
   const groups = getVisibleLinks();
   const profile = profileData();
   const role = normalizeRole(groups.role);
   const avatar = profile.image ? `<img src="${clean(profile.image)}" alt="${clean(profile.name)}" />` : `<span>${clean(profile.initial)}</span>`;
 
-  mount.innerHTML = `<div class="eva-nav-layer" data-render-build="${NAV_RENDER_BUILD}"><header class="eva-nav-shell is-visible" id="evaNavShell"><div class="eva-nav-pill" id="evaNavPill"><div class="eva-menu-zone" id="evaMenuZone"><button class="eva-profile-trigger" type="button" id="evaMenuBtn" aria-expanded="false" aria-label="Open Evaraos menu">${avatar}</button></div><button class="eva-top-alert" id="globalNotificationsBell" type="button" aria-expanded="false" aria-label="Open notifications">${iconSvg("bell")}<span id="globalNotificationsCount" class="eva-alert-count" hidden>0</span></button></div></header><div class="eva-backdrop" id="evaBackdrop"></div><aside class="eva-menu-panel" id="evaMenuPanel" aria-label="Evaraos menu"><div class="eva-drawer-profile"><div class="eva-drawer-avatar">${avatar}</div><div><strong>${clean(profile.name)}</strong><span>${clean(role)} · Adaptive Glass</span></div><button type="button" id="evaMenuCloseBtn" aria-label="Close menu">${iconSvg("close")}</button></div><nav class="eva-menu-apps" id="evaLinks" data-nav-role="${clean(role)}">${accountGroup(groups.authed)}${groups.authed ? appSections(groups.role) : ""}</nav>${aiGroup(groups.authed)}</aside></div>`;
+  mount.innerHTML = `<div class="eva-nav-layer" data-render-build="${NAV_RENDER_BUILD}"><header class="eva-nav-shell is-visible" id="evaNavShell"><div class="eva-nav-pill" id="evaNavPill"><div class="eva-menu-zone" id="evaMenuZone"><button class="eva-profile-trigger" type="button" id="evaMenuBtn" aria-expanded="false" aria-label="Open Evaraos menu">${avatar}</button></div><button class="eva-top-alert" id="globalNotificationsBell" type="button" aria-expanded="false" aria-label="Open notifications">${iconSvg("bell")}<span id="globalNotificationsCount" class="eva-alert-count" hidden>0</span></button></div></header><div class="eva-backdrop" id="evaBackdrop"></div><aside class="eva-menu-panel" id="evaMenuPanel" aria-label="Evaraos menu"><div class="eva-drawer-profile"><div class="eva-drawer-avatar">${avatar}</div><div class="eva-drawer-identity"><strong>${clean(profile.name)}</strong><span>${clean(role)} · Adaptive Glass</span></div><div class="eva-drawer-actions"><button type="button" id="evaMenuThemeBtn" data-theme-toggle="true" aria-label="Change appearance" title="Change appearance">${iconSvg("appearance")}</button><button type="button" id="evaMenuCloseBtn" aria-label="Close menu">${iconSvg("close")}</button></div></div><nav class="eva-menu-apps" id="evaLinks" data-nav-role="${clean(role)}">${accountGroup(groups.authed)}${groups.authed ? appSections(groups.role) : ""}</nav>${aiGroup(groups.authed)}</aside></div>`;
 
   requestAnimationFrame(() => window.EvaraTheme?.refreshAdaptiveGlass?.());
   return true;
