@@ -1,0 +1,68 @@
+/* Universal text and control legibility authority.
+   Keeps readable ink across light, dark, system, and image appearances without
+   allowing older component styles to leave white text on light controls. */
+:root[data-environment="light"]{
+  --page-ink-rgb:18,20,24;
+  --control-ink:#111318;
+  --control-placeholder:rgba(17,19,24,.56);
+}
+:root[data-environment="dark"]{
+  --page-ink-rgb:255,255,255;
+  --control-ink:#f7f9fc;
+  --control-placeholder:rgba(247,249,252,.58);
+}
+:root[data-environment="image"][data-evara-tone="dark-ink"],
+:root[data-theme-mode="image"][data-evara-tone="dark-ink"]{
+  --page-ink-rgb:18,20,24;
+  --control-ink:#111318;
+  --control-placeholder:rgba(17,19,24,.56);
+}
+:root[data-environment="image"][data-evara-tone="light-ink"],
+:root[data-theme-mode="image"][data-evara-tone="light-ink"]{
+  --page-ink-rgb:255,255,255;
+  --control-ink:#f7f9fc;
+  --control-placeholder:rgba(247,249,252,.62);
+}
+
+body,
+main,
+section,
+article,
+aside,
+header,
+footer,
+nav,
+label,
+p,
+h1,h2,h3,h4,h5,h6,
+li,dt,dd{
+  color:var(--text-primary);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+textarea,
+select{
+  color:var(--control-ink,var(--text-primary))!important;
+  caret-color:var(--control-ink,var(--text-primary))!important;
+  -webkit-text-fill-color:var(--control-ink,var(--text-primary))!important;
+}
+input::placeholder,
+textarea::placeholder{
+  color:var(--control-placeholder,var(--text-secondary))!important;
+  -webkit-text-fill-color:var(--control-placeholder,var(--text-secondary))!important;
+  opacity:1!important;
+}
+button,
+.btn,
+[role="button"],
+.evara-adaptive-text-node{
+  color:inherit;
+}
+
+/* Explicit semantic text remains stable even when nested glass components
+   redefine adaptive variables. */
+.text-primary,.title,.page-title,.card-title{color:var(--text-primary)!important}
+.text-secondary,.subtitle,.page-subtitle,.card-subtitle,.muted{color:var(--text-secondary)!important}
+
+/* Disabled controls remain readable but clearly inactive. */
+:disabled,[aria-disabled="true"]{opacity:.56}
