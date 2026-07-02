@@ -55,8 +55,7 @@
   background:rgba(var(--adaptive-ink-rgb),.04)!important;
 }
 
-/* Resting and current rows remain completely flat. The liquid capsule only
-   exists while a pointer is hovering or a row is actively pressed. */
+/* Standard drawer rows are flat at rest and receive a capsule only on hover/press. */
 .eva-menu-panel .eva-menu-control,
 .eva-menu-panel .eva-account-strip a,
 .eva-menu-panel .eva-app-link,
@@ -105,6 +104,22 @@
 .eva-menu-panel .eva-app-link:focus-visible{
   outline:2px solid currentColor!important;
   outline-offset:2px!important;
+}
+
+/* Access actions are the exception: Login, Sign Up, and Apply never get bubbles. */
+.eva-menu-panel .eva-access-strip .eva-menu-control,
+.eva-menu-panel .eva-access-strip .eva-menu-control:hover,
+.eva-menu-panel .eva-access-strip .eva-menu-control.is-hovered,
+.eva-menu-panel .eva-access-strip .eva-menu-control.is-pressed,
+.eva-menu-panel .eva-access-strip .eva-menu-control[data-active="true"],
+.eva-menu-panel .eva-access-strip .eva-menu-control[aria-current="page"]{
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  transform:none!important;
 }
 
 /* Restore Evaraos AI to its original glass card treatment. */
