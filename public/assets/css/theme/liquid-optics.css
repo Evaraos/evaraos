@@ -1,0 +1,48 @@
+/* EVARAOS LIQUID OPTICS
+   Recreates the important web-visible properties of Apple's material:
+   aligned background transmission, mild lensing, bright internal edge,
+   neutral tint, specular concentration, and depth-aware shadow. */
+:root{--liquid-optics-blur:10px;--liquid-optics-saturate:168%;--liquid-optics-opacity:.78;--liquid-optics-edge:rgba(255,255,255,.44);--liquid-optics-inner:rgba(255,255,255,.34);--liquid-optics-shadow:rgba(0,0,0,.24)}
+
+:where(.glass-card,.glass-shell,.liquid-glass,.aurora-card,.dashboard-sidebar-inner,.dashboard-panel,.dashboard-overview,.dashboard-hero,.dashboard-hero-panel,.dashboard-stat-card,.dashboard-list-item,.dashboard-feed-item,.dashboard-role-card,.dashboard-progress-row,.dashboard-state-card,.settings-card,.settings-block,.settings-hub-card,.workspace-block,.qa-card,.application-card,.customer-service-event,.eva-menu-card,[data-glass="card"],[data-glass="interactive"]){
+  position:relative;isolation:isolate;overflow:hidden;
+  background:rgba(var(--adaptive-glass-rgb),.10)!important;
+  border:1px solid var(--liquid-optics-edge)!important;
+  box-shadow:0 20px 54px var(--liquid-optics-shadow),0 2px 8px rgba(0,0,0,.10),inset 0 1px 0 rgba(255,255,255,.58),inset 0 -1px 0 rgba(255,255,255,.10)!important;
+  backdrop-filter:blur(var(--liquid-optics-blur)) saturate(var(--liquid-optics-saturate)) contrast(106%)!important;
+  -webkit-backdrop-filter:blur(var(--liquid-optics-blur)) saturate(var(--liquid-optics-saturate)) contrast(106%)!important;
+}
+
+:where(.glass-card,.glass-shell,.liquid-glass,.aurora-card,.dashboard-sidebar-inner,.dashboard-panel,.dashboard-overview,.dashboard-hero,.dashboard-hero-panel,.dashboard-stat-card,.dashboard-list-item,.dashboard-feed-item,.dashboard-role-card,.dashboard-progress-row,.dashboard-state-card,.settings-card,.settings-block,.settings-hub-card,.workspace-block,.qa-card,.application-card,.customer-service-event,.eva-menu-card,[data-glass="card"],[data-glass="interactive"])::before{
+  content:""!important;position:absolute!important;z-index:0!important;inset:-10%!important;pointer-events:none!important;border-radius:inherit!important;
+  background-image:var(--evara-wallpaper-image)!important;
+  background-size:cover!important;background-position:var(--evara-wallpaper-position)!important;background-repeat:no-repeat!important;background-attachment:fixed!important;
+  opacity:var(--liquid-optics-opacity)!important;
+  filter:url("#evara-liquid-refraction") saturate(1.22) contrast(1.03)!important;
+  transform:scale(1.06)!important;transform-origin:center!important;
+  mix-blend-mode:normal!important;
+}
+
+:where(.glass-card,.glass-shell,.liquid-glass,.aurora-card,.dashboard-sidebar-inner,.dashboard-panel,.dashboard-overview,.dashboard-hero,.dashboard-hero-panel,.dashboard-stat-card,.dashboard-list-item,.dashboard-feed-item,.dashboard-role-card,.dashboard-progress-row,.dashboard-state-card,.settings-card,.settings-block,.settings-hub-card,.workspace-block,.qa-card,.application-card,.customer-service-event,.eva-menu-card,[data-glass="card"],[data-glass="interactive"])::after{
+  content:""!important;position:absolute!important;z-index:0!important;inset:0!important;pointer-events:none!important;border-radius:inherit!important;
+  background:radial-gradient(130% 78% at var(--glass-x,22%) var(--glass-y,0%),rgba(255,255,255,.34),transparent 42%),linear-gradient(180deg,rgba(255,255,255,.16),transparent 24%),linear-gradient(118deg,rgba(255,255,255,.10),transparent 32% 72%,rgba(255,255,255,.05))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.60),inset 0 0 0 1px rgba(255,255,255,.07),inset 0 -18px 28px rgba(var(--adaptive-shadow-rgb),.04)!important;
+  opacity:.92!important;mix-blend-mode:screen!important;
+}
+
+:where(.glass-card,.glass-shell,.liquid-glass,.aurora-card,.dashboard-sidebar-inner,.dashboard-panel,.dashboard-overview,.dashboard-hero,.dashboard-hero-panel,.dashboard-stat-card,.dashboard-list-item,.dashboard-feed-item,.dashboard-role-card,.dashboard-progress-row,.dashboard-state-card,.settings-card,.settings-block,.settings-hub-card,.workspace-block,.qa-card,.application-card,.customer-service-event,.eva-menu-card,[data-glass="card"],[data-glass="interactive"])>*{position:relative;z-index:1}
+
+/* Clear variant for compact controls over detailed photography. */
+:where(.liquid-clear,[data-liquid-variant="clear"]){--liquid-optics-blur:5px;--liquid-optics-opacity:.90;background:rgba(var(--adaptive-glass-rgb),.06)!important}
+:where(.liquid-clear,[data-liquid-variant="clear"])::before{filter:url("#evara-liquid-refraction-clear") saturate(1.28) contrast(1.04)!important}
+
+/* Light and dark environments share one optical material; only ambient tuning changes. */
+html[data-theme="light"]{--liquid-optics-edge:rgba(255,255,255,.72);--liquid-optics-inner:rgba(255,255,255,.54);--liquid-optics-shadow:rgba(44,64,88,.18)}
+html[data-theme="dark"]{--liquid-optics-edge:rgba(255,255,255,.24);--liquid-optics-inner:rgba(255,255,255,.28);--liquid-optics-shadow:rgba(0,0,0,.46)}
+
+@supports not (filter:url("#evara-liquid-refraction")){
+  :where(.glass-card,.glass-shell,.liquid-glass,.aurora-card,[data-glass="card"],[data-glass="interactive"])::before{filter:blur(1.5px) saturate(1.20)!important}
+}
+@media(prefers-reduced-transparency:reduce){
+  :where(.glass-card,.glass-shell,.liquid-glass,.aurora-card,[data-glass="card"],[data-glass="interactive"])::before{opacity:.28!important;filter:none!important}
+}
