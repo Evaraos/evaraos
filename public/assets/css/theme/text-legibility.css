@@ -1,68 +1,140 @@
 /* Universal text and control legibility authority.
-   Keeps readable ink across light, dark, system, and image appearances without
-   allowing older component styles to leave white text on light controls. */
-:root[data-environment="light"]{
-  --page-ink-rgb:18,20,24;
-  --control-ink:#111318;
-  --control-placeholder:rgba(17,19,24,.56);
-}
-:root[data-environment="dark"]{
-  --page-ink-rgb:255,255,255;
-  --control-ink:#f7f9fc;
-  --control-placeholder:rgba(247,249,252,.58);
-}
-:root[data-environment="image"][data-evara-tone="dark-ink"],
-:root[data-theme-mode="image"][data-evara-tone="dark-ink"]{
-  --page-ink-rgb:18,20,24;
-  --control-ink:#111318;
-  --control-placeholder:rgba(17,19,24,.56);
-}
-:root[data-environment="image"][data-evara-tone="light-ink"],
-:root[data-theme-mode="image"][data-evara-tone="light-ink"]{
-  --page-ink-rgb:255,255,255;
-  --control-ink:#f7f9fc;
-  --control-placeholder:rgba(247,249,252,.62);
+   Light and dark appearances use stable semantic ink. Image appearance remains
+   adaptive to the sampled wallpaper. */
+
+:root[data-environment="light"] {
+  --page-ink-rgb: 18,20,24;
+  --adaptive-ink-rgb: 18,20,24;
+  --adaptive-shadow-rgb: 29,42,61;
+  --adaptive-glass-rgb: 255,255,255;
+  --text-primary: rgba(18,20,24,.98);
+  --text-secondary: rgba(18,20,24,.70);
+  --text-tertiary: rgba(18,20,24,.52);
+  --text-soft: rgba(18,20,24,.46);
+  --control-ink: #111318;
+  --control-placeholder: rgba(17,19,24,.54);
+  --glass-edge: rgba(255,255,255,.82);
+  --glass-edge-soft: rgba(255,255,255,.48);
+  --glass-highlight: rgba(255,255,255,.94);
+  --glass-specular: rgba(255,255,255,.82);
+  --glass-shadow: rgba(29,42,61,.20);
+  --glass-shadow-soft: rgba(29,42,61,.10);
 }
 
-body,
-main,
-section,
-article,
-aside,
-header,
-footer,
-nav,
-label,
-p,
-h1,h2,h3,h4,h5,h6,
-li,dt,dd{
-  color:var(--text-primary);
+:root[data-environment="dark"] {
+  --page-ink-rgb: 255,255,255;
+  --adaptive-ink-rgb: 255,255,255;
+  --adaptive-shadow-rgb: 0,0,0;
+  --adaptive-glass-rgb: 22,28,39;
+  --text-primary: rgba(255,255,255,.98);
+  --text-secondary: rgba(255,255,255,.74);
+  --text-tertiary: rgba(255,255,255,.56);
+  --text-soft: rgba(255,255,255,.48);
+  --control-ink: #f7f9fc;
+  --control-placeholder: rgba(247,249,252,.60);
+  --glass-edge: rgba(255,255,255,.30);
+  --glass-edge-soft: rgba(255,255,255,.15);
+  --glass-highlight: rgba(255,255,255,.50);
+  --glass-specular: rgba(255,255,255,.36);
+  --glass-shadow: rgba(0,0,0,.46);
+  --glass-shadow-soft: rgba(0,0,0,.24);
+}
+
+:root[data-theme-mode="image"][data-evara-tone="dark-ink"] {
+  --page-ink-rgb: 18,20,24;
+  --control-ink: #111318;
+  --control-placeholder: rgba(17,19,24,.56);
+}
+
+:root[data-theme-mode="image"][data-evara-tone="light-ink"] {
+  --page-ink-rgb: 255,255,255;
+  --control-ink: #f7f9fc;
+  --control-placeholder: rgba(247,249,252,.62);
+}
+
+/* Fixed light and dark modes never inherit the wrong sampled surface ink. */
+:root[data-environment="light"]:not([data-theme-mode="image"]) :where(
+  body, main, section, article, aside, header, footer, nav, label,
+  p, h1, h2, h3, h4, h5, h6, li, dt, dd,
+  .hero-kicker, .hero-title, .hero-subtitle,
+  .section-head, .section-head p, .section-head h2,
+  .feature-card, .service-card, .category-card, .info-card,
+  .site-footer, .eva-bottom-link, .eva-bottom-label,
+  .eva-menu-panel, .eva-menu-panel *, .messages-page
+) {
+  --adaptive-ink-rgb: 18,20,24 !important;
+  --text-primary: rgba(18,20,24,.98) !important;
+  --text-secondary: rgba(18,20,24,.70) !important;
+  --text-tertiary: rgba(18,20,24,.52) !important;
+  color: var(--text-primary) !important;
+}
+
+:root[data-environment="dark"]:not([data-theme-mode="image"]) :where(
+  body, main, section, article, aside, header, footer, nav, label,
+  p, h1, h2, h3, h4, h5, h6, li, dt, dd,
+  .hero-kicker, .hero-title, .hero-subtitle,
+  .section-head, .section-head p, .section-head h2,
+  .feature-card, .service-card, .category-card, .info-card,
+  .site-footer, .eva-bottom-link, .eva-bottom-label,
+  .eva-menu-panel, .eva-menu-panel *, .messages-page
+) {
+  --adaptive-ink-rgb: 255,255,255 !important;
+  --text-primary: rgba(255,255,255,.98) !important;
+  --text-secondary: rgba(255,255,255,.74) !important;
+  --text-tertiary: rgba(255,255,255,.56) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Restore semantic secondary hierarchy after the universal primary authority. */
+:root[data-environment="light"]:not([data-theme-mode="image"]) :where(
+  p, .hero-kicker, .hero-subtitle, .section-head p,
+  .feature-card p, .service-card p, .category-card p, .info-card p,
+  .site-footer-left span, .subtitle, .page-subtitle, .card-subtitle, .muted
+) {
+  color: rgba(18,20,24,.70) !important;
+}
+
+:root[data-environment="dark"]:not([data-theme-mode="image"]) :where(
+  p, .hero-kicker, .hero-subtitle, .section-head p,
+  .feature-card p, .service-card p, .category-card p, .info-card p,
+  .site-footer-left span, .subtitle, .page-subtitle, .card-subtitle, .muted
+) {
+  color: rgba(255,255,255,.74) !important;
+}
+
+/* The universal brand title is a pseudo-element and needs an explicit authority. */
+:root[data-environment="light"]:not([data-theme-mode="image"]) .eva-nav-shell::before {
+  color: #111318 !important;
+  text-shadow: 0 6px 18px rgba(29,42,61,.14) !important;
+}
+
+:root[data-environment="dark"]:not([data-theme-mode="image"]) .eva-nav-shell::before {
+  color: #fff !important;
+  text-shadow: 0 8px 24px rgba(0,0,0,.44) !important;
 }
 
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
 textarea,
-select{
-  color:var(--control-ink,var(--text-primary))!important;
-  caret-color:var(--control-ink,var(--text-primary))!important;
-  -webkit-text-fill-color:var(--control-ink,var(--text-primary))!important;
+select {
+  color: var(--control-ink,var(--text-primary)) !important;
+  caret-color: var(--control-ink,var(--text-primary)) !important;
+  -webkit-text-fill-color: var(--control-ink,var(--text-primary)) !important;
 }
+
 input::placeholder,
-textarea::placeholder{
-  color:var(--control-placeholder,var(--text-secondary))!important;
-  -webkit-text-fill-color:var(--control-placeholder,var(--text-secondary))!important;
-  opacity:1!important;
+textarea::placeholder {
+  color: var(--control-placeholder,var(--text-secondary)) !important;
+  -webkit-text-fill-color: var(--control-placeholder,var(--text-secondary)) !important;
+  opacity: 1 !important;
 }
+
 button,
 .btn,
 [role="button"],
-.evara-adaptive-text-node{
-  color:inherit;
+.evara-adaptive-text-node {
+  color: inherit;
 }
 
-/* Explicit semantic text remains stable even when nested glass components
-   redefine adaptive variables. */
-.text-primary,.title,.page-title,.card-title{color:var(--text-primary)!important}
-.text-secondary,.subtitle,.page-subtitle,.card-subtitle,.muted{color:var(--text-secondary)!important}
-
-/* Disabled controls remain readable but clearly inactive. */
-:disabled,[aria-disabled="true"]{opacity:.56}
+.text-primary,.title,.page-title,.card-title { color: var(--text-primary) !important; }
+.text-secondary,.subtitle,.page-subtitle,.card-subtitle,.muted { color: var(--text-secondary) !important; }
+:disabled,[aria-disabled="true"] { opacity: .56; }
