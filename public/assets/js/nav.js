@@ -1,4 +1,4 @@
-import "./nav/nav-main-v5.js?v=nav-v28-stable-avatar";
+import "./nav/nav-main-v6.js?v=nav-v28-stable-avatar";
 import "./nav/nav-bottom.js?v=nav-v28-stable-avatar";
 import "./nav/nav-drawer-close.js?v=nav-v28-stable-avatar";
 import "./nav/pull-to-refresh.js?v=nav-v28-stable-avatar";
