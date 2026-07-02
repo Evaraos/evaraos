@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="/assets/css/base.css">
   <link rel="stylesheet" href="/assets/css/theme.css">
   <link rel="stylesheet" href="/assets/css/nav.css">
-  <link rel="stylesheet" href="/assets/css/pages/messages.css?build=20260702-apple-groups">
+  <link rel="stylesheet" href="/assets/css/pages/messages.css?build=20260702-actions">
 </head>
 <body class="messages-page auth-pending app-loading" data-route-guard="private">
   <div id="universalNavRoot"></div>
@@ -50,7 +50,7 @@
           <button id="showConversationList" class="messages-chat-button" type="button" aria-label="Back to messages">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg>
           </button>
-          <div id="chatAvatar" class="conversation-avatar"><span>E</span></div>
+          <button id="chatAvatar" class="conversation-avatar chat-avatar-button" type="button" aria-label="Conversation photo and options"><span>E</span></button>
           <div class="messages-chat-title">
             <h2 id="chatTitle">Messages</h2>
             <p id="chatSubtitle">Select a conversation</p>
@@ -80,16 +80,29 @@
     <button class="messages-sheet-backdrop" type="button" aria-label="Close menu"></button>
     <section class="messages-sheet-card" role="dialog" aria-modal="true" aria-labelledby="messagesMenuTitle">
       <div class="messages-sheet-handle"></div>
-      <h2 id="messagesMenuTitle">Messages</h2>
+      <h2 id="messagesMenuTitle">Conversation</h2>
+      <button id="viewConversationPhoto" type="button">View photo</button>
+      <button id="muteConversation" type="button">Do Not Disturb</button>
+      <button id="conversationInfo" type="button">Conversation info</button>
+      <button id="editConversation" type="button">Edit conversation</button>
+      <button id="deleteConversation" class="messages-destructive-action" type="button">Delete conversation</button>
       <button id="refreshConversations" type="button">Refresh conversations</button>
-      <a href="/dashboard.html">Back to dashboard</a>
+      <a id="backToDashboard" href="/dashboard.html">Back to dashboard</a>
       <button id="closeMessagesMenu" class="messages-sheet-cancel" type="button">Cancel</button>
     </section>
   </div>
 
+  <div id="conversationPhotoViewer" class="messages-photo-viewer" hidden>
+    <button id="closePhotoViewer" class="messages-photo-backdrop" type="button" aria-label="Close photo"></button>
+    <figure class="messages-photo-card">
+      <img id="conversationPhotoImage" alt="Conversation">
+      <figcaption id="conversationPhotoCaption"></figcaption>
+    </figure>
+  </div>
+
   <script src="/assets/js/loader.js"></script>
   <script type="module" src="/assets/js/route-guard.js"></script>
-  <script type="module" src="/assets/js/messages.js?build=20260702-apple-groups"></script>
+  <script type="module" src="/assets/js/messages.js?build=20260702-actions"></script>
   <script type="module" src="/assets/js/theme.js"></script>
   <script type="module" src="/assets/js/nav.js"></script>
 </body>
