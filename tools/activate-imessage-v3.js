@@ -1,1 +1,1 @@
-// obsolete
+// obsolete imessage activation tool
