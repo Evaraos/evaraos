@@ -1,9 +1,9 @@
 /* EVARAOS UNIVERSAL ADAPTIVE LIQUID GLASS NAV */
 @import url("./components/icons.css?v=3");
 @import url("./nav/nav-shell.css?v=nav-v25");
-@import url("./nav/nav-actions.css?v=nav-v27-profile-avatar");
+@import url("./nav/nav-actions.css?v=nav-v29-round-profile");
 @import url("./nav/nav-menu-liquid.css?v=nav-v25-x-drawer");
-@import url("./nav/nav-menu-clean-controls.css?v=nav-v25-selected-only");
+@import url("./nav/nav-menu-clean-controls.css?v=nav-v29-transient-bubbles");
 @import url("./nav/nav-access-flat.css?v=3");
 @import url("./nav/nav-drawer-motion.css?v=nav-v25-x-drawer");
 @import url("./nav/nav-bottom.css?v=nav-v26-neutral-glass");
@@ -11,7 +11,7 @@
 @import url("./nav/nav-effects.css?v=nav-v25");
 @import url("./nav/nav-motion.css?v=nav-v13");
 @import url("./nav/pull-to-refresh.css?v=nav-v17");
-@import url("./nav/nav-stability.css?v=nav-v25-final");
-@import url("./nav/nav-drawer-flat.css?v=2");
+@import url("./nav/nav-stability.css?v=nav-v29-stability-fix");
+@import url("./nav/nav-drawer-flat.css?v=nav-v29-transient-bubbles");
 @import url("./nav/nav-drawer-final.css?v=1");
 @import url("./nav/nav-ios-stability.css?v=1");
