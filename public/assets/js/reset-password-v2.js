@@ -14,13 +14,6 @@ function normalizeEmail(value = '') {
   return String(value || '').trim().toLowerCase();
 }
 
-function actionCodeSettings() {
-  return {
-    url: `${window.location.origin}/login.html?passwordReset=sent`,
-    handleCodeInApp: false
-  };
-}
-
 function resetError(error) {
   const code = String(error?.code || '');
   const text = `${code} ${error?.message || ''}`.toLowerCase();
@@ -37,6 +30,7 @@ async function handleReset(event) {
   event.preventDefault();
   const email = normalizeEmail(emailInput?.value);
   const button = form?.querySelector('button[type="submit"]');
+
   if (!email || !email.includes('@') || !email.includes('.')) {
     show('Enter the full email address connected to the account.', 'error');
     emailInput?.focus();
@@ -51,7 +45,8 @@ async function handleReset(event) {
   show('Requesting a secure password-reset email…', 'info');
 
   try {
-    await sendPasswordResetEmail(auth, email, actionCodeSettings());
+    auth.useDeviceLanguage?.();
+    await sendPasswordResetEmail(auth, email);
     show('If an account uses that email, a reset link has been sent. Check the inbox, spam, and promotions folders.', 'success');
     form?.reset();
   } catch (error) {
