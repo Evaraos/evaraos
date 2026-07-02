@@ -34,7 +34,7 @@ body.messages-page #appRoot {
   height: 100dvh;
   padding: calc(74px + env(safe-area-inset-top)) 0 calc(76px + env(safe-area-inset-bottom));
   display: grid;
-  grid-template-columns: 360px minmax(0, 1fr);
+  grid-template-columns: minmax(330px, 390px) minmax(0, 1fr);
   overflow: hidden;
   background: transparent;
 }
@@ -48,109 +48,83 @@ body.messages-page #appRoot {
 
 .messages-sidebar {
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
   border-right: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent);
-  background: color-mix(in srgb, var(--glass-bg-strong) 82%, transparent);
+  background: color-mix(in srgb, var(--glass-bg-strong) 84%, transparent);
   backdrop-filter: blur(22px) saturate(150%);
   -webkit-backdrop-filter: blur(22px) saturate(150%);
 }
 
-.messages-sidebar-head {
-  min-height: 54px;
-  padding: 14px 16px 6px;
-  display: flex;
+.messages-center-head {
+  min-height: 66px;
+  padding: 11px 16px 10px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--text-primary) 8%, transparent);
 }
 
-.messages-sidebar-head h1 {
+.messages-center-head h1 {
   margin: 0;
   color: var(--text-primary);
-  font-size: 1.42rem;
-  font-weight: 820;
-  line-height: 1;
-  letter-spacing: -0.045em;
+  font-size: 1.08rem;
+  font-weight: 790;
+  letter-spacing: -0.03em;
+  text-align: center;
 }
 
-.messages-toolbar {
-  padding: 7px 12px 12px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 40px;
-  align-items: center;
-  gap: 8px;
-}
-
-.messages-search {
-  min-width: 0;
-  height: 38px;
-  padding: 0 11px;
-  display: grid;
-  grid-template-columns: 18px minmax(0, 1fr);
-  align-items: center;
-  gap: 7px;
-  border: 1px solid color-mix(in srgb, var(--text-primary) 11%, transparent);
-  border-radius: 13px;
-  color: var(--text-secondary);
+.messages-head-button,
+.messages-chat-button,
+.messages-voice-button,
+.messages-send {
+  appearance: none;
+  -webkit-appearance: none;
+  color: var(--text-primary);
   background: color-mix(in srgb, var(--text-primary) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text-primary) 12%, transparent);
   box-shadow: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.messages-search:focus-within {
-  border-color: color-mix(in srgb, var(--text-primary) 24%, transparent);
-  background: color-mix(in srgb, var(--text-primary) 7%, transparent);
+.messages-head-button {
+  min-width: 62px;
+  min-height: 42px;
+  padding: 0 15px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.96rem;
+  font-weight: 560;
 }
 
-.messages-search span {
+.messages-head-button:first-child {
+  justify-self: start;
+}
+
+.messages-menu-button {
+  width: 42px;
+  min-width: 42px;
+  padding: 0;
   display: grid;
   place-items: center;
-  font-size: 0.88rem;
+  justify-self: end;
 }
 
-.messages-search input {
-  width: 100%;
-  min-width: 0;
-  height: 100%;
-  padding: 0;
-  border: 0;
-  outline: 0;
-  color: var(--text-primary);
-  background: transparent;
-  font: inherit;
-  font-size: 0.84rem;
-  -webkit-text-fill-color: var(--text-primary);
-}
-
-.messages-search input::placeholder {
-  color: var(--text-secondary);
-  opacity: 0.82;
-  -webkit-text-fill-color: var(--text-secondary);
-}
-
-.messages-compose,
-.messages-icon-button {
-  appearance: none !important;
-  -webkit-appearance: none !important;
-  width: 40px !important;
-  min-width: 40px !important;
-  height: 40px !important;
-  min-height: 40px !important;
-  padding: 0 !important;
-  display: grid !important;
-  place-items: center !important;
-  border: 1px solid color-mix(in srgb, var(--text-primary) 12%, transparent) !important;
-  border-radius: 999px !important;
-  color: var(--text-primary) !important;
-  background: color-mix(in srgb, var(--text-primary) 5%, transparent) !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  line-height: 1 !important;
-}
-
-.messages-compose::before,
-.messages-compose::after,
-.messages-icon-button::before,
-.messages-icon-button::after {
-  content: none !important;
+.messages-head-button svg,
+.messages-chat-button svg,
+.messages-voice-button svg,
+.messages-send svg,
+.messages-search svg,
+.messages-section-toggle svg {
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .conversation-list {
@@ -158,39 +132,94 @@ body.messages-page #appRoot {
   overflow: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  border-top: 1px solid color-mix(in srgb, var(--text-primary) 8%, transparent);
   background: transparent;
 }
 
 .messages-conversation-group {
   display: block;
+  border-bottom: 1px solid color-mix(in srgb, var(--text-primary) 8%, transparent);
+}
+
+.messages-conversation-group:last-child {
+  border-bottom: 0;
+}
+
+.messages-section-toggle {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  min-height: 46px;
+  padding: 0 15px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  color: var(--text-primary);
   background: transparent;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.messages-conversation-group + .messages-conversation-group {
-  margin-top: 7px;
+.messages-section-toggle:active,
+.messages-section-toggle:hover {
+  background: color-mix(in srgb, var(--text-primary) 5%, transparent);
 }
 
-.messages-section-title {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  margin: 0;
-  padding: 9px 15px 7px;
+.messages-section-chevron {
+  width: 9px;
+  height: 9px;
+  border-right: 1.7px solid var(--text-secondary);
+  border-bottom: 1.7px solid var(--text-secondary);
+  transform: rotate(45deg);
+  transition: transform 0.18s ease;
+}
+
+.messages-conversation-group.is-collapsed .messages-section-chevron {
+  transform: rotate(-45deg);
+}
+
+.messages-section-copy {
+  min-width: 0;
+}
+
+.messages-section-copy strong,
+.messages-section-copy span {
+  display: block;
+}
+
+.messages-section-copy strong {
+  font-size: 0.88rem;
+  font-weight: 780;
+}
+
+.messages-section-copy span {
+  margin-top: 2px;
   color: var(--text-secondary);
-  background: color-mix(in srgb, var(--glass-bg-strong) 90%, transparent);
-  font-size: 0.66rem;
+  font-size: 0.67rem;
+}
+
+.messages-section-count {
+  min-width: 26px;
+  height: 26px;
+  padding: 0 8px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+  font-size: 0.67rem;
   font-weight: 760;
-  letter-spacing: 0.08em;
-  line-height: 1;
-  text-transform: uppercase;
-  backdrop-filter: blur(18px) saturate(145%);
-  -webkit-backdrop-filter: blur(18px) saturate(145%);
 }
 
 .messages-section-list {
   display: block;
-  background: transparent;
+}
+
+.messages-conversation-group.is-collapsed .messages-section-list {
+  display: none;
 }
 
 .conversation-item {
@@ -198,21 +227,19 @@ body.messages-page #appRoot {
   -webkit-appearance: none;
   position: relative;
   width: 100%;
-  min-height: 76px;
+  min-height: 82px;
   margin: 0;
-  padding: 11px 14px;
+  padding: 12px 14px;
   display: grid;
-  grid-template-columns: 52px minmax(0, 1fr) auto 10px;
+  grid-template-columns: 54px minmax(0, 1fr) auto 10px;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
   border: 0;
   border-radius: 0;
   color: var(--text-primary);
   background: transparent;
   text-align: left;
   box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -225,7 +252,7 @@ body.messages-page #appRoot {
 .conversation-item::after {
   content: "";
   position: absolute;
-  left: 76px;
+  left: 80px;
   right: 14px;
   bottom: 0;
   height: 1px;
@@ -246,13 +273,9 @@ body.messages-page #appRoot {
   background: color-mix(in srgb, var(--text-primary) 8%, transparent);
 }
 
-.conversation-item.is-active {
-  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--text-primary) 46%, transparent);
-}
-
 .conversation-avatar {
-  width: 52px;
-  height: 52px;
+  width: 54px;
+  height: 54px;
   overflow: hidden;
   display: grid;
   place-items: center;
@@ -284,14 +307,14 @@ body.messages-page #appRoot {
 
 .conversation-copy strong {
   color: var(--text-primary);
-  font-size: 0.94rem;
-  font-weight: 780;
+  font-size: 0.96rem;
+  font-weight: 790;
 }
 
 .conversation-copy span {
   margin-top: 4px;
   color: var(--text-secondary);
-  font-size: 0.77rem;
+  font-size: 0.78rem;
   line-height: 1.25;
 }
 
@@ -299,7 +322,7 @@ body.messages-page #appRoot {
   align-self: start;
   padding-top: 6px;
   color: var(--text-secondary);
-  font-size: 0.66rem;
+  font-size: 0.68rem;
   white-space: nowrap;
 }
 
@@ -312,23 +335,87 @@ body.messages-page #appRoot {
   transform: rotate(45deg);
 }
 
+.messages-search-dock {
+  padding: 9px 12px max(10px, env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--text-primary) 8%, transparent);
+  background: color-mix(in srgb, var(--glass-bg-strong) 88%, transparent);
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+}
+
+.messages-search {
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 14px;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  border: 1px solid color-mix(in srgb, var(--text-primary) 12%, transparent);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--text-primary) 5%, transparent);
+}
+
+.messages-search input {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: var(--text-primary);
+  background: transparent;
+  font: inherit;
+  font-size: 0.9rem;
+  -webkit-text-fill-color: var(--text-primary);
+}
+
+.messages-search input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.82;
+  -webkit-text-fill-color: var(--text-secondary);
+}
+
+.messages-voice-button {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+}
+
 .messages-chat {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  background: var(--bg-primary);
+  background: transparent;
 }
 
 .messages-chat-head {
-  min-height: 68px;
-  padding: 9px 14px;
+  min-height: 72px;
+  padding: 12px 14px 10px;
   display: grid;
-  grid-template-columns: 40px 50px minmax(0, 1fr) 40px;
+  grid-template-columns: 44px 50px minmax(0, 1fr) 44px;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   border-bottom: 1px solid color-mix(in srgb, var(--text-primary) 9%, transparent);
   background: color-mix(in srgb, var(--glass-bg-strong) 86%, transparent);
   backdrop-filter: blur(22px) saturate(150%);
   -webkit-backdrop-filter: blur(22px) saturate(150%);
+}
+
+.messages-chat-button {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
 }
 
 .messages-chat-head .conversation-avatar {
@@ -357,12 +444,12 @@ body.messages-page #appRoot {
 .messages-chat-title p {
   margin-top: 3px;
   color: var(--text-secondary);
-  font-size: 0.74rem;
+  font-size: 0.76rem;
 }
 
 .messages-feed {
   min-height: 0;
-  padding: 18px clamp(12px, 4vw, 50px);
+  padding: 20px clamp(12px, 4vw, 50px) 16px;
   display: grid;
   align-content: start;
   gap: 5px;
@@ -378,9 +465,8 @@ body.messages-page #appRoot {
   align-items: center;
   gap: 10px;
   color: var(--text-secondary);
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-size: 0.67rem;
+  font-weight: 720;
   text-align: center;
 }
 
@@ -389,7 +475,7 @@ body.messages-page #appRoot {
   content: "";
   flex: 1;
   height: 1px;
-  background: color-mix(in srgb, var(--text-primary) 8%, transparent);
+  background: color-mix(in srgb, var(--text-primary) 9%, transparent);
 }
 
 .message-row {
@@ -407,8 +493,8 @@ body.messages-page #appRoot {
 
 .message-author {
   margin: 0 9px 4px;
-  color: var(--text-secondary);
-  font-size: 0.66rem;
+  color: var(--text-primary);
+  font-size: 0.68rem;
   font-weight: 760;
 }
 
@@ -417,25 +503,23 @@ body.messages-page #appRoot {
   border: 0;
   border-radius: 18px 18px 18px 6px;
   color: var(--text-primary);
-  background: color-mix(in srgb, var(--text-primary) 9%, var(--bg-primary));
+  background: color-mix(in srgb, var(--text-primary) 10%, transparent);
   box-shadow: none;
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
 
 .message-row.mine .message-bubble {
-  border: 0;
   border-radius: 18px 18px 6px 18px;
   color: #fff;
   background: #0a84ff;
-  box-shadow: none;
 }
 
 .message-time {
   min-height: 14px;
   margin: 3px 8px 2px;
   color: var(--text-secondary);
-  font-size: 0.61rem;
+  font-size: 0.62rem;
 }
 
 .message-row.mine .message-time {
@@ -443,70 +527,71 @@ body.messages-page #appRoot {
 }
 
 .messages-composer {
-  padding: 8px 11px calc(9px + env(safe-area-inset-bottom));
+  padding: 8px 11px max(9px, env(safe-area-inset-bottom));
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 44px;
+  grid-template-columns: minmax(0, 1fr) 46px;
   align-items: end;
   gap: 8px;
   border-top: 1px solid color-mix(in srgb, var(--text-primary) 9%, transparent);
-  background: color-mix(in srgb, var(--glass-bg-strong) 88%, transparent);
-  backdrop-filter: blur(22px) saturate(150%);
-  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  background: color-mix(in srgb, var(--glass-bg-strong) 86%, transparent);
+  backdrop-filter: blur(24px) saturate(165%);
+  -webkit-backdrop-filter: blur(24px) saturate(165%);
+}
+
+.messages-composer-shell,
+.messages-send {
+  border: 1px solid color-mix(in srgb, var(--text-primary) 18%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--glass-bg-strong) 88%, transparent),
+    color-mix(in srgb, var(--glass-bg) 78%, transparent)
+  );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 56%, transparent),
+    0 8px 22px color-mix(in srgb, #000 16%, transparent);
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
 }
 
 .messages-composer-shell {
-  min-height: 44px;
-  padding: 0 13px;
+  min-height: 46px;
+  padding: 0 14px;
   display: grid;
   align-items: center;
-  border: 1px solid color-mix(in srgb, #111318 14%, transparent);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: none;
+  border-radius: 999px;
 }
 
 .messages-composer textarea {
   width: 100%;
-  min-height: 38px;
+  min-height: 40px;
   max-height: 128px;
-  padding: 11px 0 6px;
+  padding: 12px 0 7px;
   resize: none;
   border: 0;
   outline: 0;
-  color: #111318;
+  color: var(--text-primary);
   background: transparent;
   font: inherit;
   line-height: 1.35;
-  caret-color: #111318;
-  -webkit-text-fill-color: #111318;
+  caret-color: var(--text-primary);
+  -webkit-text-fill-color: var(--text-primary);
 }
 
 .messages-composer textarea::placeholder {
-  color: rgba(17, 19, 24, 0.5);
-  opacity: 1;
-  -webkit-text-fill-color: rgba(17, 19, 24, 0.5);
+  color: var(--text-secondary);
+  opacity: 0.9;
+  -webkit-text-fill-color: var(--text-secondary);
 }
 
 .messages-send {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+  min-height: 46px;
   padding: 0;
   display: grid;
   place-items: center;
-  border: 0;
   border-radius: 999px;
-  color: #fff;
-  background: #0a84ff;
-  box-shadow: none;
-}
-
-.messages-send::before,
-.messages-send::after {
-  content: none !important;
 }
 
 .messages-empty {
@@ -599,6 +684,12 @@ body.messages-chat-active .eva-backdrop {
 }
 
 body.messages-chat-active .messages-app {
+  top: var(--messages-viewport-top, 0px);
+  right: 0;
+  bottom: auto;
+  left: 0;
+  width: 100%;
+  height: var(--messages-viewport-height, 100dvh);
   padding: 0;
   grid-template-columns: 1fr;
 }
@@ -609,15 +700,21 @@ body.messages-chat-active .messages-sidebar {
 
 body.messages-chat-active .messages-chat {
   width: 100%;
-  height: 100dvh;
+  height: 100%;
 }
 
 body.messages-chat-active .messages-chat-head {
-  padding-top: max(9px, env(safe-area-inset-top));
+  min-height: calc(70px + env(safe-area-inset-top));
+  padding-top: max(14px, calc(env(safe-area-inset-top) + 8px));
 }
 
-body.messages-chat-active .messages-composer {
-  padding-bottom: max(9px, env(safe-area-inset-bottom));
+body.messages-chat-active.keyboard-open .messages-chat-head {
+  min-height: 68px;
+  padding-top: 10px;
+}
+
+body.messages-chat-active.keyboard-open .messages-composer {
+  padding-bottom: 6px;
 }
 
 @media (min-width: 801px) {
@@ -650,8 +747,17 @@ body.messages-chat-active .messages-composer {
     display: grid;
   }
 
+  .messages-center-head {
+    min-height: 70px;
+    padding-inline: 16px;
+  }
+
+  .conversation-item {
+    min-height: 84px;
+  }
+
   .messages-feed {
-    padding: 16px 10px;
+    padding: 18px 10px 14px;
   }
 
   .message-row {
@@ -660,28 +766,45 @@ body.messages-chat-active .messages-composer {
 }
 
 @media (max-width: 390px) {
+  .messages-head-button {
+    min-width: 56px;
+    min-height: 40px;
+    padding-inline: 13px;
+  }
+
+  .messages-menu-button {
+    width: 40px;
+    min-width: 40px;
+  }
+
   .conversation-item {
-    min-height: 72px;
+    min-height: 76px;
     padding-inline: 12px;
-    grid-template-columns: 48px minmax(0, 1fr) auto 8px;
+    grid-template-columns: 50px minmax(0, 1fr) auto 8px;
     gap: 9px;
   }
 
   .conversation-item::after {
-    left: 69px;
+    left: 71px;
     right: 12px;
   }
 
   .conversation-avatar {
-    width: 48px;
-    height: 48px;
+    width: 50px;
+    height: 50px;
   }
 
   .conversation-copy strong {
-    font-size: 0.9rem;
+    font-size: 0.91rem;
   }
 
   .conversation-copy span {
-    font-size: 0.72rem;
+    font-size: 0.73rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .messages-section-chevron {
+    transition: none;
   }
 }
