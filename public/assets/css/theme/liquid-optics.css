@@ -1,48 +1,80 @@
-/* EVARAOS LIQUID OPTICS
-   Recreates the important web-visible properties of Apple's material:
-   aligned background transmission, mild lensing, bright internal edge,
-   neutral tint, specular concentration, and depth-aware shadow. */
-:root{--liquid-optics-blur:10px;--liquid-optics-saturate:168%;--liquid-optics-opacity:.78;--liquid-optics-edge:rgba(255,255,255,.44);--liquid-optics-inner:rgba(255,255,255,.34);--liquid-optics-shadow:rgba(0,0,0,.24)}
+/* EVARAOS LIQUID GLASS
+   Regular glass is used for floating UI. Nested content is flattened to avoid
+   glass-on-glass. Clear glass is opt-in for compact controls over media. */
+:root{
+  --lg-fill:rgba(var(--adaptive-glass-rgb),.13);
+  --lg-fill-strong:rgba(var(--adaptive-glass-rgb),.20);
+  --lg-fill-clear:rgba(var(--adaptive-glass-rgb),.065);
+  --lg-edge:rgba(255,255,255,.34);
+  --lg-edge-soft:rgba(255,255,255,.18);
+  --lg-highlight:rgba(255,255,255,.58);
+  --lg-shadow:rgba(var(--adaptive-shadow-rgb),.24);
+  --lg-shadow-soft:rgba(var(--adaptive-shadow-rgb),.13);
+  --lg-blur:16px;
+  --lg-blur-thick:26px;
+  --lg-saturation:178%;
+}
+html[data-theme="light"]{--lg-fill:rgba(255,255,255,.18);--lg-fill-strong:rgba(255,255,255,.27);--lg-fill-clear:rgba(255,255,255,.09);--lg-edge:rgba(255,255,255,.72);--lg-edge-soft:rgba(255,255,255,.42);--lg-shadow:rgba(34,53,76,.18);--lg-shadow-soft:rgba(34,53,76,.10)}
+html[data-theme="dark"]{--lg-fill:rgba(18,21,28,.15);--lg-fill-strong:rgba(18,21,28,.24);--lg-fill-clear:rgba(18,21,28,.075);--lg-edge:rgba(255,255,255,.24);--lg-edge-soft:rgba(255,255,255,.13);--lg-shadow:rgba(0,0,0,.46);--lg-shadow-soft:rgba(0,0,0,.25)}
+html[data-theme-mode="image"]{--lg-fill:rgba(var(--adaptive-glass-rgb),.10);--lg-fill-strong:rgba(var(--adaptive-glass-rgb),.17);--lg-fill-clear:rgba(var(--adaptive-glass-rgb),.045)}
 
 :where(.glass-card,.glass-shell,.liquid-glass,.aurora-card,.dashboard-sidebar-inner,.dashboard-panel,.dashboard-overview,.dashboard-hero,.dashboard-hero-panel,.dashboard-stat-card,.dashboard-list-item,.dashboard-feed-item,.dashboard-role-card,.dashboard-progress-row,.dashboard-state-card,.settings-card,.settings-block,.settings-hub-card,.workspace-block,.qa-card,.application-card,.customer-service-event,.eva-menu-card,[data-glass="card"],[data-glass="interactive"]){
-  position:relative;isolation:isolate;overflow:hidden;
-  background:rgba(var(--adaptive-glass-rgb),.10)!important;
-  border:1px solid var(--liquid-optics-edge)!important;
-  box-shadow:0 20px 54px var(--liquid-optics-shadow),0 2px 8px rgba(0,0,0,.10),inset 0 1px 0 rgba(255,255,255,.58),inset 0 -1px 0 rgba(255,255,255,.10)!important;
-  backdrop-filter:blur(var(--liquid-optics-blur)) saturate(var(--liquid-optics-saturate)) contrast(106%)!important;
-  -webkit-backdrop-filter:blur(var(--liquid-optics-blur)) saturate(var(--liquid-optics-saturate)) contrast(106%)!important;
+  --glass-x:22%;--glass-y:0%;position:relative;isolation:isolate;overflow:hidden;
+  color:var(--text-primary)!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.11),transparent 28%),var(--lg-fill)!important;
+  border:1px solid var(--lg-edge)!important;
+  box-shadow:0 22px 64px var(--lg-shadow),0 3px 12px var(--lg-shadow-soft),inset 0 1px 0 var(--lg-highlight),inset 0 -1px 0 rgba(255,255,255,.07)!important;
+  backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-saturation)) contrast(106%)!important;
+  -webkit-backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-saturation)) contrast(106%)!important;
+  transform:translateZ(0);
 }
-
+@supports(backdrop-filter:url("#evara-liquid-refraction")){
+  :where(.glass-card,.glass-shell,.liquid-glass,.aurora-card,.dashboard-sidebar-inner,.dashboard-panel,.dashboard-overview,.dashboard-hero,.dashboard-hero-panel,.dashboard-stat-card,.dashboard-list-item,.dashboard-feed-item,.dashboard-role-card,.dashboard-progress-row,.dashboard-state-card,.settings-card,.settings-block,.settings-hub-card,.workspace-block,.qa-card,.application-card,.customer-service-event,.eva-menu-card,[data-glass="card"],[data-glass="interactive"]){backdrop-filter:url("#evara-liquid-refraction") blur(var(--lg-blur)) saturate(var(--lg-saturation)) contrast(106%)!important}
+}
 :where(.glass-card,.glass-shell,.liquid-glass,.aurora-card,.dashboard-sidebar-inner,.dashboard-panel,.dashboard-overview,.dashboard-hero,.dashboard-hero-panel,.dashboard-stat-card,.dashboard-list-item,.dashboard-feed-item,.dashboard-role-card,.dashboard-progress-row,.dashboard-state-card,.settings-card,.settings-block,.settings-hub-card,.workspace-block,.qa-card,.application-card,.customer-service-event,.eva-menu-card,[data-glass="card"],[data-glass="interactive"])::before{
-  content:""!important;position:absolute!important;z-index:0!important;inset:-10%!important;pointer-events:none!important;border-radius:inherit!important;
-  background-image:var(--evara-wallpaper-image)!important;
-  background-size:cover!important;background-position:var(--evara-wallpaper-position)!important;background-repeat:no-repeat!important;background-attachment:fixed!important;
-  opacity:var(--liquid-optics-opacity)!important;
-  filter:url("#evara-liquid-refraction") saturate(1.22) contrast(1.03)!important;
-  transform:scale(1.06)!important;transform-origin:center!important;
-  mix-blend-mode:normal!important;
+  content:""!important;position:absolute!important;z-index:0!important;inset:0!important;pointer-events:none!important;border-radius:inherit!important;
+  background:radial-gradient(115% 72% at var(--glass-x) var(--glass-y),rgba(255,255,255,.32),transparent 45%),linear-gradient(116deg,rgba(255,255,255,.13),transparent 30% 72%,rgba(255,255,255,.04))!important;
+  opacity:.88!important;mix-blend-mode:screen!important;
 }
-
 :where(.glass-card,.glass-shell,.liquid-glass,.aurora-card,.dashboard-sidebar-inner,.dashboard-panel,.dashboard-overview,.dashboard-hero,.dashboard-hero-panel,.dashboard-stat-card,.dashboard-list-item,.dashboard-feed-item,.dashboard-role-card,.dashboard-progress-row,.dashboard-state-card,.settings-card,.settings-block,.settings-hub-card,.workspace-block,.qa-card,.application-card,.customer-service-event,.eva-menu-card,[data-glass="card"],[data-glass="interactive"])::after{
   content:""!important;position:absolute!important;z-index:0!important;inset:0!important;pointer-events:none!important;border-radius:inherit!important;
-  background:radial-gradient(130% 78% at var(--glass-x,22%) var(--glass-y,0%),rgba(255,255,255,.34),transparent 42%),linear-gradient(180deg,rgba(255,255,255,.16),transparent 24%),linear-gradient(118deg,rgba(255,255,255,.10),transparent 32% 72%,rgba(255,255,255,.05))!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.60),inset 0 0 0 1px rgba(255,255,255,.07),inset 0 -18px 28px rgba(var(--adaptive-shadow-rgb),.04)!important;
-  opacity:.92!important;mix-blend-mode:screen!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.13),transparent 22% 76%,rgba(var(--adaptive-shadow-rgb),.035))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.64),inset 0 0 0 1px rgba(255,255,255,.055),inset 0 -14px 26px rgba(var(--adaptive-shadow-rgb),.035)!important;
 }
-
 :where(.glass-card,.glass-shell,.liquid-glass,.aurora-card,.dashboard-sidebar-inner,.dashboard-panel,.dashboard-overview,.dashboard-hero,.dashboard-hero-panel,.dashboard-stat-card,.dashboard-list-item,.dashboard-feed-item,.dashboard-role-card,.dashboard-progress-row,.dashboard-state-card,.settings-card,.settings-block,.settings-hub-card,.workspace-block,.qa-card,.application-card,.customer-service-event,.eva-menu-card,[data-glass="card"],[data-glass="interactive"])>*{position:relative;z-index:1}
 
-/* Clear variant for compact controls over detailed photography. */
-:where(.liquid-clear,[data-liquid-variant="clear"]){--liquid-optics-blur:5px;--liquid-optics-opacity:.90;background:rgba(var(--adaptive-glass-rgb),.06)!important}
-:where(.liquid-clear,[data-liquid-variant="clear"])::before{filter:url("#evara-liquid-refraction-clear") saturate(1.28) contrast(1.04)!important}
-
-/* Light and dark environments share one optical material; only ambient tuning changes. */
-html[data-theme="light"]{--liquid-optics-edge:rgba(255,255,255,.72);--liquid-optics-inner:rgba(255,255,255,.54);--liquid-optics-shadow:rgba(44,64,88,.18)}
-html[data-theme="dark"]{--liquid-optics-edge:rgba(255,255,255,.24);--liquid-optics-inner:rgba(255,255,255,.28);--liquid-optics-shadow:rgba(0,0,0,.46)}
-
-@supports not (filter:url("#evara-liquid-refraction")){
-  :where(.glass-card,.glass-shell,.liquid-glass,.aurora-card,[data-glass="card"],[data-glass="interactive"])::before{filter:blur(1.5px) saturate(1.20)!important}
+/* Larger floating surfaces simulate thicker glass and never perform a distracting full flip. */
+:where(.eva-menu-panel,dialog,[role="dialog"],.modal,.sheet,.drawer,.popup,.popover,[class*="-modal"],[class*="-sheet"],[class*="-dialog"]){
+  background:linear-gradient(180deg,rgba(255,255,255,.12),transparent 24%),var(--lg-fill-strong)!important;
+  border:1px solid var(--lg-edge)!important;
+  box-shadow:0 34px 110px var(--lg-shadow),inset 0 1px 0 var(--lg-highlight)!important;
+  backdrop-filter:blur(var(--lg-blur-thick)) saturate(188%) contrast(106%)!important;
+  -webkit-backdrop-filter:blur(var(--lg-blur-thick)) saturate(188%) contrast(106%)!important;
 }
-@media(prefers-reduced-transparency:reduce){
-  :where(.glass-card,.glass-shell,.liquid-glass,.aurora-card,[data-glass="card"],[data-glass="interactive"])::before{opacity:.28!important;filter:none!important}
+
+/* Nested surfaces are thin overlays, not a second pane of glass. */
+:where(.glass-card,.glass-shell,.liquid-glass,.dashboard-panel,.settings-block,.eva-menu-panel) :where(.glass-card,.glass-shell,.liquid-glass,.dashboard-panel,.settings-card,.settings-block,.eva-menu-card,[data-glass="card"]){
+  background:rgba(var(--adaptive-ink-rgb),.045)!important;border-color:rgba(var(--adaptive-ink-rgb),.11)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.13)!important;
+  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
 }
+
+/* Compact controls use the lightweight material. */
+:where(.btn,.settings-chip,.role-pill,.role-pill-option,.messages-icon-button,.messages-camera,.messages-send,.messages-compose,.eva-account-action,[data-glass="control"]){
+  position:relative;isolation:isolate;overflow:hidden;
+  color:var(--text-primary)!important;background:linear-gradient(180deg,rgba(255,255,255,.15),transparent 48%),var(--lg-fill-clear)!important;
+  border:1px solid var(--lg-edge-soft)!important;border-radius:999px;
+  box-shadow:0 10px 28px var(--lg-shadow-soft),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(255,255,255,.055)!important;
+  backdrop-filter:blur(11px) saturate(182%) contrast(106%)!important;-webkit-backdrop-filter:blur(11px) saturate(182%) contrast(106%)!important;
+}
+:where(.liquid-clear,[data-liquid-variant="clear"]){background:var(--lg-fill-clear)!important;backdrop-filter:blur(7px) saturate(190%) contrast(107%)!important;-webkit-backdrop-filter:blur(7px) saturate(190%) contrast(107%)!important}
+
+/* Color is a translucent tint, never an opaque replacement material. */
+:where(.btn-theme-primary,.settings-chip.is-active,.role-pill.active,.role-pill-option.active){
+  color:#fff!important;background:linear-gradient(180deg,rgba(255,255,255,.22),transparent 36%),rgba(var(--accent-rgb),.52)!important;
+  border-color:rgba(255,255,255,.44)!important;box-shadow:0 14px 36px rgba(var(--accent-rgb),.24),inset 0 1px 0 rgba(255,255,255,.68)!important;
+  backdrop-filter:blur(10px) saturate(205%) contrast(108%)!important;-webkit-backdrop-filter:blur(10px) saturate(205%) contrast(108%)!important;
+}
+
+@media(prefers-reduced-transparency:reduce){:root{--lg-fill:rgba(var(--adaptive-glass-rgb),.84);--lg-fill-strong:rgba(var(--adaptive-glass-rgb),.92);--lg-fill-clear:rgba(var(--adaptive-glass-rgb),.76)}:where(.glass-card,.glass-shell,.liquid-glass,.aurora-card,[data-glass="card"],[data-glass="interactive"]){backdrop-filter:none!important;-webkit-backdrop-filter:none!important}}
+@media(prefers-contrast:more){:root{--lg-edge:rgba(var(--adaptive-ink-rgb),.58);--lg-edge-soft:rgba(var(--adaptive-ink-rgb),.38)}}
