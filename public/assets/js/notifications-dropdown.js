@@ -34,7 +34,7 @@ function renderDropdown() {
   const rows = getNotifications().slice(0, 7);
   if (countNode) {
     countNode.textContent = String(summary.unread || 0);
-    countNode.hidden = !summary.unread;
+    countNode.hidden = dropdownOpen || !summary.unread;
   }
   if (listNode) {
     listNode.innerHTML = rows.length ? rows.map((notification) => {
