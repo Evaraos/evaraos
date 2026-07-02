@@ -127,18 +127,58 @@
   width: fit-content;
 }
 
+/* Remove the two legacy brand marks that were being rendered at the bottom. */
+.site-footer img,
+.site-footer-logo,
+.footer-logo,
+.footer-brand-mark {
+  display: none !important;
+}
+
 .site-footer-left span { color: var(--text-secondary); }
 
-.site-footer-right a {
+.site-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.site-footer-right .social-link {
+  min-height: 42px;
+  padding: 0 13px;
+  border-radius: 999px;
   text-decoration: none;
   color: var(--text-primary);
-  font-weight: 700;
+  font-weight: 760;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  background: linear-gradient(180deg, rgba(255,255,255,.12), transparent 48%), var(--lg-fill-clear);
+  border: 1px solid var(--lg-edge-soft);
+  box-shadow: 0 8px 22px var(--lg-shadow-soft), inset 0 1px 0 rgba(255,255,255,.58);
+  backdrop-filter: blur(7px) saturate(190%);
+  -webkit-backdrop-filter: blur(7px) saturate(190%);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.site-footer-right .social-link:hover,
+.site-footer-right .social-link:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px var(--lg-shadow-soft), inset 0 1px 0 rgba(255,255,255,.68);
+  outline: none;
+}
+
+.social-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  display: block;
 }
 
 @media (max-width: 680px) {
   .hero-title { font-size: clamp(2.7rem, 13vw, 4.2rem); }
   .btn-apple { width: 100%; }
+  .site-footer-right { width: 100%; }
+  .site-footer-right .social-link { flex: 1 1 auto; justify-content: center; }
 }
