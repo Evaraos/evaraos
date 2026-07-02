@@ -2,6 +2,7 @@ import {installLiquidOptics} from "./liquid-optics.js?v=1";
 import {installOnboardingEntry} from "./onboarding-entry.js?v=2";
 import "./staff-application-dedupe.js?v=2";
 import "./staff-application-experience.js?v=1";
+import "./social-links.js?v=1";
 import * as Core from "./theme-core-adaptive.js?v=adaptive-liquid-v7";
 installLiquidOptics();
 installOnboardingEntry();
