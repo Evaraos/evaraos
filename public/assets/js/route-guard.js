@@ -11,7 +11,8 @@ import {
 
 const ROUTES = {
   login: "./login.html",
-  dashboard: "./dashboard.html"
+  dashboard: "./dashboard.html",
+  customerDashboard: "./customer_dashboard.html"
 };
 
 const AUTH_WAIT_TIMEOUT_MS = 4500;
@@ -43,11 +44,14 @@ const STAFF_ROLES = new Set([
 ]);
 
 const CUSTOMER_ALLOWED = new Set([
-  "dashboard.html",
+  "customer_dashboard.html",
   "customer-commerce.html",
   "customer-messaging.html",
   "customer-service-history.html",
-  "settings.html"
+  "customer_portal.html",
+  "customer_bills.html",
+  "settings.html",
+  "settings-v2.html"
 ]);
 
 const STAFF_ALLOWED = new Set([
@@ -58,7 +62,8 @@ const STAFF_ALLOWED = new Set([
   "customer-service-history.html",
   "presence.html",
   "territory-map.html",
-  "settings.html"
+  "settings.html",
+  "settings-v2.html"
 ]);
 
 const OPS_ONLY = new Set([
@@ -155,9 +160,9 @@ function consumeIntendedRoute() {
   try {
     const saved = sessionStorage.getItem("evaraos-intended-route");
     sessionStorage.removeItem("evaraos-intended-route");
-    return normalizePath(saved || ROUTES.dashboard);
+    return saved ? normalizePath(saved) : "";
   } catch {
-    return ROUTES.dashboard;
+    return "";
   }
 }
 
@@ -165,24 +170,30 @@ function getEffectiveRole(profile = getSavedUserProfile()) {
   return normalizeRole(profile?.role || getSavedUserRole() || "customer");
 }
 
-function canAccessCurrentPage(role = "customer") {
-  const page = pageName();
+function canAccessPage(path, role = "customer") {
+  const page = String(path || "").split("?")[0].split("#")[0].split("/").pop() || "index.html";
   const normalized = normalizeRole(role);
 
-  if (!OPS_ONLY.has(page)) {
-    if (normalized === "customer") return CUSTOMER_ALLOWED.has(page) || page === "dashboard.html";
-    if (STAFF_ROLES.has(normalized)) return STAFF_ALLOWED.has(page) || !OPS_ONLY.has(page);
-    return true;
-  }
+  if (normalized === "customer") return CUSTOMER_ALLOWED.has(page);
+  if (STAFF_ROLES.has(normalized)) return STAFF_ALLOWED.has(page) || !OPS_ONLY.has(page);
+  if (OPS_ONLY.has(page)) return OWNER_ROLES.has(normalized) || OPS_ROLES.has(normalized);
+  return true;
+}
 
-  return OWNER_ROLES.has(normalized) || OPS_ROLES.has(normalized);
+function canAccessCurrentPage(role = "customer") {
+  return canAccessPage(pageName(), role);
 }
 
 function defaultDashboardForRole(role = "customer") {
   const normalized = normalizeRole(role);
-  if (normalized === "customer") return "./dashboard.html";
-  if (STAFF_ROLES.has(normalized)) return "./dashboard.html";
-  return "./dashboard.html";
+  if (normalized === "customer") return ROUTES.customerDashboard;
+  return ROUTES.dashboard;
+}
+
+function safeDestinationForRole(path, role) {
+  const fallback = defaultDashboardForRole(role);
+  if (!path) return fallback;
+  return canAccessPage(path, role) ? path : fallback;
 }
 
 function waitForVerifiedFirebaseUser() {
@@ -244,9 +255,10 @@ async function handleAuthRoute() {
   if (verifiedUser) {
     const profile = await hydrateUserProfile(verifiedUser);
     const role = getEffectiveRole(profile);
-    const target = consumeIntendedRoute();
+    const intended = consumeIntendedRoute();
+    const target = safeDestinationForRole(intended, role);
 
-    beginGuardRedirect(target || defaultDashboardForRole(role), {
+    beginGuardRedirect(target, {
       title: "Opening Evaraos",
       subtitle: "Your session is already active."
     });
