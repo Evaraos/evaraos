@@ -77,6 +77,7 @@ export async function applyAppearance(value=getAppearance()){
   root.style.setProperty("--evara-glass-tint-pct",`${Math.round(appearance.glassTint*100)}%`);
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content",environment==="dark"?"#0b0f17":environment==="light"?"#eef5fb":"#111827");
   updateThemeControls();installUniversalTextInversion();await initAdaptiveGlass(appearance,wallpaperUrl);
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
   root.dataset.evaraThemeReady="true";root.classList.remove("boot-pending","evara-boot-lock");root.classList.add("evara-theme-painted");
   const detail={...appearance,environment,resolved:environment,theme:"adaptive",wallpaperUrl};
   dispatchEvent(new CustomEvent("evara:theme-applied",{detail}));dispatchEvent(new CustomEvent("evara:appearance-updated",{detail}));
