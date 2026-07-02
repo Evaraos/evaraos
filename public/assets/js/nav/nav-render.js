@@ -2,7 +2,7 @@ import { getMount, buildHref, getVisibleLinks, isCurrentPage } from "./nav-utils
 import { APP_CATEGORIES, appsByCategory } from "../navigation/app-registry.js";
 import { iconSvg, iconNameForApp, iconNameForCategory } from "../ui/icons.js";
 
-const NAV_RENDER_BUILD = "nav-v27-profile-avatar";
+const NAV_RENDER_BUILD = "nav-v28-stable-avatar";
 const CATEGORY_ORDER = [APP_CATEGORIES.operations, APP_CATEGORIES.organizations, APP_CATEGORIES.finance, APP_CATEGORIES.customer, APP_CATEGORIES.intelligence, APP_CATEGORIES.system];
 const CATEGORY_TITLES = { operations: "Operations", organizations: "Organizations", finance: "Finance", customer: "Customer", intelligence: "Executive", system: "System" };
 
@@ -41,8 +41,8 @@ function storedUser() {
 function profileData() {
   const user = storedUser();
   const name = String(user.displayName || user.name || user.username || user.email || "Evaraos User");
-  const image = String(user.photoURL || user.photoUrl || user.avatarUrl || user.avatar || user.profilePhoto || user.profilePhotoUrl || "");
-  return { name, image, initial: (name.trim().charAt(0) || "E").toUpperCase() };
+  const image = String(user.photoURL || user.photoUrl || user.avatarUrl || user.avatar || user.profilePhoto || user.profilePhotoUrl || "").trim();
+  return { name, image };
 }
 
 function compactAction(label, page, icon, active = true) {
@@ -81,7 +81,8 @@ export function renderNav() {
   const groups = getVisibleLinks();
   const profile = profileData();
   const role = normalizeRole(groups.role);
-  const avatar = profile.image ? `<img src="${clean(profile.image)}" alt="${clean(profile.name)}" />` : `<span>${clean(profile.initial)}</span>`;
+  const fallbackAvatar = iconSvg("account", "eva-drawer-avatar-icon");
+  const avatar = profile.image ? `<img src="${clean(profile.image)}" alt="${clean(profile.name)}" />` : fallbackAvatar;
   const menuContent = groups.authed && profile.image
     ? `<img class="eva-top-avatar" src="${clean(profile.image)}" alt="${clean(profile.name)}" />`
     : iconSvg("account", "eva-top-action-icon");
