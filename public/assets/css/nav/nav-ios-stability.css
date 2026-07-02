@@ -11,9 +11,7 @@
   pointer-events:none!important;
 }
 
-.eva-nav-layer::before{
-  z-index:2147483642!important;
-}
+.eva-nav-layer::before{z-index:2147483642!important}
 
 .eva-nav-shell{
   position:fixed!important;
@@ -43,9 +41,7 @@
   -webkit-backdrop-filter:blur(16px) saturate(145%)!important;
 }
 
-body.nav-menu-open .eva-menu-panel{
-  transform:translate3d(0,0,0)!important;
-}
+body.nav-menu-open .eva-menu-panel{transform:translate3d(0,0,0)!important}
 
 .eva-backdrop{
   position:fixed!important;
@@ -56,16 +52,15 @@ body.nav-menu-open .eva-menu-panel{
   -webkit-backdrop-filter:none!important;
 }
 
-/* The top-left account control is always a true Liquid Glass circle. */
+/* Both top controls stay visible and share one circular Liquid Glass language. */
 .eva-profile-trigger,
-#evaMenuBtn{
+#evaMenuBtn,
+.eva-top-alert{
   width:50px!important;
   height:50px!important;
   min-width:50px!important;
   min-height:50px!important;
-  padding:3px!important;
   border-radius:999px!important;
-  overflow:hidden!important;
   color:var(--text-primary)!important;
   border:1px solid var(--lg-edge-soft)!important;
   background:linear-gradient(180deg,rgba(255,255,255,.14),transparent 46%),var(--lg-fill-clear)!important;
@@ -74,10 +69,17 @@ body.nav-menu-open .eva-menu-panel{
   -webkit-backdrop-filter:blur(10px) saturate(185%)!important;
 }
 
-.eva-profile-trigger::before,
-#evaMenuBtn::before{
-  border-radius:999px!important;
+.eva-profile-trigger,
+#evaMenuBtn{
+  padding:3px!important;
+  overflow:hidden!important;
 }
+
+.eva-top-alert{padding:0!important;overflow:visible!important}
+
+.eva-profile-trigger::before,
+#evaMenuBtn::before,
+.eva-top-alert::before{border-radius:999px!important}
 
 .eva-top-avatar{
   width:100%!important;
@@ -88,7 +90,8 @@ body.nav-menu-open .eva-menu-panel{
 
 @media(max-width:520px){
   .eva-profile-trigger,
-  #evaMenuBtn{
+  #evaMenuBtn,
+  .eva-top-alert{
     width:46px!important;
     height:46px!important;
     min-width:46px!important;
