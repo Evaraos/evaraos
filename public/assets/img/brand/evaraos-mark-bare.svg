@@ -1,18 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Evaraos bare mark">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Evaraos official bare E mark">
   <defs>
-    <linearGradient id="evaraosBareRed" x1="90" y1="76" x2="420" y2="438" gradientUnits="userSpaceOnUse">
+    <linearGradient id="evaraosBareRed" x1="132" y1="158" x2="364" y2="430" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#ff3131"/>
       <stop offset=".56" stop-color="#e30613"/>
       <stop offset="1" stop-color="#8d000a"/>
     </linearGradient>
-    <linearGradient id="evaraosBareWhite" x1="104" y1="98" x2="402" y2="410" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#fff"/>
-      <stop offset=".62" stop-color="#f5f5f5"/>
-      <stop offset="1" stop-color="#d7d7d7"/>
-    </linearGradient>
   </defs>
-  <path fill="url(#evaraosBareRed)" d="M86 410c41-45 79-85 114-120 47-46 96-91 148-134h70c6 0 9 7 5 12l-41 53c-4 5-9 8-16 8h-85c-17 14-32 28-46 42h136c6 0 10 7 6 12l-39 51c-4 5-9 8-16 8H176c-27 28-55 59-84 93-6 7-17 3-17-7 0-6 4-14 11-18Z"/>
-  <path fill="url(#evaraosBareWhite)" d="M94 173c29-31 60-55 94-73h218c7 0 10 8 6 14l-39 51c-4 5-9 8-16 8H94Z"/>
-  <path fill="url(#evaraosBareWhite)" opacity=".96" d="M98 252h236c6 0 10 7 6 12l-38 50c-4 5-9 8-16 8H98Z"/>
-  <path fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" opacity=".22" d="M90 410c39-43 76-82 110-116 47-46 96-91 148-134"/>
+  <g fill="url(#evaraosBareRed)">
+    <path d="M154 178h202c12 0 18 13 11 23l-27 39c-7 10-17 15-29 15H206l-52 51v-72l45-43c9-8 19-13 31-13Z"/>
+    <path d="M154 268h170c12 0 18 13 11 23l-22 31c-7 10-17 15-29 15H154Z"/>
+    <path d="M154 354h204c12 0 18 13 11 23l-29 42c-7 10-17 15-29 15H154Z"/>
+  </g>
 </svg>
