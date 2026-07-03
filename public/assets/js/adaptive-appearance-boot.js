@@ -22,7 +22,7 @@
   root.dataset.themeMode = mode;
   root.dataset.appearance = `adaptive-${mode}`;
   root.dataset.adaptiveContrast = saved.adaptiveContrast === false ? "off" : "on";
-  root.dataset.evaraBootBuild = "adaptive-fast-v9";
+  root.dataset.evaraBootBuild = "adaptive-fast-v10";
   root.toggleAttribute("data-has-wallpaper", mode === "image" && Boolean(imageUrl));
   root.style.colorScheme = environment === "dark" ? "dark" : "light";
   root.style.setProperty("--evara-wallpaper-position", saved.imagePosition || "center center");
@@ -35,9 +35,6 @@
     root.style.removeProperty("--evara-wallpaper-image");
   }
 
-  /* Remove authority nodes from the retired V4 loader. Pages already include
-     the canonical theme and nav assets, so injecting them again caused the
-     slow overlapping theme paint. */
   [
     "evaraThemeAuthority",
     "evaraNavAuthority",
@@ -50,29 +47,30 @@
   const fallback = environment === "dark"
     ? "linear-gradient(145deg,#080b12,#151b28 48%,#232b3d 72%,#080b12)"
     : "linear-gradient(145deg,#f7fbff,#dbe9f7 48%,#f6e9ec 72%,#eef5fb)";
+  const canvas = mode === "image" && imageUrl
+    ? `var(--evara-wallpaper-image),${fallback}`
+    : fallback;
 
   const prepaint = document.createElement("style");
   prepaint.id = "evaraPrepaintAuthority";
-  prepaint.textContent = `html{background:${mode === "image" && imageUrl ? `var(--evara-wallpaper-image),${fallback}` : fallback} center/cover fixed no-repeat!important}body{background:transparent!important}`;
+  prepaint.textContent = `html{min-height:100%;min-height:100dvh;background:${canvas} center/cover fixed no-repeat!important}body{min-height:100dvh;background:transparent!important}`;
   document.head.appendChild(prepaint);
 
-  /* Never hide the full application while the expensive adaptive sampling
-     finishes. The saved appearance is painted immediately and enhanced later. */
   root.classList.remove("evara-boot-lock");
   root.classList.add("evara-theme-painted");
 
+  let finished = false;
   const finish = () => {
+    if (finished) return;
+    finished = true;
     root.classList.remove("boot-pending", "evara-boot-lock");
     root.classList.add("evara-theme-painted");
-    requestAnimationFrame(() => prepaint.remove());
+    requestAnimationFrame(() => requestAnimationFrame(() => prepaint.remove()));
   };
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", finish, { once: true });
-  } else {
-    finish();
-  }
-
   addEventListener("evara:theme-applied", finish, { once: true });
-  setTimeout(finish, 900);
+  addEventListener("pageshow", () => {
+    if (!document.getElementById("evaraPrepaintAuthority") && !finished) document.head.appendChild(prepaint);
+  }, { once: true });
+  setTimeout(finish, 1400);
 })();
