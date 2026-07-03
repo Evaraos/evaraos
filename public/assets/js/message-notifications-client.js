@@ -1,3 +1,5 @@
+import "./evara-notifications.js";
+
 import {
   auth,
   db,
