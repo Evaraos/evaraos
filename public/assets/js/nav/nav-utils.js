@@ -11,13 +11,18 @@ export function getBasePath() {
   return `/${segments.join("/")}`;
 }
 
+export function normalizeRoute(page) {
+  const raw = String(page || "index.html").replace(/^\//, "");
+  return raw === "settings.html" ? "settings-v2.html" : raw;
+}
+
 export function buildHref(page) {
-  const normalized = String(page || "index.html").replace(/^\//, "");
-  return `/${normalized}`;
+  return `/${normalizeRoute(page)}`;
 }
 
 export function normalizePage(path) {
-  return String(path || "").split("/").pop() || "index.html";
+  const file = String(path || "").split("/").pop() || "index.html";
+  return file === "settings.html" ? "settings-v2.html" : file;
 }
 
 export function isCurrentPage(path) {
@@ -47,6 +52,7 @@ export function isPrivateRoutePending() {
     "/jobs.html",
     "/qa.html",
     "/settings.html",
+    "/settings-v2.html",
     "/applications.html",
     "/org.html"
   ].some((page) => path.includes(page)) || path.includes("/settings/");
@@ -118,7 +124,3 @@ export function navHaptic(ms = 8) {
 export function getMenuZone() { return document.getElementById("evaMenuZone"); }
 export function getMenuBtn() { return document.getElementById("evaMenuBtn"); }
 export function getMenuPanel() { return document.getElementById("evaMenuPanel"); }
-export function getNavShell() { return document.getElementById("evaNavShell"); }
-export function getBrandBlock() { return document.getElementById("evaBrandBlock"); }
-export function getNavPill() { return document.getElementById("evaNavPill"); }
-export function getQuickBubbles() { return null; }
