@@ -1,4 +1,4 @@
-const NAV_BUILD="nav-v30-messages-pinned";
+const NAV_BUILD="nav-v31-phone-push";
 let NAV_STATE,getNavShell,renderNav,applyProgress,bindScrollBehavior,animateNav;
 
 async function loadCore(){
