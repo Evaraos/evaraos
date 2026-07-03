@@ -1,22 +1,11 @@
 (function(){
-  function label(button){return button?.querySelector('.app-icon-copy strong')?.textContent?.trim()||'Icon'}
-  function toast(text){
-    let node=document.getElementById('appIconAutoSaveToast');
-    if(!node){node=document.createElement('div');node.id='appIconAutoSaveToast';node.className='app-icon-toast';document.body.appendChild(node)}
-    node.innerHTML='<strong>Autosaved</strong><span>'+text+'</span>';
-    node.classList.remove('is-visible');
-    requestAnimationFrame(()=>node.classList.add('is-visible'));
-    clearTimeout(toast.timer);
-    toast.timer=setTimeout(()=>node.classList.remove('is-visible'),2400);
-  }
-  document.addEventListener('click',function(event){
-    const button=event.target.closest('[data-app-icon-choice]');
-    if(!button)return;
-    button.classList.remove('is-tapping');
-    void button.offsetWidth;
-    button.classList.add('is-tapping');
-    setTimeout(()=>button.classList.remove('is-tapping'),520);
-    if(window.EvaraosAppIcons)return;
-    setTimeout(()=>toast(label(button)+' selected'),80);
-  },true);
+  const meta={primaryRed:['Primary Red','Original Liquid Glass'],coreWhite:['Core White','Bright premium shell'],darkCore:['Dark Core','OLED black glass'],clearGlass:['Clear Glass','Transparent glass edge'],redGlow:['Red Glow','Red-on-black glow'],matteBlack:['Matte Black','Black stealth mark'],stripedRed:['Striped Red','Motion red glass'],waveWhite:['Wave White','White liquid waves'],hexBlack:['Hex Black','Technical grid glass'],pulse:['Pulse','Live red energy'],frosted:['Frosted','Silver frosted glass'],outlineRed:['Outline Red','Red outline black'],fabricCoin:['Fabric Coin','Coin badge mark'],loadingOrbit:['Loading Orbit','Animated system mark'],progress:['Progress','Circular progress mark'],crystal:['Crystal','Faceted red glass'],topography:['Topography','Soft contour white'],halftone:['Halftone','Red dot matrix'],liquidFlow:['Liquid Flow','Abstract red motion'],stardust:['Stardust','Black cosmic glass'],standaloneGlass:['Standalone Glass E','Floating clear glass'],standaloneRed:['Standalone Red E','Primary gradient mark'],standaloneBlack:['Standalone Black E','Dark gradient mark'],standaloneClear:['Standalone Clear E','Frosted transparent mark'],standaloneAbstract:['Abstract Glass E','Tri-color abstract mark'],ogLogo:['OG Logo','Original orbit logo']};
+  function title(id){return (meta[id]||['Evaraos Icon','Official icon'])[0]}
+  function sub(id){return (meta[id]||['','Official icon'])[1]}
+  function mark(){return '<span class="eos-official-e" aria-hidden="true"><b></b><b></b><b></b><b></b></span>'}
+  function rebuild(){document.querySelectorAll('[data-app-icon-choice]').forEach(btn=>{const id=btn.dataset.appIconChoice;const preview=btn.querySelector('.app-icon-preview');if(preview&&!id.includes('ogLogo'))preview.innerHTML=mark();let copy=btn.querySelector('.app-icon-copy');if(!copy){copy=document.createElement('span');copy.className='app-icon-copy';btn.appendChild(copy)}copy.innerHTML='<strong>'+title(id)+'</strong><span>'+sub(id)+'</span>';btn.dataset.iconName=title(id);btn.dataset.iconSubtitle=sub(id);if(id.includes('standalone'))btn.dataset.standalone='true';});}
+  function toast(text){let node=document.getElementById('appIconAutoSaveToast');if(!node){node=document.createElement('div');node.id='appIconAutoSaveToast';node.className='app-icon-toast';document.body.appendChild(node)}node.innerHTML='<strong>Autosaved</strong><span>'+text+'</span>';node.classList.remove('is-visible');requestAnimationFrame(()=>node.classList.add('is-visible'));clearTimeout(toast.timer);toast.timer=setTimeout(()=>node.classList.remove('is-visible'),2400)}
+  document.addEventListener('click',function(event){const button=event.target.closest('[data-app-icon-choice]');if(!button)return;button.classList.remove('is-tapping');void button.offsetWidth;button.classList.add('is-tapping');setTimeout(()=>button.classList.remove('is-tapping'),520);setTimeout(()=>{rebuild();toast((button.dataset.iconName||'Icon')+' selected')},90)},true);
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(rebuild,80));
+  window.addEventListener('evaraos:app-icon-change',()=>setTimeout(rebuild,50));
 })();
