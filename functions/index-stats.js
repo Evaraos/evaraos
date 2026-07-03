@@ -12,33 +12,13 @@ const HOT_PRIORITIES = ["hot", "high", "urgent"];
 const MOVING_JOBS = ["in progress", "active", "pending", "working", "scheduled"];
 const INACTIVE = ["inactive", "archived", "deleted", "lost", "cancelled", "canceled"];
 
-function norm(value = "") {
-  return String(value || "").trim().toLowerCase();
-}
-
-function safeKey(value = "unknown") {
-  return norm(value).replace(/[^a-z0-9_]/g, "_") || "unknown";
-}
-
-function normalizeUsername(value = "") {
-  return norm(value).replace(/^@+/, "").replace(/\s+/g, "");
-}
-
-function getCompanyId(data = {}) {
-  return String(data.companyId || "unassigned").trim() || "unassigned";
-}
-
-function isActive(data = {}) {
-  return !INACTIVE.includes(norm(data.status || data.health || "active"));
-}
-
-function inc(path, amount) {
-  return { [path]: FieldValue.increment(amount) };
-}
-
-function stamp(patch = {}) {
-  return { ...patch, updatedAt: FieldValue.serverTimestamp() };
-}
+function norm(value = "") { return String(value || "").trim().toLowerCase(); }
+function safeKey(value = "unknown") { return norm(value).replace(/[^a-z0-9_]/g, "_") || "unknown"; }
+function normalizeUsername(value = "") { return norm(value).replace(/^@+/, "").replace(/\s+/g, ""); }
+function getCompanyId(data = {}) { return String(data.companyId || "unassigned").trim() || "unassigned"; }
+function isActive(data = {}) { return !INACTIVE.includes(norm(data.status || data.health || "active")); }
+function inc(path, amount) { return { [path]: FieldValue.increment(amount) }; }
+function stamp(patch = {}) { return { ...patch, updatedAt: FieldValue.serverTimestamp() }; }
 
 function createPatch(type, data = {}) {
   if (type === "companies") return { ...inc("companies.total", 1), ...inc("companies.active", isActive(data) ? 1 : 0) };
@@ -104,13 +84,8 @@ function updatePatch(type, before = {}, after = {}) {
   return patch;
 }
 
-async function writeDashboard(patch) {
-  await dashboardRef.set(stamp(patch), { merge: true });
-}
-
-async function writeCompany(companyId, patch) {
-  await db.doc(`company_stats/${companyId || "unassigned"}`).set(stamp(patch), { merge: true });
-}
+async function writeDashboard(patch) { await dashboardRef.set(stamp(patch), { merge: true }); }
+async function writeCompany(companyId, patch) { await db.doc(`company_stats/${companyId || "unassigned"}`).set(stamp(patch), { merge: true }); }
 
 function attachStats(type) {
   exports[`on_${type}_created`] = onDocumentCreated(`${type}/{id}`, async (event) => {
@@ -153,39 +128,18 @@ function attachStats(type) {
 }
 
 exports.resolveUsernameLogin = onCall(
-  {
-    region: "us-central1",
-    enforceAppCheck: true,
-    cors: true
-  },
+  { region: "us-central1", enforceAppCheck: true, cors: true },
   async (request) => {
     const username = normalizeUsername(request.data?.username || "");
+    if (!username || username.length < 3 || username.length > 32) throw new HttpsError("invalid-argument", "Enter a valid username.");
+    if (!/^[a-z0-9._-]+$/.test(username)) throw new HttpsError("invalid-argument", "Enter a valid username.");
 
-    if (!username || username.length < 3 || username.length > 32) {
-      throw new HttpsError("invalid-argument", "Enter a valid username.");
-    }
-
-    if (!/^[a-z0-9._-]+$/.test(username)) {
-      throw new HttpsError("invalid-argument", "Enter a valid username.");
-    }
-
-    const usersSnap = await db
-      .collection("users")
-      .where("usernameLower", "==", username)
-      .limit(1)
-      .get();
-
-    if (usersSnap.empty) {
-      throw new HttpsError("not-found", "Account not found.");
-    }
+    const usersSnap = await db.collection("users").where("usernameLower", "==", username).limit(1).get();
+    if (usersSnap.empty) throw new HttpsError("not-found", "Account not found.");
 
     const userData = usersSnap.docs[0].data() || {};
     const email = String(userData.email || "").trim().toLowerCase();
-
-    if (!email || !email.includes("@")) {
-      throw new HttpsError("failed-precondition", "This account needs an email login first.");
-    }
-
+    if (!email || !email.includes("@")) throw new HttpsError("failed-precondition", "This account needs an email login first.");
     return { email };
   }
 );
@@ -195,3 +149,5 @@ exports.rebuildStats = require("./stats-rebuild").rebuildStats;
 exports.sanitizeLeadIdentity = require("./lead-privacy").sanitizeLeadIdentity;
 exports.notifyLeadAssignment = require("./lead-notifications").notifyLeadAssignment;
 exports.notifyChatParticipants = require("./message-notifications").notifyChatParticipants;
+exports.registerPushToken = require("./push-notifications").registerPushToken;
+exports.unregisterPushToken = require("./push-notifications").unregisterPushToken;
