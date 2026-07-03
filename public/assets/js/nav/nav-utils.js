@@ -121,6 +121,7 @@ export function navHaptic(ms = 8) {
   } catch {}
 }
 
+export function getBrandBlock() { return document.querySelector(".eva-brand,[data-home-link]"); }
 export function getMenuZone() { return document.getElementById("evaMenuZone"); }
 export function getMenuBtn() { return document.getElementById("evaMenuBtn"); }
 export function getMenuPanel() { return document.getElementById("evaMenuPanel"); }
