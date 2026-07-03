@@ -1,0 +1,21 @@
+{
+  "brand": "Evaraos Inc",
+  "version": "sprint-1",
+  "colors": {
+    "primary": {
+      "name": "Evara Red",
+      "hex": "#E30613",
+      "rgb": "227, 6, 19"
+    },
+    "secondary": {
+      "name": "Pure White",
+      "hex": "#FFFFFF",
+      "rgb": "255, 255, 255"
+    },
+    "tertiary": {
+      "name": "Executive Black",
+      "hex": "#050506",
+      "rgb": "5, 5, 6"
+    }
+  }
+}
