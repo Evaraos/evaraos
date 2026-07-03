@@ -1,0 +1,62 @@
+name: Flip Messages swipe direction
+
+on:
+  push:
+    branches: [evaraos]
+    paths:
+      - .github/workflows/flip-message-swipe.yml
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: evaraos
+          fetch-depth: 0
+
+      - name: Update canonical Messages swipe behavior
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          js = Path('public/assets/js/messages.js')
+          text = js.read_text()
+
+          replacements = {
+              '  actions.style.left = "auto";\n  actions.style.right = "0";':
+              '  actions.style.left = "0";\n  actions.style.right = "auto";',
+              '  if (item) item.style.transform = "translateX(-132px)";':
+              '  if (item) item.style.transform = "translateX(132px)";',
+              '      if (dx < 0) revealSwipeRow(row);\n      else closeSwipeRow(row);':
+              '      if (dx > 0) revealSwipeRow(row);\n      else closeSwipeRow(row);'
+          }
+
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'Missing expected source block: {old!r}')
+              text = text.replace(old, new, 1)
+
+          js.write_text(text)
+
+          html = Path('public/messages.html')
+          page = html.read_text()
+          old_build = 'messages.js?build=20260703-compose-panel'
+          new_build = 'messages.js?build=20260703-swipe-right'
+          if old_build not in page:
+              raise SystemExit('Missing Messages build reference')
+          html.write_text(page.replace(old_build, new_build, 1))
+
+          Path('.github/workflows/flip-message-swipe.yml').unlink()
+          PY
+
+      - name: Commit canonical update
+        run: |
+          git config user.name "Evaraos Automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add public/assets/js/messages.js public/messages.html .github/workflows/flip-message-swipe.yml
+          git commit -m "Reveal Messages actions on swipe right"
+          git push origin evaraos
