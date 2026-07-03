@@ -11,6 +11,7 @@ import {
 const VAPID_KEY = "BFpdd2wIIzS9CZfuX9MEJjcPz7ZzbJ-KQ76oBUsDDzVVk0iwfA_4sH21PbY6rUcMhxUW-kcByItA9GtUigsY5a4";
 const PROMPT_KEY = "evaraos-push-permission-prompted-v1";
 const TOKEN_KEY = "evaraos-fcm-token";
+const SERVICE_WORKER_URL = "/firebase-messaging-sw.js?v=2";
 
 let messaging = null;
 let registration = null;
@@ -44,7 +45,11 @@ async function ensureMessaging() {
   if (messaging && registration) return { messaging, registration };
   if (!(await isSupported())) throw new Error("Push notifications are not supported on this device.");
 
-  registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js", { scope: "/" });
+  registration = await navigator.serviceWorker.register(SERVICE_WORKER_URL, {
+    scope: "/",
+    updateViaCache: "none"
+  });
+  await registration.update();
   await navigator.serviceWorker.ready;
   messaging = getMessaging(getApp());
 
