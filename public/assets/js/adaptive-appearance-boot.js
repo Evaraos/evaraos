@@ -22,7 +22,7 @@
   root.dataset.themeMode = mode;
   root.dataset.appearance = `adaptive-${mode}`;
   root.dataset.adaptiveContrast = saved.adaptiveContrast === false ? "off" : "on";
-  root.dataset.evaraBootBuild = "adaptive-fast-v16-scoped-brand";
+  root.dataset.evaraBootBuild = "adaptive-fast-v17-stable-core";
   root.toggleAttribute("data-has-wallpaper", mode === "image" && Boolean(imageUrl));
   root.style.colorScheme = environment === "dark" ? "dark" : "light";
   root.style.setProperty("--evara-wallpaper-position", saved.imagePosition || "center center");
@@ -43,35 +43,6 @@
     "evaraThemeRuntimeAuthority",
     "evaraNavRuntimeAuthority"
   ].forEach((id) => document.getElementById(id)?.remove());
-
-  if (location.pathname.includes("/settings/icons")) {
-    const brandStyles = [
-      "/assets/css/brand/sprint3-emblem-logos.css?v=2",
-      "/assets/css/brand/sprint3-logo-carousel.css?v=2",
-      "/assets/css/brand/brand-assets-panel.css?v=2",
-      "/assets/css/brand/brand-studio-apply-motion.css?v=2"
-    ];
-    brandStyles.forEach((href) => {
-      if (document.querySelector(`link[href=\"${href}\"]`)) return;
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = href;
-      document.head.appendChild(link);
-    });
-
-    const brandScripts = [
-      "/assets/js/brand-studio-logo-assets.js?v=3",
-      "/assets/js/brand-assets-panel.js?v=2",
-      "/assets/js/brand-studio-apply-motion.js?v=1"
-    ];
-    brandScripts.forEach((src) => {
-      if (document.querySelector(`script[src=\"${src}\"]`)) return;
-      const script = document.createElement("script");
-      script.src = src;
-      script.defer = true;
-      document.head.appendChild(script);
-    });
-  }
 
   const fallback = environment === "dark"
     ? "linear-gradient(145deg,#080b12,#151b28 48%,#232b3d 72%,#080b12)"
