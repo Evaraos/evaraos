@@ -7,6 +7,11 @@ let visible = true;
 const DELTA = 7;
 const TOP_GUARD = 18;
 
+function isMessagesCenterPinned() {
+  const body = document.body;
+  return Boolean(body?.classList.contains("messages-page") && !body.classList.contains("messages-chat-active"));
+}
+
 export function atTopOfPage() { return (window.scrollY || 0) <= TOP_GUARD; }
 export function atBottomOfPage() {
   const bottom = (window.scrollY || 0) + window.innerHeight;
@@ -18,7 +23,8 @@ export function isCompact() { return false; }
 function setVisibility(nextVisible) {
   const shell = getNavShell();
   if (!shell) return;
-  visible = Boolean(nextVisible);
+
+  visible = isMessagesCenterPinned() ? true : Boolean(nextVisible);
   shell.classList.toggle("is-hidden", !visible);
   shell.classList.toggle("is-visible", visible);
   shell.dataset.navVisible = visible ? "true" : "false";
@@ -29,7 +35,7 @@ function setVisibility(nextVisible) {
 export function applyProgress() {
   const shell = getNavShell();
   if (!shell) return;
-  if (document.body.classList.contains("nav-menu-open")) setVisibility(true);
+  if (document.body.classList.contains("nav-menu-open") || isMessagesCenterPinned()) setVisibility(true);
   shell.classList.remove("compact", "expanded");
   document.body.classList.remove("eva-nav-compact", "eva-nav-expanded");
   NAV_STATE.progress = visible ? 1 : 0;
@@ -38,13 +44,20 @@ export function applyProgress() {
 
 function processScroll() {
   ticking = false;
+
+  if (isMessagesCenterPinned()) {
+    lastY = 0;
+    NAV_STATE.lastY = 0;
+    setVisibility(true);
+    return;
+  }
+
   const y = Math.max(0, window.scrollY || 0);
   const delta = y - lastY;
 
   if (document.body.classList.contains("nav-menu-open") || y <= TOP_GUARD) {
     setVisibility(true);
   } else if (Math.abs(delta) >= DELTA) {
-    // X-style behavior: hide while moving deeper into the page, reveal when returning upward.
     setVisibility(delta < 0);
   }
 
@@ -76,7 +89,10 @@ export function bindScrollBehavior() {
   window.addEventListener("scroll", requestScrollUpdate, { passive: true });
   window.addEventListener("resize", requestScrollUpdate, { passive: true });
   window.addEventListener("evara:menu-open", () => setVisibility(true));
-  window.addEventListener("evara:menu-close", () => { lastY = window.scrollY || 0; setVisibility(true); });
+  window.addEventListener("evara:menu-close", () => {
+    lastY = window.scrollY || 0;
+    setVisibility(true);
+  });
 }
 
 export function animateNav() { applyProgress(); }
