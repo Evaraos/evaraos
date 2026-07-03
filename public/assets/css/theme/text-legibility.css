@@ -19,6 +19,8 @@
   --glass-specular: rgba(255,255,255,.82);
   --glass-shadow: rgba(29,42,61,.20);
   --glass-shadow-soft: rgba(29,42,61,.10);
+  color-scheme: light;
+  background-color: #eef4f8;
 }
 
 :root[data-environment="dark"] {
@@ -38,6 +40,7 @@
   --glass-specular: rgba(255,255,255,.36);
   --glass-shadow: rgba(0,0,0,.46);
   --glass-shadow-soft: rgba(0,0,0,.24);
+  color-scheme: dark;
 }
 
 :root[data-theme-mode="image"][data-evara-tone="dark-ink"] {
@@ -56,11 +59,13 @@
 :root[data-environment="light"]:not([data-theme-mode="image"]) :where(
   body, main, section, article, aside, header, footer, nav, label,
   p, h1, h2, h3, h4, h5, h6, li, dt, dd,
+  button, a, span, strong, small, figcaption,
   .hero-kicker, .hero-title, .hero-subtitle,
   .section-head, .section-head p, .section-head h2,
   .feature-card, .service-card, .category-card, .info-card,
   .site-footer, .eva-bottom-link, .eva-bottom-label,
-  .eva-menu-panel, .eva-menu-panel *, .messages-page
+  .eva-menu-panel, .eva-menu-panel *, .messages-page, .messages-page *,
+  .notifications-page, .notifications-page *
 ) {
   --adaptive-ink-rgb: 18,20,24 !important;
   --text-primary: rgba(18,20,24,.98) !important;
@@ -87,9 +92,11 @@
 
 /* Restore semantic secondary hierarchy after the universal primary authority. */
 :root[data-environment="light"]:not([data-theme-mode="image"]) :where(
-  p, .hero-kicker, .hero-subtitle, .section-head p,
+  p, small, .hero-kicker, .hero-subtitle, .section-head p,
   .feature-card p, .service-card p, .category-card p, .info-card p,
-  .site-footer-left span, .subtitle, .page-subtitle, .card-subtitle, .muted
+  .site-footer-left span, .subtitle, .page-subtitle, .card-subtitle, .muted,
+  .conversation-copy span, .messages-section-copy span, .notification-card p,
+  .global-notification-card p, .notification-pill, .global-notification-pill
 ) {
   color: rgba(18,20,24,.70) !important;
 }
@@ -111,6 +118,10 @@
 :root[data-environment="dark"]:not([data-theme-mode="image"]) .eva-nav-shell::before {
   color: #fff !important;
   text-shadow: 0 8px 24px rgba(0,0,0,.44) !important;
+}
+
+:root[data-environment="light"]:not([data-theme-mode="image"]) body {
+  background-color: #eef4f8 !important;
 }
 
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
