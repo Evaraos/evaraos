@@ -3,13 +3,13 @@ import { installOnboardingEntry } from "./onboarding-entry.js?v=2";
 import "./staff-application-dedupe.js?v=2";
 import "./staff-application-experience.js?v=1";
 import "./social-links.js?v=1";
-import * as Core from "./theme-core-adaptive.js?v=adaptive-liquid-v9";
+import * as Core from "./theme-core-adaptive.js?v=adaptive-liquid-v10";
 
 installLiquidInteraction();
 installOnboardingEntry();
 
-export const EVARAOS_THEME_BUILD = "adaptive-liquid-v9";
-export * from "./theme-core-adaptive.js?v=adaptive-liquid-v9";
+export const EVARAOS_THEME_BUILD = "adaptive-liquid-v10";
+export * from "./theme-core-adaptive.js?v=adaptive-liquid-v10";
 
 function enforceUniversalTheme(detail = {}) {
   const root = document.documentElement;
