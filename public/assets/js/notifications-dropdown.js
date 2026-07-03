@@ -68,8 +68,13 @@ function renderDropdown() {
 
   if (enableButton) {
     const permission = notificationPermission();
-    enableButton.hidden = permission === 'granted';
-    enableButton.textContent = permission === 'denied' ? 'Alerts Blocked' : 'Enable Phone Alerts';
+    const tokenReady = Boolean(localStorage.getItem('evaraos-fcm-token'));
+    enableButton.hidden = permission === 'granted' && tokenReady;
+    enableButton.textContent = permission === 'denied'
+      ? 'Alerts Blocked'
+      : permission === 'granted'
+        ? 'Finish Phone Setup'
+        : 'Enable Phone Alerts';
     enableButton.disabled = permission === 'denied';
   }
 
