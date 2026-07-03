@@ -13,4 +13,5 @@
 @import url("/assets/css/brand/sprint3-emblem-logos.css?v=1");
 @import url("/assets/css/brand/sprint3-logo-carousel.css?v=1");
 @import url("/assets/css/brand/brand-assets-panel.css?v=1");
+@import url("/assets/css/brand/brand-studio-live-preview.css?v=1");
 :root{--evara-brand-red:#e30613;--evara-brand-white:#fff;--evara-brand-black:#050506;--evara-brand-red-rgb:227,6,19;--evara-brand-white-rgb:255,255,255;--evara-brand-black-rgb:5,5,6;--evara-primary:var(--evara-brand-red);--evara-secondary:var(--evara-brand-white);--evara-tertiary:var(--evara-brand-black);--evara-gradient-red:linear-gradient(145deg,#ff3434 0%,#e30613 52%,#780008 100%);--evara-gradient-black:linear-gradient(145deg,#1b1c22 0%,#050506 70%,#000 100%);--evara-gradient-red-black:linear-gradient(145deg,#ff3434 0%,#e30613 42%,#050506 100%);--evara-gradient-white-red:linear-gradient(145deg,#fff 0%,#f8f8f8 42%,#e30613 100%);--accent:var(--evara-brand-red);--accent-rgb:var(--evara-brand-red-rgb);--accent-red:var(--evara-brand-red)}
