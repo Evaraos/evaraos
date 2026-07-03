@@ -1,4 +1,4 @@
-const NAV_BUILD="nav-v29-stability-fix";
+const NAV_BUILD="nav-v30-messages-pinned";
 let NAV_STATE,getNavShell,renderNav,applyProgress,bindScrollBehavior,animateNav;
 
 async function loadCore(){
