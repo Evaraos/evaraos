@@ -22,7 +22,7 @@
   root.dataset.themeMode = mode;
   root.dataset.appearance = `adaptive-${mode}`;
   root.dataset.adaptiveContrast = saved.adaptiveContrast === false ? "off" : "on";
-  root.dataset.evaraBootBuild = "adaptive-fast-v11-brand-studio";
+  root.dataset.evaraBootBuild = "adaptive-fast-v12-brand-assets";
   root.toggleAttribute("data-has-wallpaper", mode === "image" && Boolean(imageUrl));
   root.style.colorScheme = environment === "dark" ? "dark" : "light";
   root.style.setProperty("--evara-wallpaper-position", saved.imagePosition || "center center");
@@ -45,10 +45,12 @@
   ].forEach((id) => document.getElementById(id)?.remove());
 
   if (location.pathname.includes("/settings/icons")) {
-    const brandStudioAssets = document.createElement("script");
-    brandStudioAssets.src = "/assets/js/brand-studio-logo-assets.js?v=1";
-    brandStudioAssets.defer = true;
-    document.head.appendChild(brandStudioAssets);
+    ["/assets/js/brand-studio-logo-assets.js?v=2", "/assets/js/brand-assets-panel.js?v=1"].forEach((src) => {
+      const script = document.createElement("script");
+      script.src = src;
+      script.defer = true;
+      document.head.appendChild(script);
+    });
   }
 
   const fallback = environment === "dark"
