@@ -194,3 +194,4 @@ exports.resolveUsernameLogin = onCall(
 exports.rebuildStats = require("./stats-rebuild").rebuildStats;
 exports.sanitizeLeadIdentity = require("./lead-privacy").sanitizeLeadIdentity;
 exports.notifyLeadAssignment = require("./lead-notifications").notifyLeadAssignment;
+exports.notifyChatParticipants = require("./message-notifications").notifyChatParticipants;
