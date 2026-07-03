@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Evaraos primary red Liquid Glass app icon">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Evaraos official red Liquid Glass app icon">
   <defs>
     <linearGradient id="bg" x1="76" y1="42" x2="438" y2="470" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ff3434"/><stop offset="0.46" stop-color="#c70012"/><stop offset="1" stop-color="#450006"/></linearGradient>
-    <radialGradient id="hot" cx="30%" cy="18%" r="78%"><stop offset="0" stop-color="#ffffff" stop-opacity=".36"/><stop offset=".34" stop-color="#ff2525" stop-opacity=".16"/><stop offset="1" stop-color="#000000" stop-opacity="0"/></radialGradient>
-    <linearGradient id="mark" x1="120" y1="140" x2="370" y2="410" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffffff"/><stop offset="0.58" stop-color="#f7f7f7"/><stop offset="1" stop-color="#d4d4d4"/></linearGradient>
+    <radialGradient id="hot" cx="30%" cy="18%" r="78%"><stop offset="0" stop-color="#ffffff" stop-opacity=".38"/><stop offset=".34" stop-color="#ff2525" stop-opacity=".18"/><stop offset="1" stop-color="#000000" stop-opacity="0"/></radialGradient>
+    <linearGradient id="mark" x1="125" y1="145" x2="370" y2="430" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffffff"/><stop offset="0.58" stop-color="#f7f7f7"/><stop offset="1" stop-color="#d4d4d4"/></linearGradient>
     <filter id="shadow" x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="0" dy="22" stdDeviation="22" flood-color="#000" flood-opacity=".30"/></filter>
     <filter id="glow" x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#ff1d25" flood-opacity=".62"/></filter>
   </defs>
@@ -11,9 +11,10 @@
   <rect x="52" y="52" width="408" height="408" rx="96" fill="none" stroke="#ffffff" stroke-opacity=".32" stroke-width="5"/>
   <path d="M80 94c74-40 204-52 350-12" fill="none" stroke="#ffffff" stroke-opacity=".34" stroke-width="9" stroke-linecap="round"/>
   <g fill="url(#mark)" filter="url(#shadow)">
-    <path d="M146 168h197c9 0 13 10 8 17l-28 40c-5 7-12 11-21 11H190l-44 43v-67l42-37c6-5 12-7 20-7Z"/>
-    <path d="M146 259h171c8 0 12 9 7 16l-25 36c-5 7-12 10-20 10H146Z"/>
-    <path d="M146 342h198c9 0 13 10 8 17l-29 41c-5 7-12 11-21 11H146Z"/>
+    <path d="M151 158h205c12 0 18 13 11 23l-27 39c-7 10-17 15-29 15H196l-45 43v-65l43-42c8-8 19-13 31-13Z"/>
+    <path d="M151 252h172c11 0 17 12 11 21l-25 37c-7 10-17 15-29 15H151Z"/>
+    <path d="M151 342h206c12 0 18 13 11 23l-29 42c-7 10-17 15-29 15H151Z"/>
+    <path d="M151 422l78-97h55l-84 97Z"/>
   </g>
   <rect x="34" y="34" width="444" height="444" rx="110" fill="none" stroke="#ff1d25" stroke-opacity=".74" stroke-width="3" filter="url(#glow)"/>
 </svg>
