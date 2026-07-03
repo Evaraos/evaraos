@@ -1,0 +1,72 @@
+/* Universal viewport/canvas authority for iOS Safari and installed PWAs. */
+html {
+  width: 100%;
+  min-height: 100%;
+  min-height: 100dvh;
+  background-color: #101827;
+  background-image: var(--evara-wallpaper-image);
+  background-position: var(--evara-wallpaper-position, center center);
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+html[data-environment="light"] {
+  background-color: #eef4f8;
+}
+
+html[data-environment="dark"] {
+  background-color: #101827;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+body::before,
+body::after {
+  width: 100vw;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Fixed application shells must use the dynamic viewport, not WebKit's stale
+   percentage-based layout viewport. */
+html:has(body.messages-page),
+body.messages-page,
+body.messages-page #appRoot {
+  width: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
+  max-height: 100dvh;
+}
+
+body.messages-page {
+  inset: 0;
+  overflow: hidden;
+  background-color: transparent !important;
+}
+
+body.messages-page #appRoot {
+  inset: 0;
+  overflow: hidden;
+  contain: layout paint;
+}
+
+/* Keep the wallpaper covering the complete display even when iOS changes the
+   visual viewport while entering or leaving a text field. */
+@supports (-webkit-touch-callout: none) {
+  html {
+    min-height: -webkit-fill-available;
+  }
+
+  body {
+    min-height: -webkit-fill-available;
+  }
+
+  html:has(body.messages-page),
+  body.messages-page,
+  body.messages-page #appRoot {
+    min-height: 100dvh;
+  }
+}
