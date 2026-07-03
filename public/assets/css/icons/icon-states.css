@@ -1,0 +1,13 @@
+:root{--ess-state-idle:.72;--ess-state-hover:1;--ess-state-disabled:.32;--ess-state-selected:var(--evara-brand-red,#e30613);--ess-state-success:#30d158;--ess-state-warning:#ff9f0a;--ess-state-error:#ff453a;--ess-state-info:#64b5ff}
+.eva-icon,.ess-icon,[data-evara-icon] .eva-icon{opacity:var(--ess-state-idle);color:currentColor;transition:opacity .18s ease,color .18s ease,filter .18s ease,transform .18s ease}
+:where(a,button,[role="button"],.eva-bottom-link,.eva-menu-card,.settings-hub-card,.dashboard-control-tile):hover .eva-icon{opacity:var(--ess-state-hover)}
+:where(.is-active,.active,[aria-current="page"],[aria-selected="true"],[data-state="selected"]):is(a,button,[role="button"],.eva-bottom-link,.eva-menu-card,.settings-hub-card) .eva-icon,.eva-icon[data-state="selected"],.ess-icon[data-state="selected"]{opacity:1;color:var(--ess-state-selected);filter:drop-shadow(0 0 12px rgba(227,6,19,.36))}
+:where([disabled],[aria-disabled="true"],.is-disabled) .eva-icon,.eva-icon[data-state="disabled"],.ess-icon[data-state="disabled"]{opacity:var(--ess-state-disabled);filter:none;transform:none}
+.eva-icon[data-state="success"],.ess-icon[data-state="success"],.has-success .eva-icon{opacity:1;color:var(--ess-state-success);filter:drop-shadow(0 0 10px rgba(48,209,88,.28))}
+.eva-icon[data-state="warning"],.ess-icon[data-state="warning"],.has-warning .eva-icon{opacity:1;color:var(--ess-state-warning);filter:drop-shadow(0 0 10px rgba(255,159,10,.28))}
+.eva-icon[data-state="error"],.ess-icon[data-state="error"],.has-error .eva-icon{opacity:1;color:var(--ess-state-error);filter:drop-shadow(0 0 10px rgba(255,69,58,.32))}
+.eva-icon[data-state="info"],.ess-icon[data-state="info"],.has-info .eva-icon{opacity:1;color:var(--ess-state-info);filter:drop-shadow(0 0 10px rgba(100,181,255,.28))}
+.eva-icon[data-loading="true"],.ess-icon[data-loading="true"],.is-loading .eva-icon{opacity:1;animation:essIconLoading 1s linear infinite}
+.eva-icon[data-badge]::after,.ess-icon[data-badge]::after{content:attr(data-badge);position:absolute;right:-6px;top:-6px;min-width:14px;height:14px;border-radius:999px;background:var(--ess-state-selected);color:#fff;font-size:9px;font-weight:900;display:grid;place-items:center;box-shadow:0 0 0 2px rgba(0,0,0,.22)}
+@keyframes essIconLoading{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.eva-icon[data-loading="true"],.ess-icon[data-loading="true"],.is-loading .eva-icon{animation:none!important}}
