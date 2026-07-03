@@ -162,7 +162,7 @@ function handleSnapshot(snapshot) {
 }
 
 function startUserSubscription(user) {
-  stopMessageNotificationClient();
+  stopMessageNotificationSubscription();
   if (!user?.uid) return;
 
   currentUserId = user.uid;
