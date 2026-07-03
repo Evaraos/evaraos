@@ -8,28 +8,29 @@ import * as Core from "./theme-core-adaptive.js?v=adaptive-liquid-v10";
 installLiquidInteraction();
 installOnboardingEntry();
 
-export const EVARAOS_THEME_BUILD = "adaptive-liquid-v10";
-export * from "./theme-core-adaptive.js?v=adaptive-liquid-v10";
+export const EVARAOS_THEME_BUILD = "adaptive-liquid-v11-single-authority";
+export const applyAppearance = Core.applyAppearance;
+export const setAppearance = Core.setAppearance;
+export const getAppearance = Core.getAppearance;
+export const getTheme = Core.getTheme;
+export const getThemeMode = Core.getThemeMode;
+export const setTheme = Core.setTheme;
+export const setThemeMode = Core.setThemeMode;
 
-function enforceUniversalTheme(detail = {}) {
+function enforceUniversalTheme(detail) {
   const root = document.documentElement;
   const appearance = Core.getAppearance();
-  const environment = detail.resolved || detail.environment || Core.resolvedTheme(appearance);
+  const environment = detail && (detail.resolved || detail.environment) ? (detail.resolved || detail.environment) : Core.resolvedTheme(appearance);
   root.dataset.theme = "adaptive";
   root.dataset.environment = environment;
   root.dataset.themeMode = appearance.mode;
-  root.dataset.appearance = `adaptive-${appearance.mode}`;
-  if (window.EvaraTheme) window.EvaraTheme.getTheme = () => "adaptive";
+  root.dataset.appearance = "adaptive-" + appearance.mode;
+  if (window.EvaraTheme) window.EvaraTheme.getTheme = function(){ return "adaptive"; };
 }
 
-const root = document.documentElement;
-new MutationObserver(() => {
-  if (root.dataset.theme !== "adaptive") enforceUniversalTheme();
-}).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
-
-addEventListener("evara:theme-applied", (event) => enforceUniversalTheme(event.detail));
+addEventListener("evara:theme-applied", function(event){ enforceUniversalTheme(event.detail || {}); });
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => enforceUniversalTheme(), { once: true });
+  document.addEventListener("DOMContentLoaded", function(){ enforceUniversalTheme({}); }, { once: true });
 } else {
-  enforceUniversalTheme();
+  enforceUniversalTheme({});
 }
