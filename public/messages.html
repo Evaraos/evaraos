@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="/assets/css/base.css">
   <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v9">
   <link rel="stylesheet" href="/assets/css/nav.css">
-  <link rel="stylesheet" href="/assets/css/pages/messages.css?build=20260703-stretched-pinned-rails">
+  <link rel="stylesheet" href="/assets/css/pages/messages.css?build=20260703-fixed-rails-compose">
 </head>
 <body class="messages-page auth-pending app-loading" data-route-guard="private">
   <div id="universalNavRoot"></div>
@@ -39,8 +39,12 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
             <input id="conversationSearch" type="search" placeholder="Search" autocomplete="off">
           </label>
-          <button id="composeConversationButton" class="messages-compose-button" type="button" aria-label="Create a new chat">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4.5 19.5 9.5M13 6l-7.5 7.5L4 20l6.5-1.5L18 11M13 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-6"/></svg>
+          <button id="composeConversationButton" class="messages-compose-button" type="button" aria-label="Compose a new message">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M13.5 5.5H7.25A3.25 3.25 0 0 0 4 8.75v8A3.25 3.25 0 0 0 7.25 20h8a3.25 3.25 0 0 0 3.25-3.25V10.5"/>
+              <path d="m10.25 14.75.7-3.05 6.35-6.35a1.56 1.56 0 0 1 2.2 2.2l-6.35 6.35-2.9.85Z"/>
+              <path d="m15.9 6.75 2.2 2.2"/>
+            </svg>
           </button>
         </div>
       </aside>
