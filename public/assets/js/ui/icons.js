@@ -1,3 +1,5 @@
+const EVARAOS_MARK_PATH = '<path d="M4.2 20.5c2.1-2.3 4-4.3 5.8-6.1 2.4-2.4 4.9-4.7 7.5-6.9h3.4c.3 0 .5.4.3.6l-2 2.6c-.2.3-.5.4-.8.4h-4.2c-.8.7-1.6 1.4-2.3 2.1h6.7c.3 0 .5.4.3.6l-1.9 2.5c-.2.3-.5.4-.8.4H9.1c-1.3 1.4-2.7 2.9-4.2 4.6-.3.4-.8.1-.8-.3 0-.2 0-.4.1-.5Z"/><path d="M4.6 8.6c1.4-1.5 3-2.7 4.7-3.6h10.6c.3 0 .5.4.3.6l-1.9 2.5c-.2.3-.5.4-.8.4H4.6Z"/><path d="M4.8 12.6h11.5c.3 0 .5.4.3.6l-1.8 2.4c-.2.3-.5.4-.8.4H4.8Z"/>';
+
 const ICONS = Object.freeze({
   home:'<path d="M3.5 10.5 12 3l8.5 7.5V21h-5.2v-6.1H8.7V21H3.5V10.5Z"/>',
   dashboard:'<rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/>',
@@ -39,14 +41,21 @@ const ICONS = Object.freeze({
   operations:'<path d="M4 7h10M4 12h16M4 17h7"/><circle cx="17" cy="7" r="2"/><circle cx="14" cy="17" r="2"/>',
   finance:'<path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/>',
   customer:'<circle cx="12" cy="8" r="4"/><path d="M4.5 21c1.6-4 4.1-6 7.5-6s5.9 2 7.5 6"/>',
-  system:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/>'
+  system:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/>',
+  evaraos:EVARAOS_MARK_PATH,
+  brand:EVARAOS_MARK_PATH,
+  brandMark:EVARAOS_MARK_PATH,
+  favicon:EVARAOS_MARK_PATH,
+  fabricCoin:'<circle cx="12" cy="12" r="9"/><g transform="scale(.72) translate(4.65 4.15)">'+EVARAOS_MARK_PATH+'</g>',
+  brandCoin:'<circle cx="12" cy="12" r="9"/><g transform="scale(.72) translate(4.65 4.15)">'+EVARAOS_MARK_PATH+'</g>',
+  loading:'<circle cx="12" cy="12" r="9" opacity=".18"/><path d="M21 12a9 9 0 0 1-9 9"/><g transform="scale(.72) translate(4.65 4.15)">'+EVARAOS_MARK_PATH+'</g>'
 });
 
 const APP_ICON_MAP = Object.freeze({
-  dashboard:"dashboard","customer-dashboard":"dashboard",organization:"company",companies:"company",users:"users",applications:"applications",jobs:"jobs",leads:"leads",dispatch:"dispatch",field:"field",schedule:"schedule","operations-map":"map","territory-intelligence":"territory","predictive-ops":"predictive","ai-command":"ai",analytics:"analytics",revenue:"revenue",payroll:"payroll",ledger:"ledger","payment-ops":"payments",messages:"messages","service-history":"history",settings:"settings"
+  dashboard:"dashboard","customer-dashboard":"dashboard",organization:"company",companies:"company",users:"users",applications:"applications",jobs:"jobs",leads:"leads",dispatch:"dispatch",field:"field",schedule:"schedule","operations-map":"map","territory-intelligence":"territory","predictive-ops":"predictive","ai-command":"ai",analytics:"analytics",revenue:"revenue",payroll:"payroll",ledger:"ledger","payment-ops":"payments",messages:"messages","service-history":"history",settings:"settings","app-icons":"brandMark",icons:"brandMark",brand:"brandMark",loading:"loading",favicon:"favicon"
 });
 
-const CATEGORY_ICON_MAP = Object.freeze({operations:"operations",organizations:"company",finance:"finance",customer:"customer",intelligence:"analytics",system:"system"});
+const CATEGORY_ICON_MAP = Object.freeze({operations:"operations",organizations:"company",finance:"finance",customer:"customer",intelligence:"analytics",system:"system",brand:"brandMark"});
 
 export function iconSvg(name, className = "eva-icon") {
   const body = ICONS[name] || ICONS.dashboard;
