@@ -13,48 +13,98 @@
   <link rel="stylesheet" href="/assets/css/base.css">
   <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v9">
   <link rel="stylesheet" href="/assets/css/nav.css">
-  <link rel="stylesheet" href="/assets/css/pages/messages.css?build=20260702-keyboard-polish">
+  <link rel="stylesheet" href="/assets/css/pages/messages.css?build=20260703-compose-panel">
 </head>
 <body class="messages-page auth-pending app-loading" data-route-guard="private">
   <div id="universalNavRoot"></div>
   <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
+
   <div id="appRoot">
     <main class="messages-app show-list">
       <aside class="messages-sidebar" aria-label="Message center">
         <header class="messages-center-head">
           <button id="editConversations" class="messages-head-button" type="button" aria-pressed="false">Edit</button>
           <h1>Messages</h1>
-          <button id="newConversationButton" class="messages-head-button messages-menu-button" type="button" aria-label="Message options"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h9"/></svg></button>
+          <button id="newConversationButton" class="messages-head-button messages-menu-button" type="button" aria-label="Message options">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h9"/></svg>
+          </button>
         </header>
-        <div id="conversationList" class="conversation-list" role="list"><div class="messages-empty">Loading conversations…</div></div>
+
+        <div id="conversationList" class="conversation-list" role="list">
+          <div class="messages-empty">Loading conversations…</div>
+        </div>
+
         <div class="messages-search-dock">
-          <label class="messages-search" for="conversationSearch"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg><input id="conversationSearch" type="search" placeholder="Search" autocomplete="off"></label>
-          <button id="voiceSearchButton" class="messages-voice-button" type="button" aria-label="Voice search"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6.5 11.5a5.5 5.5 0 0 0 11 0M12 17v4M9 21h6"/></svg></button>
+          <label class="messages-search" for="conversationSearch">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+            <input id="conversationSearch" type="search" placeholder="Search" autocomplete="off">
+          </label>
+          <button id="composeConversationButton" class="messages-compose-button" type="button" aria-label="Create a new chat">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4.5 19.5 9.5M13 6l-7.5 7.5L4 20l6.5-1.5L18 11M13 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-6"/></svg>
+          </button>
         </div>
       </aside>
+
       <section id="messagesChat" class="messages-chat" aria-label="Conversation">
         <header class="messages-chat-head">
-          <button id="showConversationList" class="messages-chat-button" type="button" aria-label="Back to messages"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
+          <button id="showConversationList" class="messages-chat-button" type="button" aria-label="Back to messages">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg>
+          </button>
           <button id="chatAvatar" class="conversation-avatar chat-avatar-button" type="button" aria-label="Conversation photo and options"><span>E</span></button>
-          <div class="messages-chat-title"><h2 id="chatTitle">Messages</h2><p id="chatSubtitle">Select a conversation</p></div>
-          <button id="chatMenuButton" class="messages-chat-button" type="button" aria-label="Conversation options"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg></button>
+          <div class="messages-chat-title">
+            <h2 id="chatTitle">Messages</h2>
+            <p id="chatSubtitle">Select a conversation</p>
+          </div>
+          <button id="chatMenuButton" class="messages-chat-button" type="button" aria-label="Conversation options">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg>
+          </button>
         </header>
-        <div id="chatFeed" class="messages-feed" aria-live="polite"><div class="messages-empty">Select a conversation to begin.</div></div>
-        <form id="messageForm" class="messages-composer"><div class="messages-composer-shell"><textarea id="messageInput" rows="1" maxlength="10000" placeholder="Message" required></textarea></div><button class="messages-send" type="submit" aria-label="Send message"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 18V6M7 11l5-5 5 5"/></svg></button></form>
+
+        <div id="chatFeed" class="messages-feed" aria-live="polite">
+          <div class="messages-empty">Select a conversation to begin.</div>
+        </div>
+
+        <form id="messageForm" class="messages-composer">
+          <div class="messages-composer-shell">
+            <textarea id="messageInput" rows="1" maxlength="10000" placeholder="Message" required></textarea>
+          </div>
+          <button class="messages-send" type="submit" aria-label="Send message">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 18V6M7 11l5-5 5 5"/></svg>
+          </button>
+        </form>
       </section>
     </main>
   </div>
+
   <div id="messagesMenu" class="messages-action-sheet" hidden>
     <button class="messages-sheet-backdrop" type="button" aria-label="Close menu"></button>
     <section class="messages-sheet-card" role="dialog" aria-modal="true" aria-labelledby="messagesMenuTitle">
-      <div class="messages-sheet-handle"></div><h2 id="messagesMenuTitle">Conversation</h2>
-      <button id="viewConversationPhoto" type="button">View photo</button><button id="muteConversation" type="button">Mute Notifications</button><button id="conversationInfo" type="button">Conversation info</button><button id="editConversation" type="button">Edit conversation</button><button id="deleteConversation" class="messages-destructive-action" type="button">Delete conversation</button><button id="refreshConversations" type="button">Refresh conversations</button><a id="backToDashboard" href="/dashboard.html">Back to dashboard</a><button id="closeMessagesMenu" class="messages-sheet-cancel" type="button">Cancel</button>
+      <div class="messages-sheet-handle"></div>
+      <h2 id="messagesMenuTitle">New Message</h2>
+      <button id="newDirectConversation" type="button">New Chat</button>
+      <button id="newGroupConversation" type="button">New Group Chat</button>
+      <button id="viewConversationPhoto" type="button">View photo</button>
+      <button id="muteConversation" type="button">Mute Notifications</button>
+      <button id="conversationInfo" type="button">Conversation info</button>
+      <button id="editConversation" type="button">Edit conversation</button>
+      <button id="deleteConversation" class="messages-destructive-action" type="button">Delete conversation</button>
+      <button id="refreshConversations" type="button">Refresh conversations</button>
+      <a id="backToDashboard" href="/dashboard.html">Back to dashboard</a>
+      <button id="closeMessagesMenu" class="messages-sheet-cancel" type="button">Cancel</button>
     </section>
   </div>
-  <div id="conversationPhotoViewer" class="messages-photo-viewer" hidden><button id="closePhotoViewer" class="messages-photo-backdrop" type="button" aria-label="Close photo"></button><figure class="messages-photo-card"><img id="conversationPhotoImage" alt="Conversation"><figcaption id="conversationPhotoCaption"></figcaption></figure></div>
+
+  <div id="conversationPhotoViewer" class="messages-photo-viewer" hidden>
+    <button id="closePhotoViewer" class="messages-photo-backdrop" type="button" aria-label="Close photo"></button>
+    <figure class="messages-photo-card">
+      <img id="conversationPhotoImage" alt="Conversation">
+      <figcaption id="conversationPhotoCaption"></figcaption>
+    </figure>
+  </div>
+
   <script src="/assets/js/loader.js"></script>
   <script type="module" src="/assets/js/route-guard.js"></script>
-  <script type="module" src="/assets/js/messages.js?build=20260702-keyboard-polish"></script>
+  <script type="module" src="/assets/js/messages.js?build=20260703-compose-panel"></script>
   <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v9"></script>
   <script type="module" src="/assets/js/nav.js"></script>
 </body>
