@@ -11,9 +11,14 @@ import {
 import {
   startMessageNotificationClient,
   stopMessageNotificationClient,
-  requestMessageNotificationPermission,
   markMessageNotificationRead
 } from './message-notifications-client.js';
+
+import {
+  startPushNotifications,
+  stopPushNotifications,
+  enablePhoneNotifications
+} from './push-notifications-client.js';
 
 let listenerId = null;
 let dropdownOpen = false;
@@ -35,7 +40,7 @@ function ensurePanel() {
   panel.id = 'globalNotificationsPanel';
   panel.className = 'global-notifications-panel glass-card';
   panel.setAttribute('aria-label', 'Recent notifications');
-  panel.innerHTML = '<div class="global-notifications-head"><strong>Notifications</strong><div class="global-notifications-actions"><button id="enableDeviceNotifications" type="button">Enable Alerts</button><a href="/notifications_center.html">Open Center</a></div></div><div id="globalNotificationsList" class="global-notifications-list"><div class="item muted">No notifications yet.</div></div>';
+  panel.innerHTML = '<div class="global-notifications-head"><strong>Notifications</strong><div class="global-notifications-actions"><button id="enableDeviceNotifications" type="button">Enable Phone Alerts</button><a href="/notifications_center.html">Open Center</a></div></div><div id="globalNotificationsList" class="global-notifications-list"><div class="item muted">No notifications yet.</div></div>';
   document.body.appendChild(panel);
 
   if (!document.getElementById('globalNotificationsDropdownStyles')) {
@@ -63,8 +68,9 @@ function renderDropdown() {
 
   if (enableButton) {
     const permission = notificationPermission();
-    enableButton.hidden = permission !== 'default';
-    enableButton.textContent = permission === 'default' ? 'Enable Alerts' : 'Alerts Enabled';
+    enableButton.hidden = permission === 'granted';
+    enableButton.textContent = permission === 'denied' ? 'Alerts Blocked' : 'Enable Phone Alerts';
+    enableButton.disabled = permission === 'denied';
   }
 
   if (listNode) {
@@ -98,7 +104,7 @@ function bindEvents() {
     if (enableButton) {
       event.preventDefault();
       event.stopPropagation();
-      await requestMessageNotificationPermission();
+      await enablePhoneNotifications();
       renderDropdown();
       return;
     }
@@ -128,6 +134,7 @@ function bindEvents() {
   });
 
   window.addEventListener('evara:message-notification-permission', renderDropdown);
+  window.addEventListener('evara:push-status', renderDropdown);
 }
 
 export function startNotificationsDropdown() {
@@ -136,6 +143,7 @@ export function startNotificationsDropdown() {
   bindEvents();
   startNotificationEventBridge();
   startMessageNotificationClient();
+  startPushNotifications();
   listenerId = subscribeNotifications(renderDropdown);
   renderDropdown();
   return stopNotificationsDropdown;
@@ -146,6 +154,7 @@ export function stopNotificationsDropdown() {
   listenerId = null;
   stopNotificationEventBridge();
   stopMessageNotificationClient();
+  stopPushNotifications();
 }
 
 window.EvaraNotificationsDropdown = {
