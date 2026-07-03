@@ -27,6 +27,8 @@ let unsubscribeNotifications = null;
 let authUnsubscribe = null;
 let currentUserId = "";
 let initialSnapshot = true;
+let conversationEventsBound = false;
+let deepLinkObserver = null;
 const notificationCache = new Map();
 
 function mutedChannels() {
@@ -54,10 +56,15 @@ function routeFor(notification = {}) {
   return notification.route || notification.actionUrl || "/messages.html";
 }
 
+function activeConversationId() {
+  return document.documentElement.dataset.activeConversation
+    || new URLSearchParams(location.search).get("conversation")
+    || "";
+}
+
 function isActiveConversation(channelId = "") {
-  if (!document.body.classList.contains("messages-chat-active")) return false;
-  const current = new URLSearchParams(location.search).get("conversation") || "";
-  return current === channelId;
+  return document.body.classList.contains("messages-chat-active")
+    && activeConversationId() === channelId;
 }
 
 function browserNotificationSupported() {
@@ -213,7 +220,61 @@ export async function markConversationNotificationsRead(channelId) {
   await Promise.all(pending.map((notification) => markMessageNotificationRead(notification.id)));
 }
 
+function bindConversationReadTracking() {
+  if (conversationEventsBound) return;
+  conversationEventsBound = true;
+
+  document.addEventListener("click", (event) => {
+    const conversation = event.target.closest?.("[data-conversation]");
+    if (conversation?.dataset?.conversation) {
+      const channelId = conversation.dataset.conversation;
+      document.documentElement.dataset.activeConversation = channelId;
+      markConversationNotificationsRead(channelId).catch(() => {});
+      return;
+    }
+
+    if (event.target.closest?.("#showConversationList")) {
+      delete document.documentElement.dataset.activeConversation;
+    }
+  }, true);
+}
+
+function openRequestedConversation() {
+  if (!document.body.classList.contains("messages-page")) return;
+  const channelId = new URLSearchParams(location.search).get("conversation");
+  if (!channelId) return;
+
+  const attemptOpen = () => {
+    const rows = document.querySelectorAll("[data-conversation]");
+    const row = [...rows].find((candidate) => candidate.dataset.conversation === channelId);
+    if (!row) return false;
+
+    document.documentElement.dataset.activeConversation = channelId;
+    row.click();
+    markConversationNotificationsRead(channelId).catch(() => {});
+    deepLinkObserver?.disconnect();
+    deepLinkObserver = null;
+    return true;
+  };
+
+  if (attemptOpen()) return;
+  const list = document.getElementById("conversationList");
+  if (!list) return;
+
+  deepLinkObserver?.disconnect();
+  deepLinkObserver = new MutationObserver(attemptOpen);
+  deepLinkObserver.observe(list, { childList: true, subtree: true });
+  setTimeout(() => {
+    deepLinkObserver?.disconnect();
+    deepLinkObserver = null;
+  }, 12000);
+}
+
 export function startMessageNotificationClient() {
+  bindConversationReadTracking();
+  openRequestedConversation();
+  window.addEventListener("evara:session-ready", openRequestedConversation, { once: true });
+
   if (authUnsubscribe) return stopMessageNotificationClient;
 
   authUnsubscribe = onAuthStateChanged(auth, (user) => {
@@ -222,6 +283,7 @@ export function startMessageNotificationClient() {
       return;
     }
     startUserSubscription(user);
+    openRequestedConversation();
   });
 
   return stopMessageNotificationClient;
@@ -239,6 +301,8 @@ export function stopMessageNotificationClient() {
   stopMessageNotificationSubscription();
   if (authUnsubscribe) authUnsubscribe();
   authUnsubscribe = null;
+  deepLinkObserver?.disconnect();
+  deepLinkObserver = null;
 }
 
 window.EvaraMessageNotifications = {
