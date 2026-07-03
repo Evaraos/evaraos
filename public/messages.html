@@ -22,7 +22,7 @@
   <div id="appRoot">
     <main class="messages-app show-list">
       <aside class="messages-sidebar" aria-label="Message center">
-        <header class="messages-center-head">
+        <header class="messages-center-head" style="position:relative;min-height:74px;padding:14px 20px 12px">
           <button id="editConversations" class="messages-head-button" type="button" aria-pressed="false">Edit</button>
           <h1>Messages</h1>
           <button id="newConversationButton" class="messages-head-button messages-menu-button" type="button" aria-label="Message options">
@@ -50,7 +50,7 @@
       </aside>
 
       <section id="messagesChat" class="messages-chat" aria-label="Conversation">
-        <header class="messages-chat-head">
+        <header class="messages-chat-head" style="position:relative;min-height:calc(70px + env(safe-area-inset-top));padding-top:max(14px,calc(env(safe-area-inset-top) + 8px))">
           <button id="showConversationList" class="messages-chat-button" type="button" aria-label="Back to messages">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg>
           </button>
