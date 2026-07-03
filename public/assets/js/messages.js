@@ -194,13 +194,15 @@ function conversationRow(conversation) {
 
   const actions = document.createElement("div");
   actions.className = "conversation-swipe-actions";
+  actions.style.left = "auto";
+  actions.style.right = "0";
 
   const mute = document.createElement("button");
   mute.type = "button";
   mute.className = `conversation-swipe-action mute${state.muted.has(conversation.id) ? " is-muted" : ""}`;
   mute.dataset.muteConversation = conversation.id;
-  mute.setAttribute("aria-label", state.muted.has(conversation.id) ? "Turn on notifications" : "Mute conversation");
-  mute.innerHTML = `${bellMarkup(state.muted.has(conversation.id))}<span>${state.muted.has(conversation.id) ? "Unmute" : "Mute"}</span>`;
+  mute.setAttribute("aria-label", state.muted.has(conversation.id) ? "Turn on notifications" : "Do not disturb");
+  mute.innerHTML = `${bellMarkup(state.muted.has(conversation.id))}<span>${state.muted.has(conversation.id) ? "Alerts On" : "DND"}</span>`;
 
   const remove = document.createElement("button");
   remove.type = "button";
@@ -692,6 +694,23 @@ function setSearchMode(active) {
   setTimeout(syncViewport, 280);
 }
 
+function closeSwipeRow(row) {
+  if (!row) return;
+  row.classList.remove("is-revealed");
+  const item = row.querySelector(".conversation-item");
+  if (item) item.style.transform = "";
+}
+
+function revealSwipeRow(row) {
+  if (!row) return;
+  el.conversationList?.querySelectorAll(".conversation-swipe-row.is-revealed").forEach(item => {
+    if (item !== row) closeSwipeRow(item);
+  });
+  row.classList.add("is-revealed");
+  const item = row.querySelector(".conversation-item");
+  if (item) item.style.transform = "translateX(-132px)";
+}
+
 function swipe() {
   let startX = 0;
   let startY = 0;
@@ -709,14 +728,13 @@ function swipe() {
     const dx = event.clientX - startX;
     const dy = event.clientY - startY;
     if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy)) {
-      el.conversationList.querySelectorAll(".conversation-swipe-row.is-revealed").forEach(item => {
-        if (item !== row) item.classList.remove("is-revealed");
-      });
-      if (dx > 0) row.classList.add("is-revealed");
-      else row.classList.remove("is-revealed");
+      if (dx < 0) revealSwipeRow(row);
+      else closeSwipeRow(row);
     }
     row = null;
   });
+
+  el.conversationList?.addEventListener("pointercancel", () => { row = null; });
 }
 
 function bind() {
