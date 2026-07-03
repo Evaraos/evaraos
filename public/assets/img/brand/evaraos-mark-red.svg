@@ -2,7 +2,7 @@
   <defs>
     <linearGradient id="bg" x1="76" y1="42" x2="438" y2="470" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ff3434"/><stop offset="0.46" stop-color="#c70012"/><stop offset="1" stop-color="#450006"/></linearGradient>
     <radialGradient id="hot" cx="30%" cy="18%" r="78%"><stop offset="0" stop-color="#ffffff" stop-opacity=".36"/><stop offset=".34" stop-color="#ff2525" stop-opacity=".16"/><stop offset="1" stop-color="#000000" stop-opacity="0"/></radialGradient>
-    <linearGradient id="mark" x1="102" y1="96" x2="410" y2="420" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffffff"/><stop offset="0.58" stop-color="#f7f7f7"/><stop offset="1" stop-color="#d4d4d4"/></linearGradient>
+    <linearGradient id="mark" x1="120" y1="140" x2="370" y2="410" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffffff"/><stop offset="0.58" stop-color="#f7f7f7"/><stop offset="1" stop-color="#d4d4d4"/></linearGradient>
     <filter id="shadow" x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="0" dy="22" stdDeviation="22" flood-color="#000" flood-opacity=".30"/></filter>
     <filter id="glow" x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#ff1d25" flood-opacity=".62"/></filter>
   </defs>
@@ -11,10 +11,9 @@
   <rect x="52" y="52" width="408" height="408" rx="96" fill="none" stroke="#ffffff" stroke-opacity=".32" stroke-width="5"/>
   <path d="M80 94c74-40 204-52 350-12" fill="none" stroke="#ffffff" stroke-opacity=".34" stroke-width="9" stroke-linecap="round"/>
   <g fill="url(#mark)" filter="url(#shadow)">
-    <path d="M94 409c38-42 74-80 108-114 42-42 90-86 144-133h66c6 0 9 7 5 12l-38 50c-3 4-8 7-14 7h-87c-15 13-29 26-42 39h130c6 0 9 7 5 12l-37 49c-3 4-8 7-14 7H177c-24 24-52 55-83 91-5 6-14 2-14-6 0-5 1-10 4-14z"/>
-    <path d="M99 173c26-28 55-51 87-70h216c7 0 10 8 6 13l-38 50c-3 4-8 7-14 7H99z"/>
-    <path d="M101 251h231c6 0 9 7 5 12l-36 48c-3 4-8 7-14 7H101z" opacity=".96"/>
+    <path d="M146 168h197c9 0 13 10 8 17l-28 40c-5 7-12 11-21 11H190l-44 43v-67l42-37c6-5 12-7 20-7Z"/>
+    <path d="M146 259h171c8 0 12 9 7 16l-25 36c-5 7-12 10-20 10H146Z"/>
+    <path d="M146 342h198c9 0 13 10 8 17l-29 41c-5 7-12 11-21 11H146Z"/>
   </g>
-  <path d="M94 409c38-42 74-80 108-114 42-42 90-86 144-133" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" opacity=".22"/>
   <rect x="34" y="34" width="444" height="444" rx="110" fill="none" stroke="#ff1d25" stroke-opacity=".74" stroke-width="3" filter="url(#glow)"/>
 </svg>
