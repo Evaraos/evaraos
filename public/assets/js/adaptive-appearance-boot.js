@@ -2,6 +2,31 @@
   if (window.__evaraAdaptiveBootFast) return;
   window.__evaraAdaptiveBootFast = true;
 
+  const normalizeSettingsUrl = (url) => {
+    try {
+      const next = new URL(url, location.origin);
+      if (next.pathname === "/settings.html") {
+        next.pathname = "/settings-v2.html";
+        return next.href;
+      }
+    } catch {}
+    return "";
+  };
+
+  if (location.pathname === "/settings.html") {
+    location.replace("/settings-v2.html" + location.search + location.hash);
+    return;
+  }
+
+  document.addEventListener("click", (event) => {
+    const anchor = event.target?.closest?.("a[href]");
+    if (!anchor) return;
+    const next = normalizeSettingsUrl(anchor.getAttribute("href"));
+    if (!next) return;
+    event.preventDefault();
+    location.assign(next);
+  }, true);
+
   const root = document.documentElement;
   let saved = {};
   try {
@@ -22,7 +47,7 @@
   root.dataset.themeMode = mode;
   root.dataset.appearance = `adaptive-${mode}`;
   root.dataset.adaptiveContrast = saved.adaptiveContrast === false ? "off" : "on";
-  root.dataset.evaraBootBuild = "adaptive-fast-v17-stable-core";
+  root.dataset.evaraBootBuild = "adaptive-fast-v18-settings-route-guard";
   root.toggleAttribute("data-has-wallpaper", mode === "image" && Boolean(imageUrl));
   root.style.colorScheme = environment === "dark" ? "dark" : "light";
   root.style.setProperty("--evara-wallpaper-position", saved.imagePosition || "center center");
