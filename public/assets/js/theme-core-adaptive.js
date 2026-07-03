@@ -14,7 +14,7 @@ export const DEFAULT_APPEARANCE = Object.freeze({
   updatedAt: null
 });
 
-const THEME_STYLESHEET = "/assets/css/theme.css?v=adaptive-liquid-v9";
+const THEME_STYLESHEET = "/assets/css/theme.css?v=adaptive-liquid-v10";
 const clamp = (value, min, max, fallback) => {
   const number = Number(value);
   return Number.isFinite(number) ? Math.min(max, Math.max(min, number)) : fallback;
@@ -79,225 +79,113 @@ export function getThemeMode() { return getAppearance().mode; }
 
 function presetWallpaper(environment) {
   if (presetCache.has(environment)) return presetCache.get(environment);
+  const value = environment === "dark"
+    ? "radial-gradient(circle at 18% 12%,#10243f 0,transparent 38%),radial-gradient(circle at 83% 22%,#211b55 0,transparent 42%),radial-gradient(circle at 58% 88%,#4a1c31 0,transparent 43%),linear-gradient(145deg,#080b12,#151b28 48%,#232b3d 72%,#080b12)"
+    : "radial-gradient(circle at 18% 12%,#d8f0ff 0,transparent 38%),radial-gradient(circle at 83% 22%,#d5d0ff 0,transparent 42%),radial-gradient(circle at 58% 88%,#ffd6df 0,transparent 43%),linear-gradient(145deg,#f7fbff,#dbe9f7 48%,#f6e9ec 72%,#eef5fb)";
+  presetCache.set(environment, value);
+  return value;
+}
 
-  const canvas = document.createElement("canvas");
-  canvas.width = 1200;
-  canvas.height = 1600;
-  const context = canvas.getContext("2d", { alpha: false });
-  if (!context) return "";
-
-  const dark = environment === "dark";
-  const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
-  if (dark) {
-    gradient.addColorStop(0, "#080b12");
-    gradient.addColorStop(0.42, "#151b28");
-    gradient.addColorStop(0.72, "#232b3d");
-    gradient.addColorStop(1, "#080b12");
-  } else {
-    gradient.addColorStop(0, "#f7fbff");
-    gradient.addColorStop(0.42, "#dbe9f7");
-    gradient.addColorStop(0.72, "#f6e9ec");
-    gradient.addColorStop(1, "#eef5fb");
+function ensureStylesheet() {
+  const existing = [...document.querySelectorAll('link[rel="stylesheet"]')]
+    .find((link) => link.href.includes("/assets/css/theme.css"));
+  if (existing) {
+    if (!existing.href.includes("adaptive-liquid-v10")) existing.href = THEME_STYLESHEET;
+    return existing;
   }
-  context.fillStyle = gradient;
-  context.fillRect(0, 0, canvas.width, canvas.height);
-
-  const lights = dark
-    ? [[220, 280, 620, "rgba(71,119,210,.34)"], [1000, 460, 700, "rgba(117,74,182,.28)"], [650, 1380, 760, "rgba(201,58,95,.18)"]]
-    : [[180, 240, 620, "rgba(134,205,255,.48)"], [1020, 460, 720, "rgba(186,164,255,.34)"], [650, 1360, 760, "rgba(255,178,190,.32)"]];
-
-  for (const [x, y, radius, color] of lights) {
-    const glow = context.createRadialGradient(x, y, 0, x, y, radius);
-    glow.addColorStop(0, color);
-    glow.addColorStop(1, "rgba(0,0,0,0)");
-    context.fillStyle = glow;
-    context.fillRect(x - radius, y - radius, radius * 2, radius * 2);
-  }
-
-  let url = "";
-  try { url = canvas.toDataURL("image/webp", 0.84); }
-  catch { url = canvas.toDataURL("image/png"); }
-  presetCache.set(environment, url);
-  return url;
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = THEME_STYLESHEET;
+  document.head.appendChild(link);
+  return link;
 }
 
-function ensureThemeLink() {
-  const links = [...document.querySelectorAll('link[rel="stylesheet"][href*="/assets/css/theme.css"]')];
-  let active = links.shift();
-  links.forEach((link) => link.remove());
-
-  if (!active) {
-    active = document.createElement("link");
-    active.rel = "stylesheet";
-    document.head.appendChild(active);
-  }
-
-  const desired = new URL(THEME_STYLESHEET, location.origin).href;
-  if (active.href !== desired) active.href = desired;
-}
-
-const cssUrl = (value) => value ? `url(${JSON.stringify(value)})` : "none";
-
-export function updateThemeControls() {
-  const appearance = getAppearance();
-  const environment = resolvedTheme(appearance);
-  document.querySelectorAll("#evaThemeToggle,#evaThemePillToggle,[data-theme-toggle]").forEach((node) => {
-    node.dataset.themeMode = appearance.mode;
-    node.dataset.themeResolved = environment;
-    node.title = `Appearance: ${appearance.mode}`;
-    node.setAttribute("aria-label", `Current appearance: ${appearance.mode}`);
-  });
-  document.querySelectorAll("[data-theme-label]").forEach((node) => {
-    node.textContent = appearance.mode[0].toUpperCase() + appearance.mode.slice(1);
-  });
-}
-
-function appearanceSignature(appearance, environment) {
-  return JSON.stringify([
-    appearance.mode,
-    environment,
-    appearance.imageUrl,
-    appearance.imagePosition,
-    appearance.wallpaperDim,
-    appearance.glassTint,
-    appearance.adaptiveContrast
-  ]);
-}
-
-async function applyAppearanceNow(value) {
-  ensureThemeLink();
-  const appearance = normalizeAppearance(value);
-  const environment = resolvedTheme(appearance);
+function setWallpaperVariables(appearance, environment) {
   const root = document.documentElement;
-  const signature = appearanceSignature(appearance, environment);
-
-  if (root.dataset.evaraThemeReady === "true" && signature === appliedSignature) {
-    updateThemeControls();
-    refreshAdaptiveGlass();
-    return appearance;
-  }
-
-  const wallpaperUrl = appearance.mode === "image"
-    ? getEffectiveWallpaper(appearance.imageUrl)
+  const image = appearance.mode === "image" && appearance.imageUrl
+    ? `url(${JSON.stringify(appearance.imageUrl)})`
     : presetWallpaper(environment);
-
-  root.dataset.theme = "adaptive";
-  root.dataset.environment = environment;
-  root.dataset.themeMode = appearance.mode;
-  root.dataset.appearance = `adaptive-${appearance.mode}`;
-  root.dataset.adaptiveContrast = appearance.adaptiveContrast ? "on" : "off";
-  root.toggleAttribute("data-has-wallpaper", appearance.mode === "image");
-  root.style.colorScheme = environment === "dark" ? "dark" : environment === "light" ? "light" : "light dark";
-  root.style.setProperty("--evara-wallpaper-image", cssUrl(wallpaperUrl));
-  root.style.setProperty("--evara-wallpaper-position", appearance.mode === "image" ? appearance.imagePosition : "center center");
+  root.style.setProperty("--evara-wallpaper-image", image);
+  root.style.setProperty("--evara-wallpaper-position", appearance.imagePosition);
   root.style.setProperty("--evara-wallpaper-dim", String(appearance.mode === "image" ? appearance.wallpaperDim : 0));
   root.style.setProperty("--evara-glass-tint", String(appearance.glassTint));
   root.style.setProperty("--evara-glass-tint-pct", `${Math.round(appearance.glassTint * 100)}%`);
+}
 
-  document.querySelector('meta[name="theme-color"]')?.setAttribute(
-    "content",
-    environment === "dark" ? "#0b0f17" : environment === "light" ? "#eef5fb" : "#111827"
-  );
+export async function applyAppearance(value = getAppearance(), options = {}) {
+  const appearance = normalizeAppearance(value);
+  const environment = resolvedTheme(appearance);
+  const signature = JSON.stringify([appearance.mode, environment, appearance.imageUrl, appearance.imagePosition, appearance.wallpaperDim, appearance.glassTint, appearance.adaptiveContrast]);
+  if (!options.force && signature === appliedSignature) return appearance;
 
-  updateThemeControls();
-  installUniversalTextInversion();
-  await initAdaptiveGlass(appearance, wallpaperUrl);
-  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  applyQueue = applyQueue.then(async () => {
+    ensureStylesheet();
+    const root = document.documentElement;
+    root.dataset.theme = "adaptive";
+    root.dataset.environment = environment;
+    root.dataset.themeMode = appearance.mode;
+    root.dataset.appearance = `adaptive-${appearance.mode}`;
+    root.dataset.adaptiveContrast = appearance.adaptiveContrast ? "on" : "off";
+    root.toggleAttribute("data-has-wallpaper", appearance.mode === "image" && Boolean(appearance.imageUrl));
+    setWallpaperVariables(appearance, environment);
+    appliedSignature = signature;
+    refreshAdaptiveGlass?.();
+    dispatchEvent(new CustomEvent("evara:theme-applied", { detail: { ...appearance, resolved: environment } }));
+  }).catch((error) => console.warn("Appearance apply failed:", error));
 
-  appliedSignature = signature;
-  root.dataset.evaraThemeReady = "true";
-  root.classList.remove("boot-pending", "evara-boot-lock");
-  root.classList.add("evara-theme-painted");
-
-  const detail = { ...appearance, environment, resolved: environment, theme: "adaptive", wallpaperUrl };
-  dispatchEvent(new CustomEvent("evara:theme-applied", { detail }));
-  dispatchEvent(new CustomEvent("evara:appearance-updated", { detail }));
+  await applyQueue;
   return appearance;
 }
 
-export function applyAppearance(value = getAppearance()) {
-  const appearance = normalizeAppearance(value);
-  applyQueue = applyQueue
-    .catch((error) => console.warn("Previous appearance update failed:", error))
-    .then(() => applyAppearanceNow(appearance));
-  return applyQueue;
-}
-
-export const applyTheme = (mode) => applyAppearance(mode ? { ...getAppearance(), mode } : getAppearance());
-
-export function saveAppearance(value = {}) {
+export function setAppearance(value = {}) {
   const appearance = normalizeAppearance({ ...getAppearance(), ...value, updatedAt: new Date().toISOString() });
   localStorage.setItem(APPEARANCE_KEY, JSON.stringify(appearance));
-  void applyAppearance(appearance);
-  return appearance;
+  return applyAppearance(appearance, { force: true });
 }
 
-export const setThemeMode = (mode) => saveAppearance({ mode: VALID_MODES.includes(mode) ? mode : "system" });
-export const setImageTheme = (imageUrl) => saveAppearance({ mode: "image", imageUrl: imageUrl || getAppearance().imageUrl });
+export const setThemeMode = (mode) => setAppearance({ mode });
+export const setTheme = () => applyAppearance(getAppearance(), { force: true });
+export const setAppearanceImage = (imageUrl, imagePosition = "center center") => setAppearance({ mode: "image", imageUrl, imagePosition });
+export const setWallpaperImage = setAppearanceImage;
+export const setWallpaperPosition = (imagePosition) => setAppearance({ imagePosition });
+export const setWallpaperDim = (wallpaperDim) => setAppearance({ wallpaperDim });
+export const setGlassTint = (glassTint) => setAppearance({ glassTint });
+export const setAdaptiveContrast = (adaptiveContrast) => setAppearance({ adaptiveContrast });
+export const getEffectiveWallpaperUrl = () => getEffectiveWallpaper?.() || getAppearance().imageUrl || "";
+export const updateThemeControls = () => {};
 
-export function resetAppearance() {
-  localStorage.removeItem(APPEARANCE_KEY);
-  const appearance = { ...DEFAULT_APPEARANCE, updatedAt: new Date().toISOString() };
-  void applyAppearance(appearance);
-  return appearance;
-}
-
-if (typeof window !== "undefined") {
-  window.EvaraTheme = {
-    ...(window.EvaraTheme || {}),
-    APPEARANCE_KEY,
-    VALID_MODES,
-    IMAGE_POSITIONS,
-    DEFAULT_APPEARANCE,
-    normalizeAppearance,
-    resolvedTheme,
-    systemTheme,
-    getAppearance,
-    getThemeMode,
-    getTheme,
-    applyAppearance,
-    applyTheme,
-    saveAppearance,
-    setThemeMode,
-    setImageTheme,
-    resetAppearance,
-    updateThemeControls,
-    refreshAdaptiveGlass
-  };
-
-  const init = () => {
-    installUniversalTextInversion();
-    if (initialized) {
-      updateThemeControls();
-      refreshAdaptiveGlass();
-      return;
-    }
-    initialized = true;
-    void applyAppearance();
-  };
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init, { once: true });
-  } else {
-    init();
-  }
-
-  addEventListener("storage", (event) => {
-    if (event.key === APPEARANCE_KEY) void applyAppearance();
-  });
-
+export function initTheme() {
+  if (initialized) return;
+  initialized = true;
+  ensureStylesheet();
+  installUniversalTextInversion?.();
+  initAdaptiveGlass?.();
+  applyAppearance(getAppearance(), { force: true });
   matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => {
-    if (getAppearance().mode === "system") void applyAppearance();
-  });
-
-  addEventListener("pageshow", () => {
-    if (!initialized) {
-      init();
-      return;
-    }
-    document.documentElement.classList.remove("eva-transitioning");
-    document.body?.classList.remove("eva-page-leaving");
-    updateThemeControls();
-    requestAnimationFrame(refreshAdaptiveGlass);
+    if (getAppearance().mode === "system") applyAppearance(getAppearance(), { force: true });
   });
 }
+
+window.EvaraTheme = {
+  ...(window.EvaraTheme || {}),
+  initTheme,
+  applyAppearance,
+  setAppearance,
+  getAppearance,
+  getTheme,
+  getThemeMode,
+  setTheme,
+  setThemeMode,
+  setAppearanceImage,
+  setWallpaperImage,
+  setWallpaperPosition,
+  setWallpaperDim,
+  setGlassTint,
+  setAdaptiveContrast,
+  updateThemeControls,
+  refreshAdaptiveGlass,
+  getEffectiveWallpaper: getEffectiveWallpaperUrl
+};
+
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initTheme, { once: true });
+else initTheme();
