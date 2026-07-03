@@ -4,6 +4,7 @@
   const NAV_DELAY=650;
   const FORCE_UNLOCK=2600;
   const EXIT_MS=160;
+  const MARK='<svg class="evara-loader-mark" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path d="M86 410c41-45 79-85 114-120 47-46 96-91 148-134h70c6 0 9 7 5 12l-41 53c-4 5-9 8-16 8h-85c-17 14-32 28-46 42h136c6 0 10 7 6 12l-39 51c-4 5-9 8-16 8H176c-27 28-55 59-84 93-6 7-17 3-17-7 0-6 4-14 11-18Z"/><path d="M94 173c29-31 60-55 94-73h218c7 0 10 8 6 14l-39 51c-4 5-9 8-16 8H94Z"/><path d="M98 252h236c6 0 10 7 6 12l-38 50c-4 5-9 8-16 8H98Z"/></svg>';
   let timer=null,forceTimer=null,isTransitioning=false,created=false;
 
   function transition(){return document.getElementById(TRANSITION_ID)}
@@ -22,7 +23,7 @@
       const node=document.createElement("div");node.id=TRANSITION_ID;node.className="eva-page-transition";node.setAttribute("aria-hidden","true");document.body.appendChild(node);
     }
     if(!document.getElementById(FAST_ID)){
-      const node=document.createElement("div");node.id=FAST_ID;node.className="evara-loader-fast evara-loader-fast--compact";node.setAttribute("aria-hidden","true");node.innerHTML='<div class="evara-loader-fast-wrap" aria-label="Loading"><span class="evara-loader-dot"></span></div>';document.body.appendChild(node);
+      const node=document.createElement("div");node.id=FAST_ID;node.className="evara-loader-fast evara-loader-fast--compact";node.setAttribute("aria-hidden","true");node.innerHTML='<div class="evara-loader-fast-wrap" aria-label="Loading Evaraos"><span class="evara-loader-orbit"></span><span class="evara-loader-core">'+MARK+'</span></div>';document.body.appendChild(node);
     }
     document.getElementById("evaraGlobalLoader")?.remove();
     created=true;
