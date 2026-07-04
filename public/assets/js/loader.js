@@ -2,12 +2,13 @@
   const FAST_ID="evaraFastLoader";
   const TRANSITION_ID="evaPageTransition";
   const NAV_DELAY=650;
-  const FORCE_UNLOCK=2600;
+  const FORCE_UNLOCK=2400;
+  const WATCHDOG_MS=3200;
   const EXIT_MS=160;
   const BRAND_MARK='/assets/brand/evaraos-mark.png?v=brand-png-1';
   const APP_ICON='/assets/brand/evaraos-app-icon.png?v=brand-png-1';
   const MARK='<img class="evara-loader-mark" src="'+BRAND_MARK+'" alt="" aria-hidden="true">';
-  let timer=null,forceTimer=null,isTransitioning=false,created=false;
+  let timer=null,forceTimer=null,watchdogTimer=null,isTransitioning=false,created=false;
 
   function applyBrand(){
     document.documentElement.style.setProperty('--evaraos-brand-icon','url("'+BRAND_MARK+'")');
@@ -47,16 +48,26 @@
   function beginNavigationLoad(){if(isTransitioning)return;isTransitioning=true;clearTimers();ensure();document.body?.classList.add("eva-page-leaving");transition()?.classList.add("active");timer=setTimeout(()=>{if(pending())show()},NAV_DELAY);forceTimer=setTimeout(()=>hideAll(true),FORCE_UNLOCK)}
   function shouldIntercept(anchor){if(!anchor)return false;const href=anchor.getAttribute("href")||"";if(!href||href.startsWith("#")||href.startsWith("mailto:")||href.startsWith("tel:")||anchor.hasAttribute("download")||(anchor.target&&anchor.target!=="_self"))return false;try{const url=new URL(anchor.href,location.origin);return url.origin===location.origin&&!(url.pathname===location.pathname&&url.hash)}catch{return false}}
   function resetLeavingFrame(){clearTimers();transition()?.classList.remove("active");hide(true);document.body?.classList.remove("eva-page-leaving");isTransitioning=false}
+  function shellWatchdog(){
+    applyBrand();
+    if(document.body?.classList.contains("app-loading")||document.documentElement.classList.contains("auth-pending"))hideAll(true);
+    const root=document.getElementById("universalNavRoot");
+    if(root&&!root.querySelector(".eva-nav-layer")&&!document.documentElement.dataset.evaraosNavReady){
+      import('/assets/js/nav.js?v=nav-v37-shell-watchdog').catch(error=>console.warn('Nav watchdog import failed:',error));
+    }
+    window.dispatchEvent(new CustomEvent('evaraos:shell-watchdog',{detail:{navReady:document.documentElement.dataset.evaraosNavReady==='true',appReady:document.body?.classList.contains('app-ready')}}));
+  }
   function init(){
     applyBrand();ensure();document.getElementById("evaraGlobalLoader")?.remove();
     window.EvaraBrand={mark:BRAND_MARK,appIcon:APP_ICON,apply:applyBrand};
-    window.EvaraLoader={beginNavigationLoad,completeNavigationLoad:()=>hideAll(false),showFastLoader:show,hideFastLoader:hide,showFullLoader:show,hideFullLoader:hide,hideAllLoaders:hideAll,markAppReady:()=>hideAll(false),getState:()=>({isTransitioning,appPending:pending(),loadersCreated:created})};
+    window.EvaraLoader={beginNavigationLoad,completeNavigationLoad:()=>hideAll(false),showFastLoader:show,hideFastLoader:hide,showFullLoader:show,hideFullLoader:hide,hideAllLoaders:hideAll,markAppReady:()=>hideAll(false),runShellWatchdog:shellWatchdog,getState:()=>({isTransitioning,appPending:pending(),loadersCreated:created,navReady:document.documentElement.dataset.evaraosNavReady==='true'})};
     document.addEventListener("click",event=>{if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;const anchor=event.target.closest("a[href]");if(!shouldIntercept(anchor))return;event.preventDefault();beginNavigationLoad();setTimeout(()=>location.assign(anchor.href),80)});
     addEventListener("evara:session-ready",()=>hideAll(false));
-    addEventListener("load",()=>{applyBrand();if(!pending())hideAll(false)});
-    addEventListener("pageshow",()=>{applyBrand();hideAll(true)});
+    addEventListener("load",()=>{applyBrand();if(!pending())hideAll(false);shellWatchdog()});
+    addEventListener("pageshow",()=>{applyBrand();hideAll(true);setTimeout(shellWatchdog,180)});
     addEventListener("pagehide",resetLeavingFrame);
     forceTimer=setTimeout(()=>hideAll(true),FORCE_UNLOCK);
+    watchdogTimer=setTimeout(shellWatchdog,WATCHDOG_MS);
   }
   document.readyState==="loading"?document.addEventListener("DOMContentLoaded",init,{once:true}):init();
 })();
