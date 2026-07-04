@@ -1,16 +1,17 @@
 (() => {
   const KEY = 'evaraos-app-icon';
   const CUSTOM_KEY = 'evaraos-custom-app-icon';
-  const FALLBACK = '/assets/icons/brand/current-uploaded-logo.svg?v=exact-e-4';
+  const ORIGINAL_LOGO = '/assets/icons/brand/current-uploaded-logo.svg?v=restore-safe-1';
   const DATA_ASSET = '/assets/js/brand/current-logo-data.js?v=official-png-2';
   const backgrounds = ['primaryRed','darkCore','clearGlass','redGlow','coreWhite','frosted','waveWhite','hexBlack','matteBlack','topography','halftone','outlineRed','holoShift','aurora','energyRing','liquidFlow','pulse','crystal','glassOrbit','loadingOrbit','neonOrbit','plasma','vortex','stardust','dualOrbit','ringSpin','fabricCoin','eclipse','stripedRed','progress'];
   const labels = ['Primary Red','Dark Core','Clear Glass','Red Glow','Core White','Frosted','Wave White','Hex Black','Matte Black','Topography','Halftone','Outline Red','Holo Shift','Aurora','Energy Ring','Liquid Flow','Pulse','Crystal','Glass Orbit','Loading Orbit','Neon Orbit','Plasma','Vortex','Stardust','Dual Orbit','Ring Spin','Fabric Coin','Eclipse','Striped Red','Progress'];
-  let logo = FALLBACK;
-  try { logo = localStorage.getItem(CUSTOM_KEY) || window.EVARAOS_CURRENT_LOGO_DATA || FALLBACK; } catch { logo = window.EVARAOS_CURRENT_LOGO_DATA || FALLBACK; }
+  let officialLogo = ORIGINAL_LOGO;
+  let logo = ORIGINAL_LOGO;
+  try { logo = localStorage.getItem(CUSTOM_KEY) || ORIGINAL_LOGO; } catch { logo = ORIGINAL_LOGO; }
   const icons = Object.fromEntries(backgrounds.map((id, index) => [id, { id, label: `${index + 1}. ${labels[index]}`, shortLabel: labels[index] }]));
   function selectedId() { try { return icons[localStorage.getItem(KEY)] ? localStorage.getItem(KEY) : 'primaryRed'; } catch { return 'primaryRed'; } }
-  function safeLogo() { return logo || FALLBACK; }
-  function img() { return `<img class="app-icon-logo-img" src="${safeLogo()}" alt="" aria-hidden="true" loading="eager" onerror="this.onerror=null;this.src='${FALLBACK}'">`; }
+  function safeLogo() { return logo || ORIGINAL_LOGO; }
+  function img() { return `<img class="app-icon-logo-img" src="${safeLogo()}" alt="" aria-hidden="true" loading="eager" onerror="this.onerror=null;this.src='${ORIGINAL_LOGO}'">`; }
   function paint(node, id) { if (!node) return; node.className = `${node.hasAttribute('data-current-icon-preview') ? 'app-icon-current-preview ' : ''}app-icon-preview has-current-logo app-icon-preview--${id}`; node.innerHTML = img(); }
   function sync(id = selectedId()) {
     paint(document.querySelector('[data-current-icon-preview]'), id);
@@ -26,7 +27,7 @@
     if (!/^image\/(png|jpeg|webp)$/.test(file.type)) { toast('Use PNG, JPG, or WEBP'); return; }
     const reader = new FileReader();
     reader.onload = () => {
-      logo = String(reader.result || FALLBACK);
+      logo = String(reader.result || ORIGINAL_LOGO);
       try { localStorage.setItem(CUSTOM_KEY, logo); } catch {}
       render();
       toast('Custom icon uploaded');
@@ -49,24 +50,24 @@
       });
     }
     document.querySelectorAll('[data-apply-selected-icon]').forEach(button => { if (button.dataset.bound === 'true') return; button.dataset.bound = 'true'; button.addEventListener('click', () => { sync(); toast('Icon saved'); }); });
-    document.querySelectorAll('[data-restore-original-icon]').forEach(button => { if (button.dataset.bound === 'true') return; button.dataset.bound = 'true'; button.addEventListener('click', () => { try { localStorage.removeItem(KEY); localStorage.removeItem(CUSTOM_KEY); } catch {} logo = window.EVARAOS_CURRENT_LOGO_DATA || FALLBACK; render(); toast('Original icon restored'); }); });
+    document.querySelectorAll('[data-restore-original-icon]').forEach(button => { if (button.dataset.bound === 'true') return; button.dataset.bound = 'true'; button.addEventListener('click', () => { try { localStorage.removeItem(KEY); localStorage.removeItem(CUSTOM_KEY); } catch {} logo = officialLogo || ORIGINAL_LOGO; render(); toast('Original icon restored'); }); });
     document.querySelectorAll('[data-custom-icon-upload]').forEach(input => { if (input.dataset.bound === 'true') return; input.dataset.bound = 'true'; input.addEventListener('change', () => handleUpload(input.files && input.files[0])); });
   }
-  function loadExactLogo() {
+  function loadOfficialLogo() {
     return new Promise(resolve => {
       try {
         const saved = localStorage.getItem(CUSTOM_KEY);
         if (saved) { logo = saved; resolve(); return; }
       } catch {}
-      if (window.EVARAOS_CURRENT_LOGO_DATA) { logo = window.EVARAOS_CURRENT_LOGO_DATA; resolve(); return; }
+      if (window.EVARAOS_CURRENT_LOGO_DATA) { officialLogo = window.EVARAOS_CURRENT_LOGO_DATA; logo = officialLogo || ORIGINAL_LOGO; resolve(); return; }
       const script = document.createElement('script');
       script.src = DATA_ASSET;
-      script.onload = () => { logo = window.EVARAOS_CURRENT_LOGO_DATA || FALLBACK; resolve(); };
-      script.onerror = () => { logo = FALLBACK; resolve(); };
+      script.onload = () => { officialLogo = window.EVARAOS_CURRENT_LOGO_DATA || ORIGINAL_LOGO; logo = officialLogo || ORIGINAL_LOGO; resolve(); };
+      script.onerror = () => { officialLogo = ORIGINAL_LOGO; logo = ORIGINAL_LOGO; resolve(); };
       document.head.appendChild(script);
     });
   }
-  async function boot() { try { await loadExactLogo(); } catch { logo = FALLBACK; } render(); bind(); }
+  async function boot() { try { await loadOfficialLogo(); } catch { officialLogo = ORIGINAL_LOGO; logo = ORIGINAL_LOGO; } render(); bind(); }
   window.EvaraosAppIcons = { icons, renderPicker: render, currentIconId: selectedId };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true }); else boot();
 })();
