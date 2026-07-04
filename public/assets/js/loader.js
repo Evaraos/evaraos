@@ -45,6 +45,22 @@
   function hide(immediate=false){const node=document.getElementById(FAST_ID);if(!node)return;if(immediate){node.classList.remove("active","is-entering","is-exiting");node.setAttribute("aria-hidden","true");return}node.classList.add("is-exiting");setTimeout(()=>{node.classList.remove("active","is-exiting");node.setAttribute("aria-hidden","true")},EXIT_MS)}
   function hideAll(immediate=false){clearTimers();hide(immediate);document.getElementById("evaraGlobalLoader")?.remove();unlock()}
   function pending(){return document.documentElement.classList.contains("boot-pending")||document.documentElement.classList.contains("auth-pending")||document.body?.classList.contains("auth-pending")||document.body?.classList.contains("app-loading")||isTransitioning}
+  function health(){
+    return {
+      path:location.pathname,
+      appReady:document.body?.classList.contains('app-ready')===true,
+      pending:pending(),
+      navReady:document.documentElement.dataset.evaraosNavReady==='true',
+      navBuild:document.documentElement.dataset.evaraosNavBuild||window.EVARAOS_NAV_BUILD||'',
+      themeAuthority:document.documentElement.dataset.evaraThemeAuthority||'',
+      themeMode:document.documentElement.dataset.themeMode||'',
+      environment:document.documentElement.dataset.environment||'',
+      brandMark:BRAND_MARK,
+      duplicateLoaders:document.querySelectorAll('#evaraFastLoader,#evaraGlobalLoader').length,
+      topMenuVisible:!!document.getElementById('evaMenuBtn'),
+      notificationsVisible:!!document.getElementById('globalNotificationsBell')
+    };
+  }
   function beginNavigationLoad(){if(isTransitioning)return;isTransitioning=true;clearTimers();ensure();document.body?.classList.add("eva-page-leaving");transition()?.classList.add("active");timer=setTimeout(()=>{if(pending())show()},NAV_DELAY);forceTimer=setTimeout(()=>hideAll(true),FORCE_UNLOCK)}
   function shouldIntercept(anchor){if(!anchor)return false;const href=anchor.getAttribute("href")||"";if(!href||href.startsWith("#")||href.startsWith("mailto:")||href.startsWith("tel:")||anchor.hasAttribute("download")||(anchor.target&&anchor.target!=="_self"))return false;try{const url=new URL(anchor.href,location.origin);return url.origin===location.origin&&!(url.pathname===location.pathname&&url.hash)}catch{return false}}
   function resetLeavingFrame(){clearTimers();transition()?.classList.remove("active");hide(true);document.body?.classList.remove("eva-page-leaving");isTransitioning=false}
@@ -55,12 +71,12 @@
     if(root&&!root.querySelector(".eva-nav-layer")&&!document.documentElement.dataset.evaraosNavReady){
       import('/assets/js/nav.js?v=nav-v37-shell-watchdog').catch(error=>console.warn('Nav watchdog import failed:',error));
     }
-    window.dispatchEvent(new CustomEvent('evaraos:shell-watchdog',{detail:{navReady:document.documentElement.dataset.evaraosNavReady==='true',appReady:document.body?.classList.contains('app-ready')}}));
+    window.dispatchEvent(new CustomEvent('evaraos:shell-watchdog',{detail:{...health()}}));
   }
   function init(){
     applyBrand();ensure();document.getElementById("evaraGlobalLoader")?.remove();
     window.EvaraBrand={mark:BRAND_MARK,appIcon:APP_ICON,apply:applyBrand};
-    window.EvaraLoader={beginNavigationLoad,completeNavigationLoad:()=>hideAll(false),showFastLoader:show,hideFastLoader:hide,showFullLoader:show,hideFullLoader:hide,hideAllLoaders:hideAll,markAppReady:()=>hideAll(false),runShellWatchdog:shellWatchdog,getState:()=>({isTransitioning,appPending:pending(),loadersCreated:created,navReady:document.documentElement.dataset.evaraosNavReady==='true'})};
+    window.EvaraLoader={beginNavigationLoad,completeNavigationLoad:()=>hideAll(false),showFastLoader:show,hideFastLoader:hide,showFullLoader:show,hideFullLoader:hide,hideAllLoaders:hideAll,markAppReady:()=>hideAll(false),runShellWatchdog:shellWatchdog,getState:health,health};
     document.addEventListener("click",event=>{if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;const anchor=event.target.closest("a[href]");if(!shouldIntercept(anchor))return;event.preventDefault();beginNavigationLoad();setTimeout(()=>location.assign(anchor.href),80)});
     addEventListener("evara:session-ready",()=>hideAll(false));
     addEventListener("load",()=>{applyBrand();if(!pending())hideAll(false);shellWatchdog()});
