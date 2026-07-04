@@ -4,9 +4,21 @@
   const NAV_DELAY=650;
   const FORCE_UNLOCK=2600;
   const EXIT_MS=160;
-  const MARK='<svg class="evara-loader-mark" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path d="M86 410c41-45 79-85 114-120 47-46 96-91 148-134h70c6 0 9 7 5 12l-41 53c-4 5-9 8-16 8h-85c-17 14-32 28-46 42h136c6 0 10 7 6 12l-39 51c-4 5-9 8-16 8H176c-27 28-55 59-84 93-6 7-17 3-17-7 0-6 4-14 11-18Z"/><path d="M94 173c29-31 60-55 94-73h218c7 0 10 8 6 14l-39 51c-4 5-9 8-16 8H94Z"/><path d="M98 252h236c6 0 10 7 6 12l-38 50c-4 5-9 8-16 8H98Z"/></svg>';
+  const BRAND_MARK='/assets/brand/evaraos-mark.png?v=brand-png-1';
+  const APP_ICON='/assets/brand/evaraos-app-icon.png?v=brand-png-1';
+  const MARK='<img class="evara-loader-mark" src="'+BRAND_MARK+'" alt="" aria-hidden="true">';
   let timer=null,forceTimer=null,isTransitioning=false,created=false;
 
+  function applyBrand(){
+    document.documentElement.style.setProperty('--evaraos-brand-icon','url("'+BRAND_MARK+'")');
+    document.querySelectorAll('[data-evaraos-brand-icon]').forEach(node=>node.style.setProperty('--evaraos-brand-icon','url("'+BRAND_MARK+'")'));
+    const links=[['icon','image/png',BRAND_MARK],['shortcut icon','image/png',BRAND_MARK],['apple-touch-icon','image/png',APP_ICON]];
+    links.forEach(([rel,type,href])=>{
+      let link=document.querySelector('link[rel="'+rel+'"]');
+      if(!link){link=document.createElement('link');link.rel=rel;document.head.appendChild(link)}
+      link.type=type;link.href=href;
+    });
+  }
   function transition(){return document.getElementById(TRANSITION_ID)}
   function clearTimers(){if(timer)clearTimeout(timer);if(forceTimer)clearTimeout(forceTimer);timer=forceTimer=null}
   function unlock(){
@@ -36,12 +48,13 @@
   function shouldIntercept(anchor){if(!anchor)return false;const href=anchor.getAttribute("href")||"";if(!href||href.startsWith("#")||href.startsWith("mailto:")||href.startsWith("tel:")||anchor.hasAttribute("download")||(anchor.target&&anchor.target!=="_self"))return false;try{const url=new URL(anchor.href,location.origin);return url.origin===location.origin&&!(url.pathname===location.pathname&&url.hash)}catch{return false}}
   function resetLeavingFrame(){clearTimers();transition()?.classList.remove("active");hide(true);document.body?.classList.remove("eva-page-leaving");isTransitioning=false}
   function init(){
-    ensure();document.getElementById("evaraGlobalLoader")?.remove();
+    applyBrand();ensure();document.getElementById("evaraGlobalLoader")?.remove();
+    window.EvaraBrand={mark:BRAND_MARK,appIcon:APP_ICON,apply:applyBrand};
     window.EvaraLoader={beginNavigationLoad,completeNavigationLoad:()=>hideAll(false),showFastLoader:show,hideFastLoader:hide,showFullLoader:show,hideFullLoader:hide,hideAllLoaders:hideAll,markAppReady:()=>hideAll(false),getState:()=>({isTransitioning,appPending:pending(),loadersCreated:created})};
     document.addEventListener("click",event=>{if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;const anchor=event.target.closest("a[href]");if(!shouldIntercept(anchor))return;event.preventDefault();beginNavigationLoad();setTimeout(()=>location.assign(anchor.href),80)});
     addEventListener("evara:session-ready",()=>hideAll(false));
-    addEventListener("load",()=>{if(!pending())hideAll(false)});
-    addEventListener("pageshow",()=>hideAll(true));
+    addEventListener("load",()=>{applyBrand();if(!pending())hideAll(false)});
+    addEventListener("pageshow",()=>{applyBrand();hideAll(true)});
     addEventListener("pagehide",resetLeavingFrame);
     forceTimer=setTimeout(()=>hideAll(true),FORCE_UNLOCK);
   }

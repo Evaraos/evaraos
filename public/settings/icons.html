@@ -5,14 +5,15 @@
   <script src="/assets/js/adaptive-appearance-boot.js?v=1"></script>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate,max-age=0">
-  <link rel="manifest" href="/manifest.json">
-  <link rel="icon" type="image/svg+xml" href="/assets/icons/brand/current-uploaded-logo.svg?v=restore-safe-2">
-  <link rel="apple-touch-icon" href="/assets/icons/brand/current-uploaded-logo.svg?v=restore-safe-2">
+  <link rel="manifest" href="/manifest.json?v=brand-png-1">
+  <link rel="icon" type="image/png" href="/assets/brand/evaraos-mark.png?v=brand-png-1">
+  <link rel="shortcut icon" type="image/png" href="/assets/brand/evaraos-mark.png?v=brand-png-1">
+  <link rel="apple-touch-icon" type="image/png" href="/assets/brand/evaraos-app-icon.png?v=brand-png-1">
   <meta name="theme-color" content="#e30613">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>App Icon • Evaraos Inc</title>
+  <title>App Icon Studio • Evaraos Inc</title>
   <style>html.boot-pending body{margin:0;overflow:hidden;touch-action:none}html.auth-pending body,body.auth-pending{opacity:0;pointer-events:none}body.dashboard-body{margin:0;min-height:100vh;background:transparent}body.app-loading #appRoot{visibility:hidden}body.app-ready #appRoot{visibility:visible}</style>
   <link rel="stylesheet" href="/assets/css/base.css?v=53">
   <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v35-drawer-restore">
@@ -20,9 +21,9 @@
   <link rel="stylesheet" href="/assets/css/settings.css?v=52">
   <link rel="stylesheet" href="/assets/css/pages/app-icons.css?v=32">
   <link rel="stylesheet" href="/assets/css/pages/app-icon-studio-v2.css?v=1">
-  <link rel="stylesheet" href="/assets/css/pages/app-icon-studio-final.css?v=5">
+  <link rel="stylesheet" href="/assets/css/pages/app-icon-studio-final.css?v=brand-studio-3">
   <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v1">
-  <script src="/assets/js/app-icon-preferences.js?v=39"></script>
+  <script src="/assets/js/app-icon-preferences.js?v=brand-studio-3"></script>
 </head>
 <body class="dashboard-body auth-pending app-loading" data-route-guard="private">
   <div id="universalNavRoot"></div>
@@ -33,41 +34,44 @@
       <header class="app-icon-topbar">
         <a class="app-icon-back" href="/settings-v2.html" aria-label="Back to Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/></svg></a>
         <div class="app-icon-title-lockup">
-          <span class="app-icon-title-mark" data-brand-title-mark><img class="app-icon-logo-img" src="/assets/icons/brand/current-uploaded-logo.svg?v=restore-safe-2" alt=""></span>
-          <div><h1>App Icon</h1><p>Customize your Evaraos app icon</p></div>
+          <span class="app-icon-title-mark is-backgroundless" data-brand-title-mark><img class="app-icon-logo-img" src="/assets/brand/evaraos-mark.png?v=brand-png-1" alt=""></span>
+          <div><h1>App Icon Studio</h1><p>Design the official Evaraos icon</p></div>
         </div>
         <button class="app-icon-save-button" type="button" data-apply-selected-icon><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h12l2 2v14H5z"/><path d="M8 4v6h8V4"/><path d="M8 17h8"/></svg>Save</button>
       </header>
+
       <section class="app-icon-current-card glass-card">
         <p class="settings-kicker">CURRENT ICON</p>
         <div class="app-icon-current-body">
-          <div class="app-icon-current-preview app-icon-preview app-icon-preview--primaryRed has-current-logo" data-current-icon-preview><img class="app-icon-logo-img" src="/assets/icons/brand/current-uploaded-logo.svg?v=restore-safe-2" alt=""></div>
+          <div class="app-icon-current-preview app-icon-preview app-icon-preview--none is-backgroundless" data-current-icon-preview><img class="app-icon-logo-img" src="/assets/brand/evaraos-mark.png?v=brand-png-1" alt="Current Evaraos app icon"></div>
           <div class="app-icon-current-copy">
-            <h2>Your current app icon</h2>
-            <p>This is how your app icon appears on your device.</p>
+            <h2 data-current-icon-name>No Background</h2>
+            <p>The official glossy E PNG is now the universal Evaraos brand mark.</p>
             <div class="app-icon-upload-actions">
-              <label class="app-icon-upload-button"><input type="file" accept="image/png,image/jpeg,image/webp" data-custom-icon-upload hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/></svg><span><strong>Upload New Icon</strong><small>PNG, JPG or WEBP (512x512px)</small></span></label>
-              <button class="app-icon-restore-button" type="button" data-restore-original-icon><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg><span><strong>Restore Original</strong><small>Use the original Evaraos icon</small></span></button>
+              <label class="app-icon-upload-button"><input type="file" accept="image/png,image/jpeg,image/webp" data-custom-icon-upload hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/></svg><span><strong>Upload New Mark</strong><small>PNG, JPG or WEBP</small></span></label>
+              <button class="app-icon-restore-button" type="button" data-restore-original-icon><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg><span><strong>Restore Official PNG</strong><small>Return to the universal Evaraos mark</small></span></button>
             </div>
           </div>
         </div>
       </section>
+
       <section class="app-icon-background-card glass-card">
-        <div class="app-icon-section-head"><p class="settings-kicker">CHOOSE A BACKGROUND</p><span>30 Backgrounds</span></div>
-        <div class="app-icon-grid" data-app-icon-grid role="group" aria-label="Choose app icon background"></div>
+        <div class="app-icon-section-head"><p class="settings-kicker">ICON OPTIONS</p><span>15 static • 10 animated • 5 icon effects</span></div>
+        <div class="app-icon-grid" data-app-icon-grid role="group" aria-label="Choose app icon style"></div>
         <p id="appIconSaveStatus" class="app-icon-status" hidden></p>
       </section>
+
       <div class="app-icon-bottom-row">
-        <section class="app-icon-tips-card glass-card"><span class="app-icon-tip-symbol">i</span><div><h2>Tips for best results</h2><p>Square PNG with transparent background works best. Recommended size: 512x512px.</p></div></section>
+        <section class="app-icon-tips-card glass-card"><span class="app-icon-tip-symbol">i</span><div><h2>Official brand system</h2><p>The standalone E is the default. Backgrounds and motion are optional presentation layers built around the same PNG mark.</p></div></section>
         <section class="app-icon-device-card glass-card" aria-label="Preview on device">
-          <div class="app-icon-device-preview"><div class="app-icon-preview app-icon-preview--primaryRed has-current-logo" data-device-preview><img class="app-icon-logo-img" src="/assets/icons/brand/current-uploaded-logo.svg?v=restore-safe-2" alt=""></div><span>Home Screen</span></div>
-          <div class="app-icon-device-preview"><div class="app-icon-preview app-icon-preview--primaryRed has-current-logo" data-device-preview><img class="app-icon-logo-img" src="/assets/icons/brand/current-uploaded-logo.svg?v=restore-safe-2" alt=""></div><span>App Library</span></div>
-          <div class="app-icon-device-preview"><div class="app-icon-preview app-icon-preview--coreWhite has-current-logo" data-device-preview-light><img class="app-icon-logo-img" src="/assets/icons/brand/current-uploaded-logo.svg?v=restore-safe-2" alt=""></div><span>Settings</span></div>
+          <div class="app-icon-device-preview"><div class="app-icon-preview app-icon-preview--none is-backgroundless" data-device-preview><img class="app-icon-logo-img" src="/assets/brand/evaraos-mark.png?v=brand-png-1" alt=""></div><span>Home Screen</span></div>
+          <div class="app-icon-device-preview"><div class="app-icon-preview app-icon-preview--none is-backgroundless" data-device-preview><img class="app-icon-logo-img" src="/assets/brand/evaraos-mark.png?v=brand-png-1" alt=""></div><span>App Library</span></div>
+          <div class="app-icon-device-preview"><div class="app-icon-preview app-icon-preview--none is-backgroundless" data-device-preview-light><img class="app-icon-logo-img" src="/assets/brand/evaraos-mark.png?v=brand-png-1" alt=""></div><span>Settings</span></div>
         </section>
       </div>
     </main>
   </div>
-  <script src="/assets/js/loader.js?v=39"></script>
+  <script src="/assets/js/loader.js?v=brand-png-1"></script>
   <script type="module" src="/assets/js/firebase.js?v=36"></script>
   <script type="module" src="/assets/js/route-guard.js?v=35"></script>
   <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v1"></script>
