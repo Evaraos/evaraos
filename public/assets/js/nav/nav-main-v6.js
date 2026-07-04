@@ -1,4 +1,4 @@
-const NAV_BUILD="nav-v36-brand-stable";
+const NAV_BUILD="nav-v37-shell-watchdog";
 let NAV_STATE,getNavShell,renderNav,applyProgress,bindScrollBehavior,animateNav;
 
 async function loadCore(){
@@ -29,6 +29,14 @@ function ready(){
   });
 }
 
+function keepVisible(){
+  [document.getElementById("evaNavShell"),document.getElementById("evaMenuBtn"),document.getElementById("globalNotificationsBell")].filter(Boolean).forEach(node=>{
+    node.style.visibility="visible";
+    node.style.opacity="1";
+    node.style.pointerEvents=node.id==="evaNavShell"?"none":"auto";
+  });
+}
+
 async function bindSystems(){
   const [menu,events,logout,session,interactions,notifications]=await Promise.all([
     optional("./nav-menu.js"),
@@ -51,7 +59,7 @@ async function bindSystems(){
 export async function initNav(){
   try{
     await loadCore();
-    if(NAV_STATE.hasInitialized)return;
+    if(NAV_STATE.hasInitialized){keepVisible();ready();return}
     NAV_STATE.hasInitialized=true;
     window.EVARAOS_NAV_BUILD=NAV_BUILD;
     document.documentElement.dataset.evaraosNavBuild=NAV_BUILD;
@@ -61,6 +69,8 @@ export async function initNav(){
     await bindSystems();
     applyProgress?.();
     animateNav?.();
+    keepVisible();
+    setTimeout(keepVisible,600);
     ready();
   }catch(error){
     console.error("Evaraos nav failed to boot:",error);
