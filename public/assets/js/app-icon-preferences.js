@@ -3,8 +3,10 @@
 
   const STORAGE_KEY = 'evaraos-app-icon-selection-v2';
   const CUSTOM_KEY = 'evaraos-custom-app-icon-v2';
+  const SNAPSHOT_KEY = 'evaraos-app-icon-snapshot-v2';
   const MARK_SRC = '/assets/brand/evaraos-mark.png?v=brand-png-1';
   const APP_ICON_SRC = '/assets/brand/evaraos-app-icon.png?v=brand-png-1';
+  let manifestBlobUrl = '';
 
   const options = [
     { id:'none', label:'No Background', group:'static', description:'Official Evaraos PNG mark, untouched.', colors:['transparent','transparent'] },
@@ -22,7 +24,6 @@
     { id:'matteBlack', label:'Matte Black', group:'static', description:'Minimal non-reflective black.', colors:['#17181c','#030304'] },
     { id:'softIvory', label:'Soft Ivory', group:'static', description:'Warm clean neutral.', colors:['#fffdf7','#e8e1d3'] },
     { id:'burgundy', label:'Burgundy', group:'static', description:'Deep red luxury finish.', colors:['#8f1726','#260207'] },
-
     { id:'liquidGlassWaves', label:'Liquid Glass Waves', group:'animated', description:'Slow refractive wave motion.', colors:['#ff3147','#15101b'] },
     { id:'auroraFlow', label:'Aurora Flow', group:'animated', description:'Adaptive red, blue, and violet flow.', colors:['#ef2343','#193d77'] },
     { id:'orbitRings', label:'Orbit Rings', group:'animated', description:'Precision rings revolve behind the mark.', colors:['#d6102d','#050506'] },
@@ -33,7 +34,6 @@
     { id:'crystalRefraction', label:'Crystal Refraction', group:'animated', description:'Faceted light shifts across crystal.', colors:['#ff5365','#f5f6fb'] },
     { id:'adaptiveGradient', label:'Adaptive Gradient', group:'animated', description:'Brand gradient slowly rebalances.', colors:['#f20f2f','#101b3b'] },
     { id:'particleDrift', label:'Particle Drift', group:'animated', description:'Subtle particles drift in depth.', colors:['#d90b26','#050506'] },
-
     { id:'shineSweep', label:'Shine Sweep', group:'effect', description:'Specular highlight crosses the E.', colors:['#ffffff','#f2f3f6'] },
     { id:'hoverFloat', label:'Hover Float', group:'effect', description:'The mark gently lifts and settles.', colors:['#15171d','#050506'] },
     { id:'magneticTilt', label:'Magnetic Tilt', group:'effect', description:'A restrained dimensional tilt.', colors:['#2a2d35','#08090c'] },
@@ -45,21 +45,11 @@
   let activeId = readSelection();
   let customLogo = readCustomLogo();
 
-  function readSelection() {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return byId.has(saved) ? saved : 'none';
-    } catch { return 'none'; }
-  }
-
-  function readCustomLogo() {
-    try {
-      const saved = localStorage.getItem(CUSTOM_KEY);
-      return saved && saved.startsWith('data:image/') ? saved : '';
-    } catch { return ''; }
-  }
-
+  function readSelection() { try { const saved = localStorage.getItem(STORAGE_KEY); return byId.has(saved) ? saved : 'none'; } catch { return 'none'; } }
+  function readCustomLogo() { try { const saved = localStorage.getItem(CUSTOM_KEY); return saved && saved.startsWith('data:image/') ? saved : ''; } catch { return ''; } }
   function activeLogoSrc() { return customLogo || MARK_SRC; }
+  function isIOS() { return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+  function isStandalone() { return window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true; }
 
   function logoImage() {
     const image = document.createElement('img');
@@ -74,26 +64,11 @@
   }
 
   function previewClass(option, current = false) {
-    return [
-      current ? 'app-icon-current-preview' : '',
-      'app-icon-preview',
-      `app-icon-preview--${option.id}`,
-      `app-icon-preview--${option.group}`,
-      option.group === 'animated' ? 'is-animated' : '',
-      option.group === 'effect' ? 'has-icon-effect' : '',
-      option.id === 'none' ? 'is-backgroundless' : ''
-    ].filter(Boolean).join(' ');
+    return [current ? 'app-icon-current-preview' : '', 'app-icon-preview', `app-icon-preview--${option.id}`, `app-icon-preview--${option.group}`, option.group === 'animated' ? 'is-animated' : '', option.group === 'effect' ? 'has-icon-effect' : '', option.id === 'none' ? 'is-backgroundless' : ''].filter(Boolean).join(' ');
   }
 
-  function paint(node, option, current = false) {
-    if (!node) return;
-    node.className = previewClass(option, current);
-    node.replaceChildren(logoImage());
-  }
-
-  function groupLabel(group) {
-    return group === 'animated' ? 'Animated background' : group === 'effect' ? 'Icon animation' : 'Static background';
-  }
+  function paint(node, option, current = false) { if (!node) return; node.className = previewClass(option, current); node.replaceChildren(logoImage()); }
+  function groupLabel(group) { return group === 'animated' ? 'Animated background' : group === 'effect' ? 'Icon animation' : 'Static background'; }
 
   function renderGrid() {
     const grid = document.querySelector('[data-app-icon-grid]');
@@ -106,11 +81,9 @@
       button.dataset.appIconChoice = option.id;
       button.setAttribute('aria-pressed', String(option.id === activeId));
       button.setAttribute('aria-label', `${option.label}. ${option.description}`);
-
       const preview = document.createElement('span');
       preview.className = previewClass(option);
       preview.appendChild(logoImage());
-
       const copy = document.createElement('span');
       copy.className = 'app-icon-copy';
       const number = document.createElement('small');
@@ -130,22 +103,30 @@
     paint(document.querySelector('[data-current-icon-preview]'), option, true);
     document.querySelectorAll('[data-device-preview]').forEach(node => paint(node, option));
     document.querySelectorAll('[data-device-preview-light]').forEach(node => paint(node, option));
-    document.querySelectorAll('[data-brand-title-mark]').forEach(node => {
-      node.replaceChildren(logoImage());
-      node.classList.toggle('is-backgroundless', option.id === 'none');
-    });
+    document.querySelectorAll('[data-brand-title-mark]').forEach(node => { node.replaceChildren(logoImage()); node.classList.toggle('is-backgroundless', option.id === 'none'); });
     document.querySelectorAll('[data-current-icon-name]').forEach(node => { node.textContent = option.label; });
   }
 
   function ensureIconLink(rel, href, type = 'image/png') {
     let link = document.querySelector(`link[rel="${rel}"]`);
-    if (!link) {
-      link = document.createElement('link');
-      link.rel = rel;
-      document.head.appendChild(link);
-    }
+    if (!link) { link = document.createElement('link'); link.rel = rel; document.head.appendChild(link); }
     link.type = type;
     link.href = href;
+  }
+
+  function ensureManifest(snapshot) {
+    const icon = snapshot || APP_ICON_SRC;
+    const manifest = {
+      name: 'Evaraos Inc', short_name: 'Evaraos', id: '/', start_url: '/', scope: '/', display: 'standalone', orientation: 'portrait', background_color: '#050506', theme_color: '#e30613',
+      icons: [{ src: icon, sizes: '512x512', type: 'image/png', purpose: 'any' }, { src: icon, sizes: '512x512', type: 'image/png', purpose: 'maskable' }]
+    };
+    try {
+      if (manifestBlobUrl) URL.revokeObjectURL(manifestBlobUrl);
+      manifestBlobUrl = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type:'application/manifest+json' }));
+      let link = document.querySelector('link[rel="manifest"]');
+      if (!link) { link = document.createElement('link'); link.rel = 'manifest'; document.head.appendChild(link); }
+      link.href = manifestBlobUrl;
+    } catch {}
   }
 
   function canvasBackground(ctx, option, size) {
@@ -165,25 +146,8 @@
     ctx.fill();
   }
 
-  function roundRect(ctx, x, y, w, h, r) {
-    const radius = Math.min(r, w / 2, h / 2);
-    ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.arcTo(x + w, y, x + w, y + h, radius);
-    ctx.arcTo(x + w, y + h, x, y + h, radius);
-    ctx.arcTo(x, y + h, x, y, radius);
-    ctx.arcTo(x, y, x + w, y, radius);
-    ctx.closePath();
-  }
-
-  function loadImage(src) {
-    return new Promise((resolve, reject) => {
-      const image = new Image();
-      image.onload = () => resolve(image);
-      image.onerror = reject;
-      image.src = src;
-    });
-  }
+  function roundRect(ctx, x, y, w, h, r) { const radius = Math.min(r, w / 2, h / 2); ctx.beginPath(); ctx.moveTo(x + radius, y); ctx.arcTo(x + w, y, x + w, y + h, radius); ctx.arcTo(x + w, y + h, x, y + h, radius); ctx.arcTo(x, y + h, x, y, radius); ctx.arcTo(x, y, x + w, y, radius); ctx.closePath(); }
+  function loadImage(src) { return new Promise((resolve, reject) => { const image = new Image(); image.onload = () => resolve(image); image.onerror = reject; image.crossOrigin = 'anonymous'; image.src = src; }); }
 
   async function buildSnapshot(option) {
     const size = 512;
@@ -205,13 +169,16 @@
     try {
       localStorage.setItem(STORAGE_KEY, option.id);
       const snapshot = await buildSnapshot(option);
-      localStorage.setItem('evaraos-app-icon-snapshot-v2', snapshot);
+      localStorage.setItem(SNAPSHOT_KEY, snapshot);
+      const iconHref = option.id === 'none' ? APP_ICON_SRC : snapshot;
       ensureIconLink('icon', snapshot);
       ensureIconLink('shortcut icon', snapshot);
-      ensureIconLink('apple-touch-icon', option.id === 'none' ? APP_ICON_SRC : snapshot);
+      ensureIconLink('apple-touch-icon', iconHref);
+      ensureManifest(iconHref);
       const registration = await navigator.serviceWorker?.getRegistration?.();
       registration?.update?.();
       if (showConfirmation) toast(`${option.label} saved`);
+      if (showConfirmation && isIOS()) showIOSRefreshHelper(option);
       window.dispatchEvent(new CustomEvent('evaraos:app-icon-change', { detail:{ option, snapshot } }));
     } catch (error) {
       console.warn('[App Icon Studio] Save failed', error);
@@ -221,26 +188,29 @@
 
   function toast(message) {
     let node = document.querySelector('.app-icon-toast');
-    if (!node) {
-      node = document.createElement('div');
-      node.className = 'app-icon-toast';
-      node.setAttribute('role', 'status');
-      document.body.appendChild(node);
-    }
+    if (!node) { node = document.createElement('div'); node.className = 'app-icon-toast'; node.setAttribute('role', 'status'); document.body.appendChild(node); }
     node.innerHTML = `<strong>Autosaved</strong><span>${message}</span>`;
     node.classList.add('is-visible');
     clearTimeout(toast.timer);
     toast.timer = setTimeout(() => node.classList.remove('is-visible'), 1700);
   }
 
+  function showIOSRefreshHelper(option) {
+    let panel = document.querySelector('[data-ios-icon-refresh-helper]');
+    if (!panel) {
+      panel = document.createElement('section');
+      panel.className = 'app-icon-ios-helper glass-card';
+      panel.dataset.iosIconRefreshHelper = 'true';
+      const card = document.querySelector('.app-icon-current-card');
+      card?.after(panel);
+    }
+    panel.innerHTML = `<div><p class="settings-kicker">IPHONE ICON REFRESH</p><h2>${option.label} is ready</h2><p>${isStandalone() ? 'iOS has received the new icon data, but an already-installed Home Screen icon is cached by the system.' : 'The icon data is ready for the next Add to Home Screen install.'}</p></div><ol><li>Remove the old Evaraos icon from the Home Screen.</li><li>Open Evaraos in Safari.</li><li>Tap Share → Add to Home Screen.</li></ol>`;
+  }
+
   function selectOption(id) {
     if (!byId.has(id)) return;
     activeId = id;
-    document.querySelectorAll('[data-app-icon-choice]').forEach(button => {
-      const active = button.dataset.appIconChoice === id;
-      button.classList.toggle('is-active', active);
-      button.setAttribute('aria-pressed', String(active));
-    });
+    document.querySelectorAll('[data-app-icon-choice]').forEach(button => { const active = button.dataset.appIconChoice === id; button.classList.toggle('is-active', active); button.setAttribute('aria-pressed', String(active)); });
     syncPreviews();
     applySelection(true);
   }
@@ -248,33 +218,19 @@
   function restoreOriginal() {
     activeId = 'none';
     customLogo = '';
-    try {
-      localStorage.removeItem(CUSTOM_KEY);
-      localStorage.setItem(STORAGE_KEY, 'none');
-    } catch {}
-    renderGrid();
-    syncPreviews();
-    applySelection(false).then(() => toast('Official PNG restored'));
+    try { localStorage.removeItem(CUSTOM_KEY); localStorage.setItem(STORAGE_KEY, 'none'); } catch {}
+    renderGrid(); syncPreviews(); applySelection(false).then(() => toast('Official PNG restored'));
   }
 
   function upload(file) {
     if (!file) return;
-    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) {
-      toast('Use PNG, JPG, or WEBP');
-      return;
-    }
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) { toast('Use PNG, JPG, or WEBP'); return; }
     const reader = new FileReader();
     reader.onload = () => {
       customLogo = String(reader.result || '');
-      if (!customLogo.startsWith('data:image/')) {
-        customLogo = '';
-        toast('Image upload failed');
-        return;
-      }
+      if (!customLogo.startsWith('data:image/')) { customLogo = ''; toast('Image upload failed'); return; }
       try { localStorage.setItem(CUSTOM_KEY, customLogo); } catch {}
-      renderGrid();
-      syncPreviews();
-      applySelection(false).then(() => toast('Custom mark uploaded'));
+      renderGrid(); syncPreviews(); applySelection(false).then(() => toast('Custom mark uploaded'));
     };
     reader.onerror = () => toast('Image upload failed');
     reader.readAsDataURL(file);
@@ -282,37 +238,13 @@
 
   function bind() {
     const grid = document.querySelector('[data-app-icon-grid]');
-    if (grid && grid.dataset.bound !== 'true') {
-      grid.dataset.bound = 'true';
-      grid.addEventListener('click', event => {
-        const button = event.target.closest('[data-app-icon-choice]');
-        if (button) selectOption(button.dataset.appIconChoice);
-      });
-    }
-    document.querySelectorAll('[data-apply-selected-icon]').forEach(button => {
-      if (button.dataset.bound === 'true') return;
-      button.dataset.bound = 'true';
-      button.addEventListener('click', () => applySelection(true));
-    });
-    document.querySelectorAll('[data-restore-original-icon]').forEach(button => {
-      if (button.dataset.bound === 'true') return;
-      button.dataset.bound = 'true';
-      button.addEventListener('click', restoreOriginal);
-    });
-    document.querySelectorAll('[data-custom-icon-upload]').forEach(input => {
-      if (input.dataset.bound === 'true') return;
-      input.dataset.bound = 'true';
-      input.addEventListener('change', () => upload(input.files?.[0]));
-    });
+    if (grid && grid.dataset.bound !== 'true') { grid.dataset.bound = 'true'; grid.addEventListener('click', event => { const button = event.target.closest('[data-app-icon-choice]'); if (button) selectOption(button.dataset.appIconChoice); }); }
+    document.querySelectorAll('[data-apply-selected-icon]').forEach(button => { if (button.dataset.bound === 'true') return; button.dataset.bound = 'true'; button.addEventListener('click', () => applySelection(true)); });
+    document.querySelectorAll('[data-restore-original-icon]').forEach(button => { if (button.dataset.bound === 'true') return; button.dataset.bound = 'true'; button.addEventListener('click', restoreOriginal); });
+    document.querySelectorAll('[data-custom-icon-upload]').forEach(input => { if (input.dataset.bound === 'true') return; input.dataset.bound = 'true'; input.addEventListener('change', () => upload(input.files?.[0])); });
   }
 
-  function boot() {
-    renderGrid();
-    syncPreviews();
-    bind();
-    applySelection(false);
-  }
-
+  function boot() { renderGrid(); syncPreviews(); bind(); applySelection(false); }
   window.EvaraosAppIcons = { options, selectOption, restoreOriginal, applySelection, currentIconId:() => activeId };
   document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', boot, { once:true }) : boot();
 })();
