@@ -5,15 +5,15 @@
   const FORCE_UNLOCK=2400;
   const WATCHDOG_MS=3200;
   const EXIT_MS=160;
-  const BRAND_MARK='/assets/brand/evaraos-mark.png?v=brand-png-1';
-  const APP_ICON='/assets/brand/evaraos-app-icon.png?v=brand-png-1';
-  const MARK='<img class="evara-loader-mark" src="'+BRAND_MARK+'" alt="" aria-hidden="true">';
+  const BRAND_MARK='/assets/brand/evaraos-app-icon.png?v=brand-icon-5';
+  const APP_ICON='/assets/brand/evaraos-app-icon.png?v=brand-icon-5';
+  const MARK='<img class="evara-loader-mark" src="'+APP_ICON+'" alt="" aria-hidden="true">';
   let timer=null,forceTimer=null,watchdogTimer=null,isTransitioning=false,created=false;
 
   function applyBrand(){
-    document.documentElement.style.setProperty('--evaraos-brand-icon','url("'+BRAND_MARK+'")');
-    document.querySelectorAll('[data-evaraos-brand-icon]').forEach(node=>node.style.setProperty('--evaraos-brand-icon','url("'+BRAND_MARK+'")'));
-    const links=[['icon','image/png',BRAND_MARK],['shortcut icon','image/png',BRAND_MARK],['apple-touch-icon','image/png',APP_ICON]];
+    document.documentElement.style.setProperty('--evaraos-brand-icon','url("'+APP_ICON+'")');
+    document.querySelectorAll('[data-evaraos-brand-icon]').forEach(node=>node.style.setProperty('--evaraos-brand-icon','url("'+APP_ICON+'")'));
+    const links=[['icon','image/png',APP_ICON],['shortcut icon','image/png',APP_ICON],['apple-touch-icon','image/png',APP_ICON]];
     links.forEach(([rel,type,href])=>{
       let link=document.querySelector('link[rel="'+rel+'"]');
       if(!link){link=document.createElement('link');link.rel=rel;document.head.appendChild(link)}
@@ -55,7 +55,7 @@
       themeAuthority:document.documentElement.dataset.evaraThemeAuthority||'',
       themeMode:document.documentElement.dataset.themeMode||'',
       environment:document.documentElement.dataset.environment||'',
-      brandMark:BRAND_MARK,
+      brandMark:APP_ICON,
       duplicateLoaders:document.querySelectorAll('#evaraFastLoader,#evaraGlobalLoader').length,
       topMenuVisible:!!document.getElementById('evaMenuBtn'),
       notificationsVisible:!!document.getElementById('globalNotificationsBell')
@@ -75,7 +75,7 @@
   }
   function init(){
     applyBrand();ensure();document.getElementById("evaraGlobalLoader")?.remove();
-    window.EvaraBrand={mark:BRAND_MARK,appIcon:APP_ICON,apply:applyBrand};
+    window.EvaraBrand={mark:APP_ICON,appIcon:APP_ICON,apply:applyBrand};
     window.EvaraLoader={beginNavigationLoad,completeNavigationLoad:()=>hideAll(false),showFastLoader:show,hideFastLoader:hide,showFullLoader:show,hideFullLoader:hide,hideAllLoaders:hideAll,markAppReady:()=>hideAll(false),runShellWatchdog:shellWatchdog,getState:health,health};
     document.addEventListener("click",event=>{if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;const anchor=event.target.closest("a[href]");if(!shouldIntercept(anchor))return;event.preventDefault();beginNavigationLoad();setTimeout(()=>location.assign(anchor.href),80)});
     addEventListener("evara:session-ready",()=>hideAll(false));
