@@ -1,7 +1,7 @@
 // Evaraos App Registry
 // Centralized application catalog powering navigation, launcher, command search, and role visibility.
 
-export const APP_REGISTRY_VERSION = "2026.05.17-app-registry-aligned";
+export const APP_REGISTRY_VERSION = "2026.07.06-builder-executive-menu";
 
 export const APP_CATEGORIES = Object.freeze({
   operations: "operations",
@@ -29,6 +29,15 @@ export const APP_REGISTRY = Object.freeze([
     category: APP_CATEGORIES.intelligence,
     route: "/dashboard.html",
     icon: "◈",
+    searchable: true,
+    roles: ["owner", "admin"]
+  },
+  {
+    id: "website-builder",
+    title: "Website Builder",
+    category: APP_CATEGORIES.intelligence,
+    route: "/website-builder.html",
+    icon: "✦",
     searchable: true,
     roles: ["owner", "admin"]
   },
@@ -259,18 +268,3 @@ export function searchApps(query = "", role = "customer") {
     );
   });
 }
-
-export function appById(id = "") {
-  return APP_REGISTRY.find((app) => app.id === id) || null;
-}
-
-window.EvaraAppRegistry = {
-  version: APP_REGISTRY_VERSION,
-  APP_CATEGORIES,
-  APP_ROLES,
-  APP_REGISTRY,
-  appsForRole,
-  appsByCategory,
-  searchApps,
-  appById
-};
