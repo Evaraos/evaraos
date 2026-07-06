@@ -38,6 +38,7 @@ const ICONS = Object.freeze({
   themeDark:'<path d="M20 15.2A8.5 8.5 0 0 1 8.8 4a8.5 8.5 0 1 0 11.2 11.2Z"/>',
   themeImage:'<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9" r="1.5"/><path d="m5 18 4.5-4.5 3.2 3.2 2.3-2.3L19 18"/>',
   workspace:'<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M8 20v-4h8v4M3 10h18"/>',
+  builder:'<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 8h10M7 12h7M7 16h4"/><path d="M17 15l2 2-2 2"/>',
   operations:'<path d="M4 7h10M4 12h16M4 17h7"/><circle cx="17" cy="7" r="2"/><circle cx="14" cy="17" r="2"/>',
   finance:'<path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/>',
   customer:'<circle cx="12" cy="8" r="4"/><path d="M4.5 21c1.6-4 4.1-6 7.5-6s5.9 2 7.5 6"/>',
@@ -52,7 +53,7 @@ const ICONS = Object.freeze({
 });
 
 const APP_ICON_MAP = Object.freeze({
-  dashboard:"dashboard","customer-dashboard":"dashboard",organization:"company",companies:"company",users:"users",applications:"applications",jobs:"jobs",leads:"leads",dispatch:"dispatch",field:"field",schedule:"schedule","operations-map":"map","territory-intelligence":"territory","predictive-ops":"predictive","ai-command":"ai",analytics:"analytics",revenue:"revenue",payroll:"payroll",ledger:"ledger","payment-ops":"payments",messages:"messages","service-history":"history",settings:"settings","app-icons":"brandMark",icons:"brandMark",brand:"brandMark",loading:"loading",favicon:"favicon"
+  dashboard:"dashboard","customer-dashboard":"dashboard",organization:"company",companies:"company",users:"users",applications:"applications",jobs:"jobs",leads:"leads",dispatch:"dispatch",field:"field",schedule:"schedule","operations-map":"map","territory-intelligence":"territory","predictive-ops":"predictive","ai-command":"ai",analytics:"analytics","website-builder":"builder",revenue:"revenue",payroll:"payroll",ledger:"ledger","payment-ops":"payments",messages:"messages","service-history":"history",settings:"settings","app-icons":"brandMark",icons:"brandMark",brand:"brandMark",loading:"loading",favicon:"favicon"
 });
 
 const CATEGORY_ICON_MAP = Object.freeze({operations:"operations",organizations:"company",finance:"finance",customer:"customer",intelligence:"analytics",system:"system",brand:"brandMark"});
@@ -61,10 +62,8 @@ export function iconSvg(name, className = "eva-icon") {
   const body = ICONS[name] || ICONS.dashboard;
   return `<svg class="${className}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${body}</svg>`;
 }
-
 export function iconNameForApp(id = "") { return APP_ICON_MAP[id] || "dashboard"; }
 export function iconNameForCategory(category = "") { return CATEGORY_ICON_MAP[category] || "dashboard"; }
 export function hasIcon(name) { return Object.prototype.hasOwnProperty.call(ICONS, name); }
 export const ICON_NAMES = Object.freeze(Object.keys(ICONS));
-
 window.EvaraIcons = { iconSvg, iconNameForApp, iconNameForCategory, hasIcon, names: ICON_NAMES };
