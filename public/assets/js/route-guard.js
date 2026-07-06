@@ -18,6 +18,7 @@ const ROUTES = {
 const AUTH_WAIT_TIMEOUT_MS = 4500;
 
 const OWNER_ROLES = new Set(["owner", "super_admin", "admin"]);
+const OWNER_ONLY_PAGES = new Set(["website-builder.html"]);
 const OPS_ROLES = new Set([
   "owner",
   "super_admin",
@@ -88,7 +89,8 @@ const OPS_ONLY = new Set([
   "analytics-dashboard.html",
   "territories.html",
   "live-operations-command.html",
-  "qa.html"
+  "qa.html",
+  "website-builder.html"
 ]);
 
 let hasFinishedRouteGuard = false;
@@ -141,7 +143,7 @@ function beginGuardRedirect(url, options = {}) {
 
   if (window.EvaraLoader?.beginNavigationLoad) {
     window.EvaraLoader.beginNavigationLoad({
-      title: options.title || "Opening Evaraos",
+      title: options.title || "Opening EvaraOS",
       subtitle: options.subtitle || "Taking you to the right page."
     });
   }
@@ -176,6 +178,7 @@ function canAccessPage(path, role = "customer") {
   const page = String(path || "").split("?")[0].split("#")[0].split("/").pop() || "index.html";
   const normalized = normalizeRole(role);
 
+  if (OWNER_ONLY_PAGES.has(page)) return OWNER_ROLES.has(normalized);
   if (normalized === "customer") return CUSTOMER_ALLOWED.has(page);
   if (STAFF_ROLES.has(normalized)) return STAFF_ALLOWED.has(page) || !OPS_ONLY.has(page);
   if (OPS_ONLY.has(page)) return OWNER_ROLES.has(normalized) || OPS_ROLES.has(normalized);
@@ -261,7 +264,7 @@ async function handleAuthRoute() {
     const target = safeDestinationForRole(intended, role);
 
     beginGuardRedirect(target, {
-      title: "Opening Evaraos",
+      title: "Opening EvaraOS",
       subtitle: "Your session is already active."
     });
     return;
