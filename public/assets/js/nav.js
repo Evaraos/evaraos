@@ -8,4 +8,5 @@ import "./ui/icon-hydrator.js?v=9";
 import "./nav/nav-role-lockdown.js?v=2";
 import "./permissions-runtime.js?v=2";
 import "./direct-access-check.js?v=1";
-window.EVARAOS_NAV_ENTRY_VERSION = "nav-v41-permissions-ds1";
+import "./owner-inline-editor.js?v=4";
+window.EVARAOS_NAV_ENTRY_VERSION = "nav-v42-owner-editor";
