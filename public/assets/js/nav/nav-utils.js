@@ -54,7 +54,8 @@ export function isPrivateRoutePending() {
     "/settings.html",
     "/settings-v2.html",
     "/applications.html",
-    "/org.html"
+    "/org.html",
+    "/website-builder.html"
   ].some((page) => path.includes(page)) || path.includes("/settings/");
 
   const authResolving = document.documentElement.classList.contains("auth-pending") ||
@@ -73,7 +74,10 @@ export function isAuthenticated() {
 export function getRole() {
   const user = getStoredUser();
   if (user) return String(user.role || "guest").toLowerCase();
-  if (isPrivateRoutePending()) return "owner";
+  try {
+    const storedRole = localStorage.getItem("evaraos-role") || sessionStorage.getItem("evaraos-role");
+    if (storedRole) return String(storedRole).toLowerCase();
+  } catch {}
   return "guest";
 }
 
