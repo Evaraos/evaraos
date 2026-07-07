@@ -1,4 +1,4 @@
-const NAV_BUILD="nav-v37-shell-watchdog";
+const NAV_BUILD="nav-v39-role-visibility";
 let NAV_STATE,getNavShell,renderNav,applyProgress,bindScrollBehavior,animateNav;
 
 async function loadCore(){
