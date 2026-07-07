@@ -1,0 +1,54 @@
+:root{--evara-pro-red:#f2172d;--evara-pro-red2:#ff6b78;--evara-pro-black:#06070b;--evara-pro-glass:rgba(255,255,255,.18)}
+.app-icon-background-card{padding:22px!important}
+.app-icon-section-head{display:flex!important;align-items:flex-end!important;justify-content:space-between!important;gap:14px!important;margin-bottom:16px!important}
+.app-icon-section-head span{font-weight:900!important;letter-spacing:-.03em!important;padding:8px 12px!important;border-radius:999px!important;background:rgba(255,255,255,.16)!important;border:1px solid rgba(255,255,255,.28)!important}
+.app-icon-grid{gap:30px 16px!important}
+.app-icon-choice{border-radius:30px!important;padding:14px 10px 16px!important;background:linear-gradient(145deg,rgba(255,255,255,.10),rgba(255,255,255,.035))!important;border:1px solid rgba(255,255,255,.16)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 16px 36px rgba(0,0,0,.10)!important;transition:transform .22s ease,border-color .22s ease,background .22s ease!important}
+.app-icon-choice:hover{transform:translateY(-3px)!important;border-color:rgba(255,255,255,.36)!important;background:linear-gradient(145deg,rgba(255,255,255,.17),rgba(255,255,255,.07))!important}
+.app-icon-choice .app-icon-preview{width:104px!important;height:104px!important;border-radius:30px!important;isolation:isolate!important;overflow:hidden!important;box-shadow:0 22px 50px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.38)!important;border:1px solid rgba(255,255,255,.36)!important}
+.app-icon-preview:before{content:""!important;position:absolute!important;inset:0!important;border-radius:inherit!important;pointer-events:none!important;z-index:1!important;background:radial-gradient(circle at 22% 12%,rgba(255,255,255,.58),transparent 22%),linear-gradient(145deg,rgba(255,255,255,.22),transparent 38%,rgba(0,0,0,.20))!important}
+.app-icon-preview:after{content:""!important;position:absolute!important;inset:1px!important;border-radius:inherit!important;border:1px solid rgba(255,255,255,.20)!important;pointer-events:none!important;z-index:12!important}
+.app-icon-logo-img{z-index:8!important;filter:drop-shadow(0 12px 18px rgba(0,0,0,.28))!important}
+.app-icon-preview--none{background:linear-gradient(145deg,#ffffff,#f2f4f8)!important}
+.app-icon-preview--pearlWhite{background:radial-gradient(circle at 22% 14%,#fff 0 20%,#eef2f7 42%,#ced5df 100%)!important}
+.app-icon-preview--pianoBlack{background:radial-gradient(circle at 24% 12%,#5a5f69 0 16%,#16181f 44%,#020306 100%)!important}
+.app-icon-preview--crimsonGlass{background:radial-gradient(circle at 30% 15%,#ff9aa3 0 16%,#f2172d 38%,#4a0008 100%)!important}
+.app-icon-preview--graphite{background:linear-gradient(145deg,#79808d 0,#222630 42%,#06080d 100%)!important}
+.app-icon-preview--titanium{background:linear-gradient(135deg,#fff 0,#c7ced9 24%,#737d89 58%,#f8fbff 100%)!important}
+.app-icon-preview--midnightBlue{background:radial-gradient(circle at 24% 18%,#32669c 0 16%,#07162d 48%,#02040a 100%)!important}
+.app-icon-preview--carbonFiber{background:#07080b!important;background-image:linear-gradient(45deg,rgba(255,255,255,.08) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.08) 75%,transparent 75%),linear-gradient(145deg,#2f343d,#040507)!important;background-size:12px 12px,100% 100%!important}
+.app-icon-preview--rubyGlass{background:radial-gradient(circle at 18% 12%,#ffc1c6 0 13%,#ba0016 36%,#320005 100%)!important}
+.app-icon-preview--frostedClear{background:linear-gradient(145deg,rgba(255,255,255,.88),rgba(201,219,232,.36))!important;backdrop-filter:blur(18px)!important}
+.app-icon-preview--satinSilver{background:linear-gradient(120deg,#f8fbff 0,#99a2ae 36%,#ecf2f7 68%,#6c737e 100%)!important}
+.app-icon-preview--deepNavy{background:linear-gradient(145deg,#1f3762 0,#061024 54%,#010207 100%)!important}
+.app-icon-preview--matteBlack{background:linear-gradient(145deg,#24262b,#050506)!important}
+.app-icon-preview--softIvory{background:linear-gradient(145deg,#fff8ec,#e8e0d3)!important}
+.app-icon-preview--burgundy{background:linear-gradient(145deg,#aa0015,#2d0006)!important}
+.app-icon-preview--liquidGlassWaves{background:linear-gradient(115deg,#10131d,#ef1732,#ff8a97,#5cd6ff,#141722)!important;background-size:360% 360%!important;animation:evaraProFlow 7s ease infinite!important}
+.app-icon-preview--auroraFlow{background:linear-gradient(125deg,#07111f,#00d4ff,#f2172d,#ffe8f0,#2a0b16)!important;background-size:380% 380%!important;animation:evaraProFlow 8.5s ease infinite!important}
+.app-icon-preview--orbitRings{background:radial-gradient(circle,#f2172d 0 8%,#090b10 9% 34%,#f2172d 35% 37%,#111724 38% 60%,#ffffff22 61% 62%,#050507 63%)!important;animation:evaraProSpin 12s linear infinite!important}
+.app-icon-preview--neuralGrid{background:#05070d!important;background-image:radial-gradient(circle at 20% 20%,#f2172d 0 2px,transparent 3px),radial-gradient(circle at 70% 35%,#ff7b86 0 2px,transparent 3px),linear-gradient(rgba(242,23,45,.20) 1px,transparent 1px),linear-gradient(90deg,rgba(242,23,45,.20) 1px,transparent 1px)!important;background-size:100% 100%,100% 100%,18px 18px,18px 18px!important;animation:evaraProPulse 2.6s ease-in-out infinite!important}
+.app-icon-preview--energyPulse{background:radial-gradient(circle,#fff 0 2%,#ff5b69 3% 14%,#7c0010 28%,#040507 70%)!important;animation:evaraProPulse 1.8s ease-in-out infinite!important}
+.app-icon-preview--redPlasma{background:radial-gradient(circle at 30% 30%,#ff9098,transparent 24%),radial-gradient(circle at 70% 70%,#f2172d,transparent 30%),linear-gradient(145deg,#1a0004,#07070a)!important;animation:evaraProFlow 6.8s ease infinite!important;background-size:180% 180%!important}
+.app-icon-preview--lightSweepBg{background:linear-gradient(145deg,#f4f6fb,#111722)!important;overflow:hidden!important}
+.app-icon-preview--lightSweepBg:before,.app-icon-preview--shineSweep:before{animation:evaraProSweep 2.4s ease-in-out infinite!important;background:linear-gradient(105deg,transparent 0 36%,rgba(255,255,255,.86) 48%,transparent 62%)!important;transform:translateX(-120%)!important}
+.app-icon-preview--crystalRefraction{background:conic-gradient(from 120deg,#fff,#a7d6ff,#f2172d,#1a1f2b,#fff)!important;animation:evaraProHue 8s linear infinite!important}
+.app-icon-preview--adaptiveGradient{background:linear-gradient(145deg,#f2172d,#ff99a4,#2c6dff,#0e1118)!important;background-size:300% 300%!important;animation:evaraProFlow 5.5s ease infinite!important}
+.app-icon-preview--particleDrift{background:#080910!important;background-image:radial-gradient(circle at 22% 30%,#fff 0 1px,transparent 2px),radial-gradient(circle at 62% 22%,#ff6772 0 2px,transparent 3px),radial-gradient(circle at 75% 72%,#fff 0 1px,transparent 2px),linear-gradient(145deg,#31000a,#06070a)!important;animation:evaraProDrift 7s linear infinite!important}
+.app-icon-preview--shineSweep,.app-icon-preview--hoverFloat,.app-icon-preview--magneticTilt,.app-icon-preview--breathingGlow,.app-icon-preview--orbitReflection{background:linear-gradient(145deg,#222833,#08090d)!important}
+.app-icon-preview--hoverFloat{animation:evaraProFloat 3.4s ease-in-out infinite!important}
+.app-icon-preview--magneticTilt{animation:evaraProTilt 4.4s ease-in-out infinite!important}
+.app-icon-preview--breathingGlow{animation:evaraProGlow 2.2s ease-in-out infinite!important;box-shadow:0 0 0 0 rgba(242,23,45,.0),0 22px 50px rgba(0,0,0,.22)!important}
+.app-icon-preview--orbitReflection:before{animation:evaraProOrbit 4.8s linear infinite!important;background:conic-gradient(from 0deg,transparent,rgba(255,255,255,.8),transparent,rgba(242,23,45,.40),transparent)!important;inset:-32%!important}
+.owner-edit-fab,.owner-editor-fab{background:linear-gradient(145deg,rgba(255,255,255,.34),rgba(255,255,255,.12))!important;color:var(--text-primary,#fff)!important;border:1px solid rgba(255,255,255,.46)!important;box-shadow:0 18px 44px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.38)!important;backdrop-filter:blur(26px) saturate(1.35)!important;-webkit-backdrop-filter:blur(26px) saturate(1.35)!important}
+@keyframes evaraProFlow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes evaraProSpin{to{filter:hue-rotate(20deg);transform:rotate(360deg)}}
+@keyframes evaraProPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+@keyframes evaraProSweep{0%{transform:translateX(-140%)}50%,100%{transform:translateX(140%)}}
+@keyframes evaraProHue{to{filter:hue-rotate(360deg)}}
+@keyframes evaraProDrift{to{background-position:60px 80px,20px 40px,-30px 50px,0 0}}
+@keyframes evaraProFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes evaraProTilt{0%,100%{transform:perspective(400px) rotateX(0deg) rotateY(0deg)}50%{transform:perspective(400px) rotateX(6deg) rotateY(-7deg)}}
+@keyframes evaraProGlow{0%,100%{box-shadow:0 22px 50px rgba(0,0,0,.22),0 0 0 rgba(242,23,45,0)}50%{box-shadow:0 22px 50px rgba(0,0,0,.22),0 0 28px rgba(242,23,45,.56)}}
+@keyframes evaraProOrbit{to{transform:rotate(360deg)}}
+@media(max-width:760px){.app-icon-choice .app-icon-preview{width:92px!important;height:92px!important}.app-icon-grid{gap:20px 10px!important}.app-icon-choice{padding:10px 6px 14px!important}}
