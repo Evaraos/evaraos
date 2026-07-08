@@ -1,4 +1,6 @@
 import "./design-system.js?v=1";
+import "./studio/component-registry.js?v=1";
+import "./studio/module-registry.js?v=1";
 import "./nav/nav-main-v6.js?v=nav-v41-permissions";
 import "./nav/nav-bottom.js?v=nav-v41-permissions";
 import "./nav/nav-drawer-close.js?v=nav-v41-permissions";
@@ -8,5 +10,5 @@ import "./ui/icon-hydrator.js?v=9";
 import "./nav/nav-role-lockdown.js?v=2";
 import "./permissions-runtime.js?v=2";
 import "./direct-access-check.js?v=1";
-import "./owner-inline-editor.js?v=4";
-window.EVARAOS_NAV_ENTRY_VERSION = "nav-v42-owner-editor";
+import "./owner-inline-editor.js?v=5";
+window.EVARAOS_NAV_ENTRY_VERSION = "nav-v43-studio-registries";
