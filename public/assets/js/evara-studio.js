@@ -3,10 +3,12 @@ import { STUDIO_COMPONENTS, renderComponentPreview } from './studio/component-re
 import { STUDIO_MODULES } from './studio/module-registry.js';
 import { STUDIO_WAVES, STUDIO_CORE_SYSTEMS, studioOverallProgress } from './studio/studio-roadmap.js';
 import { EVARA_BLUEPRINTS, blueprintsForStudio } from './studio/blueprint-registry.js';
+import { saveDraftBlueprint, publishBlueprint, rollbackBlueprint, blueprintDraftSummary } from './studio/blueprint-drafts.js';
 
 const OWNER_ROLES = new Set(['owner', 'super_admin', 'admin']);
 const DRAFT_KEY = 'evaraos-studio-home-draft-v1';
 const ASSETS = ['Official App Icon', 'Favicon', 'Brand Mark', 'Splash Screen', 'Backgrounds', 'Service Images', 'Marketplace Images', 'Documents'];
+let selectedBlueprintId = 'owner';
 
 function currentRole() {
   const profile = getSavedUserProfile?.() || {};
@@ -27,6 +29,7 @@ function saveDraft(show = true) {
   const saved = data();
   document.querySelectorAll('[data-studio-field]').forEach((field) => { saved[field.dataset.studioField] = field.value || ''; });
   saved.panel = document.querySelector('[data-studio-panel].is-active')?.dataset.studioPanel || 'overview';
+  saved.selectedBlueprintId = selectedBlueprintId;
   saveData(saved);
   if (show) toast('Studio draft saved');
 }
@@ -40,8 +43,12 @@ function progressLine(item, selectType = 'system') {
 function progressCard(module) {
   return `<article class="eva-card studio-module-card" data-studio-select="module" data-name="${safe(module.name)}" data-copy="${safe(module.status)} • ${safe(module.progress)}%"><div><span>${safe(module.status)}</span><strong>${safe(module.name)}</strong></div><small>${module.dependencies.length ? 'Depends on: ' + safe(module.dependencies.join(', ')) : 'No dependencies'}</small><div class="studio-module-progress"><i style="width:${Number(module.progress || 0)}%"></i></div></article>`;
 }
+function draftFor(id) { return blueprintDraftSummary().find((item) => item.id === id) || null; }
 function blueprintCard(blueprint) {
-  return `<article class="eva-card studio-module-card" data-studio-select="blueprint" data-name="${safe(blueprint.name)}" data-copy="Role: ${safe(blueprint.role)} • Sections: ${blueprint.sectionCount} • Components: ${blueprint.componentCount}"><div><span>${safe(blueprint.status)}</span><strong>${safe(blueprint.name)}</strong></div><small>${safe(blueprint.role)} • v${blueprint.version} • ${blueprint.sectionCount} sections • ${blueprint.componentCount} components</small><div class="studio-module-progress"><i style="width:${Math.min(100, blueprint.componentCount * 12)}%"></i></div></article>`;
+  const draft = draftFor(blueprint.id);
+  const liveVersion = draft?.liveVersion || 0;
+  const draftVersion = draft?.draftVersion || 1;
+  return `<article class="eva-card studio-module-card" data-studio-select="blueprint" data-blueprint-id="${blueprint.id}" data-name="${safe(blueprint.name)}" data-copy="Role: ${safe(blueprint.role)} • Draft v${draftVersion} • Live v${liveVersion}"><div><span>${liveVersion ? 'live' : blueprint.status}</span><strong>${safe(blueprint.name)}</strong></div><small>${safe(blueprint.role)} • draft v${draftVersion} • live v${liveVersion} • ${blueprint.sectionCount} sections</small><div class="studio-module-progress"><i style="width:${Math.min(100, (blueprint.componentCount * 10) + (liveVersion ? 18 : 0))}%"></i></div></article>`;
 }
 function setInspector(title = 'Nothing selected', copy = 'Select a Studio item to view its properties.') {
   document.querySelector('[data-studio-inspector-title]').textContent = title;
@@ -51,14 +58,14 @@ function setInspector(title = 'Nothing selected', copy = 'Select a Studio item t
 }
 function renderOverview() {
   const total = studioOverallProgress();
-  return `<section class="studio-overview-grid"><article class="eva-card studio-large-card"><p class="settings-kicker">STUDIO CORE</p><h2>The platform that builds the platform.</h2><p>Blueprint Engine v1 is now registered. Role experiences can move toward structured blueprints instead of duplicated hard-coded dashboards.</p><div class="studio-module-progress"><i style="width:${total}%"></i></div><small>Overall Studio Core progress: ${total}%</small></article>${card('Blueprint Engine', `${EVARA_BLUEPRINTS.length} role blueprints registered`, '◈', 'data-studio-panel-jump="blueprints"')}${card('Component Engine', `${STUDIO_COMPONENTS.length} components registered`, '▣', 'data-studio-panel-jump="components"')}${card('Module Registry', `${STUDIO_MODULES.length} modules tracked`, '◎', 'data-studio-panel-jump="modules"')}${card('Studio Core Roadmap', `${STUDIO_CORE_SYSTEMS.length} systems tracked`, '✦', 'data-studio-panel-jump="project"')}</section>`;
+  return `<section class="studio-overview-grid"><article class="eva-card studio-large-card"><p class="settings-kicker">STUDIO CORE</p><h2>The platform that builds the platform.</h2><p>Blueprint Engine now supports draft, publish, live versioning, and rollback foundations.</p><div class="studio-module-progress"><i style="width:${total}%"></i></div><small>Overall Studio Core progress: ${total}%</small></article>${card('Blueprint Engine', `${EVARA_BLUEPRINTS.length} role blueprints registered`, '◈', 'data-studio-panel-jump="blueprints"')}${card('Component Engine', `${STUDIO_COMPONENTS.length} components registered`, '▣', 'data-studio-panel-jump="components"')}${card('Module Registry', `${STUDIO_MODULES.length} modules tracked`, '◎', 'data-studio-panel-jump="modules"')}${card('Studio Core Roadmap', `${STUDIO_CORE_SYSTEMS.length} systems tracked`, '✦', 'data-studio-panel-jump="project"')}</section>`;
 }
 function renderComponents() {
   return `<section class="studio-component-library">${STUDIO_COMPONENTS.map((component) => `<div data-studio-select="component" data-name="${safe(component.name)}" data-copy="${safe(component.description)}">${renderComponentPreview(component)}</div>`).join('')}</section>`;
 }
 function renderModules() { return `<section class="studio-module-grid">${STUDIO_MODULES.map(progressCard).join('')}</section>`; }
 function renderBlueprints() {
-  return `<section class="studio-overview-grid"><article class="eva-card studio-large-card"><p class="settings-kicker">BLUEPRINT ENGINE V1</p><h2>Role experiences from structured blueprints.</h2><p>Blueprints define navigation, dashboard sections, components, permissions, and future draft/publish behavior for each role.</p><div class="studio-module-progress"><i style="width:28%"></i></div><small>Blueprint Engine progress: 28%</small></article>${blueprintsForStudio().map(blueprintCard).join('')}</section>`;
+  return `<section class="studio-overview-grid"><article class="eva-card studio-large-card"><p class="settings-kicker">BLUEPRINT ENGINE</p><h2>Draft, preview, publish, rollback.</h2><p>Select a blueprint, then save a draft, publish it live, or roll back to the previous live version.</p><div class="studio-actions"><button type="button" data-blueprint-action="save">Save Draft</button><button type="button" data-blueprint-action="publish">Publish</button><button type="button" data-blueprint-action="rollback">Rollback</button><button type="button" data-blueprint-action="preview">Preview Role</button></div><small>Selected blueprint: <b data-selected-blueprint>${safe(selectedBlueprintId)}</b></small></article>${blueprintsForStudio().map(blueprintCard).join('')}</section>`;
 }
 function renderAssets() {
   return `<section class="studio-module-grid">${ASSETS.map((name) => card(name, 'Managed through the upcoming Asset Library.', '▧', `data-studio-select="asset" data-name="${name}" data-copy="Assets will be uploaded once and reused everywhere."`)).join('')}</section>`;
@@ -88,14 +95,26 @@ function updateProgress() {
   if (label) label.textContent = `Studio Core • ${progress}%`;
   if (bar) bar.style.width = `${progress}%`;
 }
+function handleBlueprintAction(action) {
+  if (action === 'save') { saveDraftBlueprint(selectedBlueprintId, { updatedFromStudio: true }); toast('Blueprint draft saved'); }
+  if (action === 'publish') { publishBlueprint(selectedBlueprintId); toast('Blueprint published'); }
+  if (action === 'rollback') { const rolled = rollbackBlueprint(selectedBlueprintId); toast(rolled ? 'Blueprint rolled back' : 'No rollback available'); }
+  if (action === 'preview') { localStorage.setItem('evaraos-preview-role', selectedBlueprintId); toast(`Preview role: ${selectedBlueprintId}`); }
+  renderPanel('blueprints');
+}
 function boot() {
   if (!isAllowed()) return;
   window.EvaraBrand?.apply?.();
   updateProgress();
   const saved = data();
+  selectedBlueprintId = saved.selectedBlueprintId || selectedBlueprintId;
   document.querySelectorAll('[data-studio-field]').forEach((field) => { field.value = saved[field.dataset.studioField] || ''; });
   setPanel(saved.panel || 'overview');
   document.addEventListener('click', (event) => {
+    const blueprintAction = event.target.closest('[data-blueprint-action]');
+    if (blueprintAction) { handleBlueprintAction(blueprintAction.dataset.blueprintAction); return; }
+    const blueprint = event.target.closest('[data-blueprint-id]');
+    if (blueprint) { selectedBlueprintId = blueprint.dataset.blueprintId; saveDraft(false); document.querySelector('[data-selected-blueprint]') && (document.querySelector('[data-selected-blueprint]').textContent = selectedBlueprintId); }
     const panel = event.target.closest('[data-studio-panel], [data-studio-panel-jump], [data-studio-open]');
     if (panel) setPanel(panel.dataset.studioPanel || panel.dataset.studioPanelJump || panel.dataset.studioOpen || 'overview');
     const selected = event.target.closest('[data-studio-select]');
