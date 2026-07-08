@@ -72,6 +72,10 @@ export function isAuthenticated() {
 }
 
 export function getRole() {
+  try {
+    const previewRole = localStorage.getItem("evaraos-preview-role");
+    if (previewRole) return String(previewRole).toLowerCase();
+  } catch {}
   const user = getStoredUser();
   if (user) return String(user.role || "guest").toLowerCase();
   try {
@@ -84,6 +88,8 @@ export function getRole() {
 export function getDisplayName() {
   const user = getStoredUser();
   if (!user) return "Profile";
+  const previewRole = (() => { try { return localStorage.getItem("evaraos-preview-role"); } catch { return ""; } })();
+  if (previewRole) return `${previewRole.charAt(0).toUpperCase() + previewRole.slice(1)} Preview`;
   return user.displayName || user.fullName || user.username || user.email || "Profile";
 }
 
