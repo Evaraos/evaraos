@@ -5,7 +5,16 @@ let startY = 0;
 let distance = 0;
 let refreshing = false;
 
+function ensureStyles() {
+  if (document.getElementById("evaPullRefreshStyles")) return;
+  const style = document.createElement("style");
+  style.id = "evaPullRefreshStyles";
+  style.textContent = `.eva-pull-refresh{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:9990;display:flex;align-items:center;gap:8px;opacity:0;pointer-events:none;visibility:hidden;padding:9px 12px;border-radius:999px;background:rgba(10,12,18,.68);border:1px solid rgba(255,255,255,.24);color:#fff;font-weight:900;box-shadow:0 12px 34px rgba(0,0,0,.22);backdrop-filter:blur(18px);transform:translate3d(-50%,-72px,0);transition:opacity .16s ease,visibility .16s ease,transform .16s ease}.eva-pull-refresh.is-active,.eva-pull-refresh.is-ready,.eva-pull-refresh.is-refreshing{opacity:1;visibility:visible}.eva-pull-spinner{width:14px;height:14px;border-radius:999px;border:2px solid rgba(255,255,255,.36);border-top-color:#fff}.eva-pull-refresh.is-refreshing .eva-pull-spinner{animation:evaPullSpin .8s linear infinite}@keyframes evaPullSpin{to{transform:rotate(360deg)}}`;
+  document.head.appendChild(style);
+}
+
 function indicator() {
+  ensureStyles();
   let node = document.getElementById("evaPullRefresh");
   if (node) return node;
   node = document.createElement("div");
@@ -21,8 +30,9 @@ function setPull(value) {
   distance = Math.max(0, Math.min(MAX_PULL, value));
   const node = indicator();
   const progress = Math.min(1, distance / THRESHOLD);
+  node.classList.toggle("is-active", distance > 3);
   node.style.setProperty("--pull-progress", progress.toFixed(3));
-  node.style.transform = `translate3d(-50%, ${Math.max(-60, -58 + distance * .72)}px, 0)`;
+  node.style.transform = `translate3d(-50%, ${Math.max(-72, -70 + distance * .72)}px, 0)`;
   node.classList.toggle("is-ready", distance >= THRESHOLD);
   node.querySelector("strong").textContent = distance >= THRESHOLD ? "Release to refresh" : "Pull to refresh";
   document.documentElement.style.setProperty("--eva-pull-offset", `${distance * .22}px`);
@@ -32,8 +42,8 @@ function reset() {
   tracking = false;
   distance = 0;
   const node = indicator();
-  node.classList.remove("is-ready", "is-refreshing");
-  node.style.transform = "translate3d(-50%,-60px,0)";
+  node.classList.remove("is-active", "is-ready", "is-refreshing");
+  node.style.transform = "translate3d(-50%,-72px,0)";
   document.documentElement.style.setProperty("--eva-pull-offset", "0px");
 }
 
@@ -41,7 +51,7 @@ function hardRefresh() {
   if (refreshing) return;
   refreshing = true;
   const node = indicator();
-  node.classList.add("is-refreshing");
+  node.classList.add("is-active", "is-refreshing");
   node.querySelector("strong").textContent = "Refreshing Evaraos…";
   document.documentElement.style.setProperty("--eva-pull-offset", "18px");
   window.setTimeout(() => window.location.reload(), 260);
@@ -70,7 +80,7 @@ function end() {
 }
 
 function bind() {
-  indicator();
+  ensureStyles();
   window.addEventListener("touchstart", (event) => begin(event.touches?.[0]?.clientY || 0), { passive: true });
   window.addEventListener("touchmove", (event) => move(event.touches?.[0]?.clientY || 0, event), { passive: false });
   window.addEventListener("touchend", end, { passive: true });
