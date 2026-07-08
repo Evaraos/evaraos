@@ -1,0 +1,15 @@
+const PREVIEW_KEY = 'evaraos-preview-role';
+const ROLES = ['owner','admin','sales','technician','cleaner','customer','vendor'];
+function label(role){return role ? role.charAt(0).toUpperCase()+role.slice(1) : 'Live';}
+function current(){return localStorage.getItem(PREVIEW_KEY)||'';}
+function ensure(){
+  if(!document.getElementById('rolePreviewStyle')){const s=document.createElement('style');s.id='rolePreviewStyle';s.textContent='.role-preview-bar{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:9999;display:none;gap:8px;align-items:center;padding:9px 10px;border-radius:999px;background:rgba(10,12,18,.78);border:1px solid rgba(255,255,255,.3);color:#fff;backdrop-filter:blur(24px)}.role-preview-bar.is-visible{display:flex}.role-preview-bar select,.role-preview-bar button{border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);color:#fff;font-weight:900;height:34px;padding:0 10px}.role-preview-chip{position:fixed;right:12px;top:82px;z-index:9997;display:none;padding:8px 10px;border-radius:999px;background:rgba(242,23,45,.22);border:1px solid rgba(255,255,255,.25);color:#fff;font-weight:950}.role-preview-chip.is-visible{display:block}';document.head.appendChild(s);}
+  if(!document.querySelector('.role-preview-bar')){const bar=document.createElement('div');bar.className='role-preview-bar';bar.innerHTML='<strong>Preview</strong><select data-role-preview>'+ROLES.map(r=>`<option value="${r}">${label(r)}</option>`).join('')+'</select><button type="button" data-clear-preview>Exit</button>';document.body.appendChild(bar);bar.querySelector('[data-role-preview]').addEventListener('change',e=>setPreview(e.target.value));bar.querySelector('[data-clear-preview]').addEventListener('click',clearPreview);}
+  if(!document.querySelector('.role-preview-chip')){const chip=document.createElement('div');chip.className='role-preview-chip';document.body.appendChild(chip);}
+}
+function apply(){ensure();const role=current();document.documentElement.dataset.evaraPreviewRole=role;const visible=!!role||document.documentElement.classList.contains('evara-studio-mode');document.querySelector('.role-preview-bar')?.classList.toggle('is-visible',visible);const select=document.querySelector('[data-role-preview]');if(select&&role)select.value=role;const chip=document.querySelector('.role-preview-chip');if(chip){chip.textContent=role?`${label(role)} Preview`:'';chip.classList.toggle('is-visible',!!role);}window.dispatchEvent(new CustomEvent('evara:role-preview',{detail:{role}}));}
+export function setPreview(role){localStorage.setItem(PREVIEW_KEY,role||'');apply();}
+export function clearPreview(){localStorage.removeItem(PREVIEW_KEY);document.documentElement.removeAttribute('data-evara-preview-role');apply();}
+function bind(){ensure();apply();window.addEventListener('evara:studio-mode',apply);}
+window.EvaraRolePreview={set:setPreview,clear:clearPreview,apply};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
