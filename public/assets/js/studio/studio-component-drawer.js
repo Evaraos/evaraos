@@ -1,7 +1,14 @@
 import { STUDIO_COMPONENTS, renderComponentPreview, getStudioComponent } from './component-registry.js';
 
+const INSERTED_KEY = 'evaraos-studio-inserted-components-v1';
+
 function isModeOn() { return localStorage.getItem('evaraos-studio-mode-enabled') === 'true'; }
 function selected() { return document.querySelector('.studio-mode-selected'); }
+function pageKey() { return location.pathname || '/'; }
+function readInserted() { try { return JSON.parse(localStorage.getItem(INSERTED_KEY) || '{}') || {}; } catch { return {}; } }
+function writeInserted(value) { try { localStorage.setItem(INSERTED_KEY, JSON.stringify(value)); } catch {} }
+function pageItems() { const all = readInserted(); all[pageKey()] = Array.isArray(all[pageKey()]) ? all[pageKey()] : []; return { all, items: all[pageKey()] }; }
+function uid(prefix = 'component') { return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`; }
 function ensureStyles() {
   if (document.getElementById('evaraStudioComponentDrawerStyles')) return;
   const style = document.createElement('style');
@@ -16,30 +23,46 @@ function ensureDrawer() {
   if (document.querySelector('.studio-component-drawer')) return;
   const drawer = document.createElement('aside');
   drawer.className = 'studio-component-drawer';
-  drawer.innerHTML = `<h3>Add Component</h3><p>Search, then insert near the selected item.</p><input data-studio-component-search placeholder="Search components"><div class="studio-component-results" data-studio-component-results></div>`;
+  drawer.innerHTML = `<h3>Add Component</h3><p>Search, then insert near the selected item. Saved locally as a Studio draft.</p><input data-studio-component-search placeholder="Search components"><div class="studio-component-results" data-studio-component-results></div>`;
   document.body.appendChild(drawer);
   drawer.querySelector('[data-studio-component-search]').addEventListener('input', renderResults);
   renderResults();
 }
 function openDrawer() { ensureStyles(); ensureDrawer(); document.querySelector('.studio-component-drawer')?.classList.add('is-open'); renderResults(); }
 function closeDrawer() { document.querySelector('.studio-component-drawer')?.classList.remove('is-open'); }
-function componentHtml(component) {
+function componentHtml(component, item = {}) {
   const wrapper = document.createElement('section');
-  wrapper.className = 'eva-card glass-card';
+  wrapper.className = 'eva-card glass-card studio-inserted-component';
   wrapper.dataset.studioComponent = component.id;
   wrapper.dataset.ownerEdit = component.id;
-  wrapper.innerHTML = renderComponentPreview(component);
+  wrapper.dataset.studioInsertedId = item.instanceId || uid(component.id);
+  wrapper.innerHTML = renderComponentPreview(component, item.values || {});
   return wrapper;
 }
-function insertComponent(id) {
+function saveInserted(id, instanceId) {
+  const { all, items } = pageItems();
+  items.push({ id, instanceId, createdAt: Date.now(), values: {} });
+  all[pageKey()] = items;
+  writeInserted(all);
+}
+function insertComponent(id, persist = true, item = null) {
   const component = getStudioComponent(id);
   if (!component) return;
-  const node = componentHtml(component);
-  const target = selected();
+  const instanceId = item?.instanceId || uid(id);
+  const node = componentHtml(component, { ...(item || {}), instanceId });
+  const target = persist ? selected() : null;
   const host = target?.parentNode || document.querySelector('main') || document.body;
   if (target?.parentNode) host.insertBefore(node, target.nextSibling); else host.appendChild(node);
+  if (persist) saveInserted(id, instanceId);
   closeDrawer();
   window.EvaraStudioMode?.renderLayers?.();
+}
+function renderSavedComponents() {
+  const { items } = pageItems();
+  items.forEach((item) => {
+    if (document.querySelector(`[data-studio-inserted-id="${item.instanceId}"]`)) return;
+    insertComponent(item.id, false, item);
+  });
 }
 function renderResults() {
   const root = document.querySelector('[data-studio-component-results]');
@@ -49,7 +72,7 @@ function renderResults() {
   root.innerHTML = items.map((component) => `<button type="button" class="studio-component-result" data-insert-component="${component.id}"><strong>${component.icon} ${component.name}</strong><small>${component.description}</small></button>`).join('');
 }
 function bind() {
-  ensureStyles(); ensureDrawer();
+  ensureStyles(); ensureDrawer(); renderSavedComponents();
   document.addEventListener('click', (event) => {
     const action = event.target.closest('[data-studio-action="components"]');
     if (action && isModeOn()) { event.preventDefault(); event.stopPropagation(); openDrawer(); return; }
@@ -57,5 +80,7 @@ function bind() {
     if (insert) { event.preventDefault(); insertComponent(insert.dataset.insertComponent); }
     if (isModeOn() && !event.target.closest('.studio-component-drawer') && !event.target.closest('[data-studio-action="components"]')) closeDrawer();
   }, true);
+  window.addEventListener('evara:studio-mode', renderSavedComponents);
+  window.addEventListener('pageshow', renderSavedComponents);
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once: true }); else bind();
