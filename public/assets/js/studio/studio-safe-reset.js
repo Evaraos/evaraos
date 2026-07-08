@@ -1,0 +1,4 @@
+const K=['evaraos-studio-mode-enabled','evaraos-preview-role','evaraos-preview-use-draft'];
+function resetStudioRuntime(){try{K.forEach(k=>localStorage.removeItem(k));document.documentElement.classList.remove('evara-studio-mode-on','evara-studio-mode');document.documentElement.removeAttribute('data-evara-preview-role');document.documentElement.dataset.evaraStudioMode='off';document.querySelectorAll('.studio-mode-shell,.evara-studio-mode-toggle,.role-preview-bar,.role-preview-chip,.studio-component-drawer,.studio-asset-library').forEach(n=>n.remove());}catch(e){console.warn('Studio safe reset failed',e)}}
+resetStudioRuntime();
+window.EvaraStudioSafeReset={run:resetStudioRuntime};
