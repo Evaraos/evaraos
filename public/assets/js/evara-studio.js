@@ -1,7 +1,11 @@
 import { getSavedUserProfile, getSavedUserRole, normalizeRole } from './firebase.js';
+import { STUDIO_COMPONENTS, renderComponentPreview } from './studio/component-registry.js';
+import { STUDIO_MODULES, studioProgress } from './studio/module-registry.js';
 
 const OWNER_ROLES = new Set(['owner', 'super_admin', 'admin']);
-const DRAFT_KEY = 'evaraos-studio-draft-v1';
+const DRAFT_KEY = 'evaraos-studio-home-draft-v1';
+const BLUEPRINTS = ['Owner', 'Admin', 'Organization', 'HR', 'Sales', 'Technician', 'Cleaner', 'Vendor', 'Customer'];
+const ASSETS = ['Official App Icon', 'Favicon', 'Brand Mark', 'Splash Screen', 'Backgrounds', 'Service Images', 'Marketplace Images', 'Documents'];
 
 function currentRole() {
   const profile = getSavedUserProfile?.() || {};
@@ -21,57 +25,77 @@ function toast(message) {
 function saveDraft(show = true) {
   const saved = data();
   document.querySelectorAll('[data-studio-field]').forEach((field) => { saved[field.dataset.studioField] = field.value || ''; });
-  saved.product = document.querySelector('[data-studio-product].is-active')?.dataset.studioProduct || 'studio';
-  saved.view = document.querySelector('[data-studio-frame]')?.dataset.view || 'tablet';
+  saved.panel = document.querySelector('[data-studio-panel].is-active')?.dataset.studioPanel || 'overview';
   saveData(saved);
   if (show) toast('Studio draft saved');
 }
-function setView(view = 'tablet') {
-  document.querySelectorAll('[data-viewport]').forEach((button) => button.classList.toggle('is-active', button.dataset.viewport === view));
-  const frame = document.querySelector('[data-studio-frame]');
-  if (frame) frame.dataset.view = view;
+function safe(text = '') { return String(text).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
+function card(title, copy, icon = '◈', attrs = '') {
+  return `<article class="eva-card studio-registry-card" ${attrs}><span>${safe(icon)}</span><strong>${safe(title)}</strong><small>${safe(copy)}</small></article>`;
 }
-function setProduct(product = 'studio') {
-  document.querySelectorAll('[data-studio-product]').forEach((button) => button.classList.toggle('is-active', button.dataset.studioProduct === product));
-  const names = { studio: 'Evara Studio canvas', operations: 'Operations OS draft', finance: 'Finance OS draft', hr: 'HR OS draft', mapping: 'Mapping + Tracking draft', marketplace: 'Marketplace draft', ai: 'AI OS draft' };
-  const title = document.querySelector('[data-owner-edit="canvasTitle"]');
-  if (title) title.textContent = names[product] || 'Evara Studio canvas';
+function progressCard(module) {
+  return `<article class="eva-card studio-module-card" data-studio-select="module" data-name="${safe(module.name)}" data-copy="${safe(module.status)} • ${safe(module.progress)}%"><div><span>${safe(module.status)}</span><strong>${safe(module.name)}</strong></div><small>${module.dependencies.length ? 'Depends on: ' + safe(module.dependencies.join(', ')) : 'No dependencies'}</small><div class="studio-module-progress"><i style="width:${Number(module.progress || 0)}%"></i></div></article>`;
 }
-function addBlock(type = 'module') {
-  const frame = document.querySelector('[data-studio-frame]');
-  if (!frame) return;
-  const node = document.createElement('section');
-  node.className = 'studio-section is-selected';
-  node.dataset.studioBlock = type;
-  const label = type.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-  node.innerHTML = '<button class="studio-block-x" type="button">Remove</button><strong>' + label + '</strong><small>Configure access, data, and AI behavior from the inspector.</small>';
-  document.querySelectorAll('.studio-section').forEach((item) => item.classList.remove('is-selected'));
-  frame.appendChild(node);
-  toast('Studio block added');
+function setInspector(title = 'Nothing selected', copy = 'Select a Studio item to view its properties.') {
+  document.querySelector('[data-studio-inspector-title]').textContent = title;
+  document.querySelector('[data-studio-inspector-copy]').textContent = copy;
+  const nameField = document.querySelector('[data-studio-field="name"]');
+  if (nameField) nameField.value = title;
+}
+function renderOverview() {
+  const total = studioProgress();
+  return `<section class="studio-overview-grid"><article class="eva-card studio-large-card"><p class="settings-kicker">STUDIO 2.0</p><h2>Build with systems, not random pages.</h2><p>Evara Studio now reads from component and module registries. Next: blueprints, media, visual editor, and reusable components.</p><div class="studio-module-progress"><i style="width:${total}%"></i></div><small>Architecture progress: ${total}%</small></article>${card('Component Engine', `${STUDIO_COMPONENTS.length} components registered`, '▣', 'data-studio-panel-jump="components"')}${card('Module Registry', `${STUDIO_MODULES.length} modules tracked`, '◎', 'data-studio-panel-jump="modules"')}${card('Blueprint Manager', `${BLUEPRINTS.length} role blueprints planned`, '◈', 'data-studio-panel-jump="blueprints"')}${card('Asset Library', `${ASSETS.length} asset groups planned`, '▧', 'data-studio-panel-jump="assets"')}</section>`;
+}
+function renderComponents() {
+  return `<section class="studio-component-library">${STUDIO_COMPONENTS.map((component) => `<div data-studio-select="component" data-name="${safe(component.name)}" data-copy="${safe(component.description)}">${renderComponentPreview(component)}</div>`).join('')}</section>`;
+}
+function renderModules() { return `<section class="studio-module-grid">${STUDIO_MODULES.map(progressCard).join('')}</section>`; }
+function renderBlueprints() {
+  return `<section class="studio-module-grid">${BLUEPRINTS.map((name) => card(`${name} Blueprint`, `Role-aware workspace for ${name.toLowerCase()} users.`, '◈', `data-studio-select="blueprint" data-name="${name} Blueprint" data-copy="Blueprint controls layout, components, permissions, and data."`)).join('')}</section>`;
+}
+function renderAssets() {
+  return `<section class="studio-module-grid">${ASSETS.map((name) => card(name, 'Managed through the upcoming Asset Library.', '▧', `data-studio-select="asset" data-name="${name}" data-copy="Assets will be uploaded once and reused everywhere."`)).join('')}</section>`;
+}
+function renderProject() {
+  return `<section class="studio-overview-grid"><article class="eva-card studio-large-card"><p class="settings-kicker">CURRENT WAVE</p><h2>Wave 2: Studio Platform</h2><p>Studio Home is now the launcher. Blueprint Manager comes next, then Visual Editor and Component Library.</p><div class="studio-module-progress"><i style="width:22%"></i></div><small>Wave 2 progress: 22%</small></article>${card('Last major commits', 'Registries, Studio Home, role separation, design system.', '✓')}${card('Testing queue', 'Open Studio, switch panels, check owner access.', '◷')}${card('Known issue', 'Live Edit is temporary until Visual Editor replaces it.', '!')}</section>`;
+}
+function renderPanel(panel = 'overview') {
+  const root = document.querySelector('[data-studio-panel-root]');
+  if (!root) return;
+  const renderers = { overview: renderOverview, components: renderComponents, modules: renderModules, blueprints: renderBlueprints, assets: renderAssets, project: renderProject };
+  root.innerHTML = (renderers[panel] || renderOverview)();
+  const kicker = document.querySelector('[data-studio-panel-kicker]');
+  const title = document.querySelector('[data-owner-edit="studioPanelTitle"]');
+  if (kicker) kicker.textContent = panel.toUpperCase();
+  if (title) title.textContent = panel === 'overview' ? 'Studio operating center' : panel.replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+function setPanel(panel = 'overview') {
+  document.querySelectorAll('[data-studio-panel]').forEach((button) => button.classList.toggle('is-active', button.dataset.studioPanel === panel));
+  renderPanel(panel);
+  saveDraft(false);
+}
+function updateProgress() {
+  const progress = studioProgress();
+  const label = document.querySelector('[data-studio-progress]');
+  const bar = document.querySelector('[data-studio-progress-bar]');
+  if (label) label.textContent = `Studio Platform • ${progress}%`;
+  if (bar) bar.style.width = `${progress}%`;
 }
 function boot() {
-  const access = document.querySelector('[data-builder-access]');
-  if (!isAllowed()) { if (access) access.textContent = 'Owner or admin required'; return; }
-  if (access) access.textContent = 'Access granted: ' + (currentRole() || 'owner');
+  if (!isAllowed()) return;
   window.EvaraBrand?.apply?.();
+  updateProgress();
   const saved = data();
   document.querySelectorAll('[data-studio-field]').forEach((field) => { field.value = saved[field.dataset.studioField] || ''; });
-  setView(saved.view || 'tablet');
-  setProduct(saved.product || 'studio');
+  setPanel(saved.panel || 'overview');
   document.addEventListener('click', (event) => {
-    const product = event.target.closest('[data-studio-product]');
-    if (product) { setProduct(product.dataset.studioProduct); saveDraft(false); }
-    const view = event.target.closest('[data-viewport]');
-    if (view) { setView(view.dataset.viewport); saveDraft(false); }
-    const add = event.target.closest('[data-component],[data-add-section]');
-    if (add) addBlock(add.dataset.component || 'section');
-    const section = event.target.closest('.studio-section');
-    if (section) { document.querySelectorAll('.studio-section').forEach((item) => item.classList.remove('is-selected')); section.classList.add('is-selected'); }
-    const remove = event.target.closest('.studio-block-x');
-    if (remove) { remove.closest('.studio-section')?.remove(); toast('Block removed'); }
+    const panel = event.target.closest('[data-studio-panel], [data-studio-panel-jump], [data-studio-open]');
+    if (panel) setPanel(panel.dataset.studioPanel || panel.dataset.studioPanelJump || panel.dataset.studioOpen || 'overview');
+    const selected = event.target.closest('[data-studio-select]');
+    if (selected) setInspector(selected.dataset.name || 'Selected item', selected.dataset.copy || 'Editable Studio item.');
   });
-  document.querySelectorAll('[data-save-studio],[data-save-builder-draft]').forEach((button) => button.addEventListener('click', () => saveDraft(true)));
-  document.querySelector('[data-builder-preview]')?.addEventListener('click', () => document.documentElement.classList.toggle('builder-preview-mode'));
+  document.querySelectorAll('[data-save-studio]').forEach((button) => button.addEventListener('click', () => saveDraft(true)));
+  document.querySelector('[data-open-icons]')?.addEventListener('click', () => location.assign('/settings/icons.html'));
   document.querySelectorAll('[data-studio-field]').forEach((field) => field.addEventListener('input', () => saveDraft(false)));
 }
 window.addEventListener('evara:session-ready', boot, { once: true });
