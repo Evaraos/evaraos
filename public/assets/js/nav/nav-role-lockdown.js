@@ -27,7 +27,10 @@ const EXECUTIVE_ROUTES = new Set([
 const CUSTOMER_ONLY_ROUTES = new Set(['/customer_dashboard.html', '/customer-commerce.html', '/customer-service-history.html']);
 const STAFF_ALLOWED_ROUTES = new Set(['/dashboard.html', '/leads.html', '/jobs.html', '/presence.html', '/territory-map.html', '/customer-messaging.html', '/messages.html', '/settings-v2.html', '/settings.html']);
 
+function previewRole() { return String(localStorage.getItem('evaraos-preview-role') || '').toLowerCase(); }
 function role() {
+  const preview = previewRole();
+  if (preview) return preview;
   try {
     const raw = localStorage.getItem('evaraos-user') || sessionStorage.getItem('evaraos-user') || '{}';
     const user = JSON.parse(raw);
@@ -56,6 +59,7 @@ function allowed(path, currentRole) {
 export function applyNavRoleLockdown() {
   const currentRole = norm(role());
   document.documentElement.dataset.evaraosEffectiveRole = currentRole;
+  document.documentElement.dataset.evaraosPreviewRoleActive = previewRole() ? 'true' : 'false';
   document.querySelectorAll('#evaLinks a[href], .eva-menu-panel a[href]').forEach((link) => {
     const path = routeFromHref(link.getAttribute('href'));
     if (!allowed(path, currentRole)) link.remove();
@@ -70,6 +74,7 @@ function schedule() {
   setTimeout(applyNavRoleLockdown, 900);
 }
 window.addEventListener('evara:session-ready', schedule);
+window.addEventListener('evara:role-preview', schedule);
 window.addEventListener('pageshow', schedule);
 document.addEventListener('click', (event) => {
   const link = event.target.closest('a[href]');
