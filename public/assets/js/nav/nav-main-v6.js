@@ -1,4 +1,4 @@
-const NAV_BUILD="nav-v39-role-visibility";
+const NAV_BUILD="nav-v53-preview-cleanup";
 let NAV_STATE,getNavShell,renderNav,applyProgress,bindScrollBehavior,animateNav;
 
 async function loadCore(){
@@ -59,10 +59,10 @@ async function bindSystems(){
 export async function initNav(){
   try{
     await loadCore();
-    if(NAV_STATE.hasInitialized){keepVisible();ready();return}
-    NAV_STATE.hasInitialized=true;
     window.EVARAOS_NAV_BUILD=NAV_BUILD;
     document.documentElement.dataset.evaraosNavBuild=NAV_BUILD;
+    if(NAV_STATE.hasInitialized){keepVisible();ready();return}
+    NAV_STATE.hasInitialized=true;
     if(!renderNav()){ready();return}
     const shell=getNavShell();
     if(shell)shell.dataset.navBuild=NAV_BUILD;
