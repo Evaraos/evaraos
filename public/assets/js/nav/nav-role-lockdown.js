@@ -28,9 +28,7 @@ const CUSTOMER_ONLY_ROUTES = new Set(['/customer_dashboard.html', '/customer-com
 const STAFF_ALLOWED_ROUTES = new Set(['/dashboard.html', '/leads.html', '/jobs.html', '/presence.html', '/territory-map.html', '/customer-messaging.html', '/messages.html', '/settings-v2.html', '/settings.html']);
 
 function previewRole() { return String(localStorage.getItem('evaraos-preview-role') || '').toLowerCase(); }
-function role() {
-  const preview = previewRole();
-  if (preview) return preview;
+function actualRole() {
   try {
     const raw = localStorage.getItem('evaraos-user') || sessionStorage.getItem('evaraos-user') || '{}';
     const user = JSON.parse(raw);
@@ -39,6 +37,7 @@ function role() {
     return 'guest';
   }
 }
+function role() { return previewRole() || actualRole(); }
 function norm(value) {
   if (['owner', 'super_admin'].includes(value)) return 'owner';
   if (value === 'admin') return 'admin';
@@ -51,6 +50,8 @@ function routeFromHref(href = '') {
   catch { return href; }
 }
 function allowed(path, currentRole) {
+  const trueRole = actualRole();
+  if (path === '/website-builder.html' && EXECUTIVE_ROLES.has(trueRole)) return true;
   if (EXECUTIVE_ROUTES.has(path)) return EXECUTIVE_ROLES.has(currentRole);
   if (currentRole === 'customer') return CUSTOMER_ONLY_ROUTES.has(path) || ['/customer-messaging.html', '/messages.html', '/settings-v2.html', '/settings.html', '/index.html', '/'].includes(path);
   if (currentRole === 'staff') return STAFF_ALLOWED_ROUTES.has(path) || !EXECUTIVE_ROUTES.has(path);
@@ -74,7 +75,7 @@ function schedule() {
   setTimeout(applyNavRoleLockdown, 900);
 }
 window.addEventListener('evara:session-ready', schedule);
-window.addEventListener('evara:role-preview', schedule);
+window.addEventListener('evara:role-preview', () => window.setTimeout(() => location.reload(), 120));
 window.addEventListener('pageshow', schedule);
 document.addEventListener('click', (event) => {
   const link = event.target.closest('a[href]');
