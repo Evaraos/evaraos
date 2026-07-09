@@ -1,92 +1,106 @@
-const EXECUTIVE_ROLES = new Set(['owner', 'super_admin', 'admin']);
-const STAFF_ROLES = new Set(['staff', 'sales', 'sales_rep', 'technician', 'cleaner', 'field_staff', 'crew_lead', 'customer_support', 'quality_control']);
-const CUSTOMER_ROLES = new Set(['customer']);
-const EXECUTIVE_ROUTES = new Set([
-  '/website-builder.html',
-  '/companies.html',
-  '/users.html',
-  '/org.html',
-  '/applications.html',
-  '/enterprise-finance-dashboard.html',
-  '/marketplace-payouts.html',
-  '/governance-dashboard.html',
-  '/governance-analytics.html',
-  '/anomaly-dashboard.html',
-  '/audit-dashboard.html',
-  '/replay-dashboard.html',
-  '/live-operations-command.html',
-  '/operations-visibility.html',
-  '/notifications.html',
-  '/executive-queue.html',
-  '/workflow-monitor-dashboard.html',
-  '/alerts-dashboard.html',
-  '/analytics-dashboard.html',
-  '/territories.html',
-  '/qa.html'
-]);
-const CUSTOMER_ONLY_ROUTES = new Set(['/customer_dashboard.html', '/customer-commerce.html', '/customer-service-history.html']);
-const STAFF_ALLOWED_ROUTES = new Set(['/dashboard.html', '/leads.html', '/jobs.html', '/presence.html', '/territory-map.html', '/customer-messaging.html', '/messages.html', '/settings-v2.html', '/settings.html']);
+import {
+  CANONICAL_ROLES,
+  canAccessPageName,
+  defaultRouteForRole,
+  normalizeAccessRole
+} from '../access-control.js';
 
-function previewRole() { return String(localStorage.getItem('evaraos-preview-role') || '').toLowerCase(); }
-function actualRole() {
+const PREVIEW_KEY = 'evaraos-preview-role';
+const PREVIEW_CONTROLLERS = new Set(['platform_admin', 'owner', 'admin']);
+
+function storedProfile() {
   try {
     const raw = localStorage.getItem('evaraos-user') || sessionStorage.getItem('evaraos-user') || '{}';
-    const user = JSON.parse(raw);
-    return String(user.role || localStorage.getItem('evaraos-role') || sessionStorage.getItem('evaraos-role') || 'guest').toLowerCase();
+    return JSON.parse(raw) || {};
   } catch {
-    return 'guest';
+    return {};
   }
 }
-function role() { return previewRole() || actualRole(); }
-function norm(value) {
-  if (['owner', 'super_admin'].includes(value)) return 'owner';
-  if (value === 'admin') return 'admin';
-  if (STAFF_ROLES.has(value)) return 'staff';
-  if (CUSTOMER_ROLES.has(value)) return 'customer';
-  return value || 'guest';
+
+function actualRole() {
+  const profile = storedProfile();
+  return normalizeAccessRole(
+    profile.role ||
+    localStorage.getItem('evaraos-role') ||
+    sessionStorage.getItem('evaraos-role') ||
+    'customer'
+  );
 }
+
+function requestedPreviewRole() {
+  const raw = String(localStorage.getItem(PREVIEW_KEY) || '').trim();
+  if (!raw) return '';
+  const normalized = normalizeAccessRole(raw);
+  return CANONICAL_ROLES.includes(normalized) ? normalized : '';
+}
+
+function previewRole() {
+  const actual = actualRole();
+  if (!PREVIEW_CONTROLLERS.has(actual)) return '';
+  return requestedPreviewRole();
+}
+
 function routeFromHref(href = '') {
-  try { return new URL(href, location.origin).pathname; }
-  catch { return href; }
+  try {
+    const url = new URL(href, location.origin);
+    if (url.origin !== location.origin) return '';
+    return url.pathname;
+  } catch {
+    return '';
+  }
 }
-function allowed(path, currentRole) {
-  const trueRole = actualRole();
-  if (path === '/website-builder.html' && EXECUTIVE_ROLES.has(trueRole)) return true;
-  if (EXECUTIVE_ROUTES.has(path)) return EXECUTIVE_ROLES.has(currentRole);
-  if (currentRole === 'customer') return CUSTOMER_ONLY_ROUTES.has(path) || ['/customer-messaging.html', '/messages.html', '/settings-v2.html', '/settings.html', '/index.html', '/'].includes(path);
-  if (currentRole === 'staff') return STAFF_ALLOWED_ROUTES.has(path) || !EXECUTIVE_ROUTES.has(path);
-  return true;
+
+function allowed(path) {
+  const actual = actualRole();
+  const preview = previewRole();
+  const actualAllowed = canAccessPageName(path, actual);
+  const previewAllowed = !preview || canAccessPageName(path, preview);
+  return actualAllowed && previewAllowed;
 }
+
 export function applyNavRoleLockdown() {
-  const currentRole = norm(role());
-  document.documentElement.dataset.evaraosEffectiveRole = currentRole;
-  document.documentElement.dataset.evaraosPreviewRoleActive = previewRole() ? 'true' : 'false';
+  const actual = actualRole();
+  const preview = previewRole();
+  const effective = preview || actual;
+
+  document.documentElement.dataset.evaraosActualRole = actual;
+  document.documentElement.dataset.evaraosEffectiveRole = effective;
+  document.documentElement.dataset.evaraosPreviewRoleActive = preview ? 'true' : 'false';
+
   document.querySelectorAll('#evaLinks a[href], .eva-menu-panel a[href]').forEach((link) => {
     const path = routeFromHref(link.getAttribute('href'));
-    if (!allowed(path, currentRole)) link.remove();
+    if (!path || !allowed(path)) link.remove();
   });
+
   document.querySelectorAll('.eva-app-section').forEach((section) => {
     if (!section.querySelector('.eva-app-link')) section.remove();
   });
 }
+
 function schedule() {
   requestAnimationFrame(applyNavRoleLockdown);
   setTimeout(applyNavRoleLockdown, 250);
   setTimeout(applyNavRoleLockdown, 900);
 }
+
 window.addEventListener('evara:session-ready', schedule);
-window.addEventListener('evara:role-preview', () => window.setTimeout(() => location.reload(), 120));
+window.addEventListener('evara:role-preview', schedule);
 window.addEventListener('pageshow', schedule);
+
 document.addEventListener('click', (event) => {
   const link = event.target.closest('a[href]');
   if (!link) return;
-  const currentRole = norm(role());
+
   const path = routeFromHref(link.getAttribute('href'));
-  if (!allowed(path, currentRole)) {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    location.assign(currentRole === 'customer' ? '/customer_dashboard.html' : '/dashboard.html');
-  }
+  if (!path || allowed(path)) return;
+
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  location.assign(defaultRouteForRole(previewRole() || actualRole()));
 }, true);
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', schedule, { once: true });
-else schedule();
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', schedule, { once: true });
+} else {
+  schedule();
+}
