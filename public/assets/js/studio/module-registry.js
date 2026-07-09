@@ -1,15 +1,16 @@
-export const STUDIO_MODULE_VERSION = 'module-registry-v8';
+export const STUDIO_MODULE_VERSION = 'module-registry-v9';
 
 export const STUDIO_MODULES = Object.freeze([
   { id: 'core', name: 'Core Engine', status: 'active', progress: 92, permissions: ['owner', 'admin'], dependencies: ['permissions', 'design-system'], routes: ['/dashboard.html'] },
   { id: 'permissions', name: 'Permission Engine', status: 'active', progress: 100, permissions: ['owner', 'admin'], dependencies: [], routes: [] },
   { id: 'design-system', name: 'Design System', status: 'active', progress: 98, permissions: ['owner', 'admin'], dependencies: [], routes: [] },
-  { id: 'graph-core', name: 'Evara Graph Core', status: 'active', progress: 58, permissions: ['owner', 'admin'], dependencies: ['permissions'], routes: [] },
-  { id: 'operation-engine', name: 'Operation & History Engine', status: 'active', progress: 72, permissions: ['owner', 'admin'], dependencies: ['graph-core'], routes: [] },
-  { id: 'canvas-engine', name: 'Canvas Engine', status: 'active-sandbox', progress: 84, permissions: ['owner', 'admin'], dependencies: ['design-system', 'graph-core', 'operation-engine'], routes: ['/website-builder.html'] },
-  { id: 'studio', name: 'Evara Studio', status: 'rebuild', progress: 78, permissions: ['owner', 'admin'], dependencies: ['permissions', 'design-system', 'components', 'blueprints', 'canvas-engine', 'graph-core', 'operation-engine'], routes: ['/website-builder.html'] },
-  { id: 'components', name: 'Component Engine', status: 'active', progress: 70, permissions: ['owner', 'admin'], dependencies: ['design-system', 'graph-core'], routes: [] },
-  { id: 'blueprints', name: 'Blueprint Engine', status: 'active', progress: 72, permissions: ['owner', 'admin'], dependencies: ['permissions', 'components', 'graph-core', 'operation-engine'], routes: [] },
+  { id: 'graph-core', name: 'Evara Graph Core', status: 'active', progress: 72, permissions: ['owner', 'admin'], dependencies: ['permissions'], routes: [] },
+  { id: 'operation-engine', name: 'Operation & History Engine', status: 'release-candidate', progress: 90, permissions: ['owner', 'admin'], dependencies: ['graph-core'], routes: [], classification: 'production-ready-source', deploymentState: 'required', validationState: 'pending-external' },
+  { id: 'journal-engine', name: 'Trusted Journal & Release Engine', status: 'release-candidate', progress: 94, permissions: ['owner', 'admin'], dependencies: ['permissions', 'graph-core', 'operation-engine'], routes: ['/website-builder.html'], classification: 'production-ready-source', deploymentState: 'required', validationState: 'pending-external' },
+  { id: 'canvas-engine', name: 'Canvas Engine', status: 'release-candidate', progress: 94, permissions: ['owner', 'admin'], dependencies: ['design-system', 'graph-core', 'operation-engine', 'journal-engine'], routes: ['/website-builder.html'], classification: 'production-ready-source', deploymentState: 'required', validationState: 'pending-external' },
+  { id: 'studio', name: 'Evara Studio', status: 'release-candidate', progress: 88, permissions: ['owner', 'admin'], dependencies: ['permissions', 'design-system', 'components', 'blueprints', 'canvas-engine', 'journal-engine', 'graph-core', 'operation-engine'], routes: ['/website-builder.html'], classification: 'production-ready-source', deploymentState: 'required', validationState: 'pending-external' },
+  { id: 'components', name: 'Component Engine', status: 'active', progress: 74, permissions: ['owner', 'admin'], dependencies: ['design-system', 'graph-core'], routes: [] },
+  { id: 'blueprints', name: 'Blueprint Engine', status: 'active', progress: 78, permissions: ['owner', 'admin'], dependencies: ['permissions', 'components', 'graph-core', 'operation-engine'], routes: [] },
   { id: 'operations', name: 'Operations OS', status: 'active', progress: 36, permissions: ['owner', 'admin', 'organization', 'vendor', 'staff'], dependencies: ['core'], routes: ['/jobs.html', '/leads.html', '/schedule.html'] },
   { id: 'finance', name: 'Finance OS', status: 'planned', progress: 18, permissions: ['owner', 'admin', 'organization', 'vendor'], dependencies: ['core'], routes: ['/revenue.html', '/ledger.html'] },
   { id: 'hr', name: 'HR OS', status: 'planned', progress: 22, permissions: ['owner', 'admin', 'hr'], dependencies: ['core'], routes: ['/applications.html', '/users.html'] },
