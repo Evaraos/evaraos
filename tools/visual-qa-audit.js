@@ -171,14 +171,26 @@ if (!errors.length) {
   for (const canvasContract of [
     "page.goto('/website-builder.html'",
     'EvaraCanvasSandbox?.open',
+    'EvaraCanvasSyncStatus?.snapshot',
     'data-canvas-sandbox-toggle',
     "dispatch('canvas.component.insert'",
     'EvaraCanvasSandbox.undo()',
     'EvaraCanvasSandbox.redo()',
     'pendingTransactions()',
+    'pendingTransactionCount',
+    'unsynchronizedChanges',
+    'integrityState',
+    'data-canvas-unsynchronized',
     'page.reload',
     'recovered.exists',
+    'second tab is read-only and takes over after release',
+    'corrupted Canvas transaction fails closed with recovery-required',
+    'canvas-transaction-integrity',
+    'graph-head mismatch fails closed and requires refresh',
+    'canvas-graph-head-mismatch',
     'canvas-session-recovery.json',
+    'canvas-corrupt-transaction-recovery.json',
+    'canvas-graph-head-mismatch-recovery.json',
     'canvas-session-recovery.png',
     'storageStatePath'
   ]) {
@@ -194,8 +206,12 @@ if (!errors.length) {
     }
   }
 
-  if (!workflow.includes('workflow_dispatch:')) errors.push('.github/workflows/design-system-visual-qa.yml: authenticated job must remain manually dispatchable');
-  if (!workflow.includes("- studio\n          - all")) errors.push('.github/workflows/design-system-visual-qa.yml: focused Studio suite option is missing');
+  if (!workflow.includes('workflow_dispatch:')) errors.push('.github/workflows/design-system-visual-qa.yml: QA workflow must remain manually dispatchable');
+  if (!workflow.includes('default: static')) errors.push('.github/workflows/design-system-visual-qa.yml: credential-free static validation must be the default');
+  if (!workflow.includes("- static\n          - studio\n          - all")) errors.push('.github/workflows/design-system-visual-qa.yml: static, Studio, and all suite options are required');
+  if (!workflow.includes("if: github.event_name == 'workflow_dispatch' && inputs.suite != 'static'")) {
+    errors.push('.github/workflows/design-system-visual-qa.yml: authenticated job must be skipped for the static suite');
+  }
   const focusedCommand = 'npx playwright test specs/studio-interactions.spec.mjs specs/studio-action-icon.spec.mjs specs/studio-blueprint-serialization.spec.mjs specs/studio-blueprint-operations.spec.mjs specs/studio-canvas-session.spec.mjs --project=desktop-chromium';
   if (!workflow.includes(focusedCommand)) {
     errors.push('.github/workflows/design-system-visual-qa.yml: all focused Studio validation specs must run together');
@@ -236,4 +252,4 @@ if (errors.length) {
   errors.forEach((error) => console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('Visual QA role, appearance, device, authentication, Studio interaction, action/icon, Blueprint serialization, operation journal, durable CanvasSession, artifact, and route contracts passed.');
+console.log('Visual QA role, appearance, device, authentication, Studio interaction, Blueprint serialization, operation Journal, writer lease, integrity recovery, unsynchronized diagnostics, static-only execution, artifact, and route contracts passed.');
