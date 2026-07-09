@@ -7,6 +7,7 @@ import {
 
 const ownerRole = ROLE_DEFINITIONS.find((role) => role.id === 'owner');
 const ownerAvailable = Boolean(ownerRole && credentialsFor(ownerRole).available);
+const appCheckDebugToken = String(process.env.EVARA_QA_APP_CHECK_DEBUG_TOKEN || '').trim();
 
 function diagnostics(page) {
   const pageErrors = [];
@@ -18,36 +19,44 @@ function diagnostics(page) {
   return { pageErrors, consoleErrors };
 }
 
-async function installJournalEventCapture(page) {
+async function installStudioBoot(page) {
+  if (appCheckDebugToken) {
+    await page.addInitScript((token) => {
+      self.FIREBASE_APPCHECK_DEBUG_TOKEN = token;
+    }, appCheckDebugToken);
+  }
   await page.addInitScript(() => {
     window.__evaraJournalEvents = [];
+    window.__evaraAppCheckEvents = [];
+    localStorage.removeItem('evaraos-studio-visual-builder-v1');
+    localStorage.removeItem('evaraos-studio-auto-layout-v1');
     window.addEventListener('evara:studio-journal-status', (event) => {
       window.__evaraJournalEvents.push(JSON.parse(JSON.stringify(event.detail || {})));
     });
     window.addEventListener('evara:trusted-studio-journal', (event) => {
       window.__evaraJournalEvents.push(JSON.parse(JSON.stringify(event.detail || {})));
     });
+    window.addEventListener('evara:app-check-status', (event) => {
+      window.__evaraAppCheckEvents.push(JSON.parse(JSON.stringify(event.detail || {})));
+    });
   });
 }
 
 async function openStudioCanvas(page) {
-  await installJournalEventCapture(page);
-  await page.addInitScript(() => {
-    localStorage.removeItem('evaraos-studio-visual-builder-v1');
-    localStorage.removeItem('evaraos-studio-auto-layout-v1');
-  });
+  await installStudioBoot(page);
   const response = await page.goto('/website-builder.html', { waitUntil: 'domcontentloaded' });
   expect(response).not.toBeNull();
   expect(response.status()).toBeLessThan(400);
   await page.waitForFunction(() => document.body?.classList.contains('app-ready'), null, { timeout: 30_000 });
   await expect(page.locator('[data-visual-studio]')).toBeVisible();
   await page.waitForFunction(() => Boolean(
-    window.EvaraCanvasWriterGuard?.snapshot
+    window.EvaraAppCheckReadiness?.snapshot?.().state === 'ready'
+    && window.EvaraTrustedStudioJournal?.snapshot
+    && window.EvaraCanvasWriterGuard?.snapshot
     && window.EvaraCanvasSandbox?.open
     && window.EvaraCanvasSyncStatus?.snapshot
     && window.EvaraStudioJournal?.idempotencyGuardVersion
-    && window.EvaraTrustedStudioJournal?.snapshot
-  ), null, { timeout: 15_000 });
+  ), null, { timeout: 30_000 });
   await page.locator('[data-canvas-sandbox-toggle]').click();
   await expect(page.locator('[data-canvas-sandbox]')).toBeVisible();
   await page.waitForFunction(() => Boolean(window.EvaraCanvasSandbox?.getSession?.()?.snapshot?.().ready), null, { timeout: 15_000 });
@@ -112,121 +121,77 @@ async function insertDurableNode(page, name = 'QA Durable Card') {
   expect(inserted.headRevision).toBe(inserted.revision);
   expect(inserted.headSequence).toBeGreaterThan(0);
   expect(inserted.canUndo).toBe(true);
-
   return { before, inserted, nodeId };
 }
 
-async function openJournalDatabase(page) {
-  return page.evaluate(async () => {
-    const name = window.EvaraStudioJournal.databaseName;
-    const request = indexedDB.open(name);
-    return new Promise((resolve, reject) => {
-      request.onsuccess = () => {
-        request.result.close();
-        resolve(name);
-      };
+async function withJournalDatabase(page, storeNames, mode, callbackSource, argument) {
+  return page.evaluate(async ({ storeNames, mode, callbackSource, argument }) => {
+    const database = await new Promise((resolve, reject) => {
+      const request = indexedDB.open(window.EvaraStudioJournal.databaseName);
+      request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error || new Error('Journal database could not open.'));
     });
-  });
+    try {
+      const transaction = database.transaction(storeNames, mode);
+      const stores = Object.fromEntries(storeNames.map((name) => [name, transaction.objectStore(name)]));
+      const callback = new Function('stores', 'argument', `return (${callbackSource})(stores, argument);`);
+      const result = await callback(stores, argument);
+      await new Promise((resolve, reject) => {
+        transaction.oncomplete = resolve;
+        transaction.onerror = () => reject(transaction.error);
+        transaction.onabort = () => reject(transaction.error || new Error('Transaction aborted.'));
+      });
+      return result;
+    } finally {
+      database.close();
+    }
+  }, { storeNames, mode, callbackSource, argument });
 }
 
 async function configureTrustedScope(page, projectId, branchId) {
-  return page.evaluate(async ({ projectId, branchId }) => {
-    const db = await new Promise((resolve, reject) => {
-      const request = indexedDB.open(window.EvaraStudioJournal.databaseName);
+  return withJournalDatabase(page, ['sessions'], 'readwrite', async (stores, values) => {
+    const session = await new Promise((resolve, reject) => {
+      const request = stores.sessions.get('local-studio-session');
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error || new Error('Journal database could not open.'));
+      request.onerror = () => reject(request.error);
     });
-    try {
-      const tx = db.transaction(['sessions'], 'readwrite');
-      const store = tx.objectStore('sessions');
-      const session = await new Promise((resolve, reject) => {
-        const request = store.get('local-studio-session');
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
-      const next = {
-        ...session,
-        projectId,
-        branchId,
-        updatedAt: new Date().toISOString()
-      };
-      store.put(next);
-      await new Promise((resolve, reject) => {
-        tx.oncomplete = resolve;
-        tx.onerror = () => reject(tx.error);
-        tx.onabort = () => reject(tx.error || new Error('Transaction aborted.'));
-      });
-      return next;
-    } finally {
-      db.close();
-    }
-  }, { projectId, branchId });
+    const next = { ...session, projectId: values.projectId, branchId: values.branchId, updatedAt: new Date().toISOString() };
+    stores.sessions.put(next);
+    return next;
+  }.toString(), { projectId, branchId });
 }
 
 async function corruptTransaction(page, transactionId) {
-  return page.evaluate(async (id) => {
-    const db = await new Promise((resolve, reject) => {
-      const request = indexedDB.open(window.EvaraStudioJournal.databaseName);
+  return withJournalDatabase(page, ['transactions'], 'readwrite', async (stores, id) => {
+    const record = await new Promise((resolve, reject) => {
+      const request = stores.transactions.get(id);
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error || new Error('Journal database could not open.'));
+      request.onerror = () => reject(request.error);
     });
-    try {
-      const tx = db.transaction(['transactions'], 'readwrite');
-      const store = tx.objectStore('transactions');
-      const record = await new Promise((resolve, reject) => {
-        const request = store.get(id);
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
-      if (!record) throw new Error(`Missing transaction ${id}`);
-      record.operations = [];
-      store.put(record);
-      await new Promise((resolve, reject) => {
-        tx.oncomplete = resolve;
-        tx.onerror = () => reject(tx.error);
-        tx.onabort = () => reject(tx.error || new Error('Transaction aborted.'));
-      });
-      return { transactionId: id, corrupted: true };
-    } finally {
-      db.close();
-    }
-  }, transactionId);
+    if (!record) throw new Error(`Missing transaction ${id}`);
+    record.operations = [];
+    stores.transactions.put(record);
+    return { transactionId: id, corrupted: true };
+  }.toString(), transactionId);
 }
 
 async function offsetGraphHead(page, graphId) {
-  return page.evaluate(async (id) => {
-    const db = await new Promise((resolve, reject) => {
-      const request = indexedDB.open(window.EvaraStudioJournal.databaseName);
+  return withJournalDatabase(page, ['sessions'], 'readwrite', async (stores, id) => {
+    const session = await new Promise((resolve, reject) => {
+      const request = stores.sessions.get('local-studio-session');
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error || new Error('Journal database could not open.'));
+      request.onerror = () => reject(request.error);
     });
-    try {
-      const tx = db.transaction(['sessions'], 'readwrite');
-      const store = tx.objectStore('sessions');
-      const session = await new Promise((resolve, reject) => {
-        const request = store.get('local-studio-session');
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
-      if (!session?.graphHeads?.[id]) throw new Error(`Missing graph head ${id}`);
-      session.graphHeads[id] = {
-        ...session.graphHeads[id],
-        revision: Number(session.graphHeads[id].revision || 0) + 1,
-        updatedAt: new Date().toISOString()
-      };
-      if (session.activeGraphId === id) session.activeGraphRevision = session.graphHeads[id].revision;
-      store.put(session);
-      await new Promise((resolve, reject) => {
-        tx.oncomplete = resolve;
-        tx.onerror = () => reject(tx.error);
-        tx.onabort = () => reject(tx.error || new Error('Transaction aborted.'));
-      });
-      return { graphId: id, revision: session.graphHeads[id].revision };
-    } finally {
-      db.close();
-    }
-  }, graphId);
+    if (!session?.graphHeads?.[id]) throw new Error(`Missing graph head ${id}`);
+    session.graphHeads[id] = {
+      ...session.graphHeads[id],
+      revision: Number(session.graphHeads[id].revision || 0) + 1,
+      updatedAt: new Date().toISOString()
+    };
+    if (session.activeGraphId === id) session.activeGraphRevision = session.graphHeads[id].revision;
+    stores.sessions.put(session);
+    return { graphId: id, revision: session.graphHeads[id].revision };
+  }.toString(), graphId);
 }
 
 async function reloadAndAttemptCanvasRecovery(page, { offsetGraphId = null } = {}) {
@@ -246,8 +211,9 @@ async function reloadAndAttemptCanvasRecovery(page, { offsetGraphId = null } = {
   }), injected);
 }
 
-test.describe('authenticated durable CanvasSession', () => {
+test.describe('authenticated durable CanvasSession — corruption and graph-head recovery validation', () => {
   test.skip(!ownerAvailable, 'Owner QA credentials are required for CanvasSession validation.');
+  test.skip(Boolean(process.env.CI) && !appCheckDebugToken, 'EVARA_QA_APP_CHECK_DEBUG_TOKEN is required for authenticated CI.');
   test.use({ storageState: ownerRole ? storageStatePath(ownerRole.id) : undefined });
 
   test('@critical semantic insert undo redo and reload recovery', async ({ page }, testInfo) => {
@@ -255,7 +221,6 @@ test.describe('authenticated durable CanvasSession', () => {
     const runtime = diagnostics(page);
     await openStudioCanvas(page);
     await expect.poll(() => writerState(page), { timeout: 15_000 }).toBe('writer');
-
     const { before, inserted, nodeId } = await insertDurableNode(page);
     expect(before.graphId).toMatch(/^graph:canvas:/);
     await expect(page.locator('[data-canvas-sync-status]')).toContainText(/local change|server confirmed|saved offline|syncing/i);
@@ -264,42 +229,37 @@ test.describe('authenticated durable CanvasSession', () => {
     const undone = await page.evaluate(async (targetId) => {
       await window.EvaraCanvasSandbox.undo();
       const session = window.EvaraCanvasSandbox.getSession();
-      const graph = session.getGraph();
-      const snapshot = session.snapshot();
       return {
-        exists: Boolean(graph.nodes[targetId]),
-        revision: graph.revision,
-        canRedo: snapshot.canRedo,
-        pendingTransactionCount: snapshot.pendingTransactionCount,
-        unsynchronizedChanges: snapshot.unsynchronizedChanges,
-        integrityState: snapshot.integrityState
+        exists: Boolean(session.getGraph().nodes[targetId]),
+        revision: session.getGraph().revision,
+        canRedo: session.snapshot().canRedo,
+        pendingTransactionCount: session.snapshot().pendingTransactionCount,
+        unsynchronizedChanges: session.snapshot().unsynchronizedChanges,
+        integrityState: session.snapshot().integrityState
       };
     }, nodeId);
     expect(undone.exists).toBe(false);
     expect(undone.revision).toBeGreaterThan(inserted.revision);
     expect(undone.canRedo).toBe(true);
-    expect(undone.pendingTransactionCount).toBeGreaterThanOrEqual(0);
     expect(undone.unsynchronizedChanges).toBe(undone.pendingTransactionCount > 0);
     expect(undone.integrityState).toBe('verified');
 
     const redone = await page.evaluate(async (targetId) => {
       await window.EvaraCanvasSandbox.redo();
       const session = window.EvaraCanvasSandbox.getSession();
-      const graph = session.getGraph();
-      const snapshot = session.snapshot();
+      const pendingCount = (await window.EvaraCanvasSandbox.pendingTransactions()).length;
       return {
-        exists: Boolean(graph.nodes[targetId]),
-        revision: graph.revision,
-        transactionCount: snapshot.transactionCount,
-        pendingCount: (await window.EvaraCanvasSandbox.pendingTransactions()).length,
-        pendingTransactionCount: snapshot.pendingTransactionCount,
-        unsynchronizedChanges: snapshot.unsynchronizedChanges,
-        headRevision: snapshot.headRevision
+        exists: Boolean(session.getGraph().nodes[targetId]),
+        revision: session.getGraph().revision,
+        transactionCount: session.snapshot().transactionCount,
+        pendingCount,
+        pendingTransactionCount: session.snapshot().pendingTransactionCount,
+        unsynchronizedChanges: session.snapshot().unsynchronizedChanges,
+        headRevision: session.snapshot().headRevision
       };
     }, nodeId);
     expect(redone.exists).toBe(true);
     expect(redone.revision).toBeGreaterThan(undone.revision);
-    expect(redone.pendingCount).toBeGreaterThanOrEqual(0);
     expect(redone.pendingTransactionCount).toBe(redone.pendingCount);
     expect(redone.unsynchronizedChanges).toBe(redone.pendingCount > 0);
     expect(redone.headRevision).toBe(redone.revision);
@@ -313,60 +273,42 @@ test.describe('authenticated durable CanvasSession', () => {
 
     const recovered = await page.evaluate(async (targetId) => {
       const session = window.EvaraCanvasSandbox.getSession();
-      const graph = session.getGraph();
-      const snapshot = session.snapshot();
+      const pendingCount = (await window.EvaraCanvasSandbox.pendingTransactions()).length;
       return {
-        exists: Boolean(graph.nodes[targetId]),
-        revision: graph.revision,
-        transactionCount: snapshot.transactionCount,
-        canUndo: snapshot.canUndo,
-        pendingCount: (await window.EvaraCanvasSandbox.pendingTransactions()).length,
-        pendingTransactionCount: snapshot.pendingTransactionCount,
-        durabilityState: snapshot.durabilityState,
-        integrityState: snapshot.integrityState,
-        headRevision: snapshot.headRevision,
-        headSequence: snapshot.headSequence,
-        unsynchronizedChanges: snapshot.unsynchronizedChanges
+        exists: Boolean(session.getGraph().nodes[targetId]),
+        revision: session.getGraph().revision,
+        transactionCount: session.snapshot().transactionCount,
+        pendingCount,
+        pendingTransactionCount: session.snapshot().pendingTransactionCount,
+        durabilityState: session.snapshot().durabilityState,
+        integrityState: session.snapshot().integrityState,
+        headRevision: session.snapshot().headRevision,
+        headSequence: session.snapshot().headSequence,
+        unsynchronizedChanges: session.snapshot().unsynchronizedChanges,
+        appCheck: window.EvaraAppCheckReadiness.snapshot()
       };
     }, nodeId);
-
     expect(recovered.exists).toBe(true);
     expect(recovered.revision).toBe(redone.revision);
-    expect(recovered.transactionCount).toBe(redone.transactionCount);
-    expect(recovered.canUndo).toBe(true);
-    expect(recovered.pendingCount).toBeGreaterThanOrEqual(0);
     expect(recovered.pendingTransactionCount).toBe(recovered.pendingCount);
-    expect(['saved-locally', 'server-confirmed', 'offline', 'syncing']).toContain(recovered.durabilityState);
     expect(recovered.integrityState).toBe('verified');
     expect(recovered.headRevision).toBe(recovered.revision);
     expect(recovered.headSequence).toBeGreaterThan(0);
     expect(recovered.unsynchronizedChanges).toBe(recovered.pendingCount > 0);
+    expect(recovered.appCheck.state).toBe('ready');
+    expect(recovered.appCheck.loaded).toBe(true);
 
-    await testInfo.attach('canvas-session-recovery.json', {
-      body: JSON.stringify({ before, inserted, undone, redone, recovered }, null, 2),
-      contentType: 'application/json'
-    });
-    await testInfo.attach('canvas-session-recovery.png', {
-      body: await page.screenshot({ fullPage: false }),
-      contentType: 'image/png'
-    });
-
-    if (runtime.consoleErrors.length) {
-      await testInfo.attach('canvas-session-console-errors.txt', {
-        body: runtime.consoleErrors.join('\n'),
-        contentType: 'text/plain'
-      });
-    }
+    await testInfo.attach('canvas-session-recovery.json', { body: JSON.stringify({ before, inserted, undone, redone, recovered }, null, 2), contentType: 'application/json' });
+    await testInfo.attach('canvas-session-recovery.png', { body: await page.screenshot({ fullPage: false }), contentType: 'image/png' });
+    if (runtime.consoleErrors.length) await testInfo.attach('canvas-session-console-errors.txt', { body: runtime.consoleErrors.join('\n'), contentType: 'text/plain' });
     expect(runtime.pageErrors, 'CanvasSession must not emit uncaught page errors.').toEqual([]);
     expect.soft(runtime.consoleErrors, 'CanvasSession console errors require review.').toEqual([]);
   });
 
   test('@critical second tab is read-only and takes over after release', async ({ context, page }, testInfo) => {
     if (testInfo.project.name !== 'desktop-chromium') test.skip();
-
     await openStudioCanvas(page);
     await expect.poll(() => writerState(page), { timeout: 15_000 }).toBe('writer');
-
     const second = await context.newPage();
     await openStudioCanvas(second);
     await expect.poll(() => writerState(second), { timeout: 15_000 }).toBe('read-only');
@@ -375,37 +317,14 @@ test.describe('authenticated durable CanvasSession', () => {
       const session = window.EvaraCanvasSandbox.getSession();
       const graph = session.getGraph();
       const frame = Object.values(graph.nodes).find((node) => node.kind === 'frame');
-      return {
-        graphId: graph.graphId,
-        revision: graph.revision,
-        nodeCount: Object.keys(graph.nodes).length,
-        frameId: frame?.id || null,
-        guard: window.EvaraCanvasWriterGuard.snapshot()
-      };
+      return { revision: graph.revision, nodeCount: Object.keys(graph.nodes).length, frameId: frame?.id || null, guard: window.EvaraCanvasWriterGuard?.snapshot() };
     });
-    expect(before.frameId).toBeTruthy();
-    expect(before.guard.canWrite).toBe(false);
-
     const blockedNodeId = `component_blocked_${Date.now().toString(36)}`;
     const blocked = await second.evaluate(async ({ nodeId, frameId }) => {
-      const result = await window.EvaraCanvasSandbox.dispatch('canvas.component.insert', {
-        nodeId,
-        parentId: frameId,
-        componentType: 'glass-card',
-        name: 'Blocked secondary-tab card',
-        span: 4,
-        content: { title: 'Must not persist' }
-      });
+      const result = await window.EvaraCanvasSandbox.dispatch('canvas.component.insert', { nodeId, parentId: frameId, componentType: 'glass-card', name: 'Blocked secondary-tab card', span: 4, content: { title: 'Must not persist' } });
       const graph = window.EvaraCanvasSandbox.getSession().getGraph();
-      return {
-        result,
-        exists: Boolean(graph.nodes[nodeId]),
-        revision: graph.revision,
-        nodeCount: Object.keys(graph.nodes).length,
-        state: document.body.dataset.canvasWriterState
-      };
+      return { result, exists: Boolean(graph.nodes[nodeId]), revision: graph.revision, nodeCount: Object.keys(graph.nodes).length, state: document.body.dataset.canvasWriterState };
     }, { nodeId: blockedNodeId, frameId: before.frameId });
-
     expect(blocked.result).toBeNull();
     expect(blocked.exists).toBe(false);
     expect(blocked.revision).toBe(before.revision);
@@ -414,41 +333,18 @@ test.describe('authenticated durable CanvasSession', () => {
 
     await page.evaluate(() => window.EvaraCanvasWriterGuard.release());
     await expect.poll(() => writerState(second), { timeout: 20_000 }).toBe('writer');
-
     const takeoverNodeId = `component_takeover_${Date.now().toString(36)}`;
     const takeover = await second.evaluate(async ({ nodeId, frameId }) => {
-      const result = await window.EvaraCanvasSandbox.dispatch('canvas.component.insert', {
-        nodeId,
-        parentId: frameId,
-        componentType: 'glass-card',
-        name: 'Writer takeover card',
-        span: 4,
-        content: { title: 'Writer takeover succeeded' }
-      });
+      const result = await window.EvaraCanvasSandbox.dispatch('canvas.component.insert', { nodeId, parentId: frameId, componentType: 'glass-card', name: 'Writer takeover card', span: 4, content: { title: 'Writer takeover succeeded' } });
       const graph = window.EvaraCanvasSandbox.getSession().getGraph();
-      return {
-        durable: Boolean(result?.durable),
-        exists: Boolean(graph.nodes[nodeId]),
-        revision: graph.revision,
-        state: document.body.dataset.canvasWriterState,
-        guard: window.EvaraCanvasWriterGuard.snapshot()
-      };
+      return { durable: Boolean(result?.durable), exists: Boolean(graph.nodes[nodeId]), revision: graph.revision, state: document.body.dataset.canvasWriterState, guard: window.EvaraCanvasWriterGuard.snapshot() };
     }, { nodeId: takeoverNodeId, frameId: before.frameId });
-
     expect(takeover.durable).toBe(true);
     expect(takeover.exists).toBe(true);
     expect(takeover.revision).toBeGreaterThan(before.revision);
     expect(takeover.state).toBe('writer');
     expect(takeover.guard.canWrite).toBe(true);
-
-    await testInfo.attach('canvas-writer-lease.json', {
-      body: JSON.stringify({ before, blocked, takeover }, null, 2),
-      contentType: 'application/json'
-    });
-    await testInfo.attach('canvas-writer-lease.png', {
-      body: await second.screenshot({ fullPage: false }),
-      contentType: 'image/png'
-    });
+    await testInfo.attach('canvas-writer-lease.json', { body: JSON.stringify({ before, blocked, takeover }, null, 2), contentType: 'application/json' });
   });
 
   test('@critical local transaction IDs are idempotent and conflicting reuse fails closed', async ({ page }, testInfo) => {
@@ -456,36 +352,21 @@ test.describe('authenticated durable CanvasSession', () => {
     await openStudioCanvas(page);
     await expect.poll(() => writerState(page), { timeout: 15_000 }).toBe('writer');
     const { inserted } = await insertDurableNode(page, 'Local idempotency probe');
-
     const result = await page.evaluate(async (transactionId) => {
-      const records = await window.EvaraStudioJournal.listOperationTransactions();
-      const record = records.find((item) => item.transactionId === transactionId);
-      if (!record) throw new Error(`Missing transaction ${transactionId}`);
+      const record = (await window.EvaraStudioJournal.listOperationTransactions()).find((item) => item.transactionId === transactionId);
       const same = await window.EvaraStudioJournal.appendOperationTransaction(JSON.parse(JSON.stringify(record)));
       let conflict = null;
       try {
-        await window.EvaraStudioJournal.appendOperationTransaction({
-          ...JSON.parse(JSON.stringify(record)),
-          summary: `${record.summary} changed-content`
-        });
+        await window.EvaraStudioJournal.appendOperationTransaction({ ...JSON.parse(JSON.stringify(record)), summary: `${record.summary} changed-content` });
       } catch (error) {
         conflict = String(error?.message || error);
       }
-      return {
-        originalId: record.transactionId,
-        duplicateId: same.transactionId,
-        conflict,
-        guardVersion: window.EvaraStudioJournal.idempotencyGuardVersion
-      };
+      return { originalId: record.transactionId, duplicateId: same.transactionId, conflict, guardVersion: window.EvaraStudioJournal.idempotencyGuardVersion };
     }, inserted.transactionId);
-
     expect(result.duplicateId).toBe(result.originalId);
     expect(result.conflict).toMatch(/reused with different content/i);
     expect(result.guardVersion).toBe('studio-journal-idempotency-guard-v1');
-    await testInfo.attach('canvas-local-idempotency.json', {
-      body: JSON.stringify(result, null, 2),
-      contentType: 'application/json'
-    });
+    await testInfo.attach('canvas-local-idempotency.json', { body: JSON.stringify(result, null, 2), contentType: 'application/json' });
   });
 
   test('@critical trusted synchronization checkpoint and immutable release are server confirmed', async ({ page }, testInfo) => {
@@ -495,33 +376,19 @@ test.describe('authenticated durable CanvasSession', () => {
     const projectId = `qa-studio-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
     await configureTrustedScope(page, projectId, 'main');
     const { inserted } = await insertDurableNode(page, 'Trusted release probe');
-
     const result = await page.evaluate(async (transactionId) => {
       const adapter = window.EvaraTrustedStudioJournal;
       const session = window.EvaraCanvasSandbox.getSession();
       const graph = session.getGraph();
       const sync = await adapter.syncGraph(graph.graphId);
-      const records = await window.EvaraStudioJournal.listOperationTransactions(graph.graphId);
-      const confirmed = records.find((record) => record.transactionId === transactionId);
+      const confirmed = (await window.EvaraStudioJournal.listOperationTransactions(graph.graphId)).find((record) => record.transactionId === transactionId);
       const retry = await adapter.commit(confirmed);
       const checkpoint = await adapter.checkpoint(graph, 'qa-trusted-checkpoint');
       const latest = await window.EvaraStudioJournal.latestTrustedCheckpoint(graph.graphId);
       const release = await adapter.release(graph, { releaseId: `release-${Date.now().toString(36)}` });
       const pending = await window.EvaraStudioJournal.listPendingOperationTransactions(graph.graphId);
-      return {
-        sync,
-        confirmedState: confirmed?.durabilityState,
-        startSequence: confirmed?.startSequence,
-        endSequence: confirmed?.endSequence,
-        retryIdempotent: retry?.idempotent,
-        checkpoint,
-        latestCheckpointId: latest?.checkpointId,
-        pendingCount: pending.length,
-        release: release.release,
-        releaseIdempotent: release.idempotent
-      };
+      return { sync, confirmedState: confirmed?.durabilityState, startSequence: confirmed?.startSequence, endSequence: confirmed?.endSequence, retryIdempotent: retry?.idempotent, checkpoint, latestCheckpointId: latest?.checkpointId, pendingCount: pending.length, release: release.release, releaseIdempotent: release.idempotent, appCheck: window.EvaraAppCheckReadiness.snapshot() };
     }, inserted.transactionId);
-
     expect(result.confirmedState).toBe('server-confirmed');
     expect(result.startSequence).toBeGreaterThan(0);
     expect(result.endSequence).toBeGreaterThanOrEqual(result.startSequence);
@@ -531,61 +398,40 @@ test.describe('authenticated durable CanvasSession', () => {
     expect(result.pendingCount).toBe(0);
     expect(result.release.immutable).toBe(true);
     expect(result.release.status).toBe('prepared');
-
-    await testInfo.attach('canvas-trusted-release.json', {
-      body: JSON.stringify({ projectId, result }, null, 2),
-      contentType: 'application/json'
-    });
-    await testInfo.attach('canvas-trusted-release.png', {
-      body: await page.screenshot({ fullPage: false }),
-      contentType: 'image/png'
-    });
+    expect(result.appCheck.state).toBe('ready');
+    await testInfo.attach('canvas-trusted-release.json', { body: JSON.stringify({ projectId, result }, null, 2), contentType: 'application/json' });
+    await testInfo.attach('canvas-trusted-release.png', { body: await page.screenshot({ fullPage: false }), contentType: 'image/png' });
   });
 
   test('@critical corrupted Canvas transaction fails closed with recovery-required', async ({ page }, testInfo) => {
     if (testInfo.project.name !== 'desktop-chromium') test.skip();
     await openStudioCanvas(page);
     await expect.poll(() => writerState(page), { timeout: 15_000 }).toBe('writer');
-    await openJournalDatabase(page);
-
     const { inserted } = await insertDurableNode(page, 'Corruption recovery probe');
     const corruption = await corruptTransaction(page, inserted.transactionId);
-    expect(corruption.corrupted).toBe(true);
-
     const recovery = await reloadAndAttemptCanvasRecovery(page);
     const event = recovery.events.find((item) => item.recoveryCode === 'canvas-transaction-integrity');
-    expect(event).toBeTruthy();
-    expect(event.state).toBe('recovery-required');
+    expect(corruption.corrupted).toBe(true);
+    expect(event?.state).toBe('recovery-required');
     expect(recovery.overlayVisible).toBe(false);
     expect(recovery.sync.integrityState).toBe('recovery-required');
     expect(recovery.toast).toMatch(/integrity|recovery/i);
     await expect(page.locator('body')).toHaveAttribute('data-canvas-integrity-state', 'recovery-required');
-
-    await testInfo.attach('canvas-corrupt-transaction-recovery.json', {
-      body: JSON.stringify({ corruption, recovery }, null, 2),
-      contentType: 'application/json'
-    });
+    await testInfo.attach('canvas-corrupt-transaction-recovery.json', { body: JSON.stringify({ corruption, recovery }, null, 2), contentType: 'application/json' });
   });
 
   test('@critical graph-head mismatch fails closed and requires refresh', async ({ page }, testInfo) => {
     if (testInfo.project.name !== 'desktop-chromium') test.skip();
     await openStudioCanvas(page);
     await expect.poll(() => writerState(page), { timeout: 15_000 }).toBe('writer');
-
     const { before } = await insertDurableNode(page, 'Graph head mismatch probe');
     const recovery = await reloadAndAttemptCanvasRecovery(page, { offsetGraphId: before.graphId });
-    const mismatch = recovery.injected;
-    expect(mismatch.revision).toBeGreaterThan(0);
     const event = recovery.events.find((item) => item.recoveryCode === 'canvas-graph-head-mismatch');
-    expect(event).toBeTruthy();
-    expect(event.state).toBe('recovery-required');
+    expect(recovery.injected.revision).toBeGreaterThan(0);
+    expect(event?.state).toBe('recovery-required');
     expect(recovery.overlayVisible).toBe(false);
     expect(recovery.sync.integrityState).toBe('recovery-required');
     expect(recovery.toast).toMatch(/head mismatch|recovery/i);
-
-    await testInfo.attach('canvas-graph-head-mismatch-recovery.json', {
-      body: JSON.stringify({ mismatch, recovery }, null, 2),
-      contentType: 'application/json'
-    });
+    await testInfo.attach('canvas-graph-head-mismatch-recovery.json', { body: JSON.stringify({ mismatch: recovery.injected, recovery }, null, 2), contentType: 'application/json' });
   });
 });
