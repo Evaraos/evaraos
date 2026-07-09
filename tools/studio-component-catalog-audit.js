@@ -186,7 +186,8 @@ if (!errors.length) {
     }
   }
 
-  const journalModelImport = '/assets/js/studio/studio-document-model.js?v=1';
+  const journalModelImport = '/assets/js/studio/studio-document-model.js?v=2';
+  const journalControlsImport = '/assets/js/studio/studio-document-controls.js?v=2';
   const builderImport = '/assets/js/studio/studio-visual-builder.js?v=2';
   const inspectorImport = '/assets/js/studio/studio-component-inspector.js?v=1';
   if (!studioPage.includes('/assets/css/pages/studio-component-catalog.css?v=1')) {
@@ -210,8 +211,8 @@ if (!errors.length) {
   if (!studioPage.includes('/assets/js/studio/studio-auto-layout-bridge.js?v=1')) {
     errors.push('public/website-builder.html: Auto Layout drag bridge is missing');
   }
-  if (!studioPage.includes(journalModelImport) || !studioPage.includes('/assets/js/studio/studio-document-controls.js?v=1')) {
-    errors.push('public/website-builder.html: draft journal runtime or controls are missing');
+  if (!studioPage.includes(journalModelImport) || !studioPage.includes(journalControlsImport)) {
+    errors.push('public/website-builder.html: operation-aware Journal runtime or controls are missing');
   }
   if (!studioPage.includes(inspectorImport)) {
     errors.push('public/website-builder.html: component property inspector is missing');
@@ -269,4 +270,4 @@ if (errors.length) {
   errors.forEach((error) => console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('Studio catalog, property inspector, semantic controls, Canvas compatibility layer, Auto Layout, IndexedDB draft journal, recovery, and authoring boundaries passed.');
+console.log('Studio catalog, property inspector, semantic controls, Canvas compatibility layer, Auto Layout, operation-aware IndexedDB Journal, recovery, and authoring boundaries passed.');
