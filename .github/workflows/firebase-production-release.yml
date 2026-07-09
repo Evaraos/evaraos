@@ -1,0 +1,202 @@
+name: Evaraos Firebase Production Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_scope:
+        description: Production components to deploy
+        required: true
+        type: choice
+        default: all
+        options:
+          - hosting
+          - functions
+          - firestore
+          - backend
+          - all
+      confirmation:
+        description: Type DEPLOY EVARAOS PRODUCTION to authorize the release
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firebase-production-release
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate production release
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: production
+
+    steps:
+      - name: Verify release confirmation
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ inputs.confirmation }}" != "DEPLOY EVARAOS PRODUCTION" ]; then
+            echo "Release confirmation did not match the required phrase."
+            exit 1
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Functions dependencies
+        if: inputs.release_scope == 'functions' || inputs.release_scope == 'backend' || inputs.release_scope == 'all'
+        run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+
+      - name: Validate Cloud Function syntax
+        if: inputs.release_scope == 'functions' || inputs.release_scope == 'backend' || inputs.release_scope == 'all'
+        run: |
+          node --check functions/index-stats.js
+          node --check functions/marketplace-commerce-runtime.js
+          node --check functions/marketplace-commerce-read.js
+          node --check functions/marketplace-operations-core.js
+          node --check functions/marketplace-order-changes.js
+          node --check functions/marketplace-refunds.js
+          node --check functions/marketplace-operations-read.js
+          node --check functions/marketplace-lifecycle-notifications.js
+          node --check functions/marketplace-exception-review.js
+
+      - name: Run Marketplace policy tests
+        if: inputs.release_scope == 'functions' || inputs.release_scope == 'backend' || inputs.release_scope == 'all'
+        run: npm run test:marketplace --prefix functions
+
+      - name: Validate browser modules
+        if: inputs.release_scope == 'hosting' || inputs.release_scope == 'all'
+        run: |
+          node --experimental-default-type=module --check public/assets/js/customer-commerce-dashboard.js
+          node --experimental-default-type=module --check public/assets/js/customer-marketplace-operations.js
+          node --experimental-default-type=module --check public/assets/js/marketplace-exception-review.js
+          node --experimental-default-type=module --check public/assets/js/marketplace-vendor-handoff.js
+          node --experimental-default-type=module --check public/assets/js/customer-marketplace-ordering.js
+          node --experimental-default-type=module --check public/assets/js/marketplace-order-engine.js
+
+      - name: Validate Firebase configuration
+        run: |
+          node -e "JSON.parse(require('fs').readFileSync('firebase.json', 'utf8'));"
+          node -e "JSON.parse(require('fs').readFileSync('firestore.indexes.json', 'utf8'));"
+          node -e "JSON.parse(require('fs').readFileSync('functions/package.json', 'utf8'));"
+
+      - name: Verify Firebase service account secret
+        shell: bash
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EVARAOS_WEB }}
+        run: |
+          set -euo pipefail
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "FIREBASE_SERVICE_ACCOUNT_EVARAOS_WEB is not configured."
+            exit 1
+          fi
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
+          node -e "JSON.parse(require('fs').readFileSync(process.env.RUNNER_TEMP + '/firebase-service-account.json', 'utf8'));"
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Verify required Firebase Functions secrets
+        if: inputs.release_scope == 'functions' || inputs.release_scope == 'backend' || inputs.release_scope == 'all'
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          firebase functions:secrets:access STRIPE_SECRET_KEY --project evaraos-web >/dev/null
+          firebase functions:secrets:access STRIPE_WEBHOOK_SECRET --project evaraos-web >/dev/null
+          echo "Required Stripe-backed Firebase Functions secrets are configured."
+
+      - name: Verify Marketplace production wiring
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q "getMarketplaceExceptionQueue" functions/index-stats.js
+          grep -q "reviewMarketplaceException" functions/index-stats.js
+          grep -q "stripeMarketplaceWebhook" functions/index-stats.js
+          grep -q "marketplaceExceptionRoot" public/live-operations-command.html
+          grep -q "customerOrderRoot" public/customer-commerce.html
+
+      - name: Publish validated source artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaraos-production-source-${{ github.sha }}
+          path: |
+            firebase.json
+            .firebaserc
+            firestore.indexes.json
+            firebase/
+            functions/
+            public/
+          retention-days: 14
+
+  deploy:
+    name: Deploy validated production release
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+
+    steps:
+      - name: Checkout validated commit
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Write Firebase service account
+        shell: bash
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EVARAOS_WEB }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
+
+      - name: Deploy Firebase Hosting
+        if: inputs.release_scope == 'hosting'
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: firebase deploy --only hosting:production --project evaraos-web --non-interactive
+
+      - name: Deploy Firebase Functions
+        if: inputs.release_scope == 'functions'
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: firebase deploy --only functions --project evaraos-web --non-interactive
+
+      - name: Deploy Firestore rules and indexes
+        if: inputs.release_scope == 'firestore'
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: firebase deploy --only firestore:rules,firestore:indexes --project evaraos-web --non-interactive
+
+      - name: Deploy backend
+        if: inputs.release_scope == 'backend'
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: firebase deploy --only functions,firestore:rules,firestore:indexes --project evaraos-web --non-interactive
+
+      - name: Deploy complete production release
+        if: inputs.release_scope == 'all'
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: firebase deploy --only functions,firestore:rules,firestore:indexes,hosting:production --project evaraos-web --non-interactive
+
+      - name: Release summary
+        run: |
+          echo "Evaraos production release completed."
+          echo "Scope: ${{ inputs.release_scope }}"
+          echo "Commit: ${{ github.sha }}"
