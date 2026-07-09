@@ -13,6 +13,7 @@ const requiredFiles = [
   'public/assets/js/studio/studio-visual-builder.js',
   'public/assets/js/studio/studio-layout-engine.js',
   'public/assets/js/studio/studio-auto-layout.js',
+  'public/assets/js/studio/studio-auto-layout-bridge.js',
   'public/assets/css/pages/studio-component-catalog.css',
   'public/assets/css/pages/studio-auto-layout.css',
   'public/assets/css/pages/studio-auto-layout-widths.css',
@@ -32,6 +33,7 @@ if (!errors.length) {
   const builder = read('public/assets/js/studio/studio-visual-builder.js');
   const layout = read('public/assets/js/studio/studio-layout-engine.js');
   const autoLayout = read('public/assets/js/studio/studio-auto-layout.js');
+  const autoLayoutBridge = read('public/assets/js/studio/studio-auto-layout-bridge.js');
   const catalogCss = read('public/assets/css/pages/studio-component-catalog.css');
   const autoLayoutCss = read('public/assets/css/pages/studio-auto-layout.css');
   const autoLayoutWidths = read('public/assets/css/pages/studio-auto-layout-widths.css');
@@ -120,13 +122,18 @@ if (!errors.length) {
     if (!autoLayout.includes(capability)) errors.push(`studio-auto-layout.js: missing ${capability} capability`);
   }
   for (const unsafeSink of ['innerHTML', 'outerHTML', 'eval(', 'new Function']) {
-    if (autoLayout.includes(unsafeSink)) errors.push(`studio-auto-layout.js: unsafe sink detected: ${unsafeSink}`);
+    if (autoLayout.includes(unsafeSink) || autoLayoutBridge.includes(unsafeSink)) {
+      errors.push(`Studio Auto Layout: unsafe sink detected: ${unsafeSink}`);
+    }
   }
   if (!autoLayout.includes('MutationObserver') || !autoLayout.includes('normalizeAutoState')) {
     errors.push('studio-auto-layout.js: validated lifecycle rehydration is incomplete');
   }
   if (!autoLayout.includes('undoAuto') || !autoLayout.includes('redoAuto')) {
     errors.push('studio-auto-layout.js: Auto Layout history controls are missing');
+  }
+  if (!autoLayoutBridge.includes("text/x-evara-studio-node") || !autoLayoutBridge.includes('[data-auto-node]')) {
+    errors.push('studio-auto-layout-bridge.js: hierarchy drag payload bridge is incomplete');
   }
 
   if (!studioPage.includes('/assets/css/pages/studio-component-catalog.css?v=1')) {
@@ -140,6 +147,9 @@ if (!errors.length) {
   }
   if (!studioPage.includes('/assets/js/studio/studio-auto-layout.js?v=1')) {
     errors.push('public/website-builder.html: Auto Layout runtime is missing');
+  }
+  if (!studioPage.includes('/assets/js/studio/studio-auto-layout-bridge.js?v=1')) {
+    errors.push('public/website-builder.html: Auto Layout drag bridge is missing');
   }
 
   for (const selector of [
