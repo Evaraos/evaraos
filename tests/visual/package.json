@@ -1,0 +1,15 @@
+{
+  "name": "evaraos-visual-qa",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:critical": "playwright test --grep @critical",
+    "test:full": "playwright test",
+    "snapshots:update": "playwright test --update-snapshots",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.61.1"
+  }
+}
