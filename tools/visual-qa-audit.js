@@ -54,6 +54,10 @@ if (!errors.length) {
     if (!matrix.includes(`id: '${role}'`)) errors.push(`tests/visual/visual-matrix.mjs: missing ${role} role`);
   }
 
+  if (!matrix.includes("id: 'owner'") || !matrix.includes('required: true')) {
+    errors.push('tests/visual/visual-matrix.mjs: owner credentials must remain mandatory');
+  }
+
   for (const appearance of ['light', 'dark', 'system', 'image']) {
     if (!matrix.includes(`id: '${appearance}'`)) errors.push(`tests/visual/visual-matrix.mjs: missing ${appearance} appearance`);
   }
@@ -63,8 +67,9 @@ if (!errors.length) {
     "page.locator('#loginEmail')",
     "page.locator('#loginPassword')",
     'indexedDB: true',
-    'EVARA_QA_OWNER_EMAIL',
-    'EVARA_QA_OWNER_PASSWORD'
+    'credentialsFor(role)',
+    'missingRequired',
+    'role.required'
   ]) {
     if (!setup.includes(requiredSetupContract)) errors.push(`tests/visual/global-setup.mjs: missing secure setup contract ${requiredSetupContract}`);
   }
