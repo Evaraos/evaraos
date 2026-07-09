@@ -14,6 +14,11 @@ on:
           - firestore
           - backend
           - all
+      release_ref:
+        description: Branch, tag, or commit SHA to validate and deploy
+        required: true
+        type: string
+        default: evaraos
       confirmation:
         description: Type DEPLOY EVARAOS PRODUCTION to authorize the release
         required: true
@@ -32,6 +37,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     environment: production
+    outputs:
+      validated_sha: ${{ steps.source.outputs.sha }}
 
     steps:
       - name: Verify release confirmation
@@ -43,8 +50,19 @@ jobs:
             exit 1
           fi
 
-      - name: Checkout repository
+      - name: Checkout requested release reference
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_ref }}
+          fetch-depth: 0
+
+      - name: Lock validated source commit
+        id: source
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "Validating commit $(git rev-parse HEAD)"
 
       - name: Use Node.js 20
         uses: actions/setup-node@v4
@@ -134,8 +152,17 @@ jobs:
     environment: production
 
     steps:
-      - name: Checkout validated commit
+      - name: Checkout exact validated commit
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.validated_sha }}
+          fetch-depth: 0
+
+      - name: Verify checked-out commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ needs.validate.outputs.validated_sha }}"
 
       - name: Use Node.js 20
         uses: actions/setup-node@v4
@@ -192,4 +219,4 @@ jobs:
         run: |
           echo "Evaraos production release completed."
           echo "Scope: ${{ inputs.release_scope }}"
-          echo "Commit: ${{ github.sha }}"
+          echo "Commit: ${{ needs.validate.outputs.validated_sha }}"
