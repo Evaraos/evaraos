@@ -32,18 +32,19 @@
   <link rel="stylesheet" href="/assets/css/base.css?v=53" />
   <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v1" />
   <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v25-x-drawer" />
-  <link rel="stylesheet" href="/assets/css/dashboard.css?v=50" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css?v=51" />
   <link rel="stylesheet" href="/assets/css/app-system.css?v=50" />
 </head>
 <body class="dashboard-body auth-pending app-loading" data-route-guard="private">
+  <a class="dashboard-skip-link" href="#dashboardMain">Skip to dashboard content</a>
   <div id="universalNavRoot"></div>
   <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
 
   <div id="appRoot">
-    <div class="page-grid-overlay"></div>
+    <div class="page-grid-overlay" aria-hidden="true"></div>
 
     <div class="dashboard-shell">
-      <aside class="dashboard-sidebar" id="dashboardSidebar">
+      <aside class="dashboard-sidebar" id="dashboardSidebar" aria-label="Dashboard navigation and search">
         <div class="dashboard-sidebar-inner glass-shell aurora-card active-glow beam-target">
           <div class="dashboard-sidebar-search">
             <div class="dashboard-search-shell input-shell aurora-card active-glow beam-target">
@@ -57,13 +58,13 @@
           </div>
 
           <nav class="dashboard-sidebar-nav" aria-label="Dashboard sections">
-            <a href="#overviewSection" class="dashboard-nav-link active aurora-card beam-target"><span class="dashboard-nav-icon">◉</span><span>Overview</span></a>
-            <a href="#kpiSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon">◎</span><span>KPI Board</span></a>
-            <a href="#companiesSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon">◌</span><span>Companies</span></a>
-            <a href="#usersSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon">◍</span><span>Users</span></a>
-            <a href="#pipelineSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon">◒</span><span>Pipeline</span></a>
-            <a href="#operationsSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon">◈</span><span>Operations</span></a>
-            <a href="#activitySection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon">◐</span><span>Activity</span></a>
+            <a href="#overviewSection" class="dashboard-nav-link active aurora-card beam-target" aria-current="location"><span class="dashboard-nav-icon" aria-hidden="true">◉</span><span>Overview</span></a>
+            <a href="#kpiSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon" aria-hidden="true">◎</span><span>KPI Board</span></a>
+            <a href="#companiesSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon" aria-hidden="true">◌</span><span>Companies</span></a>
+            <a href="#usersSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon" aria-hidden="true">◍</span><span>Users</span></a>
+            <a href="#pipelineSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon" aria-hidden="true">◒</span><span>Pipeline</span></a>
+            <a href="#operationsSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon" aria-hidden="true">◈</span><span>Operations</span></a>
+            <a href="#activitySection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon" aria-hidden="true">◐</span><span>Activity</span></a>
           </nav>
 
           <div class="dashboard-sidebar-foot glass-card aurora-card active-glow beam-target">
@@ -76,13 +77,13 @@
         </div>
       </aside>
 
-      <main class="dashboard-main">
-        <section class="dashboard-hero glass-card aurora-card active-glow beam-target" id="overviewSection">
+      <main class="dashboard-main" id="dashboardMain" tabindex="-1">
+        <section class="dashboard-hero glass-card aurora-card active-glow beam-target" id="overviewSection" aria-labelledby="dashboardHeroTitle">
           <div class="dashboard-hero-copy">
             <p class="dashboard-eyebrow">OWNER DASHBOARD</p>
-            <h1>Run the ecosystem like a premium operating system.</h1>
+            <h1 id="dashboardHeroTitle">Run the ecosystem like a premium operating system.</h1>
             <p class="dashboard-hero-text">Watch subsidiaries, users, leads, jobs, approvals, and recent movement from one command center built for Evaraos Inc.</p>
-            <div class="dashboard-hero-actions">
+            <div class="dashboard-hero-actions" aria-label="Dashboard quick actions">
               <a href="/companies.html" class="btn btn-theme-primary beam-target">Manage Companies</a>
               <a href="/leads.html" class="btn btn-theme-secondary beam-target">Open Leads</a>
               <a href="/qa.html" class="btn btn-theme-secondary beam-target">Open QA</a>
@@ -90,56 +91,56 @@
           </div>
 
           <div class="dashboard-hero-panel glass-card aurora-card active-glow beam-target">
-            <div class="dashboard-hero-panel-top"><span class="dashboard-mini-badge">Live Platform</span><span class="dashboard-live-dot"></span></div>
+            <div class="dashboard-hero-panel-top"><span class="dashboard-mini-badge">Live Platform</span><span class="dashboard-live-dot" aria-hidden="true"></span></div>
             <div class="dashboard-hero-logo-wrap"><img src="/assets/img/evaraos_logo.png" alt="Evaraos" class="dashboard-hero-logo" loading="eager" decoding="async" fetchpriority="high" /></div>
-            <div class="dashboard-hero-panel-copy"><strong id="heroStatusTitle">Workspace ready</strong><span id="heroStatusText">Dashboard is open. Live records are syncing in the background.</span></div>
+            <div class="dashboard-hero-panel-copy" role="status" aria-live="polite" aria-atomic="true"><strong id="heroStatusTitle">Workspace ready</strong><span id="heroStatusText">Dashboard is open. Live records are syncing in the background.</span></div>
           </div>
         </section>
 
-        <section class="dashboard-overview glass-card aurora-card active-glow beam-target" id="kpiSection">
-          <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Snapshot</p><h2>Executive KPI Board</h2></div><a href="/settings.html" class="btn btn-theme-secondary beam-target">Open Settings</a></div>
-          <div class="dashboard-stats-grid">
-            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target"><p>Active Companies</p><h3 id="statCompanies">0</h3><span id="statCompaniesMeta">Syncing in background</span></article>
-            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target"><p>Total Users</p><h3 id="statUsers">0</h3><span id="statUsersMeta">Syncing in background</span></article>
-            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target"><p>Open Leads</p><h3 id="statLeads">0</h3><span id="statLeadsMeta">Syncing in background</span></article>
-            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target"><p>Jobs</p><h3 id="statJobs">0</h3><span id="statJobsMeta">Syncing in background</span></article>
+        <section class="dashboard-overview glass-card aurora-card active-glow beam-target" id="kpiSection" aria-labelledby="kpiSectionTitle">
+          <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Snapshot</p><h2 id="kpiSectionTitle">Executive KPI Board</h2></div><a href="/settings.html" class="btn btn-theme-secondary beam-target">Open Settings</a></div>
+          <div class="dashboard-stats-grid" aria-label="Executive key performance indicators">
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target"><p id="statCompaniesLabel">Active Companies</p><h3 id="statCompanies" aria-live="polite" aria-atomic="true">0</h3><span id="statCompaniesMeta">Syncing in background</span></article>
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target"><p id="statUsersLabel">Total Users</p><h3 id="statUsers" aria-live="polite" aria-atomic="true">0</h3><span id="statUsersMeta">Syncing in background</span></article>
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target"><p id="statLeadsLabel">Open Leads</p><h3 id="statLeads" aria-live="polite" aria-atomic="true">0</h3><span id="statLeadsMeta">Syncing in background</span></article>
+            <article class="dashboard-stat-card glass-card aurora-card active-glow beam-target"><p id="statJobsLabel">Jobs</p><h3 id="statJobs" aria-live="polite" aria-atomic="true">0</h3><span id="statJobsMeta">Syncing in background</span></article>
           </div>
         </section>
 
-        <section class="dashboard-grid-2">
-          <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="companiesSection">
-            <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Subsidiaries</p><h2>Company Health</h2></div><a href="/companies.html" class="dashboard-inline-link">View all</a></div>
-            <div class="dashboard-list" id="companiesList"><article class="dashboard-list-item glass-card aurora-card active-glow beam-target"><div><strong>Company health is syncing</strong><span>Your dashboard is visible first. Firestore records load after first paint.</span></div><span class="dashboard-status-pill working">Syncing</span></article></div>
+        <section class="dashboard-grid-2" aria-label="Company and user overview">
+          <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="companiesSection" aria-labelledby="companiesSectionTitle">
+            <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Subsidiaries</p><h2 id="companiesSectionTitle">Company Health</h2></div><a href="/companies.html" class="dashboard-inline-link">View all</a></div>
+            <div class="dashboard-list" id="companiesList" aria-live="polite"><article class="dashboard-list-item glass-card aurora-card active-glow beam-target"><div><strong>Company health is syncing</strong><span>Your dashboard is visible first. Firestore records load after first paint.</span></div><span class="dashboard-status-pill working">Syncing</span></article></div>
           </section>
 
-          <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="usersSection">
-            <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Access</p><h2>User Roles</h2></div><a href="/users.html" class="dashboard-inline-link">Manage</a></div>
-            <div class="dashboard-role-grid" id="usersRoleGrid"><article class="dashboard-role-card glass-card aurora-card active-glow beam-target"><div><strong>Role board is syncing</strong><span>User role totals load in the background.</span></div><span class="dashboard-status-pill working">Syncing</span></article></div>
-          </section>
-        </section>
-
-        <section class="dashboard-grid-2" id="pipelineSection">
-          <section class="dashboard-panel glass-card aurora-card active-glow beam-target">
-            <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Pipeline</p><h2>Lead Flow</h2></div><a href="/leads.html" class="dashboard-inline-link">Review queue</a></div>
-            <div class="dashboard-progress-stack" id="leadFlowStack"><div class="dashboard-progress-row glass-card aurora-card active-glow beam-target"><div class="dashboard-progress-copy"><strong>Lead flow is syncing</strong><span>Pipeline counts will appear automatically.</span></div><div class="dashboard-progress-bar"><span style="width: 20%;"></span></div></div></div>
-          </section>
-
-          <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="operationsSection">
-            <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Execution</p><h2>Jobs In Motion</h2></div><a href="/jobs.html" class="dashboard-inline-link">Open jobs</a></div>
-            <div class="dashboard-list" id="jobsList"><article class="dashboard-list-item glass-card aurora-card active-glow beam-target"><div><strong>Jobs are syncing</strong><span>Operations data will appear automatically.</span></div><span class="dashboard-status-pill working">Syncing</span></article></div>
+          <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="usersSection" aria-labelledby="usersSectionTitle">
+            <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Access</p><h2 id="usersSectionTitle">User Roles</h2></div><a href="/users.html" class="dashboard-inline-link">Manage</a></div>
+            <div class="dashboard-role-grid" id="usersRoleGrid" aria-live="polite"><article class="dashboard-role-card glass-card aurora-card active-glow beam-target"><div><strong>Role board is syncing</strong><span>User role totals load in the background.</span></div><span class="dashboard-status-pill working">Syncing</span></article></div>
           </section>
         </section>
 
-        <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="activitySection">
-          <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Activity</p><h2>Recent Platform Events</h2></div></div>
-          <div class="dashboard-feed" id="activityFeed"><article class="dashboard-feed-item glass-card aurora-card active-glow beam-target"><div><strong>Activity is syncing</strong><span>Recent platform activity loads without blocking the dashboard.</span></div><span class="dashboard-status-pill working">Syncing</span></article></div>
+        <section class="dashboard-grid-2" id="pipelineSection" aria-label="Lead pipeline and job operations">
+          <section class="dashboard-panel glass-card aurora-card active-glow beam-target" aria-labelledby="pipelineSectionTitle">
+            <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Pipeline</p><h2 id="pipelineSectionTitle">Lead Flow</h2></div><a href="/leads.html" class="dashboard-inline-link">Review queue</a></div>
+            <div class="dashboard-progress-stack" id="leadFlowStack" aria-live="polite"><div class="dashboard-progress-row glass-card aurora-card active-glow beam-target"><div class="dashboard-progress-copy"><strong>Lead flow is syncing</strong><span>Pipeline counts will appear automatically.</span></div><div class="dashboard-progress-bar" aria-hidden="true"><span style="width: 20%;"></span></div></div></div>
+          </section>
+
+          <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="operationsSection" aria-labelledby="operationsSectionTitle">
+            <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Execution</p><h2 id="operationsSectionTitle">Jobs In Motion</h2></div><a href="/jobs.html" class="dashboard-inline-link">Open jobs</a></div>
+            <div class="dashboard-list" id="jobsList" aria-live="polite"><article class="dashboard-list-item glass-card aurora-card active-glow beam-target"><div><strong>Jobs are syncing</strong><span>Operations data will appear automatically.</span></div><span class="dashboard-status-pill working">Syncing</span></article></div>
+          </section>
+        </section>
+
+        <section class="dashboard-panel glass-card aurora-card active-glow beam-target" id="activitySection" aria-labelledby="activitySectionTitle">
+          <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Activity</p><h2 id="activitySectionTitle">Recent Platform Events</h2></div></div>
+          <div class="dashboard-feed" id="activityFeed" aria-live="polite"><article class="dashboard-feed-item glass-card aurora-card active-glow beam-target"><div><strong>Activity is syncing</strong><span>Recent platform activity loads without blocking the dashboard.</span></div><span class="dashboard-status-pill working">Syncing</span></article></div>
         </section>
       </main>
     </div>
   </div>
 
   <script src="/assets/js/loader.js?v=36"></script>
-  <script type="module" src="/assets/js/firebase.js?v=36"></script><script type="module" src="/assets/js/route-guard.js?v=35"></script><script type="module" src="/assets/js/dashboard-entry.js?v=1"></script>  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v1"></script>
+  <script type="module" src="/assets/js/firebase.js?v=36"></script><script type="module" src="/assets/js/route-guard.js?v=35"></script><script type="module" src="/assets/js/dashboard-entry.js?v=2"></script>  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v1"></script>
   <script type="module" src="/assets/js/nav.js?v=nav-v25-x-drawer"></script>
 </body>
 </html>
