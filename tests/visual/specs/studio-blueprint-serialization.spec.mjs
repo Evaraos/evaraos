@@ -44,11 +44,23 @@ test.describe('authenticated Studio Blueprint serialization', () => {
     const card = page.locator('.studio-node[data-node-type="glass-card"]').first();
     await card.click();
     await page.locator('[data-catalog-tool="properties"]').click();
-    const panel = page.locator('[data-catalog-sheet="properties"]');
+
+    let panel = page.locator('[data-catalog-sheet="properties"]');
     await panel.locator('[data-action-intent-control]').selectOption('navigate');
+    let selectedCard = page.locator('.studio-node[data-node-type="glass-card"].is-selected');
+    await expect(selectedCard).toHaveAttribute('data-action-intent', 'navigate');
+
+    panel = page.locator('[data-catalog-sheet="properties"]');
     await panel.locator('[data-action-target-control]').selectOption('/revenue.html');
+    selectedCard = page.locator('.studio-node[data-node-type="glass-card"].is-selected');
+    await expect(selectedCard).toHaveAttribute('data-action-target', '/revenue.html');
+    await expect(selectedCard).toHaveAttribute('data-action-allowed', 'true');
+
+    panel = page.locator('[data-catalog-sheet="properties"]');
     await panel.locator('[data-icon-search]').fill('map');
     await panel.locator('[data-icon-choice="map"]').click();
+    selectedCard = page.locator('.studio-node[data-node-type="glass-card"].is-selected');
+    await expect(selectedCard).toHaveAttribute('data-icon-id', 'map');
 
     await page.locator('[data-auto-layout-tool]').click();
     await page.locator('[data-auto-action="create"]').click();
@@ -91,6 +103,7 @@ test.describe('authenticated Studio Blueprint serialization', () => {
 
     expect(result.document.kind).toBe('evara.blueprint.component-document');
     expect(result.document.schemaVersion).toBe('1.0.0');
+    expect(result.document.documentId).toBe('blueprint-document:owner:owner-dashboard');
     expect(result.document.blueprintId).toBe('owner');
     expect(result.document.role).toBe('owner');
     expect(result.document.validation.valid).toBe(true);
