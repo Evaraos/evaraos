@@ -1,12 +1,46 @@
-# EvaraOS Authenticated Visual QA
+# EvaraOS Studio and Visual QA
 
-This workspace runs authenticated route, layout, accessibility-smoke, Studio interaction, Blueprint serialization, operation-journal, and screenshot-regression checks against a deployed EvaraOS environment.
+This workspace validates EvaraOS architecture, authenticated routes, responsive layouts, accessibility smoke checks, Studio interactions, Blueprint serialization, semantic operations, Canvas recovery, writer leases, and screenshot regressions.
 
-It does **not** bypass Firebase Authentication, Firestore profile verification, route permissions, or role policies. Every saved browser session is created through the production login form using dedicated QA accounts.
+It does **not** bypass Firebase Authentication, Firestore profile verification, route permissions, or role policies. Authenticated browser sessions are created through the production login form using dedicated synthetic QA users.
 
-## Coverage
+## QA suites
 
-### Roles
+### `static`
+
+Runs the zero-dependency architecture audits only. It requires no deployed environment, Firebase account, or repository secrets.
+
+Use it to verify:
+
+- Design System ownership
+- Studio component and inspector boundaries
+- Action and icon contracts
+- Blueprint serialization
+- Blueprint operation envelopes
+- CanvasSession architecture
+- writer lease enforcement
+- transaction-chain integrity
+- recovery codes
+- unsynchronized-change diagnostics
+- workflow and route contracts
+
+### `studio`
+
+Runs the static audits first, then five authenticated owner tests in desktop Chromium.
+
+Required secrets:
+
+```text
+EVARA_QA_BASE_URL
+EVARA_QA_OWNER_EMAIL
+EVARA_QA_OWNER_PASSWORD
+```
+
+### `all`
+
+Runs the static audits and the complete authenticated role, appearance, route, and device matrix. Optional non-owner credentials increase coverage; `EVARA_QA_REQUIRE_ALL_ROLES=1` requires every canonical role.
+
+## Canonical roles
 
 - platform administrator
 - owner
@@ -18,86 +52,79 @@ It does **not** bypass Firebase Authentication, Firestore profile verification, 
 - customer
 - vendor
 
-Owner credentials are required. Other role credentials are optional for critical runs and required when `EVARA_QA_REQUIRE_ALL_ROLES=1`.
+Owner credentials are required for authenticated Studio runs. Other role credentials are optional for critical runs and required for a full role matrix.
 
-### Appearances
+## Appearance coverage
 
 - light
 - dark
 - system
 - image
 
-### Device projects
+## Device projects
 
 - desktop Chromium — 1440 × 1100
 - tablet Chromium — 1024 × 1366
 - iPhone WebKit
 - Android Chromium
 
-### Route diagnostics
+## Route diagnostics
 
 Each covered route checks:
 
 - successful HTTP response
-- no redirect to login for an authorized role
+- authorization without an unexpected login redirect
 - completed application-ready state
 - expected appearance mode
-- root horizontal overflow
+- horizontal overflow
 - keyboard focus reachability
 - uncaught page errors
 - console errors
 - duplicate element IDs
 - visible controls without accessible names
 
-Visual cases compare deterministic viewport screenshots. Dynamic maps, live counters, timestamps, and realtime status values are masked so the baseline measures layout and visual treatment rather than volatile business data.
+Dynamic maps, live counters, timestamps, and realtime values are narrowly masked so screenshots measure layout and visual treatment rather than volatile business data.
 
-## Focused Studio diagnostics
-
-The `studio` suite runs four authenticated owner tests in desktop Chromium.
+## Focused Studio tests
 
 ### `studio-interactions.spec.mjs`
 
 Checks:
 
-- categorized catalog search
+- categorized component search
 - component creation
 - required-field validation
 - property commits
-- undo and redo
+- compatibility undo and redo
 - Layers coordination
 - Auto Layout stack creation
-- Draft Journal checkpoint creation
+- compatibility checkpoint creation
 - panel exclusivity
-- screenshots and serialized local Studio state
+- serialized local Studio state and screenshots
 
 ### `studio-action-icon.spec.mjs`
 
 Checks:
 
-- separation of action label, intent, and destination
+- action label, intent, and destination separation
 - permission-filtered route destinations
 - role-change authorization invalidation
 - canonical icon search and selection
 - SVG icon rendering
-- persisted `actionIntent`, `actionTarget`, and icon IDs
-- screenshots and serialized property state
+- persisted action and icon IDs
 
 ### `studio-blueprint-serialization.spec.mjs`
 
 Checks:
 
-- `evara.blueprint.component-document` schema version `1.0.0`
-- page-scoped document identity
-- deterministic fingerprints independent of generation time
+- Blueprint component-document schema `1.0.0`
+- page-scoped identity
+- deterministic fingerprints
 - component definition references
-- properties, icons, and action bindings
-- grid span and Auto Layout metadata
-- responsive values
-- role visibility
+- properties, icons, actions, layout, responsive values, and role visibility
 - round-trip Studio projection
-- compilation into Evara Graph
-- `component-instance`, `instantiates`, `visibleTo`, and `navigatesTo` graph contracts
-- Blueprint document, projection, graph summary, and screenshot artifacts
+- Evara Graph compilation
+- component-instance and relationship contracts
 
 ### `studio-blueprint-operations.spec.mjs`
 
@@ -107,56 +134,46 @@ Checks:
 - reversible low-level Evara operations
 - `transaction.commit` envelopes
 - inverse operations
-- per-page graph revision advancement
+- per-page graph revisions
 - IndexedDB durability
-- transaction idempotency
-- property-update commands
-- Auto Layout commands
+- idempotent transaction IDs
+- property and Auto Layout commands
 - compatibility-projection duplicate suppression
-- operation transaction, graph-head, screenshot, and console artifacts
 
-All four tests reset only Studio's browser-local draft keys. They do not clear authentication, appearance, or unrelated browser state, and they do not write production business records.
+### `studio-canvas-session.spec.mjs`
 
-## Required environment
+Checks:
+
+- journaled component insertion
+- compensating undo and redo
+- reload recovery through operation replay
+- graph-scoped writer leases
+- read-only secondary tabs
+- deterministic writer takeover
+- pending local transaction indicators
+- unsynchronized-change state
+- transaction-chain integrity
+- corrupted transaction failure
+- graph-head mismatch failure
+- fail-closed recovery-required behavior
+
+All focused tests clear only the two browser-local Studio compatibility draft keys. They do not clear authentication, appearance, or unrelated browser data, and they do not write production business records.
+
+## Local authenticated setup
 
 ```bash
 export EVARA_QA_BASE_URL="https://your-deployed-evaraos-origin.example"
 export EVARA_QA_OWNER_EMAIL="qa-owner@example.com"
 export EVARA_QA_OWNER_PASSWORD="use-a-secret-manager"
-```
 
-Optional role credentials follow the same format:
-
-```text
-EVARA_QA_PLATFORM_ADMIN_EMAIL
-EVARA_QA_PLATFORM_ADMIN_PASSWORD
-EVARA_QA_ADMIN_EMAIL
-EVARA_QA_ADMIN_PASSWORD
-EVARA_QA_MANAGER_EMAIL
-EVARA_QA_MANAGER_PASSWORD
-EVARA_QA_SALES_EMAIL
-EVARA_QA_SALES_PASSWORD
-EVARA_QA_TECHNICIAN_EMAIL
-EVARA_QA_TECHNICIAN_PASSWORD
-EVARA_QA_CLEANER_EMAIL
-EVARA_QA_CLEANER_PASSWORD
-EVARA_QA_CUSTOMER_EMAIL
-EVARA_QA_CUSTOMER_PASSWORD
-EVARA_QA_VENDOR_EMAIL
-EVARA_QA_VENDOR_PASSWORD
-```
-
-Never commit credentials or browser storage-state files.
-
-## Local installation
-
-```bash
 cd tests/visual
 npm install --no-audit --no-fund
 npx playwright install chromium webkit
 ```
 
-## Focused Studio suite
+Never commit credentials or browser storage-state files.
+
+## Focused Studio command
 
 ```bash
 npx playwright test \
@@ -164,38 +181,33 @@ npx playwright test \
   specs/studio-action-icon.spec.mjs \
   specs/studio-blueprint-serialization.spec.mjs \
   specs/studio-blueprint-operations.spec.mjs \
+  specs/studio-canvas-session.spec.mjs \
   --project=desktop-chromium
 ```
 
-This is the smallest authenticated gate for Studio component authoring, Blueprint serialization, and local operation durability.
-
 ## Critical matrix
-
-The critical matrix runs route diagnostics in desktop Chromium and visual baselines in desktop Chromium plus iPhone WebKit.
 
 ```bash
 EVARA_QA_MATRIX=critical npx playwright test
 ```
 
-## Full matrix
+The critical matrix runs route diagnostics in desktop Chromium and visual baselines in desktop Chromium plus iPhone WebKit.
 
-The full matrix runs all configured role routes and visual cases across every device project.
+## Full matrix
 
 ```bash
 EVARA_QA_MATRIX=full EVARA_QA_REQUIRE_ALL_ROLES=1 npx playwright test
 ```
 
-## Create baseline candidates
+## Candidate baselines
 
 ```bash
 EVARA_QA_MATRIX=critical npx playwright test --update-snapshots
 ```
 
-Review every generated image before committing it. A changed baseline is not proof that a change is correct.
+Review every generated image before committing it. A changed baseline is not proof that the change is correct.
 
-## Reports
-
-Generated files:
+## Generated files
 
 ```text
 playwright-report/
@@ -204,7 +216,7 @@ test-results/
 specs/__screenshots__/
 ```
 
-Only reviewed screenshot baselines under `specs/__screenshots__/` should be committed. Authentication state, traces, videos, reports, and local results remain ignored.
+Only reviewed screenshot baselines under `specs/__screenshots__/` may be committed. Authentication state, traces, videos, reports, and local results remain ignored.
 
 ## GitHub Actions
 
@@ -214,78 +226,55 @@ Workflow:
 .github/workflows/design-system-visual-qa.yml
 ```
 
-Automatic pushes and pull requests run seven zero-dependency architecture checks:
+### Credential-free static run
 
-1. Design System ownership audit
-2. Studio component catalog and inspector audit
-3. Studio action and icon audit
-4. Studio Blueprint serialization audit
-5. Studio Blueprint operation and Journal audit
-6. Studio Canvas sandbox audit
-7. Visual-QA architecture audit
+1. Open the repository **Actions** tab.
+2. Select **Design System Visual QA**.
+3. Choose **Run workflow**.
+4. Select branch `evaraos`.
+5. Keep suite set to `static`.
+6. Run the workflow.
 
-Authenticated QA is manual because it requires:
+The static job executes seven architecture checks and skips the authenticated job.
 
-- a deployed QA origin
-- dedicated Firebase test users
-- repository secrets
-- explicit selection of the `studio` or `all` suite
-- critical or full coverage selection for the `all` suite
+### Authenticated Studio run
 
-The `studio` suite runs all four focused Studio specs. The `all` suite runs the full authenticated visual matrix and can optionally generate candidate baselines.
+After the three required secrets are configured, repeat the steps above and choose suite `studio`.
 
-Configure the environment variables above as GitHub repository secrets. The workflow uploads reports, traces, videos, failure screenshots, state diagnostics, Blueprint documents, graph summaries, operation envelopes, and optional baseline candidates. It never uploads `.auth/`.
+The workflow uploads Playwright reports, traces, videos, screenshots, state diagnostics, Blueprint documents, graph summaries, operation envelopes, writer-lease evidence, and recovery evidence. It never uploads `.auth/`.
 
-## Blueprint serialization authority boundary
+## Blueprint authority boundaries
 
-The Blueprint serializer is a read-only compatibility projection.
+The compatibility serializer may read local Studio prototype state, produce a validated component document, create deterministic fingerprints, project a document back into a Studio page, and compile a graph fixture.
 
-It may:
+It may not publish, roll back, write canonical graph state, call trusted Blueprint APIs, bypass the Journal, or treat browser state as a release.
 
-- read the current browser-local Studio prototype state
-- produce a versioned Blueprint component document
-- validate the document
-- create a deterministic fingerprint
-- project the document back into a Studio page shape
-- compile the document into an Evara Graph fixture
+The Blueprint operation adapter may infer semantic edits, compile graph deltas, verify parity, append reversible local operation envelopes, and suppress duplicate compatibility snapshots.
 
-It may not:
+It may not open another database, create another history store, write directly to localStorage, call Firebase, publish a Blueprint, bypass revision checks, or represent local durability as server confirmation.
 
-- call `saveBlueprintDraft`
-- call `publishBlueprint`
-- call `rollbackBlueprint`
-- write canonical graph state
-- bypass the Draft Journal
-- treat browser state as a published release
+## Canvas authority boundaries
 
-The existing trusted Blueprint service currently accepts only the legacy navigation, sections, and component-ID projection. It must not receive the richer component-instance document until a reviewed server schema and migration are deployed.
+CanvasSession must:
 
-## Blueprint operation authority boundary
+- use the canonical Studio Journal
+- validate the full transaction revision and sequence chain
+- verify commit envelopes
+- replay operations before accepting recovery
+- compare replay state with the graph head
+- fail closed on corruption or mismatch
+- obtain the graph writer lease before appending
+- promote candidate graph state only after durability succeeds
+- expose pending local changes as unsynchronized
 
-The operation adapter converts differences between two validated Blueprint projections into semantic Canvas commands and low-level Evara operations.
-
-It may:
-
-- observe writes performed by the existing Studio prototype
-- infer insert, delete, move, layout, visibility, and property intents
-- compile graph deltas through the existing Operation Protocol
-- verify semantic parity against the target Blueprint graph
-- append reversible operation envelopes to the existing IndexedDB Draft Journal
-- track an independent revision head for every page graph
-- suppress a delayed duplicate compatibility snapshot after a successful semantic commit
-
-It may not:
+CanvasSession may not:
 
 - open another IndexedDB database
-- create another transaction store
-- write directly to localStorage
-- call Firebase or external APIs
-- publish or roll back Blueprints
-- commit to the trusted server journal
-- bypass expected revision checks
-- treat local durability as a trusted release
-
-The current adapter runs after the legacy prototype writes its browser projection. This is a migration boundary, not the final production edit order. Production Canvas must journal the transaction before reporting an edit durable or rendering it as accepted state.
+- write localStorage
+- own network transport
+- silently overwrite a stale graph head
+- allow a secondary tab to write
+- claim server confirmation without the trusted Backend adapter
 
 ## Account requirements
 
@@ -293,70 +282,49 @@ Every QA user must:
 
 - exist in Firebase Authentication
 - have a matching `users/{uid}` Firestore profile
-- have an active account status
+- have active account status
 - use the canonical role being tested
-- have data access appropriate for that role
-- contain non-sensitive synthetic QA data only
+- have access appropriate for that role
+- contain synthetic, non-sensitive data only
 
-Do not use personal accounts, customer credentials, or production-sensitive records for automated QA.
-
-## Baseline policy
-
-A baseline update requires review for:
-
-- correct appearance mode
-- consistent Liquid Glass hierarchy
-- expected navigation for the role
-- no clipped content
-- no accidental horizontal scrolling
-- readable text over image mode
-- correct safe-area spacing
-- visible focus states
-- intentional responsive reflow
-- absence of leaked data or unauthorized controls
+Do not use personal, customer, vendor, or production-sensitive accounts.
 
 ## Troubleshooting
 
-### Login succeeds but the route returns to login
+### Static workflow does not appear
 
-Verify the Firestore profile exists and contains an active canonical role. The route guard does not trust local role storage alone.
+Confirm GitHub Actions is enabled under repository **Settings → Actions → General** and that workflows from this repository are allowed.
 
-### A role test is skipped
+### Static workflow fails
 
-The corresponding email or password environment variable is missing.
+Open the failed job and review the first failed architecture audit. Do not bypass an audit to make the workflow green; fix the violated ownership or version contract.
 
-### The focused Studio suite is skipped
+### Studio workflow fails before Playwright
 
-The owner QA credentials are missing or the saved authenticated owner state could not be created by global setup.
+Confirm these repository secrets exist and are not blank:
 
-### An action destination is unavailable
+```text
+EVARA_QA_BASE_URL
+EVARA_QA_OWNER_EMAIL
+EVARA_QA_OWNER_PASSWORD
+```
 
-The route is not authorized for the current Studio preview role by `access-control.js`. Change the preview role or select an approved route; do not bypass the route policy.
+### Login returns to the login page
 
-### Blueprint validation reports a warning
+Verify the QA owner exists in Firebase Authentication and has a matching active Firestore profile with the canonical owner role.
 
-Review route authorization, icon normalization, unreferenced instances, repeated instance references, and migration metadata. A warning is not a publishing approval.
+### Canvas reports local changes waiting for trusted sync
 
-### Blueprint compilation fails
+This is expected until the trusted Backend Journal adapter confirms the transactions. Local durability is not publication.
 
-Confirm the document uses schema `1.0.0`, every section reference resolves to an instance, every component definition exists in the Studio registry, and all generated graph edges reference existing nodes.
+### Canvas reports recovery required
 
-### Operation adapter reports semantic graph parity failure
+Do not overwrite the Journal. Review the attached recovery event and determine whether the failure is a corrupted transaction, revision-chain mismatch, sequence mismatch, replay failure, or graph-head mismatch.
 
-The graph delta did not reproduce the graph generated from the target Blueprint document. The transaction is intentionally not journaled. Review removed properties, changed edge contracts, component-definition changes, and graph compiler output.
+### A secondary tab is read-only
 
-### Operation adapter reports a revision conflict
-
-The browser projection does not match the latest durable fingerprint or its expected graph revision is stale. Do not overwrite the head. Restore a checkpoint or reload the latest trusted branch state before retrying.
-
-### Compatibility transactions still appear
-
-Compatibility entries remain a migration fallback for writes that do not change the serialized Blueprint document, such as temporary prototype state. A successful semantic transaction must not be followed by a compatibility entry with the same projection hash.
+Close or release the writer tab. The remaining tab must verify its graph head before becoming writable. A stale tab must reload.
 
 ### Screenshots differ only in business values
 
-Add a narrowly targeted selector to the dynamic mask list. Do not mask complete cards or page regions unless the whole region is intentionally nondeterministic.
-
-### Image mode is different across runs
-
-The harness uses the committed EvaraOS app icon as a deterministic wallpaper. Confirm the asset path still exists and is served by the same origin.
+Add a narrowly targeted selector to the dynamic mask list. Do not mask entire cards or page regions unless the whole region is intentionally nondeterministic.
