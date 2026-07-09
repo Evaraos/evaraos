@@ -2,27 +2,19 @@
 <html lang="en" data-theme="adaptive" data-environment="light" data-theme-mode="image" data-appearance="adaptive-system">
 <head>
   <meta charset="UTF-8" />
-  <script src="/assets/js/adaptive-appearance-boot.js?v=1"></script><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-
+  <script src="/assets/js/adaptive-appearance-boot.js?v=1"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
-  <!-- Evaraos App Identity / PWA / Favicons -->
   <link rel="manifest" href="/manifest.json" />
-
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/icon-192.png" />
   <link rel="shortcut icon" href="/favicon.ico" />
-
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
-  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" />
-
   <meta name="theme-color" content="#eef5fb" />
-  <meta name="msapplication-TileColor" content="#f4f7f6" />
-  <meta name="msapplication-TileImage" content="/assets/img/icon-192.png" />
-
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -37,26 +29,11 @@
   <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com" />
   <link rel="preload" as="image" href="/assets/img/evaraos_logo.png" />
 
-  <title>Jobs • Evaraos Inc</title><style>
-
-    html.boot-pending body {
-      margin: 0;
-      overflow: hidden;
-      touch-action: none;
-    }
-
-    html.auth-pending body,
-    body.auth-pending {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    body.dashboard-body {
-      margin: 0;
-      min-height: 100vh;
-      background: transparent;
-    }
-
+  <title>Jobs • Evaraos Inc</title>
+  <style>
+    html.boot-pending body { margin: 0; overflow: hidden; touch-action: none; }
+    html.auth-pending body, body.auth-pending { opacity: 0; pointer-events: none; }
+    body.dashboard-body { margin: 0; min-height: 100vh; background: transparent; }
     body.app-loading #appRoot { visibility: hidden; }
     body.app-ready #appRoot { visibility: visible; }
   </style>
@@ -64,35 +41,153 @@
   <link rel="stylesheet" href="/assets/css/base.css?v=53" />
   <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v1" />
   <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v25-x-drawer" />
-  <link rel="stylesheet" href="/assets/css/dashboard.css?v=50" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css?v=51" />
   <link rel="stylesheet" href="/assets/css/app-system.css?v=50" />
   <link rel="stylesheet" href="/assets/css/design-system/marketplace.css?v=1" />
+  <link rel="stylesheet" href="/assets/css/pages/jobs.css?v=1" />
 </head>
 <body class="dashboard-body marketplace-page jobs-marketplace-page auth-pending app-loading" data-route-guard="private">
+  <a class="jobs-skip-link" href="#jobsMain">Skip to jobs content</a>
   <div id="universalNavRoot"></div>
   <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
 
   <div id="appRoot">
-    <div class="page-grid-overlay"></div>
+    <div class="page-grid-overlay" aria-hidden="true"></div>
 
-    <div class="dashboard-shell">
-      <aside class="dashboard-sidebar" id="dashboardSidebar">
-        <div class="dashboard-sidebar-inner glass-shell aurora-card active-glow beam-target">
-          <div class="dashboard-sidebar-search">
-            <div class="dashboard-search-shell input-shell aurora-card active-glow beam-target">
-              <svg viewBox="0 0 24 24" aria-hidden="true" class="dashboard-search-icon">
-                <path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm9.2 12.8 1.4 1.4-3.3 3.3-1.4-1.4 3.3-3.3Z"/>
-              </svg>
-              <input type="search" class="dashboard-search-input input" id="jobsSearch" placeholder="Search jobs..." aria-label="Search jobs" />
-            </div>
+    <div class="jobs-page-shell">
+      <aside class="jobs-sidebar" aria-label="Jobs navigation and controls">
+        <div class="jobs-sidebar-inner glass-shell aurora-card active-glow beam-target">
+          <div class="jobs-sidebar-head">
+            <p class="jobs-sidebar-eyebrow">Operations</p>
+            <h2>Jobs Command</h2>
+          </div>
+
+          <div class="jobs-sidebar-search">
+            <label class="jobs-search-shell input-shell aurora-card active-glow beam-target" for="jobsSearch">
+              <span data-evara-icon="search" aria-hidden="true"></span>
+              <input type="search" id="jobsSearch" placeholder="Search jobs, customers, teams..." autocomplete="off" />
+            </label>
+          </div>
+
+          <nav class="jobs-sidebar-nav" aria-label="Jobs sections">
+            <a href="#jobsOverview" class="jobs-sidebar-link" aria-current="location"><span data-evara-icon="dashboard" aria-hidden="true"></span><span>Overview</span></a>
+            <a href="#jobsBoard" class="jobs-sidebar-link"><span data-evara-icon="jobs" aria-hidden="true"></span><span>Live Jobs</span></a>
+            <a href="#jobsWorkflow" class="jobs-sidebar-link"><span data-evara-icon="operations" aria-hidden="true"></span><span>Workflow</span></a>
+            <a href="#jobsActivity" class="jobs-sidebar-link"><span data-evara-icon="history" aria-hidden="true"></span><span>Activity</span></a>
+            <a href="/dispatch.html" class="jobs-sidebar-link"><span data-evara-icon="dispatch" aria-hidden="true"></span><span>Dispatch</span></a>
+            <a href="/schedule.html" class="jobs-sidebar-link"><span data-evara-icon="schedule" aria-hidden="true"></span><span>Schedule</span></a>
+          </nav>
+
+          <div class="jobs-sidebar-actions">
+            <a href="/leads.html" class="btn btn-theme-secondary beam-target">Open Leads</a>
+            <button type="button" class="btn btn-theme-primary beam-target" id="jobsRefreshBtnSide">Connect Feed</button>
           </div>
         </div>
       </aside>
+
+      <main class="jobs-main" id="jobsMain" tabindex="-1" aria-busy="true">
+        <section class="jobs-hero glass-card aurora-card active-glow beam-target" id="jobsOverview" aria-labelledby="jobsHeroTitle">
+          <div class="jobs-hero-copy">
+            <p class="jobs-hero-eyebrow">LIVE JOB OPERATIONS</p>
+            <h1 id="jobsHeroTitle">Connecting live job feed...</h1>
+            <p class="jobs-hero-text" id="jobsHeroText">Opening the live dispatch workspace for companies, teams, and field execution.</p>
+            <div class="jobs-hero-actions" aria-label="Jobs quick actions">
+              <button type="button" class="btn btn-theme-primary beam-target" id="jobsRefreshBtnTop">Connect Feed</button>
+              <a href="/dispatch.html" class="btn btn-theme-secondary beam-target">Open Dispatch</a>
+              <a href="/schedule.html" class="btn btn-theme-secondary beam-target">Open Schedule</a>
+            </div>
+          </div>
+
+          <aside class="jobs-hero-status" aria-label="Live jobs connection status">
+            <span class="jobs-live-label"><span class="jobs-live-dot" aria-hidden="true"></span><span id="jobsConnectionLabel">Connecting</span></span>
+            <div class="jobs-hero-status-copy" role="status" aria-live="polite" aria-atomic="true">
+              <strong id="jobsStatusTitle">Preparing operations</strong>
+              <span id="jobsStatusLive">Live records will appear as soon as the secure feed connects.</span>
+            </div>
+          </aside>
+        </section>
+
+        <section class="jobs-stats-grid" aria-label="Jobs key performance indicators">
+          <article class="jobs-stat-card glass-card aurora-card active-glow beam-target">
+            <p>Total jobs</p>
+            <strong id="jobsStatTotal" aria-live="polite">0</strong>
+            <span>Records in the live feed</span>
+          </article>
+          <article class="jobs-stat-card glass-card aurora-card active-glow beam-target">
+            <p>Active work</p>
+            <strong id="jobsStatActive" aria-live="polite">0</strong>
+            <span>Open, claimed, or in progress</span>
+          </article>
+          <article class="jobs-stat-card glass-card aurora-card active-glow beam-target">
+            <p>Completed</p>
+            <strong id="jobsStatCompleted" aria-live="polite">0</strong>
+            <span>Finished jobs in view</span>
+          </article>
+          <article class="jobs-stat-card glass-card aurora-card active-glow beam-target">
+            <p>Visible now</p>
+            <strong id="jobsStatFiltered" aria-live="polite">0</strong>
+            <span>Matching the current search</span>
+          </article>
+        </section>
+
+        <section class="jobs-toolbar glass-card aurora-card active-glow beam-target" aria-label="Job search and sorting controls">
+          <label class="jobs-search-shell input-shell aurora-card active-glow beam-target" for="jobsSearchToolbar">
+            <span data-evara-icon="search" aria-hidden="true"></span>
+            <input type="search" id="jobsSearchToolbar" placeholder="Search customer, company, service, status, team..." autocomplete="off" aria-label="Search live jobs" />
+          </label>
+          <button type="button" class="btn btn-theme-secondary beam-target" id="jobsSortBtn" aria-pressed="false">Sort A–Z</button>
+          <a href="/leads.html" class="btn btn-theme-secondary beam-target">Create from Lead</a>
+        </section>
+
+        <div class="jobs-content-grid">
+          <section class="jobs-panel glass-card aurora-card active-glow beam-target" id="jobsBoard" aria-labelledby="jobsBoardTitle">
+            <div class="jobs-section-head">
+              <div>
+                <p class="jobs-section-kicker">Dispatch queue</p>
+                <h2 id="jobsBoardTitle">Live Jobs</h2>
+              </div>
+              <span class="jobs-section-meta">Up to 50 live records</span>
+            </div>
+            <div class="jobs-list dashboard-list" id="jobsList" aria-live="polite" aria-busy="true">
+              <article class="dashboard-state-card loading"><strong>Connecting live dispatch...</strong><span>Opening the secure Firestore job feed.</span></article>
+            </div>
+          </section>
+
+          <section class="jobs-panel jobs-progress-panel glass-card aurora-card active-glow beam-target" id="jobsWorkflow" aria-labelledby="jobsWorkflowTitle">
+            <div class="jobs-section-head">
+              <div>
+                <p class="jobs-section-kicker">Execution flow</p>
+                <h2 id="jobsWorkflowTitle">Workflow Distribution</h2>
+              </div>
+            </div>
+            <div class="jobs-progress-stack dashboard-progress-stack" id="jobsProgressStack" aria-live="polite" aria-busy="true">
+              <article class="dashboard-state-card loading"><strong>Building workflow view...</strong><span>Status distribution will appear after the feed connects.</span></article>
+            </div>
+          </section>
+        </div>
+
+        <section class="jobs-panel glass-card aurora-card active-glow beam-target" id="jobsActivity" aria-labelledby="jobsActivityTitle">
+          <div class="jobs-section-head">
+            <div>
+              <p class="jobs-section-kicker">Latest movement</p>
+              <h2 id="jobsActivityTitle">Recent Job Activity</h2>
+            </div>
+            <span class="jobs-section-meta">Most recent six records</span>
+          </div>
+          <div class="jobs-feed dashboard-feed" id="jobsFeed" aria-live="polite" aria-busy="true">
+            <article class="dashboard-state-card loading"><strong>Starting activity feed...</strong><span>Recent job movement will appear here.</span></article>
+          </div>
+        </section>
+      </main>
     </div>
   </div>
 
   <script src="/assets/js/loader.js?v=36"></script>
-  <script type="module" src="/assets/js/firebase.js?v=36"></script><script type="module" src="/assets/js/route-guard.js?v=35"></script><script type="module" src="/assets/js/jobs.js?v=4"></script><script type="module" src="/assets/js/marketplace-vendor-handoff.js?v=1"></script>  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v1"></script>
+  <script type="module" src="/assets/js/firebase.js?v=36"></script>
+  <script type="module" src="/assets/js/route-guard.js?v=35"></script>
+  <script type="module" src="/assets/js/jobs.js?v=5"></script>
+  <script type="module" src="/assets/js/marketplace-vendor-handoff.js?v=1"></script>
+  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v1"></script>
   <script type="module" src="/assets/js/nav.js?v=nav-v25-x-drawer"></script>
 </body>
 </html>
