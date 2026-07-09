@@ -12,8 +12,10 @@
   <link rel="stylesheet" href="./assets/css/nav.css" />
   <link rel="stylesheet" href="./assets/css/dashboard.css" />
   <link rel="stylesheet" href="./assets/css/app-system.css" />
-<link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v1"></head>
-<body data-route-guard="private" class="dashboard-body app-loading">
+  <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v1" />
+  <link rel="stylesheet" href="/assets/css/design-system/marketplace.css?v=1" />
+</head>
+<body data-route-guard="private" class="dashboard-body marketplace-page customer-commerce-page app-loading">
   <div id="universalNavRoot"></div>
   <div class="page-aurora" aria-hidden="true"></div>
   <div class="page-grid-overlay" aria-hidden="true"></div>
@@ -113,7 +115,7 @@
           </div>
           <span id="customerOperationsStatus" class="dashboard-mini-badge">Loading operations…</span>
         </div>
-        <div id="customerOrderRoot" class="dashboard-list">
+        <div id="customerOrderRoot" class="dashboard-list" aria-live="polite">
           <div class="item muted">Loading Marketplace orders...</div>
         </div>
       </section>
@@ -126,7 +128,7 @@
               <h2>What Needs Attention</h2>
             </div>
           </div>
-          <div id="customerActionRoot" class="dashboard-list">
+          <div id="customerActionRoot" class="dashboard-list" aria-live="polite">
             <div class="item muted">Loading account actions...</div>
           </div>
         </section>
@@ -138,7 +140,7 @@
               <h2>Notifications</h2>
             </div>
           </div>
-          <div id="customerNotificationRoot" class="dashboard-list">
+          <div id="customerNotificationRoot" class="dashboard-list" aria-live="polite">
             <div class="item muted">Loading Marketplace updates...</div>
           </div>
         </section>
@@ -152,7 +154,7 @@
               <h2>Invoices</h2>
             </div>
           </div>
-          <div id="customerInvoiceRoot" class="dashboard-list">
+          <div id="customerInvoiceRoot" class="dashboard-list" aria-live="polite">
             <div class="item muted">Loading invoices...</div>
           </div>
         </section>
@@ -164,7 +166,7 @@
               <h2>Refunds</h2>
             </div>
           </div>
-          <div id="customerRefundRoot" class="dashboard-list">
+          <div id="customerRefundRoot" class="dashboard-list" aria-live="polite">
             <div class="item muted">Loading refund status...</div>
           </div>
         </section>
@@ -178,7 +180,7 @@
               <h2>Subscriptions</h2>
             </div>
           </div>
-          <div id="customerSubscriptionRoot" class="dashboard-list">
+          <div id="customerSubscriptionRoot" class="dashboard-list" aria-live="polite">
             <div class="item muted">Loading subscriptions...</div>
           </div>
         </section>
@@ -190,7 +192,7 @@
               <h2>Quotes</h2>
             </div>
           </div>
-          <div id="customerQuoteRoot" class="dashboard-list">
+          <div id="customerQuoteRoot" class="dashboard-list" aria-live="polite">
             <div class="item muted">Loading quotes...</div>
           </div>
         </section>
