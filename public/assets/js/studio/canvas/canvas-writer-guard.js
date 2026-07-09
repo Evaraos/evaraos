@@ -20,6 +20,15 @@ function sessionSnapshot() {
   return window.EvaraCanvasSandbox?.getSession?.()?.snapshot?.() || null;
 }
 
+function currentLeaseResult() {
+  const snapshot = lease?.snapshot?.() || { graphId: activeGraphId, method: 'none' };
+  return {
+    ...snapshot,
+    state: guardState,
+    canWrite: guardState === 'writer'
+  };
+}
+
 function publishState(state, reason, leaseSnapshot = null, { updateSession = true } = {}) {
   previousLeaseState = guardState;
   guardState = state;
@@ -51,7 +60,10 @@ async function verifyCurrentHead(graphId) {
 async function acquireForGraph(graphId) {
   if (!String(graphId || '').startsWith(CANVAS_GRAPH_PREFIX)) return { state: 'not-canvas', canWrite: true };
   if (suspended) return { state: 'released', canWrite: false };
-  if (activeGraphId === graphId && leasePromise) return leasePromise;
+  if (activeGraphId === graphId && leasePromise) {
+    await leasePromise.catch(() => undefined);
+    return currentLeaseResult();
+  }
 
   lease?.release();
   lease = new CanvasWriterLease(graphId);
@@ -71,14 +83,15 @@ async function acquireForGraph(graphId) {
     if (suspended) return { ...next, state: 'released', canWrite: false };
     if (next.state !== 'writer') {
       publishState(next.state, 'lease-acquired-read-only', next);
-      return { ...next, canWrite: false };
+      return currentLeaseResult();
     }
     const current = await verifyCurrentHead(graphId).catch(() => false);
     const state = current ? 'writer' : 'refresh-required';
     publishState(state, current ? 'lease-acquired-writer' : 'stale-graph-head', next);
-    return { ...next, state, canWrite: state === 'writer' };
+    return currentLeaseResult();
   });
-  return leasePromise;
+  await leasePromise;
+  return currentLeaseResult();
 }
 
 function installJournalGuard() {
