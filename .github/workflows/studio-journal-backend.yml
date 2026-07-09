@@ -1,0 +1,67 @@
+name: Trusted Studio Journal Backend
+
+on:
+  push:
+    branches: [evaraos]
+    paths:
+      - 'functions/studio-journal-core.js'
+      - 'functions/studio-journal-core.test.js'
+      - 'functions/studio-journal-service.js'
+      - 'functions/index-stats.js'
+      - 'functions/package.json'
+      - 'public/assets/js/studio/studio-document-model.js'
+      - 'public/assets/js/studio/studio-journal-authority-v2.js'
+      - 'public/assets/js/studio/studio-trusted-journal.js'
+      - 'public/assets/js/studio/studio-document-controls.js'
+      - 'public/assets/js/studio/canvas/canvas-operation-journal.js'
+      - 'public/website-builder.html'
+      - 'tools/studio-trusted-journal-audit.js'
+      - '.github/workflows/studio-journal-backend.yml'
+  pull_request:
+    paths:
+      - 'functions/studio-journal-core.js'
+      - 'functions/studio-journal-core.test.js'
+      - 'functions/studio-journal-service.js'
+      - 'functions/index-stats.js'
+      - 'functions/package.json'
+      - 'public/assets/js/studio/studio-document-model.js'
+      - 'public/assets/js/studio/studio-journal-authority-v2.js'
+      - 'public/assets/js/studio/studio-trusted-journal.js'
+      - 'public/assets/js/studio/studio-document-controls.js'
+      - 'public/assets/js/studio/canvas/canvas-operation-journal.js'
+      - 'public/website-builder.html'
+      - 'tools/studio-trusted-journal-audit.js'
+      - '.github/workflows/studio-journal-backend.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: trusted-studio-journal-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  trusted-journal:
+    name: Trusted journal invariants
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install function dependencies
+        working-directory: functions
+        run: npm install --no-audit --no-fund
+
+      - name: Run trusted Journal domain tests
+        working-directory: functions
+        run: npm run test:studio-journal
+
+      - name: Run production architecture audit
+        run: node tools/studio-trusted-journal-audit.js
