@@ -13,6 +13,7 @@ on:
       - 'public/qa-v2.html'
       - 'tools/design-system-audit.js'
       - 'tools/visual-qa-audit.js'
+      - 'tools/studio-component-catalog-audit.js'
       - 'tests/visual/**'
       - 'docs/design-system/**'
       - '.github/workflows/design-system-visual-qa.yml'
@@ -27,6 +28,7 @@ on:
       - 'public/qa-v2.html'
       - 'tools/design-system-audit.js'
       - 'tools/visual-qa-audit.js'
+      - 'tools/studio-component-catalog-audit.js'
       - 'tests/visual/**'
       - 'docs/design-system/**'
       - '.github/workflows/design-system-visual-qa.yml'
@@ -60,7 +62,7 @@ concurrency:
 
 jobs:
   static-audit:
-    name: Design-system and visual-QA audits
+    name: Design-system, Studio catalog, and visual-QA audits
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -73,6 +75,9 @@ jobs:
 
       - name: Run design-system audit
         run: node tools/design-system-audit.js
+
+      - name: Run Studio component catalog audit
+        run: node tools/studio-component-catalog-audit.js
 
       - name: Run visual-QA architecture audit
         run: node tools/visual-qa-audit.js
