@@ -188,10 +188,7 @@
   }
 
   .dashboard-click-card::after {
-    top: 10px;
-    right: 10px;
-    opacity: 1;
-    transform: none;
+    display: none;
   }
 
   .dashboard-stat-card {
