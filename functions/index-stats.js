@@ -173,6 +173,10 @@ exports.cancelMarketplaceOrder = marketplaceOrderChanges.cancelMarketplaceOrder;
 exports.processMarketplaceRefund = require("./marketplace-refunds").processMarketplaceRefund;
 exports.getMarketplaceOperationsSnapshot = require("./marketplace-operations-read").getMarketplaceOperationsSnapshot;
 
+const marketplaceExceptionReview = require("./marketplace-exception-review");
+exports.getMarketplaceExceptionQueue = marketplaceExceptionReview.getMarketplaceExceptionQueue;
+exports.reviewMarketplaceException = marketplaceExceptionReview.reviewMarketplaceException;
+
 const marketplaceLifecycleNotifications = require("./marketplace-lifecycle-notifications");
 exports.notifyMarketplaceOrderLifecycle = marketplaceLifecycleNotifications.notifyMarketplaceOrderLifecycle;
 exports.notifyMarketplaceChangeRequest = marketplaceLifecycleNotifications.notifyMarketplaceChangeRequest;
