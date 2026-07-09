@@ -160,3 +160,4 @@ exports.manageMarketplaceSubscription = marketplaceCommerce.manageMarketplaceSub
 exports.vendorRespondMarketplaceOrder = marketplaceCommerce.vendorRespondMarketplaceOrder;
 exports.stripeMarketplaceWebhook = marketplaceCommerce.stripeMarketplaceWebhook;
 exports.releaseExpiredMarketplaceReservations = marketplaceCommerce.releaseExpiredMarketplaceReservations;
+exports.getMarketplaceCommerceSnapshot = require("./marketplace-commerce-read").getMarketplaceCommerceSnapshot;
