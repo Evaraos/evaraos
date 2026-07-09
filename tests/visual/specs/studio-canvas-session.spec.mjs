@@ -130,8 +130,8 @@ async function openJournalDatabase(page) {
   });
 }
 
-async function updateJournalSession(page, mutate) {
-  return page.evaluate(async (source) => {
+async function configureTrustedScope(page, projectId, branchId) {
+  return page.evaluate(async ({ projectId, branchId }) => {
     const db = await new Promise((resolve, reject) => {
       const request = indexedDB.open(window.EvaraStudioJournal.databaseName);
       request.onsuccess = () => resolve(request.result);
@@ -145,8 +145,12 @@ async function updateJournalSession(page, mutate) {
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
       });
-      const apply = new Function('session', `return (${source})(session);`);
-      const next = apply(session);
+      const next = {
+        ...session,
+        projectId,
+        branchId,
+        updatedAt: new Date().toISOString()
+      };
       store.put(next);
       await new Promise((resolve, reject) => {
         tx.oncomplete = resolve;
@@ -157,16 +161,7 @@ async function updateJournalSession(page, mutate) {
     } finally {
       db.close();
     }
-  }, mutate.toString());
-}
-
-async function configureTrustedScope(page, projectId, branchId) {
-  return updateJournalSession(page, (session) => ({
-    ...session,
-    projectId,
-    branchId,
-    updatedAt: new Date().toISOString()
-  }));
+  }, { projectId, branchId });
 }
 
 async function corruptTransaction(page, transactionId) {
