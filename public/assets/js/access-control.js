@@ -76,6 +76,7 @@ export const PAGE_POLICY = Object.freeze({
   'org.html': ['platform_admin', 'owner', 'admin', 'manager'],
   'applications.html': ['platform_admin', 'owner', 'admin', 'manager'],
   'qa.html': ['platform_admin', 'owner', 'admin'],
+  'qa-v2.html': ['platform_admin', 'owner', 'admin'],
 
   'jobs.html': OPERATIONS_ROLES,
   'leads.html': ['platform_admin', 'owner', 'admin', 'manager', 'vendor', 'sales'],
