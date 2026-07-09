@@ -1,0 +1,29 @@
+.studio-auto-layout-frame[data-auto-direction="row"] .studio-node {
+  flex: 0 1 calc(33.333% - var(--auto-gap, 16px));
+}
+
+.studio-auto-layout-frame[data-auto-direction="row"] .studio-node[data-span="3"] {
+  flex-basis: calc(25% - var(--auto-gap, 16px));
+}
+
+.studio-auto-layout-frame[data-auto-direction="row"] .studio-node[data-span="4"] {
+  flex-basis: calc(33.333% - var(--auto-gap, 16px));
+}
+
+.studio-auto-layout-frame[data-auto-direction="row"] .studio-node[data-span="6"] {
+  flex-basis: calc(50% - var(--auto-gap, 16px));
+}
+
+.studio-auto-layout-frame[data-auto-direction="row"] .studio-node[data-span="8"] {
+  flex-basis: calc(66.667% - var(--auto-gap, 16px));
+}
+
+.studio-auto-layout-frame[data-auto-direction="row"] .studio-node[data-span="12"] {
+  flex-basis: 100%;
+}
+
+@media (max-width: 720px) {
+  .studio-auto-layout-frame[data-auto-direction="row"] .studio-node {
+    flex: 0 0 auto;
+  }
+}
