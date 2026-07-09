@@ -51,7 +51,7 @@
         <div class="dashboard-hero-copy">
           <p class="dashboard-eyebrow">Executive Operations Command</p>
           <h1>Monitor live workforce, routes, territories, and dispatch pressure from one command center.</h1>
-          <p class="dashboard-hero-text">Live Operations Command unifies presence, availability, dispatch, assignments, shifts, routes, and territory balance into one realtime operational view.</p>
+          <p class="dashboard-hero-text">Live Operations Command unifies presence, availability, dispatch, assignments, shifts, routes, territory balance, and Marketplace policy exceptions into one realtime operational view.</p>
         </div>
 
         <div class="dashboard-hero-panel glass-card">
@@ -92,6 +92,56 @@
         <section class="dashboard-panel glass-card"><div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Territories</p><h2>Territory Balance</h2></div></div><div id="operationsTerritoryRoot" class="dashboard-list" aria-live="polite"><div class="item muted">Loading territory balance...</div></div></section>
         <section class="dashboard-panel glass-card"><div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Routes</p><h2>Operational Routes</h2></div></div><div id="operationsRouteRoot" class="dashboard-list" aria-live="polite"><div class="item muted">Loading routes...</div></div></section>
       </section>
+
+      <section class="dashboard-overview glass-card">
+        <div class="dashboard-section-head marketplace-exception-toolbar">
+          <div>
+            <p class="dashboard-section-kicker">Marketplace Intervention</p>
+            <h2>Policy Exception Review</h2>
+          </div>
+          <div class="row">
+            <select id="marketplaceExceptionTypeFilter" aria-label="Filter Marketplace exception type">
+              <option value="">All exception types</option>
+              <option value="cancel">Cancellations</option>
+              <option value="reschedule">Reschedules</option>
+            </select>
+            <span class="dashboard-mini-badge" id="marketplaceExceptionStatus">Loading exception queue…</span>
+          </div>
+        </div>
+
+        <div class="dashboard-stats-grid">
+          <article class="dashboard-stat-card glass-card"><p>Pending Review</p><h3 id="marketplaceExceptionPendingCount">0</h3><span>Policy exceptions</span></article>
+          <article class="dashboard-stat-card glass-card"><p>Cancellations</p><h3 id="marketplaceExceptionCancellationCount">0</h3><span>Awaiting a decision</span></article>
+          <article class="dashboard-stat-card glass-card"><p>Reschedules</p><h3 id="marketplaceExceptionRescheduleCount">0</h3><span>Capacity changes</span></article>
+          <article class="dashboard-stat-card glass-card"><p>Recent Decisions</p><h3 id="marketplaceExceptionRecentCount">0</h3><span>Audited outcomes</span></article>
+        </div>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Decision Queue</p>
+              <h2>Pending Policy Exceptions</h2>
+            </div>
+          </div>
+          <div id="marketplaceExceptionRoot" class="dashboard-list" aria-live="polite">
+            <div class="item muted">Loading pending Marketplace policy exceptions...</div>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Decision History</p>
+              <h2>Recent Reviewed Exceptions</h2>
+            </div>
+          </div>
+          <div id="marketplaceExceptionRecentRoot" class="dashboard-list" aria-live="polite">
+            <div class="item muted">Loading reviewed Marketplace policy exceptions...</div>
+          </div>
+        </section>
+      </section>
     </section>
   </main>
 
@@ -100,7 +150,9 @@
   <script type="module" src="./assets/js/theme.js"></script>
   <script type="module" src="./assets/js/route-guard.js"></script>
   <script type="module" src="./assets/js/nav.js"></script>
-  <script type="module" src="./assets/js/live-operations-command-dashboard.js"></script>  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v1"></script>
+  <script type="module" src="./assets/js/live-operations-command-dashboard.js"></script>
+  <script type="module" src="./assets/js/marketplace-exception-review.js?v=1"></script>
+  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v1"></script>
   <script type="module" src="/assets/js/nav.js?v=nav-v25-x-drawer"></script>
 </body>
 </html>
