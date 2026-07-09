@@ -1,0 +1,225 @@
+/* EVARAOS PRODUCTION DASHBOARD UI
+   Frontend-only accessibility, responsive navigation, interaction, and motion refinements.
+*/
+
+.dashboard-skip-link {
+  position: fixed;
+  top: max(10px, env(safe-area-inset-top));
+  left: 50%;
+  z-index: 10000;
+  min-height: var(--tap-target-min, 44px);
+  padding: 0 18px;
+  border-radius: var(--radius-pill, 999px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  transform: translate(-50%, calc(-100% - 24px));
+  transition: transform var(--motion, 220ms ease);
+}
+
+.dashboard-skip-link:focus {
+  transform: translate(-50%, 0);
+  outline: none;
+  box-shadow: var(--focus-ring), var(--shadow-md);
+}
+
+.dashboard-main > [id],
+.dashboard-main .dashboard-grid-2[id] {
+  scroll-margin-top: 112px;
+}
+
+.dashboard-nav-link,
+.dashboard-inline-link,
+.dashboard-click-card,
+.dashboard-hero-actions .btn,
+.dashboard-section-head .btn {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dashboard-nav-link:focus-visible,
+.dashboard-inline-link:focus-visible,
+.dashboard-click-card:focus-visible,
+.dashboard-hero-actions .btn:focus-visible,
+.dashboard-section-head .btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring), inset 0 1px 0 var(--liquid-highlight);
+}
+
+.dashboard-nav-link[aria-current="location"] {
+  border-color: color-mix(in srgb, var(--accent-blue) 52%, var(--liquid-border));
+  box-shadow:
+    var(--focus-ring),
+    inset 0 1px 0 var(--liquid-highlight),
+    0 10px 28px var(--liquid-shadow);
+}
+
+.dashboard-nav-icon .eva-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.dashboard-click-card {
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    transform var(--motion),
+    box-shadow var(--motion),
+    border-color var(--motion),
+    filter var(--motion);
+}
+
+.dashboard-click-card::after {
+  content: "Open";
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  padding: 6px 9px;
+  border-radius: var(--radius-pill, 999px);
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  font-size: var(--text-2xs, .6875rem);
+  font-weight: var(--weight-bold, 700);
+  color: var(--text-secondary);
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-xs);
+  transition: opacity var(--motion), transform var(--motion);
+}
+
+.dashboard-click-card:hover,
+.dashboard-click-card:focus-visible {
+  transform: translateY(-2px);
+  filter: saturate(1.05);
+}
+
+.dashboard-click-card:hover::after,
+.dashboard-click-card:focus-visible::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.dashboard-widget-mount {
+  scroll-margin-top: 112px;
+}
+
+.dashboard-sidebar-nav {
+  scrollbar-width: none;
+  overscroll-behavior-inline: contain;
+}
+
+.dashboard-sidebar-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.dashboard-status-pill,
+.dashboard-mini-badge {
+  min-height: 34px;
+}
+
+@media (max-width: 1100px) {
+  .dashboard-sidebar {
+    position: sticky;
+    top: calc(env(safe-area-inset-top) + 78px);
+    z-index: 8;
+  }
+
+  .dashboard-sidebar-inner {
+    padding: 12px;
+    border-radius: 24px;
+    gap: 10px;
+  }
+
+  .dashboard-sidebar-head,
+  .dashboard-sidebar-foot {
+    display: none;
+  }
+
+  .dashboard-sidebar-nav {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    overflow-x: auto;
+    gap: 8px;
+    padding: 2px;
+    scroll-snap-type: inline proximity;
+  }
+
+  .dashboard-nav-link {
+    min-height: var(--tap-target-min, 44px);
+    padding-inline: 13px;
+    border-radius: 16px;
+    scroll-snap-align: start;
+  }
+}
+
+@media (max-width: 680px) {
+  .dashboard-shell {
+    width: calc(100% - 16px);
+  }
+
+  .dashboard-sidebar {
+    top: calc(env(safe-area-inset-top) + 70px);
+  }
+
+  .dashboard-sidebar-search {
+    display: none;
+  }
+
+  .dashboard-sidebar-inner {
+    padding: 8px;
+    border-radius: 20px;
+  }
+
+  .dashboard-nav-link {
+    min-height: 44px;
+    font-size: var(--text-sm, .8125rem);
+  }
+
+  .dashboard-nav-icon {
+    width: 20px;
+  }
+
+  .dashboard-click-card::after {
+    top: 10px;
+    right: 10px;
+    opacity: 1;
+    transform: none;
+  }
+
+  .dashboard-stat-card {
+    min-height: 140px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-skip-link,
+  .dashboard-click-card,
+  .dashboard-click-card::after,
+  .dashboard-nav-link {
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .dashboard-click-card:hover,
+  .dashboard-click-card:focus-visible {
+    transform: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .dashboard-skip-link,
+  .dashboard-nav-link,
+  .dashboard-click-card,
+  .dashboard-status-pill,
+  .dashboard-mini-badge {
+    border: 1px solid CanvasText;
+  }
+}
