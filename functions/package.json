@@ -13,7 +13,7 @@
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
     "test": "node --test intelligence/*.test.js studio-journal-core.test.js",
-    "test:marketplace": "node --test marketplace-operations-core.test.js",
+    "test:marketplace": "node --test marketplace-operations-core.test.js studio-journal-core.test.js",
     "test:studio-journal": "node --test studio-journal-core.test.js",
     "test:all": "node --test intelligence/*.test.js marketplace-operations-core.test.js studio-journal-core.test.js"
   },
