@@ -1,4 +1,35 @@
-export const STUDIO_COMPONENT_VERSION = 'component-engine-v2';
+import {
+  DESIGN_SYSTEM_VERSION,
+  EVARA_DESIGN_SYSTEM_REGISTRY,
+  getDesignSystemComponent
+} from '../design-system/registry.js';
+
+export const STUDIO_COMPONENT_VERSION = 'component-engine-v3';
+
+const CONTRACT_BY_COMPONENT = Object.freeze({
+  'glass-card': 'card',
+  'metric-card': 'card',
+  'map-block': 'marketplace-map',
+  'image-block': 'card',
+  'action-button': 'control',
+  'dev-block': 'card'
+});
+
+function registerContract(component) {
+  const contractId = CONTRACT_BY_COMPONENT[component.id] || 'card';
+  const contract = getDesignSystemComponent(contractId);
+  return Object.freeze({
+    ...component,
+    designSystem: Object.freeze({
+      version: DESIGN_SYSTEM_VERSION,
+      contractId,
+      source: contract?.source || 'primitives',
+      status: contract?.status || 'stable',
+      selector: contract?.selector || '[data-ui="card"]',
+      properties: Object.freeze([...(contract?.properties || [])])
+    })
+  });
+}
 
 export const STUDIO_COMPONENTS = Object.freeze([
   {
@@ -67,7 +98,7 @@ export const STUDIO_COMPONENTS = Object.freeze([
     primitive: { ui: 'card', glass: 'card', density: 'comfortable', size: 'md' },
     defaults: { name: 'Developer block', module: 'custom', notes: 'Advanced logic placeholder.' }
   }
-]);
+].map(registerContract));
 
 export function getStudioComponent(id) {
   return STUDIO_COMPONENTS.find((component) => component.id === id) || null;
@@ -101,19 +132,27 @@ export function renderComponentPreview(component, values = {}) {
   const iconMarkup = `<span class="eva-icon" data-ui="icon" data-size="sm" data-glass="control" aria-hidden="true">${icon}</span>`;
 
   if (component.id === 'metric-card') {
-    return `<article class="eva-card studio-component-preview" ${cardAttributes} data-studio-component="${component.id}"><header class="eva-card__header" data-ui="card-header">${iconMarkup}<small class="eva-overline" data-ui="text" data-style="overline">${data.label}</small></header><strong class="eva-title" data-ui="text" data-style="title">${data.value}</strong><em class="eva-caption" data-ui="text" data-style="caption">${data.trend}</em></article>`;
+    return `<article class="eva-card studio-component-preview" ${cardAttributes} data-studio-component="${component.id}" data-design-system-contract="${component.designSystem.contractId}"><header class="eva-card__header" data-ui="card-header">${iconMarkup}<small class="eva-overline" data-ui="text" data-style="overline">${data.label}</small></header><strong class="eva-title" data-ui="text" data-style="title">${data.value}</strong><em class="eva-caption" data-ui="text" data-style="caption">${data.trend}</em></article>`;
   }
   if (component.id === 'map-block') {
-    return `<article class="eva-card studio-component-preview" ${cardAttributes} data-studio-component="${component.id}"><header class="eva-card__header" data-ui="card-header"><strong class="eva-heading" data-ui="text" data-style="heading">${data.title}</strong>${iconMarkup}</header><div class="studio-preview-map">Map</div><small class="eva-caption" data-ui="text" data-style="caption">${data.locationSource}</small></article>`;
+    return `<article class="eva-card studio-component-preview" ${cardAttributes} data-studio-component="${component.id}" data-design-system-contract="${component.designSystem.contractId}"><header class="eva-card__header" data-ui="card-header"><strong class="eva-heading" data-ui="text" data-style="heading">${data.title}</strong>${iconMarkup}</header><div class="studio-preview-map">Map</div><small class="eva-caption" data-ui="text" data-style="caption">${data.locationSource}</small></article>`;
   }
   if (component.id === 'image-block') {
-    return `<article class="eva-card studio-component-preview" ${cardAttributes} data-studio-component="${component.id}"><div class="studio-preview-image">Image</div><small class="eva-caption" data-ui="text" data-style="caption">${data.caption}</small></article>`;
+    return `<article class="eva-card studio-component-preview" ${cardAttributes} data-studio-component="${component.id}" data-design-system-contract="${component.designSystem.contractId}"><div class="studio-preview-image">Image</div><small class="eva-caption" data-ui="text" data-style="caption">${data.caption}</small></article>`;
   }
   if (component.id === 'action-button') {
     const controlAttributes = primitiveAttributes(component, { ui: 'control', glass: 'control' });
-    return `<article class="studio-component-preview" data-studio-component="${component.id}"><button class="btn btn-theme-primary eva-control" ${controlAttributes} type="button">${data.label}</button></article>`;
+    return `<article class="studio-component-preview" data-studio-component="${component.id}" data-design-system-contract="${component.designSystem.contractId}"><button class="btn btn-theme-primary eva-control" ${controlAttributes} type="button">${data.label}</button></article>`;
   }
-  return `<article class="eva-card studio-component-preview" ${cardAttributes} data-studio-component="${component.id}"><header class="eva-card__header" data-ui="card-header">${iconMarkup}<strong class="eva-heading" data-ui="text" data-style="heading">${data.title || data.name || component.name}</strong></header><small class="eva-body" data-ui="text" data-style="body">${data.body || data.notes || component.description}</small></article>`;
+  return `<article class="eva-card studio-component-preview" ${cardAttributes} data-studio-component="${component.id}" data-design-system-contract="${component.designSystem.contractId}"><header class="eva-card__header" data-ui="card-header">${iconMarkup}<strong class="eva-heading" data-ui="text" data-style="heading">${data.title || data.name || component.name}</strong></header><small class="eva-body" data-ui="text" data-style="body">${data.body || data.notes || component.description}</small></article>`;
 }
 
-window.EvaraStudioComponents = { version: STUDIO_COMPONENT_VERSION, components: STUDIO_COMPONENTS, get: getStudioComponent, byCategory: componentsByCategory, renderPreview: renderComponentPreview };
+window.EvaraStudioComponents = {
+  version: STUDIO_COMPONENT_VERSION,
+  designSystemVersion: DESIGN_SYSTEM_VERSION,
+  registry: EVARA_DESIGN_SYSTEM_REGISTRY,
+  components: STUDIO_COMPONENTS,
+  get: getStudioComponent,
+  byCategory: componentsByCategory,
+  renderPreview: renderComponentPreview
+};
