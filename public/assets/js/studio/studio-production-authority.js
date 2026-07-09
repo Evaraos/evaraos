@@ -186,12 +186,14 @@ async function createRecoveryBranch(graphId) {
   const adapter = trustedAdapter();
   if (!adapter?.createBranch) throw new Error('Trusted branch creation is unavailable.');
   const checkpoint = await window.EvaraStudioJournal?.latestTrustedCheckpoint?.(graphId);
-  if (!checkpoint?.checkpointId) throw new Error('Create a trusted checkpoint before creating a recovery branch.');
+  if (!checkpoint?.checkpointId || !checkpoint?.branchId) {
+    throw new Error('Create a trusted checkpoint before creating a recovery branch.');
+  }
   const logicalBranchId = `recovery-${new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14)}`;
   const result = await adapter.createBranch({
     graphId,
     branchId: logicalBranchId,
-    sourceBranchId: 'local-draft',
+    sourceBranchId: checkpoint.branchId,
     sourceCheckpointId: checkpoint.checkpointId
   });
   showToast(`Recovery branch ${result.branch?.branchId || logicalBranchId} created from trusted checkpoint ${checkpoint.checkpointId}.`);
