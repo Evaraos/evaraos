@@ -159,3 +159,9 @@ exports.bootstrapMessageChannels = require("./messaging-registry").bootstrapMess
 exports.resolveMessageRecipient = require("./messaging-registry").resolveMessageRecipient;
 exports.migrateMessageRegistry = require("./messaging-registry").migrateMessageRegistry;
 exports.aiCommand = require("./ai-command").aiCommand;
+
+const blueprintSecurity = require("./blueprint-security");
+exports.saveBlueprintDraft = blueprintSecurity.saveBlueprintDraft;
+exports.publishBlueprint = blueprintSecurity.publishBlueprint;
+exports.rollbackBlueprint = blueprintSecurity.rollbackBlueprint;
+exports.getBlueprintState = blueprintSecurity.getBlueprintState;
