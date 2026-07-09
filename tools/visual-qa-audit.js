@@ -15,6 +15,10 @@ const requiredFiles = [
   'public/assets/css/pages/qa-v2.css',
   'public/assets/js/qa-v2.js',
   'public/assets/js/access-control.js',
+  'tools/studio-trusted-journal-audit.js',
+  'functions/studio-journal-core.js',
+  'functions/studio-journal-core.test.js',
+  'functions/package.json',
   'tests/visual/package.json',
   'tests/visual/playwright.config.mjs',
   'tests/visual/visual-matrix.mjs',
@@ -41,6 +45,10 @@ if (!errors.length) {
   const qaPage = read('public/qa-v2.html');
   const qaRuntime = read('public/assets/js/qa-v2.js');
   const access = read('public/assets/js/access-control.js');
+  const trustedAudit = read('tools/studio-trusted-journal-audit.js');
+  const backendCore = read('functions/studio-journal-core.js');
+  const backendTest = read('functions/studio-journal-core.test.js');
+  const backendPackage = JSON.parse(read('functions/package.json'));
   const config = read('tests/visual/playwright.config.mjs');
   const matrix = read('tests/visual/visual-matrix.mjs');
   const setup = read('tests/visual/global-setup.mjs');
@@ -206,6 +214,23 @@ if (!errors.length) {
     }
   }
 
+  for (const trustedContract of [
+    "ADAPTER_VERSION = 'trusted-studio-journal-v2'",
+    'branchIdForGraph',
+    'studio-journal-authority-v2',
+    'enforceAppCheck: true',
+    'npm run test:studio-journal',
+    'prepareImmutableRelease'
+  ]) {
+    if (!(trustedAudit.includes(trustedContract) || backendCore.includes(trustedContract) || backendTest.includes(trustedContract) || workflow.includes(trustedContract))) {
+      errors.push(`Trusted Studio Journal validation is missing contract ${trustedContract}`);
+    }
+  }
+  if (backendPackage.engines?.node !== '20') errors.push('functions/package.json: Backend Journal runtime must remain on Node 20');
+  if (!String(backendPackage.scripts?.['test:studio-journal'] || '').includes('studio-journal-core.test.js')) {
+    errors.push('functions/package.json: trusted Studio Journal test script is missing');
+  }
+
   if (!workflow.includes('workflow_dispatch:')) errors.push('.github/workflows/design-system-visual-qa.yml: QA workflow must remain manually dispatchable');
   if (!workflow.includes('default: static')) errors.push('.github/workflows/design-system-visual-qa.yml: credential-free static validation must be the default');
   if (!workflow.includes("- static\n          - studio\n          - all")) errors.push('.github/workflows/design-system-visual-qa.yml: static, Studio, and all suite options are required');
@@ -216,12 +241,16 @@ if (!errors.length) {
   if (!workflow.includes(focusedCommand)) {
     errors.push('.github/workflows/design-system-visual-qa.yml: all focused Studio validation specs must run together');
   }
+  if (!workflow.includes("- 'functions/**'")) errors.push('.github/workflows/design-system-visual-qa.yml: Backend changes must trigger the validation workflow');
+  if (!workflow.includes("node-version: '20'")) errors.push('.github/workflows/design-system-visual-qa.yml: Firebase Functions tests must run on Node 20');
+  if (!workflow.includes('npm run test:studio-journal')) errors.push('.github/workflows/design-system-visual-qa.yml: trusted Backend Journal tests are missing');
   if (!workflow.includes('node tools/design-system-audit.js')) errors.push('.github/workflows/design-system-visual-qa.yml: design-system audit is missing');
   if (!workflow.includes('node tools/studio-component-catalog-audit.js')) errors.push('.github/workflows/design-system-visual-qa.yml: Studio catalog audit is missing');
   if (!workflow.includes('node tools/studio-action-icon-audit.js')) errors.push('.github/workflows/design-system-visual-qa.yml: Studio action/icon audit is missing');
   if (!workflow.includes('node tools/studio-blueprint-serialization-audit.js')) errors.push('.github/workflows/design-system-visual-qa.yml: Studio Blueprint serialization audit is missing');
   if (!workflow.includes('node tools/studio-blueprint-operation-audit.js')) errors.push('.github/workflows/design-system-visual-qa.yml: Studio Blueprint operation audit is missing');
   if (!workflow.includes('node tools/studio-canvas-sandbox-audit.js')) errors.push('.github/workflows/design-system-visual-qa.yml: Studio CanvasSession audit is missing');
+  if (!workflow.includes('node tools/studio-trusted-journal-audit.js')) errors.push('.github/workflows/design-system-visual-qa.yml: trusted Studio Journal audit is missing');
   if (!workflow.includes('node tools/visual-qa-audit.js')) warnings.push('.github/workflows/design-system-visual-qa.yml: visual QA audit has not been wired yet');
   if (!workflow.includes('EVARA_QA_OWNER_EMAIL')) errors.push('.github/workflows/design-system-visual-qa.yml: owner QA secret is missing');
   if (!workflow.includes('actions/upload-artifact@v4')) errors.push('.github/workflows/design-system-visual-qa.yml: report artifact upload is missing');
@@ -252,4 +281,4 @@ if (errors.length) {
   errors.forEach((error) => console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('Visual QA role, appearance, device, authentication, Studio interaction, Blueprint serialization, operation Journal, writer lease, integrity recovery, unsynchronized diagnostics, static-only execution, artifact, and route contracts passed.');
+console.log('Visual QA role, appearance, device, authentication, Studio interaction, Blueprint serialization, operation Journal, writer lease, integrity recovery, graph-scoped trusted synchronization, Backend tests, static-only execution, artifact, and route contracts passed.');
