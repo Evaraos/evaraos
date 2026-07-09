@@ -17,6 +17,7 @@ on:
       - 'tools/studio-component-catalog-audit.js'
       - 'tools/studio-action-icon-audit.js'
       - 'tools/studio-blueprint-serialization-audit.js'
+      - 'tools/studio-blueprint-operation-audit.js'
       - 'tools/studio-canvas-sandbox-audit.js'
       - 'tests/visual/**'
       - 'docs/design-system/**'
@@ -37,6 +38,7 @@ on:
       - 'tools/studio-component-catalog-audit.js'
       - 'tools/studio-action-icon-audit.js'
       - 'tools/studio-blueprint-serialization-audit.js'
+      - 'tools/studio-blueprint-operation-audit.js'
       - 'tools/studio-canvas-sandbox-audit.js'
       - 'tests/visual/**'
       - 'docs/design-system/**'
@@ -103,6 +105,9 @@ jobs:
       - name: Run Studio Blueprint serialization audit
         run: node tools/studio-blueprint-serialization-audit.js
 
+      - name: Run Studio Blueprint operation audit
+        run: node tools/studio-blueprint-operation-audit.js
+
       - name: Run Studio Canvas sandbox audit
         run: node tools/studio-canvas-sandbox-audit.js
 
@@ -165,7 +170,7 @@ jobs:
 
       - name: Run focused Studio validation
         if: ${{ inputs.suite == 'studio' }}
-        run: npx playwright test specs/studio-interactions.spec.mjs specs/studio-action-icon.spec.mjs specs/studio-blueprint-serialization.spec.mjs --project=desktop-chromium
+        run: npx playwright test specs/studio-interactions.spec.mjs specs/studio-action-icon.spec.mjs specs/studio-blueprint-serialization.spec.mjs specs/studio-blueprint-operations.spec.mjs --project=desktop-chromium
 
       - name: Run visual QA
         if: ${{ inputs.suite == 'all' && !inputs.update_snapshots }}
