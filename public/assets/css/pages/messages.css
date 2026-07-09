@@ -112,6 +112,12 @@ body.messages-page .messages-chat {
   background: transparent;
 }
 
+/* Prevent automatic iOS zoom while keeping the text system consistent. */
+body.messages-page .messages-search input,
+body.messages-page .messages-composer textarea {
+  font-size: 1rem;
+}
+
 body.messages-page .conversation-swipe-actions {
   right: 0;
   left: auto;
