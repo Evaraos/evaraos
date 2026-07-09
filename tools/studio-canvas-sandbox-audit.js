@@ -16,12 +16,16 @@ const files = {
   operationJournal: 'public/assets/js/studio/canvas/canvas-operation-journal.js',
   history: 'public/assets/js/studio/canvas/canvas-history-controller.js',
   session: 'public/assets/js/studio/canvas/canvas-session.js',
+  writerLease: 'public/assets/js/studio/canvas/canvas-writer-lease.js',
+  writerGuard: 'public/assets/js/studio/canvas/canvas-writer-guard.js',
   sandbox: 'public/assets/js/studio/canvas/canvas-session-sandbox.js',
   css: 'public/assets/css/pages/studio-canvas-sandbox.css',
+  sessionCss: 'public/assets/css/pages/studio-canvas-session.css',
   page: 'public/website-builder.html',
   modules: 'public/assets/js/studio/module-registry.js',
   journal: 'public/assets/js/studio/studio-document-model.js',
-  blueprintAdapter: 'public/assets/js/studio/blueprint-operation-adapter.js'
+  blueprintAdapter: 'public/assets/js/studio/blueprint-operation-adapter.js',
+  canvasTest: 'tests/visual/specs/studio-canvas-session.spec.mjs'
 };
 
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
@@ -38,12 +42,16 @@ if (!errors.length) {
   const operationJournal = read(files.operationJournal);
   const history = read(files.history);
   const session = read(files.session);
+  const writerLease = read(files.writerLease);
+  const writerGuard = read(files.writerGuard);
   const sandbox = read(files.sandbox);
   const css = read(files.css);
+  const sessionCss = read(files.sessionCss);
   const page = read(files.page);
   const modules = read(files.modules);
   const journal = read(files.journal);
   const blueprintAdapter = read(files.blueprintAdapter);
+  const canvasTest = read(files.canvasTest);
 
   for (const file of [
     files.fixture,
@@ -54,6 +62,8 @@ if (!errors.length) {
     files.operationJournal,
     files.history,
     files.session,
+    files.writerLease,
+    files.writerGuard,
     files.sandbox
   ]) {
     try {
@@ -143,6 +153,24 @@ if (!errors.length) {
   if (session.includes('CanvasJournalAdapter')) errors.push('canvas-session.js: deprecated parallel Canvas journal adapter is still active');
 
   for (const marker of [
+    'CanvasWriterLease', 'navigator.locks?.request', "mode: 'exclusive'", 'ifAvailable: true',
+    'BroadcastChannel', "state: this.#state", "this.#setState('read-only'", "this.#setState('writer'",
+    "addEventListener('pagehide'", 'release()'
+  ]) {
+    if (!writerLease.includes(marker)) errors.push(`canvas-writer-lease.js: missing ${marker}`);
+  }
+
+  for (const marker of [
+    'CanvasWriterLease', "CANVAS_GRAPH_PREFIX = 'graph:canvas:'", 'writerLeaseGuardVersion',
+    'acquireForGraph', 'verifyCurrentHead', 'currentLeaseResult', 'refresh-required',
+    'appendOperationTransaction: guarded', 'suspended = true', 'manual-release',
+    'evara:canvas-writer-guard', 'EvaraCanvasWriterGuard'
+  ]) {
+    if (!writerGuard.includes(marker)) errors.push(`canvas-writer-guard.js: missing ${marker}`);
+  }
+  if (!writerGuard.includes("throw new Error(reason)")) errors.push('canvas-writer-guard.js: read-only writes must fail closed');
+
+  for (const marker of [
     'createCanvasSession', 'startMarquee', 'updateMarquee', 'startPan', 'updatePan',
     'startResize', 'finishResize', "event.dataTransfer.setData('text/x-evara-canvas-node'",
     "command('canvas.component.move'", "command('canvas.component.resize'",
@@ -153,12 +181,12 @@ if (!errors.length) {
     if (!sandbox.includes(marker)) errors.push(`canvas-session-sandbox.js: missing ${marker}`);
   }
 
-  for (const source of [fixture, projection, dispatcher, layout, controllers, operationJournal, history, session, sandbox]) {
+  for (const source of [fixture, projection, dispatcher, layout, controllers, operationJournal, history, session, writerLease, writerGuard, sandbox]) {
     for (const unsafe of ['innerHTML', 'outerHTML', 'eval(', 'new Function']) {
       if (source.includes(unsafe)) errors.push(`Canvas runtime: unsafe sink detected: ${unsafe}`);
     }
   }
-  for (const source of [dispatcher, layout, controllers, operationJournal, history, session, sandbox]) {
+  for (const source of [dispatcher, layout, controllers, operationJournal, history, session, writerLease, writerGuard, sandbox]) {
     for (const prohibited of ['localStorage', 'sessionStorage', 'firebase', 'firestore', 'fetch(']) {
       if (source.toLowerCase().includes(prohibited.toLowerCase())) errors.push(`Canvas runtime: prohibited dependency ${prohibited}`);
     }
@@ -180,16 +208,41 @@ if (!errors.length) {
   ]) {
     if (!css.includes(selector)) errors.push(`studio-canvas-sandbox.css: missing ${selector}`);
   }
+  for (const selector of [
+    'data-canvas-writer-state="acquiring"',
+    'data-canvas-writer-state="read-only"',
+    'data-canvas-writer-state="refresh-required"',
+    'another Studio tab owns this Canvas draft',
+    'reload before editing'
+  ]) {
+    if (!sessionCss.includes(selector)) errors.push(`studio-canvas-session.css: missing ${selector}`);
+  }
 
   const cssImport = '/assets/css/pages/studio-canvas-sandbox.css?v=1';
+  const sessionCssImport = '/assets/css/pages/studio-canvas-session.css?v=2';
+  const guardImport = '/assets/js/studio/canvas/canvas-writer-guard.js?v=1';
   const scriptImport = '/assets/js/studio/canvas/canvas-session-sandbox.js?v=1';
   const oldScriptImport = '/assets/js/studio/canvas/canvas-sandbox.js?v=1';
   const blueprintOperationImport = '/assets/js/studio/blueprint-operation-adapter.js?v=1';
-  if (!page.includes(cssImport)) errors.push('public/website-builder.html: Canvas stylesheet is missing');
+  if (!page.includes(cssImport) || !page.includes(sessionCssImport)) errors.push('public/website-builder.html: Canvas stylesheets are missing');
+  if (!page.includes(guardImport)) errors.push('public/website-builder.html: Canvas writer guard is missing');
   if (!page.includes(scriptImport)) errors.push('public/website-builder.html: journaled CanvasSession runtime is missing');
   if (page.includes(oldScriptImport)) errors.push('public/website-builder.html: rollback Canvas sandbox must not remain active');
-  if (page.indexOf(scriptImport) < page.indexOf(blueprintOperationImport)) {
-    errors.push('public/website-builder.html: CanvasSession must load after Blueprint operation integration');
+  if (!(page.indexOf(blueprintOperationImport) < page.indexOf(guardImport) && page.indexOf(guardImport) < page.indexOf(scriptImport))) {
+    errors.push('public/website-builder.html: Blueprint operations, writer guard, and CanvasSession load order is invalid');
+  }
+
+  for (const marker of [
+    'second tab is read-only and takes over after release',
+    'EvaraCanvasWriterGuard?.snapshot',
+    "toBe('read-only')",
+    'blocked.result).toBeNull()',
+    'EvaraCanvasWriterGuard.release()',
+    "toBe('writer')",
+    'takeover.durable).toBe(true)',
+    'canvas-writer-lease.json'
+  ]) {
+    if (!canvasTest.includes(marker)) errors.push(`studio-canvas-session.spec.mjs: missing writer-lease coverage ${marker}`);
   }
 
   if (!modules.includes("id: 'canvas-engine'")) errors.push('module-registry.js: Canvas Engine module is missing');
@@ -204,4 +257,4 @@ if (errors.length) {
   errors.forEach((error) => console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('CanvasSession, GraphProjection, semantic dispatcher, Flow/Grid/Spatial layout, controllers, durable history, and shared journal boundaries passed.');
+console.log('CanvasSession, GraphProjection, semantic dispatcher, Flow/Grid/Spatial layout, controllers, durable history, shared journal, and graph-scoped writer lease boundaries passed.');
