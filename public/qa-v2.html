@@ -1,4 +1,153 @@
-<!DOCTYPE html><html lang="en" data-theme="adaptive" data-environment="light" data-theme-mode="image" data-appearance="adaptive-system"><head><meta charset="UTF-8">
-  <script src="/assets/js/adaptive-appearance-boot.js?v=1"></script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate,max-age=0"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/assets/img/favicon-32.png"><link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png"><meta name="theme-color" content="#eef5fb" /><title>System Audit • Evaraos</title><style>html.boot-pending body{margin:0;overflow:hidden}html.auth-pending body,body.auth-pending{opacity:0;pointer-events:none}body{margin:0;min-height:100vh;background:transparent}body.app-loading #appRoot{visibility:hidden}body.app-ready #appRoot{visibility:visible}</style><link rel="stylesheet" href="/assets/css/base.css?v=53"><link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v1"><link rel="stylesheet" href="/assets/css/nav.css?v=nav-v25-x-drawer"><link rel="stylesheet" href="/assets/css/pages/qa-v2.css?v=1"></head><body class="auth-pending app-loading" data-route-guard="private"><div id="universalNavRoot"></div><div id="appRoot"><main class="qa2-shell"><section class="qa2-hero glass-card"><div><p class="settings-kicker">SYSTEM AUDIT + QUALITY</p><h1>Live product health, not a decorative checklist.</h1><p>Run browser runtime checks, verify critical routes, read the deployed repository audit, search findings, and export a combined diagnostic report.</p></div><div class="qa2-actions"><button id="qa2Run" class="btn btn-theme-primary" type="button">Run full audit</button><button id="qa2Refresh" class="btn btn-theme-secondary" type="button">Refresh repo report</button><button id="qa2Export" class="btn btn-theme-secondary" type="button">Export report</button><a class="btn btn-theme-secondary" href="/settings-v2.html">Back to Settings</a></div></section><section class="qa2-stats"><article class="qa2-stat"><span>Runtime checks passing</span><strong id="qa2RuntimeStat">0</strong></article><article class="qa2-stat"><span>Warnings</span><strong id="qa2WarningsStat">0</strong></article><article class="qa2-stat"><span>Audited files</span><strong id="qa2FilesStat">0</strong></article><article class="qa2-stat"><span>Repo issues</span><strong id="qa2IssuesStat">0</strong></article></section><section class="qa2-grid"><article class="qa2-panel glass-card"><div><p class="settings-kicker">LIVE RUNTIME</p><h2>Application diagnostics</h2><p class="qa2-status">Theme, navigation, Firebase references, network state, service worker support, and critical routes.</p></div><div id="qa2Checks" class="qa2-checks"></div></article><article class="qa2-panel glass-card"><div><p class="settings-kicker">REPOSITORY REPORT</p><h2>Audit findings</h2><p id="qa2Status" class="qa2-status">Waiting for repository audit…</p></div><input id="qa2Search" class="qa2-search" type="search" placeholder="Search files and findings"><div id="qa2Files" class="qa2-files"></div></article></section></main></div><script src="/assets/js/loader.js?v=38"></script><script type="module" src="/assets/js/firebase.js?v=36"></script><script type="module" src="/assets/js/route-guard.js?v=35"></script><script type="module" src="/assets/js/qa-v2.js?v=1"></script>  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v1"></script>
-  <script type="module" src="/assets/js/nav.js?v=nav-v25-x-drawer"></script>
-</body></html>
+<!DOCTYPE html>
+<html lang="en" data-theme="adaptive" data-environment="light" data-theme-mode="system" data-appearance="adaptive-system">
+<head>
+  <meta charset="UTF-8" />
+  <script src="/assets/js/adaptive-appearance-boot.js?v=1"></script>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate,max-age=0" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" href="/assets/img/favicon-32.png" />
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" />
+  <meta name="theme-color" content="#eef5fb" />
+  <title>Visual QA • Evaraos</title>
+  <style>
+    html.boot-pending body{margin:0;overflow:hidden}
+    html.auth-pending body,body.auth-pending{opacity:0;pointer-events:none}
+    body{margin:0;min-height:100vh;background:transparent}
+    body.app-loading #appRoot{visibility:hidden}
+    body.app-ready #appRoot{visibility:visible}
+  </style>
+  <link rel="stylesheet" href="/assets/css/base.css?v=53" />
+  <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v11" />
+  <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v55-owner-editor" />
+  <link rel="stylesheet" href="/assets/css/design-system.css?v=2" data-evara-design-system="ds-v2" />
+  <link rel="stylesheet" href="/assets/css/pages/qa-v2.css?v=2" />
+</head>
+<body class="auth-pending app-loading qa2-page" data-route-guard="private">
+  <div id="universalNavRoot"></div>
+  <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
+  <div id="appRoot">
+    <main class="qa2-shell">
+      <section class="qa2-hero glass-card" data-ui="surface" data-glass="surface">
+        <div class="qa2-hero-copy">
+          <p class="eva-overline" data-ui="text" data-style="overline">DESIGN SYSTEM • VISUAL QA</p>
+          <h1>Authenticated product quality, measured across the real operating system.</h1>
+          <p>Verify runtime health, design-system ownership, appearance modes, authorized routes, responsive coverage, and repository findings from one protected command center.</p>
+        </div>
+        <div class="qa2-actions" data-layout="cluster">
+          <button id="qa2Run" class="btn btn-theme-primary eva-control" data-ui="control" data-glass="control" type="button">Run full audit</button>
+          <button id="qa2Refresh" class="btn btn-theme-secondary eva-control" data-ui="control" data-glass="control" type="button">Refresh repo report</button>
+          <button id="qa2Export" class="btn btn-theme-secondary eva-control" data-ui="control" data-glass="control" type="button">Export report</button>
+          <a class="btn btn-theme-secondary eva-control" data-ui="control" data-glass="control" href="/settings-v2.html">Back to Settings</a>
+        </div>
+      </section>
+
+      <section class="qa2-stats" aria-label="Visual QA summary">
+        <article class="qa2-stat"><span>Runtime passing</span><strong id="qa2RuntimeStat">0</strong></article>
+        <article class="qa2-stat"><span>Warnings</span><strong id="qa2WarningsStat">0</strong></article>
+        <article class="qa2-stat"><span>Registry contracts</span><strong id="qa2ContractsStat">0</strong></article>
+        <article class="qa2-stat"><span>Authorized routes</span><strong id="qa2RoutesStat">0</strong></article>
+        <article class="qa2-stat"><span>Appearance</span><strong id="qa2AppearanceStat">—</strong></article>
+        <article class="qa2-stat"><span>Viewport</span><strong id="qa2ViewportStat">—</strong></article>
+      </section>
+
+      <section class="qa2-grid qa2-grid-primary">
+        <article class="qa2-panel glass-card" data-ui="surface" data-glass="surface">
+          <header class="qa2-panel-head">
+            <div>
+              <p class="eva-overline" data-ui="text" data-style="overline">LIVE RUNTIME</p>
+              <h2>Application diagnostics</h2>
+              <p>Theme authority, navigation, authentication, design-system bundle, DOM health, network state, and protected routes.</p>
+            </div>
+            <span id="qa2RuntimeBadge" class="qa2-badge">Waiting</span>
+          </header>
+          <div id="qa2Checks" class="qa2-checks" aria-live="polite"></div>
+        </article>
+
+        <article class="qa2-panel glass-card" data-ui="surface" data-glass="surface">
+          <header class="qa2-panel-head">
+            <div>
+              <p class="eva-overline" data-ui="text" data-style="overline">APPEARANCE MATRIX</p>
+              <h2>Universal theme verification</h2>
+              <p>Switch the protected audit screen through each supported appearance and verify the same component hierarchy remains readable.</p>
+            </div>
+          </header>
+          <div id="qa2AppearanceMatrix" class="qa2-appearance-grid"></div>
+          <p id="qa2AppearanceStatus" class="qa2-status" aria-live="polite"></p>
+        </article>
+      </section>
+
+      <section class="qa2-grid">
+        <article class="qa2-panel glass-card" data-ui="surface" data-glass="surface">
+          <header class="qa2-panel-head">
+            <div>
+              <p class="eva-overline" data-ui="text" data-style="overline">REGISTRY</p>
+              <h2>Studio-ready component contracts</h2>
+              <p>The same registry used by Evara Studio, grouped by architectural ownership.</p>
+            </div>
+          </header>
+          <div id="qa2Registry" class="qa2-registry"></div>
+        </article>
+
+        <article class="qa2-panel glass-card" data-ui="surface" data-glass="surface">
+          <header class="qa2-panel-head">
+            <div>
+              <p class="eva-overline" data-ui="text" data-style="overline">DEVICE COVERAGE</p>
+              <h2>Responsive regression matrix</h2>
+              <p>Viewport projects configured in the authenticated Playwright harness.</p>
+            </div>
+          </header>
+          <div id="qa2ViewportMatrix" class="qa2-device-grid"></div>
+        </article>
+      </section>
+
+      <section class="qa2-grid">
+        <article class="qa2-panel glass-card" data-ui="surface" data-glass="surface">
+          <header class="qa2-panel-head">
+            <div>
+              <p class="eva-overline" data-ui="text" data-style="overline">ROLE ROUTES</p>
+              <h2>Authorized visual coverage</h2>
+              <p id="qa2RoleStatus">Resolving the verified role and protected route matrix…</p>
+            </div>
+          </header>
+          <div id="qa2Routes" class="qa2-routes"></div>
+        </article>
+
+        <article class="qa2-panel glass-card" data-ui="surface" data-glass="surface">
+          <header class="qa2-panel-head">
+            <div>
+              <p class="eva-overline" data-ui="text" data-style="overline">AUTOMATION</p>
+              <h2>Regression readiness</h2>
+              <p>Static architecture checks run automatically. Authenticated screenshots require an explicit workflow dispatch and secure QA accounts.</p>
+            </div>
+          </header>
+          <div id="qa2Automation" class="qa2-automation"></div>
+        </article>
+      </section>
+
+      <section class="qa2-panel glass-card qa2-repository" data-ui="surface" data-glass="surface">
+        <header class="qa2-panel-head qa2-repository-head">
+          <div>
+            <p class="eva-overline" data-ui="text" data-style="overline">REPOSITORY REPORT</p>
+            <h2>Audit findings</h2>
+            <p id="qa2Status">Waiting for repository audit…</p>
+          </div>
+          <label class="qa2-search-shell" data-ui="control" data-glass="control">
+            <span class="sr-only">Search repository findings</span>
+            <input id="qa2Search" class="qa2-search" type="search" placeholder="Search files and findings" />
+          </label>
+        </header>
+        <div id="qa2Files" class="qa2-files"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/assets/js/loader.js?v=39"></script>
+  <script type="module" src="/assets/js/firebase.js?v=38"></script>
+  <script type="module" src="/assets/js/route-guard.js?v=36"></script>
+  <script src="/assets/js/design-system.js?v=2"></script>
+  <script type="module" src="/assets/js/qa-v2.js?v=2"></script>
+  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v12"></script>
+  <script type="module" src="/assets/js/nav.js?v=nav-v55-owner-editor"></script>
+</body>
+</html>
