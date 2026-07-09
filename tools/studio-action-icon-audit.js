@@ -59,7 +59,7 @@ if (!errors.length) {
     'bridgeFields',
     'actionIntent',
     'actionTarget',
-    'data-catalog-field-bridge',
+    'catalogFieldBridge',
     'element.prepend(fragment)',
     'MutationObserver(installPropertyBridges)',
     "version: 'canonical-property-bridge-v1'"
