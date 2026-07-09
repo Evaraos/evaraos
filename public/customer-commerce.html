@@ -27,7 +27,7 @@
         </div>
 
         <nav class="dashboard-sidebar-nav" aria-label="Customer commerce navigation">
-          <a class="dashboard-nav-link active" href="./customer-commerce.html"><span class="dashboard-nav-icon">◎</span><span>Billing</span></a>
+          <a class="dashboard-nav-link active" href="./customer-commerce.html"><span class="dashboard-nav-icon">◎</span><span>Orders & Billing</span></a>
           <a class="dashboard-nav-link" href="./dashboard.html"><span class="dashboard-nav-icon">◈</span><span>Dashboard</span></a>
           <a class="dashboard-nav-link" href="./leads.html"><span class="dashboard-nav-icon">▲</span><span>Requests</span></a>
           <a class="dashboard-nav-link" href="./settings.html"><span class="dashboard-nav-icon">◆</span><span>Settings</span></a>
@@ -35,8 +35,8 @@
 
         <div class="dashboard-sidebar-foot glass-card">
           <div class="dashboard-sidebar-foot-copy">
-            <strong>Self-Service Billing</strong>
-            <span>Review quotes, invoices, subscriptions, payment links, and account actions.</span>
+            <strong>Marketplace Self-Service</strong>
+            <span>Track orders, manage appointments, review quotes, pay invoices, and follow refunds.</span>
           </div>
         </div>
       </div>
@@ -45,9 +45,9 @@
     <section class="dashboard-main">
       <section class="dashboard-hero glass-card">
         <div class="dashboard-hero-copy">
-          <p class="dashboard-eyebrow">Customer Commerce Portal</p>
-          <h1>Manage your quotes, invoices, subscriptions, and payment actions in one place.</h1>
-          <p class="dashboard-hero-text">Your customer portal keeps billing, account actions, open invoices, subscription details, and quote visibility organized in real time.</p>
+          <p class="dashboard-eyebrow">Customer Marketplace Portal</p>
+          <h1>Manage every service order from quote to completion.</h1>
+          <p class="dashboard-hero-text">Review pricing, pay securely, reschedule appointments, request cancellations, follow refunds, and track assigned professionals when live service tracking is active.</p>
         </div>
 
         <div class="dashboard-hero-panel glass-card">
@@ -57,7 +57,7 @@
           </div>
           <div class="dashboard-hero-panel-copy">
             <strong id="customerOutstanding">$0.00</strong>
-            <span id="customerCommerceStatus">Initializing customer commerce portal...</span>
+            <span id="customerCommerceStatus">Initializing customer Marketplace portal...</span>
           </div>
         </div>
       </section>
@@ -66,7 +66,7 @@
         <div class="dashboard-section-head">
           <div>
             <p class="dashboard-section-kicker">Account Snapshot</p>
-            <h2>Billing Overview</h2>
+            <h2>Marketplace Overview</h2>
           </div>
           <span class="dashboard-mini-badge">Customer</span>
         </div>
@@ -83,6 +83,16 @@
             <span>Total paid</span>
           </article>
           <article class="dashboard-stat-card glass-card">
+            <p>Active Orders</p>
+            <h3 id="customerActiveOrders">0</h3>
+            <span>In progress</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Updates</p>
+            <h3 id="customerUnreadUpdates">0</h3>
+            <span>Unread alerts</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
             <p>Subscriptions</p>
             <h3 id="customerActiveSubscriptions">0</h3>
             <span>Active plans</span>
@@ -92,6 +102,19 @@
             <h3 id="customerQuoteCount">0</h3>
             <span>Total quotes</span>
           </article>
+        </div>
+      </section>
+
+      <section class="dashboard-panel glass-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Service Lifecycle</p>
+            <h2>My Orders</h2>
+          </div>
+          <span id="customerOperationsStatus" class="dashboard-mini-badge">Loading operations…</span>
+        </div>
+        <div id="customerOrderRoot" class="dashboard-list">
+          <div class="item muted">Loading Marketplace orders...</div>
         </div>
       </section>
 
@@ -111,12 +134,38 @@
         <section class="dashboard-panel glass-card">
           <div class="dashboard-section-head">
             <div>
+              <p class="dashboard-section-kicker">Lifecycle Updates</p>
+              <h2>Notifications</h2>
+            </div>
+          </div>
+          <div id="customerNotificationRoot" class="dashboard-list">
+            <div class="item muted">Loading Marketplace updates...</div>
+          </div>
+        </section>
+      </section>
+
+      <section class="dashboard-grid-2">
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
               <p class="dashboard-section-kicker">Payments</p>
-              <h2>Open Invoices</h2>
+              <h2>Invoices</h2>
             </div>
           </div>
           <div id="customerInvoiceRoot" class="dashboard-list">
             <div class="item muted">Loading invoices...</div>
+          </div>
+        </section>
+
+        <section class="dashboard-panel glass-card">
+          <div class="dashboard-section-head">
+            <div>
+              <p class="dashboard-section-kicker">Money Back</p>
+              <h2>Refunds</h2>
+            </div>
+          </div>
+          <div id="customerRefundRoot" class="dashboard-list">
+            <div class="item muted">Loading refund status...</div>
           </div>
         </section>
       </section>
@@ -154,7 +203,8 @@
   <script type="module" src="./assets/js/theme.js"></script>
   <script type="module" src="./assets/js/route-guard.js"></script>
   <script type="module" src="./assets/js/nav.js"></script>
-  <script type="module" src="./assets/js/customer-commerce-dashboard.js"></script>  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v1"></script>
+  <script type="module" src="./assets/js/customer-commerce-dashboard.js?v=2"></script>
+  <script type="module" src="./assets/js/customer-marketplace-operations.js?v=1"></script>  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v1"></script>
   <script type="module" src="/assets/js/nav.js?v=nav-v25-x-drawer"></script>
 </body>
 </html>
