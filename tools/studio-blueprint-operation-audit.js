@@ -15,9 +15,10 @@ const requiredFiles = [
   'public/assets/js/studio/canvas/canvas-operation-journal.js',
   'public/assets/js/studio/canvas/canvas-session.js',
   'public/assets/js/studio/canvas/canvas-history-controller.js',
-  'public/assets/js/studio/canvas/canvas-sandbox.js',
+  'public/assets/js/studio/canvas/canvas-session-sandbox.js',
   'public/website-builder.html',
   'tests/visual/specs/studio-blueprint-operations.spec.mjs',
+  'tests/visual/specs/studio-canvas-session.spec.mjs',
   '.github/workflows/design-system-visual-qa.yml'
 ];
 
@@ -37,9 +38,10 @@ if (!errors.length) {
   const canvasJournal = read('public/assets/js/studio/canvas/canvas-operation-journal.js');
   const canvasSession = read('public/assets/js/studio/canvas/canvas-session.js');
   const history = read('public/assets/js/studio/canvas/canvas-history-controller.js');
-  const sandbox = read('public/assets/js/studio/canvas/canvas-sandbox.js');
+  const sandbox = read('public/assets/js/studio/canvas/canvas-session-sandbox.js');
   const page = read('public/website-builder.html');
-  const test = read('tests/visual/specs/studio-blueprint-operations.spec.mjs');
+  const blueprintTest = read('tests/visual/specs/studio-blueprint-operations.spec.mjs');
+  const canvasTest = read('tests/visual/specs/studio-canvas-session.spec.mjs');
   const workflow = read('.github/workflows/design-system-visual-qa.yml');
 
   for (const marker of [
@@ -162,21 +164,34 @@ if (!errors.length) {
     if (!history.includes(marker)) errors.push(`canvas-history-controller.js: missing ${marker}`);
   }
 
-  if (!sandbox.includes('MockOperationDispatcher')) errors.push('canvas-sandbox.js: current sandbox ownership marker is missing');
-  if (sandbox.includes('CanvasOperationJournal') || sandbox.includes('CanvasSession')) {
-    errors.push('canvas-sandbox.js: direct CanvasSession activation requires a dedicated migration and authenticated validation gate');
+  for (const marker of [
+    'createCanvasSession',
+    'session.undo()',
+    'session.redo()',
+    'session.interaction.begin',
+    'session.selection.select',
+    "command('canvas.component.insert'",
+    "event.dataTransfer.setData('text/x-evara-canvas-node'",
+    'pendingTransactions'
+  ]) {
+    if (!sandbox.includes(marker)) errors.push(`canvas-session-sandbox.js: missing ${marker}`);
+  }
+  if (sandbox.includes('MockOperationDispatcher')) {
+    errors.push('canvas-session-sandbox.js: activated UI must dispatch through CanvasSession rather than own a mock dispatcher');
   }
 
   const serializationImport = '/assets/js/studio/studio-blueprint-serialization.js?v=1';
   const operationImport = '/assets/js/studio/blueprint-operation-adapter.js?v=1';
-  const sandboxImport = '/assets/js/studio/canvas/canvas-sandbox.js?v=1';
+  const canvasImport = '/assets/js/studio/canvas/canvas-session-sandbox.js?v=1';
+  const rollbackImport = '/assets/js/studio/canvas/canvas-sandbox.js?v=1';
   if (!page.includes(operationImport)) errors.push('public/website-builder.html: Blueprint operation adapter is missing');
   if (!(page.indexOf(serializationImport) >= 0 && page.indexOf(serializationImport) < page.indexOf(operationImport))) {
     errors.push('public/website-builder.html: Blueprint operation adapter must load after serialization');
   }
-  if (!(page.indexOf(operationImport) < page.indexOf(sandboxImport))) {
-    errors.push('public/website-builder.html: Blueprint operation adapter must load before Canvas sandbox');
+  if (!(page.indexOf(operationImport) < page.indexOf(canvasImport))) {
+    errors.push('public/website-builder.html: Blueprint operation adapter must load before CanvasSession');
   }
+  if (page.includes(rollbackImport)) errors.push('public/website-builder.html: rollback sandbox must not remain active after the migration gate');
   if (!page.includes('/assets/js/studio/studio-document-model.js?v=2')) errors.push('public/website-builder.html: operation-aware Journal cache version is missing');
 
   for (const marker of [
@@ -199,7 +214,21 @@ if (!errors.length) {
     'studio-blueprint-operation-transactions.json',
     'studio-blueprint-operations.png'
   ]) {
-    if (!test.includes(marker)) errors.push(`studio-blueprint-operations.spec.mjs: missing ${marker} coverage`);
+    if (!blueprintTest.includes(marker)) errors.push(`studio-blueprint-operations.spec.mjs: missing ${marker} coverage`);
+  }
+
+  for (const marker of [
+    'semantic insert undo redo and reload recovery',
+    "graphId).toMatch(/^graph:canvas:/",
+    "dispatch('canvas.component.insert'",
+    'EvaraCanvasSandbox.undo()',
+    'EvaraCanvasSandbox.redo()',
+    'pendingTransactions()',
+    'page.reload',
+    'recovered.exists',
+    'canvas-session-recovery.json'
+  ]) {
+    if (!canvasTest.includes(marker)) errors.push(`studio-canvas-session.spec.mjs: missing ${marker} coverage`);
   }
 
   if (!workflow.includes('node tools/studio-blueprint-operation-audit.js')) {
@@ -207,6 +236,9 @@ if (!errors.length) {
   }
   if (!workflow.includes('specs/studio-blueprint-operations.spec.mjs')) {
     errors.push('.github/workflows/design-system-visual-qa.yml: Blueprint operation test is not wired');
+  }
+  if (!workflow.includes('specs/studio-canvas-session.spec.mjs')) {
+    errors.push('.github/workflows/design-system-visual-qa.yml: CanvasSession migration test is not wired');
   }
 }
 
@@ -216,4 +248,4 @@ if (errors.length) {
   errors.forEach((error) => console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('Blueprint semantic commands, reversible Evara operations, per-graph revisions, IndexedDB durability, conflict detection, idempotency, compatibility suppression, Canvas replay, and compensating history boundaries passed.');
+console.log('Blueprint and Canvas semantic commands, reversible Evara operations, canonical Journal durability, migration validation, conflict detection, and compensating history boundaries passed.');
