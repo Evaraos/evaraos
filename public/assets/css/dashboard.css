@@ -1,6 +1,7 @@
 /* EVARAOS DASHBOARD SYSTEM */
 @import url("./dashboard/dashboard-layout.css?v=2");
 @import url("./dashboard/dashboard-components.css?v=2");
+@import url("./dashboard/dashboard-production-ui.css?v=1");
 @import url("./onboarding-entry.css?v=4");
 @import url("./auth/apply-page-polish.css?v=2");
 @import url("./auth/apply-experience.css?v=1");
