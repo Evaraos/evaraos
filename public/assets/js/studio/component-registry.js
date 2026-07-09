@@ -1,4 +1,4 @@
-export const STUDIO_COMPONENT_VERSION = 'component-engine-v1';
+export const STUDIO_COMPONENT_VERSION = 'component-engine-v2';
 
 export const STUDIO_COMPONENTS = Object.freeze([
   {
@@ -9,6 +9,7 @@ export const STUDIO_COMPONENTS = Object.freeze([
     description: 'Reusable Liquid Glass content card.',
     fields: ['title', 'body', 'icon', 'action'],
     permissions: ['view', 'edit', 'move', 'delete'],
+    primitive: { ui: 'card', glass: 'card', density: 'comfortable', size: 'md' },
     defaults: { title: 'Glass card', body: 'Editable reusable card.', icon: '◈', action: 'Open' }
   },
   {
@@ -19,6 +20,7 @@ export const STUDIO_COMPONENTS = Object.freeze([
     description: 'KPI card for revenue, jobs, leads, or performance.',
     fields: ['label', 'value', 'trend', 'icon'],
     permissions: ['view', 'edit', 'move'],
+    primitive: { ui: 'card', glass: 'card', density: 'compact', size: 'md' },
     defaults: { label: 'Revenue', value: '$0', trend: '+0%', icon: '$' }
   },
   {
@@ -29,6 +31,7 @@ export const STUDIO_COMPONENTS = Object.freeze([
     description: 'Map placeholder for routes, jobs, service areas, or customers.',
     fields: ['title', 'locationSource', 'zoom'],
     permissions: ['view', 'edit', 'move'],
+    primitive: { ui: 'card', glass: 'card', density: 'comfortable', size: 'lg' },
     defaults: { title: 'Operations Map', locationSource: 'jobs', zoom: 'city' }
   },
   {
@@ -39,6 +42,7 @@ export const STUDIO_COMPONENTS = Object.freeze([
     description: 'Reusable image/media block connected to the Asset Library.',
     fields: ['asset', 'caption', 'radius'],
     permissions: ['view', 'edit', 'move', 'delete'],
+    primitive: { ui: 'card', glass: 'card', density: 'compact', size: 'md' },
     defaults: { caption: 'Image caption', radius: '24' }
   },
   {
@@ -49,6 +53,7 @@ export const STUDIO_COMPONENTS = Object.freeze([
     description: 'Primary or secondary CTA connected to an action.',
     fields: ['label', 'action', 'style'],
     permissions: ['view', 'edit', 'move', 'delete'],
+    primitive: { ui: 'control', glass: 'control', size: 'md', shape: 'pill' },
     defaults: { label: 'Continue', action: 'none', style: 'primary' }
   },
   {
@@ -59,6 +64,7 @@ export const STUDIO_COMPONENTS = Object.freeze([
     description: 'Advanced owner/senior engineer logic placeholder.',
     fields: ['name', 'module', 'notes'],
     permissions: ['view', 'edit', 'move', 'delete', 'publish'],
+    primitive: { ui: 'card', glass: 'card', density: 'comfortable', size: 'md' },
     defaults: { name: 'Developer block', module: 'custom', notes: 'Advanced logic placeholder.' }
   }
 ]);
@@ -75,23 +81,39 @@ export function componentsByCategory() {
   }, {});
 }
 
+function primitiveAttributes(component, overrides = {}) {
+  const primitive = { ...(component?.primitive || {}), ...(overrides || {}) };
+  return [
+    primitive.ui ? `data-ui="${primitive.ui}"` : '',
+    primitive.glass ? `data-glass="${primitive.glass}"` : '',
+    primitive.size ? `data-size="${primitive.size}"` : '',
+    primitive.density ? `data-density="${primitive.density}"` : '',
+    primitive.shape ? `data-shape="${primitive.shape}"` : ''
+  ].filter(Boolean).join(' ');
+}
+
 export function renderComponentPreview(component, values = {}) {
   const data = { ...(component?.defaults || {}), ...(values || {}) };
   const icon = data.icon || component?.icon || '◈';
   if (!component) return '';
+
+  const cardAttributes = primitiveAttributes(component, { ui: 'card', glass: 'card' });
+  const iconMarkup = `<span class="eva-icon" data-ui="icon" data-size="sm" data-glass="control" aria-hidden="true">${icon}</span>`;
+
   if (component.id === 'metric-card') {
-    return `<article class="eva-card studio-component-preview" data-studio-component="${component.id}"><span>${icon}</span><small>${data.label}</small><strong>${data.value}</strong><em>${data.trend}</em></article>`;
+    return `<article class="eva-card studio-component-preview" ${cardAttributes} data-studio-component="${component.id}"><header class="eva-card__header" data-ui="card-header">${iconMarkup}<small class="eva-overline" data-ui="text" data-style="overline">${data.label}</small></header><strong class="eva-title" data-ui="text" data-style="title">${data.value}</strong><em class="eva-caption" data-ui="text" data-style="caption">${data.trend}</em></article>`;
   }
   if (component.id === 'map-block') {
-    return `<article class="eva-card studio-component-preview" data-studio-component="${component.id}"><strong>${data.title}</strong><div class="studio-preview-map">Map</div><small>${data.locationSource}</small></article>`;
+    return `<article class="eva-card studio-component-preview" ${cardAttributes} data-studio-component="${component.id}"><header class="eva-card__header" data-ui="card-header"><strong class="eva-heading" data-ui="text" data-style="heading">${data.title}</strong>${iconMarkup}</header><div class="studio-preview-map">Map</div><small class="eva-caption" data-ui="text" data-style="caption">${data.locationSource}</small></article>`;
   }
   if (component.id === 'image-block') {
-    return `<article class="eva-card studio-component-preview" data-studio-component="${component.id}"><div class="studio-preview-image">Image</div><small>${data.caption}</small></article>`;
+    return `<article class="eva-card studio-component-preview" ${cardAttributes} data-studio-component="${component.id}"><div class="studio-preview-image">Image</div><small class="eva-caption" data-ui="text" data-style="caption">${data.caption}</small></article>`;
   }
   if (component.id === 'action-button') {
-    return `<article class="studio-component-preview" data-studio-component="${component.id}"><button class="btn btn-theme-primary" type="button">${data.label}</button></article>`;
+    const controlAttributes = primitiveAttributes(component, { ui: 'control', glass: 'control' });
+    return `<article class="studio-component-preview" data-studio-component="${component.id}"><button class="btn btn-theme-primary eva-control" ${controlAttributes} type="button">${data.label}</button></article>`;
   }
-  return `<article class="eva-card studio-component-preview" data-studio-component="${component.id}"><span>${icon}</span><strong>${data.title || data.name || component.name}</strong><small>${data.body || data.notes || component.description}</small></article>`;
+  return `<article class="eva-card studio-component-preview" ${cardAttributes} data-studio-component="${component.id}"><header class="eva-card__header" data-ui="card-header">${iconMarkup}<strong class="eva-heading" data-ui="text" data-style="heading">${data.title || data.name || component.name}</strong></header><small class="eva-body" data-ui="text" data-style="body">${data.body || data.notes || component.description}</small></article>`;
 }
 
 window.EvaraStudioComponents = { version: STUDIO_COMPONENT_VERSION, components: STUDIO_COMPONENTS, get: getStudioComponent, byCategory: componentsByCategory, renderPreview: renderComponentPreview };
