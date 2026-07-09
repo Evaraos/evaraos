@@ -144,13 +144,18 @@ function statusText(state) {
   return 'Saved locally';
 }
 
+function openJournalPanel() {
+  panelOpen = false;
+  closeCompetingPanels();
+  panelOpen = true;
+  return renderPanel(true);
+}
+
 function blockPrototypePublish(event) {
   if (!event.target.closest('[data-action="publish"]')) return;
   event.preventDefault();
   event.stopImmediatePropagation();
-  panelOpen = true;
-  closeCompetingPanels();
-  renderPanel(true);
+  openJournalPanel();
   toast('Publishing requires the trusted server journal and release service.', 'error');
 }
 
@@ -177,9 +182,9 @@ function bindEvents() {
     event.preventDefault();
     const type = action.dataset.journalAction;
     if (type === 'toggle') {
-      panelOpen = !panelOpen;
-      if (panelOpen) closeCompetingPanels();
-      await renderPanel(true);
+      const nextOpen = !panelOpen;
+      if (nextOpen) await openJournalPanel();
+      else { panelOpen = false; await renderPanel(true); }
     } else if (type === 'close') {
       panelOpen = false;
       await renderPanel(true);
@@ -212,9 +217,9 @@ function bindEvents() {
   document.addEventListener('keydown', (event) => {
     if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === 'j') {
       event.preventDefault();
-      panelOpen = !panelOpen;
-      if (panelOpen) closeCompetingPanels();
-      renderPanel(true);
+      const nextOpen = !panelOpen;
+      if (nextOpen) openJournalPanel();
+      else { panelOpen = false; renderPanel(true); }
     }
   });
 }
