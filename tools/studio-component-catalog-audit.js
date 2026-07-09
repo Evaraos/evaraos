@@ -12,7 +12,9 @@ const requiredFiles = [
   'public/assets/js/studio/component-registry.js',
   'public/assets/js/studio/studio-visual-builder.js',
   'public/assets/js/studio/studio-layout-engine.js',
+  'public/assets/js/studio/studio-auto-layout.js',
   'public/assets/css/pages/studio-component-catalog.css',
+  'public/assets/css/pages/studio-auto-layout.css',
   'public/website-builder.html'
 ];
 
@@ -28,7 +30,9 @@ if (!errors.length) {
   const componentRegistry = read('public/assets/js/studio/component-registry.js');
   const builder = read('public/assets/js/studio/studio-visual-builder.js');
   const layout = read('public/assets/js/studio/studio-layout-engine.js');
+  const autoLayout = read('public/assets/js/studio/studio-auto-layout.js');
   const catalogCss = read('public/assets/css/pages/studio-component-catalog.css');
+  const autoLayoutCss = read('public/assets/css/pages/studio-auto-layout.css');
   const studioPage = read('public/website-builder.html');
 
   if (!componentRegistry.includes("STUDIO_COMPONENT_VERSION = 'component-engine-v4'")) {
@@ -104,8 +108,41 @@ if (!errors.length) {
     errors.push('studio-layout-engine.js: layout operations must remain generic across registered nodes');
   }
 
+  if (!autoLayout.includes("AUTO_LAYOUT_KEY = 'evaraos-studio-auto-layout-v1'")) {
+    errors.push('studio-auto-layout.js: versioned Auto Layout persistence key is missing');
+  }
+  if (!autoLayout.includes("node?.dataset.nodeType !== 'hero-block'")) {
+    errors.push('studio-auto-layout.js: hero must remain excluded from stack membership');
+  }
+  for (const capability of ['direction', 'gap', 'padding', 'align', 'wrap', 'children']) {
+    if (!autoLayout.includes(capability)) errors.push(`studio-auto-layout.js: missing ${capability} capability`);
+  }
+  for (const unsafeSink of ['innerHTML', 'outerHTML', 'eval(', 'new Function']) {
+    if (autoLayout.includes(unsafeSink)) errors.push(`studio-auto-layout.js: unsafe sink detected: ${unsafeSink}`);
+  }
+  if (!autoLayout.includes('MutationObserver') || !autoLayout.includes('normalizeAutoState')) {
+    errors.push('studio-auto-layout.js: validated lifecycle rehydration is incomplete');
+  }
+  if (!autoLayout.includes('undoAuto') || !autoLayout.includes('redoAuto')) {
+    errors.push('studio-auto-layout.js: Auto Layout history controls are missing');
+  }
+
   if (!studioPage.includes('/assets/css/pages/studio-component-catalog.css?v=1')) {
     errors.push('public/website-builder.html: expanded catalog preview stylesheet is missing');
+  }
+  if (!studioPage.includes('/assets/css/pages/studio-auto-layout.css?v=1')) {
+    errors.push('public/website-builder.html: Auto Layout stylesheet is missing');
+  }
+  if (!studioPage.includes('/assets/js/studio/studio-auto-layout.js?v=1')) {
+    errors.push('public/website-builder.html: Auto Layout runtime is missing');
+  }
+
+  for (const selector of [
+    '.studio-auto-layout-frame[data-auto-direction="row"]',
+    '.studio-auto-layout-frame[data-auto-direction="column"]',
+    '@media (max-width: 720px)'
+  ]) {
+    if (!autoLayoutCss.includes(selector)) errors.push(`studio-auto-layout.css: missing ${selector}`);
   }
 
   for (const id of expectedComponents.filter((id) => !['glass-card', 'action-button', 'metric-card', 'map-block', 'image-block', 'dev-block'].includes(id))) {
@@ -127,4 +164,4 @@ if (errors.length) {
   errors.forEach((error) => console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('Studio catalog registry, contracts, previews, layout compatibility, and authoring boundaries passed.');
+console.log('Studio catalog, layout engine, Auto Layout, contracts, previews, and authoring boundaries passed.');
