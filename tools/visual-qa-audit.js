@@ -23,6 +23,7 @@ const requiredFiles = [
   'tests/visual/specs/studio-interactions.spec.mjs',
   'tests/visual/specs/studio-action-icon.spec.mjs',
   'tests/visual/specs/studio-blueprint-serialization.spec.mjs',
+  'tests/visual/specs/studio-blueprint-operations.spec.mjs',
   'tests/visual/README.md'
 ];
 
@@ -46,6 +47,7 @@ if (!errors.length) {
   const studioSpec = read('tests/visual/specs/studio-interactions.spec.mjs');
   const actionIconSpec = read('tests/visual/specs/studio-action-icon.spec.mjs');
   const blueprintSpec = read('tests/visual/specs/studio-blueprint-serialization.spec.mjs');
+  const operationSpec = read('tests/visual/specs/studio-blueprint-operations.spec.mjs');
   const packageJson = JSON.parse(read('tests/visual/package.json'));
 
   if (packageJson.devDependencies?.['@playwright/test'] !== '1.61.1') {
@@ -144,7 +146,27 @@ if (!errors.length) {
     if (!blueprintSpec.includes(blueprintContract)) errors.push(`tests/visual/specs/studio-blueprint-serialization.spec.mjs: missing ${blueprintContract} coverage`);
   }
 
-  for (const focusedSpec of [studioSpec, actionIconSpec, blueprintSpec]) {
+  for (const operationContract of [
+    "page.goto('/website-builder.html'",
+    'EvaraStudioJournal?.appendOperationTransaction',
+    'EvaraBlueprintOperationAdapter?.flush',
+    'studio-journal-operation-envelope-v1',
+    'canvas-semantic-command-v1',
+    'canvas.component.insert',
+    'canvas.property.set',
+    'canvas.layout.set',
+    'inverseOperations',
+    'transaction.commit',
+    'getGraphHead',
+    'compatibilityForLatestProjection',
+    'studio-blueprint-operation-transactions.json',
+    'studio-blueprint-operations.png',
+    'storageStatePath'
+  ]) {
+    if (!operationSpec.includes(operationContract)) errors.push(`tests/visual/specs/studio-blueprint-operations.spec.mjs: missing ${operationContract} coverage`);
+  }
+
+  for (const focusedSpec of [studioSpec, actionIconSpec, blueprintSpec, operationSpec]) {
     if (!focusedSpec.includes("localStorage.removeItem('evaraos-studio-visual-builder-v1')")) {
       errors.push('Focused Studio validation must start from a clean browser-local draft');
     }
@@ -155,13 +177,15 @@ if (!errors.length) {
 
   if (!workflow.includes('workflow_dispatch:')) errors.push('.github/workflows/design-system-visual-qa.yml: authenticated job must remain manually dispatchable');
   if (!workflow.includes("- studio\n          - all")) errors.push('.github/workflows/design-system-visual-qa.yml: focused Studio suite option is missing');
-  if (!workflow.includes('npx playwright test specs/studio-interactions.spec.mjs specs/studio-action-icon.spec.mjs specs/studio-blueprint-serialization.spec.mjs --project=desktop-chromium')) {
+  if (!workflow.includes('npx playwright test specs/studio-interactions.spec.mjs specs/studio-action-icon.spec.mjs specs/studio-blueprint-serialization.spec.mjs specs/studio-blueprint-operations.spec.mjs --project=desktop-chromium')) {
     errors.push('.github/workflows/design-system-visual-qa.yml: all focused Studio validation specs must run together');
   }
   if (!workflow.includes('node tools/design-system-audit.js')) errors.push('.github/workflows/design-system-visual-qa.yml: design-system audit is missing');
   if (!workflow.includes('node tools/studio-component-catalog-audit.js')) errors.push('.github/workflows/design-system-visual-qa.yml: Studio catalog audit is missing');
   if (!workflow.includes('node tools/studio-action-icon-audit.js')) errors.push('.github/workflows/design-system-visual-qa.yml: Studio action/icon audit is missing');
   if (!workflow.includes('node tools/studio-blueprint-serialization-audit.js')) errors.push('.github/workflows/design-system-visual-qa.yml: Studio Blueprint serialization audit is missing');
+  if (!workflow.includes('node tools/studio-blueprint-operation-audit.js')) errors.push('.github/workflows/design-system-visual-qa.yml: Studio Blueprint operation audit is missing');
+  if (!workflow.includes('node tools/studio-canvas-sandbox-audit.js')) errors.push('.github/workflows/design-system-visual-qa.yml: Studio Canvas sandbox audit is missing');
   if (!workflow.includes('node tools/visual-qa-audit.js')) warnings.push('.github/workflows/design-system-visual-qa.yml: visual QA audit has not been wired yet');
   if (!workflow.includes('EVARA_QA_OWNER_EMAIL')) errors.push('.github/workflows/design-system-visual-qa.yml: owner QA secret is missing');
   if (!workflow.includes('actions/upload-artifact@v4')) errors.push('.github/workflows/design-system-visual-qa.yml: report artifact upload is missing');
@@ -192,4 +216,4 @@ if (errors.length) {
   errors.forEach((error) => console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('Visual QA role, appearance, device, authentication, Studio interaction, action/icon, Blueprint serialization, artifact, and route contracts passed.');
+console.log('Visual QA role, appearance, device, authentication, Studio interaction, action/icon, Blueprint serialization, operation journal, artifact, and route contracts passed.');
