@@ -1,0 +1,89 @@
+name: Design System Visual QA
+
+on:
+  pull_request:
+    paths:
+      - 'public/dashboard.html'
+      - 'public/assets/css/dashboard.css'
+      - 'public/assets/css/dashboard/**'
+      - 'public/assets/js/dashboard.js'
+      - 'tests/visual/**'
+      - '.github/workflows/design-system-visual-qa.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dashboard-auth-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  authenticated-dashboard-smoke:
+    name: Authenticated owner and technician dashboard smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      EVARA_QA_BASE_URL: http://127.0.0.1:4173
+      EVARA_QA_MATRIX: critical
+      EVARA_QA_REQUIRE_ALL_ROLES: '0'
+      EVARA_QA_OWNER_EMAIL: ${{ secrets.EVARA_QA_OWNER_EMAIL }}
+      EVARA_QA_OWNER_PASSWORD: ${{ secrets.EVARA_QA_OWNER_PASSWORD }}
+      EVARA_QA_TECHNICIAN_EMAIL: ${{ secrets.EVARA_QA_TECHNICIAN_EMAIL }}
+      EVARA_QA_TECHNICIAN_PASSWORD: ${{ secrets.EVARA_QA_TECHNICIAN_PASSWORD }}
+    defaults:
+      run:
+        working-directory: tests/visual
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate dashboard QA credentials
+        shell: bash
+        run: |
+          if [[ -z "$EVARA_QA_OWNER_EMAIL" || -z "$EVARA_QA_OWNER_PASSWORD" ]]; then
+            echo "Owner QA credentials must be configured as repository secrets."
+            exit 1
+          fi
+          if [[ -z "$EVARA_QA_TECHNICIAN_EMAIL" || -z "$EVARA_QA_TECHNICIAN_PASSWORD" ]]; then
+            echo "Technician QA credentials must be configured as repository secrets."
+            exit 1
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install visual QA dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Install browser engines
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Start local branch server
+        shell: bash
+        run: |
+          cd ../..
+          python3 -m http.server 4173 --directory public > /tmp/evara-dashboard-http.log 2>&1 &
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:4173/login.html > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/evara-dashboard-http.log
+          exit 1
+
+      - name: Run authenticated dashboard smoke test
+        run: npx playwright test specs/dashboard-auth-smoke.spec.mjs
+
+      - name: Upload dashboard smoke report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-auth-smoke-${{ github.run_id }}
+          path: |
+            tests/visual/playwright-report
+            tests/visual/test-results
+          if-no-files-found: warn
+          retention-days: 7
