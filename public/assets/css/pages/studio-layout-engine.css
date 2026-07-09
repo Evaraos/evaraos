@@ -39,6 +39,17 @@
   cursor: grabbing;
 }
 
+.studio-node[data-layout-pinned="true"],
+.studio-node[data-layout-pinned="true"]:active {
+  cursor: default;
+}
+
+.studio-context-toolbar button:disabled {
+  opacity: 0.32;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .studio-layout-dragging .studio-node {
   transition: border-color 120ms ease, opacity 120ms ease, transform 120ms ease;
 }
@@ -122,6 +133,15 @@ body.studio-layout-resizing * {
 .studio-layout-layer.is-selected {
   border-color: color-mix(in srgb, var(--studio-accent) 62%, rgba(255, 255, 255, 0.3));
   box-shadow: inset 3px 0 0 var(--studio-accent);
+}
+
+.studio-layout-layer.is-pinned {
+  cursor: default;
+  opacity: 0.78;
+}
+
+.studio-layout-layer.is-pinned:hover {
+  transform: none;
 }
 
 .studio-layout-layer-grip {
