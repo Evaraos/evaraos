@@ -35,11 +35,11 @@
     "source": "functions"
   },
   "firestore": {
-    "rules": "firebase/firestore.rules",
+    "rules": "firebase/firestore.zero-trust.rules",
     "indexes": "firestore.indexes.json"
   },
   "storage": {
-    "rules": "firebase/storage.rules"
+    "rules": "firebase/storage.zero-trust.rules"
   },
   "emulators": {
     "auth": {
