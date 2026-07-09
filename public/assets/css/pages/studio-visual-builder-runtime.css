@@ -8,8 +8,46 @@
   -webkit-backdrop-filter: blur(calc(var(--node-glass, 72) * 0.45px)) saturate(1.18);
 }
 
+/*
+ * Studio must follow the universal navigation contract instead of guessing
+ * its height. The previous 78px/72px offsets placed the editor 14px beneath
+ * the navigation and visibly clipped the top of the page.
+ */
+.visual-studio {
+  inset: var(--eva-page-nav-clearance, 92px) 0 0;
+  width: 100%;
+  max-width: 100vw;
+  min-width: 0;
+}
+
+.studio-topbar,
+.studio-workspace,
+.studio-brand-cluster,
+.studio-top-actions {
+  min-width: 0;
+}
+
+.studio-page-picker {
+  max-width: min(260px, 28vw);
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 980px) {
+  .studio-brand-copy span {
+    display: none;
+  }
+
+  .studio-page-picker {
+    max-width: 34vw;
+  }
+}
+
 @media (max-width: 720px) {
   .visual-studio {
-    inset: 72px 0 0;
+    inset: var(--eva-page-nav-clearance, 86px) 0 0;
+  }
+
+  .studio-topbar {
+    overflow: hidden;
   }
 }
