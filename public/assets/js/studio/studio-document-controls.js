@@ -65,23 +65,26 @@ function injectControls() {
   );
 }
 
-function checkpointRow(checkpoint) {
-  return make('article', { className: 'studio-document-version' }, [
+function checkpointRow(checkpoint, { recoverable = true } = {}) {
+  const children = [
     make('div', { className: 'studio-document-version-copy' }, [
       make('strong', { text: `Revision ${checkpoint.revision}` }),
-      make('span', { text: checkpoint.reason.replaceAll('-', ' ') }),
-      make('small', { text: `${formatTime(checkpoint.createdAt)} · ${checkpoint.trusted ? 'trusted' : 'local'}` })
-    ]),
-    make('button', { type: 'button', text: 'Recover', dataset: { journalAction: 'restore', checkpointId: checkpoint.checkpointId } })
-  ]);
+      make('span', { text: String(checkpoint.reason || 'checkpoint').replaceAll('-', ' ') }),
+      make('small', { text: `${formatTime(checkpoint.createdAt)} · ${checkpoint.trusted ? 'trusted' : 'local'}${checkpoint.checkpointType === 'canvas-graph' ? ' · Canvas graph' : ''}` })
+    ])
+  ];
+  children.push(recoverable
+    ? make('button', { type: 'button', text: 'Recover', dataset: { journalAction: 'restore', checkpointId: checkpoint.checkpointId } })
+    : make('span', { className: 'studio-document-version-state', text: 'Canvas' }));
+  return make('article', { className: 'studio-document-version' }, children);
 }
 
 function transactionRow(transaction) {
   return make('article', { className: 'studio-document-version studio-journal-transaction' }, [
     make('div', { className: 'studio-document-version-copy' }, [
-      make('strong', { text: transaction.intent.replaceAll('.', ' › ') }),
-      make('span', { text: transaction.summary }),
-      make('small', { text: `${formatTime(transaction.createdAtClient)} · revision ${transaction.expectedHeadRevision + 1}` })
+      make('strong', { text: String(transaction.intent || 'system').replaceAll('.', ' › ') }),
+      make('span', { text: transaction.summary || transaction.metadata?.channel || 'Journal transaction' }),
+      make('small', { text: `${formatTime(transaction.createdAtClient)} · revision ${transaction.acceptedHeadRevision ?? (transaction.expectedHeadRevision + 1)} · ${transaction.durabilityState || 'saved-locally'}` })
     ])
   ]);
 }
@@ -104,33 +107,39 @@ async function renderPanel(force = false) {
   const status = await refreshStatus();
   if (!status || !panelOpen || !workspace()) return;
   const { session, checkpoints, transactions, serverAdapters } = status;
+  const compatibilityCheckpoints = checkpoints.filter((checkpoint) => checkpoint.checkpointType !== 'canvas-graph');
+  const canvasCheckpoints = checkpoints.filter((checkpoint) => checkpoint.checkpointType === 'canvas-graph');
   const panel = make('aside', { className: 'studio-sheet studio-document-panel', dataset: { journalPanel: 'true' } });
   panel.append(
     make('div', { className: 'studio-sheet-header' }, [
-      make('div', {}, [make('h2', { text: 'Draft Journal' }), make('p', { text: 'IndexedDB recovery journal for the current Canvas prototype.' })]),
+      make('div', {}, [make('h2', { text: 'Draft Journal' }), make('p', { text: 'IndexedDB recovery journal for compatibility and Evara Graph Canvas drafts.' })]),
       make('button', { className: 'studio-sheet-close', type: 'button', text: '×', dataset: { journalAction: 'close' }, attrs: { 'aria-label': 'Close draft journal' } })
     ]),
     make('section', { className: 'studio-document-summary' }, [
-      make('div', {}, [make('span', { text: 'Revision' }), make('strong', { text: session.headRevision })]),
+      make('div', {}, [make('span', { text: 'Compatibility revision' }), make('strong', { text: session.headRevision })]),
       make('div', {}, [make('span', { text: 'Durability' }), make('strong', { text: session.durabilityState.replaceAll('-', ' ') })]),
       make('div', {}, [make('span', { text: 'Server' }), make('strong', { text: serverAdapters.length ? 'Adapter ready' : 'Not connected' })])
     ]),
     make('div', { className: 'studio-document-report' }, [
       make('p', { className: serverAdapters.length ? 'is-warning' : 'is-error', text: serverAdapters.length
-        ? 'A trusted server adapter is registered, but this session is still a local compatibility projection.'
+        ? 'A trusted server adapter is registered, but release publishing remains gated until server confirmation.'
         : 'Publishing is blocked until Backend connects the trusted journal and release service.' })
     ]),
     make('div', { className: 'studio-document-actions' }, [
-      make('button', { type: 'button', text: 'Create checkpoint', dataset: { journalAction: 'checkpoint' } }),
+      make('button', { type: 'button', text: 'Compatibility checkpoint', dataset: { journalAction: 'checkpoint' } }),
       make('button', { type: 'button', text: 'Refresh', dataset: { journalAction: 'refresh' } })
     ]),
-    make('h3', { className: 'studio-journal-heading', text: 'Recovery checkpoints' }),
-    make('div', { className: 'studio-document-version-list' }, checkpoints.length
-      ? checkpoints.map(checkpointRow)
-      : [make('div', { className: 'studio-empty-state', text: 'No checkpoints yet.' })]),
+    make('h3', { className: 'studio-journal-heading', text: 'Compatibility recovery' }),
+    make('div', { className: 'studio-document-version-list' }, compatibilityCheckpoints.length
+      ? compatibilityCheckpoints.map((checkpoint) => checkpointRow(checkpoint, { recoverable: true }))
+      : [make('div', { className: 'studio-empty-state', text: 'No compatibility checkpoints yet.' })]),
+    make('h3', { className: 'studio-journal-heading', text: 'Canvas graph checkpoints' }),
+    make('div', { className: 'studio-document-version-list' }, canvasCheckpoints.length
+      ? canvasCheckpoints.slice(0, 8).map((checkpoint) => checkpointRow(checkpoint, { recoverable: false }))
+      : [make('div', { className: 'studio-empty-state', text: 'Open Graph Canvas and create a save point.' })]),
     make('h3', { className: 'studio-journal-heading', text: 'Recent transactions' }),
     make('div', { className: 'studio-document-version-list studio-journal-transaction-list' }, transactions.length
-      ? transactions.slice(0, 20).map(transactionRow)
+      ? transactions.slice(0, 24).map(transactionRow)
       : [make('div', { className: 'studio-empty-state', text: 'No journal transactions yet.' })])
   );
   workspace().append(panel);
@@ -138,6 +147,10 @@ async function renderPanel(force = false) {
 
 function statusText(state) {
   if (state === 'syncing') return 'Journaling…';
+  if (state === 'offline') return 'Saved offline';
+  if (state === 'server-confirmed') return 'Server confirmed';
+  if (state === 'conflict') return 'Conflict';
+  if (state === 'read-only') return 'Read only';
   if (state === 'recovery-required') return 'Recovery needed';
   if (state === 'release-blocked') return 'Publish blocked';
   if (state === 'recovered') return 'Recovered';
@@ -191,12 +204,17 @@ function bindEvents() {
     } else if (type === 'checkpoint') {
       await api()?.createCheckpoint('manual-checkpoint');
       await renderPanel(true);
-      toast('Local recovery checkpoint created.');
+      toast('Local compatibility checkpoint created.');
     } else if (type === 'refresh') {
       await renderPanel(true);
     } else if (type === 'restore') {
       const checkpointId = action.dataset.checkpointId;
-      if (!checkpointId || !window.confirm('Recover this local Studio checkpoint? The current projection will be journaled first.')) return;
+      const checkpoint = statusCache?.checkpoints?.find((item) => item.checkpointId === checkpointId);
+      if (checkpoint?.checkpointType === 'canvas-graph') {
+        toast('Canvas graph checkpoints recover automatically when Graph Canvas opens.', 'error');
+        return;
+      }
+      if (!checkpointId || !window.confirm('Recover this local Studio checkpoint? The current compatibility projection will be journaled first.')) return;
       const result = await api()?.restoreCheckpoint(checkpointId);
       if (result?.restored) location.reload();
       else toast(result?.reason || 'Checkpoint could not be recovered.', 'error');
