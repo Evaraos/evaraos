@@ -34,8 +34,16 @@ on:
       - '.github/workflows/design-system-visual-qa.yml'
   workflow_dispatch:
     inputs:
+      suite:
+        description: Authenticated QA suite
+        required: true
+        default: studio
+        type: choice
+        options:
+          - studio
+          - all
       matrix:
-        description: Visual QA coverage
+        description: Visual QA coverage for the all suite
         required: true
         default: critical
         type: choice
@@ -43,7 +51,7 @@ on:
           - critical
           - full
       update_snapshots:
-        description: Generate candidate screenshot baselines
+        description: Generate candidate baselines for the all suite
         required: true
         default: false
         type: boolean
@@ -136,12 +144,16 @@ jobs:
       - name: Install browser engines
         run: npx playwright install --with-deps chromium webkit
 
+      - name: Run focused Studio validation
+        if: ${{ inputs.suite == 'studio' }}
+        run: npx playwright test specs/studio-interactions.spec.mjs --project=desktop-chromium
+
       - name: Run visual QA
-        if: ${{ !inputs.update_snapshots }}
+        if: ${{ inputs.suite == 'all' && !inputs.update_snapshots }}
         run: npx playwright test
 
       - name: Generate candidate baselines
-        if: ${{ inputs.update_snapshots }}
+        if: ${{ inputs.suite == 'all' && inputs.update_snapshots }}
         run: npx playwright test --update-snapshots
 
       - name: Upload Playwright report
@@ -156,7 +168,7 @@ jobs:
           retention-days: 14
 
       - name: Upload candidate baselines
-        if: ${{ always() && inputs.update_snapshots }}
+        if: ${{ always() && inputs.suite == 'all' && inputs.update_snapshots }}
         uses: actions/upload-artifact@v4
         with:
           name: evaraos-visual-baseline-candidates-${{ github.run_id }}
