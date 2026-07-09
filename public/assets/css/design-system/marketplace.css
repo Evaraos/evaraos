@@ -1,0 +1,907 @@
+/* EVARAOS DESIGN SYSTEM — MARKETPLACE & OPERATIONS
+   Reusable presentation for service discovery, quotes, orders, invoices,
+   subscriptions, payouts, schedules, dispatch, field execution, tracking,
+   uploads, status metadata, and operational empty states.
+
+   This layer never owns Marketplace behavior, payment logic, maps, capacity,
+   permissions, or persistence. Primary Liquid Glass rendering remains owned by
+   theme/liquid-optics.css; nested cards use restrained semantic overlays.
+*/
+
+:root {
+  --marketplace-content-max: 82.5rem;
+  --marketplace-shell-top: 7.5rem;
+  --marketplace-shell-bottom: 4.5rem;
+  --marketplace-section-gap: var(--space-5);
+  --marketplace-panel-padding: clamp(var(--space-5), 3.5vw, var(--space-8));
+  --marketplace-card-padding: var(--space-5);
+  --marketplace-panel-radius: var(--radius-2xl);
+  --marketplace-card-radius: var(--radius-lg);
+  --marketplace-control-radius: var(--radius-pill);
+  --marketplace-grid-min: 17rem;
+  --marketplace-status-height: 1.875rem;
+  --marketplace-map-height: 28rem;
+}
+
+/* Shared page and hero composition */
+:where(.eva-marketplace-shell,.schedule-wrap,.dispatch-wrap,.field-wrap) {
+  width: min(var(--marketplace-content-max), calc(100% - (var(--page-gutter) * 2)));
+  margin: 0 auto;
+  padding: var(--marketplace-shell-top) 0 var(--marketplace-shell-bottom);
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+}
+
+:where(.eva-marketplace-hero,.schedule-hero,.dispatch-hero,.field-hero) {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(18rem, .85fr);
+  gap: var(--marketplace-section-gap);
+  margin-bottom: var(--marketplace-section-gap);
+  align-items: stretch;
+}
+
+:where(.schedule-hero > .glass-card,.dispatch-hero > .glass-card,.field-hero > .glass-card,.schedule-shell,.dispatch-toolbar,.dispatch-column,.field-toolbar,.field-section) {
+  min-width: 0;
+  padding: var(--marketplace-panel-padding) !important;
+  border-radius: var(--marketplace-panel-radius) !important;
+}
+
+:where(.eva-marketplace-kicker,.schedule-kicker,.dispatch-kicker,.field-kicker) {
+  margin: 0 0 var(--space-3);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  line-height: 1.2;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+:where(.eva-marketplace-title,.schedule-title,.dispatch-title,.field-title) {
+  max-width: 13ch;
+  margin: 0;
+  color: var(--text-primary);
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: var(--weight-bold);
+  line-height: .96;
+  letter-spacing: -.055em;
+  text-wrap: balance;
+}
+
+:where(.eva-marketplace-copy,.schedule-copy,.dispatch-copy,.field-copy) {
+  max-width: 68ch;
+  margin: var(--space-4) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--text-md);
+  line-height: var(--leading-relaxed);
+  text-wrap: pretty;
+}
+
+/* KPI summary blocks */
+:where(.eva-marketplace-stats,.schedule-stats,.dispatch-stats,.field-stats) {
+  padding: var(--space-5);
+  display: grid;
+  gap: var(--space-3);
+  align-content: center;
+}
+
+:where(.eva-marketplace-stat,.schedule-stat,.dispatch-stat,.field-stat) {
+  min-width: 0;
+  padding: var(--space-4);
+  border-radius: var(--marketplace-card-radius);
+  display: grid;
+  gap: var(--space-1);
+  background: rgba(var(--adaptive-ink-rgb), .03);
+  border: 1px solid var(--separator);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.09);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+:where(.eva-marketplace-stat,.schedule-stat,.dispatch-stat,.field-stat) strong {
+  color: var(--text-primary);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  overflow-wrap: anywhere;
+}
+
+:where(.eva-marketplace-stat,.schedule-stat,.dispatch-stat,.field-stat) span {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-normal);
+}
+
+/* Toolbars and filters */
+:where(.eva-marketplace-toolbar,.calendar-toolbar,.dispatch-toolbar,.field-toolbar) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+:where(.dispatch-toolbar,.field-toolbar) {
+  margin-bottom: var(--marketplace-section-gap);
+}
+
+:where(.eva-marketplace-toolbar,.calendar-toolbar,.dispatch-toolbar,.field-toolbar) :where(input,select) {
+  flex: 1 1 17.5rem;
+  width: auto;
+  min-width: min(17.5rem, 100%);
+  min-height: var(--control-height-lg);
+  padding-inline: var(--space-4);
+  border-radius: var(--marketplace-control-radius);
+  color: var(--text-primary);
+  outline: 0;
+}
+
+:where(.eva-marketplace-toolbar,.calendar-toolbar,.dispatch-toolbar,.field-toolbar) :where(input,select):focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring), var(--shadow-sm) !important;
+}
+
+:where(.eva-marketplace-toolbar,.calendar-toolbar,.dispatch-toolbar,.field-toolbar) :where(button,.btn) {
+  min-height: var(--control-height-lg);
+}
+
+.calendar-toolbar h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  text-align: center;
+}
+
+/* Generic Marketplace dashboard records */
+body.marketplace-page .dashboard-list {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+body.marketplace-page .dashboard-list .item {
+  min-width: 0;
+  padding: var(--marketplace-card-padding);
+  border-radius: var(--marketplace-card-radius);
+  color: var(--text-primary);
+  background: rgba(var(--adaptive-ink-rgb), .028);
+  border: 1px solid var(--separator);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+body.marketplace-page .dashboard-list .item.muted,
+body.marketplace-page .dashboard-list > .muted {
+  min-height: 7.5rem;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+body.marketplace-page .dashboard-list .item h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  letter-spacing: -.012em;
+  text-wrap: balance;
+}
+
+body.marketplace-page .dashboard-list .item p {
+  margin: var(--space-2) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+
+body.marketplace-page .dashboard-list .row {
+  margin-top: var(--space-3);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+body.marketplace-page .dashboard-list .row:first-child { margin-top: 0; }
+body.marketplace-page .dashboard-list .row > div { min-width: 0; }
+body.marketplace-page .dashboard-list .row > strong {
+  color: var(--text-primary);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+body.marketplace-page :where(.dashboard-list,.marketplace-meta,.dispatch-meta,.field-meta) .pill,
+:where(.eva-marketplace-pill,.dispatch-pill,.field-pill) {
+  min-height: var(--marketplace-status-height);
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+  white-space: nowrap;
+  background: rgba(var(--adaptive-ink-rgb), .045);
+  border: 1px solid var(--separator);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.07);
+  text-decoration: none;
+}
+
+:where(.eva-marketplace-pill,.dispatch-pill,.field-pill).go,
+body.marketplace-page .dashboard-status-pill.success {
+  color: var(--positive);
+  border-color: color-mix(in srgb, var(--positive) 32%, var(--separator));
+  background: color-mix(in srgb, var(--positive) 9%, transparent);
+}
+
+:where(.eva-marketplace-pill,.dispatch-pill,.field-pill).hot,
+body.marketplace-page .dashboard-status-pill.working {
+  color: var(--warning);
+  border-color: color-mix(in srgb, var(--warning) 32%, var(--separator));
+  background: color-mix(in srgb, var(--warning) 9%, transparent);
+}
+
+:where(.eva-marketplace-pill,.dispatch-pill,.field-pill).stop,
+body.marketplace-page .dashboard-status-pill.empty,
+body.marketplace-page .dashboard-status-pill.error {
+  color: var(--critical);
+  border-color: color-mix(in srgb, var(--critical) 32%, var(--separator));
+  background: color-mix(in srgb, var(--critical) 8%, transparent);
+}
+
+body.marketplace-page .dashboard-status-pill.warning {
+  color: var(--information);
+  border-color: color-mix(in srgb, var(--information) 32%, var(--separator));
+  background: color-mix(in srgb, var(--information) 8%, transparent);
+}
+
+body.marketplace-page .dashboard-list :where(select,input[type="datetime-local"]) {
+  min-height: var(--control-height-md);
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  outline: 0;
+}
+
+body.marketplace-page .dashboard-list :where(select,input[type="datetime-local"]):focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring), var(--shadow-sm) !important;
+}
+
+body.marketplace-page .dashboard-list .btn {
+  min-height: var(--control-height-md);
+}
+
+body.marketplace-page .dashboard-list [data-commerce-action]:disabled,
+body.marketplace-page .dashboard-list [data-marketplace-operation]:disabled {
+  opacity: .56;
+  cursor: wait;
+}
+
+/* Customer order controls and tracking */
+body.marketplace-page .marketplace-order-controls {
+  align-items: flex-end !important;
+}
+
+body.marketplace-page .marketplace-change-field {
+  min-width: min(100%, 17.5rem) !important;
+  display: grid !important;
+  gap: var(--space-2) !important;
+}
+
+body.marketplace-page .marketplace-change-field span {
+  color: var(--text-secondary) !important;
+  font-size: var(--text-xs) !important;
+  font-weight: var(--weight-semibold) !important;
+  line-height: var(--leading-snug);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+body.marketplace-page .marketplace-change-field input {
+  min-height: var(--control-height-md) !important;
+  padding-inline: var(--space-3) !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--text-primary) !important;
+}
+
+:where(.eva-marketplace-tracking,.marketplace-tracking-card) {
+  min-height: 8rem;
+  padding: var(--space-4);
+  border-radius: var(--marketplace-card-radius);
+  display: grid;
+  gap: var(--space-3);
+  background: rgba(var(--adaptive-ink-rgb), .025);
+  border: 1px solid var(--separator);
+}
+
+:where(.eva-marketplace-map,.marketplace-map) {
+  min-height: var(--marketplace-map-height);
+  overflow: hidden;
+  border-radius: var(--marketplace-panel-radius);
+  background: rgba(var(--adaptive-ink-rgb), .03);
+  border: 1px solid var(--separator);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+/* Service discovery and cart primitives for Evara Studio reuse */
+:where(.eva-service-grid,.marketplace-service-grid) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--marketplace-grid-min)), 1fr));
+  gap: var(--space-4);
+}
+
+:where(.eva-service-card,.marketplace-service-card) {
+  min-width: 0;
+  min-height: 15rem;
+  padding: var(--marketplace-card-padding);
+  border-radius: var(--marketplace-card-radius);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+}
+
+:where(.eva-service-card,.marketplace-service-card) img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  background: rgba(var(--adaptive-ink-rgb), .04);
+}
+
+:where(.eva-service-card,.marketplace-service-card) h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-tight);
+}
+
+:where(.eva-service-card,.marketplace-service-card) p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+
+:where(.eva-marketplace-price,.marketplace-price) {
+  margin-top: auto;
+  color: var(--text-primary);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+}
+
+:where(.eva-marketplace-cart,.marketplace-cart) {
+  padding: var(--marketplace-panel-padding);
+  border-radius: var(--marketplace-panel-radius);
+  display: grid;
+  gap: var(--space-4);
+}
+
+/* Calendar */
+.schedule-shell {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.calendar-day {
+  min-width: 0;
+  min-height: 10rem;
+  padding: var(--space-3);
+  border-radius: var(--marketplace-card-radius);
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+}
+
+.calendar-day header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.calendar-day header strong {
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -.01em;
+}
+
+.calendar-day header span {
+  min-width: var(--space-7);
+  height: var(--space-7);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  background: rgba(var(--adaptive-ink-rgb), .04);
+  border: 1px solid var(--separator);
+}
+
+.calendar-pill {
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-normal);
+  background: rgba(var(--adaptive-ink-rgb), .035);
+  border: 1px solid var(--separator);
+  overflow-wrap: anywhere;
+}
+
+.calendar-pill.hot {
+  color: var(--warning);
+  border-color: color-mix(in srgb, var(--warning) 34%, var(--separator));
+  background: color-mix(in srgb, var(--warning) 9%, transparent);
+}
+
+.calendar-pill.go {
+  color: var(--positive);
+  border-color: color-mix(in srgb, var(--positive) 34%, var(--separator));
+  background: color-mix(in srgb, var(--positive) 9%, transparent);
+}
+
+.calendar-pill.stop {
+  color: var(--critical);
+  border-color: color-mix(in srgb, var(--critical) 34%, var(--separator));
+  background: color-mix(in srgb, var(--critical) 8%, transparent);
+}
+
+/* Dispatch board */
+.dispatch-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.dispatch-column {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+}
+
+.dispatch-column h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-tight);
+}
+
+.dispatch-list {
+  min-height: 7.5rem;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.dispatch-card {
+  min-width: 0;
+  padding: var(--marketplace-card-padding);
+  border-radius: var(--marketplace-card-radius) !important;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.dispatch-card h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  letter-spacing: -.012em;
+}
+
+.dispatch-card p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+
+.dispatch-meta,
+.dispatch-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.dispatch-actions { padding-top: var(--space-1); }
+.dispatch-actions .btn { min-height: var(--control-height-md); }
+
+/* Jobs dashboard runtime compatibility */
+body.marketplace-page .job-dispatch-item {
+  align-items: flex-start !important;
+  gap: var(--space-4) !important;
+  padding: var(--marketplace-card-padding) !important;
+  border-radius: var(--marketplace-card-radius) !important;
+}
+
+body.marketplace-page .job-dispatch-content {
+  min-width: 0;
+  display: grid !important;
+  gap: var(--space-2) !important;
+}
+
+body.marketplace-page .job-dispatch-content > strong {
+  color: var(--text-primary);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+}
+
+body.marketplace-page .job-dispatch-content > span {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+
+body.marketplace-page .job-dispatch-meta {
+  margin-top: var(--space-1) !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: var(--space-2) !important;
+}
+
+body.marketplace-page .job-dispatch-meta span {
+  min-height: var(--marketplace-status-height);
+  padding: 0 var(--space-3) !important;
+  border-radius: var(--radius-pill) !important;
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-secondary) !important;
+  font-size: var(--text-xs) !important;
+  font-weight: var(--weight-semibold) !important;
+  background: rgba(var(--adaptive-ink-rgb), .045) !important;
+  border: 1px solid var(--separator) !important;
+}
+
+body.marketplace-page .job-dispatch-actions {
+  min-width: 15rem !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: var(--space-2) !important;
+}
+
+body.marketplace-page .job-dispatch-actions .btn {
+  min-height: var(--control-height-md) !important;
+  padding-inline: var(--space-3) !important;
+  font-size: var(--text-xs) !important;
+}
+
+/* Field execution */
+.field-section {
+  display: grid;
+  align-content: start;
+}
+
+.field-list {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.field-card {
+  min-width: 0;
+  padding: var(--marketplace-card-padding);
+  border-radius: var(--marketplace-card-radius) !important;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.field-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.field-card h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-tight);
+}
+
+.field-card p {
+  margin: var(--space-2) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+
+.field-meta,
+.field-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.field-actions :where(button,a) {
+  min-height: var(--control-height-md);
+  padding-inline: var(--space-4);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  text-decoration: none;
+}
+
+.field-photo-box {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.field-upload {
+  min-width: 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: rgba(var(--adaptive-ink-rgb), .025);
+  border: 1px dashed var(--separator-strong);
+}
+
+.field-upload strong {
+  display: block;
+  margin-bottom: var(--space-3);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  line-height: 1.2;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.field-upload input[type="file"] {
+  width: 100%;
+  min-height: var(--control-height-md);
+  padding: var(--space-2);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+}
+
+.field-upload input[type="file"]::file-selector-button {
+  min-height: var(--control-height-sm);
+  margin-right: var(--space-2);
+  padding-inline: var(--space-3);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-pill);
+  color: var(--text-primary);
+  background: rgba(var(--adaptive-ink-rgb), .05);
+  font: inherit;
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+/* Shared empty state */
+body.marketplace-page .empty-card,
+:where(.eva-marketplace-empty,.marketplace-empty) {
+  min-height: 7.5rem;
+  padding: var(--space-6);
+  border-radius: var(--marketplace-card-radius);
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  text-align: center;
+  background: rgba(var(--adaptive-ink-rgb), .025);
+  border: 1px solid var(--separator);
+}
+
+/* Timeline primitive */
+:where(.eva-marketplace-timeline,.marketplace-timeline) {
+  display: grid;
+  gap: 0;
+}
+
+:where(.eva-marketplace-timeline-step,.marketplace-timeline-step) {
+  min-width: 0;
+  padding: 0 0 var(--space-5) var(--space-8);
+  position: relative;
+}
+
+:where(.eva-marketplace-timeline-step,.marketplace-timeline-step)::before {
+  content: "";
+  position: absolute;
+  left: .6875rem;
+  top: .75rem;
+  bottom: 0;
+  width: 1px;
+  background: var(--separator);
+}
+
+:where(.eva-marketplace-timeline-step,.marketplace-timeline-step)::after {
+  content: "";
+  position: absolute;
+  left: .375rem;
+  top: .375rem;
+  width: .6875rem;
+  height: .6875rem;
+  border-radius: 50%;
+  background: var(--text-soft);
+  box-shadow: 0 0 0 var(--space-1) rgba(var(--adaptive-ink-rgb), .045);
+}
+
+:where(.eva-marketplace-timeline-step,.marketplace-timeline-step)[data-state="complete"]::after { background: var(--positive); }
+:where(.eva-marketplace-timeline-step,.marketplace-timeline-step)[data-state="active"]::after { background: var(--information); }
+
+/* Responsive Marketplace behavior */
+@media (max-width: 68.75rem) {
+  .calendar-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .dispatch-board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 61.25rem) {
+  :where(.eva-marketplace-hero,.schedule-hero,.dispatch-hero,.field-hero) {
+    grid-template-columns: 1fr;
+  }
+
+  :where(.eva-marketplace-stats,.schedule-stats,.dispatch-stats,.field-stats) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 50rem) {
+  :root {
+    --marketplace-shell-top: 6rem;
+    --marketplace-shell-bottom: 2.5rem;
+    --marketplace-section-gap: var(--space-4);
+    --marketplace-panel-padding: var(--space-5);
+    --marketplace-card-padding: var(--space-4);
+  }
+
+  :where(.eva-marketplace-shell,.schedule-wrap,.dispatch-wrap,.field-wrap) {
+    width: calc(100% - var(--space-4));
+  }
+
+  :where(.eva-marketplace-title,.schedule-title,.dispatch-title,.field-title) {
+    font-size: clamp(2.25rem, 11vw, 3.5rem);
+  }
+
+  .calendar-grid,
+  .dispatch-board,
+  .field-photo-box {
+    grid-template-columns: 1fr;
+  }
+
+  :where(.eva-marketplace-toolbar,.calendar-toolbar,.dispatch-toolbar,.field-toolbar) {
+    align-items: stretch;
+  }
+
+  :where(.eva-marketplace-toolbar,.dispatch-toolbar,.field-toolbar) > * {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .calendar-toolbar h2 {
+    width: 100%;
+    order: -1;
+  }
+
+  .calendar-toolbar button { flex: 1 1 0; }
+
+  body.marketplace-page .marketplace-order-controls {
+    align-items: stretch !important;
+    flex-direction: column;
+  }
+
+  body.marketplace-page .marketplace-order-controls :where(.btn,.marketplace-change-field) {
+    width: 100% !important;
+  }
+
+  body.marketplace-page .job-dispatch-item {
+    display: grid !important;
+  }
+
+  body.marketplace-page .job-dispatch-actions {
+    min-width: 0 !important;
+    justify-content: flex-start !important;
+  }
+}
+
+@media (max-width: 35rem) {
+  :where(.eva-marketplace-stats,.schedule-stats,.dispatch-stats,.field-stats) {
+    grid-template-columns: 1fr;
+  }
+
+  body.marketplace-page .dashboard-list .row {
+    align-items: stretch;
+  }
+
+  body.marketplace-page .dashboard-list .row > :where(.btn,select) {
+    width: 100%;
+  }
+}
+
+@media (hover:hover) and (pointer:fine) {
+  :where(.eva-service-card,.marketplace-service-card),
+  .dispatch-card,
+  .field-card,
+  body.marketplace-page .dashboard-list .item {
+    transition: transform var(--motion), outline-color var(--motion), background var(--motion);
+  }
+
+  :where(.eva-service-card,.marketplace-service-card):hover,
+  .dispatch-card:hover,
+  .field-card:hover,
+  body.marketplace-page .dashboard-list .item:hover {
+    transform: translateY(-1px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(.eva-service-card,.marketplace-service-card),
+  .dispatch-card,
+  .field-card,
+  body.marketplace-page .dashboard-list .item {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+@media (forced-colors: active) {
+  :where(
+    .eva-marketplace-stat,
+    .schedule-stat,
+    .dispatch-stat,
+    .field-stat,
+    .calendar-pill,
+    .dispatch-pill,
+    .field-pill,
+    .field-upload,
+    .eva-marketplace-empty,
+    .marketplace-empty,
+    body.marketplace-page .empty-card,
+    body.marketplace-page .dashboard-list .item,
+    body.marketplace-page .job-dispatch-meta span
+  ) {
+    background: Canvas !important;
+    color: CanvasText !important;
+    border-color: CanvasText !important;
+    box-shadow: none !important;
+  }
+
+  :where(.calendar-pill.go,.dispatch-pill.go,.field-pill.go),
+  :where(.calendar-pill.hot,.dispatch-pill.hot,.field-pill.hot),
+  :where(.calendar-pill.stop,.dispatch-pill.stop,.field-pill.stop) {
+    color: CanvasText !important;
+  }
+}
