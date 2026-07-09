@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evaraos.com/schemas/studio-draft-session.schema.json",
+  "title": "EvaraOS Studio Draft Session",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sessionId",
+    "companyId",
+    "projectId",
+    "branchId",
+    "graphId",
+    "graphSchemaVersion",
+    "operationProtocolVersion",
+    "headRevision",
+    "headSequence",
+    "durabilityState",
+    "openedAt",
+    "actor"
+  ],
+  "properties": {
+    "sessionId": { "type": "string", "minLength": 8, "maxLength": 160 },
+    "companyId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "projectId": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "branchId": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "graphId": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "graphSchemaVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "operationProtocolVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "headRevision": { "type": "integer", "minimum": 0 },
+    "headSequence": { "type": "integer", "minimum": 0 },
+    "latestCheckpointId": { "type": ["string", "null"], "maxLength": 200 },
+    "clientInstanceId": { "type": ["string", "null"], "maxLength": 200 },
+    "collaborationMode": {
+      "type": "string",
+      "enum": ["single_writer", "review_only", "multi_writer", "collaborative"]
+    },
+    "durabilityState": {
+      "type": "string",
+      "enum": [
+        "saved-locally",
+        "syncing",
+        "server-confirmed",
+        "offline",
+        "conflict",
+        "recovery-required",
+        "read-only"
+      ]
+    },
+    "pendingTransactionIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 8, "maxLength": 200 }
+    },
+    "openedAt": { "type": "string", "format": "date-time" },
+    "lastRecoveredAt": { "type": ["string", "null"], "format": "date-time" },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "type": { "type": "string", "enum": ["user", "system", "ai", "migration"] },
+        "role": { "type": ["string", "null"], "maxLength": 100 }
+      }
+    },
+    "viewport": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "device": { "type": "string", "enum": ["desktop", "tablet", "mobile", "custom"] },
+        "width": { "type": "integer", "minimum": 240, "maximum": 10000 },
+        "height": { "type": "integer", "minimum": 240, "maximum": 10000 },
+        "zoom": { "type": "number", "exclusiveMinimum": 0, "maximum": 8 },
+        "panX": { "type": "number" },
+        "panY": { "type": "number" }
+      }
+    },
+    "previewContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "role": { "type": ["string", "null"], "maxLength": 100 },
+        "themeMode": { "type": ["string", "null"], "maxLength": 100 },
+        "environment": { "type": "string", "enum": ["draft", "preview", "release-candidate"] }
+      }
+    }
+  }
+}
