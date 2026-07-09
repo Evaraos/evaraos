@@ -1,0 +1,315 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userPath(userId) {
+      return /databases/(default)/documents/users/$(userId);
+    }
+
+    function currentUserExists() {
+      return signedIn() && firestore.exists(userPath(request.auth.uid));
+    }
+
+    function currentUser() {
+      return firestore.get(userPath(request.auth.uid)).data;
+    }
+
+    function userRole() {
+      return currentUserExists() ? currentUser().role : null;
+    }
+
+    function userCompanyId() {
+      return currentUserExists() ? currentUser().companyId : null;
+    }
+
+    function hasCompanyId(value) {
+      return value != null && value is string && value.size() > 0;
+    }
+
+    function isPlatformAdmin() {
+      return signedIn() && userRole() in ['super_admin', 'Super Admin', 'SUPER_ADMIN'];
+    }
+
+    function isOwner() {
+      return signedIn() && userRole() in ['owner', 'Owner', 'OWNER'];
+    }
+
+    function isAdmin() {
+      return signedIn() && userRole() in ['admin', 'Admin', 'ADMIN'];
+    }
+
+    function isManager() {
+      return signedIn() && userRole() in [
+        'manager', 'Manager', 'MANAGER',
+        'operations_manager', 'Operations Manager', 'OPERATIONS_MANAGER',
+        'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR',
+        'field_manager', 'Field Manager', 'FIELD_MANAGER',
+        'sales_manager', 'Sales Manager', 'SALES_MANAGER',
+        'dispatcher', 'Dispatcher', 'DISPATCHER',
+        'hr', 'HR',
+        'hr_manager', 'HR Manager', 'HR_MANAGER'
+      ];
+    }
+
+    function isSales() {
+      return signedIn() && userRole() in [
+        'sales', 'Sales', 'SALES',
+        'sales_rep', 'Sales Rep', 'SALES_REP'
+      ];
+    }
+
+    function isFieldStaff() {
+      return signedIn() && userRole() in [
+        'technician', 'Technician', 'TECHNICIAN',
+        'tech', 'Tech', 'TECH',
+        'lead_technician', 'Lead Technician', 'LEAD_TECHNICIAN',
+        'cleaner', 'Cleaner', 'CLEANER',
+        'lead_cleaner', 'Lead Cleaner', 'LEAD_CLEANER',
+        'staff', 'Staff', 'STAFF',
+        'field_staff', 'Field Staff', 'FIELD_STAFF',
+        'crew_lead', 'Crew Lead', 'CREW_LEAD',
+        'quality_control', 'Quality Control', 'QUALITY_CONTROL',
+        'customer_support', 'Customer Support', 'CUSTOMER_SUPPORT'
+      ];
+    }
+
+    function isCustomer() {
+      return signedIn() && userRole() in ['customer', 'Customer', 'CUSTOMER'];
+    }
+
+    function isVendor() {
+      return signedIn() && userRole() in [
+        'vendor', 'Vendor', 'VENDOR',
+        'lead_vendor', 'Lead Vendor', 'LEAD_VENDOR',
+        'service_vendor', 'Service Vendor', 'SERVICE_VENDOR',
+        'management_program', 'Management Program', 'MANAGEMENT_PROGRAM'
+      ];
+    }
+
+    function isTenantExecutive() {
+      return isOwner() || isAdmin();
+    }
+
+    function isTenantLeadership() {
+      return isTenantExecutive() || isManager();
+    }
+
+    function sameCompanyId(companyId) {
+      return signedIn()
+        && hasCompanyId(userCompanyId())
+        && hasCompanyId(companyId)
+        && userCompanyId() == companyId;
+    }
+
+    function safeImage() {
+      return request.resource != null
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    function safeApplicationAttachment() {
+      return request.resource != null
+        && request.resource.size < 15 * 1024 * 1024
+        && (
+          request.resource.contentType.matches('image/.*') ||
+          request.resource.contentType == 'application/pdf'
+        );
+    }
+
+    function safeDocument() {
+      return request.resource != null
+        && request.resource.size < 20 * 1024 * 1024
+        && (
+          request.resource.contentType.matches('image/.*') ||
+          request.resource.contentType == 'application/pdf'
+        );
+    }
+
+    function targetUserExists(userId) {
+      return firestore.exists(userPath(userId));
+    }
+
+    function targetUser(userId) {
+      return firestore.get(userPath(userId)).data;
+    }
+
+    function canManageUserFiles(userId) {
+      return signedIn() && targetUserExists(userId) && (
+        isPlatformAdmin() ||
+        (isTenantLeadership() && sameCompanyId(targetUser(userId).companyId))
+      );
+    }
+
+    function jobPath(jobId) {
+      return /databases/(default)/documents/jobs/$(jobId);
+    }
+
+    function jobExists(jobId) {
+      return firestore.exists(jobPath(jobId));
+    }
+
+    function job(jobId) {
+      return firestore.get(jobPath(jobId)).data;
+    }
+
+    function assignedToMe(data) {
+      return signedIn() && (
+        (data.keys().hasAny(['assignedTo']) && data.assignedTo is list && request.auth.uid in data.assignedTo) ||
+        (data.keys().hasAny(['assignedTeamIds']) && data.assignedTeamIds is list && request.auth.uid in data.assignedTeamIds) ||
+        (data.keys().hasAny(['assignedToUid']) && data.assignedToUid == request.auth.uid) ||
+        (data.keys().hasAny(['assignedRep']) && data.assignedRep == request.auth.uid) ||
+        (data.keys().hasAny(['technicianUid']) && data.technicianUid == request.auth.uid) ||
+        (data.keys().hasAny(['cleanerUid']) && data.cleanerUid == request.auth.uid) ||
+        (data.keys().hasAny(['staffClaimedBy']) && data.staffClaimedBy == request.auth.uid)
+      );
+    }
+
+    function customerOwns(data) {
+      return signedIn() && (
+        (data.keys().hasAny(['customerUid']) && data.customerUid == request.auth.uid) ||
+        (data.keys().hasAny(['customerId']) && data.customerId == request.auth.uid) ||
+        (data.keys().hasAny(['userId']) && data.userId == request.auth.uid)
+      );
+    }
+
+    function canReadJob(jobId) {
+      return signedIn() && jobExists(jobId) && (
+        isPlatformAdmin() ||
+        (job(jobId).keys().hasAny(['companyId']) && sameCompanyId(job(jobId).companyId) && (isTenantLeadership() || isVendor())) ||
+        assignedToMe(job(jobId)) ||
+        customerOwns(job(jobId))
+      );
+    }
+
+    function canWriteJob(jobId) {
+      return signedIn() && jobExists(jobId) && (
+        isPlatformAdmin() ||
+        (job(jobId).keys().hasAny(['companyId']) && sameCompanyId(job(jobId).companyId) && (isTenantLeadership() || isVendor())) ||
+        (assignedToMe(job(jobId)) && (isFieldStaff() || isSales()))
+      );
+    }
+
+    function customerProfilePath(customerId) {
+      return /databases/(default)/documents/users/$(customerId);
+    }
+
+    function canManageCustomer(customerId) {
+      return signedIn() && (
+        request.auth.uid == customerId ||
+        isPlatformAdmin() ||
+        (
+          firestore.exists(customerProfilePath(customerId)) &&
+          isTenantLeadership() &&
+          sameCompanyId(firestore.get(customerProfilePath(customerId)).data.companyId)
+        )
+      );
+    }
+
+    function conversationPath(conversationId) {
+      return /databases/(default)/documents/channels/_group_registry/messages/$(conversationId);
+    }
+
+    function conversationExists(conversationId) {
+      return firestore.exists(conversationPath(conversationId));
+    }
+
+    function conversation(conversationId) {
+      return firestore.get(conversationPath(conversationId)).data;
+    }
+
+    function canAccessConversation(conversationId) {
+      return signedIn() && conversationExists(conversationId) && (
+        isPlatformAdmin() ||
+        (
+          conversation(conversationId).keys().hasAny(['companyId']) &&
+          sameCompanyId(conversation(conversationId).companyId) &&
+          (
+            (conversation(conversationId).keys().hasAny(['memberUids']) && request.auth.uid in conversation(conversationId).memberUids) ||
+            (conversation(conversationId).keys().hasAny(['adminUids']) && request.auth.uid in conversation(conversationId).adminUids) ||
+            (conversation(conversationId).keys().hasAny(['allowedRoles']) && userRole() in conversation(conversationId).allowedRoles)
+          )
+        )
+      );
+    }
+
+    function staffApplicationPath(applicationId) {
+      return /databases/(default)/documents/staff_applications/$(applicationId);
+    }
+
+    function canReviewApplication(applicationId) {
+      return signedIn() && firestore.exists(staffApplicationPath(applicationId)) && (
+        isPlatformAdmin() ||
+        (
+          isTenantLeadership() &&
+          firestore.get(staffApplicationPath(applicationId)).data.keys().hasAny(['companyId']) &&
+          sameCompanyId(firestore.get(staffApplicationPath(applicationId)).data.companyId)
+        )
+      );
+    }
+
+    match /users/{userId}/{fileName} {
+      allow read: if signedIn() && (request.auth.uid == userId || canManageUserFiles(userId));
+      allow create, update: if signedIn()
+        && request.auth.uid == userId
+        && safeImage();
+      allow delete: if signedIn() && (
+        request.auth.uid == userId || isPlatformAdmin() || canManageUserFiles(userId)
+      );
+    }
+
+    match /companies/{companyId}/{fileName} {
+      allow read: if signedIn() && (isPlatformAdmin() || sameCompanyId(companyId));
+      allow create, update: if safeImage() && (
+        isPlatformAdmin() || (isTenantLeadership() && sameCompanyId(companyId))
+      );
+      allow delete: if isPlatformAdmin() || (isTenantExecutive() && sameCompanyId(companyId));
+    }
+
+    match /jobs/{jobId}/{fileName} {
+      allow read: if canReadJob(jobId);
+      allow create, update: if canWriteJob(jobId) && safeImage();
+      allow delete: if canWriteJob(jobId);
+    }
+
+    match /customers/{customerId}/{fileName} {
+      allow read: if canManageCustomer(customerId);
+      allow create, update: if canManageCustomer(customerId) && safeDocument();
+      allow delete: if signedIn() && (
+        request.auth.uid == customerId || isPlatformAdmin() || canManageCustomer(customerId)
+      );
+    }
+
+    match /messages/{conversationId}/{fileName} {
+      allow read: if canAccessConversation(conversationId);
+      allow create: if canAccessConversation(conversationId)
+        && safeImage()
+        && request.resource.metadata.ownerUid == request.auth.uid;
+      allow update: if canAccessConversation(conversationId)
+        && safeImage()
+        && resource.metadata.ownerUid == request.auth.uid
+        && request.resource.metadata.ownerUid == request.auth.uid;
+      allow delete: if canAccessConversation(conversationId)
+        && (resource.metadata.ownerUid == request.auth.uid || isPlatformAdmin());
+    }
+
+    match /staff_applications/{applicationId}/{fileName} {
+      allow read: if signedIn() && (
+        request.auth.uid == applicationId || canReviewApplication(applicationId)
+      );
+      allow create, update: if signedIn()
+        && request.auth.uid == applicationId
+        && safeApplicationAttachment();
+      allow delete: if signedIn() && (
+        request.auth.uid == applicationId || isPlatformAdmin() || canReviewApplication(applicationId)
+      );
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
