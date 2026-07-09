@@ -1,0 +1,34 @@
+name: Access Continuity Preflight Validation
+
+on:
+  pull_request:
+    paths:
+      - "tools/access-continuity-audit/**"
+      - "docs/ACCESS_CONTINUITY_PREFLIGHT.md"
+      - ".github/workflows/access-continuity-preflight.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-read-only-auditor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install audit dependencies
+        working-directory: tools/access-continuity-audit
+        run: npm install --no-audit --no-fund
+
+      - name: Validate read-only audit tool
+        working-directory: tools/access-continuity-audit
+        run: npm run check

@@ -26,6 +26,9 @@ tests/visual/test-results/
 tests/visual/blob-report/
 tests/visual/.cache/
 
+# Access continuity audit reports
+tools/access-continuity-audit/audit-output/
+
 # OS / editor files
 .DS_Store
 .vscode/
