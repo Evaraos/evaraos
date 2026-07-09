@@ -183,8 +183,18 @@ function transactionEnvelope(session, projection, previousProjection, reason) {
     endSequence: null,
     intent: semanticIntent(reason),
     summary: text(`Compatibility projection: ${reason}`, 500),
-    operations: [{ operationId, type: 'compatibility.projection.replace', targetId: session.graphId, payload: normalizeProjection(projection) }],
-    inverseOperations: previousProjection ? [{ operationId: inverseId, type: 'compatibility.projection.replace', targetId: session.graphId, payload: normalizeProjection(previousProjection) }] : [],
+    operations: [{
+      operationId,
+      type: 'compatibility.projection.replace',
+      targetId: session.graphId,
+      payload: normalizeProjection(projection)
+    }],
+    inverseOperations: previousProjection ? [{
+      operationId: inverseId,
+      type: 'compatibility.projection.replace',
+      targetId: session.graphId,
+      payload: normalizeProjection(previousProjection)
+    }] : [],
     actor: clone(session.actor),
     clientSessionId: session.sessionId,
     correlationId: null,
@@ -234,9 +244,17 @@ async function createCheckpoint(reason = 'manual-checkpoint', options = {}) {
   const projection = normalizeProjection(options.projection || readLegacyProjection());
   const session = await getSession();
   const checkpoint = {
-    checkpointId: uid('checkpoint'), projectId: session.projectId, branchId: session.branchId, graphId: session.graphId,
-    revision: session.headRevision, sequence: session.headSequence, reason: text(reason, 120), createdAt: now(),
-    trusted: false, projectionHash: projectionHash(projection), projection
+    checkpointId: uid('checkpoint'),
+    projectId: session.projectId,
+    branchId: session.branchId,
+    graphId: session.graphId,
+    revision: session.headRevision,
+    sequence: session.headSequence,
+    reason: text(reason, 120),
+    createdAt: now(),
+    trusted: false,
+    projectionHash: projectionHash(projection),
+    projection
   };
   const nextSession = { ...session, latestCheckpointId: checkpoint.checkpointId, updatedAt: now() };
   await transact([CHECKPOINT_STORE, SESSION_STORE], 'readwrite', ({ checkpoints, sessions }) => {
@@ -278,7 +296,14 @@ async function restoreCheckpoint(checkpointId) {
 
 function dispatchStatus(state, reason, extra = {}) {
   window.dispatchEvent(new CustomEvent('evara:studio-journal-status', {
-    detail: { state, reason, revision: sessionCache?.headRevision || 0, sequence: sessionCache?.headSequence || 0, durabilityState: sessionCache?.durabilityState || state, ...extra }
+    detail: {
+      state,
+      reason,
+      revision: sessionCache?.headRevision || 0,
+      sequence: sessionCache?.headSequence || 0,
+      durabilityState: sessionCache?.durabilityState || state,
+      ...extra
+    }
   }));
 }
 
@@ -287,8 +312,11 @@ function scheduleCompatibilityJournal(reason = 'system') {
   clearTimeout(saveTimer);
   dispatchStatus('syncing', pendingReason);
   saveTimer = setTimeout(async () => {
-    try { await appendTransaction(pendingReason); }
-    catch (error) { dispatchStatus('recovery-required', pendingReason, { error: text(error?.message || error, 300) }); }
+    try {
+      await appendTransaction(pendingReason);
+    } catch (error) {
+      dispatchStatus('recovery-required', pendingReason, { error: text(error?.message || error, 300) });
+    }
   }, AUTOSAVE_DELAY);
 }
 
@@ -320,13 +348,10 @@ async function recoverOnStartup() {
     await putSession({ ...session, lastRecoveredAt: now(), durabilityState: 'saved-locally', updatedAt: now() });
     lastProjectionHash = checkpoint.projectionHash;
     dispatchStatus('recovered', 'startup-recovery', { checkpointId: checkpoint.checkpointId });
-    return;
+    return { migrationProjection: null };
   }
   lastProjectionHash = currentHash;
-  if (!checkpoint && current.content) {
-    await appendTransaction('legacy-migration', { projection: current, force: true });
-    await createCheckpoint('legacy-migration', { projection: current });
-  }
+  return { migrationProjection: !checkpoint && current.content ? current : null };
 }
 
 async function initialize() {
@@ -334,10 +359,9 @@ async function initialize() {
   readyPromise = (async () => {
     await openDatabase();
     await getSession();
-    await recoverOnStartup();
-    installCompatibilityBridge();
+    const recovery = await recoverOnStartup();
     dispatchStatus('saved-locally', 'journal-ready');
-    return true;
+    return recovery;
   })();
   return readyPromise;
 }
@@ -370,4 +394,11 @@ window.EvaraStudioJournal = Object.freeze({
   listServerAdapters: () => [...serverAdapters.keys()]
 });
 
-initialize().catch((error) => dispatchStatus('recovery-required', 'journal-initialize', { error: text(error?.message || error, 300) }));
+installCompatibilityBridge();
+initialize()
+  .then(async ({ migrationProjection }) => {
+    if (!migrationProjection) return;
+    await appendTransaction('legacy-migration', { projection: migrationProjection, force: true });
+    await createCheckpoint('legacy-migration', { projection: migrationProjection });
+  })
+  .catch((error) => dispatchStatus('recovery-required', 'journal-initialize', { error: text(error?.message || error, 300) }));
