@@ -6,6 +6,7 @@ on:
     paths:
       - 'public/assets/css/**'
       - 'public/assets/js/design-system/**'
+      - 'public/assets/js/icons/**'
       - 'public/assets/js/studio/**'
       - 'public/assets/js/qa-v2.js'
       - 'public/assets/js/access-control.js'
@@ -14,6 +15,7 @@ on:
       - 'tools/design-system-audit.js'
       - 'tools/visual-qa-audit.js'
       - 'tools/studio-component-catalog-audit.js'
+      - 'tools/studio-action-icon-audit.js'
       - 'tests/visual/**'
       - 'docs/design-system/**'
       - '.github/workflows/design-system-visual-qa.yml'
@@ -21,6 +23,7 @@ on:
     paths:
       - 'public/assets/css/**'
       - 'public/assets/js/design-system/**'
+      - 'public/assets/js/icons/**'
       - 'public/assets/js/studio/**'
       - 'public/assets/js/qa-v2.js'
       - 'public/assets/js/access-control.js'
@@ -29,6 +32,7 @@ on:
       - 'tools/design-system-audit.js'
       - 'tools/visual-qa-audit.js'
       - 'tools/studio-component-catalog-audit.js'
+      - 'tools/studio-action-icon-audit.js'
       - 'tests/visual/**'
       - 'docs/design-system/**'
       - '.github/workflows/design-system-visual-qa.yml'
@@ -70,7 +74,7 @@ concurrency:
 
 jobs:
   static-audit:
-    name: Design-system, Studio catalog, and visual-QA audits
+    name: Design-system, Studio, and visual-QA audits
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -86,6 +90,9 @@ jobs:
 
       - name: Run Studio component catalog audit
         run: node tools/studio-component-catalog-audit.js
+
+      - name: Run Studio action and icon audit
+        run: node tools/studio-action-icon-audit.js
 
       - name: Run visual-QA architecture audit
         run: node tools/visual-qa-audit.js
@@ -146,7 +153,7 @@ jobs:
 
       - name: Run focused Studio validation
         if: ${{ inputs.suite == 'studio' }}
-        run: npx playwright test specs/studio-interactions.spec.mjs --project=desktop-chromium
+        run: npx playwright test specs/studio-interactions.spec.mjs specs/studio-action-icon.spec.mjs --project=desktop-chromium
 
       - name: Run visual QA
         if: ${{ inputs.suite == 'all' && !inputs.update_snapshots }}
