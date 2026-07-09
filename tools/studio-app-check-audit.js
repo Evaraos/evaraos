@@ -12,7 +12,9 @@ const files = {
   loader: 'public/assets/js/studio/studio-trusted-journal-loader.js',
   trusted: 'public/assets/js/studio/studio-trusted-journal.js',
   authority: 'public/assets/js/studio/studio-production-authority.js',
-  route: 'public/website-builder.html'
+  route: 'public/website-builder.html',
+  canvasTest: 'tests/visual/specs/studio-canvas-session.spec.mjs',
+  workflow: '.github/workflows/design-system-visual-qa.yml'
 };
 
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
@@ -23,7 +25,7 @@ for (const file of Object.values(files)) {
 if (!errors.length) {
   const source = Object.fromEntries(Object.entries(files).map(([key, file]) => [key, read(file)]));
 
-  for (const file of [files.firebase, files.loader, files.trusted, files.authority]) {
+  for (const file of [files.firebase, files.loader, files.trusted, files.authority, files.canvasTest]) {
     try {
       execFileSync(process.execPath, ['--check', path.join(root, file)], { stdio: 'pipe' });
     } catch (error) {
@@ -112,9 +114,43 @@ if (!errors.length) {
   if (!source.authority.includes('if (!adapter || adapter.productionAuthorityVersion) return;')) {
     errors.push('studio-production-authority.js: production authority must tolerate an App Check-blocked adapter');
   }
+  if (!source.authority.includes("window.addEventListener('evara:app-check-status'")) {
+    errors.push('studio-production-authority.js: late App Check readiness must rebind the Canvas release guard');
+  }
+  if (!source.authority.includes('trustedAdapterGuarded')) {
+    errors.push('studio-production-authority.js: trusted release-guard status must be observable');
+  }
   if (!source.authority.includes('Publishing requires the trusted server journal and release service.')
     && !source.authority.includes('Trusted synchronization is unavailable.')) {
     errors.push('studio-production-authority.js: unavailable trusted transport must remain fail-closed');
+  }
+
+  for (const marker of [
+    'EVARA_QA_APP_CHECK_DEBUG_TOKEN',
+    'page.addInitScript',
+    'self.FIREBASE_APPCHECK_DEBUG_TOKEN = token',
+    "window.EvaraAppCheckReadiness?.snapshot?.().state === 'ready'",
+    'window.EvaraTrustedStudioJournal?.snapshot',
+    "test.skip(Boolean(process.env.CI) && !appCheckDebugToken",
+    'canvas-trusted-release.json'
+  ]) {
+    if (!source.canvasTest.includes(marker)) errors.push(`studio-canvas-session.spec.mjs: missing secure App Check QA contract ${marker}`);
+  }
+  if (/localStorage\.setItem\([^)]*APP_CHECK|console\.(log|warn|error)\([^)]*appCheckDebugToken|testInfo\.attach\([^)]*appCheckDebugToken/i.test(source.canvasTest)) {
+    errors.push('studio-canvas-session.spec.mjs: App Check debug token must not be stored, logged, or attached');
+  }
+  if (/new Function|eval\(/.test(source.canvasTest)) {
+    errors.push('studio-canvas-session.spec.mjs: dynamic code execution is prohibited');
+  }
+
+  for (const marker of [
+    'EVARA_QA_APP_CHECK_DEBUG_TOKEN: ${{ secrets.EVARA_QA_APP_CHECK_DEBUG_TOKEN }}',
+    '-z "$EVARA_QA_APP_CHECK_DEBUG_TOKEN"',
+    'encrypted repository secrets',
+    'Run Studio App Check audit',
+    'node tools/studio-app-check-audit.js'
+  ]) {
+    if (!source.workflow.includes(marker)) errors.push(`design-system-visual-qa.yml: missing App Check CI contract ${marker}`);
   }
 }
 
@@ -124,4 +160,4 @@ if (errors.length) {
   errors.forEach((error) => console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('reCAPTCHA Enterprise initialization, token auto-refresh, attestation-before-import, no token exposure, and fail-closed trusted transport passed.');
+console.log('reCAPTCHA Enterprise initialization, token auto-refresh, attestation-before-import, encrypted CI debug-token bootstrap, no token exposure, and fail-closed trusted transport passed.');
