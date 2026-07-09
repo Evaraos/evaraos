@@ -21,7 +21,7 @@ const {
   getMetadata
 } = require("firebase/storage");
 
-const projectId = `evaraos-security-${Date.now()}`;
+const projectId = process.env.GCLOUD_PROJECT || "evaraos-web";
 const root = path.resolve(__dirname, "../..");
 let env;
 
