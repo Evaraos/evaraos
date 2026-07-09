@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evaraos.com/schemas/evara-graph/0.1.0",
+  "title": "Evara Graph",
+  "description": "Canonical framework-neutral document model for an editable EvaraOS operating system.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["graphId", "schemaVersion", "name", "state", "revision", "nodes", "edges", "metadata"],
+  "properties": {
+    "graphId": { "type": "string", "minLength": 1 },
+    "schemaVersion": { "const": "0.1.0" },
+    "name": { "type": "string" },
+    "state": { "enum": ["draft", "review", "release-candidate", "published", "archived"] },
+    "revision": { "type": "integer", "minimum": 0 },
+    "nodes": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/node" }
+    },
+    "edges": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/edge" }
+    },
+    "metadata": { "$ref": "#/$defs/metadata" }
+  },
+  "$defs": {
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "name", "revision", "props", "metadata"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": {
+          "enum": [
+            "workspace", "application", "page", "route", "modal", "panel", "navigation", "frame", "container",
+            "component-definition", "component-instance", "slot", "text", "icon", "image", "button", "card", "chart", "map", "form", "table", "list", "calendar",
+            "theme", "token-collection", "token", "token-mode", "variable", "style-rule", "effect", "animation", "transition", "responsive-condition",
+            "module", "data-entity", "data-field", "query", "filter", "action", "workflow", "notification", "automation", "integration",
+            "role", "capability", "permission-policy", "visibility-rule", "data-scope", "field-mask", "approval-policy",
+            "blueprint", "blueprint-instance", "draft", "branch", "snapshot", "release", "environment", "migration", "audit-event"
+          ]
+        },
+        "name": { "type": "string" },
+        "revision": { "type": "integer", "minimum": 0 },
+        "props": { "type": "object", "additionalProperties": true },
+        "metadata": { "$ref": "#/$defs/metadata" }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "source", "target", "revision", "props", "metadata"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": {
+          "enum": ["contains", "inherits", "instantiates", "bindsTo", "visibleTo", "triggers", "readsFrom", "writesTo", "styledBy", "overrides", "dependsOn", "publishesAs", "guards", "navigatesTo", "emits", "consumes"]
+        },
+        "source": { "type": "string", "minLength": 1 },
+        "target": { "type": "string", "minLength": 1 },
+        "revision": { "type": "integer", "minimum": 0 },
+        "props": { "type": "object", "additionalProperties": true },
+        "metadata": { "$ref": "#/$defs/metadata" }
+      }
+    }
+  }
+}
