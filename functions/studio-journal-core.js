@@ -192,6 +192,7 @@ function requestHashInput(envelope) {
   return {
     envelopeVersion: OPERATION_ENVELOPE_VERSION,
     transactionId: envelope.transactionId,
+    companyId: envelope.companyId,
     projectId: envelope.projectId,
     branchId: envelope.branchId,
     graphId: envelope.graphId,
@@ -200,15 +201,22 @@ function requestHashInput(envelope) {
     expectedHeadRevision: envelope.expectedHeadRevision,
     acceptedHeadRevision: envelope.acceptedHeadRevision,
     intent: envelope.intent,
+    summary: envelope.summary,
     semanticCommand: envelope.semanticCommand,
     operations: envelope.operations,
     inverseOperations: envelope.inverseOperations,
     commitOperation: envelope.commitOperation,
+    actor: envelope.actor,
+    clientSessionId: envelope.clientSessionId,
     correlationId: envelope.correlationId,
     revertsTransactionId: envelope.revertsTransactionId,
     redoesTransactionId: envelope.redoesTransactionId,
+    affectedNodeIds: envelope.affectedNodeIds,
+    affectedEdgeIds: envelope.affectedEdgeIds,
     sourceDocumentId: envelope.sourceDocumentId,
-    sourceFingerprint: envelope.sourceFingerprint
+    sourceFingerprint: envelope.sourceFingerprint,
+    createdAtClient: envelope.createdAtClient,
+    metadata: envelope.metadata
   };
 }
 
