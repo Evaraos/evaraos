@@ -1,0 +1,149 @@
+name: Design System Visual QA
+
+on:
+  push:
+    branches: [evaraos]
+    paths:
+      - 'public/assets/css/**'
+      - 'public/assets/js/design-system/**'
+      - 'public/assets/js/studio/**'
+      - 'public/website-builder.html'
+      - 'tools/design-system-audit.js'
+      - 'tests/visual/**'
+      - '.github/workflows/design-system-visual-qa.yml'
+  pull_request:
+    paths:
+      - 'public/assets/css/**'
+      - 'public/assets/js/design-system/**'
+      - 'public/assets/js/studio/**'
+      - 'public/website-builder.html'
+      - 'tools/design-system-audit.js'
+      - 'tests/visual/**'
+      - '.github/workflows/design-system-visual-qa.yml'
+  workflow_dispatch:
+    inputs:
+      matrix:
+        description: Visual QA coverage
+        required: true
+        default: critical
+        type: choice
+        options:
+          - critical
+          - full
+      update_snapshots:
+        description: Generate candidate screenshot baselines
+        required: true
+        default: false
+        type: boolean
+      require_all_roles:
+        description: Fail when any canonical role credential is missing
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: design-system-visual-qa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static-audit:
+    name: Design-system ownership audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run design-system audit
+        run: node tools/design-system-audit.js
+
+  authenticated-visual-qa:
+    name: Authenticated visual regression
+    if: github.event_name == 'workflow_dispatch'
+    needs: static-audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      EVARA_QA_BASE_URL: ${{ secrets.EVARA_QA_BASE_URL }}
+      EVARA_QA_MATRIX: ${{ inputs.matrix }}
+      EVARA_QA_REQUIRE_ALL_ROLES: ${{ inputs.require_all_roles && '1' || '0' }}
+      EVARA_QA_PLATFORM_ADMIN_EMAIL: ${{ secrets.EVARA_QA_PLATFORM_ADMIN_EMAIL }}
+      EVARA_QA_PLATFORM_ADMIN_PASSWORD: ${{ secrets.EVARA_QA_PLATFORM_ADMIN_PASSWORD }}
+      EVARA_QA_OWNER_EMAIL: ${{ secrets.EVARA_QA_OWNER_EMAIL }}
+      EVARA_QA_OWNER_PASSWORD: ${{ secrets.EVARA_QA_OWNER_PASSWORD }}
+      EVARA_QA_ADMIN_EMAIL: ${{ secrets.EVARA_QA_ADMIN_EMAIL }}
+      EVARA_QA_ADMIN_PASSWORD: ${{ secrets.EVARA_QA_ADMIN_PASSWORD }}
+      EVARA_QA_MANAGER_EMAIL: ${{ secrets.EVARA_QA_MANAGER_EMAIL }}
+      EVARA_QA_MANAGER_PASSWORD: ${{ secrets.EVARA_QA_MANAGER_PASSWORD }}
+      EVARA_QA_SALES_EMAIL: ${{ secrets.EVARA_QA_SALES_EMAIL }}
+      EVARA_QA_SALES_PASSWORD: ${{ secrets.EVARA_QA_SALES_PASSWORD }}
+      EVARA_QA_TECHNICIAN_EMAIL: ${{ secrets.EVARA_QA_TECHNICIAN_EMAIL }}
+      EVARA_QA_TECHNICIAN_PASSWORD: ${{ secrets.EVARA_QA_TECHNICIAN_PASSWORD }}
+      EVARA_QA_CLEANER_EMAIL: ${{ secrets.EVARA_QA_CLEANER_EMAIL }}
+      EVARA_QA_CLEANER_PASSWORD: ${{ secrets.EVARA_QA_CLEANER_PASSWORD }}
+      EVARA_QA_CUSTOMER_EMAIL: ${{ secrets.EVARA_QA_CUSTOMER_EMAIL }}
+      EVARA_QA_CUSTOMER_PASSWORD: ${{ secrets.EVARA_QA_CUSTOMER_PASSWORD }}
+      EVARA_QA_VENDOR_EMAIL: ${{ secrets.EVARA_QA_VENDOR_EMAIL }}
+      EVARA_QA_VENDOR_PASSWORD: ${{ secrets.EVARA_QA_VENDOR_PASSWORD }}
+    defaults:
+      run:
+        working-directory: tests/visual
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate required QA secrets
+        shell: bash
+        run: |
+          if [[ -z "$EVARA_QA_BASE_URL" || -z "$EVARA_QA_OWNER_EMAIL" || -z "$EVARA_QA_OWNER_PASSWORD" ]]; then
+            echo "EVARA_QA_BASE_URL and owner QA credentials must be configured as repository secrets."
+            exit 1
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: tests/visual/package.json
+
+      - name: Install visual QA dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Install browser engines
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Run visual QA
+        if: ${{ !inputs.update_snapshots }}
+        run: npx playwright test
+
+      - name: Generate candidate baselines
+        if: ${{ inputs.update_snapshots }}
+        run: npx playwright test --update-snapshots
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaraos-visual-qa-report-${{ github.run_id }}
+          path: |
+            tests/visual/playwright-report
+            tests/visual/test-results
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload candidate baselines
+        if: ${{ always() && inputs.update_snapshots }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaraos-visual-baseline-candidates-${{ github.run_id }}
+          path: tests/visual/specs/__screenshots__
+          if-no-files-found: warn
+          retention-days: 14
