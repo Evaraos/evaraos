@@ -7,7 +7,7 @@
 .applications-page {
   --workflow-content-max: 77.5rem;
   --workflow-hero-columns: minmax(0, 1.15fr) minmax(18rem, .85fr);
-  --workflow-panel-padding: clamp(var(--space-6), 4vw, var(--space-9, 2.25rem));
+  --workflow-panel-padding: clamp(var(--space-6), 4vw, var(--space-10));
   --workflow-card-padding: var(--space-5);
 }
 
