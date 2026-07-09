@@ -1,135 +1,61 @@
 import {
   auth,
+  db,
+  doc,
+  getDoc,
   onAuthStateChanged,
-  hydrateUserProfile,
-  getSavedUserProfile,
-  getSavedUserRole,
+  saveUserRole,
+  saveUserProfile,
+  applyUserToUi,
   clearSavedUserRole,
-  clearSavedUserProfile,
-  normalizeRole
-} from "./firebase.js";
+  clearSavedUserProfile
+} from './firebase.js';
+import {
+  canAccessPageName,
+  defaultRouteForRole,
+  normalizeAccessRole
+} from './access-control.js';
 
-const ROUTES = {
-  login: "./login.html",
-  dashboard: "./dashboard.html",
-  customerDashboard: "./customer_dashboard.html"
-};
+const ROUTES = Object.freeze({
+  login: './login.html'
+});
 
 const AUTH_WAIT_TIMEOUT_MS = 4500;
-
-const OWNER_ROLES = new Set(["owner", "super_admin", "admin"]);
-const OWNER_ONLY_PAGES = new Set(["website-builder.html"]);
-const OPS_ROLES = new Set([
-  "owner",
-  "super_admin",
-  "admin",
-  "manager",
-  "operations_manager",
-  "operations_coordinator",
-  "dispatcher",
-  "field_manager",
-  "sales_manager",
-  "hr",
-  "hr_manager"
-]);
-const STAFF_ROLES = new Set([
-  "technician",
-  "cleaner",
-  "staff",
-  "field_staff",
-  "crew_lead",
-  "sales",
-  "sales_rep",
-  "customer_support",
-  "quality_control"
-]);
-
-const CUSTOMER_ALLOWED = new Set([
-  "customer_dashboard.html",
-  "customer-commerce.html",
-  "customer-messaging.html",
-  "messages.html",
-  "customer-service-history.html",
-  "customer_portal.html",
-  "customer_bills.html",
-  "settings.html",
-  "settings-v2.html"
-]);
-
-const STAFF_ALLOWED = new Set([
-  "dashboard.html",
-  "leads.html",
-  "jobs.html",
-  "messages.html",
-  "customer-messaging.html",
-  "customer-service-history.html",
-  "presence.html",
-  "territory-map.html",
-  "settings.html",
-  "settings-v2.html"
-]);
-
-const OPS_ONLY = new Set([
-  "operations-visibility.html",
-  "enterprise-finance-dashboard.html",
-  "marketplace-payouts.html",
-  "applications.html",
-  "users.html",
-  "companies.html",
-  "governance-dashboard.html",
-  "governance-analytics.html",
-  "anomaly-dashboard.html",
-  "audit-dashboard.html",
-  "replay-dashboard.html",
-  "org.html",
-  "notifications.html",
-  "executive-queue.html",
-  "workflow-monitor-dashboard.html",
-  "alerts-dashboard.html",
-  "analytics-dashboard.html",
-  "territories.html",
-  "live-operations-command.html",
-  "qa.html",
-  "website-builder.html"
-]);
-
 let hasFinishedRouteGuard = false;
 
 function emit(name, detail = {}) {
-  window.dispatchEvent(new CustomEvent(name, { detail: { at: Date.now(), ...detail } }));
+  window.dispatchEvent(new CustomEvent(name, {
+    detail: { at: Date.now(), ...detail }
+  }));
 }
 
 function pageName() {
-  return (window.location.pathname.split("/").pop() || "index.html") || "index.html";
+  return window.location.pathname.split('/').pop() || 'index.html';
 }
 
-function normalizePath(path = "") {
-  if (!path) return ROUTES.dashboard;
+function normalizePath(path = '') {
+  if (!path) return '';
   try {
     const url = new URL(path, window.location.origin);
-    if (url.origin !== window.location.origin) return ROUTES.dashboard;
+    if (url.origin !== window.location.origin) return '';
     return `${url.pathname}${url.search}${url.hash}`;
   } catch {
-    return path;
+    return '';
   }
 }
 
 function setReadyState() {
-  document.documentElement.classList.remove("auth-pending");
-  document.body?.classList.remove("auth-pending", "app-loading");
-  document.body?.classList.add("app-ready");
-}
-
-function markLoaderReady() {
-  window.EvaraLoader?.markAppReady?.();
+  document.documentElement.classList.remove('auth-pending');
+  document.body?.classList.remove('auth-pending', 'app-loading');
+  document.body?.classList.add('app-ready');
 }
 
 function safeMarkReady(detail = {}) {
   if (hasFinishedRouteGuard) return;
   hasFinishedRouteGuard = true;
   setReadyState();
-  markLoaderReady();
-  emit("evara:session-ready", detail);
+  window.EvaraLoader?.markAppReady?.();
+  emit('evara:session-ready', detail);
 }
 
 function clearUserSession() {
@@ -141,12 +67,10 @@ function beginGuardRedirect(url, options = {}) {
   if (hasFinishedRouteGuard) return;
   hasFinishedRouteGuard = true;
 
-  if (window.EvaraLoader?.beginNavigationLoad) {
-    window.EvaraLoader.beginNavigationLoad({
-      title: options.title || "Opening EvaraOS",
-      subtitle: options.subtitle || "Taking you to the right page."
-    });
-  }
+  window.EvaraLoader?.beginNavigationLoad?.({
+    title: options.title || 'Opening EvaraOS',
+    subtitle: options.subtitle || 'Taking you to the right page.'
+  });
 
   requestAnimationFrame(() => window.location.replace(url));
 }
@@ -154,51 +78,33 @@ function beginGuardRedirect(url, options = {}) {
 function saveIntendedRoute() {
   try {
     const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-    if (!current.includes("login.html") && !current.includes("signup.html") && !current.includes("reset.html")) {
-      sessionStorage.setItem("evaraos-intended-route", current);
+    if (!/(login|signup|reset)\.html/.test(current)) {
+      sessionStorage.setItem('evaraos-intended-route', current);
     }
   } catch {}
 }
 
 function consumeIntendedRoute() {
   try {
-    const saved = sessionStorage.getItem("evaraos-intended-route");
-    sessionStorage.removeItem("evaraos-intended-route");
-    return saved ? normalizePath(saved) : "";
+    const saved = sessionStorage.getItem('evaraos-intended-route') || '';
+    sessionStorage.removeItem('evaraos-intended-route');
+    return normalizePath(saved);
   } catch {
-    return "";
+    return '';
   }
 }
 
-function getEffectiveRole(profile = getSavedUserProfile()) {
-  return normalizeRole(profile?.role || getSavedUserRole() || "customer");
-}
-
-function canAccessPage(path, role = "customer") {
-  const page = String(path || "").split("?")[0].split("#")[0].split("/").pop() || "index.html";
-  const normalized = normalizeRole(role);
-
-  if (OWNER_ONLY_PAGES.has(page)) return OWNER_ROLES.has(normalized);
-  if (normalized === "customer") return CUSTOMER_ALLOWED.has(page);
-  if (STAFF_ROLES.has(normalized)) return STAFF_ALLOWED.has(page) || !OPS_ONLY.has(page);
-  if (OPS_ONLY.has(page)) return OWNER_ROLES.has(normalized) || OPS_ROLES.has(normalized);
-  return true;
-}
-
-function canAccessCurrentPage(role = "customer") {
-  return canAccessPage(pageName(), role);
-}
-
-function defaultDashboardForRole(role = "customer") {
-  const normalized = normalizeRole(role);
-  if (normalized === "customer") return ROUTES.customerDashboard;
-  return ROUTES.dashboard;
+function accountIsActive(profile = {}) {
+  const status = String(profile.status || 'active').trim().toLowerCase();
+  const approval = String(profile.approvalStatus || '').trim().toLowerCase();
+  return !['inactive', 'suspended', 'disabled', 'rejected'].includes(status)
+    && approval !== 'rejected';
 }
 
 function safeDestinationForRole(path, role) {
-  const fallback = defaultDashboardForRole(role);
+  const fallback = defaultRouteForRole(role);
   if (!path) return fallback;
-  return canAccessPage(path, role) ? path : fallback;
+  return canAccessPageName(path, role) ? path : fallback;
 }
 
 function waitForVerifiedFirebaseUser() {
@@ -215,10 +121,7 @@ function waitForVerifiedFirebaseUser() {
       resolve(user || null);
     };
 
-    const timer = setTimeout(() => {
-      console.warn("Firebase auth wait timed out. Continuing safely.");
-      finish(auth.currentUser || null);
-    }, AUTH_WAIT_TIMEOUT_MS);
+    const timer = setTimeout(() => finish(auth.currentUser || null), AUTH_WAIT_TIMEOUT_MS);
 
     unsubscribe = onAuthStateChanged(auth, (user) => {
       clearTimeout(timer);
@@ -227,85 +130,120 @@ function waitForVerifiedFirebaseUser() {
   });
 }
 
-async function handlePrivateRoute() {
-  const verifiedUser = await waitForVerifiedFirebaseUser();
+async function readVerifiedProfile(user) {
+  if (!user?.uid) return null;
 
-  if (!verifiedUser) {
+  const snapshot = await getDoc(doc(db, 'users', user.uid));
+  if (!snapshot.exists()) return null;
+
+  const data = snapshot.data() || {};
+  const profile = {
+    ...data,
+    uid: user.uid,
+    id: user.uid,
+    email: user.email || data.email || ''
+  };
+
+  if (!profile.role || !accountIsActive(profile)) return null;
+
+  saveUserRole(profile.role);
+  saveUserProfile(profile);
+  applyUserToUi(profile);
+  return profile;
+}
+
+async function resolveVerifiedSession() {
+  const user = await waitForVerifiedFirebaseUser();
+  if (!user) return { user: null, profile: null, role: '' };
+
+  const profile = await readVerifiedProfile(user);
+  if (!profile) return { user, profile: null, role: '' };
+
+  return {
+    user,
+    profile,
+    role: normalizeAccessRole(profile.role)
+  };
+}
+
+async function handlePrivateRoute() {
+  const session = await resolveVerifiedSession();
+
+  if (!session.user || !session.profile || !session.role) {
     saveIntendedRoute();
     clearUserSession();
     beginGuardRedirect(ROUTES.login, {
-      title: "Secure Area",
-      subtitle: "Please sign in to continue."
+      title: 'Secure Area',
+      subtitle: 'Your account could not be securely verified.'
     });
     return;
   }
 
-  const profile = await hydrateUserProfile(verifiedUser);
-  const role = getEffectiveRole(profile);
-
-  if (!canAccessCurrentPage(role)) {
-    beginGuardRedirect(defaultDashboardForRole(role), {
-      title: "Opening your dashboard",
-      subtitle: "That page is not available for this account."
+  if (!canAccessPageName(pageName(), session.role)) {
+    beginGuardRedirect(defaultRouteForRole(session.role), {
+      title: 'Opening your dashboard',
+      subtitle: 'That screen is not authorized for this account.'
     });
     return;
   }
 
-  safeMarkReady({ mode: "private", authenticated: true, role, source: "route-guard" });
+  safeMarkReady({
+    mode: 'private',
+    authenticated: true,
+    role: session.role,
+    userId: session.user.uid,
+    source: 'verified-route-guard'
+  });
 }
 
 async function handleAuthRoute() {
-  const verifiedUser = await waitForVerifiedFirebaseUser();
+  const session = await resolveVerifiedSession();
 
-  if (verifiedUser) {
-    const profile = await hydrateUserProfile(verifiedUser);
-    const role = getEffectiveRole(profile);
+  if (session.user && session.profile && session.role) {
     const intended = consumeIntendedRoute();
-    const target = safeDestinationForRole(intended, role);
-
-    beginGuardRedirect(target, {
-      title: "Opening EvaraOS",
-      subtitle: "Your session is already active."
+    beginGuardRedirect(safeDestinationForRole(intended, session.role), {
+      title: 'Opening EvaraOS',
+      subtitle: 'Your secure session is already active.'
     });
     return;
   }
 
   clearUserSession();
-  safeMarkReady({ mode: "auth", authenticated: false, source: "verified-guest" });
+  safeMarkReady({ mode: 'auth', authenticated: false, source: 'verified-guest' });
 }
 
 function handlePublicRoute(mode) {
   safeMarkReady({
-    mode: mode || "public",
-    authenticated: Boolean(auth.currentUser || getSavedUserProfile()),
-    source: "public-route"
+    mode: mode || 'public',
+    authenticated: Boolean(auth.currentUser),
+    source: 'public-route'
   });
 }
 
 async function initRouteGuard() {
-  const mode = document.body?.dataset?.routeGuard || "";
+  const mode = document.body?.dataset?.routeGuard || '';
 
   try {
-    if (mode === "private") {
+    if (mode === 'private') {
       await handlePrivateRoute();
       return;
     }
 
-    if (mode === "auth") {
+    if (mode === 'auth') {
       await handleAuthRoute();
       return;
     }
 
     handlePublicRoute(mode);
   } catch (error) {
-    console.error("Route guard failed:", error);
+    console.error('Route authorization failed:', error);
 
-    if (mode === "private") {
+    if (mode === 'private') {
       saveIntendedRoute();
       clearUserSession();
       beginGuardRedirect(ROUTES.login, {
-        title: "Returning to login",
-        subtitle: "Unable to verify your secure session."
+        title: 'Returning to login',
+        subtitle: 'Unable to verify your secure session.'
       });
       return;
     }
@@ -314,8 +252,8 @@ async function initRouteGuard() {
   }
 }
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initRouteGuard, { once: true });
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initRouteGuard, { once: true });
 } else {
   initRouteGuard();
 }

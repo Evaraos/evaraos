@@ -1,0 +1,14 @@
+{
+  "name": "evaraos-backend-security-tests",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "firebase emulators:exec --config ../../firebase.json --only firestore,storage \"node --test security-rules.test.cjs\""
+  },
+  "dependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "firebase": "^10.14.1",
+    "firebase-tools": "^13.31.2"
+  }
+}

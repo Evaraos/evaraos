@@ -151,6 +151,11 @@ exports.notifyLeadAssignment = require("./lead-notifications").notifyLeadAssignm
 exports.notifyChatParticipants = require("./message-notifications").notifyChatParticipants;
 exports.registerPushToken = require("./push-notifications").registerPushToken;
 exports.unregisterPushToken = require("./push-notifications").unregisterPushToken;
+exports.reviewStaffApplication = require("./staff-approval").reviewStaffApplication;
+exports.writeSecurityAudit = require("./audit-events").writeSecurityAudit;
+exports.bootstrapMessageChannels = require("./messaging-registry").bootstrapMessageChannels;
+exports.resolveMessageRecipient = require("./messaging-registry").resolveMessageRecipient;
+exports.migrateMessageRegistry = require("./messaging-registry").migrateMessageRegistry;
 
 const marketplaceCommerce = require("./marketplace-commerce-runtime");
 exports.acceptMarketplaceQuote = marketplaceCommerce.acceptMarketplaceQuote;
@@ -171,3 +176,9 @@ exports.reviewAiActionRequest = actionGovernance.reviewAiActionRequest;
 exports.cancelAiActionRequest = actionGovernance.cancelAiActionRequest;
 exports.executeAiActionRequest = actionExecutor.executeAiActionRequest;
 exports.rollbackAiActionRequest = actionExecutor.rollbackAiActionRequest;
+
+const blueprintSecurity = require("./blueprint-security");
+exports.saveBlueprintDraft = blueprintSecurity.saveBlueprintDraft;
+exports.publishBlueprint = blueprintSecurity.publishBlueprint;
+exports.rollbackBlueprint = blueprintSecurity.rollbackBlueprint;
+exports.getBlueprintState = blueprintSecurity.getBlueprintState;

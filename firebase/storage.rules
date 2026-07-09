@@ -10,113 +10,264 @@ service firebase.storage {
       return signedIn() && firestore.exists(/databases/(default)/documents/users/$(request.auth.uid));
     }
 
-    function currentUser() {
-      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid));
+    function currentUserData() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data;
     }
 
     function userRole() {
-      return currentUserExists() ? currentUser().data.role : null;
+      return currentUserExists() ? currentUserData().role : null;
     }
 
     function userCompanyId() {
-      return currentUserExists() ? currentUser().data.companyId : null;
+      return currentUserExists() ? currentUserData().companyId : null;
     }
 
-    function isOwnerOrAdmin() {
-      return signedIn() && userRole() in [
+    function hasCompany(companyId) {
+      return companyId is string && companyId != '';
+    }
+
+    function accountActive() {
+      return currentUserExists()
+        && currentUserData().status in ['active', 'approved']
+        && currentUserData().approvalStatus == 'approved';
+    }
+
+    function isPlatformOwner() {
+      return accountActive() && userRole() in [
         'owner', 'Owner', 'OWNER',
-        'super_admin', 'Super Admin', 'SUPER_ADMIN',
-        'admin', 'Admin', 'ADMIN'
+        'super_admin', 'Super Admin', 'SUPER_ADMIN'
       ];
+    }
+
+    function isPlatformAdmin() {
+      return isPlatformOwner() || (
+        accountActive()
+        && userRole() in ['admin', 'Admin', 'ADMIN']
+        && currentUserData().platformAccess == true
+      );
     }
 
     function isOperationsPlus() {
-      return signedIn() && userRole() in [
-        'owner', 'Owner', 'OWNER',
-        'super_admin', 'Super Admin', 'SUPER_ADMIN',
-        'admin', 'Admin', 'ADMIN',
-        'manager', 'Manager', 'MANAGER',
-        'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR'
-      ];
+      return isPlatformAdmin() || (
+        accountActive() && userRole() in [
+          'admin', 'Admin', 'ADMIN',
+          'manager', 'Manager', 'MANAGER',
+          'operations_manager', 'Operations Manager', 'OPERATIONS_MANAGER',
+          'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR',
+          'hr', 'HR',
+          'hr_manager', 'HR Manager', 'HR_MANAGER'
+        ]
+      );
     }
 
     function isStaff() {
-      return signedIn() && userRole() in [
-        'owner', 'Owner', 'OWNER',
-        'admin', 'Admin', 'ADMIN',
-        'manager', 'Manager', 'MANAGER',
-        'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR',
-        'sales', 'Sales', 'SALES',
-        'sales_rep', 'Sales Rep', 'SALES_REP',
-        'technician', 'Technician', 'TECHNICIAN',
-        'cleaner', 'Cleaner', 'CLEANER',
-        'staff', 'Staff', 'STAFF'
-      ];
+      return isPlatformAdmin() || (
+        accountActive() && userRole() in [
+          'admin', 'Admin', 'ADMIN',
+          'manager', 'Manager', 'MANAGER',
+          'operations_manager', 'Operations Manager', 'OPERATIONS_MANAGER',
+          'operations_coordinator', 'Operations Coordinator', 'OPERATIONS_COORDINATOR',
+          'field_manager', 'Field Manager', 'FIELD_MANAGER',
+          'dispatcher', 'Dispatcher', 'DISPATCHER',
+          'quality_control', 'Quality Control', 'QUALITY_CONTROL',
+          'sales', 'Sales', 'SALES',
+          'sales_rep', 'Sales Rep', 'SALES_REP',
+          'technician', 'Technician', 'TECHNICIAN',
+          'lead_technician', 'Lead Technician', 'LEAD_TECHNICIAN',
+          'cleaner', 'Cleaner', 'CLEANER',
+          'lead_cleaner', 'Lead Cleaner', 'LEAD_CLEANER',
+          'staff', 'Staff', 'STAFF',
+          'field_staff', 'Field Staff', 'FIELD_STAFF',
+          'crew_lead', 'Crew Lead', 'CREW_LEAD',
+          'customer_support', 'Customer Support', 'CUSTOMER_SUPPORT'
+        ]
+      );
+    }
+
+    function sameCompany(companyId) {
+      return accountActive()
+        && hasCompany(userCompanyId())
+        && hasCompany(companyId)
+        && userCompanyId() == companyId;
+    }
+
+    function sameCompanyOrPlatform(companyId) {
+      return isPlatformAdmin() || sameCompany(companyId);
+    }
+
+    function userExists(userId) {
+      return firestore.exists(/databases/(default)/documents/users/$(userId));
+    }
+
+    function targetUserCompany(userId) {
+      return userExists(userId)
+        ? firestore.get(/databases/(default)/documents/users/$(userId)).data.companyId
+        : null;
+    }
+
+    function jobExists(jobId) {
+      return firestore.exists(/databases/(default)/documents/jobs/$(jobId));
+    }
+
+    function job(jobId) {
+      return firestore.get(/databases/(default)/documents/jobs/$(jobId)).data;
+    }
+
+    function assignedToJob(jobId) {
+      let data = job(jobId);
+      return accountActive() && (
+        (data.keys().hasAny(['assignedTo']) && data.assignedTo is list && request.auth.uid in data.assignedTo) ||
+        (data.keys().hasAny(['assignedTeamIds']) && data.assignedTeamIds is list && request.auth.uid in data.assignedTeamIds) ||
+        (data.keys().hasAny(['assignedToUid']) && data.assignedToUid == request.auth.uid) ||
+        (data.keys().hasAny(['assignedRep']) && data.assignedRep == request.auth.uid) ||
+        (data.keys().hasAny(['staffClaimedBy']) && data.staffClaimedBy == request.auth.uid)
+      );
+    }
+
+    function customerOwnsJob(jobId) {
+      let data = job(jobId);
+      return accountActive() && userRole() in ['customer', 'Customer', 'CUSTOMER'] && (
+        (data.keys().hasAny(['customerUid']) && data.customerUid == request.auth.uid) ||
+        (data.keys().hasAny(['customerId']) && data.customerId == request.auth.uid)
+      );
+    }
+
+    function registryExists(conversationId) {
+      return firestore.exists(/databases/(default)/documents/channels/_group_registry/messages/$(conversationId));
+    }
+
+    function registry(conversationId) {
+      return firestore.get(/databases/(default)/documents/channels/_group_registry/messages/$(conversationId)).data;
+    }
+
+    function conversationMember(conversationId) {
+      let data = registry(conversationId);
+      return accountActive()
+        && registryExists(conversationId)
+        && (
+          isPlatformAdmin()
+          || (
+            data.kind in ['group_meta', 'direct_meta']
+            && (
+              (data.memberUids is list && request.auth.uid in data.memberUids)
+              || (data.adminUids is list && request.auth.uid in data.adminUids)
+            )
+            && (!hasCompany(data.companyId) || sameCompany(data.companyId))
+          )
+          || (
+            data.kind == 'role_meta'
+            && data.allowedRoles is list
+            && userRole() in data.allowedRoles
+            && sameCompany(data.companyId)
+          )
+        );
     }
 
     function isSafeImage() {
       return request.resource != null
-        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.size > 0
+        && request.resource.size < 12 * 1024 * 1024
         && request.resource.contentType.matches('image/.*');
     }
 
     function isSafeApplicationAttachment() {
       return request.resource != null
+        && request.resource.size > 0
         && request.resource.size < 15 * 1024 * 1024
         && (
-          request.resource.contentType.matches('image/.*') ||
-          request.resource.contentType == 'application/pdf'
+          request.resource.contentType.matches('image/.*')
+          || request.resource.contentType == 'application/pdf'
         );
     }
 
-    function companyMatches(companyId) {
-      return isOwnerOrAdmin()
-        || userCompanyId() == companyId
-        || userCompanyId() == null
-        || userCompanyId() == '';
+    function ownerMetadataMatches() {
+      return request.resource != null
+        && request.resource.metadata.ownerUid == request.auth.uid;
     }
 
     match /users/{userId}/{fileName} {
-      allow read: if signedIn() && (request.auth.uid == userId || isOperationsPlus());
-      allow create, update: if signedIn() && request.auth.uid == userId && isSafeImage();
-      allow delete: if signedIn() && (request.auth.uid == userId || isOwnerOrAdmin());
+      allow read: if signedIn() && (
+        request.auth.uid == userId
+        || isPlatformAdmin()
+        || (isOperationsPlus() && sameCompany(targetUserCompany(userId)))
+      );
+      allow create, update: if accountActive()
+        && request.auth.uid == userId
+        && isSafeImage()
+        && ownerMetadataMatches();
+      allow delete: if request.auth.uid == userId || isPlatformAdmin();
     }
 
     match /companies/{companyId}/{fileName} {
-      allow read: if signedIn();
-      allow create, update: if isOperationsPlus() && companyMatches(companyId) && isSafeImage();
-      allow delete: if isOwnerOrAdmin();
+      allow read: if sameCompanyOrPlatform(companyId);
+      allow create, update: if isOperationsPlus()
+        && sameCompanyOrPlatform(companyId)
+        && isSafeImage();
+      allow delete: if isPlatformAdmin()
+        || (isOperationsPlus() && sameCompany(companyId));
     }
 
-    match /jobs/{jobId}/{fileName} {
-      allow read: if signedIn();
-      allow create, update: if isStaff() && isSafeImage();
-      allow delete: if isOwnerOrAdmin();
+    match /jobs/{jobId}/{allFiles=**} {
+      allow read: if jobExists(jobId) && (
+        isPlatformAdmin()
+        || customerOwnsJob(jobId)
+        || (sameCompany(job(jobId).companyId) && (isOperationsPlus() || assignedToJob(jobId)))
+      );
+      allow create, update: if jobExists(jobId)
+        && isStaff()
+        && sameCompanyOrPlatform(job(jobId).companyId)
+        && (isOperationsPlus() || assignedToJob(jobId))
+        && isSafeImage()
+        && ownerMetadataMatches();
+      allow delete: if jobExists(jobId) && (
+        isPlatformAdmin()
+        || (isOperationsPlus() && sameCompany(job(jobId).companyId))
+        || (assignedToJob(jobId) && resource.metadata.ownerUid == request.auth.uid)
+      );
     }
 
     match /customers/{customerId}/{fileName} {
-      allow read: if signedIn() && (request.auth.uid == customerId || isOperationsPlus());
-      allow create, update: if signedIn() && (request.auth.uid == customerId || isOperationsPlus()) && isSafeImage();
-      allow delete: if isOwnerOrAdmin();
+      allow read: if accountActive() && (
+        request.auth.uid == customerId
+        || isPlatformAdmin()
+        || (isOperationsPlus() && sameCompany(targetUserCompany(customerId)))
+      );
+      allow create, update: if accountActive()
+        && (request.auth.uid == customerId
+          || isPlatformAdmin()
+          || (isOperationsPlus() && sameCompany(targetUserCompany(customerId))))
+        && isSafeImage();
+      allow delete: if request.auth.uid == customerId || isPlatformAdmin();
     }
 
     match /messages/{conversationId}/{fileName} {
-      allow read: if signedIn();
-      allow create: if signedIn()
+      allow read: if conversationMember(conversationId);
+      allow create: if conversationMember(conversationId)
         && isSafeImage()
-        && request.resource.metadata.ownerUid == request.auth.uid;
-      allow update: if signedIn()
+        && ownerMetadataMatches()
+        && request.resource.metadata.conversationId == conversationId;
+      allow update: if conversationMember(conversationId)
         && isSafeImage()
         && resource.metadata.ownerUid == request.auth.uid
-        && request.resource.metadata.ownerUid == request.auth.uid;
-      allow delete: if signedIn()
-        && (resource.metadata.ownerUid == request.auth.uid || isOwnerOrAdmin());
+        && request.resource.metadata.ownerUid == request.auth.uid
+        && request.resource.metadata.conversationId == conversationId;
+      allow delete: if conversationMember(conversationId)
+        && (resource.metadata.ownerUid == request.auth.uid || isPlatformAdmin());
     }
 
-    match /staff_applications/{applicationId}/{fileName} {
-      allow read: if signedIn() && (request.auth.uid == applicationId || isOperationsPlus());
-      allow create, update: if signedIn() && request.auth.uid == applicationId && isSafeApplicationAttachment();
-      allow delete: if signedIn() && (request.auth.uid == applicationId || isOwnerOrAdmin());
+    match /staff_applications/{applicationId}/{allFiles=**} {
+      allow read: if signedIn() && (
+        request.auth.uid == applicationId
+        || isPlatformAdmin()
+        || (isOperationsPlus()
+          && firestore.exists(/databases/(default)/documents/staff_applications/$(applicationId))
+          && sameCompany(firestore.get(/databases/(default)/documents/staff_applications/$(applicationId)).data.companyId))
+      );
+      allow create, update: if signedIn()
+        && request.auth.uid == applicationId
+        && isSafeApplicationAttachment()
+        && ownerMetadataMatches();
+      allow delete: if request.auth.uid == applicationId || isPlatformAdmin();
     }
 
     match /{allPaths=**} {

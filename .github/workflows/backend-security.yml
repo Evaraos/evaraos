@@ -1,0 +1,78 @@
+name: Backend Security Validation
+
+on:
+  push:
+    branches:
+      - "security/zero-trust-rbac-phase-1"
+    paths:
+      - "firebase/**"
+      - "firebase.json"
+      - "firestore.indexes.json"
+      - "functions/**"
+      - "tests/backend-security/**"
+      - "public/assets/js/access-control.js"
+      - "public/assets/js/route-guard.js"
+      - "public/assets/js/nav/nav-role-lockdown.js"
+      - "public/assets/js/studio/blueprint-drafts.js"
+      - "public/assets/js/studio/role-preview.js"
+      - ".github/workflows/backend-security.yml"
+  pull_request:
+    paths:
+      - "firebase/**"
+      - "firebase.json"
+      - "firestore.indexes.json"
+      - "functions/**"
+      - "tests/backend-security/**"
+      - "public/assets/js/access-control.js"
+      - "public/assets/js/route-guard.js"
+      - "public/assets/js/nav/nav-role-lockdown.js"
+      - "public/assets/js/studio/blueprint-drafts.js"
+      - "public/assets/js/studio/role-preview.js"
+      - ".github/workflows/backend-security.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rules-and-functions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install security test dependencies
+        working-directory: tests/backend-security
+        run: npm install --no-audit --no-fund
+
+      - name: Validate Cloud Function syntax
+        run: |
+          node --check functions/index-stats.js
+          node --check functions/staff-approval.js
+          node --check functions/audit-events.js
+          node --check functions/messaging-registry.js
+          node --check functions/message-notifications.js
+          node --check functions/push-notifications.js
+          node --check functions/stats-rebuild.js
+          node --check functions/blueprint-security.js
+          node --check functions/marketplace-commerce-runtime.js
+          node --check functions/marketplace-commerce-read.js
+
+      - name: Validate authorization client syntax
+        run: |
+          node --experimental-default-type=module --check public/assets/js/access-control.js
+          node --experimental-default-type=module --check public/assets/js/route-guard.js
+          node --experimental-default-type=module --check public/assets/js/nav/nav-role-lockdown.js
+          node --experimental-default-type=module --check public/assets/js/studio/blueprint-drafts.js
+          node --experimental-default-type=module --check public/assets/js/studio/role-preview.js
+
+      - name: Run Firebase rules emulator tests
+        working-directory: tests/backend-security
+        run: npm test
