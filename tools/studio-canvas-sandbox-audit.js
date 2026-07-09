@@ -135,8 +135,8 @@ if (!errors.length) {
     '.studio-canvas-graph-resize-handle',
     '.studio-canvas-sandbox-marquee',
     '.studio-canvas-graph-snap-guide.is-active',
-    '@media (max-width: 900px)',
-    '@media (prefers-reduced-motion: reduce)'
+    '@media (max-width:900px)',
+    '@media (prefers-reduced-motion:reduce)'
   ]) {
     if (!css.includes(selector)) errors.push(`studio-canvas-sandbox.css: missing ${selector}`);
   }
