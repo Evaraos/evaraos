@@ -12,6 +12,8 @@ import {
   summarizeQuotes
 } from './dynamic-quoting-engine.js';
 
+import { createOrderFromApprovedQuote } from './marketplace-order-engine.js';
+
 const quoteAdapter = createCollectionAdapter(EvaraCollections.QUOTES);
 let unsubscribeLiveQuotes = null;
 
@@ -32,6 +34,16 @@ function hydrateLocalQuote(record = {}) {
   return createQuote(record);
 }
 
+async function resolveLocalQuote(quoteId) {
+  let localQuote = getQuotes().find((quote) => quote.id === quoteId) || null;
+  if (localQuote) return localQuote;
+
+  const record = await quoteAdapter.get(quoteId);
+  if (!record) return null;
+  localQuote = hydrateLocalQuote(record);
+  return localQuote;
+}
+
 export async function createPersistentQuote(input = {}, options = {}) {
   const localQuote = createQuote(normalizeQuoteInput(input));
   await quoteAdapter.set(localQuote.id, localQuote, { merge: true, ...options });
@@ -45,13 +57,64 @@ export async function updatePersistentQuote(quoteId, patch = {}, options = {}) {
 }
 
 export async function approvePersistentQuote(quoteId, options = {}) {
-  const localQuote = approveQuote(quoteId);
+  const currentQuote = await resolveLocalQuote(quoteId);
+  if (!currentQuote) throw new Error('Quote not found.');
+
+  const approvedAtMs = Date.now();
+  const localQuote = approveQuote(quoteId) || updateQuote(quoteId, {
+    status: 'approved',
+    approvedAtMs
+  });
+  const approvedQuote = {
+    ...currentQuote,
+    ...localQuote,
+    status: 'approved',
+    approvedAtMs,
+    updatedAtMs: approvedAtMs
+  };
+  const persistenceOptions = options.persistence || {};
+  const orderOptions = options.order || options;
+
   await quoteAdapter.update(quoteId, {
     status: 'approved',
-    approvedAtMs: Date.now(),
-    updatedAtMs: Date.now()
-  }, options);
-  return localQuote;
+    approvedAtMs,
+    orderConversionStatus: 'processing',
+    orderConversionStartedAtMs: approvedAtMs,
+    updatedAtMs: approvedAtMs
+  }, persistenceOptions);
+
+  try {
+    const order = await createOrderFromApprovedQuote(approvedQuote, orderOptions);
+    const convertedAtMs = Date.now();
+    const conversionPatch = {
+      status: 'approved',
+      approvedAtMs,
+      orderId: order.id,
+      orderStatus: order.status,
+      scheduleStatus: order.scheduleStatus,
+      orderConversionStatus: 'converted',
+      orderConversionAtMs: convertedAtMs,
+      updatedAtMs: convertedAtMs
+    };
+
+    await quoteAdapter.update(quoteId, conversionPatch, persistenceOptions);
+    return updateQuote(quoteId, conversionPatch) || { ...approvedQuote, ...conversionPatch };
+  } catch (error) {
+    console.error('Approved quote conversion failed:', error);
+
+    try {
+      await quoteAdapter.update(quoteId, {
+        orderConversionStatus: 'failed',
+        orderConversionError: String(error?.message || 'Order conversion failed.').slice(0, 500),
+        orderConversionFailedAtMs: Date.now(),
+        updatedAtMs: Date.now()
+      }, persistenceOptions);
+    } catch (reconciliationError) {
+      console.warn('Quote conversion failure status could not be persisted:', reconciliationError);
+    }
+
+    throw error;
+  }
 }
 
 export async function rejectPersistentQuote(quoteId, options = {}) {

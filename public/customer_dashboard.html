@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v1" />
   <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v25-x-drawer" />
   <link rel="stylesheet" href="/assets/css/pages/customer-portal.css?v=2" />
+  <link rel="stylesheet" href="/assets/css/pages/customer-marketplace.css?v=1" />
 </head>
 <body class="dashboard-body auth-pending app-loading" data-route-guard="private">
   <div id="universalNavRoot"></div>
@@ -30,7 +31,7 @@
           <div>
             <p class="customer-kicker">CUSTOMER PORTAL</p>
             <h1 class="customer-title">Welcome, <span id="customerWelcomeName">Customer</span></h1>
-            <p class="customer-copy">Track who accepted your service, which company they represent, where they are in the process, and the full before-and-after record of every visit.</p>
+            <p class="customer-copy">Book services, choose your property and preferred time, then track who accepted your order, which company they represent, and every milestone through completion.</p>
           </div>
           <div class="customer-avatar" id="customerAvatar"><span>C</span></div>
         </div>
@@ -95,8 +96,13 @@
   </div>
 
   <script src="/assets/js/loader.js?v=37"></script>
-  <script type="module" src="/assets/js/firebase.js?v=36"></script><script type="module" src="/assets/js/route-guard.js?v=35"></script><script type="module" src="/assets/js/customer-portal-v2.js?v=1"></script>
-  <script type="module" src="/assets/js/customer-portal-profile-sync.js?v=1"></script>  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v1"></script>
+  <script type="module" src="/assets/js/firebase.js?v=36"></script>
+  <script type="module" src="/assets/js/route-guard.js?v=35"></script>
+  <script type="module" src="/assets/js/customer-portal-v2.js?v=1"></script>
+  <script type="module" src="/assets/js/customer-marketplace-ordering.js?v=1"></script>
+  <script type="module" src="/assets/js/customer-marketplace-guardrails.js?v=1"></script>
+  <script type="module" src="/assets/js/customer-portal-profile-sync.js?v=1"></script>
+  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v1"></script>
   <script type="module" src="/assets/js/nav.js?v=nav-v25-x-drawer"></script>
 </body>
 </html>

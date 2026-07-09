@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Evara Studio Core Smoke Test</title>
+  <style>
+    body { font: 15px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; margin: 32px; background: #0b0d12; color: #eef2ff; }
+    pre { white-space: pre-wrap; padding: 20px; border: 1px solid #2d3342; border-radius: 16px; background: #11151d; }
+    .pass { color: #70e1a1; }
+    .fail { color: #ff8585; }
+  </style>
+</head>
+<body>
+  <h1>Evara Studio Core Smoke Test</h1>
+  <pre id="results">Running…</pre>
+
+  <script type="module">
+    import {
+      applyOperation,
+      applyTransaction,
+      createGraphNode,
+      createOperation,
+      createUndoTransaction,
+      graphSummary,
+      legacyRegistriesToGraph,
+      validateEvaraGraph
+    } from '../public/assets/js/studio/core/index.js';
+
+    const output = document.querySelector('#results');
+    const lines = [];
+
+    function assert(condition, message) {
+      if (!condition) throw new Error(message);
+      lines.push(`PASS  ${message}`);
+    }
+
+    try {
+      const converted = legacyRegistriesToGraph({
+        components: [
+          { id: 'glass-card', name: 'Glass Card', category: 'foundation', fields: ['title'], permissions: ['view'], defaults: { title: 'Card' } }
+        ],
+        modules: [
+          { id: 'permissions', name: 'Permission Engine', status: 'active', progress: 100, dependencies: [], permissions: ['owner'], routes: [] },
+          { id: 'studio', name: 'Evara Studio', status: 'rebuild', progress: 20, dependencies: ['permissions'], permissions: ['owner'], routes: ['/website-builder.html'] }
+        ],
+        blueprints: [
+          { id: 'owner', name: 'Owner Blueprint', role: 'owner', status: 'draft', version: 1, navigation: ['Dashboard'], permissions: ['view'], sections: [{ id: 'home', title: 'Home', components: ['glass-card'] }] }
+        ]
+      });
+
+      const validation = validateEvaraGraph(converted.graph);
+      assert(validation.valid, 'Legacy registries convert into a valid Evara Graph.');
+      assert(converted.graph.nodes['component:glass-card'], 'Component definitions become graph nodes.');
+      assert(converted.graph.nodes['blueprint:owner'], 'Blueprints become graph nodes.');
+      assert(Object.values(converted.graph.edges).some((edge) => edge.kind === 'instantiates'), 'Blueprint component instances retain definition relationships.');
+
+      const page = createGraphNode({ id: 'page:smoke-test', kind: 'page', name: 'Smoke Test Page', props: { route: '/smoke-test' } });
+      const createPage = createOperation({ graphId: converted.graph.graphId, type: 'node.create', actor: { id: 'smoke-test', type: 'system' }, payload: { node: page } });
+      const created = applyOperation(converted.graph, createPage);
+      assert(created.graph.nodes[page.id], 'Typed operations create nodes.');
+      assert(!converted.graph.nodes[page.id], 'Operations do not mutate the original graph.');
+
+      const patchPage = createOperation({
+        graphId: created.graph.graphId,
+        type: 'node.patch',
+        actor: { id: 'smoke-test', type: 'system' },
+        payload: { nodeId: page.id, patch: { props: { route: '/renamed' } } }
+      });
+      const patched = applyOperation(created.graph, patchPage);
+      assert(patched.graph.nodes[page.id].props.route === '/renamed', 'Node patches merge nested properties.');
+
+      const undoOperations = createUndoTransaction(patched.graph, patched.inverseOperations, { id: 'smoke-test', type: 'system' });
+      const undone = applyTransaction(patched.graph, undoOperations);
+      assert(undone.graph.nodes[page.id].props.route === '/smoke-test', 'Inverse operations provide deterministic undo.');
+
+      const published = structuredClone(undone.graph);
+      published.state = 'published';
+      let immutabilityBlocked = false;
+      try {
+        applyOperation(published, createPage);
+      } catch (error) {
+        immutabilityBlocked = /immutable/i.test(error.message);
+      }
+      assert(immutabilityBlocked, 'Published releases reject direct mutation.');
+
+      lines.push('');
+      lines.push(JSON.stringify(graphSummary(undone.graph), null, 2));
+      output.className = 'pass';
+      output.textContent = lines.join('\n');
+    } catch (error) {
+      lines.push(`FAIL  ${error.stack || error.message}`);
+      output.className = 'fail';
+      output.textContent = lines.join('\n');
+    }
+  </script>
+</body>
+</html>

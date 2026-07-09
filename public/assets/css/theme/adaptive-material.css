@@ -1,10 +1,5 @@
-/* Legacy material painter retired.
-   liquid-optics.css is the sole authority for glass fills, borders, highlights,
-   refraction, shadows, controls, sheets, and nested-surface behavior. */
-:where(.glass-card,.glass-shell,.liquid-glass,.aurora-card,.dashboard-panel,.dashboard-stat-card,.dashboard-list-item,.dashboard-feed-item,.settings-card,.settings-block,[data-glass="interactive"]){
-  transition:transform var(--motion),border-color var(--motion),box-shadow var(--motion),color var(--motion);
-}
-:where(.glass-card,.dashboard-stat-card,.dashboard-list-item,.dashboard-feed-item,.settings-card,.settings-block,[data-glass="interactive"]):active{transform:scale(.985)}
-@media(hover:hover) and (pointer:fine){
-  :where(.glass-card,.dashboard-stat-card,.dashboard-list-item,.dashboard-feed-item,.settings-card,.settings-block,[data-glass="interactive"]):hover{transform:translateY(-1px) scale(1.001)}
-}
+/* EVARAOS LEGACY MATERIAL COMPATIBILITY
+   Material rendering is owned by liquid-optics.css.
+   Card presets and interaction states are owned by liquid-functional-cards.css.
+   This file intentionally remains inert so older imports do not break while
+   the theme manifest is migrated in a future cleanup. */
