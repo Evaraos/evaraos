@@ -12,6 +12,7 @@ const root = () => document.querySelector('#appRoot');
 const canvas = () => document.querySelector('[data-canvas-dropzone]');
 const workspace = () => document.querySelector('.studio-workspace');
 const selectedNode = () => document.querySelector('.studio-node.is-selected');
+const isPinnedNode = (node) => node?.dataset.nodeType === 'hero-block';
 const nextFrame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
 function make(tag, options = {}, children = []) {
@@ -21,6 +22,7 @@ function make(tag, options = {}, children = []) {
   if (options.type) node.type = options.type;
   if (options.title) node.title = options.title;
   if (options.draggable !== undefined) node.draggable = options.draggable;
+  if (options.disabled !== undefined) node.disabled = Boolean(options.disabled);
   if (options.dataset) Object.entries(options.dataset).forEach(([key, value]) => { node.dataset[key] = String(value); });
   if (options.attrs) Object.entries(options.attrs).forEach(([key, value]) => node.setAttribute(key, String(value)));
   const list = Array.isArray(children) ? children : [children];
@@ -53,8 +55,8 @@ function toggleGrid() {
 
 function nodeLabel(node) {
   const heading = node.querySelector('h1, h2, h3, strong, [data-field="title"], [data-field="label"]');
-  const text = heading?.textContent?.trim();
-  return text ? text.slice(0, 42) : (node.dataset.nodeType || 'Component').replaceAll('-', ' ');
+  const value = heading?.textContent?.trim();
+  return value ? value.slice(0, 42) : (node.dataset.nodeType || 'Component').replaceAll('-', ' ');
 }
 
 function visualNodes() {
@@ -65,13 +67,21 @@ function visualNodeIds() {
   return visualNodes().map((node) => node.dataset.nodeId).filter(Boolean);
 }
 
+function findNode(nodeId) {
+  if (!nodeId) return null;
+  return document.querySelector(`.studio-node[data-node-id="${CSS.escape(nodeId)}"]`);
+}
+
 function selectById(nodeId) {
-  const target = document.querySelector(`.studio-node[data-node-id="${CSS.escape(nodeId)}"]`);
-  target?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+  findNode(nodeId)?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
 }
 
 async function moveNode(nodeId, targetId) {
   if (!nodeId || !targetId || nodeId === targetId) return;
+  const sourceNode = findNode(nodeId);
+  const targetNode = findNode(targetId);
+  if (!sourceNode || !targetNode || isPinnedNode(sourceNode) || isPinnedNode(targetNode)) return;
+
   const ids = visualNodeIds();
   const from = ids.indexOf(nodeId);
   const to = ids.indexOf(targetId);
@@ -85,7 +95,7 @@ async function moveNode(nodeId, targetId) {
   const steps = Math.abs(to - from);
   for (let index = 0; index < steps; index += 1) {
     const control = document.querySelector(`[data-context-action="${direction}"]`);
-    if (!control) break;
+    if (!control || control.disabled) break;
     control.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
     await nextFrame();
   }
@@ -98,8 +108,13 @@ function nearestSpan(value) {
 }
 
 async function commitSpan(nodeId, span) {
-  const target = document.querySelector(`.studio-node[data-node-id="${CSS.escape(nodeId)}"]`);
-  if (!target) return;
+  const target = findNode(nodeId);
+  if (!target || isPinnedNode(target)) return;
+
+  if (layersOpen) {
+    layersOpen = false;
+    renderLayersPanel(true);
+  }
 
   setSaveStatus('Saving...');
   if (!target.classList.contains('is-selected')) {
@@ -136,7 +151,7 @@ function beginResize(event) {
 
   const node = handle.closest('.studio-node[data-node-id]');
   const stage = node?.closest('.studio-stage');
-  if (!node || !stage || stage.dataset.device === 'mobile') return;
+  if (!node || !stage || isPinnedNode(node) || stage.dataset.device === 'mobile') return;
 
   resizeSession = {
     pointerId: event.pointerId,
@@ -157,7 +172,7 @@ function resizeMove(event) {
   const columnWidth = resizeSession.stageWidth / 12;
   const delta = Math.round((event.clientX - resizeSession.startX) / columnWidth);
   resizeSession.nextSpan = nearestSpan(resizeSession.startSpan + delta);
-  const node = document.querySelector(`.studio-node[data-node-id="${CSS.escape(resizeSession.nodeId)}"]`);
+  const node = findNode(resizeSession.nodeId);
   if (!node) return;
   node.dataset.span = String(resizeSession.nextSpan);
   node.querySelector('[data-layout-size-label]')?.replaceChildren(document.createTextNode(`${resizeSession.nextSpan}/12`));
@@ -169,18 +184,31 @@ async function endResize(event) {
   const session = resizeSession;
   resizeSession = null;
   document.body.classList.remove('studio-layout-resizing');
-  document.querySelector(`.studio-node[data-node-id="${CSS.escape(session.nodeId)}"]`)?.classList.remove('is-layout-resizing');
+  findNode(session.nodeId)?.classList.remove('is-layout-resizing');
   if (session.nextSpan !== session.startSpan) await commitSpan(session.nodeId, session.nextSpan);
+}
+
+function updateContextBoundaries(node) {
+  const ids = visualNodeIds();
+  const index = node ? ids.indexOf(node.dataset.nodeId) : -1;
+  const pinned = isPinnedNode(node);
+  const up = document.querySelector('[data-context-action="up"]');
+  const down = document.querySelector('[data-context-action="down"]');
+  if (up) up.disabled = pinned || index <= 1;
+  if (down) down.disabled = pinned || index < 0 || index >= ids.length - 1;
 }
 
 function enhanceNodes() {
   visualNodes().forEach((node) => {
-    node.draggable = !node.classList.contains('is-layout-resizing');
+    const pinned = isPinnedNode(node);
+    node.draggable = !pinned && !node.classList.contains('is-layout-resizing');
     node.dataset.layoutReady = 'true';
+    node.dataset.layoutPinned = String(pinned);
   });
 
   const node = selectedNode();
-  if (!node || node.querySelector('[data-layout-resize]')) return;
+  updateContextBoundaries(node);
+  if (!node || isPinnedNode(node) || node.querySelector('[data-layout-resize]')) return;
   const handle = make('button', {
     className: 'studio-layout-resize-handle',
     type: 'button',
@@ -224,28 +252,36 @@ function injectToolbarTools() {
 }
 
 function layerRow(node, index) {
+  const pinned = isPinnedNode(node);
   const row = make('button', {
-    className: `studio-layout-layer${node.classList.contains('is-selected') ? ' is-selected' : ''}`,
+    className: `studio-layout-layer${node.classList.contains('is-selected') ? ' is-selected' : ''}${pinned ? ' is-pinned' : ''}`,
     type: 'button',
-    draggable: true,
-    dataset: { layerNode: node.dataset.nodeId, layerIndex: index }
+    draggable: !pinned,
+    dataset: { layerNode: node.dataset.nodeId, layerIndex: index, layerPinned: String(pinned) }
   });
   row.append(
-    make('span', { className: 'studio-layout-layer-grip', text: '::', attrs: { 'aria-hidden': 'true' } }),
+    make('span', { className: 'studio-layout-layer-grip', text: pinned ? '--' : '::', attrs: { 'aria-hidden': 'true' } }),
     make('span', { className: 'studio-layout-layer-type', text: (node.dataset.nodeType || 'component').slice(0, 1).toUpperCase() }),
     make('span', { className: 'studio-layout-layer-copy' }, [
       make('strong', { text: nodeLabel(node) }),
       make('small', { text: `${(node.dataset.nodeType || 'component').replaceAll('-', ' ')} · ${node.dataset.span || 4}/12` })
     ]),
-    make('span', { className: 'studio-layout-layer-state', text: node.dataset.hiddenInPreview === 'true' ? 'Hidden' : 'Visible' })
+    make('span', { className: 'studio-layout-layer-state', text: pinned ? 'Pinned' : node.dataset.hiddenInPreview === 'true' ? 'Hidden' : 'Visible' })
   );
   return row;
 }
 
-function renderLayersPanel() {
-  workspace()?.querySelector('[data-layout-sheet="layers"]')?.remove();
+function renderLayersPanel(force = false) {
+  const mount = workspace();
+  const existing = mount?.querySelector('[data-layout-sheet="layers"]');
   document.querySelector('[data-layout-tool="layers"]')?.classList.toggle('is-active', layersOpen);
-  if (!layersOpen || !workspace()) return;
+
+  if (!layersOpen || !mount) {
+    existing?.remove();
+    return;
+  }
+  if (existing && !force) return;
+  existing?.remove();
 
   const sheet = make('aside', { className: 'studio-sheet studio-layout-sheet', dataset: { layoutSheet: 'layers' } });
   const header = make('div', { className: 'studio-sheet-header' }, [
@@ -256,7 +292,7 @@ function renderLayersPanel() {
   visualNodes().forEach((node, index) => list.append(layerRow(node, index)));
   if (!list.children.length) list.append(make('div', { className: 'studio-empty-state', text: 'Add a component to begin building layers.' }));
   sheet.append(header, list);
-  workspace().append(sheet);
+  mount.append(sheet);
 }
 
 function enhance() {
@@ -264,7 +300,7 @@ function enhance() {
   injectToolbarTools();
   enhanceNodes();
   applyGridPreference();
-  renderLayersPanel();
+  if (layersOpen && !workspace()?.querySelector('[data-layout-sheet="layers"]')) renderLayersPanel(true);
 }
 
 function scheduleEnhance() {
@@ -272,15 +308,30 @@ function scheduleEnhance() {
   enhancementFrame = requestAnimationFrame(enhance);
 }
 
+function clearDragState() {
+  dragNodeId = null;
+  dragTargetId = null;
+  document.body.classList.remove('studio-layout-dragging');
+  document.querySelectorAll('.is-layout-drop-target').forEach((item) => item.classList.remove('is-layout-drop-target'));
+}
+
 function bindEvents() {
   document.addEventListener('click', (event) => {
+    const nativeSheet = event.target.closest('[data-sheet]');
+    if (nativeSheet && layersOpen) {
+      layersOpen = false;
+      renderLayersPanel(true);
+    }
+
     const layers = event.target.closest('[data-layout-tool="layers"]');
     if (layers) {
       event.preventDefault();
+      const nextOpen = !layersOpen;
+      layersOpen = false;
       const activeNativeSheet = document.querySelector('.studio-dock-button.is-active[data-sheet]');
       activeNativeSheet?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-      layersOpen = !layersOpen;
-      renderLayersPanel();
+      layersOpen = nextOpen;
+      renderLayersPanel(true);
       return;
     }
 
@@ -293,7 +344,7 @@ function bindEvents() {
     if (action?.dataset.layoutAction === 'close-layers') {
       event.preventDefault();
       layersOpen = false;
-      renderLayersPanel();
+      renderLayersPanel(true);
       return;
     }
 
@@ -313,7 +364,8 @@ function bindEvents() {
     const layer = event.target.closest('[data-layer-node]');
     const node = event.target.closest('.studio-node[data-node-id]');
     const sourceId = layer?.dataset.layerNode || node?.dataset.nodeId;
-    if (!sourceId || event.target.closest('[contenteditable="true"], [data-layout-resize]')) return;
+    const sourceNode = findNode(sourceId);
+    if (!sourceId || !sourceNode || isPinnedNode(sourceNode) || event.target.closest('[contenteditable="true"], [data-layout-resize]')) return;
     dragNodeId = sourceId;
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/x-evara-studio-node', sourceId);
@@ -323,7 +375,8 @@ function bindEvents() {
   document.addEventListener('dragover', (event) => {
     const target = event.target.closest('[data-layer-node], .studio-node[data-node-id]');
     const targetId = target?.dataset.layerNode || target?.dataset.nodeId;
-    if (!dragNodeId || !targetId || targetId === dragNodeId) return;
+    const targetNode = findNode(targetId);
+    if (!dragNodeId || !targetId || targetId === dragNodeId || !targetNode || isPinnedNode(targetNode)) return;
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
     if (dragTargetId !== targetId) {
@@ -336,28 +389,24 @@ function bindEvents() {
   document.addEventListener('drop', async (event) => {
     const target = event.target.closest('[data-layer-node], .studio-node[data-node-id]');
     const targetId = target?.dataset.layerNode || target?.dataset.nodeId;
-    if (!dragNodeId || !targetId) return;
-    event.preventDefault();
     const source = dragNodeId;
-    dragNodeId = null;
-    dragTargetId = null;
-    document.body.classList.remove('studio-layout-dragging');
-    document.querySelectorAll('.is-layout-drop-target').forEach((item) => item.classList.remove('is-layout-drop-target'));
+    const targetNode = findNode(targetId);
+    if (!source || !targetId || !targetNode || isPinnedNode(targetNode)) {
+      clearDragState();
+      return;
+    }
+    event.preventDefault();
+    clearDragState();
     await moveNode(source, targetId);
   });
 
-  document.addEventListener('dragend', () => {
-    dragNodeId = null;
-    dragTargetId = null;
-    document.body.classList.remove('studio-layout-dragging');
-    document.querySelectorAll('.is-layout-drop-target').forEach((item) => item.classList.remove('is-layout-drop-target'));
-  });
+  document.addEventListener('dragend', clearDragState);
 
   document.addEventListener('keydown', (event) => {
     if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === 'l') {
       event.preventDefault();
       layersOpen = !layersOpen;
-      renderLayersPanel();
+      renderLayersPanel(true);
       return;
     }
     if (!event.metaKey && !event.ctrlKey && !event.altKey && event.key.toLowerCase() === 'g' && !event.target.matches('input, textarea, select, [contenteditable="true"]')) {
