@@ -10,51 +10,51 @@
   <meta name="theme-color" content="#eef5fb">
   <title>Messages • Evaraos Inc</title>
   <script src="/assets/js/adaptive-appearance-boot.js?v=10"></script>
-  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/base.css?v=53">
   <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v10">
-  <link rel="stylesheet" href="/assets/css/nav.css">
-  <link rel="stylesheet" href="/assets/css/pages/messages.css?build=20260703-fixed-rails-compose">
-  <link rel="stylesheet" href="/assets/css/pages/messages-group-photo.css?v=1">
+  <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v33-theme-notifications">
+  <link rel="stylesheet" href="/assets/css/pages/messages.css?build=20260709-design-system-v1">
+  <link rel="stylesheet" href="/assets/css/pages/messages-group-photo.css?v=2">
 </head>
 <body class="messages-page auth-pending app-loading" data-route-guard="private">
   <div id="universalNavRoot"></div>
   <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
   <div id="appRoot">
     <main class="messages-app show-list">
-      <aside class="messages-sidebar" aria-label="Message center">
-        <header class="messages-center-head" style="position:relative;min-height:74px;padding:14px 20px 12px">
+      <aside class="messages-sidebar" aria-label="Message center" data-ui="surface" data-glass="surface">
+        <header class="messages-center-head" data-ui="surface" data-glass="surface">
           <button id="editConversations" class="messages-head-button" type="button" aria-pressed="false">Edit</button>
           <h1>Messages</h1>
           <button id="newConversationButton" class="messages-head-button messages-menu-button" type="button" aria-label="Message options"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h9"/></svg></button>
         </header>
         <div id="conversationList" class="conversation-list" role="list"><div class="messages-empty">Loading conversations…</div></div>
-        <div class="messages-search-dock">
-          <label class="messages-search" for="conversationSearch"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg><input id="conversationSearch" type="search" inputmode="search" placeholder="Search" autocomplete="off" style="font-size:16px"></label>
+        <div class="messages-search-dock" data-ui="surface" data-glass="surface">
+          <label class="messages-search" for="conversationSearch" data-ui="control" data-glass="control"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg><input id="conversationSearch" type="search" inputmode="search" placeholder="Search" autocomplete="off"></label>
           <button id="composeConversationButton" class="messages-compose-button" type="button" aria-label="Compose a new message"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 5.5H7.25A3.25 3.25 0 0 0 4 8.75v8A3.25 3.25 0 0 0 7.25 20h8a3.25 3.25 0 0 0 3.25-3.25V10.5"/><path d="m10.25 14.75.7-3.05 6.35-6.35a1.56 1.56 0 0 1 2.2 2.2l-6.35 6.35-2.9.85Z"/><path d="m15.9 6.75 2.2 2.2"/></svg></button>
         </div>
       </aside>
       <section id="messagesChat" class="messages-chat" aria-label="Conversation">
-        <header class="messages-chat-head" style="position:relative;min-height:calc(70px + env(safe-area-inset-top));padding-top:max(14px,calc(env(safe-area-inset-top) + 8px))">
+        <header class="messages-chat-head" data-ui="surface" data-glass="surface">
           <button id="showConversationList" class="messages-chat-button" type="button" aria-label="Back to messages"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
           <button id="chatAvatar" class="conversation-avatar chat-avatar-button" type="button" aria-label="Conversation photo and options"><span>E</span></button>
           <div class="messages-chat-title"><h2 id="chatTitle">Messages</h2><p id="chatSubtitle">Select a conversation</p></div>
           <button id="chatMenuButton" class="messages-chat-button" type="button" aria-label="Conversation options"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg></button>
         </header>
         <div id="chatFeed" class="messages-feed" aria-live="polite"><div class="messages-empty">Select a conversation to begin.</div></div>
-        <form id="messageForm" class="messages-composer"><div class="messages-composer-shell"><textarea id="messageInput" rows="1" maxlength="10000" inputmode="text" autocomplete="off" autocapitalize="sentences" spellcheck="true" placeholder="Message" required style="font-size:16px"></textarea></div><button class="messages-send" type="submit" aria-label="Send message"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 18V6M7 11l5-5 5 5"/></svg></button></form>
+        <form id="messageForm" class="messages-composer" data-ui="surface" data-glass="surface"><div class="messages-composer-shell" data-ui="control" data-glass="control"><textarea id="messageInput" rows="1" maxlength="10000" inputmode="text" autocomplete="off" autocapitalize="sentences" spellcheck="true" placeholder="Message" required></textarea></div><button class="messages-send" type="submit" aria-label="Send message"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 18V6M7 11l5-5 5 5"/></svg></button></form>
       </section>
     </main>
   </div>
   <div id="messagesMenu" class="messages-action-sheet" hidden>
     <button class="messages-sheet-backdrop" type="button" aria-label="Close menu"></button>
-    <section class="messages-sheet-card" role="dialog" aria-modal="true" aria-labelledby="messagesMenuTitle">
+    <section class="messages-sheet-card" role="dialog" aria-modal="true" aria-labelledby="messagesMenuTitle" data-ui="surface" data-glass="surface">
       <div class="messages-sheet-handle"></div><h2 id="messagesMenuTitle">New Message</h2>
       <button id="newDirectConversation" type="button">New Chat</button><button id="newGroupConversation" type="button">New Group Chat</button><button id="viewConversationPhoto" type="button">View photo</button><button id="muteConversation" type="button">Mute Notifications</button><button id="conversationInfo" type="button">Conversation info</button><button id="editConversation" type="button">Edit conversation</button><button id="deleteConversation" class="messages-destructive-action" type="button">Delete conversation</button><button id="refreshConversations" type="button">Refresh conversations</button><a id="backToDashboard" href="/dashboard.html">Back to dashboard</a><button id="closeMessagesMenu" class="messages-sheet-cancel" type="button">Cancel</button>
     </section>
   </div>
   <div id="conversationPhotoViewer" class="messages-photo-viewer" hidden>
     <button id="closePhotoViewer" class="messages-photo-backdrop" type="button" aria-label="Close photo"></button>
-    <figure class="messages-photo-card"><button id="conversationPhotoButton" class="messages-photo-button" type="button" aria-label="Change group image" disabled><img id="conversationPhotoImage" alt="Conversation"></button><figcaption id="conversationPhotoCaption"></figcaption><div class="messages-photo-actions"><button id="changeConversationPhoto" class="messages-photo-change" type="button" hidden>Change Group Image</button><p id="conversationPhotoStatus" class="messages-photo-status" hidden></p><input id="conversationPhotoInput" class="messages-photo-file" type="file" accept="image/*" aria-label="Choose a group image"></div></figure>
+    <figure class="messages-photo-card" data-ui="surface" data-glass="surface"><button id="conversationPhotoButton" class="messages-photo-button" type="button" aria-label="Change group image" disabled><img id="conversationPhotoImage" alt="Conversation"></button><figcaption id="conversationPhotoCaption"></figcaption><div class="messages-photo-actions"><button id="changeConversationPhoto" class="messages-photo-change" type="button" hidden>Change Group Image</button><p id="conversationPhotoStatus" class="messages-photo-status" hidden></p><input id="conversationPhotoInput" class="messages-photo-file" type="file" accept="image/*" aria-label="Choose a group image"></div></figure>
   </div>
   <script src="/assets/js/loader.js"></script>
   <script type="module" src="/assets/js/route-guard.js"></script>
