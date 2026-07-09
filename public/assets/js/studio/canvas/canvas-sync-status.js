@@ -73,6 +73,8 @@ function render() {
     overlay.dataset.integrityState = state.integrityState;
     overlay.dataset.unsynchronized = state.unsynchronizedChanges ? 'true' : 'false';
     overlay.dataset.pendingCount = String(state.pendingCount);
+    const header = overlay.querySelector('.studio-canvas-sandbox-header');
+    if (header) header.dataset.pendingCount = String(state.pendingCount);
   }
 
   let status = document.querySelector('[data-canvas-sync-status]');
