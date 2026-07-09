@@ -1,4 +1,3 @@
-import fs from 'node:fs';
 import { test, expect } from '@playwright/test';
 import {
   APPEARANCES,
@@ -139,7 +138,7 @@ async function verifyKeyboardFocus(page) {
 }
 
 for (const role of ROLE_DEFINITIONS) {
-  const available = credentialsFor(role).available && fs.existsSync(storageStatePath(role.id));
+  const available = credentialsFor(role).available;
   const routes = matrixMode === 'full' ? role.routes : role.criticalRoutes;
 
   test.describe(`${role.id} authenticated route QA`, () => {
@@ -178,7 +177,7 @@ const visualCases = matrixMode === 'full'
 
 for (const visualCase of visualCases) {
   const role = ROLE_DEFINITIONS.find((entry) => entry.id === visualCase.role);
-  const available = Boolean(role && credentialsFor(role).available && fs.existsSync(storageStatePath(role.id)));
+  const available = Boolean(role && credentialsFor(role).available);
 
   test.describe(`${visualCase.role} visual baselines`, () => {
     test.skip(!available, `${visualCase.role} QA credentials are not configured.`);
