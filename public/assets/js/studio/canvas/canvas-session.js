@@ -79,6 +79,7 @@ export class CanvasSession {
   #ready = false;
   #source = null;
   #pageId = null;
+  #durabilityState = 'saved-locally';
   #actor;
 
   constructor(options = {}) {
@@ -128,6 +129,7 @@ export class CanvasSession {
     });
     const recovery = await this.#journal.initialize();
     this.#graph = recovery.graph;
+    this.#durabilityState = recovery.session?.durabilityState || 'saved-locally';
     const viewport = recovery.session?.viewport || this.viewport.snapshot();
     this.viewport = new ViewportController(viewport);
     this.#reproject();
@@ -160,6 +162,7 @@ export class CanvasSession {
     if (!prepared?.changed) return prepared;
     await this.#journal.append(prepared, prepared.graph, options);
     this.#graph = clone(prepared.graph);
+    this.#durabilityState = 'saved-locally';
     this.#reproject();
     this.selection.prune(flattenGraphProjection(this.#projection).map((node) => node.id));
     if (this.#history) await this.#history.refresh();
@@ -189,6 +192,7 @@ export class CanvasSession {
     if (!this.#ready) await this.initialize();
     if (!Array.isArray(operations) || !operations.length) return { changed: false, reason: 'No operations supplied.' };
     const transactionId = randomId(intent === 'history.undo' ? 'undo' : intent === 'history.redo' ? 'redo' : 'canvas_tx');
+    const correlationId = randomId('correlation');
     const normalized = operations.map((operation) => createOperation({
       graphId: this.#graph.graphId,
       type: operation.type,
@@ -196,7 +200,7 @@ export class CanvasSession {
       actor: this.#actor,
       baseRevision: null,
       transactionId,
-      correlationId: randomId('correlation'),
+      correlationId,
       metadata: { ...(operation.metadata || {}), semanticIntent: intent, source: 'canvas-session' }
     }));
     const expectedHeadRevision = this.#graph.revision;
@@ -213,7 +217,7 @@ export class CanvasSession {
         type: intent,
         payload: {},
         actor: this.#actor,
-        correlationId: randomId('correlation')
+        correlationId
       },
       transactionId: result.transactionId,
       expectedHeadRevision,
@@ -254,7 +258,10 @@ export class CanvasSession {
 
   async setDurabilityState(state, reason) {
     if (!this.#ready) await this.initialize();
-    return this.#journal.setDurabilityState(state, reason);
+    const session = await this.#journal.setDurabilityState(state, reason);
+    this.#durabilityState = session.durabilityState;
+    this.#emit('durability-change');
+    return session;
   }
 
   getGraph() {
@@ -274,7 +281,6 @@ export class CanvasSession {
   }
 
   snapshot() {
-    const session = this.#journal ? this.#journal.#session : null;
     const history = this.getHistory();
     return {
       ready: this.#ready,
@@ -289,7 +295,7 @@ export class CanvasSession {
       viewport: this.viewport.snapshot(),
       selection: this.selection.snapshot(),
       interaction: this.interaction.snapshot(),
-      durabilityState: session?.durabilityState || 'saved-locally',
+      durabilityState: this.#durabilityState,
       canUndo: history.canUndo,
       canRedo: history.canRedo,
       transactionCount: history.transactions.length
