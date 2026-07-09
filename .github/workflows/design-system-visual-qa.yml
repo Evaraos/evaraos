@@ -12,6 +12,8 @@ on:
       - 'public/assets/js/access-control.js'
       - 'public/website-builder.html'
       - 'public/qa-v2.html'
+      - 'functions/**'
+      - 'firebase.json'
       - 'tools/design-system-audit.js'
       - 'tools/visual-qa-audit.js'
       - 'tools/studio-component-catalog-audit.js'
@@ -33,6 +35,8 @@ on:
       - 'public/assets/js/access-control.js'
       - 'public/website-builder.html'
       - 'public/qa-v2.html'
+      - 'functions/**'
+      - 'firebase.json'
       - 'tools/design-system-audit.js'
       - 'tools/visual-qa-audit.js'
       - 'tools/studio-component-catalog-audit.js'
@@ -83,13 +87,13 @@ concurrency:
 
 jobs:
   static-audit:
-    name: Design-system, Studio, and visual-QA audits
+    name: Design-system, Studio, Backend Journal, and visual-QA audits
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Set up Node.js for architecture audits
         uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -114,6 +118,19 @@ jobs:
 
       - name: Run visual-QA architecture audit
         run: node tools/visual-qa-audit.js
+
+      - name: Set up Node.js for Firebase Functions
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Firebase Functions dependencies
+        working-directory: functions
+        run: npm install --no-audit --no-fund
+
+      - name: Run trusted Studio Journal backend tests
+        working-directory: functions
+        run: npm run test:studio-journal
 
   authenticated-visual-qa:
     name: Authenticated visual regression
