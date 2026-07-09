@@ -163,3 +163,11 @@ exports.releaseExpiredMarketplaceReservations = marketplaceCommerce.releaseExpir
 exports.getMarketplaceCommerceSnapshot = require("./marketplace-commerce-read").getMarketplaceCommerceSnapshot;
 
 exports.aiCommand = require("./ai-command").aiCommand;
+
+const actionGovernance = require("./intelligence/action-governance");
+const actionExecutor = require("./intelligence/action-executor");
+exports.getAiActionQueue = actionGovernance.getAiActionQueue;
+exports.reviewAiActionRequest = actionGovernance.reviewAiActionRequest;
+exports.cancelAiActionRequest = actionGovernance.cancelAiActionRequest;
+exports.executeAiActionRequest = actionExecutor.executeAiActionRequest;
+exports.rollbackAiActionRequest = actionExecutor.rollbackAiActionRequest;
