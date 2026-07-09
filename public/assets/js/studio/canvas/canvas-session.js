@@ -86,6 +86,21 @@ function initialGraph() {
   };
 }
 
+function defaultJournalDiagnostics() {
+  return {
+    graphId: null,
+    graphRevision: 0,
+    headRevision: 0,
+    headSequence: 0,
+    lastTransactionId: null,
+    transactionCount: 0,
+    pendingCount: 0,
+    unsynchronizedChanges: false,
+    syncState: 'saved-locally',
+    integrityState: 'unverified'
+  };
+}
+
 export class CanvasSession {
   #graph = null;
   #projection = null;
@@ -96,6 +111,7 @@ export class CanvasSession {
   #source = null;
   #pageId = null;
   #durabilityState = 'saved-locally';
+  #journalDiagnostics = defaultJournalDiagnostics();
   #actor;
 
   constructor(options = {}) {
@@ -114,6 +130,17 @@ export class CanvasSession {
     return () => this.#listeners.delete(listener);
   }
 
+  #applyJournalDiagnostics(diagnostics = {}) {
+    this.#journalDiagnostics = {
+      ...defaultJournalDiagnostics(),
+      ...this.#journalDiagnostics,
+      ...(diagnostics || {})
+    };
+    if (diagnostics?.syncState && !['read-only', 'recovery-required', 'conflict'].includes(this.#durabilityState)) {
+      this.#durabilityState = diagnostics.syncState;
+    }
+  }
+
   #emit(reason, extra = {}) {
     const snapshot = this.snapshot();
     this.#listeners.forEach((listener) => listener(snapshot, { reason, ...extra }));
@@ -123,6 +150,9 @@ export class CanvasSession {
         graphId: snapshot.graphId,
         graphRevision: snapshot.graphRevision,
         durabilityState: snapshot.durabilityState,
+        syncState: snapshot.syncState,
+        pendingTransactionCount: snapshot.pendingTransactionCount,
+        unsynchronizedChanges: snapshot.unsynchronizedChanges,
         source: snapshot.source,
         ...extra
       }
@@ -141,6 +171,7 @@ export class CanvasSession {
     const recovery = await this.#journal.initialize();
     this.#graph = recovery.graph;
     this.#durabilityState = recovery.durabilityState;
+    this.#applyJournalDiagnostics(recovery.diagnostics);
     this.#reproject();
     this.selection.prune(flattenGraphProjection(this.#projection).map((node) => node.id));
     this.#history = new HistoryController({
@@ -154,7 +185,10 @@ export class CanvasSession {
     });
     this.selection.subscribe(() => this.#emit('selection-change'));
     this.#ready = true;
-    this.#emit('initialized', { recoveredTransactions: recovery.transactions.length });
+    this.#emit('initialized', {
+      recoveredTransactions: recovery.transactions.length,
+      integrityState: this.#journalDiagnostics.integrityState
+    });
     return this.snapshot();
   }
 
@@ -168,18 +202,27 @@ export class CanvasSession {
 
   async #commitPrepared(prepared, options = {}) {
     if (!prepared?.changed) return prepared;
-    await this.#journal.append(prepared, {
+    const durable = await this.#journal.append(prepared, {
       ...options,
       sourceDocumentId: this.#source.sourceDocumentId,
       sourceFingerprint: this.#source.sourceFingerprint
     });
+    this.#applyJournalDiagnostics(durable.diagnostics);
     this.#graph = clone(prepared.graph);
-    this.#durabilityState = 'saved-locally';
+    this.#durabilityState = durable.diagnostics?.syncState || 'saved-locally';
     this.#reproject();
     this.selection.prune(flattenGraphProjection(this.#projection).map((node) => node.id));
     if (this.#history) await this.#history.refresh();
-    this.#emit(options.intent || prepared.intent || prepared.command?.type || 'transaction', { transactionId: prepared.transactionId });
-    return { ...prepared, graph: clone(this.#graph), durable: true };
+    this.#emit(options.intent || prepared.intent || prepared.command?.type || 'transaction', {
+      transactionId: prepared.transactionId,
+      pendingTransactionCount: this.#journalDiagnostics.pendingCount
+    });
+    return {
+      ...prepared,
+      graph: clone(this.#graph),
+      durable: true,
+      journal: clone(this.#journalDiagnostics)
+    };
   }
 
   async dispatch(command) {
@@ -258,7 +301,21 @@ export class CanvasSession {
 
   async pendingTransactions() {
     if (!this.#ready) await this.initialize();
-    return this.#journal.pendingTransactions();
+    const pending = await this.#journal.pendingTransactions();
+    this.#applyJournalDiagnostics({
+      pendingCount: pending.length,
+      unsynchronizedChanges: pending.length > 0,
+      syncState: pending.length > 0 ? 'saved-locally' : 'server-confirmed'
+    });
+    return pending;
+  }
+
+  async refreshJournalDiagnostics() {
+    if (!this.#ready) await this.initialize();
+    const diagnostics = await this.#journal.getDiagnostics();
+    this.#applyJournalDiagnostics(diagnostics);
+    this.#emit('journal-diagnostics-refresh');
+    return clone(this.#journalDiagnostics);
   }
 
   async setDurabilityState(state, reason = 'canvas-state-change') {
@@ -283,6 +340,10 @@ export class CanvasSession {
     return this.#journal;
   }
 
+  getJournalDiagnostics() {
+    return clone(this.#journalDiagnostics);
+  }
+
   snapshot() {
     const history = this.getHistory();
     return {
@@ -299,6 +360,13 @@ export class CanvasSession {
       selection: this.selection.snapshot(),
       interaction: this.interaction.snapshot(),
       durabilityState: this.#durabilityState,
+      syncState: this.#journalDiagnostics.syncState,
+      integrityState: this.#journalDiagnostics.integrityState,
+      headRevision: this.#journalDiagnostics.headRevision,
+      headSequence: this.#journalDiagnostics.headSequence,
+      lastTransactionId: this.#journalDiagnostics.lastTransactionId,
+      pendingTransactionCount: this.#journalDiagnostics.pendingCount,
+      unsynchronizedChanges: this.#journalDiagnostics.unsynchronizedChanges,
       canUndo: history.canUndo,
       canRedo: history.canRedo,
       transactionCount: history.transactions.length
