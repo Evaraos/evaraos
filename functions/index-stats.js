@@ -197,3 +197,13 @@ exports.saveBlueprintDraft = blueprintSecurity.saveBlueprintDraft;
 exports.publishBlueprint = blueprintSecurity.publishBlueprint;
 exports.rollbackBlueprint = blueprintSecurity.rollbackBlueprint;
 exports.getBlueprintState = blueprintSecurity.getBlueprintState;
+
+const studioJournal = require("./studio-journal-service");
+exports.openStudioBranch = studioJournal.openStudioBranch;
+exports.commitStudioTransaction = studioJournal.commitStudioTransaction;
+exports.getStudioOperationRange = studioJournal.getStudioOperationRange;
+exports.createStudioCheckpoint = studioJournal.createStudioCheckpoint;
+exports.restoreStudioCheckpoint = studioJournal.restoreStudioCheckpoint;
+exports.createStudioBranch = studioJournal.createStudioBranch;
+exports.closeStudioSession = studioJournal.closeStudioSession;
+exports.prepareStudioRelease = studioJournal.prepareStudioRelease;
