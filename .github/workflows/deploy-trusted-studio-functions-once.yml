@@ -1,0 +1,199 @@
+name: Trusted Studio Functions Production Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type DEPLOY TRUSTED STUDIO FUNCTIONS
+        required: true
+        type: string
+  push:
+    branches: [evaraos]
+    paths:
+      - '.github/workflows/deploy-trusted-studio-functions-once.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: trusted-studio-functions-production
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate trusted Studio Functions
+    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'deploy: run trusted Studio Functions production release'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      validated_sha: ${{ steps.source.outputs.sha }}
+
+    steps:
+      - name: Verify manual confirmation
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ inputs.confirmation }}" != "DEPLOY TRUSTED STUDIO FUNCTIONS" ]; then
+            echo "Deployment confirmation did not match the required phrase."
+            exit 1
+          fi
+
+      - name: Check out exact source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Lock validated commit
+        id: source
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "Validated source: $(git rev-parse HEAD)"
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Functions dependencies
+        run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+
+      - name: Validate trusted Studio source syntax
+        run: |
+          set -euo pipefail
+          node --check functions/index-stats.js
+          node --check functions/studio-journal-core.js
+          node --check functions/studio-journal-service.js
+          node --check functions/studio-journal-core.test.js
+
+      - name: Run trusted Studio Journal tests
+        run: npm run test:studio-journal --prefix functions
+
+      - name: Run trusted Journal architecture audit
+        run: node tools/studio-trusted-journal-audit.js
+
+      - name: Run Studio production authority audit
+        run: node tools/studio-production-authority-audit.js
+
+      - name: Verify Firebase service account
+        shell: bash
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EVARAOS_WEB }}
+        run: |
+          set -euo pipefail
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "FIREBASE_SERVICE_ACCOUNT_EVARAOS_WEB is not configured."
+            exit 1
+          fi
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
+          node -e "const value=JSON.parse(require('fs').readFileSync(process.env.RUNNER_TEMP + '/firebase-service-account.json','utf8')); if(value.project_id!=='evaraos-web') throw new Error('Service account project_id must be evaraos-web');"
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools@latest
+
+      - name: Verify shared Functions secrets
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          firebase functions:secrets:access STRIPE_SECRET_KEY --project evaraos-web >/dev/null
+          firebase functions:secrets:access STRIPE_WEBHOOK_SECRET --project evaraos-web >/dev/null
+          firebase functions:secrets:access OPENAI_API_KEY --project evaraos-web >/dev/null
+          echo "Shared Firebase Functions secrets are accessible."
+
+  deploy:
+    name: Deploy trusted Studio Functions
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+
+    steps:
+      - name: Check out validated commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.validated_sha }}
+          fetch-depth: 0
+
+      - name: Verify validated source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ needs.validate.outputs.validated_sha }}"
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Functions dependencies
+        run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools@latest
+
+      - name: Write Firebase service account
+        shell: bash
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EVARAOS_WEB }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
+          node -e "JSON.parse(require('fs').readFileSync(process.env.RUNNER_TEMP + '/firebase-service-account.json','utf8'));"
+
+      - name: Deploy eight trusted Studio callables
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          firebase deploy \
+            --only functions:openStudioBranch,functions:commitStudioTransaction,functions:getStudioOperationRange,functions:createStudioCheckpoint,functions:restoreStudioCheckpoint,functions:createStudioBranch,functions:closeStudioSession,functions:prepareStudioRelease \
+            --project evaraos-web \
+            --non-interactive
+
+      - name: Verify deployed callable inventory
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          firebase functions:list --project evaraos-web > "$RUNNER_TEMP/firebase-functions-list.txt"
+          for function_name in \
+            openStudioBranch \
+            commitStudioTransaction \
+            getStudioOperationRange \
+            createStudioCheckpoint \
+            restoreStudioCheckpoint \
+            createStudioBranch \
+            closeStudioSession \
+            prepareStudioRelease
+          do
+            grep -q "$function_name" "$RUNNER_TEMP/firebase-functions-list.txt"
+          done
+          printf 'project=evaraos-web\ncommit=%s\ndeployed_at=%s\nfunctions=8\n' \
+            "${{ needs.validate.outputs.validated_sha }}" \
+            "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            > "$RUNNER_TEMP/trusted-studio-deployment-proof.txt"
+          cat "$RUNNER_TEMP/trusted-studio-deployment-proof.txt"
+
+      - name: Upload deployment proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: trusted-studio-functions-deployment-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/trusted-studio-deployment-proof.txt
+            ${{ runner.temp }}/firebase-functions-list.txt
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Deployment summary
+        run: |
+          echo "Trusted Studio Functions deployment completed."
+          echo "Project: evaraos-web"
+          echo "Commit: ${{ needs.validate.outputs.validated_sha }}"
+          echo "Callable count: 8"
