@@ -231,7 +231,11 @@ function boot() {
     event.preventDefault();
     handleAction(button);
   });
+  window.addEventListener('evara:app-check-status', (event) => {
+    if (event.detail?.state === 'ready') enhance();
+  });
   window.addEventListener('evara:trusted-studio-journal', (event) => {
+    enhance();
     if (!['conflict', 'recovery-required'].includes(event.detail?.state)) return;
     conflictState = JSON.parse(JSON.stringify(event.detail || {}));
     renderConflictPanel();
@@ -249,11 +253,14 @@ window.EvaraStudioProductionAuthority = Object.freeze({
   compatibilityMode: 'migration-only',
   releaseGraphPrefix: CANVAS_GRAPH_PREFIX,
   openCanvas,
+  refresh: enhance,
   snapshot: () => ({
     version: AUTHORITY_VERSION,
     authority: 'canvas-session',
     compatibilityMode: 'migration-only',
     releaseGraphPrefix: CANVAS_GRAPH_PREFIX,
+    trustedAdapterGuarded: Boolean(window.EvaraTrustedStudioJournal?.productionAuthorityVersion),
+    appCheck: window.EvaraAppCheckReadiness?.snapshot?.() || null,
     conflict: conflictState ? JSON.parse(JSON.stringify(conflictState)) : null
   })
 });
