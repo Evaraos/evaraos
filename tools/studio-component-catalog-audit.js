@@ -14,9 +14,12 @@ const requiredFiles = [
   'public/assets/js/studio/studio-layout-engine.js',
   'public/assets/js/studio/studio-auto-layout.js',
   'public/assets/js/studio/studio-auto-layout-bridge.js',
+  'public/assets/js/studio/studio-document-model.js',
+  'public/assets/js/studio/studio-document-controls.js',
   'public/assets/css/pages/studio-component-catalog.css',
   'public/assets/css/pages/studio-auto-layout.css',
   'public/assets/css/pages/studio-auto-layout-widths.css',
+  'public/assets/css/pages/studio-document-model.css',
   'public/website-builder.html'
 ];
 
@@ -24,7 +27,7 @@ const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 const exists = (file) => fs.existsSync(path.join(root, file));
 
 for (const file of requiredFiles) {
-  if (!exists(file)) errors.push(`${file}: required Studio catalog asset is missing`);
+  if (!exists(file)) errors.push(`${file}: required Studio asset is missing`);
 }
 
 if (!errors.length) {
@@ -34,9 +37,12 @@ if (!errors.length) {
   const layout = read('public/assets/js/studio/studio-layout-engine.js');
   const autoLayout = read('public/assets/js/studio/studio-auto-layout.js');
   const autoLayoutBridge = read('public/assets/js/studio/studio-auto-layout-bridge.js');
+  const journal = read('public/assets/js/studio/studio-document-model.js');
+  const journalControls = read('public/assets/js/studio/studio-document-controls.js');
   const catalogCss = read('public/assets/css/pages/studio-component-catalog.css');
   const autoLayoutCss = read('public/assets/css/pages/studio-auto-layout.css');
   const autoLayoutWidths = read('public/assets/css/pages/studio-auto-layout-widths.css');
+  const journalCss = read('public/assets/css/pages/studio-document-model.css');
   const studioPage = read('public/website-builder.html');
 
   if (!componentRegistry.includes("STUDIO_COMPONENT_VERSION = 'component-engine-v4'")) {
@@ -44,25 +50,10 @@ if (!errors.length) {
   }
 
   const expectedComponents = [
-    'glass-card',
-    'text-block',
-    'action-button',
-    'metric-card',
-    'status-card',
-    'workflow-form',
-    'upload-field',
-    'notice-banner',
-    'settings-panel',
-    'preference-row',
-    'conversation-row',
-    'message-bubble',
-    'map-block',
-    'tracking-card',
-    'field-card',
-    'service-card',
-    'timeline-card',
-    'image-block',
-    'dev-block'
+    'glass-card', 'text-block', 'action-button', 'metric-card', 'status-card',
+    'workflow-form', 'upload-field', 'notice-banner', 'settings-panel', 'preference-row',
+    'conversation-row', 'message-bubble', 'map-block', 'tracking-card', 'field-card',
+    'service-card', 'timeline-card', 'image-block', 'dev-block'
   ];
 
   for (const id of expectedComponents) {
@@ -74,21 +65,9 @@ if (!errors.length) {
   if (duplicateIds.length) errors.push(`audit configuration contains duplicate component IDs: ${duplicateIds.join(', ')}`);
 
   const requiredContracts = [
-    'card',
-    'text',
-    'control',
-    'workflow-form',
-    'workflow-upload',
-    'workflow-notice',
-    'settings-panel',
-    'settings-field',
-    'conversation-row',
-    'message-bubble',
-    'marketplace-map',
-    'marketplace-tracking',
-    'field-card',
-    'service-card',
-    'marketplace-timeline'
+    'card', 'text', 'control', 'workflow-form', 'workflow-upload', 'workflow-notice',
+    'settings-panel', 'settings-field', 'conversation-row', 'message-bubble',
+    'marketplace-map', 'marketplace-tracking', 'field-card', 'service-card', 'marketplace-timeline'
   ];
 
   for (const contract of requiredContracts) {
@@ -113,18 +92,13 @@ if (!errors.length) {
   }
 
   if (!autoLayout.includes("AUTO_LAYOUT_KEY = 'evaraos-studio-auto-layout-v1'")) {
-    errors.push('studio-auto-layout.js: versioned Auto Layout persistence key is missing');
+    errors.push('studio-auto-layout.js: versioned compatibility Auto Layout key is missing');
   }
   if (!autoLayout.includes("node?.dataset.nodeType !== 'hero-block'")) {
     errors.push('studio-auto-layout.js: hero must remain excluded from stack membership');
   }
   for (const capability of ['direction', 'gap', 'padding', 'align', 'wrap', 'children']) {
     if (!autoLayout.includes(capability)) errors.push(`studio-auto-layout.js: missing ${capability} capability`);
-  }
-  for (const unsafeSink of ['innerHTML', 'outerHTML', 'eval(', 'new Function']) {
-    if (autoLayout.includes(unsafeSink) || autoLayoutBridge.includes(unsafeSink)) {
-      errors.push(`Studio Auto Layout: unsafe sink detected: ${unsafeSink}`);
-    }
   }
   if (!autoLayout.includes('MutationObserver') || !autoLayout.includes('normalizeAutoState')) {
     errors.push('studio-auto-layout.js: validated lifecycle rehydration is incomplete');
@@ -136,6 +110,52 @@ if (!errors.length) {
     errors.push('studio-auto-layout-bridge.js: hierarchy drag payload bridge is incomplete');
   }
 
+  for (const marker of [
+    "DB_NAME = 'evaraos-studio-journal'",
+    "SESSION_STORE = 'sessions'",
+    "TRANSACTION_STORE = 'transactions'",
+    "CHECKPOINT_STORE = 'checkpoints'",
+    'indexedDB.open',
+    'expectedHeadRevision',
+    'inverseOperations',
+    'pendingTransactionIds',
+    'appendTransaction',
+    'createCheckpoint',
+    'restoreCheckpoint',
+    'registerServerAdapter',
+    "type: 'compatibility.projection.replace'",
+    "reason: 'trusted-release-required'"
+  ]) {
+    if (!journal.includes(marker)) errors.push(`studio-document-model.js: missing journal contract marker ${marker}`);
+  }
+
+  for (const intent of [
+    'canvas.layout.set', 'canvas.property.set', 'history.undo', 'checkpoint.create', 'migration.apply'
+  ]) {
+    if (!journal.includes(`'${intent}'`)) errors.push(`studio-document-model.js: missing semantic intent ${intent}`);
+  }
+
+  if (!journal.includes('installCompatibilityBridge();') || journal.indexOf('installCompatibilityBridge();') > journal.indexOf('initialize()\n  .then')) {
+    errors.push('studio-document-model.js: compatibility bridge must install synchronously before journal initialization completes');
+  }
+  if (!journal.includes('return { migrationProjection:') || !journal.includes('.then(async ({ migrationProjection })')) {
+    errors.push('studio-document-model.js: startup migration must occur after journal initialization without recursive initialize calls');
+  }
+  if (!journalControls.includes('Publishing requires the trusted server journal and release service.')) {
+    errors.push('studio-document-controls.js: browser-only publishing must remain blocked');
+  }
+  if (!journalControls.includes('window.EvaraStudioJournal') || !journalControls.includes('createCheckpoint') || !journalControls.includes('restoreCheckpoint')) {
+    errors.push('studio-document-controls.js: journal recovery controls are incomplete');
+  }
+
+  for (const source of [autoLayout, autoLayoutBridge, journal, journalControls]) {
+    for (const unsafeSink of ['innerHTML', 'outerHTML', 'eval(', 'new Function']) {
+      if (source.includes(unsafeSink)) errors.push(`Studio runtime: unsafe sink detected: ${unsafeSink}`);
+    }
+  }
+
+  const journalModelImport = '/assets/js/studio/studio-document-model.js?v=1';
+  const builderImport = '/assets/js/studio/studio-visual-builder.js?v=2';
   if (!studioPage.includes('/assets/css/pages/studio-component-catalog.css?v=1')) {
     errors.push('public/website-builder.html: expanded catalog preview stylesheet is missing');
   }
@@ -145,11 +165,20 @@ if (!errors.length) {
   if (!studioPage.includes('/assets/css/pages/studio-auto-layout-widths.css?v=1')) {
     errors.push('public/website-builder.html: compatible Auto Layout width stylesheet is missing');
   }
+  if (!studioPage.includes('/assets/css/pages/studio-document-model.css?v=1')) {
+    errors.push('public/website-builder.html: draft journal stylesheet is missing');
+  }
   if (!studioPage.includes('/assets/js/studio/studio-auto-layout.js?v=1')) {
     errors.push('public/website-builder.html: Auto Layout runtime is missing');
   }
   if (!studioPage.includes('/assets/js/studio/studio-auto-layout-bridge.js?v=1')) {
     errors.push('public/website-builder.html: Auto Layout drag bridge is missing');
+  }
+  if (!studioPage.includes(journalModelImport) || !studioPage.includes('/assets/js/studio/studio-document-controls.js?v=1')) {
+    errors.push('public/website-builder.html: draft journal runtime or controls are missing');
+  }
+  if (studioPage.indexOf(journalModelImport) > studioPage.indexOf(builderImport)) {
+    errors.push('public/website-builder.html: draft journal must load before the compatibility visual builder');
   }
 
   for (const selector of [
@@ -159,11 +188,11 @@ if (!errors.length) {
   ]) {
     if (!autoLayoutCss.includes(selector)) errors.push(`studio-auto-layout.css: missing ${selector}`);
   }
-
   for (const span of ['3', '4', '6', '8', '12']) {
-    if (!autoLayoutWidths.includes(`data-span="${span}"`)) {
-      errors.push(`studio-auto-layout-widths.css: missing explicit ${span}/12 width rule`);
-    }
+    if (!autoLayoutWidths.includes(`data-span="${span}"`)) errors.push(`studio-auto-layout-widths.css: missing explicit ${span}/12 width rule`);
+  }
+  for (const selector of ['data-state="syncing"', 'data-state="saved-locally"', '.studio-journal-heading']) {
+    if (!journalCss.includes(selector)) errors.push(`studio-document-model.css: missing ${selector}`);
   }
 
   for (const id of expectedComponents.filter((id) => !['glass-card', 'action-button', 'metric-card', 'map-block', 'image-block', 'dev-block'].includes(id))) {
@@ -179,10 +208,10 @@ if (!errors.length) {
   }
 }
 
-console.log(`EvaraOS Studio catalog audit: ${requiredFiles.length} required assets checked.`);
+console.log(`EvaraOS Studio audit: ${requiredFiles.length} required assets checked.`);
 if (errors.length) {
   console.error(`Errors (${errors.length}):`);
   errors.forEach((error) => console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('Studio catalog, layout engine, Auto Layout, contracts, previews, and authoring boundaries passed.');
+console.log('Studio catalog, Canvas compatibility layer, IndexedDB draft journal, recovery, and authoring boundaries passed.');
