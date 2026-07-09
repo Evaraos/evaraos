@@ -12,8 +12,10 @@
   <link rel="stylesheet" href="./assets/css/nav.css" />
   <link rel="stylesheet" href="./assets/css/dashboard.css" />
   <link rel="stylesheet" href="./assets/css/app-system.css" />
-<link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v1"></head>
-<body data-route-guard="private" class="dashboard-body app-loading">
+  <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v1" />
+  <link rel="stylesheet" href="/assets/css/design-system/marketplace.css?v=1" />
+</head>
+<body data-route-guard="private" class="dashboard-body marketplace-page operations-command-page app-loading">
   <div id="universalNavRoot"></div>
   <div class="page-aurora" aria-hidden="true"></div>
   <div class="page-grid-overlay" aria-hidden="true"></div>
@@ -74,79 +76,21 @@
         </div>
 
         <div class="dashboard-stats-grid">
-          <article class="dashboard-stat-card glass-card">
-            <p>Active Workforce</p>
-            <h3 id="operationsActiveWorkforce">0</h3>
-            <span>Online or active</span>
-          </article>
-          <article class="dashboard-stat-card glass-card">
-            <p>Dispatch Ready</p>
-            <h3 id="operationsDispatchReady">0</h3>
-            <span>Ready for work</span>
-          </article>
-          <article class="dashboard-stat-card glass-card">
-            <p>Active Routes</p>
-            <h3 id="operationsActiveRoutes">0</h3>
-            <span>Routes in motion</span>
-          </article>
-          <article class="dashboard-stat-card glass-card">
-            <p>Risky Territories</p>
-            <h3 id="operationsRiskyTerritories">0</h3>
-            <span>Needs attention</span>
-          </article>
+          <article class="dashboard-stat-card glass-card"><p>Active Workforce</p><h3 id="operationsActiveWorkforce">0</h3><span>Online or active</span></article>
+          <article class="dashboard-stat-card glass-card"><p>Dispatch Ready</p><h3 id="operationsDispatchReady">0</h3><span>Ready for work</span></article>
+          <article class="dashboard-stat-card glass-card"><p>Active Routes</p><h3 id="operationsActiveRoutes">0</h3><span>Routes in motion</span></article>
+          <article class="dashboard-stat-card glass-card"><p>Risky Territories</p><h3 id="operationsRiskyTerritories">0</h3><span>Needs attention</span></article>
         </div>
       </section>
 
       <section class="dashboard-grid-2">
-        <section class="dashboard-panel glass-card">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Operational Systems</p>
-              <h2>Live Summary</h2>
-            </div>
-          </div>
-          <div id="operationsSummaryRoot" class="dashboard-list">
-            <div class="item muted">Loading live operations summary...</div>
-          </div>
-        </section>
-
-        <section class="dashboard-panel glass-card">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Command Guidance</p>
-              <h2>Recommended Actions</h2>
-            </div>
-          </div>
-          <div id="operationsRecommendationRoot" class="dashboard-list">
-            <div class="item muted">Loading operational recommendations...</div>
-          </div>
-        </section>
+        <section class="dashboard-panel glass-card"><div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Operational Systems</p><h2>Live Summary</h2></div></div><div id="operationsSummaryRoot" class="dashboard-list" aria-live="polite"><div class="item muted">Loading live operations summary...</div></div></section>
+        <section class="dashboard-panel glass-card"><div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Command Guidance</p><h2>Recommended Actions</h2></div></div><div id="operationsRecommendationRoot" class="dashboard-list" aria-live="polite"><div class="item muted">Loading operational recommendations...</div></div></section>
       </section>
 
       <section class="dashboard-grid-2">
-        <section class="dashboard-panel glass-card">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Territories</p>
-              <h2>Territory Balance</h2>
-            </div>
-          </div>
-          <div id="operationsTerritoryRoot" class="dashboard-list">
-            <div class="item muted">Loading territory balance...</div>
-          </div>
-        </section>
-
-        <section class="dashboard-panel glass-card">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Routes</p>
-              <h2>Operational Routes</h2>
-            </div>
-          </div>
-          <div id="operationsRouteRoot" class="dashboard-list">
-            <div class="item muted">Loading routes...</div>
-          </div>
-        </section>
+        <section class="dashboard-panel glass-card"><div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Territories</p><h2>Territory Balance</h2></div></div><div id="operationsTerritoryRoot" class="dashboard-list" aria-live="polite"><div class="item muted">Loading territory balance...</div></div></section>
+        <section class="dashboard-panel glass-card"><div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Routes</p><h2>Operational Routes</h2></div></div><div id="operationsRouteRoot" class="dashboard-list" aria-live="polite"><div class="item muted">Loading routes...</div></div></section>
       </section>
     </section>
   </main>
