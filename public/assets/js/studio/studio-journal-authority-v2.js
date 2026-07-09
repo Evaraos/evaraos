@@ -43,7 +43,23 @@ function stableStringify(value) {
   return JSON.stringify(stable(value));
 }
 
+function semanticOperation(operation = {}) {
+  const result = clone(operation) || {};
+  delete result.actor;
+  return result;
+}
+
+function semanticCommand(command = null) {
+  if (!command || typeof command !== 'object') return null;
+  const result = clone(command);
+  delete result.actor;
+  return result;
+}
+
 function requestComparable(record = {}, fallback = {}) {
+  const operations = record.operations ?? fallback.operations ?? [];
+  const inverseOperations = record.inverseOperations ?? fallback.inverseOperations ?? [];
+  const commitOperation = record.commitOperation ?? fallback.commitOperation ?? null;
   return {
     envelopeVersion: OPERATION_ENVELOPE_VERSION,
     transactionId: text(record.transactionId || fallback.transactionId, 180),
@@ -54,11 +70,10 @@ function requestComparable(record = {}, fallback = {}) {
     acceptedHeadRevision: integer(record.acceptedHeadRevision ?? fallback.acceptedHeadRevision),
     intent: text(record.intent || fallback.intent, 140),
     summary: text(record.summary || fallback.summary, 500),
-    semanticCommand: clone(record.semanticCommand ?? fallback.semanticCommand ?? null),
-    operations: clone(record.operations ?? fallback.operations ?? []),
-    inverseOperations: clone(record.inverseOperations ?? fallback.inverseOperations ?? []),
-    commitOperation: clone(record.commitOperation ?? fallback.commitOperation ?? null),
-    actor: clone(record.actor ?? fallback.actor ?? null),
+    semanticCommand: semanticCommand(record.semanticCommand ?? fallback.semanticCommand ?? null),
+    operations: clone(operations).map(semanticOperation),
+    inverseOperations: clone(inverseOperations).map(semanticOperation),
+    commitOperation: commitOperation ? semanticOperation(commitOperation) : null,
     correlationId: text(record.correlationId || fallback.correlationId, 180) || null,
     revertsTransactionId: text(record.revertsTransactionId || fallback.revertsTransactionId, 180) || null,
     redoesTransactionId: text(record.redoesTransactionId || fallback.redoesTransactionId, 180) || null,
@@ -72,6 +87,7 @@ function requestComparable(record = {}, fallback = {}) {
 }
 
 function sameRequest(existing, submitted) {
+  if (existing?.requestHash && submitted?.requestHash) return existing.requestHash === submitted.requestHash;
   return stableStringify(requestComparable(existing)) === stableStringify(requestComparable(submitted, existing));
 }
 
@@ -171,7 +187,9 @@ async function resequenceGraph(graphId, serverOverrides = new Map()) {
     if (record.durabilityState === 'server-confirmed') {
       const start = integer(record.startSequence, sequence + 1);
       const end = integer(record.endSequence, start + sequenceWidth(record) - 1);
-      if (start <= sequence || end < start) throw new Error(`Confirmed Studio transaction ${record.transactionId} has an invalid canonical sequence range.`);
+      if (start <= sequence || end < start || end - start + 1 !== sequenceWidth(record)) {
+        throw new Error(`Confirmed Studio transaction ${record.transactionId} has an invalid canonical sequence range.`);
+      }
       record.startSequence = start;
       record.endSequence = end;
       sequence = end;
@@ -212,8 +230,25 @@ async function resequenceGraph(graphId, serverOverrides = new Map()) {
   return { graphId: id, revision, sequence, lastTransactionId, records: updates.map(clone) };
 }
 
-async function appendOperationTransaction(rawEnvelope, options = {}) {
+let authorityReady;
+
+async function initializeAuthority() {
   await base.initialize();
+  const records = await base.listOperationTransactions();
+  const graphIds = [...new Set(records.map((record) => record.graphId).filter(Boolean))];
+  for (const graphId of graphIds) await resequenceGraph(graphId);
+  await pruneTransactions();
+  emit('saved-locally', 'journal-authority-ready', { authorityVersion: AUTHORITY_VERSION });
+  return { authorityVersion: AUTHORITY_VERSION };
+}
+
+async function initialize() {
+  await authorityReady;
+  return { authorityVersion: AUTHORITY_VERSION };
+}
+
+async function appendOperationTransaction(rawEnvelope, options = {}) {
+  await initialize();
   const transactionId = text(rawEnvelope?.transactionId, 180);
   if (!transactionId) throw new TypeError('Operation transaction requires transactionId.');
   const duplicate = await getRecord(TRANSACTION_STORE, transactionId);
@@ -229,11 +264,13 @@ async function appendOperationTransaction(rawEnvelope, options = {}) {
 }
 
 async function listPendingOperationTransactions(graphId = '') {
+  await initialize();
   const records = await base.listOperationTransactions(graphId);
   return chronological(records.filter((record) => !FINAL_STATES.has(record.durabilityState))).map(clone);
 }
 
 async function setDurabilityState(state, reason = 'durability-state', extra = {}) {
+  await initialize();
   if (!ALL_STATES.has(state)) throw new TypeError(`Unsupported Studio durability state: ${state}`);
   const session = await getSessionRecord();
   await withStores([SESSION_STORE], 'readwrite', async ({ sessions }) => {
@@ -244,6 +281,7 @@ async function setDurabilityState(state, reason = 'durability-state', extra = {}
 }
 
 async function markTransactionState(transactionId, state, server = {}) {
+  await initialize();
   if (!ALL_STATES.has(state)) throw new TypeError(`Unsupported Studio transaction state: ${state}`);
   const id = text(transactionId, 180);
   const existing = await getRecord(TRANSACTION_STORE, id);
@@ -290,6 +328,7 @@ async function rejectTransaction(transactionId, reason = 'rejected-by-owner') {
 }
 
 async function recordTrustedCheckpoint({ checkpoint, graphSnapshot } = {}) {
+  await initialize();
   if (!checkpoint?.checkpointId || checkpoint.trusted !== true || !graphSnapshot) {
     throw new TypeError('Trusted checkpoint metadata and graphSnapshot are required.');
   }
@@ -326,6 +365,7 @@ async function recordTrustedCheckpoint({ checkpoint, graphSnapshot } = {}) {
 }
 
 async function latestTrustedCheckpoint(graphId = '') {
+  await initialize();
   const id = text(graphId, 220);
   const records = (await base.listCheckpoints())
     .filter((record) => record.trusted === true && record.checkpointType === 'canvas-graph' && (!id || record.graphId === id))
@@ -334,6 +374,7 @@ async function latestTrustedCheckpoint(graphId = '') {
 }
 
 async function importServerTransactions(records = []) {
+  await initialize();
   if (!Array.isArray(records)) throw new TypeError('Server transactions must be an array.');
   const byGraph = new Map();
   for (const raw of records) {
@@ -350,6 +391,7 @@ async function importServerTransactions(records = []) {
 }
 
 async function installRecoveryPlan({ checkpoint, graphSnapshot, transactions = [] } = {}) {
+  await initialize();
   const trusted = await recordTrustedCheckpoint({ checkpoint, graphSnapshot });
   await importServerTransactions(transactions);
   await setDurabilityState('server-confirmed', 'trusted-recovery-installed', {
@@ -387,6 +429,7 @@ async function pruneCheckpoints() {
 }
 
 async function getAuthorityStatus() {
+  await initialize();
   const [status, pending] = await Promise.all([base.getStatus(), listPendingOperationTransactions()]);
   return {
     ...status,
@@ -395,9 +438,16 @@ async function getAuthorityStatus() {
   };
 }
 
+authorityReady = initializeAuthority().catch((error) => {
+  emit('recovery-required', 'journal-authority-initialize', { error: text(error?.message || error, 500) });
+  throw error;
+});
+
 const extended = Object.freeze({
   ...base,
   authorityVersion: AUTHORITY_VERSION,
+  initialize,
+  authorityReady,
   appendOperationTransaction,
   listPendingOperationTransactions,
   setDurabilityState,
@@ -414,12 +464,3 @@ const extended = Object.freeze({
 });
 
 window.EvaraStudioJournal = extended;
-base.initialize()
-  .then(async () => {
-    const records = await base.listOperationTransactions();
-    const graphIds = [...new Set(records.map((record) => record.graphId).filter(Boolean))];
-    for (const graphId of graphIds) await resequenceGraph(graphId);
-    await pruneTransactions();
-    emit('saved-locally', 'journal-authority-ready', { authorityVersion: AUTHORITY_VERSION });
-  })
-  .catch((error) => emit('recovery-required', 'journal-authority-initialize', { error: text(error?.message || error, 500) }));
