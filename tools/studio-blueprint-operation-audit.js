@@ -12,6 +12,10 @@ const requiredFiles = [
   'public/assets/js/studio/blueprint-component-document.js',
   'public/assets/js/studio/core/evara-graph.js',
   'public/assets/js/studio/core/operation-protocol.js',
+  'public/assets/js/studio/canvas/canvas-operation-journal.js',
+  'public/assets/js/studio/canvas/canvas-session.js',
+  'public/assets/js/studio/canvas/canvas-history-controller.js',
+  'public/assets/js/studio/canvas/canvas-sandbox.js',
   'public/website-builder.html',
   'tests/visual/specs/studio-blueprint-operations.spec.mjs',
   '.github/workflows/design-system-visual-qa.yml'
@@ -30,6 +34,10 @@ if (!errors.length) {
   const documentRuntime = read('public/assets/js/studio/blueprint-component-document.js');
   const graph = read('public/assets/js/studio/core/evara-graph.js');
   const protocol = read('public/assets/js/studio/core/operation-protocol.js');
+  const canvasJournal = read('public/assets/js/studio/canvas/canvas-operation-journal.js');
+  const canvasSession = read('public/assets/js/studio/canvas/canvas-session.js');
+  const history = read('public/assets/js/studio/canvas/canvas-history-controller.js');
+  const sandbox = read('public/assets/js/studio/canvas/canvas-sandbox.js');
   const page = read('public/website-builder.html');
   const test = read('tests/visual/specs/studio-blueprint-operations.spec.mjs');
   const workflow = read('.github/workflows/design-system-visual-qa.yml');
@@ -45,7 +53,7 @@ if (!errors.length) {
     'listOperationTransactions',
     'transactions.add(envelope)',
     "dispatchStatus('conflict'",
-    "evara:studio-operation-durable",
+    'evara:studio-operation-durable',
     'pendingTransactionIds',
     'projectionHash'
   ]) {
@@ -101,6 +109,64 @@ if (!errors.length) {
   if (!graph.includes("'component-instance'")) errors.push('evara-graph.js: component-instance node kind is missing');
   if (!documentRuntime.includes('compileBlueprintDocumentToGraph')) errors.push('blueprint-component-document.js: graph compiler is missing');
 
+  for (const marker of [
+    'class CanvasOperationJournal',
+    'window.EvaraStudioJournal',
+    'listOperationTransactions',
+    'appendOperationTransaction',
+    'getGraphHead',
+    'replayOperations',
+    'Canvas operation recovery failed',
+    'Canvas graph head mismatch',
+    "channel: 'direct-canvas-session'",
+    'inverseOperations',
+    'commitOperation',
+    'pendingTransactions'
+  ]) {
+    if (!canvasJournal.includes(marker)) errors.push(`canvas-operation-journal.js: missing ${marker}`);
+  }
+  if (/indexedDB\.open|localStorage|sessionStorage|httpsCallable|fetch\(|XMLHttpRequest/.test(canvasJournal)) {
+    errors.push('canvas-operation-journal.js: CanvasSession must reuse the canonical Journal without direct storage or network access');
+  }
+
+  for (const marker of [
+    'CanvasOperationJournal',
+    'HistoryController',
+    'await this.#journal.append(prepared',
+    'this.#graph = clone(prepared.graph)',
+    'applyTransaction',
+    'history.undo',
+    'history.redo',
+    'sourceDocumentId',
+    'sourceFingerprint',
+    'durable: true'
+  ]) {
+    if (!canvasSession.includes(marker)) errors.push(`canvas-session.js: missing ${marker}`);
+  }
+  if (canvasSession.indexOf('await this.#journal.append(prepared') > canvasSession.indexOf('this.#graph = clone(prepared.graph)')) {
+    errors.push('canvas-session.js: Canvas graph must not be accepted before the Journal append resolves');
+  }
+  if (/indexedDB\.open|localStorage|sessionStorage|httpsCallable|fetch\(|XMLHttpRequest/.test(canvasSession)) {
+    errors.push('canvas-session.js: CanvasSession must not own persistence or network transport');
+  }
+
+  for (const marker of [
+    'class HistoryController',
+    'inverseOperations',
+    "intent: 'history.undo'",
+    'revertsTransactionId',
+    "intent: 'history.redo'",
+    'redoesTransactionId',
+    'dispatchOperations'
+  ]) {
+    if (!history.includes(marker)) errors.push(`canvas-history-controller.js: missing ${marker}`);
+  }
+
+  if (!sandbox.includes('MockOperationDispatcher')) errors.push('canvas-sandbox.js: current sandbox ownership marker is missing');
+  if (sandbox.includes('CanvasOperationJournal') || sandbox.includes('CanvasSession')) {
+    errors.push('canvas-sandbox.js: direct CanvasSession activation requires a dedicated migration and authenticated validation gate');
+  }
+
   const serializationImport = '/assets/js/studio/studio-blueprint-serialization.js?v=1';
   const operationImport = '/assets/js/studio/blueprint-operation-adapter.js?v=1';
   const sandboxImport = '/assets/js/studio/canvas/canvas-sandbox.js?v=1';
@@ -150,4 +216,4 @@ if (errors.length) {
   errors.forEach((error) => console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('Blueprint semantic commands, reversible Evara operations, per-graph revisions, IndexedDB durability, conflict detection, idempotency, and compatibility suppression passed.');
+console.log('Blueprint semantic commands, reversible Evara operations, per-graph revisions, IndexedDB durability, conflict detection, idempotency, compatibility suppression, Canvas replay, and compensating history boundaries passed.');
