@@ -13,6 +13,7 @@ const files = {
   serviceTest: 'functions/studio-journal-core.test.js',
   functionIndex: 'functions/index-stats.js',
   package: 'functions/package.json',
+  firebaseConfig: 'firebase.json',
   localJournal: 'public/assets/js/studio/studio-document-model.js',
   authority: 'public/assets/js/studio/studio-journal-authority-v2.js',
   trustedAdapter: 'public/assets/js/studio/studio-trusted-journal.js',
@@ -21,7 +22,8 @@ const files = {
   canvasTest: 'tests/visual/specs/studio-canvas-session.spec.mjs',
   route: 'public/website-builder.html',
   firestoreRules: 'firebase/firestore.rules',
-  storageRules: 'firebase/storage.rules'
+  storageRules: 'firebase/storage.rules',
+  workflow: '.github/workflows/design-system-visual-qa.yml'
 };
 
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
@@ -108,16 +110,24 @@ if (!errors.length) {
   }
 
   const packageJson = JSON.parse(source.package);
+  if (packageJson.engines?.node !== '20') errors.push('functions/package.json: trusted Studio Journal runtime must remain on Node 20');
+  if (packageJson.main !== 'index-stats.js') errors.push('functions/package.json: deployed callable entrypoint must remain index-stats.js');
   if (!String(packageJson.scripts?.['test:studio-journal'] || '').includes('studio-journal-core.test.js')) {
     errors.push('functions/package.json: test:studio-journal is missing');
   }
   if (!String(packageJson.scripts?.test || '').includes('studio-journal-core.test.js')) {
     errors.push('functions/package.json: default test command does not include trusted Studio Journal tests');
   }
+  if (packageJson.scripts?.deploy !== 'firebase deploy --only functions') {
+    errors.push('functions/package.json: functions-only deployment command is missing');
+  }
+  if (!source.firebaseConfig.includes('"source": "functions"')) errors.push('firebase.json: Functions source must remain functions/');
 
   for (const marker of [
     "AUTHORITY_VERSION = 'studio-journal-authority-v2'",
+    "DB_NAME = 'evaraos-studio-journal'",
     'sameRequest',
+    'sequenceWidth',
     'resequenceGraph',
     "'server-confirmed'",
     "'offline'",
@@ -125,6 +135,7 @@ if (!errors.length) {
     "'recovery-required'",
     'listPendingOperationTransactions',
     'markTransactionState',
+    'setDurabilityState',
     'rejectTransaction',
     'recordTrustedCheckpoint',
     'latestTrustedCheckpoint',
@@ -136,13 +147,23 @@ if (!errors.length) {
   if ((source.authority.match(/indexedDB\.open\(/g) || []).length !== 1 || !source.authority.includes("DB_NAME = 'evaraos-studio-journal'")) {
     errors.push('studio-journal-authority-v2.js: authority must reuse exactly the canonical IndexedDB database');
   }
+  if (!source.authority.includes('const base = window.EvaraStudioJournal')) {
+    errors.push('studio-journal-authority-v2.js: authority must extend the canonical Journal rather than replace it');
+  }
   if (/localStorage\.setItem|firebase|firestore|getStorage|uploadBytes|fetch\(/i.test(source.authority)) {
     errors.push('studio-journal-authority-v2.js: direct compatibility storage, Firebase, or network access is prohibited');
   }
 
   for (const marker of [
     "ADAPTER_NAME = 'trusted-studio-journal'",
+    "ADAPTER_VERSION = 'trusted-studio-journal-v2'",
     'onAuthStateChanged',
+    'branchIdForGraph',
+    "`${branch}--g-${digest(graph)}`",
+    'context(record.graphId)',
+    'context(graphSnapshot.graphId)',
+    'context(graphId)',
+    "'graph-id-conflict'",
     'commitOne',
     'synchronizeGraph',
     'listPendingOperationTransactions',
@@ -156,12 +177,13 @@ if (!errors.length) {
     'rejectPendingAndRecover',
     'prepareImmutableRelease',
     'Unsynchronized Canvas transactions block publication',
+    'pendingTransactionIds: []',
     'registerServerAdapter'
   ]) {
     if (!source.trustedAdapter.includes(marker)) errors.push(`studio-trusted-journal.js: missing ${marker}`);
   }
-  if (/getFirestore|getStorage|doc\(|setDoc|addDoc|uploadBytes|fetch\(/.test(source.trustedAdapter)) {
-    errors.push('studio-trusted-journal.js: trusted client adapter must use callable contracts, not direct data writes');
+  if (/indexedDB|localStorage|sessionStorage|getFirestore|getStorage|doc\(|setDoc|addDoc|uploadBytes|fetch\(/.test(source.trustedAdapter)) {
+    errors.push('studio-trusted-journal.js: trusted client adapter must use callable contracts and the canonical Journal only');
   }
 
   for (const marker of [
@@ -208,6 +230,9 @@ if (!errors.length) {
     && source.route.indexOf(guardImport) < source.route.indexOf(canvasImport))) {
     errors.push('public/website-builder.html: trusted Journal authority load order is invalid');
   }
+  if (source.route.includes('studio-server-journal-adapter.js')) {
+    errors.push('public/website-builder.html: duplicate trusted Journal adapter must not be loaded');
+  }
 
   if (!source.firestoreRules.includes('allow read, write: if false;')) {
     errors.push('firebase/firestore.rules: default direct-client deny rule is missing');
@@ -228,6 +253,16 @@ if (!errors.length) {
   ]) {
     if (!source.canvasTest.includes(marker)) errors.push(`studio-canvas-session.spec.mjs: missing ${marker}`);
   }
+
+  for (const marker of [
+    "- 'functions/**'",
+    'node tools/studio-trusted-journal-audit.js',
+    'working-directory: functions',
+    'npm run test:studio-journal',
+    "node-version: '20'"
+  ]) {
+    if (!source.workflow.includes(marker)) errors.push(`design-system-visual-qa.yml: missing trusted Journal CI contract ${marker}`);
+  }
 }
 
 console.log(`EvaraOS trusted Studio Journal audit: ${Object.keys(files).length} required assets checked.`);
@@ -236,4 +271,4 @@ if (errors.length) {
   errors.forEach((error) => console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('Trusted branch commits, canonical sequences, idempotency, conflicts, checkpoints, recovery, synchronization, and immutable release gates passed.');
+console.log('Trusted graph-scoped branch commits, canonical sequences, idempotency, conflicts, checkpoints, recovery, synchronization, immutable release gates, Backend tests, and deployment contracts passed.');
