@@ -167,6 +167,17 @@ exports.stripeMarketplaceWebhook = marketplaceCommerce.stripeMarketplaceWebhook;
 exports.releaseExpiredMarketplaceReservations = marketplaceCommerce.releaseExpiredMarketplaceReservations;
 exports.getMarketplaceCommerceSnapshot = require("./marketplace-commerce-read").getMarketplaceCommerceSnapshot;
 
+const marketplaceOrderChanges = require("./marketplace-order-changes");
+exports.requestMarketplaceReschedule = marketplaceOrderChanges.requestMarketplaceReschedule;
+exports.cancelMarketplaceOrder = marketplaceOrderChanges.cancelMarketplaceOrder;
+exports.processMarketplaceRefund = require("./marketplace-refunds").processMarketplaceRefund;
+exports.getMarketplaceOperationsSnapshot = require("./marketplace-operations-read").getMarketplaceOperationsSnapshot;
+
+const marketplaceLifecycleNotifications = require("./marketplace-lifecycle-notifications");
+exports.notifyMarketplaceOrderLifecycle = marketplaceLifecycleNotifications.notifyMarketplaceOrderLifecycle;
+exports.notifyMarketplaceChangeRequest = marketplaceLifecycleNotifications.notifyMarketplaceChangeRequest;
+exports.notifyMarketplaceRefundRequest = marketplaceLifecycleNotifications.notifyMarketplaceRefundRequest;
+
 exports.aiCommand = require("./ai-command").aiCommand;
 
 const actionGovernance = require("./intelligence/action-governance");
