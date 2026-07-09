@@ -14,12 +14,18 @@ import {
 import { createVirtualizationEngine, installSharedVirtualStyles } from "./shared-virtualization.js";
 
 const jobsSearch = document.getElementById("jobsSearch");
+const jobsSearchToolbar = document.getElementById("jobsSearchToolbar");
+const jobsSearchInputs = [jobsSearch, jobsSearchToolbar].filter(Boolean);
 const jobsList = document.getElementById("jobsList");
 const jobsFeed = document.getElementById("jobsFeed");
 const jobsProgressStack = document.getElementById("jobsProgressStack");
+const jobsMain = document.getElementById("jobsMain");
 
 const jobsHeroTitle = document.getElementById("jobsHeroTitle");
 const jobsHeroText = document.getElementById("jobsHeroText");
+const jobsConnectionLabel = document.getElementById("jobsConnectionLabel");
+const jobsStatusTitle = document.getElementById("jobsStatusTitle");
+const jobsStatusLive = document.getElementById("jobsStatusLive");
 
 const jobsStatTotal = document.getElementById("jobsStatTotal");
 const jobsStatActive = document.getElementById("jobsStatActive");
@@ -48,6 +54,7 @@ let currentFirebaseUser = null;
 let unsubscribeJobs = null;
 let isLiveFeedConnected = false;
 let renderTimer = null;
+let currentSearchTerm = "";
 
 let lastListHtml = "";
 let lastProgressHtml = "";
@@ -62,6 +69,12 @@ function navigateWithLoader(url, options = {}) {
   }
 
   requestAnimationFrame(() => window.location.assign(url));
+}
+
+function notify(title, message, tone = "info") {
+  window.dispatchEvent(new CustomEvent("evara:notify", {
+    detail: { title, message, tone }
+  }));
 }
 
 function escapeHtml(value) {
@@ -79,6 +92,14 @@ function normalize(value = "") {
 
 function stableKey(value = "") {
   return normalize(value).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "default";
+}
+
+function humanize(value = "") {
+  return String(value || "open")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function jobName(job = {}) {
@@ -210,6 +231,17 @@ function setHtmlIfChanged(el, html, cacheValue) {
   return html;
 }
 
+function setRegionBusy(isBusy) {
+  [jobsMain, jobsList, jobsFeed, jobsProgressStack].forEach((region) => {
+    if (region) region.setAttribute("aria-busy", String(Boolean(isBusy)));
+  });
+}
+
+function setStatus(title, message) {
+  setTextIfChanged(jobsStatusTitle, title);
+  setTextIfChanged(jobsStatusLive, message);
+}
+
 function setHero(title, text) {
   if (title !== lastHeroTitle) {
     setTextIfChanged(jobsHeroTitle, title);
@@ -224,48 +256,70 @@ function setHero(title, text) {
 
 function setFeedConnectedState(isConnected) {
   isLiveFeedConnected = isConnected;
+  setTextIfChanged(jobsConnectionLabel, isConnected ? "Live Feed Connected" : "Feed Disconnected");
 
   [jobsRefreshBtnTop, jobsRefreshBtnSide].forEach((btn) => {
     if (!btn) return;
 
     btn.disabled = false;
+    btn.removeAttribute("aria-busy");
     setTextIfChanged(btn, isConnected ? "Reconnect Feed" : "Connect Feed");
   });
 }
 
+function setActionBusy(button, isBusy, busyLabel = "Working…") {
+  if (!button) return;
+
+  if (isBusy) {
+    button.dataset.defaultLabel = button.textContent || "Action";
+    button.disabled = true;
+    button.setAttribute("aria-busy", "true");
+    button.textContent = busyLabel;
+    return;
+  }
+
+  button.disabled = false;
+  button.removeAttribute("aria-busy");
+  button.textContent = button.dataset.defaultLabel || button.textContent || "Action";
+  delete button.dataset.defaultLabel;
+}
+
 function buildJobCard(job = {}) {
   const id = escapeHtml(job.id);
+  const titleId = `job-title-${stableKey(job.id || jobName(job))}`;
   const name = escapeHtml(jobName(job));
-  const status = escapeHtml(jobStatus(job));
+  const statusRaw = jobStatus(job);
+  const status = escapeHtml(humanize(statusRaw));
   const description = escapeHtml(jobDescription(job));
   const company = escapeHtml(jobCompany(job));
   const claim = claimPill(job);
   const team = assignedNames(job).length ? escapeHtml(assignedNames(job).join(", ")) : "Unassigned";
-  const stateKey = stableKey(`${jobStatus(job)} ${claim.label}`);
+  const contact = escapeHtml(job.customerPhone || job.customerEmail || "No customer contact");
+  const stateKey = stableKey(`${statusRaw} ${claim.label}`);
 
   const companyButton = canClaimCompany(job)
-    ? `<button type="button" class="btn btn-theme-primary job-company-claim-btn" data-company-claim="${id}">Claim for Company</button>`
+    ? `<button type="button" class="btn btn-theme-primary job-company-claim-btn" data-company-claim="${id}" aria-label="Claim ${name} for company">Claim for Company</button>`
     : "";
 
   const staffButton = canClaimStaff(job)
-    ? `<button type="button" class="btn btn-theme-primary job-staff-claim-btn" data-staff-claim="${id}">Accept Job</button>`
+    ? `<button type="button" class="btn btn-theme-primary job-staff-claim-btn" data-staff-claim="${id}" aria-label="Accept ${name}">Accept Job</button>`
     : "";
 
   return `
-    <article class="dashboard-list-item glass-card aurora-card active-glow beam-target job-dispatch-item virtual-paint-card shared-virtual-card" data-job-id="${id}" data-virtual-state="${stateKey}">
+    <article class="dashboard-list-item glass-card aurora-card active-glow beam-target job-dispatch-item virtual-paint-card shared-virtual-card" data-job-id="${id}" data-virtual-state="${stateKey}" aria-labelledby="${titleId}">
       <div class="job-dispatch-content">
-        <strong>${name}</strong>
+        <strong id="${titleId}">${name}</strong>
         <span>${description}</span>
 
-        <div class="job-dispatch-meta">
+        <div class="job-dispatch-meta" aria-label="Job details">
           <span>${company}</span>
           <span>Team: ${team}</span>
-          <span>${escapeHtml(job.customerPhone || job.customerEmail || "No customer contact")}</span>
+          <span>${contact}</span>
         </div>
       </div>
 
-      <div class="job-dispatch-actions">
-        <span class="dashboard-status-pill ${pillClass(status)}">${status}</span>
+      <div class="job-dispatch-actions" aria-label="Job status and actions">
+        <span class="dashboard-status-pill ${pillClass(statusRaw)}">${status}</span>
         <span class="dashboard-status-pill ${claim.cls}">${claim.label}</span>
         ${companyButton}
         ${staffButton}
@@ -275,10 +329,21 @@ function buildJobCard(job = {}) {
 }
 
 function renderLoadingState() {
+  setRegionBusy(true);
+  setTextIfChanged(jobsConnectionLabel, "Connecting");
+  setStatus("Preparing operations", "Opening the secure live job feed.");
+
+  [jobsRefreshBtnTop, jobsRefreshBtnSide].forEach((btn) => {
+    if (!btn) return;
+    btn.disabled = true;
+    btn.setAttribute("aria-busy", "true");
+    setTextIfChanged(btn, "Connecting…");
+  });
+
   lastListHtml = setHtmlIfChanged(
     jobsList,
     `
-      <div class="dashboard-skeleton-grid virtual-paint-list shared-virtual-list">
+      <div class="dashboard-skeleton-grid virtual-paint-list shared-virtual-list" aria-hidden="true">
         <div class="dashboard-skeleton-card virtual-paint-card shared-virtual-card">
           <div class="dashboard-skeleton-line line-1"></div>
           <div class="dashboard-skeleton-line line-2"></div>
@@ -306,11 +371,11 @@ function renderLoadingState() {
     lastFeedHtml
   );
 
-  setHero("Connecting live job feed...", "Opening optimized live listener for Uber-style dispatch.");
+  setHero("Connecting live job feed...", "Opening the optimized live workspace for companies, teams, and field execution.");
 }
 
 function filteredJobs() {
-  const term = normalize(jobsSearch?.value || "");
+  const term = normalize(currentSearchTerm);
   let rows = jobsData;
 
   if (term) {
@@ -359,17 +424,22 @@ function renderStats(rows) {
   setTextIfChanged(jobsStatCompleted, completed);
   setTextIfChanged(jobsStatFiltered, rows.length);
 
-  setHero(
-    isLiveFeedConnected
-      ? `${jobsData.length} jobs live`
-      : jobsData.length
-        ? `${jobsData.length} jobs connected`
-        : "No jobs found yet.",
-    isLiveFeedConnected
-      ? `Optimized live dispatch connected. Showing up to ${LIVE_LIMIT} jobs with shared virtualization engine.`
-      : jobsData.length
-        ? "Dispatch is live: companies claim platform jobs first, then staff claim execution first-come first-served."
-        : "Create or convert leads into jobs to populate the dispatch board."
+  const title = isLiveFeedConnected
+    ? `${jobsData.length} jobs live`
+    : jobsData.length
+      ? `${jobsData.length} jobs connected`
+      : "No jobs found yet.";
+
+  const text = isLiveFeedConnected
+    ? `Live dispatch is connected. Showing up to ${LIVE_LIMIT} jobs with the shared virtualization engine.`
+    : jobsData.length
+      ? "Companies claim platform jobs first, then eligible staff accept execution work."
+      : "Create or convert leads into jobs to populate the operations board.";
+
+  setHero(title, text);
+  setStatus(
+    isLiveFeedConnected ? "Operations synchronized" : "Operations ready",
+    `${rows.length} of ${jobsData.length} jobs are visible with the current search and sort settings.`
   );
 }
 
@@ -385,7 +455,7 @@ function renderList(rows) {
     return;
   }
 
-  const signature = visibleRows.map(rowSignature).join("|") + `:${sortAsc}:${normalize(jobsSearch?.value || "")}`;
+  const signature = visibleRows.map(rowSignature).join("|") + `:${sortAsc}:${normalize(currentSearchTerm)}`;
   if (signature === lastRenderedSignature && lastListHtml) return;
   lastRenderedSignature = signature;
 
@@ -432,14 +502,15 @@ function renderProgress(rows) {
       ).length;
 
       const width = Math.max(6, Math.round((count / total) * 100));
+      const exactPercent = rows.length ? Math.round((count / rows.length) * 100) : 0;
 
       return `
         <div class="dashboard-progress-row glass-card aurora-card active-glow beam-target virtual-paint-card shared-virtual-card">
           <div class="dashboard-progress-copy">
             <strong>${bucket.label}</strong>
-            <span>${count} job(s)</span>
+            <span>${count} job${count === 1 ? "" : "s"}</span>
           </div>
-          <div class="dashboard-progress-bar"><span style="width: ${width}%;"></span></div>
+          <div class="dashboard-progress-bar" role="progressbar" aria-label="${bucket.label}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${exactPercent}"><span style="width: ${width}%;"></span></div>
         </div>
       `;
     })
@@ -463,7 +534,7 @@ function renderFeed(rows) {
   const html = visibleRows
     .map((job) => {
       const name = escapeHtml(jobName(job));
-      const status = escapeHtml(jobStatus(job));
+      const status = escapeHtml(humanize(jobStatus(job)));
       const claim = claimPill(job);
 
       return `
@@ -487,6 +558,7 @@ function renderJobsNow() {
   renderList(rows);
   renderProgress(rows);
   renderFeed(rows);
+  setRegionBusy(false);
 }
 
 function scheduleRenderJobs() {
@@ -521,6 +593,8 @@ function startLiveJobsFeed() {
     (error) => {
       console.error("Live jobs feed failed:", error);
       setFeedConnectedState(false);
+      setRegionBusy(false);
+      setStatus("Live feed unavailable", "The jobs workspace could not connect. Use Connect Feed to retry.");
 
       const errorCard = `<article class="dashboard-state-card error virtual-paint-card shared-virtual-card"><strong>Live feed disconnected</strong><span>${escapeHtml(
         error.message || "Firestore listener failed."
@@ -533,135 +607,90 @@ function startLiveJobsFeed() {
   );
 }
 
-async function claimCompanyJob(jobId) {
+async function claimCompanyJob(jobId, button) {
   const job = jobsData.find((item) => String(item.id) === String(jobId));
   const actor = actorProfile();
 
   if (!job || !actor.uid) return;
-  if (job.companyClaimed) return alert("Already claimed by another company.");
-
-  await updateDoc(doc(db, "jobs", jobId), {
-    companyId: actor.companyId || job.companyId || "platform-company",
-    companyName: actor.companyName || job.companyName || "Platform Company",
-    companyClaimed: true,
-    companyClaimedBy: actor.uid,
-    companyClaimedByName: actor.displayName,
-    companyClaimedAt: serverTimestamp(),
-    status: "claimed",
-    updatedAt: serverTimestamp(),
-    updatedBy: actor.uid,
-    updatedByEmail: actor.email,
-    updatedByName: actor.displayName
-  });
-}
-
-async function claimStaffJob(jobId) {
-  const job = jobsData.find((item) => String(item.id) === String(jobId));
-  const actor = actorProfile();
-
-  if (!job || !actor.uid) return;
-  if (!job.companyClaimed) return alert("A company must claim this job first.");
-  if (job.staffClaimed) return alert("Already accepted by another staff member.");
-  if (job.companyId && actor.companyId && String(job.companyId) !== String(actor.companyId)) {
-    return alert("This job belongs to another company.");
+  if (job.companyClaimed) {
+    notify("Job already claimed", "Another company claimed this job before your action completed.", "warning");
+    return;
   }
 
-  await updateDoc(doc(db, "jobs", jobId), {
-    assignedTo: [actor.uid],
-    assignedToNames: [actor.displayName],
-    assignedTeamIds: [actor.uid],
-    assignedTeamNames: [actor.displayName],
-    staffClaimed: true,
-    staffClaimedBy: actor.uid,
-    staffClaimedByName: actor.displayName,
-    staffClaimedAt: serverTimestamp(),
-    status: "in_progress",
-    updatedAt: serverTimestamp(),
-    updatedBy: actor.uid,
-    updatedByEmail: actor.email,
-    updatedByName: actor.displayName
-  });
+  setActionBusy(button, true, "Claiming…");
+  try {
+    await updateDoc(doc(db, "jobs", jobId), {
+      companyId: actor.companyId || job.companyId || "platform-company",
+      companyName: actor.companyName || job.companyName || "Platform Company",
+      companyClaimed: true,
+      companyClaimedBy: actor.uid,
+      companyClaimedByName: actor.displayName,
+      companyClaimedAt: serverTimestamp(),
+      status: "claimed",
+      updatedAt: serverTimestamp(),
+      updatedBy: actor.uid,
+      updatedByEmail: actor.email,
+      updatedByName: actor.displayName
+    });
+    notify("Job claimed", `${jobName(job)} is now assigned to your company.`, "success");
+  } catch (error) {
+    console.error("Company job claim failed:", error);
+    notify("Unable to claim job", error?.message || "The job could not be claimed.", "error");
+  } finally {
+    setActionBusy(button, false);
+  }
 }
 
-function injectDispatchStyles() {
-  if (document.getElementById("jobDispatchStyles")) return;
+async function claimStaffJob(jobId, button) {
+  const job = jobsData.find((item) => String(item.id) === String(jobId));
+  const actor = actorProfile();
 
-  const style = document.createElement("style");
-  style.id = "jobDispatchStyles";
-  style.textContent = `
-    .job-dispatch-item {
-      align-items: flex-start;
-      gap: 14px;
-      contain: content;
-      content-visibility: auto;
-      contain-intrinsic-size: 164px;
-    }
+  if (!job || !actor.uid) return;
+  if (!job.companyClaimed) {
+    notify("Company claim required", "A company must claim this job before staff can accept it.", "warning");
+    return;
+  }
+  if (job.staffClaimed) {
+    notify("Job already accepted", "Another team member accepted this job first.", "warning");
+    return;
+  }
+  if (job.companyId && actor.companyId && String(job.companyId) !== String(actor.companyId)) {
+    notify("Different company", "This job belongs to another company.", "warning");
+    return;
+  }
 
-    .job-dispatch-content {
-      min-width: 0;
-      display: grid;
-      gap: 7px;
-    }
+  setActionBusy(button, true, "Accepting…");
+  try {
+    await updateDoc(doc(db, "jobs", jobId), {
+      assignedTo: [actor.uid],
+      assignedToNames: [actor.displayName],
+      assignedTeamIds: [actor.uid],
+      assignedTeamNames: [actor.displayName],
+      staffClaimed: true,
+      staffClaimedBy: actor.uid,
+      staffClaimedByName: actor.displayName,
+      staffClaimedAt: serverTimestamp(),
+      status: "in_progress",
+      updatedAt: serverTimestamp(),
+      updatedBy: actor.uid,
+      updatedByEmail: actor.email,
+      updatedByName: actor.displayName
+    });
+    notify("Job accepted", `${jobName(job)} is now assigned to you.`, "success");
+  } catch (error) {
+    console.error("Staff job claim failed:", error);
+    notify("Unable to accept job", error?.message || "The job could not be accepted.", "error");
+  } finally {
+    setActionBusy(button, false);
+  }
+}
 
-    .job-dispatch-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-      margin-top: 4px;
-    }
-
-    .job-dispatch-meta span {
-      border-radius: 999px;
-      padding: 6px 9px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.05);
-      color: var(--text-muted, rgba(255,255,255,0.68));
-      font-size: 11px;
-      font-weight: 800;
-    }
-
-    .job-dispatch-actions {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      min-width: 250px;
-    }
-
-    .job-dispatch-actions .btn {
-      min-height: 34px;
-      padding: 8px 10px;
-      font-size: 12px;
-    }
-
-    @media (max-width: 760px) {
-      .job-dispatch-item {
-        display: grid;
-        box-shadow: none !important;
-        animation: none !important;
-        contain-intrinsic-size: 210px;
-      }
-
-      .job-dispatch-actions {
-        justify-content: flex-start;
-        min-width: 0;
-      }
-
-      .job-dispatch-meta span {
-        font-size: 10px;
-        padding: 5px 8px;
-      }
-
-      #jobsList .aurora-card,
-      #jobsFeed .aurora-card,
-      #jobsProgressStack .aurora-card {
-        animation: none !important;
-      }
-    }
-  `;
-
-  document.head.appendChild(style);
+function syncSearchInputs(source) {
+  currentSearchTerm = source?.value || "";
+  jobsSearchInputs.forEach((input) => {
+    if (input !== source && input.value !== currentSearchTerm) input.value = currentSearchTerm;
+  });
+  scheduleRenderJobs();
 }
 
 function bindEvents() {
@@ -669,15 +698,18 @@ function bindEvents() {
   hasBoundEvents = true;
 
   installSharedVirtualStyles();
-  injectDispatchStyles();
 
-  jobsSearch?.addEventListener("input", scheduleRenderJobs);
+  jobsSearchInputs.forEach((input) => {
+    input.addEventListener("input", () => syncSearchInputs(input));
+  });
+
   jobsRefreshBtnTop?.addEventListener("click", startLiveJobsFeed);
   jobsRefreshBtnSide?.addEventListener("click", startLiveJobsFeed);
 
   jobsSortBtn?.addEventListener("click", () => {
     sortAsc = !sortAsc;
     jobsSortBtn.textContent = sortAsc ? "Sort A–Z" : "Sort Z–A";
+    jobsSortBtn.setAttribute("aria-pressed", String(!sortAsc));
     scheduleRenderJobs();
   });
 
@@ -685,15 +717,15 @@ function bindEvents() {
     const companyBtn = event.target.closest("[data-company-claim]");
     const staffBtn = event.target.closest("[data-staff-claim]");
 
-    if (companyBtn) return claimCompanyJob(companyBtn.getAttribute("data-company-claim"));
-    if (staffBtn) return claimStaffJob(staffBtn.getAttribute("data-staff-claim"));
+    if (companyBtn) return claimCompanyJob(companyBtn.getAttribute("data-company-claim"), companyBtn);
+    if (staffBtn) return claimStaffJob(staffBtn.getAttribute("data-staff-claim"), staffBtn);
   });
 
-  window.addEventListener("beforeunload", () => {
+  window.addEventListener("pagehide", () => {
     dispatchVirtualEngine.save();
     if (unsubscribeJobs) unsubscribeJobs();
     if (renderTimer) clearTimeout(renderTimer);
-  });
+  }, { once: true });
 }
 
 function initJobsPage() {
@@ -717,7 +749,7 @@ function initJobsPage() {
 }
 
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initJobsPage);
+  document.addEventListener("DOMContentLoaded", initJobsPage, { once: true });
 } else {
   initJobsPage();
 }
