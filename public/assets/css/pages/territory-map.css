@@ -1,0 +1,60 @@
+@import url("../design-system/marketplace.css?v=1");
+
+/* TERRITORY MAP — PAGE-SPECIFIC COMPOSITION */
+
+.territory-map-shell {
+  min-height: var(--marketplace-map-height);
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--marketplace-panel-radius) !important;
+}
+
+#territoryMapCanvas {
+  width: 100%;
+  min-height: var(--marketplace-map-height);
+  background: rgba(var(--adaptive-ink-rgb), .035);
+}
+
+.territory-map-status {
+  position: absolute;
+  z-index: 2;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  left: var(--space-4);
+  min-height: var(--control-height-md);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-normal);
+  background: color-mix(in srgb, var(--lg-fill-strong) 92%, transparent);
+  border: 1px solid var(--separator-strong);
+  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,.14);
+  backdrop-filter: blur(var(--lg-blur)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(160%);
+}
+
+@media (max-width: 50rem) {
+  .territory-map-shell,
+  #territoryMapCanvas {
+    min-height: 24rem;
+  }
+
+  .territory-map-status {
+    right: var(--space-3);
+    bottom: var(--space-3);
+    left: var(--space-3);
+  }
+}
+
+@media (forced-colors: active) {
+  .territory-map-status {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+    box-shadow: none;
+  }
+}
