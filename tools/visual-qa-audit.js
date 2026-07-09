@@ -21,6 +21,7 @@ const requiredFiles = [
   'tests/visual/global-setup.mjs',
   'tests/visual/specs/authenticated-visual.spec.mjs',
   'tests/visual/specs/studio-interactions.spec.mjs',
+  'tests/visual/specs/studio-action-icon.spec.mjs',
   'tests/visual/README.md'
 ];
 
@@ -42,6 +43,7 @@ if (!errors.length) {
   const setup = read('tests/visual/global-setup.mjs');
   const spec = read('tests/visual/specs/authenticated-visual.spec.mjs');
   const studioSpec = read('tests/visual/specs/studio-interactions.spec.mjs');
+  const actionIconSpec = read('tests/visual/specs/studio-action-icon.spec.mjs');
   const packageJson = JSON.parse(read('tests/visual/package.json'));
 
   if (packageJson.devDependencies?.['@playwright/test'] !== '1.61.1') {
@@ -108,19 +110,38 @@ if (!errors.length) {
     if (!studioSpec.includes(studioContract)) errors.push(`tests/visual/specs/studio-interactions.spec.mjs: missing ${studioContract} coverage`);
   }
 
-  if (!studioSpec.includes("localStorage.removeItem('evaraos-studio-visual-builder-v1')")) {
-    errors.push('tests/visual/specs/studio-interactions.spec.mjs: Studio validation must start from a clean browser-local draft');
+  for (const actionIconContract of [
+    "page.goto('/website-builder.html'",
+    'data-action-intent-control',
+    'data-action-target-control',
+    'data-icon-search',
+    'data-icon-choice="map"',
+    'data-preview-role',
+    'data-action-allowed',
+    'data-icon-id',
+    'studio-action-icon.png',
+    'storageStatePath'
+  ]) {
+    if (!actionIconSpec.includes(actionIconContract)) errors.push(`tests/visual/specs/studio-action-icon.spec.mjs: missing ${actionIconContract} coverage`);
   }
-  if (/localStorage\.clear\s*\(/.test(studioSpec)) {
-    errors.push('tests/visual/specs/studio-interactions.spec.mjs: validation must not clear unrelated authentication or appearance state');
+
+  for (const focusedSpec of [studioSpec, actionIconSpec]) {
+    if (!focusedSpec.includes("localStorage.removeItem('evaraos-studio-visual-builder-v1')")) {
+      errors.push('Focused Studio validation must start from a clean browser-local draft');
+    }
+    if (/localStorage\.clear\s*\(/.test(focusedSpec)) {
+      errors.push('Focused Studio validation must not clear unrelated authentication or appearance state');
+    }
   }
 
   if (!workflow.includes('workflow_dispatch:')) errors.push('.github/workflows/design-system-visual-qa.yml: authenticated job must remain manually dispatchable');
   if (!workflow.includes("- studio\n          - all")) errors.push('.github/workflows/design-system-visual-qa.yml: focused Studio suite option is missing');
-  if (!workflow.includes('npx playwright test specs/studio-interactions.spec.mjs --project=desktop-chromium')) {
-    errors.push('.github/workflows/design-system-visual-qa.yml: focused Studio validation command is missing');
+  if (!workflow.includes('npx playwright test specs/studio-interactions.spec.mjs specs/studio-action-icon.spec.mjs --project=desktop-chromium')) {
+    errors.push('.github/workflows/design-system-visual-qa.yml: both focused Studio validation specs must run together');
   }
   if (!workflow.includes('node tools/design-system-audit.js')) errors.push('.github/workflows/design-system-visual-qa.yml: design-system audit is missing');
+  if (!workflow.includes('node tools/studio-component-catalog-audit.js')) errors.push('.github/workflows/design-system-visual-qa.yml: Studio catalog audit is missing');
+  if (!workflow.includes('node tools/studio-action-icon-audit.js')) errors.push('.github/workflows/design-system-visual-qa.yml: Studio action/icon audit is missing');
   if (!workflow.includes('node tools/visual-qa-audit.js')) warnings.push('.github/workflows/design-system-visual-qa.yml: visual QA audit has not been wired yet');
   if (!workflow.includes('EVARA_QA_OWNER_EMAIL')) errors.push('.github/workflows/design-system-visual-qa.yml: owner QA secret is missing');
   if (!workflow.includes('actions/upload-artifact@v4')) errors.push('.github/workflows/design-system-visual-qa.yml: report artifact upload is missing');
@@ -151,4 +172,4 @@ if (errors.length) {
   errors.forEach((error) => console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('Visual QA role, appearance, device, authentication, Studio interaction, artifact, and route contracts passed.');
+console.log('Visual QA role, appearance, device, authentication, Studio interaction, action/icon, artifact, and route contracts passed.');
