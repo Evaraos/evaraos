@@ -16,7 +16,9 @@ const requiredFiles = [
   'public/assets/js/studio/studio-auto-layout-bridge.js',
   'public/assets/js/studio/studio-document-model.js',
   'public/assets/js/studio/studio-document-controls.js',
+  'public/assets/js/studio/studio-component-inspector.js',
   'public/assets/css/pages/studio-component-catalog.css',
+  'public/assets/css/pages/studio-component-inspector.css',
   'public/assets/css/pages/studio-auto-layout.css',
   'public/assets/css/pages/studio-auto-layout-widths.css',
   'public/assets/css/pages/studio-document-model.css',
@@ -39,7 +41,9 @@ if (!errors.length) {
   const autoLayoutBridge = read('public/assets/js/studio/studio-auto-layout-bridge.js');
   const journal = read('public/assets/js/studio/studio-document-model.js');
   const journalControls = read('public/assets/js/studio/studio-document-controls.js');
+  const inspector = read('public/assets/js/studio/studio-component-inspector.js');
   const catalogCss = read('public/assets/css/pages/studio-component-catalog.css');
+  const inspectorCss = read('public/assets/css/pages/studio-component-inspector.css');
   const autoLayoutCss = read('public/assets/css/pages/studio-auto-layout.css');
   const autoLayoutWidths = read('public/assets/css/pages/studio-auto-layout-widths.css');
   const journalCss = read('public/assets/css/pages/studio-document-model.css');
@@ -148,7 +152,35 @@ if (!errors.length) {
     errors.push('studio-document-controls.js: journal recovery controls are incomplete');
   }
 
-  for (const source of [autoLayout, autoLayoutBridge, journal, journalControls]) {
+  const inspectorContracts = [
+    'componentsByCategory',
+    'getStudioComponent',
+    'CATEGORY_ORDER',
+    'catalogSearch',
+    'propertyField',
+    'catalogFieldBridge',
+    "editableText: 'true'",
+    "new FocusEvent('focusout'",
+    "new MouseEvent('dblclick'",
+    'REQUIRED_FIELDS',
+    'SELECT_OPTIONS',
+    'MutationObserver'
+  ];
+  for (const marker of inspectorContracts) {
+    if (!inspector.includes(marker)) errors.push(`studio-component-inspector.js: missing inspector contract ${marker}`);
+  }
+
+  for (const semanticField of ['action', 'style', 'tone', 'direction', 'status', 'locationSource', 'zoom']) {
+    if (!inspector.includes(`${semanticField}: [`)) errors.push(`studio-component-inspector.js: missing semantic options for ${semanticField}`);
+  }
+  if (/localStorage\.setItem\s*\(/.test(inspector)) {
+    errors.push('studio-component-inspector.js: inspector must not create a second persistence writer');
+  }
+  if (!inspector.includes("STORAGE_KEY = 'evaraos-studio-visual-builder-v1'")) {
+    errors.push('studio-component-inspector.js: inspector must read the existing visual-builder state');
+  }
+
+  for (const source of [autoLayout, autoLayoutBridge, journal, journalControls, inspector]) {
     for (const unsafeSink of ['innerHTML', 'outerHTML', 'eval(', 'new Function']) {
       if (source.includes(unsafeSink)) errors.push(`Studio runtime: unsafe sink detected: ${unsafeSink}`);
     }
@@ -156,8 +188,12 @@ if (!errors.length) {
 
   const journalModelImport = '/assets/js/studio/studio-document-model.js?v=1';
   const builderImport = '/assets/js/studio/studio-visual-builder.js?v=2';
+  const inspectorImport = '/assets/js/studio/studio-component-inspector.js?v=1';
   if (!studioPage.includes('/assets/css/pages/studio-component-catalog.css?v=1')) {
     errors.push('public/website-builder.html: expanded catalog preview stylesheet is missing');
+  }
+  if (!studioPage.includes('/assets/css/pages/studio-component-inspector.css?v=1')) {
+    errors.push('public/website-builder.html: property inspector stylesheet is missing');
   }
   if (!studioPage.includes('/assets/css/pages/studio-auto-layout.css?v=1')) {
     errors.push('public/website-builder.html: Auto Layout stylesheet is missing');
@@ -177,8 +213,14 @@ if (!errors.length) {
   if (!studioPage.includes(journalModelImport) || !studioPage.includes('/assets/js/studio/studio-document-controls.js?v=1')) {
     errors.push('public/website-builder.html: draft journal runtime or controls are missing');
   }
+  if (!studioPage.includes(inspectorImport)) {
+    errors.push('public/website-builder.html: component property inspector is missing');
+  }
   if (studioPage.indexOf(journalModelImport) > studioPage.indexOf(builderImport)) {
     errors.push('public/website-builder.html: draft journal must load before the compatibility visual builder');
+  }
+  if (studioPage.indexOf(inspectorImport) < studioPage.indexOf(builderImport)) {
+    errors.push('public/website-builder.html: property inspector must load after the visual builder');
   }
 
   for (const selector of [
@@ -206,6 +248,19 @@ if (!errors.length) {
       errors.push(`studio-component-catalog.css: decorative pseudo-element contains non-editable copy: ${misleadingCopy}`);
     }
   }
+
+  for (const selector of [
+    '.studio-catalog-search',
+    '.studio-catalog-group',
+    '.studio-component-inspector',
+    '.studio-property-field',
+    '.studio-catalog-field-bridge',
+    '.studio-catalog-meta',
+    '[data-catalog-tone="warning"]',
+    '[data-catalog-direction="incoming"]'
+  ]) {
+    if (!inspectorCss.includes(selector)) errors.push(`studio-component-inspector.css: missing ${selector}`);
+  }
 }
 
 console.log(`EvaraOS Studio audit: ${requiredFiles.length} required assets checked.`);
@@ -214,4 +269,4 @@ if (errors.length) {
   errors.forEach((error) => console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('Studio catalog, Canvas compatibility layer, IndexedDB draft journal, recovery, and authoring boundaries passed.');
+console.log('Studio catalog, property inspector, semantic controls, Canvas compatibility layer, Auto Layout, IndexedDB draft journal, recovery, and authoring boundaries passed.');
