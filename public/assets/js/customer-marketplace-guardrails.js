@@ -1,3 +1,9 @@
+function notify(title, message, tone = 'warning') {
+  window.dispatchEvent(new CustomEvent('evara:notify', {
+    detail: { title, message, tone }
+  }));
+}
+
 function applyMarketplaceGuardrails() {
   const panel = document.getElementById('customerMarketplacePanel');
   if (!panel || panel.dataset.guardrailsReady === 'true') return false;
@@ -16,6 +22,28 @@ function applyMarketplaceGuardrails() {
   stateInput?.addEventListener('input', () => {
     stateInput.value = stateInput.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2);
   });
+
+  const form = document.getElementById('marketplaceOrderingForm');
+  form?.addEventListener('submit', (event) => {
+    const selectedProvider = document.querySelector('input[name="marketplaceProvider"]:checked');
+    const providerOptions = document.querySelectorAll('input[name="marketplaceProvider"]');
+
+    if (!selectedProvider && providerOptions.length === 0) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      const message = document.getElementById('marketplaceOrderMessage');
+      if (message) {
+        message.textContent = 'No eligible provider serves this address yet. Choose another address or try again after a provider is added.';
+      }
+
+      notify(
+        'Provider unavailable',
+        'This order was not submitted because no eligible provider serves the selected address.',
+        'warning'
+      );
+    }
+  }, true);
 
   panel.dataset.guardrailsReady = 'true';
   return true;
