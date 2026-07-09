@@ -12,7 +12,7 @@ import {
   projectCanvasPage
 } from './graph-projection.js';
 import { MockOperationDispatcher } from './mock-operation-dispatcher.js';
-import { CanvasJournalAdapter } from './canvas-journal-adapter.js';
+import { CanvasOperationJournal } from './canvas-operation-journal.js';
 import { HistoryController } from './canvas-history-controller.js';
 import {
   InteractionController,
@@ -30,6 +30,14 @@ function randomId(prefix) {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
+function slug(value = 'item') {
+  return String(value || 'item')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'item';
+}
+
 function actor(value = {}) {
   return {
     id: String(value.id || 'studio-canvas-owner').slice(0, 160),
@@ -41,18 +49,23 @@ function actor(value = {}) {
 function compiledBlueprintGraph() {
   try {
     const compiler = window.EvaraStudioBlueprintSerialization;
-    if (!compiler?.compileCurrent) return null;
-    const result = compiler.compileCurrent('', {
+    if (!compiler?.compileCurrent || !compiler?.capture) return null;
+    const document = compiler.capture();
+    const pageId = document?.pages?.[0]?.id || 'page';
+    const graphId = `graph:canvas:${slug(document.blueprintId)}:${slug(pageId)}`;
+    const result = compiler.compileCurrent(pageId, {
       actorId: 'canvas-session',
+      graphId,
       generatedAt: new Date().toISOString()
     });
     if (!result?.graph) return null;
+    result.graph.revision = 0;
     assertValidEvaraGraph(result.graph);
     return {
       graph: clone(result.graph),
       source: 'authored-blueprint-graph',
-      sourceDocumentId: result.sourceDocumentId || null,
-      sourceFingerprint: result.sourceFingerprint || null
+      sourceDocumentId: result.sourceDocumentId || document.documentId || null,
+      sourceFingerprint: result.sourceFingerprint || document.metadata?.fingerprint || null
     };
   } catch {
     return null;
@@ -62,8 +75,11 @@ function compiledBlueprintGraph() {
 function initialGraph() {
   const authored = compiledBlueprintGraph();
   if (authored) return authored;
+  const graph = createCanvasSandboxFixture();
+  graph.graphId = 'graph:canvas:sandbox:owner-dashboard';
+  graph.revision = 0;
   return {
-    graph: createCanvasSandboxFixture(),
+    graph,
     source: 'canvas-sandbox-fixture',
     sourceDocumentId: null,
     sourceFingerprint: null
@@ -121,17 +137,10 @@ export class CanvasSession {
     assertValidEvaraGraph(source.graph);
     this.#source = source;
     this.#pageId = this.options.pageId || Object.values(source.graph.nodes).find((node) => node.kind === 'page')?.id || null;
-    this.#journal = new CanvasJournalAdapter(source.graph, {
-      companyId: this.options.companyId,
-      projectId: this.options.projectId || 'evara-studio-canvas',
-      branchId: this.options.branchId || 'local-draft',
-      actor: this.#actor
-    });
+    this.#journal = new CanvasOperationJournal(source.graph);
     const recovery = await this.#journal.initialize();
     this.#graph = recovery.graph;
-    this.#durabilityState = recovery.session?.durabilityState || 'saved-locally';
-    const viewport = recovery.session?.viewport || this.viewport.snapshot();
-    this.viewport = new ViewportController(viewport);
+    this.#durabilityState = recovery.durabilityState;
     this.#reproject();
     this.selection.prune(flattenGraphProjection(this.#projection).map((node) => node.id));
     this.#history = new HistoryController({
@@ -139,9 +148,8 @@ export class CanvasSession {
       dispatchOperations: (request) => this.dispatchOperations(request)
     });
     await this.#history.initialize();
-    this.viewport.subscribe((next) => {
+    this.viewport.subscribe(() => {
       this.#reproject();
-      this.#journal.updateViewport(next).catch(() => undefined);
       this.#emit('viewport-change');
     });
     this.selection.subscribe(() => this.#emit('selection-change'));
@@ -160,7 +168,11 @@ export class CanvasSession {
 
   async #commitPrepared(prepared, options = {}) {
     if (!prepared?.changed) return prepared;
-    await this.#journal.append(prepared, prepared.graph, options);
+    await this.#journal.append(prepared, {
+      ...options,
+      sourceDocumentId: this.#source.sourceDocumentId,
+      sourceFingerprint: this.#source.sourceFingerprint
+    });
     this.#graph = clone(prepared.graph);
     this.#durabilityState = 'saved-locally';
     this.#reproject();
@@ -176,8 +188,7 @@ export class CanvasSession {
     const prepared = candidate.dispatch({ ...command, actor: command?.actor || this.#actor });
     return this.#commitPrepared(prepared, {
       intent: command.type,
-      summary: command.summary || `Canvas command: ${command.type}`,
-      metadata: { sourceDocumentId: this.#source.sourceDocumentId, sourceFingerprint: this.#source.sourceFingerprint }
+      summary: command.summary || `Canvas command: ${command.type}`
     });
   }
 
@@ -186,8 +197,7 @@ export class CanvasSession {
     operations,
     revertsTransactionId = null,
     redoesTransactionId = null,
-    summary = '',
-    metadata = {}
+    summary = ''
   } = {}) {
     if (!this.#ready) await this.initialize();
     if (!Array.isArray(operations) || !operations.length) return { changed: false, reason: 'No operations supplied.' };
@@ -210,15 +220,10 @@ export class CanvasSession {
       validateGraph: true,
       allowPublishedMutation: false
     });
-    const prepared = {
+    return this.#commitPrepared({
       changed: true,
       intent,
-      command: {
-        type: intent,
-        payload: {},
-        actor: this.#actor,
-        correlationId
-      },
+      command: { type: intent, payload: {}, actor: this.#actor, correlationId },
       transactionId: result.transactionId,
       expectedHeadRevision,
       graphRevision: result.graph.revision,
@@ -226,13 +231,11 @@ export class CanvasSession {
       inverseOperations: result.inverseOperations,
       commitOperation: result.commitOperation,
       graph: result.graph
-    };
-    return this.#commitPrepared(prepared, {
+    }, {
       intent,
       summary: summary || `Canvas transaction: ${intent}`,
       revertsTransactionId,
-      redoesTransactionId,
-      metadata
+      redoesTransactionId
     });
   }
 
@@ -246,9 +249,11 @@ export class CanvasSession {
     return this.#history.redo();
   }
 
-  async checkpoint(reason = 'canvas-manual-checkpoint') {
-    if (!this.#ready) await this.initialize();
-    return this.#journal.createCheckpoint(this.#graph, reason);
+  async checkpoint() {
+    return {
+      deferred: true,
+      reason: 'Trusted graph checkpoints are owned by the Backend journal service.'
+    };
   }
 
   async pendingTransactions() {
@@ -256,12 +261,10 @@ export class CanvasSession {
     return this.#journal.pendingTransactions();
   }
 
-  async setDurabilityState(state, reason) {
-    if (!this.#ready) await this.initialize();
-    const session = await this.#journal.setDurabilityState(state, reason);
-    this.#durabilityState = session.durabilityState;
-    this.#emit('durability-change');
-    return session;
+  async setDurabilityState(state, reason = 'canvas-state-change') {
+    this.#durabilityState = state;
+    this.#emit(reason);
+    return this.snapshot();
   }
 
   getGraph() {
