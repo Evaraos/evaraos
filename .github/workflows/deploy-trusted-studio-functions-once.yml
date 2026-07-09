@@ -13,11 +13,11 @@ on:
       - '.github/workflows/deploy-trusted-studio-functions-once.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: trusted-studio-functions-production
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   validate:
@@ -190,6 +190,51 @@ jobs:
             ${{ runner.temp }}/firebase-functions-list.txt
           if-no-files-found: error
           retention-days: 30
+
+      - name: Commit deployment proof
+        env:
+          VALIDATED_SHA: ${{ needs.validate.outputs.validated_sha }}
+          WORKFLOW_RUN_ID: ${{ github.run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin evaraos
+          git checkout -B deployment-proof origin/evaraos
+          mkdir -p docs/deployments
+          node <<'NODE'
+          const fs = require('fs');
+          const proof = {
+            schemaVersion: 'evara.deployment-proof.v1',
+            status: 'confirmed',
+            projectId: 'evaraos-web',
+            region: 'us-central1',
+            scope: 'trusted-studio-functions',
+            validatedCommit: process.env.VALIDATED_SHA,
+            workflowRunId: process.env.WORKFLOW_RUN_ID,
+            deployedAt: new Date().toISOString(),
+            verification: 'firebase functions:list',
+            callables: [
+              'openStudioBranch',
+              'commitStudioTransaction',
+              'getStudioOperationRange',
+              'createStudioCheckpoint',
+              'restoreStudioCheckpoint',
+              'createStudioBranch',
+              'closeStudioSession',
+              'prepareStudioRelease'
+            ]
+          };
+          fs.writeFileSync('docs/deployments/trusted-studio-functions-production.json', `${JSON.stringify(proof, null, 2)}\n`);
+          NODE
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/deployments/trusted-studio-functions-production.json
+          if git diff --cached --quiet; then
+            echo "Deployment proof already matches the confirmed deployment."
+          else
+            git commit -m "ops: confirm trusted Studio Functions deployment [skip ci]"
+            git push origin HEAD:evaraos
+          fi
 
       - name: Deployment summary
         run: |
