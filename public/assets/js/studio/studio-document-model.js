@@ -1,25 +1,25 @@
-const DOCUMENT_KEY = 'evaraos-studio-document-v1';
+const DB_NAME = 'evaraos-studio-journal';
+const DB_VERSION = 1;
+const SESSION_STORE = 'sessions';
+const TRANSACTION_STORE = 'transactions';
+const CHECKPOINT_STORE = 'checkpoints';
+const SESSION_ID = 'local-studio-session';
 const LEGACY_CONTENT_KEY = 'evaraos-studio-visual-builder-v1';
 const LEGACY_LAYOUT_KEY = 'evaraos-studio-auto-layout-v1';
 const LEGACY_LIVE_KEY = 'evaraos-studio-visual-builder-live-v1';
-const SCHEMA = 'evara.studio.document';
-const SCHEMA_VERSION = 1;
-const MAX_VERSIONS = 8;
-const MAX_PAGES = 30;
-const MAX_NODES_PER_PAGE = 120;
-const MAX_GROUPS_PER_PAGE = 40;
-const MAX_CHILDREN_PER_GROUP = 60;
-const AUTOSAVE_DELAY = 280;
+const AUTOSAVE_DELAY = 320;
+const MAX_TRANSACTIONS = 120;
+const MAX_CHECKPOINTS = 12;
 
 const nativeGetItem = Storage.prototype.getItem;
 const nativeSetItem = Storage.prototype.setItem;
-const nativeRemoveItem = Storage.prototype.removeItem;
-const adapters = new Map();
-let activeAdapter = 'local';
+const serverAdapters = new Map();
+let databasePromise = null;
+let readyPromise = null;
 let saveTimer = 0;
-let pendingReason = 'autosave';
-let documentState = null;
-let lastSnapshotAt = 0;
+let pendingReason = 'system';
+let lastProjectionHash = '';
+let sessionCache = null;
 
 const now = () => new Date().toISOString();
 const clone = (value) => JSON.parse(JSON.stringify(value));
@@ -27,365 +27,347 @@ const safeParse = (value, fallback = null) => {
   try { return JSON.parse(value); }
   catch { return fallback; }
 };
-const text = (value, max = 160) => String(value ?? '').replace(/[\u0000-\u001f\u007f]/g, '').slice(0, max);
-const integer = (value, fallback = 0) => Number.isInteger(Number(value)) ? Number(value) : fallback;
+const text = (value, max = 200) => String(value ?? '').replace(/[\u0000-\u001f\u007f]/g, '').slice(0, max);
+const uid = (prefix) => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
 
-function readRaw(key) {
-  return nativeGetItem.call(localStorage, key);
-}
-
-function writeRaw(key, value) {
-  nativeSetItem.call(localStorage, key, value);
-}
-
-function removeRaw(key) {
-  nativeRemoveItem.call(localStorage, key);
-}
-
-function normalizeContent(raw) {
-  if (!raw || typeof raw !== 'object') return null;
-  const pages = Array.isArray(raw.pages) ? raw.pages.slice(0, MAX_PAGES).map((page, pageIndex) => {
-    const nodes = Array.isArray(page?.nodes) ? page.nodes.slice(0, MAX_NODES_PER_PAGE).map((node, nodeIndex) => ({
-      ...clone(node || {}),
-      id: text(node?.id || `node-${pageIndex}-${nodeIndex}`, 120),
-      type: text(node?.type || 'glass-card', 80)
-    })) : [];
-    return {
-      ...clone(page || {}),
-      id: text(page?.id || `page-${pageIndex}`, 100),
-      name: text(page?.name || `Page ${pageIndex + 1}`, 120),
-      nodes
-    };
-  }) : [];
+function readLegacyProjection() {
   return {
-    ...clone(raw),
-    version: integer(raw.version, 2),
-    pages,
-    updatedAt: text(raw.updatedAt || now(), 64)
+    content: safeParse(nativeGetItem.call(localStorage, LEGACY_CONTENT_KEY)),
+    layout: safeParse(nativeGetItem.call(localStorage, LEGACY_LAYOUT_KEY)),
+    capturedAt: now()
   };
 }
 
-function normalizeLayout(raw) {
-  const pages = {};
-  if (raw?.pages && typeof raw.pages === 'object') {
-    Object.entries(raw.pages).slice(0, MAX_PAGES).forEach(([pageId, page]) => {
-      const used = new Set();
-      const groups = Array.isArray(page?.groups) ? page.groups.slice(0, MAX_GROUPS_PER_PAGE).map((group, index) => ({
-        ...clone(group || {}),
-        id: text(group?.id || `stack-${index}`, 120),
-        name: text(group?.name || `Stack ${index + 1}`, 80),
-        direction: group?.direction === 'column' ? 'column' : 'row',
-        gap: Math.min(48, Math.max(0, Number(group?.gap) || 0)),
-        padding: Math.min(48, Math.max(0, Number(group?.padding) || 0)),
-        align: ['start', 'center', 'end', 'stretch'].includes(group?.align) ? group.align : 'stretch',
-        wrap: group?.wrap !== false,
-        children: Array.isArray(group?.children)
-          ? group.children.map((id) => text(id, 120)).filter((id) => id && !used.has(id) && used.add(id)).slice(0, MAX_CHILDREN_PER_GROUP)
-          : []
-      })) : [];
-      pages[text(pageId, 100)] = { groups };
-    });
-  }
-  return { version: 1, pages };
+function normalizeProjection(raw) {
+  const content = raw?.content && typeof raw.content === 'object' ? clone(raw.content) : null;
+  const layout = raw?.layout && typeof raw.layout === 'object' ? clone(raw.layout) : { version: 1, pages: {} };
+  return { content, layout, capturedAt: text(raw?.capturedAt || now(), 64) };
 }
 
-function emptyDocument() {
+function projectionHash(projection) {
+  const value = JSON.stringify({ content: projection.content, layout: projection.layout });
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `fnv1a-${(hash >>> 0).toString(16).padStart(8, '0')}-${value.length}`;
+}
+
+function defaultSession() {
   const timestamp = now();
   return {
-    schema: SCHEMA,
-    schemaVersion: SCHEMA_VERSION,
-    documentId: 'evaraos-primary-studio',
-    revision: 0,
-    status: 'draft',
-    content: null,
-    layout: { version: 1, pages: {} },
-    publication: { revision: null, publishedAt: null },
-    versions: [],
-    metadata: {
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      migratedAt: null,
-      migratedFrom: [],
-      activeAdapter: 'local',
-      lastReason: 'initialize'
-    }
+    sessionId: SESSION_ID,
+    companyId: 'local-prototype',
+    projectId: 'evara-studio-visual-builder',
+    branchId: 'local-draft',
+    graphId: 'legacy-compatibility-projection',
+    graphSchemaVersion: '0.1.0',
+    operationProtocolVersion: '0.1.0',
+    headRevision: 0,
+    headSequence: 0,
+    latestCheckpointId: null,
+    clientInstanceId: uid('client'),
+    collaborationMode: 'single_writer',
+    durabilityState: 'saved-locally',
+    pendingTransactionIds: [],
+    openedAt: timestamp,
+    lastRecoveredAt: null,
+    actor: { id: 'local-owner', type: 'migration', role: 'owner' },
+    viewport: { device: 'desktop', width: 1440, height: 900, zoom: 1, panX: 0, panY: 0 },
+    previewContext: { role: 'owner', themeMode: null, environment: 'draft' },
+    updatedAt: timestamp
   };
 }
 
-function normalizeVersion(raw, index) {
-  return {
-    id: text(raw?.id || `version-${index}`, 120),
-    revision: Math.max(0, integer(raw?.revision, 0)),
-    createdAt: text(raw?.createdAt || now(), 64),
-    reason: text(raw?.reason || 'checkpoint', 80),
-    content: normalizeContent(raw?.content),
-    layout: normalizeLayout(raw?.layout)
-  };
-}
-
-function normalizeDocument(raw) {
-  const base = emptyDocument();
-  if (!raw || typeof raw !== 'object') return base;
-  return {
-    ...base,
-    schema: SCHEMA,
-    schemaVersion: SCHEMA_VERSION,
-    documentId: text(raw.documentId || base.documentId, 120),
-    revision: Math.max(0, integer(raw.revision, 0)),
-    status: raw.status === 'published' ? 'published' : 'draft',
-    content: normalizeContent(raw.content),
-    layout: normalizeLayout(raw.layout),
-    publication: {
-      revision: raw?.publication?.revision === null ? null : Math.max(0, integer(raw?.publication?.revision, 0)),
-      publishedAt: raw?.publication?.publishedAt ? text(raw.publication.publishedAt, 64) : null
-    },
-    versions: Array.isArray(raw.versions) ? raw.versions.slice(0, MAX_VERSIONS).map(normalizeVersion) : [],
-    metadata: {
-      ...base.metadata,
-      ...(raw.metadata && typeof raw.metadata === 'object' ? clone(raw.metadata) : {}),
-      createdAt: text(raw?.metadata?.createdAt || base.metadata.createdAt, 64),
-      updatedAt: text(raw?.metadata?.updatedAt || base.metadata.updatedAt, 64),
-      migratedAt: raw?.metadata?.migratedAt ? text(raw.metadata.migratedAt, 64) : null,
-      migratedFrom: Array.isArray(raw?.metadata?.migratedFrom) ? raw.metadata.migratedFrom.map((item) => text(item, 120)).slice(0, 8) : [],
-      activeAdapter: text(raw?.metadata?.activeAdapter || 'local', 40),
-      lastReason: text(raw?.metadata?.lastReason || 'load', 80)
-    }
-  };
-}
-
-function collectNodeIds(content) {
-  const ids = new Set();
-  const duplicates = [];
-  (content?.pages || []).forEach((page) => (page.nodes || []).forEach((node) => {
-    if (ids.has(node.id)) duplicates.push(node.id);
-    ids.add(node.id);
-  }));
-  return { ids, duplicates };
-}
-
-function validateDocument(input = documentState) {
-  const doc = normalizeDocument(input);
-  const errors = [];
-  const warnings = [];
-  if (!doc.content?.pages?.length) errors.push('Studio document has no pages.');
-  const { ids, duplicates } = collectNodeIds(doc.content);
-  if (duplicates.length) errors.push(`Duplicate component IDs: ${[...new Set(duplicates)].slice(0, 5).join(', ')}`);
-  (doc.content?.pages || []).forEach((page) => {
-    const heroCount = (page.nodes || []).filter((node) => node.type === 'hero-block').length;
-    if (heroCount > 1) errors.push(`${page.name || page.id} contains more than one hero.`);
-    if (!(page.nodes || []).length) warnings.push(`${page.name || page.id} is empty.`);
-  });
-  Object.entries(doc.layout?.pages || {}).forEach(([pageId, page]) => {
-    const membership = new Set();
-    (page.groups || []).forEach((group) => {
-      (group.children || []).forEach((nodeId) => {
-        if (!ids.has(nodeId)) errors.push(`${group.name || group.id} references missing component ${nodeId}.`);
-        if (membership.has(nodeId)) errors.push(`${nodeId} appears in multiple stacks on ${pageId}.`);
-        membership.add(nodeId);
-        const node = (doc.content?.pages || []).flatMap((item) => item.nodes || []).find((item) => item.id === nodeId);
-        if (node?.type === 'hero-block') errors.push('Hero components cannot be placed inside Auto Layout stacks.');
-      });
-    });
-  });
-  return { valid: errors.length === 0, errors: [...new Set(errors)], warnings: [...new Set(warnings)] };
-}
-
-function makeSnapshot(reason = 'checkpoint') {
-  return {
-    id: `version-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
-    revision: documentState.revision,
-    createdAt: now(),
-    reason: text(reason, 80),
-    content: clone(documentState.content),
-    layout: clone(documentState.layout)
-  };
-}
-
-function persistDocument(reason = 'autosave', options = {}) {
-  documentState = normalizeDocument(documentState);
-  documentState.revision += 1;
-  documentState.status = options.published ? 'published' : 'draft';
-  documentState.metadata.updatedAt = now();
-  documentState.metadata.activeAdapter = activeAdapter;
-  documentState.metadata.lastReason = text(reason, 80);
-  if (options.snapshot) {
-    documentState.versions.unshift(makeSnapshot(reason));
-    documentState.versions = documentState.versions.slice(0, MAX_VERSIONS);
-    lastSnapshotAt = Date.now();
-  }
-  if (options.published) {
-    documentState.publication = { revision: documentState.revision, publishedAt: now() };
-  }
-  const adapter = adapters.get(activeAdapter) || adapters.get('local');
-  adapter.save(clone(documentState));
-  dispatchStatus('saved', reason);
-  return clone(documentState);
-}
-
-function scheduleDocumentSave(reason = 'autosave') {
-  pendingReason = text(reason, 80);
-  clearTimeout(saveTimer);
-  dispatchStatus('saving', pendingReason);
-  saveTimer = setTimeout(() => {
-    const shouldSnapshot = Date.now() - lastSnapshotAt > 5 * 60 * 1000 && documentState.revision > 0;
-    persistDocument(pendingReason, { snapshot: shouldSnapshot });
-  }, AUTOSAVE_DELAY);
-}
-
-function dispatchStatus(state, reason, extra = {}) {
-  window.dispatchEvent(new CustomEvent('evara:studio-document-status', {
-    detail: {
-      state,
-      reason,
-      revision: documentState?.revision || 0,
-      updatedAt: documentState?.metadata?.updatedAt || null,
-      ...extra
-    }
-  }));
-}
-
-function migrateLegacy() {
-  const existing = safeParse(readRaw(DOCUMENT_KEY));
-  const content = normalizeContent(safeParse(readRaw(LEGACY_CONTENT_KEY)));
-  const layout = normalizeLayout(safeParse(readRaw(LEGACY_LAYOUT_KEY)));
-  documentState = normalizeDocument(existing);
-  const migratedFrom = [];
-
-  if (!existing) {
-    if (content) {
-      documentState.content = content;
-      migratedFrom.push(LEGACY_CONTENT_KEY);
-    }
-    if (Object.keys(layout.pages).length) {
-      documentState.layout = layout;
-      migratedFrom.push(LEGACY_LAYOUT_KEY);
-    }
-    if (migratedFrom.length) {
-      documentState.metadata.migratedAt = now();
-      documentState.metadata.migratedFrom = migratedFrom;
-      documentState.versions.unshift(makeSnapshot('legacy-migration'));
-      documentState.versions = documentState.versions.slice(0, MAX_VERSIONS);
-      persistDocument('legacy-migration');
-    } else {
-      adapters.get('local').save(documentState);
-    }
-  } else {
-    if (content && Date.parse(content.updatedAt || 0) > Date.parse(documentState.metadata.updatedAt || 0)) {
-      documentState.content = content;
-      persistDocument('legacy-content-recovery', { snapshot: true });
-    }
-    if (!documentState.content && content) documentState.content = content;
-    if (!Object.keys(documentState.layout.pages).length && Object.keys(layout.pages).length) documentState.layout = layout;
-  }
-
-  if (documentState.content) writeRaw(LEGACY_CONTENT_KEY, JSON.stringify(documentState.content));
-  if (documentState.layout) writeRaw(LEGACY_LAYOUT_KEY, JSON.stringify(documentState.layout));
-}
-
-function installStorageBridge() {
-  const originalSetItem = Storage.prototype.setItem;
-  if (originalSetItem.__evaraStudioUnified) return;
-  function bridgedSetItem(key, value) {
-    if (this !== localStorage) return nativeSetItem.call(this, key, value);
-    if (key === LEGACY_CONTENT_KEY) {
-      const normalized = normalizeContent(safeParse(value));
-      nativeSetItem.call(this, key, JSON.stringify(normalized));
-      documentState.content = normalized;
-      scheduleDocumentSave('content-autosave');
-      return;
-    }
-    if (key === LEGACY_LAYOUT_KEY) {
-      const normalized = normalizeLayout(safeParse(value));
-      nativeSetItem.call(this, key, JSON.stringify(normalized));
-      documentState.layout = normalized;
-      scheduleDocumentSave('layout-autosave');
-      return;
-    }
-    if (key === LEGACY_LIVE_KEY) {
-      const report = validateDocument();
-      if (!report.valid) {
-        dispatchStatus('blocked', 'publish-validation', { report });
-        return;
+function openDatabase() {
+  if (databasePromise) return databasePromise;
+  databasePromise = new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(SESSION_STORE)) db.createObjectStore(SESSION_STORE, { keyPath: 'sessionId' });
+      if (!db.objectStoreNames.contains(TRANSACTION_STORE)) {
+        const store = db.createObjectStore(TRANSACTION_STORE, { keyPath: 'transactionId' });
+        store.createIndex('createdAtClient', 'createdAtClient');
+        store.createIndex('expectedHeadRevision', 'expectedHeadRevision');
       }
-      nativeSetItem.call(this, key, value);
-      clearTimeout(saveTimer);
-      documentState.content = normalizeContent(safeParse(readRaw(LEGACY_CONTENT_KEY))) || documentState.content;
-      documentState.layout = normalizeLayout(safeParse(readRaw(LEGACY_LAYOUT_KEY)));
-      persistDocument('publish', { snapshot: true, published: true });
-      window.dispatchEvent(new CustomEvent('evara:studio-published', { detail: { revision: documentState.revision } }));
-      return;
-    }
-    nativeSetItem.call(this, key, value);
-  }
-  Object.defineProperty(bridgedSetItem, '__evaraStudioUnified', { value: true });
-  Storage.prototype.setItem = bridgedSetItem;
+      if (!db.objectStoreNames.contains(CHECKPOINT_STORE)) {
+        const store = db.createObjectStore(CHECKPOINT_STORE, { keyPath: 'checkpointId' });
+        store.createIndex('createdAt', 'createdAt');
+        store.createIndex('revision', 'revision');
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error('Studio journal database could not open.'));
+    request.onblocked = () => reject(new Error('Studio journal database upgrade is blocked by another tab.'));
+  });
+  return databasePromise;
 }
 
-function flush(reason = 'manual-save', options = {}) {
-  clearTimeout(saveTimer);
-  documentState.content = normalizeContent(safeParse(readRaw(LEGACY_CONTENT_KEY))) || documentState.content;
-  documentState.layout = normalizeLayout(safeParse(readRaw(LEGACY_LAYOUT_KEY)));
-  return persistDocument(reason, options);
+async function transact(storeNames, mode, callback) {
+  const db = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(storeNames, mode);
+    const stores = Object.fromEntries(storeNames.map((name) => [name, transaction.objectStore(name)]));
+    let result;
+    try { result = callback(stores, transaction); }
+    catch (error) { reject(error); return; }
+    transaction.oncomplete = () => resolve(result);
+    transaction.onerror = () => reject(transaction.error || new Error('Studio journal transaction failed.'));
+    transaction.onabort = () => reject(transaction.error || new Error('Studio journal transaction was aborted.'));
+  });
 }
 
-function createCheckpoint(reason = 'manual-checkpoint') {
-  return flush(reason, { snapshot: true });
+function requestValue(request) {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
 }
 
-function restoreVersion(versionId) {
-  const version = documentState.versions.find((item) => item.id === versionId);
-  if (!version) return { restored: false, reason: 'Version not found.' };
-  documentState.versions.unshift(makeSnapshot('before-restore'));
-  documentState.content = normalizeContent(version.content);
-  documentState.layout = normalizeLayout(version.layout);
-  documentState.status = 'draft';
-  documentState.publication = { revision: documentState.publication.revision, publishedAt: documentState.publication.publishedAt };
-  writeRaw(LEGACY_CONTENT_KEY, JSON.stringify(documentState.content));
-  writeRaw(LEGACY_LAYOUT_KEY, JSON.stringify(documentState.layout));
-  persistDocument(`restore-${version.revision}`, { snapshot: false });
-  window.dispatchEvent(new CustomEvent('evara:studio-document-restored', { detail: { versionId } }));
+async function getSession() {
+  if (sessionCache) return clone(sessionCache);
+  const db = await openDatabase();
+  const transaction = db.transaction([SESSION_STORE], 'readonly');
+  const session = await requestValue(transaction.objectStore(SESSION_STORE).get(SESSION_ID));
+  sessionCache = session || defaultSession();
+  if (!session) await putSession(sessionCache);
+  return clone(sessionCache);
+}
+
+async function putSession(session) {
+  sessionCache = clone(session);
+  await transact([SESSION_STORE], 'readwrite', ({ sessions }) => sessions.put(clone(sessionCache)));
+  return clone(sessionCache);
+}
+
+async function getAll(storeName) {
+  const db = await openDatabase();
+  const transaction = db.transaction([storeName], 'readonly');
+  return requestValue(transaction.objectStore(storeName).getAll());
+}
+
+async function pruneStore(storeName, idField, maximum) {
+  const records = await getAll(storeName);
+  if (records.length <= maximum) return;
+  const sorted = records.sort((a, b) => Date.parse(b.createdAtClient || b.createdAt || 0) - Date.parse(a.createdAtClient || a.createdAt || 0));
+  const remove = sorted.slice(maximum);
+  await transact([storeName], 'readwrite', (stores) => {
+    remove.forEach((record) => stores[storeName].delete(record[idField]));
+  });
+}
+
+function semanticIntent(reason) {
+  if (reason.includes('layout')) return 'canvas.layout.set';
+  if (reason.includes('content')) return 'canvas.property.set';
+  if (reason.includes('restore')) return 'history.undo';
+  if (reason.includes('checkpoint')) return 'checkpoint.create';
+  if (reason.includes('migration')) return 'migration.apply';
+  return 'system';
+}
+
+function transactionEnvelope(session, projection, previousProjection, reason) {
+  const transactionId = uid('transaction');
+  const operationId = uid('operation');
+  const inverseId = uid('operation');
+  return {
+    transactionId,
+    companyId: session.companyId,
+    projectId: session.projectId,
+    branchId: session.branchId,
+    graphId: session.graphId,
+    expectedHeadRevision: session.headRevision,
+    acceptedHeadRevision: null,
+    startSequence: null,
+    endSequence: null,
+    intent: semanticIntent(reason),
+    summary: text(`Compatibility projection: ${reason}`, 500),
+    operations: [{ operationId, type: 'compatibility.projection.replace', targetId: session.graphId, payload: normalizeProjection(projection) }],
+    inverseOperations: previousProjection ? [{ operationId: inverseId, type: 'compatibility.projection.replace', targetId: session.graphId, payload: normalizeProjection(previousProjection) }] : [],
+    actor: clone(session.actor),
+    clientSessionId: session.sessionId,
+    correlationId: null,
+    revertsTransactionId: null,
+    redoesTransactionId: null,
+    affectedNodeIds: [],
+    createdAtClient: now(),
+    durabilityState: 'saved-locally',
+    projectionHash: projectionHash(projection)
+  };
+}
+
+async function latestCheckpoint() {
+  const checkpoints = await listCheckpoints();
+  return checkpoints[0] || null;
+}
+
+async function appendTransaction(reason = 'system', options = {}) {
+  await initialize();
+  const projection = normalizeProjection(options.projection || readLegacyProjection());
+  const hash = projectionHash(projection);
+  if (!options.force && hash === lastProjectionHash) return null;
+  const session = await getSession();
+  const previous = options.previousProjection || (await latestCheckpoint())?.projection || null;
+  const envelope = transactionEnvelope(session, projection, previous, reason);
+  const nextSession = {
+    ...session,
+    headRevision: session.headRevision + 1,
+    headSequence: session.headSequence + 1,
+    durabilityState: 'saved-locally',
+    pendingTransactionIds: [...session.pendingTransactionIds, envelope.transactionId].slice(-MAX_TRANSACTIONS),
+    updatedAt: now()
+  };
+  await transact([TRANSACTION_STORE, SESSION_STORE], 'readwrite', ({ transactions, sessions }) => {
+    transactions.put(envelope);
+    sessions.put(nextSession);
+  });
+  sessionCache = clone(nextSession);
+  lastProjectionHash = hash;
+  await pruneStore(TRANSACTION_STORE, 'transactionId', MAX_TRANSACTIONS);
+  dispatchStatus('saved-locally', reason, { transactionId: envelope.transactionId });
+  return clone(envelope);
+}
+
+async function createCheckpoint(reason = 'manual-checkpoint', options = {}) {
+  await initialize();
+  const projection = normalizeProjection(options.projection || readLegacyProjection());
+  const session = await getSession();
+  const checkpoint = {
+    checkpointId: uid('checkpoint'), projectId: session.projectId, branchId: session.branchId, graphId: session.graphId,
+    revision: session.headRevision, sequence: session.headSequence, reason: text(reason, 120), createdAt: now(),
+    trusted: false, projectionHash: projectionHash(projection), projection
+  };
+  const nextSession = { ...session, latestCheckpointId: checkpoint.checkpointId, updatedAt: now() };
+  await transact([CHECKPOINT_STORE, SESSION_STORE], 'readwrite', ({ checkpoints, sessions }) => {
+    checkpoints.put(checkpoint);
+    sessions.put(nextSession);
+  });
+  sessionCache = clone(nextSession);
+  await pruneStore(CHECKPOINT_STORE, 'checkpointId', MAX_CHECKPOINTS);
+  dispatchStatus('saved-locally', reason, { checkpointId: checkpoint.checkpointId });
+  return clone(checkpoint);
+}
+
+async function listTransactions() {
+  const records = await getAll(TRANSACTION_STORE);
+  return records.sort((a, b) => Date.parse(b.createdAtClient || 0) - Date.parse(a.createdAtClient || 0));
+}
+
+async function listCheckpoints() {
+  const records = await getAll(CHECKPOINT_STORE);
+  return records.sort((a, b) => Date.parse(b.createdAt || 0) - Date.parse(a.createdAt || 0));
+}
+
+async function restoreCheckpoint(checkpointId) {
+  await initialize();
+  const db = await openDatabase();
+  const transaction = db.transaction([CHECKPOINT_STORE], 'readonly');
+  const checkpoint = await requestValue(transaction.objectStore(CHECKPOINT_STORE).get(checkpointId));
+  if (!checkpoint) return { restored: false, reason: 'Checkpoint not found.' };
+  const current = normalizeProjection(readLegacyProjection());
+  await appendTransaction('history-restore-before', { projection: current, force: true });
+  nativeSetItem.call(localStorage, LEGACY_CONTENT_KEY, JSON.stringify(checkpoint.projection.content));
+  nativeSetItem.call(localStorage, LEGACY_LAYOUT_KEY, JSON.stringify(checkpoint.projection.layout));
+  await appendTransaction('history-restore', { projection: checkpoint.projection, previousProjection: current, force: true });
+  const session = await getSession();
+  await putSession({ ...session, lastRecoveredAt: now(), updatedAt: now() });
+  dispatchStatus('recovered', 'history-restore', { checkpointId });
   return { restored: true };
 }
 
-function exportDocument() {
-  return JSON.stringify(normalizeDocument(documentState), null, 2);
+function dispatchStatus(state, reason, extra = {}) {
+  window.dispatchEvent(new CustomEvent('evara:studio-journal-status', {
+    detail: { state, reason, revision: sessionCache?.headRevision || 0, sequence: sessionCache?.headSequence || 0, durabilityState: sessionCache?.durabilityState || state, ...extra }
+  }));
 }
 
-function registerAdapter(name, adapter) {
-  if (!name || !adapter || typeof adapter.load !== 'function' || typeof adapter.save !== 'function') {
-    throw new TypeError('Studio persistence adapters require load() and save(document).');
+function scheduleCompatibilityJournal(reason = 'system') {
+  pendingReason = text(reason, 120);
+  clearTimeout(saveTimer);
+  dispatchStatus('syncing', pendingReason);
+  saveTimer = setTimeout(async () => {
+    try { await appendTransaction(pendingReason); }
+    catch (error) { dispatchStatus('recovery-required', pendingReason, { error: text(error?.message || error, 300) }); }
+  }, AUTOSAVE_DELAY);
+}
+
+function installCompatibilityBridge() {
+  const original = Storage.prototype.setItem;
+  if (original.__evaraStudioJournal) return;
+  function bridgedSetItem(key, value) {
+    nativeSetItem.call(this, key, value);
+    if (this !== localStorage) return;
+    if (key === LEGACY_CONTENT_KEY) scheduleCompatibilityJournal('content-compatibility-save');
+    else if (key === LEGACY_LAYOUT_KEY) scheduleCompatibilityJournal('layout-compatibility-save');
+    else if (key === LEGACY_LIVE_KEY) {
+      nativeSetItem.call(localStorage, LEGACY_LIVE_KEY, JSON.stringify({ blocked: true, reason: 'trusted-release-required', attemptedAt: now() }));
+      dispatchStatus('release-blocked', 'trusted-release-required');
+    }
   }
-  adapters.set(text(name, 40), adapter);
+  Object.defineProperty(bridgedSetItem, '__evaraStudioJournal', { value: true });
+  Storage.prototype.setItem = bridgedSetItem;
 }
 
-function setActiveAdapter(name) {
-  if (!adapters.has(name)) throw new Error(`Unknown Studio persistence adapter: ${name}`);
-  activeAdapter = name;
-  documentState.metadata.activeAdapter = name;
-  persistDocument('adapter-change');
+async function recoverOnStartup() {
+  const current = normalizeProjection(readLegacyProjection());
+  const currentHash = projectionHash(current);
+  const checkpoint = await latestCheckpoint();
+  if (!current.content && checkpoint?.projection?.content) {
+    nativeSetItem.call(localStorage, LEGACY_CONTENT_KEY, JSON.stringify(checkpoint.projection.content));
+    nativeSetItem.call(localStorage, LEGACY_LAYOUT_KEY, JSON.stringify(checkpoint.projection.layout));
+    const session = await getSession();
+    await putSession({ ...session, lastRecoveredAt: now(), durabilityState: 'saved-locally', updatedAt: now() });
+    lastProjectionHash = checkpoint.projectionHash;
+    dispatchStatus('recovered', 'startup-recovery', { checkpointId: checkpoint.checkpointId });
+    return;
+  }
+  lastProjectionHash = currentHash;
+  if (!checkpoint && current.content) {
+    await appendTransaction('legacy-migration', { projection: current, force: true });
+    await createCheckpoint('legacy-migration', { projection: current });
+  }
 }
 
-registerAdapter('local', {
-  load: () => normalizeDocument(safeParse(readRaw(DOCUMENT_KEY))),
-  save: (document) => writeRaw(DOCUMENT_KEY, JSON.stringify(normalizeDocument(document)))
-});
+async function initialize() {
+  if (readyPromise) return readyPromise;
+  readyPromise = (async () => {
+    await openDatabase();
+    await getSession();
+    await recoverOnStartup();
+    installCompatibilityBridge();
+    dispatchStatus('saved-locally', 'journal-ready');
+    return true;
+  })();
+  return readyPromise;
+}
 
-migrateLegacy();
-installStorageBridge();
+function registerServerAdapter(name, adapter) {
+  if (!name || !adapter || typeof adapter.commit !== 'function' || typeof adapter.checkpoint !== 'function') {
+    throw new TypeError('Trusted Studio server adapters require commit() and checkpoint().');
+  }
+  serverAdapters.set(text(name, 80), adapter);
+}
 
-window.EvaraStudioDocument = Object.freeze({
-  key: DOCUMENT_KEY,
-  schema: SCHEMA,
-  schemaVersion: SCHEMA_VERSION,
-  getDocument: () => clone(documentState),
-  validate: () => validateDocument(),
-  flush,
+async function getStatus() {
+  await initialize();
+  const session = await getSession();
+  const transactions = await listTransactions();
+  const checkpoints = await listCheckpoints();
+  return { session, transactions, checkpoints, serverAdapters: [...serverAdapters.keys()] };
+}
+
+window.EvaraStudioJournal = Object.freeze({
+  databaseName: DB_NAME,
+  initialize,
+  getStatus,
+  appendCompatibilityTransaction: appendTransaction,
   createCheckpoint,
-  restoreVersion,
-  exportDocument,
-  registerAdapter,
-  setActiveAdapter,
-  listAdapters: () => [...adapters.keys()]
+  listTransactions,
+  listCheckpoints,
+  restoreCheckpoint,
+  registerServerAdapter,
+  listServerAdapters: () => [...serverAdapters.keys()]
 });
 
-dispatchStatus('ready', 'document-model-ready');
+initialize().catch((error) => dispatchStatus('recovery-required', 'journal-initialize', { error: text(error?.message || error, 300) }));
