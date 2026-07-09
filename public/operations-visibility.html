@@ -12,8 +12,10 @@
   <link rel="stylesheet" href="./assets/css/nav.css" />
   <link rel="stylesheet" href="./assets/css/dashboard.css" />
   <link rel="stylesheet" href="./assets/css/app-system.css" />
-<link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v1"></head>
-<body data-route-guard="private" class="dashboard-body app-loading">
+  <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v1" />
+  <link rel="stylesheet" href="/assets/css/design-system/marketplace.css?v=1" />
+</head>
+<body data-route-guard="private" class="dashboard-body marketplace-page operations-visibility-page app-loading">
   <div id="universalNavRoot"></div>
   <div class="page-aurora" aria-hidden="true"></div>
   <div class="page-grid-overlay" aria-hidden="true"></div>
@@ -73,79 +75,21 @@
         </div>
 
         <div class="dashboard-stats-grid">
-          <article class="dashboard-stat-card glass-card">
-            <p>Sync Health</p>
-            <h3 id="operationsHealthStatus">Healthy</h3>
-            <span>Runtime state</span>
-          </article>
-          <article class="dashboard-stat-card glass-card">
-            <p>Adapters</p>
-            <h3 id="operationsAdapterCount">0</h3>
-            <span>Tracked systems</span>
-          </article>
-          <article class="dashboard-stat-card glass-card">
-            <p>Failing</p>
-            <h3 id="operationsFailingAdapters">0</h3>
-            <span>Needs attention</span>
-          </article>
-          <article class="dashboard-stat-card glass-card">
-            <p>Validation</p>
-            <h3 id="operationsValidationStatus">Pending</h3>
-            <span>Integrity status</span>
-          </article>
+          <article class="dashboard-stat-card glass-card"><p>Sync Health</p><h3 id="operationsHealthStatus">Healthy</h3><span>Runtime state</span></article>
+          <article class="dashboard-stat-card glass-card"><p>Adapters</p><h3 id="operationsAdapterCount">0</h3><span>Tracked systems</span></article>
+          <article class="dashboard-stat-card glass-card"><p>Failing</p><h3 id="operationsFailingAdapters">0</h3><span>Needs attention</span></article>
+          <article class="dashboard-stat-card glass-card"><p>Validation</p><h3 id="operationsValidationStatus">Pending</h3><span>Integrity status</span></article>
         </div>
       </section>
 
       <section class="dashboard-grid-2">
-        <section class="dashboard-panel glass-card">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Sync Telemetry</p>
-              <h2>Adapter Health</h2>
-            </div>
-          </div>
-          <div id="operationsTelemetryRoot" class="dashboard-list">
-            <div class="item muted">Loading adapter telemetry...</div>
-          </div>
-        </section>
-
-        <section class="dashboard-panel glass-card">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Integrity</p>
-              <h2>Validation Report</h2>
-            </div>
-          </div>
-          <div id="operationsValidationRoot" class="dashboard-list">
-            <div class="item muted">Loading validation report...</div>
-          </div>
-        </section>
+        <section class="dashboard-panel glass-card"><div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Sync Telemetry</p><h2>Adapter Health</h2></div></div><div id="operationsTelemetryRoot" class="dashboard-list" aria-live="polite"><div class="item muted">Loading adapter telemetry...</div></div></section>
+        <section class="dashboard-panel glass-card"><div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Integrity</p><h2>Validation Report</h2></div></div><div id="operationsValidationRoot" class="dashboard-list" aria-live="polite"><div class="item muted">Loading validation report...</div></div></section>
       </section>
 
       <section class="dashboard-grid-2">
-        <section class="dashboard-panel glass-card">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Finance Intelligence</p>
-              <h2>Persistent Analytics</h2>
-            </div>
-          </div>
-          <div id="operationsAnalyticsRoot" class="dashboard-list">
-            <div class="item muted">Loading revenue analytics...</div>
-          </div>
-        </section>
-
-        <section class="dashboard-panel glass-card">
-          <div class="dashboard-section-head">
-            <div>
-              <p class="dashboard-section-kicker">Payment Telemetry</p>
-              <h2>Stripe Webhook Events</h2>
-            </div>
-          </div>
-          <div id="operationsStripeRoot" class="dashboard-list">
-            <div class="item muted">Loading Stripe telemetry...</div>
-          </div>
-        </section>
+        <section class="dashboard-panel glass-card"><div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Finance Intelligence</p><h2>Persistent Analytics</h2></div></div><div id="operationsAnalyticsRoot" class="dashboard-list" aria-live="polite"><div class="item muted">Loading revenue analytics...</div></div></section>
+        <section class="dashboard-panel glass-card"><div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Payment Telemetry</p><h2>Stripe Webhook Events</h2></div></div><div id="operationsStripeRoot" class="dashboard-list" aria-live="polite"><div class="item muted">Loading Stripe telemetry...</div></div></section>
       </section>
     </section>
   </main>
