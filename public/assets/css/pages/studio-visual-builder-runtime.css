@@ -1,0 +1,15 @@
+.studio-card-block,
+.studio-metric-block,
+.studio-map-block,
+.studio-image-block,
+.studio-button-block {
+  background: rgba(255, 255, 255, var(--node-glass-opacity, 0.72));
+  backdrop-filter: blur(calc(var(--node-glass, 72) * 0.45px)) saturate(1.18);
+  -webkit-backdrop-filter: blur(calc(var(--node-glass, 72) * 0.45px)) saturate(1.18);
+}
+
+@media (max-width: 720px) {
+  .visual-studio {
+    inset: 72px 0 0;
+  }
+}
