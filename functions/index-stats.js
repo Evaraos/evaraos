@@ -9,8 +9,8 @@ const dashboardRef = db.doc("dashboard_stats/global");
 
 const OPEN_LEADS = ["new", "open", "contacted", "qualified", "proposal", "scheduled"];
 const HOT_PRIORITIES = ["hot", "high", "urgent"];
-const MOVING_JOBS = ["in progress", "active", "pending", "working", "scheduled"];
-const INACTIVE = ["inactive", "archived", "deleted", "lost", "cancelled", "canceled"];
+const MOVING_JOBS = ["in progress", "in_progress", "active", "pending", "working", "scheduled"];
+const INACTIVE = ["inactive", "archived", "deleted", "lost", "cancelled", "canceled", "suspended", "disabled"];
 
 function norm(value = "") { return String(value || "").trim().toLowerCase(); }
 function safeKey(value = "unknown") { return norm(value).replace(/[^a-z0-9_]/g, "_") || "unknown"; }
@@ -26,11 +26,11 @@ function createPatch(type, data = {}) {
   if (type === "leads") {
     const status = safeKey(data.status || "new");
     const priority = safeKey(data.priority || "normal");
-    return { ...inc("leads.total", 1), ...inc("leads.open", OPEN_LEADS.includes(status) ? 1 : 0), ...inc("leads.hot", HOT_PRIORITIES.includes(priority) ? 1 : 0), ...inc(`leads.statuses.${status}`, 1), ...inc(`leads.priorities.${priority}`, 1) };
+    return { ...inc("leads.total", 1), ...inc("leads.open", OPEN_LEADS.includes(norm(data.status || "new")) ? 1 : 0), ...inc("leads.hot", HOT_PRIORITIES.includes(norm(data.priority || "normal")) ? 1 : 0), ...inc(`leads.statuses.${status}`, 1), ...inc(`leads.priorities.${priority}`, 1) };
   }
   if (type === "jobs") {
     const status = safeKey(data.status || "active");
-    return { ...inc("jobs.total", 1), ...inc("jobs.inMotion", MOVING_JOBS.includes(status) ? 1 : 0), ...inc(`jobs.statuses.${status}`, 1) };
+    return { ...inc("jobs.total", 1), ...inc("jobs.inMotion", MOVING_JOBS.includes(norm(data.status || "active")) ? 1 : 0), ...inc(`jobs.statuses.${status}`, 1) };
   }
   return {};
 }
@@ -41,11 +41,11 @@ function deletePatch(type, data = {}) {
   if (type === "leads") {
     const status = safeKey(data.status || "new");
     const priority = safeKey(data.priority || "normal");
-    return { ...inc("leads.total", -1), ...inc("leads.open", OPEN_LEADS.includes(status) ? -1 : 0), ...inc("leads.hot", HOT_PRIORITIES.includes(priority) ? -1 : 0), ...inc(`leads.statuses.${status}`, -1), ...inc(`leads.priorities.${priority}`, -1) };
+    return { ...inc("leads.total", -1), ...inc("leads.open", OPEN_LEADS.includes(norm(data.status || "new")) ? -1 : 0), ...inc("leads.hot", HOT_PRIORITIES.includes(norm(data.priority || "normal")) ? -1 : 0), ...inc(`leads.statuses.${status}`, -1), ...inc(`leads.priorities.${priority}`, -1) };
   }
   if (type === "jobs") {
     const status = safeKey(data.status || "active");
-    return { ...inc("jobs.total", -1), ...inc("jobs.inMotion", MOVING_JOBS.includes(status) ? -1 : 0), ...inc(`jobs.statuses.${status}`, -1) };
+    return { ...inc("jobs.total", -1), ...inc("jobs.inMotion", MOVING_JOBS.includes(norm(data.status || "active")) ? -1 : 0), ...inc(`jobs.statuses.${status}`, -1) };
   }
   return {};
 }
@@ -66,11 +66,11 @@ function updatePatch(type, before = {}, after = {}) {
     const newPriority = safeKey(after.priority || "normal");
     if (oldStatus !== newStatus) {
       Object.assign(patch, inc(`leads.statuses.${oldStatus}`, -1), inc(`leads.statuses.${newStatus}`, 1));
-      if (OPEN_LEADS.includes(oldStatus) !== OPEN_LEADS.includes(newStatus)) Object.assign(patch, inc("leads.open", OPEN_LEADS.includes(newStatus) ? 1 : -1));
+      if (OPEN_LEADS.includes(norm(before.status || "new")) !== OPEN_LEADS.includes(norm(after.status || "new"))) Object.assign(patch, inc("leads.open", OPEN_LEADS.includes(norm(after.status || "new")) ? 1 : -1));
     }
     if (oldPriority !== newPriority) {
       Object.assign(patch, inc(`leads.priorities.${oldPriority}`, -1), inc(`leads.priorities.${newPriority}`, 1));
-      if (HOT_PRIORITIES.includes(oldPriority) !== HOT_PRIORITIES.includes(newPriority)) Object.assign(patch, inc("leads.hot", HOT_PRIORITIES.includes(newPriority) ? 1 : -1));
+      if (HOT_PRIORITIES.includes(norm(before.priority || "normal")) !== HOT_PRIORITIES.includes(norm(after.priority || "normal"))) Object.assign(patch, inc("leads.hot", HOT_PRIORITIES.includes(norm(after.priority || "normal")) ? 1 : -1));
     }
   }
   if (type === "jobs") {
@@ -78,7 +78,7 @@ function updatePatch(type, before = {}, after = {}) {
     const newStatus = safeKey(after.status || "active");
     if (oldStatus !== newStatus) {
       Object.assign(patch, inc(`jobs.statuses.${oldStatus}`, -1), inc(`jobs.statuses.${newStatus}`, 1));
-      if (MOVING_JOBS.includes(oldStatus) !== MOVING_JOBS.includes(newStatus)) Object.assign(patch, inc("jobs.inMotion", MOVING_JOBS.includes(newStatus) ? 1 : -1));
+      if (MOVING_JOBS.includes(norm(before.status || "active")) !== MOVING_JOBS.includes(norm(after.status || "active"))) Object.assign(patch, inc("jobs.inMotion", MOVING_JOBS.includes(norm(after.status || "active")) ? 1 : -1));
     }
   }
   return patch;
@@ -131,23 +131,31 @@ exports.resolveUsernameLogin = onCall(
   { region: "us-central1", enforceAppCheck: true, cors: true },
   async (request) => {
     const username = normalizeUsername(request.data?.username || "");
-    if (!username || username.length < 3 || username.length > 32) throw new HttpsError("invalid-argument", "Enter a valid username.");
-    if (!/^[a-z0-9._-]+$/.test(username)) throw new HttpsError("invalid-argument", "Enter a valid username.");
+    if (!username || username.length < 3 || username.length > 32 || !/^[a-z0-9._-]+$/.test(username)) {
+      throw new HttpsError("invalid-argument", "Enter a valid username.");
+    }
 
     const usersSnap = await db.collection("users").where("usernameLower", "==", username).limit(1).get();
-    if (usersSnap.empty) throw new HttpsError("not-found", "Account not found.");
-
-    const userData = usersSnap.docs[0].data() || {};
+    const userData = usersSnap.empty ? {} : usersSnap.docs[0].data() || {};
     const email = String(userData.email || "").trim().toLowerCase();
-    if (!email || !email.includes("@")) throw new HttpsError("failed-precondition", "This account needs an email login first.");
+    if (!email || !email.includes("@")) {
+      throw new HttpsError("not-found", "The username or account configuration is invalid.");
+    }
     return { email };
   }
 );
 
 ["companies", "users", "leads", "jobs"].forEach(attachStats);
+
 exports.rebuildStats = require("./stats-rebuild").rebuildStats;
 exports.sanitizeLeadIdentity = require("./lead-privacy").sanitizeLeadIdentity;
 exports.notifyLeadAssignment = require("./lead-notifications").notifyLeadAssignment;
 exports.notifyChatParticipants = require("./message-notifications").notifyChatParticipants;
 exports.registerPushToken = require("./push-notifications").registerPushToken;
 exports.unregisterPushToken = require("./push-notifications").unregisterPushToken;
+exports.reviewStaffApplication = require("./staff-approval").reviewStaffApplication;
+exports.writeSecurityAudit = require("./audit-events").writeSecurityAudit;
+exports.bootstrapMessageChannels = require("./messaging-registry").bootstrapMessageChannels;
+exports.resolveMessageRecipient = require("./messaging-registry").resolveMessageRecipient;
+exports.migrateMessageRegistry = require("./messaging-registry").migrateMessageRegistry;
+exports.aiCommand = require("./ai-command").aiCommand;
