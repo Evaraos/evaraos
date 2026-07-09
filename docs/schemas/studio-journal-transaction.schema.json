@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evaraos.com/schemas/studio-journal-transaction.schema.json",
+  "title": "EvaraOS Studio Journal Transaction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "transactionId",
+    "companyId",
+    "projectId",
+    "branchId",
+    "graphId",
+    "expectedHeadRevision",
+    "operations",
+    "inverseOperations",
+    "actor",
+    "intent",
+    "clientSessionId",
+    "createdAtClient"
+  ],
+  "properties": {
+    "transactionId": { "type": "string", "minLength": 8, "maxLength": 200 },
+    "companyId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "projectId": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "branchId": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "graphId": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "expectedHeadRevision": { "type": "integer", "minimum": 0 },
+    "acceptedHeadRevision": { "type": ["integer", "null"], "minimum": 0 },
+    "startSequence": { "type": ["integer", "null"], "minimum": 0 },
+    "endSequence": { "type": ["integer", "null"], "minimum": 0 },
+    "intent": {
+      "type": "string",
+      "enum": [
+        "canvas.component.insert",
+        "canvas.component.move",
+        "canvas.component.resize",
+        "canvas.component.reparent",
+        "canvas.component.duplicate",
+        "canvas.component.delete",
+        "canvas.property.set",
+        "canvas.layout.set",
+        "canvas.visibility.set",
+        "canvas.token.bind",
+        "canvas.data.bind",
+        "history.undo",
+        "history.redo",
+        "checkpoint.create",
+        "migration.apply",
+        "system"
+      ]
+    },
+    "summary": { "type": "string", "maxLength": 500 },
+    "operations": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 250,
+      "items": { "$ref": "evara-operation.schema.json" }
+    },
+    "inverseOperations": {
+      "type": "array",
+      "maxItems": 250,
+      "items": { "$ref": "evara-operation.schema.json" }
+    },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "type": { "type": "string", "enum": ["user", "system", "ai", "migration"] },
+        "role": { "type": ["string", "null"], "maxLength": 100 }
+      }
+    },
+    "clientSessionId": { "type": "string", "minLength": 8, "maxLength": 200 },
+    "correlationId": { "type": ["string", "null"], "maxLength": 200 },
+    "revertsTransactionId": { "type": ["string", "null"], "maxLength": 200 },
+    "redoesTransactionId": { "type": ["string", "null"], "maxLength": 200 },
+    "affectedNodeIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 200 }
+    },
+    "affectedEdgeIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 200 }
+    },
+    "durabilityState": {
+      "type": "string",
+      "enum": ["pending-local", "saved-locally", "syncing", "server-confirmed", "conflict", "rejected"]
+    },
+    "previousHash": { "type": ["string", "null"], "maxLength": 256 },
+    "transactionHash": { "type": ["string", "null"], "maxLength": 256 },
+    "createdAtClient": { "type": "string", "format": "date-time" },
+    "acceptedAtServer": { "type": ["string", "null"], "format": "date-time" },
+    "metadata": { "type": "object" }
+  }
+}
