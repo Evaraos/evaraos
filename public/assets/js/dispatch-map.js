@@ -7,11 +7,11 @@ import {
   where,
   onSnapshot,
   doc,
-  setDoc,
   serverTimestamp,
   getSavedUserProfile,
   getSavedUserRole
 } from './firebase.js';
+import { setDoc as setFirestoreDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { loadGoogleMaps } from './maps-loader.js';
 
 const statusEl = document.getElementById('mapStatus');
@@ -216,7 +216,7 @@ async function writeLocation(position) {
 
   locationWriteInFlight = true;
   try {
-    await setDoc(doc(db, 'workforce_locations', activeUser.uid), {
+    await setFirestoreDoc(doc(db, 'workforce_locations', activeUser.uid), {
       uid: activeUser.uid,
       userId: activeUser.uid,
       companyId: activeCompanyId,
@@ -263,7 +263,7 @@ async function markTrackingStopped() {
   if (!activeUser) return;
 
   try {
-    await setDoc(doc(db, 'workforce_locations', activeUser.uid), {
+    await setFirestoreDoc(doc(db, 'workforce_locations', activeUser.uid), {
       uid: activeUser.uid,
       userId: activeUser.uid,
       companyId: activeCompanyId,
