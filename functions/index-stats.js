@@ -151,3 +151,12 @@ exports.notifyLeadAssignment = require("./lead-notifications").notifyLeadAssignm
 exports.notifyChatParticipants = require("./message-notifications").notifyChatParticipants;
 exports.registerPushToken = require("./push-notifications").registerPushToken;
 exports.unregisterPushToken = require("./push-notifications").unregisterPushToken;
+
+const marketplaceCommerce = require("./marketplace-commerce-runtime");
+exports.acceptMarketplaceQuote = marketplaceCommerce.acceptMarketplaceQuote;
+exports.rejectMarketplaceQuote = marketplaceCommerce.rejectMarketplaceQuote;
+exports.createMarketplaceInvoiceCheckout = marketplaceCommerce.createMarketplaceInvoiceCheckout;
+exports.manageMarketplaceSubscription = marketplaceCommerce.manageMarketplaceSubscription;
+exports.vendorRespondMarketplaceOrder = marketplaceCommerce.vendorRespondMarketplaceOrder;
+exports.stripeMarketplaceWebhook = marketplaceCommerce.stripeMarketplaceWebhook;
+exports.releaseExpiredMarketplaceReservations = marketplaceCommerce.releaseExpiredMarketplaceReservations;
