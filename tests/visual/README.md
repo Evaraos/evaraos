@@ -1,6 +1,6 @@
 # EvaraOS Authenticated Visual QA
 
-This workspace runs authenticated route, layout, accessibility-smoke, Studio interaction, Blueprint serialization, and screenshot-regression checks against a deployed EvaraOS environment.
+This workspace runs authenticated route, layout, accessibility-smoke, Studio interaction, Blueprint serialization, operation-journal, and screenshot-regression checks against a deployed EvaraOS environment.
 
 It does **not** bypass Firebase Authentication, Firestore profile verification, route permissions, or role policies. Every saved browser session is created through the production login form using dedicated QA accounts.
 
@@ -53,7 +53,7 @@ Visual cases compare deterministic viewport screenshots. Dynamic maps, live coun
 
 ## Focused Studio diagnostics
 
-The `studio` suite runs three authenticated owner tests in desktop Chromium.
+The `studio` suite runs four authenticated owner tests in desktop Chromium.
 
 ### `studio-interactions.spec.mjs`
 
@@ -99,7 +99,23 @@ Checks:
 - `component-instance`, `instantiates`, `visibleTo`, and `navigatesTo` graph contracts
 - Blueprint document, projection, graph summary, and screenshot artifacts
 
-All three tests reset only Studio's browser-local draft keys. They do not clear authentication, appearance, or unrelated browser state, and they do not write production business records.
+### `studio-blueprint-operations.spec.mjs`
+
+Checks:
+
+- semantic component insertion
+- reversible low-level Evara operations
+- `transaction.commit` envelopes
+- inverse operations
+- per-page graph revision advancement
+- IndexedDB durability
+- transaction idempotency
+- property-update commands
+- Auto Layout commands
+- compatibility-projection duplicate suppression
+- operation transaction, graph-head, screenshot, and console artifacts
+
+All four tests reset only Studio's browser-local draft keys. They do not clear authentication, appearance, or unrelated browser state, and they do not write production business records.
 
 ## Required environment
 
@@ -147,10 +163,11 @@ npx playwright test \
   specs/studio-interactions.spec.mjs \
   specs/studio-action-icon.spec.mjs \
   specs/studio-blueprint-serialization.spec.mjs \
+  specs/studio-blueprint-operations.spec.mjs \
   --project=desktop-chromium
 ```
 
-This is the smallest authenticated gate for Studio component authoring and Blueprint serialization.
+This is the smallest authenticated gate for Studio component authoring, Blueprint serialization, and local operation durability.
 
 ## Critical matrix
 
@@ -197,13 +214,15 @@ Workflow:
 .github/workflows/design-system-visual-qa.yml
 ```
 
-Automatic pushes and pull requests run five zero-dependency architecture checks:
+Automatic pushes and pull requests run seven zero-dependency architecture checks:
 
 1. Design System ownership audit
 2. Studio component catalog and inspector audit
 3. Studio action and icon audit
 4. Studio Blueprint serialization audit
-5. Visual-QA architecture audit
+5. Studio Blueprint operation and Journal audit
+6. Studio Canvas sandbox audit
+7. Visual-QA architecture audit
 
 Authenticated QA is manual because it requires:
 
@@ -213,13 +232,13 @@ Authenticated QA is manual because it requires:
 - explicit selection of the `studio` or `all` suite
 - critical or full coverage selection for the `all` suite
 
-The `studio` suite runs all three focused Studio specs. The `all` suite runs the full authenticated visual matrix and can optionally generate candidate baselines.
+The `studio` suite runs all four focused Studio specs. The `all` suite runs the full authenticated visual matrix and can optionally generate candidate baselines.
 
-Configure the environment variables above as GitHub repository secrets. The workflow uploads reports, traces, videos, failure screenshots, state diagnostics, Blueprint documents, graph summaries, and optional baseline candidates. It never uploads `.auth/`.
+Configure the environment variables above as GitHub repository secrets. The workflow uploads reports, traces, videos, failure screenshots, state diagnostics, Blueprint documents, graph summaries, operation envelopes, and optional baseline candidates. It never uploads `.auth/`.
 
-## Blueprint authority boundary
+## Blueprint serialization authority boundary
 
-The current Blueprint serializer is a read-only compatibility projection.
+The Blueprint serializer is a read-only compatibility projection.
 
 It may:
 
@@ -240,6 +259,33 @@ It may not:
 - treat browser state as a published release
 
 The existing trusted Blueprint service currently accepts only the legacy navigation, sections, and component-ID projection. It must not receive the richer component-instance document until a reviewed server schema and migration are deployed.
+
+## Blueprint operation authority boundary
+
+The operation adapter converts differences between two validated Blueprint projections into semantic Canvas commands and low-level Evara operations.
+
+It may:
+
+- observe writes performed by the existing Studio prototype
+- infer insert, delete, move, layout, visibility, and property intents
+- compile graph deltas through the existing Operation Protocol
+- verify semantic parity against the target Blueprint graph
+- append reversible operation envelopes to the existing IndexedDB Draft Journal
+- track an independent revision head for every page graph
+- suppress a delayed duplicate compatibility snapshot after a successful semantic commit
+
+It may not:
+
+- open another IndexedDB database
+- create another transaction store
+- write directly to localStorage
+- call Firebase or external APIs
+- publish or roll back Blueprints
+- commit to the trusted server journal
+- bypass expected revision checks
+- treat local durability as a trusted release
+
+The current adapter runs after the legacy prototype writes its browser projection. This is a migration boundary, not the final production edit order. Production Canvas must journal the transaction before reporting an edit durable or rendering it as accepted state.
 
 ## Account requirements
 
@@ -294,6 +340,18 @@ Review route authorization, icon normalization, unreferenced instances, repeated
 ### Blueprint compilation fails
 
 Confirm the document uses schema `1.0.0`, every section reference resolves to an instance, every component definition exists in the Studio registry, and all generated graph edges reference existing nodes.
+
+### Operation adapter reports semantic graph parity failure
+
+The graph delta did not reproduce the graph generated from the target Blueprint document. The transaction is intentionally not journaled. Review removed properties, changed edge contracts, component-definition changes, and graph compiler output.
+
+### Operation adapter reports a revision conflict
+
+The browser projection does not match the latest durable fingerprint or its expected graph revision is stale. Do not overwrite the head. Restore a checkpoint or reload the latest trusted branch state before retrying.
+
+### Compatibility transactions still appear
+
+Compatibility entries remain a migration fallback for writes that do not change the serialized Blueprint document, such as temporary prototype state. A successful semantic transaction must not be followed by a compatibility entry with the same projection hash.
 
 ### Screenshots differ only in business values
 
