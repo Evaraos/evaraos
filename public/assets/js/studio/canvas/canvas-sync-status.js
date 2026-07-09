@@ -14,6 +14,7 @@ let state = {
   writerState: 'idle',
   reason: 'boot'
 };
+let renderFrame = 0;
 
 function integer(value, fallback = 0) {
   const normalized = Number(value);
@@ -57,6 +58,7 @@ function statusText() {
 }
 
 function render() {
+  renderFrame = 0;
   const body = document.body;
   if (!body) return;
   body.dataset.canvasSyncVersion = STATUS_VERSION;
@@ -90,14 +92,21 @@ function render() {
       : state.unsynchronizedChanges
         ? 'unsynchronized'
         : state.syncState;
-  status.textContent = statusText();
-  status.hidden = !document.body.classList.contains('is-canvas-sandbox-open');
+  const nextText = statusText();
+  if (status.textContent !== nextText) status.textContent = nextText;
+  const shouldHide = !document.body.classList.contains('is-canvas-sandbox-open');
+  if (status.hidden !== shouldHide) status.hidden = shouldHide;
+}
+
+function scheduleRender() {
+  if (renderFrame) return;
+  renderFrame = requestAnimationFrame(render);
 }
 
 function publish(reason = 'refresh') {
   state = normalize(sessionSnapshot() || {}, reason);
   state.writerState = writerSnapshot()?.state || state.writerState;
-  render();
+  scheduleRender();
   window.dispatchEvent(new CustomEvent('evara:canvas-sync-status', {
     detail: { ...state, version: STATUS_VERSION }
   }));
@@ -107,13 +116,13 @@ function publish(reason = 'refresh') {
 window.addEventListener('evara:canvas-session-change', (event) => {
   state = normalize(event.detail || sessionSnapshot() || {}, event.detail?.reason || 'canvas-session-change');
   state.writerState = writerSnapshot()?.state || state.writerState;
-  render();
+  scheduleRender();
 });
 
 window.addEventListener('evara:canvas-writer-guard', (event) => {
   state = normalize(sessionSnapshot() || {}, event.detail?.reason || 'canvas-writer-guard');
   state.writerState = event.detail?.state || state.writerState;
-  render();
+  scheduleRender();
 });
 
 window.addEventListener('evara:studio-journal-status', (event) => {
@@ -126,12 +135,20 @@ window.addEventListener('evara:studio-journal-status', (event) => {
     durabilityState: detail.durabilityState || detail.state,
     integrityState: detail.state === 'recovery-required' ? 'recovery-required' : state.integrityState
   }, detail.reason || 'studio-journal-status');
-  render();
+  scheduleRender();
 });
 
-const observer = new MutationObserver(() => render());
-if (document.body) observer.observe(document.body, { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
-else document.addEventListener('DOMContentLoaded', () => observer.observe(document.body, { attributes: true, attributeFilter: ['class'], childList: true, subtree: true }), { once: true });
+const observer = new MutationObserver(scheduleRender);
+function observe() {
+  observer.observe(document.body, {
+    attributes: true,
+    attributeFilter: ['class'],
+    childList: true,
+    subtree: true
+  });
+}
+if (document.body) observe();
+else document.addEventListener('DOMContentLoaded', observe, { once: true });
 
 window.EvaraCanvasSyncStatus = Object.freeze({
   version: STATUS_VERSION,
