@@ -1,10 +1,101 @@
 :root {
+  /* EVARAOS DESIGN SYSTEM — FOUNDATION TOKENS
+     This file is the shared contract for production UI and Evara Studio components.
+     Theme-specific material values continue to come from theme/adaptive-tokens.css. */
+
+  /* Motion */
   --page-transition-ms: 180ms;
+  --duration-instant: 80ms;
+  --duration-fast: 140ms;
+  --duration-standard: 220ms;
+  --duration-emphasized: 360ms;
+  --duration-slow: 520ms;
+  --ease-standard: cubic-bezier(.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(.16, 1, .3, 1);
+  --ease-exit: cubic-bezier(.4, 0, 1, 1);
+  --motion: var(--duration-standard) var(--ease-standard);
+  --motion-emphasized: var(--duration-emphasized) var(--ease-emphasized);
+
+  /* Spacing — 4px base grid with optical intermediate steps */
+  --space-0: 0;
+  --space-1: .25rem;
+  --space-2: .5rem;
+  --space-3: .75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-7: 1.75rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-14: 3.5rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
+
+  /* Responsive layout */
+  --page-gutter: clamp(1rem, 2.4vw, 2rem);
+  --section-gap: clamp(1.5rem, 3vw, 3rem);
+  --content-max: 90rem;
+  --content-reading: 44rem;
+  --control-height-sm: 2rem;
+  --control-height-md: 2.75rem;
+  --control-height-lg: 3.25rem;
+  --tap-target-min: 2.75rem;
+
+  /* Typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "SFMono-Regular", "SF Mono", ui-monospace, Menlo, Monaco, Consolas, monospace;
+  --text-2xs: .6875rem;
+  --text-xs: .75rem;
+  --text-sm: .8125rem;
+  --text-md: .9375rem;
+  --text-lg: 1.0625rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: clamp(1.75rem, 2.5vw, 2.25rem);
+  --text-4xl: clamp(2.125rem, 4vw, 3.25rem);
+  --leading-tight: 1.08;
+  --leading-snug: 1.24;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+  --tracking-tight: -.025em;
+  --tracking-normal: 0;
+  --tracking-wide: .04em;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* Shape */
+  --radius-xs: .375rem;
+  --radius-sm: .625rem;
+  --radius-md: .875rem;
+  --radius-lg: 1.125rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-3xl: 2.5rem;
+  --radius-pill: 999px;
+
+  /* Iconography */
+  --icon-xs: .875rem;
+  --icon-sm: 1rem;
+  --icon-md: 1.25rem;
+  --icon-lg: 1.5rem;
+  --icon-xl: 2rem;
+  --icon-stroke: 1.8;
+
+  /* Brand and semantic accents */
   --accent-red: #ff3b30;
   --accent-red-2: #ff6961;
   --accent-blue: #0a84ff;
   --accent-cyan: #64d2ff;
   --accent-violet: #8b5cf6;
+  --positive: #30d158;
+  --warning: #ff9f0a;
+  --critical: #ff453a;
+  --information: #64d2ff;
 
   /* Theme values are supplied by theme/adaptive-tokens.css.
      These neutral fallbacks prevent the base layer from painting a competing theme. */
@@ -18,6 +109,19 @@
   --theme-soft-rgb: var(--adaptive-glass-rgb,28,34,46);
   --beam-halo-rgb: 255,255,255;
 
+  /* Hairlines and focus */
+  --separator: rgba(var(--adaptive-ink-rgb,255,255,255),.12);
+  --separator-strong: rgba(var(--adaptive-ink-rgb,255,255,255),.2);
+  --focus-ring: 0 0 0 3px rgba(var(--accent-rgb,10,132,255),.28);
+
+  /* Elevation */
+  --shadow-xs: 0 1px 2px rgba(var(--adaptive-shadow-rgb,0,0,0),.10);
+  --shadow-sm: 0 4px 14px rgba(var(--adaptive-shadow-rgb,0,0,0),.14);
+  --shadow-md: 0 12px 34px rgba(var(--adaptive-shadow-rgb,0,0,0),.18);
+  --shadow-lg: 0 24px 72px rgba(var(--adaptive-shadow-rgb,0,0,0),.24);
+  --shadow-xl: 0 38px 120px rgba(var(--adaptive-shadow-rgb,0,0,0),.32);
+
+  /* Glass aliases */
   --glass-bg: var(--glass-fill,rgba(255,255,255,.10));
   --glass-bg-strong: var(--glass-fill-strong,rgba(255,255,255,.14));
   --glass-border: var(--glass-edge,rgba(255,255,255,.28));
@@ -36,4 +140,23 @@
   --card-border: var(--glass-edge,rgba(255,255,255,.28));
   --card-bg-top: transparent;
   --card-bg-bottom: transparent;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --page-gutter: 1rem;
+    --section-gap: 1.5rem;
+    --control-height-md: 2.875rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --page-transition-ms: 1ms;
+    --duration-instant: 1ms;
+    --duration-fast: 1ms;
+    --duration-standard: 1ms;
+    --duration-emphasized: 1ms;
+    --duration-slow: 1ms;
+  }
 }
