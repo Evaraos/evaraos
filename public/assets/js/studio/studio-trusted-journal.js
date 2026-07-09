@@ -1,4 +1,9 @@
-import { functions, httpsCallable } from '../firebase.js';
+import {
+  auth,
+  functions,
+  httpsCallable,
+  onAuthStateChanged
+} from '../firebase.js';
 
 const ADAPTER_NAME = 'trusted-studio-journal';
 const ADAPTER_VERSION = 'trusted-studio-journal-v1';
@@ -20,6 +25,10 @@ const graphQueues = new Map();
 const openedBranches = new Map();
 let syncTimer = 0;
 let lastError = null;
+let authenticatedUser = auth.currentUser || null;
+let resolveInitialAuth;
+const initialAuth = new Promise((resolve) => { resolveInitialAuth = resolve; });
+let initialAuthResolved = false;
 
 function journal() {
   const api = window.EvaraStudioJournal;
@@ -51,9 +60,15 @@ function isConflict(error) {
     || ['branch-head-conflict', 'transaction-id-reused', 'operation-id-reused'].includes(error?.details?.code);
 }
 
-function isOffline(error) {
+function isServiceUnavailable(error) {
   const code = errorCode(error);
-  return !navigator.onLine || ['unavailable', 'deadline-exceeded', 'network-request-failed'].includes(code);
+  return !navigator.onLine || [
+    'unavailable',
+    'deadline-exceeded',
+    'network-request-failed',
+    'not-found',
+    'unimplemented'
+  ].includes(code);
 }
 
 function emit(state, reason, extra = {}) {
@@ -62,7 +77,15 @@ function emit(state, reason, extra = {}) {
   }));
 }
 
+async function requireAuthenticatedUser() {
+  if (auth.currentUser) return auth.currentUser;
+  const user = await initialAuth;
+  if (!user) throw Object.assign(new Error('An authenticated Studio session is required for trusted synchronization.'), { code: 'unauthenticated' });
+  return user;
+}
+
 async function context() {
+  await requireAuthenticatedUser();
   const session = await journal().getLocalSession();
   return {
     companyId: session.companyId && session.companyId !== 'local-prototype' ? session.companyId : undefined,
@@ -72,6 +95,12 @@ async function context() {
     graphSchemaVersion: session.graphSchemaVersion || GRAPH_SCHEMA_VERSION,
     operationProtocolVersion: session.operationProtocolVersion || OPERATION_PROTOCOL_VERSION
   };
+}
+
+async function refreshCanvasDiagnostics() {
+  const session = window.EvaraCanvasSandbox?.getSession?.();
+  if (session?.refreshJournalDiagnostics) await session.refreshJournalDiagnostics().catch(() => undefined);
+  window.EvaraCanvasSyncStatus?.refresh?.('trusted-journal-state');
 }
 
 async function openGraph(graphId, { force = false } = {}) {
@@ -98,6 +127,7 @@ async function commitOne(record) {
   const api = journal();
   const ctx = await context();
   await api.markTransactionState(record.transactionId, 'syncing');
+  await refreshCanvasDiagnostics();
   emit('syncing', 'transaction-syncing', { graphId: record.graphId, transactionId: record.transactionId });
   try {
     await openGraph(record.graphId);
@@ -116,6 +146,7 @@ async function commitOne(record) {
     const result = response.data;
     const confirmed = await api.markTransactionState(record.transactionId, 'server-confirmed', result.transaction || {});
     openedBranches.set(record.graphId, result.branch);
+    await refreshCanvasDiagnostics();
     emit('server-confirmed', result.idempotent ? 'transaction-idempotent' : 'transaction-confirmed', {
       graphId: record.graphId,
       transactionId: record.transactionId,
@@ -138,15 +169,16 @@ async function commitOne(record) {
         conflict: details,
         error: text(error.message, 500)
       });
-    } else if (isOffline(error)) {
+    } else if (isServiceUnavailable(error)) {
       await api.markTransactionState(record.transactionId, 'offline', {
         syncErrorCode: errorCode(error),
         syncErrorMessage: error.message
       });
-      emit('offline', 'transaction-offline', {
+      emit('offline', 'trusted-service-unavailable', {
         graphId: record.graphId,
         transactionId: record.transactionId,
-        error: text(error.message, 500)
+        error: text(error.message, 500),
+        serviceCode: errorCode(error)
       });
     } else {
       await api.markTransactionState(record.transactionId, 'recovery-required', {
@@ -160,6 +192,7 @@ async function commitOne(record) {
         details
       });
     }
+    await refreshCanvasDiagnostics();
     throw error;
   }
 }
@@ -168,8 +201,10 @@ async function synchronizeGraph(graphId) {
   const id = text(graphId, 220);
   const previous = graphQueues.get(id) || Promise.resolve();
   const next = previous.catch(() => undefined).then(async () => {
+    await requireAuthenticatedUser();
     if (!navigator.onLine) {
       await journal().setDurabilityState('offline', 'browser-offline', { graphId: id });
+      await refreshCanvasDiagnostics();
       return { graphId: id, synced: 0, pending: (await journal().listPendingOperationTransactions(id)).length, state: 'offline' };
     }
     let synced = 0;
@@ -180,8 +215,17 @@ async function synchronizeGraph(graphId) {
       synced += 1;
     }
     records = await journal().listPendingOperationTransactions(id);
-    const state = records.length ? 'saved-locally' : 'server-confirmed';
+    const state = records.some((record) => record.durabilityState === 'conflict')
+      ? 'conflict'
+      : records.some((record) => record.durabilityState === 'recovery-required')
+        ? 'recovery-required'
+        : records.some((record) => record.durabilityState === 'offline')
+          ? 'offline'
+          : records.length
+            ? 'saved-locally'
+            : 'server-confirmed';
     await journal().setDurabilityState(state, 'graph-sync-complete', { graphId: id, synced, pendingCount: records.length });
+    await refreshCanvasDiagnostics();
     emit(state, 'graph-sync-complete', { graphId: id, synced, pendingCount: records.length });
     return { graphId: id, synced, pending: records.length, state };
   });
@@ -192,6 +236,7 @@ async function synchronizeGraph(graphId) {
 }
 
 async function synchronizePending(graphId = '') {
+  await requireAuthenticatedUser();
   const pending = await journal().listPendingOperationTransactions(graphId);
   const graphIds = [...new Set(pending.map((record) => record.graphId).filter(Boolean))];
   const results = [];
@@ -200,6 +245,7 @@ async function synchronizePending(graphId = '') {
 }
 
 function scheduleSync(graphId = '') {
+  if (!authenticatedUser) return;
   clearTimeout(syncTimer);
   syncTimer = setTimeout(() => {
     const task = graphId ? synchronizeGraph(graphId) : synchronizePending();
@@ -226,6 +272,7 @@ async function createTrustedCheckpoint(graphSnapshot, reason = 'trusted-checkpoi
     checkpoint: { ...response.data.checkpoint, projectId: ctx.projectId, branchId: ctx.branchId },
     graphSnapshot
   });
+  await refreshCanvasDiagnostics();
   emit('server-confirmed', 'trusted-checkpoint-created', { graphId: graphSnapshot.graphId, checkpoint });
   return checkpoint;
 }
@@ -245,6 +292,7 @@ async function restoreTrustedCheckpoint({ graphId, checkpointId = null } = {}) {
     graphSnapshot: plan.graphSnapshot,
     transactions: plan.transactions || []
   });
+  await refreshCanvasDiagnostics();
   emit('server-confirmed', 'trusted-recovery-ready', {
     graphId: plan.branch?.graphId || graphId,
     checkpointId: plan.checkpoint?.checkpointId,
@@ -304,6 +352,7 @@ async function createBranch(options = {}) {
 }
 
 async function closeCurrentSession(graphId = '') {
+  if (!auth.currentUser) return { ok: false, reason: 'not-authenticated' };
   const ctx = await context();
   const response = await callables.closeSession({
     companyId: ctx.companyId,
@@ -331,6 +380,7 @@ const adapter = Object.freeze({
   snapshot: () => ({
     name: ADAPTER_NAME,
     version: ADAPTER_VERSION,
+    authenticated: Boolean(authenticatedUser),
     online: navigator.onLine,
     openGraphIds: [...openedBranches.keys()],
     syncingGraphIds: [...graphQueues.keys()],
@@ -340,6 +390,15 @@ const adapter = Object.freeze({
 
 journal().registerServerAdapter(ADAPTER_NAME, adapter);
 window.EvaraTrustedStudioJournal = adapter;
+
+onAuthStateChanged(auth, (user) => {
+  authenticatedUser = user || null;
+  if (!initialAuthResolved) {
+    initialAuthResolved = true;
+    resolveInitialAuth(authenticatedUser);
+  }
+  if (authenticatedUser) scheduleSync();
+});
 
 window.addEventListener('evara:studio-operation-durable', (event) => {
   const graphId = event.detail?.graphId;
@@ -354,5 +413,7 @@ window.addEventListener('pagehide', () => {
 }, { once: true });
 
 journal().initialize()
-  .then(() => scheduleSync())
+  .then(() => {
+    if (auth.currentUser) scheduleSync();
+  })
   .catch((error) => emit('recovery-required', 'trusted-adapter-initialize', { error: text(error?.message || error, 500) }));
