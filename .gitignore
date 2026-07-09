@@ -8,6 +8,7 @@ functions/.env.*
 # Dependencies
 node_modules/
 functions/node_modules/
+tests/visual/node_modules/
 
 # Firebase / local debug files
 .firebase/
@@ -17,6 +18,13 @@ database-debug.log
 pubsub-debug.log
 storage-debug.log
 ui-debug.log
+
+# Visual QA credentials and generated artifacts
+tests/visual/.auth/
+tests/visual/playwright-report/
+tests/visual/test-results/
+tests/visual/blob-report/
+tests/visual/.cache/
 
 # OS / editor files
 .DS_Store
