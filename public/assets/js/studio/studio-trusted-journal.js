@@ -6,7 +6,7 @@ import {
 } from '../firebase.js';
 
 const ADAPTER_NAME = 'trusted-studio-journal';
-const ADAPTER_VERSION = 'trusted-studio-journal-v1';
+const ADAPTER_VERSION = 'trusted-studio-journal-v2';
 const GRAPH_SCHEMA_VERSION = '0.1.0';
 const OPERATION_PROTOCOL_VERSION = '0.1.0';
 
@@ -46,6 +46,29 @@ function text(value, max = 300) {
   return String(value ?? '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, max);
 }
 
+function cleanId(value, max = 160) {
+  return text(value, max)
+    .replace(/[^a-zA-Z0-9:._-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function digest(value) {
+  const input = String(value || 'graph');
+  let hash = 2166136261;
+  for (let index = 0; index < input.length; index += 1) {
+    hash ^= input.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
+
+function branchIdForGraph(logicalBranchId, graphId) {
+  const branch = cleanId(logicalBranchId || 'local-draft', 120) || 'local-draft';
+  const graph = cleanId(graphId, 220);
+  if (!graph) throw new TypeError('Trusted Studio branch scope requires graphId.');
+  return cleanId(`${branch}--g-${digest(graph)}`, 160);
+}
+
 function errorCode(error) {
   return text(error?.details?.code || error?.code || error?.name || 'unknown', 120).replace(/^functions\//, '');
 }
@@ -56,8 +79,8 @@ function errorDetails(error) {
 
 function isConflict(error) {
   const code = errorCode(error);
-  return ['aborted', 'already-exists', 'branch-head-conflict', 'transaction-id-reused', 'operation-id-reused'].includes(code)
-    || ['branch-head-conflict', 'transaction-id-reused', 'operation-id-reused'].includes(error?.details?.code);
+  return ['aborted', 'already-exists', 'branch-head-conflict', 'transaction-id-reused', 'operation-id-reused', 'graph-id-conflict'].includes(code)
+    || ['branch-head-conflict', 'transaction-id-reused', 'operation-id-reused', 'graph-id-conflict'].includes(error?.details?.code);
 }
 
 function isServiceUnavailable(error) {
@@ -84,16 +107,27 @@ async function requireAuthenticatedUser() {
   return user;
 }
 
-async function context() {
+async function baseContext() {
   await requireAuthenticatedUser();
   const session = await journal().getLocalSession();
   return {
     companyId: session.companyId && session.companyId !== 'local-prototype' ? session.companyId : undefined,
-    projectId: session.projectId || 'evara-studio-visual-builder',
-    branchId: session.branchId || 'local-draft',
-    clientSessionId: session.clientInstanceId || session.sessionId,
+    projectId: cleanId(session.projectId || 'evara-studio-visual-builder', 160),
+    logicalBranchId: cleanId(session.branchId || 'local-draft', 120),
+    clientSessionId: cleanId(session.clientInstanceId || session.sessionId, 200),
     graphSchemaVersion: session.graphSchemaVersion || GRAPH_SCHEMA_VERSION,
     operationProtocolVersion: session.operationProtocolVersion || OPERATION_PROTOCOL_VERSION
+  };
+}
+
+async function context(graphId, logicalBranchId = '') {
+  const graph = cleanId(graphId, 220);
+  if (!graph) throw new TypeError('Trusted Studio synchronization requires graphId.');
+  const base = await baseContext();
+  return {
+    ...base,
+    graphId: graph,
+    branchId: branchIdForGraph(logicalBranchId || base.logicalBranchId, graph)
   };
 }
 
@@ -103,11 +137,12 @@ async function refreshCanvasDiagnostics() {
   window.EvaraCanvasSyncStatus?.refresh?.('trusted-journal-state');
 }
 
-async function openGraph(graphId, { force = false } = {}) {
-  const id = text(graphId, 220);
+async function openGraph(graphId, { force = false, logicalBranchId = '' } = {}) {
+  const id = cleanId(graphId, 220);
   if (!id) throw new TypeError('Trusted Studio branches require graphId.');
-  if (!force && openedBranches.has(id)) return clone(openedBranches.get(id));
-  const ctx = await context();
+  const ctx = await context(id, logicalBranchId);
+  const cacheKey = `${ctx.branchId}:${id}`;
+  if (!force && openedBranches.has(cacheKey)) return clone(openedBranches.get(cacheKey));
   const response = await callables.openBranch({
     companyId: ctx.companyId,
     projectId: ctx.projectId,
@@ -118,17 +153,27 @@ async function openGraph(graphId, { force = false } = {}) {
     operationProtocolVersion: ctx.operationProtocolVersion
   });
   const result = response.data;
-  openedBranches.set(id, result.branch);
-  emit('server-confirmed', 'branch-opened', { graphId: id, branch: result.branch });
+  openedBranches.set(cacheKey, result.branch);
+  emit('server-confirmed', 'branch-opened', {
+    graphId: id,
+    logicalBranchId: ctx.logicalBranchId,
+    serverBranchId: ctx.branchId,
+    branch: result.branch
+  });
   return clone(result.branch);
 }
 
 async function commitOne(record) {
   const api = journal();
-  const ctx = await context();
+  const ctx = await context(record.graphId);
+  const cacheKey = `${ctx.branchId}:${ctx.graphId}`;
   await api.markTransactionState(record.transactionId, 'syncing');
   await refreshCanvasDiagnostics();
-  emit('syncing', 'transaction-syncing', { graphId: record.graphId, transactionId: record.transactionId });
+  emit('syncing', 'transaction-syncing', {
+    graphId: record.graphId,
+    transactionId: record.transactionId,
+    serverBranchId: ctx.branchId
+  });
   try {
     await openGraph(record.graphId);
     const response = await callables.commit({
@@ -145,11 +190,12 @@ async function commitOne(record) {
     });
     const result = response.data;
     const confirmed = await api.markTransactionState(record.transactionId, 'server-confirmed', result.transaction || {});
-    openedBranches.set(record.graphId, result.branch);
+    openedBranches.set(cacheKey, result.branch);
     await refreshCanvasDiagnostics();
     emit('server-confirmed', result.idempotent ? 'transaction-idempotent' : 'transaction-confirmed', {
       graphId: record.graphId,
       transactionId: record.transactionId,
+      serverBranchId: ctx.branchId,
       transaction: confirmed,
       branch: result.branch,
       idempotent: Boolean(result.idempotent)
@@ -166,6 +212,7 @@ async function commitOne(record) {
       emit('conflict', 'transaction-conflict', {
         graphId: record.graphId,
         transactionId: record.transactionId,
+        serverBranchId: ctx.branchId,
         conflict: details,
         error: text(error.message, 500)
       });
@@ -177,6 +224,7 @@ async function commitOne(record) {
       emit('offline', 'trusted-service-unavailable', {
         graphId: record.graphId,
         transactionId: record.transactionId,
+        serverBranchId: ctx.branchId,
         error: text(error.message, 500),
         serviceCode: errorCode(error)
       });
@@ -188,6 +236,7 @@ async function commitOne(record) {
       emit('recovery-required', 'transaction-rejected-by-server', {
         graphId: record.graphId,
         transactionId: record.transactionId,
+        serverBranchId: ctx.branchId,
         error: text(error.message, 500),
         details
       });
@@ -198,7 +247,7 @@ async function commitOne(record) {
 }
 
 async function synchronizeGraph(graphId) {
-  const id = text(graphId, 220);
+  const id = cleanId(graphId, 220);
   const previous = graphQueues.get(id) || Promise.resolve();
   const next = previous.catch(() => undefined).then(async () => {
     await requireAuthenticatedUser();
@@ -258,7 +307,7 @@ async function createTrustedCheckpoint(graphSnapshot, reason = 'trusted-checkpoi
   await synchronizeGraph(graphSnapshot.graphId);
   const pending = await journal().listPendingOperationTransactions(graphSnapshot.graphId);
   if (pending.length) throw new Error('Unsynchronized Canvas transactions must be resolved before creating a trusted checkpoint.');
-  const ctx = await context();
+  const ctx = await context(graphSnapshot.graphId);
   const response = await callables.checkpoint({
     companyId: ctx.companyId,
     projectId: ctx.projectId,
@@ -273,12 +322,16 @@ async function createTrustedCheckpoint(graphSnapshot, reason = 'trusted-checkpoi
     graphSnapshot
   });
   await refreshCanvasDiagnostics();
-  emit('server-confirmed', 'trusted-checkpoint-created', { graphId: graphSnapshot.graphId, checkpoint });
+  emit('server-confirmed', 'trusted-checkpoint-created', {
+    graphId: graphSnapshot.graphId,
+    serverBranchId: ctx.branchId,
+    checkpoint
+  });
   return checkpoint;
 }
 
 async function restoreTrustedCheckpoint({ graphId, checkpointId = null } = {}) {
-  const ctx = await context();
+  const ctx = await context(graphId);
   const response = await callables.restore({
     companyId: ctx.companyId,
     projectId: ctx.projectId,
@@ -295,6 +348,7 @@ async function restoreTrustedCheckpoint({ graphId, checkpointId = null } = {}) {
   await refreshCanvasDiagnostics();
   emit('server-confirmed', 'trusted-recovery-ready', {
     graphId: plan.branch?.graphId || graphId,
+    serverBranchId: ctx.branchId,
     checkpointId: plan.checkpoint?.checkpointId,
     operationCount: plan.operations?.length || 0,
     transactionCount: plan.transactions?.length || 0
@@ -314,7 +368,7 @@ async function prepareImmutableRelease(graphSnapshot, { releaseId = null } = {})
   const pending = await journal().listPendingOperationTransactions(graphSnapshot.graphId);
   if (pending.length) throw new Error('Unsynchronized Canvas transactions block publication.');
   const checkpoint = await createTrustedCheckpoint(graphSnapshot, 'pre-release-checkpoint');
-  const ctx = await context();
+  const ctx = await context(graphSnapshot.graphId);
   const response = await callables.release({
     companyId: ctx.companyId,
     projectId: ctx.projectId,
@@ -327,6 +381,7 @@ async function prepareImmutableRelease(graphSnapshot, { releaseId = null } = {})
   });
   emit('server-confirmed', 'immutable-release-prepared', {
     graphId: graphSnapshot.graphId,
+    serverBranchId: ctx.branchId,
     checkpointId: checkpoint.checkpointId,
     release: response.data.release,
     idempotent: Boolean(response.data.idempotent)
@@ -335,30 +390,46 @@ async function prepareImmutableRelease(graphSnapshot, { releaseId = null } = {})
 }
 
 async function getOperationRange(options = {}) {
-  const ctx = await context();
+  const graphId = cleanId(options.graphId || window.EvaraCanvasSandbox?.getSession?.()?.snapshot?.().graphId, 220);
+  if (!graphId) throw new TypeError('Operation range queries require graphId.');
+  const ctx = await context(graphId);
   const response = await callables.operationRange({
     companyId: ctx.companyId,
     projectId: ctx.projectId,
     branchId: ctx.branchId,
-    ...clone(options)
+    ...clone(options),
+    graphId
   });
   return clone(response.data);
 }
 
 async function createBranch(options = {}) {
-  const ctx = await context();
-  const response = await callables.createBranch({ companyId: ctx.companyId, projectId: ctx.projectId, ...clone(options) });
+  const graphId = cleanId(options.graphId, 220);
+  if (!graphId) throw new TypeError('Creating a Studio branch requires graphId.');
+  const base = await baseContext();
+  const logicalBranchId = cleanId(options.branchId || `branch-${Date.now().toString(36)}`, 120);
+  const sourceLogicalBranchId = cleanId(options.sourceBranchId, 120);
+  const response = await callables.createBranch({
+    companyId: base.companyId,
+    projectId: base.projectId,
+    ...clone(options),
+    graphId,
+    branchId: branchIdForGraph(logicalBranchId, graphId),
+    sourceBranchId: sourceLogicalBranchId ? branchIdForGraph(sourceLogicalBranchId, graphId) : undefined
+  });
   return clone(response.data);
 }
 
 async function closeCurrentSession(graphId = '') {
   if (!auth.currentUser) return { ok: false, reason: 'not-authenticated' };
-  const ctx = await context();
+  const id = cleanId(graphId || window.EvaraCanvasSandbox?.getSession?.()?.snapshot?.().graphId, 220);
+  if (!id) return { ok: false, reason: 'graph-id-required' };
+  const ctx = await context(id);
   const response = await callables.closeSession({
     companyId: ctx.companyId,
     projectId: ctx.projectId,
     branchId: ctx.branchId,
-    graphId,
+    graphId: id,
     clientSessionId: ctx.clientSessionId
   });
   return clone(response.data);
@@ -377,12 +448,13 @@ const adapter = Object.freeze({
   getOperationRange,
   createBranch,
   closeSession: closeCurrentSession,
+  branchIdForGraph,
   snapshot: () => ({
     name: ADAPTER_NAME,
     version: ADAPTER_VERSION,
     authenticated: Boolean(authenticatedUser),
     online: navigator.onLine,
-    openGraphIds: [...openedBranches.keys()],
+    openBranches: [...openedBranches.entries()].map(([key, branch]) => ({ key, branchId: branch?.branchId || null, graphId: branch?.graphId || null })),
     syncingGraphIds: [...graphQueues.keys()],
     lastError: lastError ? { code: errorCode(lastError), message: text(lastError.message, 500), details: errorDetails(lastError) } : null
   })
