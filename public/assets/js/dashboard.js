@@ -23,6 +23,9 @@ const ROUTES = {
 const LEADERSHIP_ROLES = new Set(["owner", "super_admin", "admin", "manager", "operations_manager", "operations_coordinator"]);
 const STAFF_ROLES = new Set(["technician", "cleaner", "staff", "field_staff", "crew_lead", "sales", "sales_rep", "customer_support", "quality_control"]);
 
+let sidebarSectionObserver = null;
+let dashboardBindFrame = 0;
+
 function roleBucket() {
   const profile = getSavedUserProfile() || {};
   const role = normalizeRole(profile.role || "customer");
@@ -117,11 +120,11 @@ function updateSidebar(bucket) {
 
   if (bucket === "staff") {
     nav.innerHTML = `
-      <a href="#overviewSection" class="dashboard-nav-link active aurora-card beam-target"><span class="dashboard-nav-icon">◉</span><span>Overview</span></a>
-      <a href="#kpiSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon">◎</span><span>Today</span></a>
-      <a href="#pipelineSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon">◒</span><span>Leads</span></a>
-      <a href="#operationsSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon">◈</span><span>Jobs</span></a>
-      <a href="#activitySection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon">◐</span><span>Activity</span></a>
+      <a href="#overviewSection" class="dashboard-nav-link active aurora-card beam-target" aria-current="location"><span class="dashboard-nav-icon" aria-hidden="true">◉</span><span>Overview</span></a>
+      <a href="#kpiSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon" aria-hidden="true">◎</span><span>Today</span></a>
+      <a href="#pipelineSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon" aria-hidden="true">◒</span><span>Leads</span></a>
+      <a href="#operationsSection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon" aria-hidden="true">◈</span><span>Jobs</span></a>
+      <a href="#activitySection" class="dashboard-nav-link aurora-card beam-target"><span class="dashboard-nav-icon" aria-hidden="true">◐</span><span>Activity</span></a>
     `;
     if (footLink) {
       footLink.href = ROUTES.jobs;
@@ -144,6 +147,59 @@ function relabelSections(bucket) {
 
   showSection("companiesSection");
   showSection("usersSection");
+}
+
+function setActiveSidebarLink(link) {
+  const nav = document.querySelector(".dashboard-sidebar-nav");
+  if (!nav || !link) return;
+
+  nav.querySelectorAll(".dashboard-nav-link").forEach((item) => {
+    const active = item === link;
+    item.classList.toggle("active", active);
+    if (active) item.setAttribute("aria-current", "location");
+    else item.removeAttribute("aria-current");
+  });
+
+  link.scrollIntoView({ block: "nearest", inline: "nearest" });
+}
+
+function bindSidebarNavigation() {
+  const nav = document.querySelector(".dashboard-sidebar-nav");
+  if (!nav) return;
+
+  if (nav.dataset.dashboardNavReady !== "true") {
+    nav.dataset.dashboardNavReady = "true";
+    nav.addEventListener("click", (event) => {
+      const link = event.target.closest(".dashboard-nav-link[href^='#']");
+      if (link) setActiveSidebarLink(link);
+    });
+  }
+
+  const links = [...nav.querySelectorAll(".dashboard-nav-link[href^='#']")];
+  const pairs = links
+    .map((link) => ({ link, section: document.querySelector(link.getAttribute("href")) }))
+    .filter(({ section }) => section && !section.hidden);
+
+  const selected = links.find((link) => link.getAttribute("aria-current") === "location") || links[0];
+  if (selected) setActiveSidebarLink(selected);
+
+  sidebarSectionObserver?.disconnect();
+  if (!("IntersectionObserver" in window) || !pairs.length) return;
+
+  sidebarSectionObserver = new IntersectionObserver((entries) => {
+    const visible = entries
+      .filter((entry) => entry.isIntersecting)
+      .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+    if (!visible) return;
+
+    const pair = pairs.find(({ section }) => section === visible.target);
+    if (pair) setActiveSidebarLink(pair.link);
+  }, {
+    rootMargin: "-18% 0px -66% 0px",
+    threshold: [0.05, 0.2, 0.45]
+  });
+
+  pairs.forEach(({ section }) => sidebarSectionObserver.observe(section));
 }
 
 function ensureWidgetMount() {
@@ -196,8 +252,6 @@ function bindDashboardCards() {
   if (bucket === "staff") {
     makeClickable(document.getElementById("statLeads")?.closest(".dashboard-stat-card"), ROUTES.leads, "Open assigned leads");
     makeClickable(document.getElementById("statJobs")?.closest(".dashboard-stat-card"), ROUTES.jobs, "Open assigned jobs");
-    makeClickable(document.getElementById("pipelineSection"), ROUTES.leads, "Open lead queue");
-    makeClickable(document.getElementById("operationsSection"), ROUTES.jobs, "Open jobs");
     return;
   }
 
@@ -205,29 +259,14 @@ function bindDashboardCards() {
   makeClickable(document.getElementById("statUsers")?.closest(".dashboard-stat-card"), ROUTES.users, "Open user analytics");
   makeClickable(document.getElementById("statLeads")?.closest(".dashboard-stat-card"), ROUTES.leads, "Open lead analytics");
   makeClickable(document.getElementById("statJobs")?.closest(".dashboard-stat-card"), ROUTES.jobs, "Open job analytics");
-
-  makeClickable(document.getElementById("companiesSection"), ROUTES.companies, "Open company health analytics");
-  makeClickable(document.getElementById("usersSection"), ROUTES.users, "Open user role analytics");
-  makeClickable(document.getElementById("pipelineSection"), ROUTES.leads, "Open lead pipeline analytics");
-  makeClickable(document.getElementById("operationsSection"), ROUTES.jobs, "Open operations analytics");
 }
 
-function injectDashboardClickStyles() {
-  if (document.getElementById("dashboardClickStyles")) return;
-  const style = document.createElement("style");
-  style.id = "dashboardClickStyles";
-  style.textContent = `
-    .dashboard-click-card { cursor: pointer; position: relative; transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, filter 180ms ease; }
-    .dashboard-click-card::after { content: "Open →"; position: absolute; right: 14px; top: 14px; opacity: 0; transform: translateY(-4px); transition: opacity 180ms ease, transform 180ms ease; border-radius: 999px; padding: 6px 9px; font-size: 0.68rem; font-weight: 900; letter-spacing: -0.01em; color: rgba(20,25,23,0.76); background: rgba(255,255,255,0.72); border: 1px solid rgba(255,255,255,0.84); pointer-events: none; }
-    html[data-theme="dark"] .dashboard-click-card::after { color: rgba(245,245,247,0.82); background: rgba(44,44,46,0.72); border-color: rgba(255,255,255,0.13); }
-    .dashboard-click-card:hover, .dashboard-click-card:focus-visible { transform: translateY(-2px); filter: saturate(1.05); outline: none; }
-    .dashboard-click-card:hover::after, .dashboard-click-card:focus-visible::after { opacity: 1; transform: translateY(0); }
-    .dashboard-stat-card.dashboard-click-card { overflow: hidden; }
-    [hidden] { display: none !important; }
-    .dashboard-widget-mount { scroll-margin-top: 90px; }
-    @media (max-width: 760px) { .dashboard-click-card::after { opacity: 1; transform: none; top: 10px; right: 10px; } }
-  `;
-  document.head.appendChild(style);
+function scheduleDashboardCardBinding() {
+  if (dashboardBindFrame) return;
+  dashboardBindFrame = requestAnimationFrame(() => {
+    dashboardBindFrame = 0;
+    bindDashboardCards();
+  });
 }
 
 function applyRoleDashboard() {
@@ -239,20 +278,27 @@ function applyRoleDashboard() {
   updateSidebar(bucket);
   relabelSections(bucket);
   mountExecutiveWidgets();
+  bindSidebarNavigation();
 }
 
 function initDashboardInteractions() {
-  injectDashboardClickStyles();
   applyRoleDashboard();
   bindDashboardCards();
 
   window.addEventListener("evara:session-ready", () => {
     applyRoleDashboard();
-    bindDashboardCards();
+    scheduleDashboardCardBinding();
   });
 
-  const observer = new MutationObserver(bindDashboardCards);
-  observer.observe(document.body, { childList: true, subtree: true });
+  const dashboardMain = document.querySelector(".dashboard-main");
+  if (dashboardMain) {
+    const observer = new MutationObserver((mutations) => {
+      if (mutations.some((mutation) => mutation.addedNodes.length || mutation.removedNodes.length)) {
+        scheduleDashboardCardBinding();
+      }
+    });
+    observer.observe(dashboardMain, { childList: true, subtree: true });
+  }
 }
 
 if (document.readyState === "loading") {
