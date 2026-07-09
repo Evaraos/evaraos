@@ -20,6 +20,7 @@ const requiredFiles = [
   'tests/visual/visual-matrix.mjs',
   'tests/visual/global-setup.mjs',
   'tests/visual/specs/authenticated-visual.spec.mjs',
+  'tests/visual/specs/studio-interactions.spec.mjs',
   'tests/visual/README.md'
 ];
 
@@ -40,6 +41,7 @@ if (!errors.length) {
   const matrix = read('tests/visual/visual-matrix.mjs');
   const setup = read('tests/visual/global-setup.mjs');
   const spec = read('tests/visual/specs/authenticated-visual.spec.mjs');
+  const studioSpec = read('tests/visual/specs/studio-interactions.spec.mjs');
   const packageJson = JSON.parse(read('tests/visual/package.json'));
 
   if (packageJson.devDependencies?.['@playwright/test'] !== '1.61.1') {
@@ -89,7 +91,35 @@ if (!errors.length) {
     if (!spec.includes(testContract)) errors.push(`tests/visual/specs/authenticated-visual.spec.mjs: missing ${testContract} coverage`);
   }
 
+  for (const studioContract of [
+    "page.goto('/website-builder.html'",
+    'data-catalog-search',
+    'data-add-component="notice-banner"',
+    'data-property-field="title"',
+    'data-action="undo"',
+    'data-action="redo"',
+    'data-layout-tool="layers"',
+    'data-auto-layout-tool',
+    'data-journal-action="checkpoint"',
+    'studio-initial.png',
+    'studio-validated.png',
+    'storageStatePath'
+  ]) {
+    if (!studioSpec.includes(studioContract)) errors.push(`tests/visual/specs/studio-interactions.spec.mjs: missing ${studioContract} coverage`);
+  }
+
+  if (!studioSpec.includes("localStorage.removeItem('evaraos-studio-visual-builder-v1')")) {
+    errors.push('tests/visual/specs/studio-interactions.spec.mjs: Studio validation must start from a clean browser-local draft');
+  }
+  if (/localStorage\.clear\s*\(/.test(studioSpec)) {
+    errors.push('tests/visual/specs/studio-interactions.spec.mjs: validation must not clear unrelated authentication or appearance state');
+  }
+
   if (!workflow.includes('workflow_dispatch:')) errors.push('.github/workflows/design-system-visual-qa.yml: authenticated job must remain manually dispatchable');
+  if (!workflow.includes("- studio\n          - all")) errors.push('.github/workflows/design-system-visual-qa.yml: focused Studio suite option is missing');
+  if (!workflow.includes('npx playwright test specs/studio-interactions.spec.mjs --project=desktop-chromium')) {
+    errors.push('.github/workflows/design-system-visual-qa.yml: focused Studio validation command is missing');
+  }
   if (!workflow.includes('node tools/design-system-audit.js')) errors.push('.github/workflows/design-system-visual-qa.yml: design-system audit is missing');
   if (!workflow.includes('node tools/visual-qa-audit.js')) warnings.push('.github/workflows/design-system-visual-qa.yml: visual QA audit has not been wired yet');
   if (!workflow.includes('EVARA_QA_OWNER_EMAIL')) errors.push('.github/workflows/design-system-visual-qa.yml: owner QA secret is missing');
@@ -121,4 +151,4 @@ if (errors.length) {
   errors.forEach((error) => console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('Visual QA role, appearance, device, authentication, artifact, and route contracts passed.');
+console.log('Visual QA role, appearance, device, authentication, Studio interaction, artifact, and route contracts passed.');
