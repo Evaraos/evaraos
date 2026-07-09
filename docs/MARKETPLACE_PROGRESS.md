@@ -1,12 +1,12 @@
 # EvaraOS Marketplace Progress
 
-Last updated: 2026-07-08
+Last updated: 2026-07-09
 
 ## Overall progress
 
-`[█████████▌] 96%`
+`[█████████▉] 99%`
 
-The Marketplace workstream owns services, quotes, ordering, scheduling, maps, tracking, payments, subscriptions, invoices, customers, vendors, order changes, refunds, and fulfillment lifecycle communications. Evara Studio is out of scope.
+The Marketplace workstream owns services, quotes, ordering, scheduling, maps, tracking, payments, subscriptions, invoices, customers, vendors, order changes, refunds, fulfillment lifecycle communications, policy exceptions, and Marketplace production readiness. Evara Studio remains out of scope.
 
 ## Delivery checklist
 
@@ -50,9 +50,17 @@ The Marketplace workstream owns services, quotes, ordering, scheduling, maps, tr
 - [x] Restrict customer tracking to assigned active workers and active service states
 - [x] Add event-driven customer, company, and assigned-staff lifecycle notifications
 - [x] Add customer order, notification, and refund self-service surfaces
-- [ ] Add the internal policy-exception review interface
-- [ ] Tighten remaining broad Firestore read rules for jobs, workforce locations, and subscriptions
-- [ ] Configure Stripe, deploy, and complete production acceptance testing
+- [x] Add the internal policy-exception review interface to Live Operations Command
+- [x] Add server-authoritative exception approval and rejection
+- [x] Require review notes and retain immutable decision records
+- [x] Add controlled refund-percentage overrides
+- [x] Add Marketplace policy unit tests
+- [x] Add Marketplace production validation CI
+- [x] Add a gated manual Firebase production release workflow
+- [x] Remove duplicate automatic Hosting deployment workflows
+- [x] Remove the stale Functions lockfile that omitted declared Stripe and OpenAI dependencies
+- [x] Verify current tenant-scoped Firestore reads and deny-by-default server collections
+- [ ] Configure production/test-mode secrets, run the release workflow, and complete acceptance testing
 
 ## Current transaction lifecycle
 
@@ -73,12 +81,14 @@ The Marketplace workstream owns services, quotes, ordering, scheduling, maps, tr
 15. The vendor accepts the order or rejects it back into dispatch review.
 16. The customer may request a reschedule or cancellation from the order portal.
 17. Safe-window reschedules move capacity between appointment slots inside one Firestore transaction.
-18. Late policy exceptions are preserved as review requests instead of mutating the order automatically.
-19. Approved cancellations release appointment capacity and calculate refund eligibility from the company policy.
-20. Eligible refunds become deterministic refund requests ready for Stripe execution.
-21. Assigned field workers may share location during active fulfillment states.
-22. The customer receives a privacy-scoped ETA and map link only for the assigned active worker.
-23. Payment, schedule, vendor, service, policy-review, and refund transitions generate deterministic lifecycle notifications.
+18. Late policy exceptions enter the Live Operations Command review queue without changing the order automatically.
+19. An authorized reviewer approves or rejects the exception with mandatory notes.
+20. Approved reschedules re-check capacity and move the reservation transactionally.
+21. Approved cancellations release capacity and create an optional deterministic refund request.
+22. Every exception decision creates one immutable review record.
+23. Assigned field workers may share location during active fulfillment states.
+24. The customer receives a privacy-scoped ETA and map link only for the assigned active worker.
+25. Payment, schedule, vendor, service, policy-review, and refund transitions generate deterministic lifecycle notifications.
 
 ## Operational policy model
 
@@ -94,7 +104,7 @@ Current defaults:
 - late cancellation: operations review
 - late reschedule: operations review
 
-The policy decision and policy version are stored with each change request so later configuration changes do not silently rewrite the original decision history.
+The policy decision and policy version are stored with every change request. Exception decisions store the reviewer, role, timestamp, notes, policy snapshot, requested change, refund override, refund amount, and linked Marketplace records.
 
 ## Self-audit gates
 
@@ -102,131 +112,106 @@ The policy decision and policy version are stored with each change request so la
 
 - [x] No Evara Studio files changed
 - [x] No visual-builder logic introduced
-- [x] Changes remain within Marketplace production behavior
+- [x] Existing Live Operations Command was extended instead of creating a duplicate page
+- [x] Existing Executive Queue was not repurposed or duplicated
+- [x] Changes remain within Marketplace operations and production readiness
 
-### Customer ordering and self-service
+### Policy exception review
 
-- [x] Marketplace ordering is mounted inside the existing customer portal
-- [x] Customers can review and act only on their own quotes, invoices, subscriptions, and orders
-- [x] Customers can view active orders, schedules, payment state, provider state, refunds, and lifecycle updates
-- [x] Customers can request a future appointment change
-- [x] Customers receive a refund estimate before confirming cancellation
-- [x] Customers can see when a request requires policy review
-- [x] Customer operational reads are sanitized and server-scoped
+- [x] Exception reads are returned by an authenticated callable
+- [x] Review roles are explicitly allow-listed
+- [x] Non-platform reviewers are company-scoped server-side
+- [x] Pending requests are revalidated before a decision
+- [x] Every decision requires a meaningful review note
+- [x] Review records are deterministic and created only once
+- [x] Repeated decisions return the existing result instead of applying a second mutation
+- [x] Reschedule approval re-checks the booking horizon and capacity
+- [x] Reschedule approval decrements the old slot and increments the new slot transactionally
+- [x] Cancellation approval releases held or confirmed capacity
+- [x] Refund overrides are clamped between 0% and 100%
+- [x] Refund amounts cannot exceed the captured amount
+- [x] Rejecting a request preserves the active order and clears pending reschedule fields
+- [x] Decision notifications continue through the existing lifecycle notification trigger
 
 ### Data integrity
 
 - [x] Quote acceptance remains idempotent
-- [x] Invoice, subscription, order, appointment, slot, change-request, notification, and refund IDs are deterministic
+- [x] Invoice, subscription, order, appointment, slot, change-request, notification, refund, and exception-review IDs are deterministic
 - [x] Money remains represented in integer cents
 - [x] Existing linked order IDs are reused instead of creating parallel orders
 - [x] Schedule changes preserve the previous appointment timestamp
 - [x] Reschedule counts and decision records are retained
 - [x] Cancellation decisions preserve the policy snapshot and reason
-- [x] Refund records link the order, quote, invoice, customer, company, and provider payment reference
-
-### Scheduling and capacity
-
-- [x] Provider hours, lead time, booking horizon, duration, and blackout dates remain supported
-- [x] Final capacity is validated inside Firestore transactions
-- [x] Safe rescheduling decrements the old slot and increments the new slot transactionally
-- [x] Same-slot reschedule requests do not double-count capacity
-- [x] Cancellation releases held or confirmed capacity only after policy approval
-- [x] Late requests do not release capacity until reviewed
-- [x] Checkout expiration and payment failure release capacity
-
-### Cancellations and refunds
-
-- [x] Cancellation eligibility is calculated server-side
-- [x] Full and partial refund tiers are supported
-- [x] No-payment cancellations do not create unnecessary refund records
-- [x] Late cancellations may be routed to manual review
-- [x] Refund requests are deterministic and idempotent
-- [x] Refund execution is restricted to approved operations roles
-- [x] Refund execution uses Stripe idempotency keys
-- [x] Refund success updates the refund request, order, invoice, and customer notification
-- [ ] Stripe-backed refund execution requires the production Stripe secret and deployment
-
-### Tracking and privacy
-
-- [x] Customer tracking data is returned by an authenticated server callable
-- [x] Only the authenticated customer's orders are evaluated
-- [x] Only workers assigned to the customer's order are considered
-- [x] Tracking appears only during active fulfillment states
-- [x] Offline or stale workforce locations are excluded
-- [x] Location coordinates are rounded before returning to the customer
-- [x] Distance uses the order destination and assigned-worker location
-- [x] ETA uses reported movement speed when available and a conservative fallback otherwise
-- [x] Customer access does not expose the company-wide workforce-location collection
-
-### Lifecycle notifications
-
-- [x] Notification IDs are deterministic to prevent duplicate alerts
-- [x] Customers receive payment confirmation and payment-failure updates
-- [x] Customers receive schedule and vendor-assignment updates
-- [x] Customers receive service-started, completed, cancelled, and refunded updates
-- [x] Company operations receive new-order, payment, reassignment, exception-review, and refund alerts
-- [x] Assigned staff receive appointment and execution-state updates
-- [x] Change-request decisions generate customer notifications
-- [x] Refund-request transitions generate customer and operations notifications
+- [x] Refund records link the order, quote, invoice, customer, company, provider payment reference, and exception review
 
 ### Security boundaries
 
-- [x] Financial and order-change mutations are server-authoritative
+- [x] Financial, order-change, and exception-review mutations are server-authoritative
 - [x] Callable Marketplace actions require Firebase Authentication and App Check
 - [x] Customer ownership is verified before every customer order mutation
 - [x] Operations refund execution uses an explicit role allow-list
 - [x] Non-platform actors remain company-scoped where company ownership applies
 - [x] Customer tracking reads use server-side document lookup instead of broad browser collection access
-- [x] Stripe secrets remain in Firebase Secret Manager
-- [ ] Firestore `jobs` reads must be company-scoped by server rules
-- [ ] Firestore `workforce_locations` reads must be company-scoped by server rules
-- [ ] Firestore `subscriptions` reads must be restricted to the customer or company
-- [ ] Server-only change-request and refund collections should be explicitly documented in Firestore rules
-- [ ] Staff-side quote approval should move fully behind trusted server orchestration
+- [x] Firestore `jobs` reads are customer, assignment, platform, or company-manager scoped
+- [x] Firestore `workforce_locations` reads are owner, platform, or company-operations scoped
+- [x] Firestore `subscriptions` reads use tenant ownership rules
+- [x] `marketplace_change_requests`, `marketplace_exception_reviews`, `refund_requests`, `appointment_slots`, and `appointment_reservations` have no direct client match and fall through to deny-by-default
+- [x] Stripe and OpenAI secrets remain in Firebase Secret Manager
+- [ ] Staff-side quote approval should eventually move fully behind trusted server orchestration
 
 ### Verification
 
-- [x] Marketplace operations core passed `node --check`
-- [x] Reschedule and cancellation functions passed `node --check`
-- [x] Refund executor passed `node --check`
-- [x] Customer operations snapshot passed `node --check`
-- [x] Lifecycle notification triggers passed `node --check`
-- [x] Customer operations browser module passed `node --check`
-- [x] New functions are exported by the active Functions entry point
-- [x] Customer portal contains all required order, notification, refund, and status roots
-- [x] Transaction reads were reviewed to occur before transaction writes
-- [x] No Studio file was changed
+- [x] Marketplace policy tests passed locally: 7 passed, 0 failed
+- [x] Marketplace production validation workflow covers server syntax
+- [x] Marketplace production validation workflow covers browser-module syntax
+- [x] Marketplace production validation workflow runs the Marketplace policy tests
+- [x] Marketplace production validation workflow validates Firebase JSON and required wiring
+- [x] Gated production workflow validates dependencies before deployment
+- [x] Gated production workflow checks `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and `OPENAI_API_KEY` before Functions deployment
+- [x] Gated production workflow requires the exact confirmation phrase `DEPLOY EVARAOS PRODUCTION`
+- [x] Gated production workflow supports Hosting, Functions, Firestore, backend, or complete releases
+- [x] Deploy runners install Functions dependencies before Firebase analyzes the source
+- [x] Duplicate auto-deploy workflows were removed
+- [ ] Observe a passing GitHub Actions validation run
 - [ ] Firebase Functions emulator test pending
-- [ ] Browser smoke test pending
+- [ ] Browser and mobile smoke tests pending
 - [ ] Stripe test-mode Checkout and refund tests pending
 - [ ] Signed Stripe webhook test pending
-- [ ] Appointment collision, reschedule, cancellation, and expiration tests pending
+- [ ] Appointment collision, exception approval, cancellation, and expiration tests pending
 - [ ] End-to-end request → quote → payment → vendor → tracking → completion test pending
-- [ ] No CI checks are currently attached to these commits
 
-## Deployment checklist
+## Production release architecture
 
-The implementation is committed but is not production-active until deployment is completed.
+Normal pushes to `evaraos` no longer deploy Firebase Hosting automatically.
 
-Stripe requirements may remain pending until the Stripe account is available:
+Production releases use:
 
-- [ ] Set `STRIPE_SECRET_KEY`
-- [ ] Set `STRIPE_WEBHOOK_SECRET`
-- [ ] Set `APP_BASE_URL` when production uses a different hostname
-- [ ] Deploy the updated Firebase Functions entry point
-- [ ] Register `stripeMarketplaceWebhook` in Stripe
-- [ ] Subscribe the Stripe endpoint to Checkout, PaymentIntent, Invoice, and Subscription events
-- [ ] Deploy Firebase Hosting
-- [ ] Run Checkout, refund, webhook, and subscription tests in Stripe test mode
-- [ ] Enable live-mode payments only after acceptance testing passes
+- `.github/workflows/marketplace-production-validation.yml` for automatic Marketplace validation
+- `.github/workflows/firebase-production-release.yml` for an explicit manual Firebase production release
 
-The operational policy, cancellation, tracking, notification, and refund-queue layers do not require Stripe credentials to remain committed and ready. Actual payment capture and refund execution do require the Stripe configuration.
+The release workflow:
+
+1. requires an exact authorization phrase
+2. validates syntax, tests, JSON, secrets, and page/function wiring
+3. uses the existing `FIREBASE_SERVICE_ACCOUNT_EVARAOS_WEB` GitHub secret
+4. verifies required Firebase Functions secrets before Functions deployment
+5. deploys only the selected release scope
+6. prevents overlapping production releases
+
+## Remaining production activation
+
+- [ ] Confirm `FIREBASE_SERVICE_ACCOUNT_EVARAOS_WEB` is valid
+- [ ] Set or verify `OPENAI_API_KEY` in Firebase Secret Manager
+- [ ] Set the Stripe test-mode `STRIPE_SECRET_KEY`
+- [ ] Create the Stripe webhook endpoint and set `STRIPE_WEBHOOK_SECRET`
+- [ ] Confirm `APP_BASE_URL` when using a custom production domain
+- [ ] Observe a passing Marketplace Production Validation run
+- [ ] Run the gated workflow with the appropriate release scope
+- [ ] Register and test all required Stripe webhook events
+- [ ] Complete test-mode Checkout, subscription, invoice, and refund acceptance tests
+- [ ] Complete browser, mobile, and Firebase emulator quality assurance
+- [ ] Enable Stripe live mode only after test-mode acceptance passes
 
 ## Remaining Marketplace phase
 
-- internal operations interface for approving or rejecting late reschedule and cancellation requests
-- production Firebase deployment and Stripe connection
-- test-mode acceptance suite
-- Firestore security-rule hardening handoff
-- final browser and mobile quality assurance
+The Marketplace implementation is code-complete for the current scope. The final 1% is production activation, external-secret configuration, test-mode payment validation, and quality assurance.
