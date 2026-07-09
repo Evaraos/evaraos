@@ -159,6 +159,7 @@ jobs:
       EVARA_QA_BASE_URL: ${{ secrets.EVARA_QA_BASE_URL }}
       EVARA_QA_MATRIX: ${{ inputs.matrix }}
       EVARA_QA_REQUIRE_ALL_ROLES: ${{ inputs.require_all_roles && '1' || '0' }}
+      EVARA_QA_APP_CHECK_DEBUG_TOKEN: ${{ secrets.EVARA_QA_APP_CHECK_DEBUG_TOKEN }}
       EVARA_QA_PLATFORM_ADMIN_EMAIL: ${{ secrets.EVARA_QA_PLATFORM_ADMIN_EMAIL }}
       EVARA_QA_PLATFORM_ADMIN_PASSWORD: ${{ secrets.EVARA_QA_PLATFORM_ADMIN_PASSWORD }}
       EVARA_QA_OWNER_EMAIL: ${{ secrets.EVARA_QA_OWNER_EMAIL }}
@@ -187,8 +188,8 @@ jobs:
       - name: Validate required QA secrets
         shell: bash
         run: |
-          if [[ -z "$EVARA_QA_BASE_URL" || -z "$EVARA_QA_OWNER_EMAIL" || -z "$EVARA_QA_OWNER_PASSWORD" ]]; then
-            echo "EVARA_QA_BASE_URL and owner QA credentials must be configured as repository secrets."
+          if [[ -z "$EVARA_QA_BASE_URL" || -z "$EVARA_QA_OWNER_EMAIL" || -z "$EVARA_QA_OWNER_PASSWORD" || -z "$EVARA_QA_APP_CHECK_DEBUG_TOKEN" ]]; then
+            echo "EVARA_QA_BASE_URL, owner QA credentials, and EVARA_QA_APP_CHECK_DEBUG_TOKEN must be configured as encrypted repository secrets."
             exit 1
           fi
 
