@@ -11,6 +11,7 @@ const files = {
   authority: 'public/assets/js/studio/studio-production-authority.js',
   css: 'public/assets/css/pages/studio-production-authority.css',
   route: 'public/website-builder.html',
+  loader: 'public/assets/js/studio/studio-trusted-journal-loader.js',
   trusted: 'public/assets/js/studio/studio-trusted-journal.js',
   controls: 'public/assets/js/studio/studio-document-controls.js',
   compatibility: 'public/assets/js/studio/studio-visual-builder.js',
@@ -24,7 +25,7 @@ for (const file of Object.values(files)) {
 
 if (!errors.length) {
   const source = Object.fromEntries(Object.entries(files).map(([key, file]) => [key, read(file)]));
-  for (const file of [files.authority, files.trusted, files.controls, files.compatibility, files.registry]) {
+  for (const file of [files.authority, files.loader, files.trusted, files.controls, files.compatibility, files.registry]) {
     try {
       execFileSync(process.execPath, ['--check', path.join(root, file)], { stdio: 'pipe' });
     } catch (error) {
@@ -49,7 +50,9 @@ if (!errors.length) {
     'latestTrustedCheckpoint',
     'createBranch',
     'The local draft was preserved',
-    'No last-write-wins overwrite was attempted'
+    'No last-write-wins overwrite was attempted',
+    "window.addEventListener('evara:app-check-status'",
+    'trustedAdapterGuarded'
   ]) {
     if (!source.authority.includes(marker)) errors.push(`studio-production-authority.js: missing ${marker}`);
   }
@@ -70,15 +73,36 @@ if (!errors.length) {
     if (!source.css.includes(selector)) errors.push(`studio-production-authority.css: missing ${selector}`);
   }
 
+  for (const marker of [
+    'getToken(appCheck, forceRefresh)',
+    "import('./studio-trusted-journal.js?v=1')",
+    'app-check-token-confirmed',
+    'trusted-journal-loaded',
+    'app-check-unavailable'
+  ]) {
+    if (!source.loader.includes(marker)) errors.push(`studio-trusted-journal-loader.js: missing ${marker}`);
+  }
+
   const authorityCss = '/assets/css/pages/studio-production-authority.css?v=1';
   const authorityJs = '/assets/js/studio/studio-production-authority.js?v=1';
+  const loaderJs = '/assets/js/studio/studio-trusted-journal-loader.js?v=1';
   const trustedJs = '/assets/js/studio/studio-trusted-journal.js?v=1';
+  const blueprintJs = '/assets/js/studio/blueprint-operation-adapter.js?v=1';
   const canvasJs = '/assets/js/studio/canvas/canvas-session-sandbox.js?v=2';
   if (!source.route.includes(authorityCss)) errors.push('website-builder.html: production-authority stylesheet is missing');
   if (!source.route.includes(authorityJs)) errors.push('website-builder.html: production-authority runtime is missing');
-  if (!(source.route.indexOf(trustedJs) < source.route.indexOf(canvasJs)
+  if (!source.route.includes(loaderJs)) errors.push('website-builder.html: App Check trusted-Journal loader is missing');
+  if (!source.route.includes(`Dynamic import contract enforced by App Check loader: ${trustedJs}`)) {
+    errors.push('website-builder.html: trusted adapter dynamic-import contract is missing');
+  }
+  const directTrustedScript = new RegExp(`<script[^>]+src=["']${trustedJs.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["']`, 'i');
+  if (directTrustedScript.test(source.route)) {
+    errors.push('website-builder.html: trusted adapter must not load directly before App Check attestation');
+  }
+  if (!(source.route.indexOf(blueprintJs) < source.route.indexOf(loaderJs)
+    && source.route.indexOf(loaderJs) < source.route.indexOf(canvasJs)
     && source.route.indexOf(canvasJs) < source.route.indexOf(authorityJs))) {
-    errors.push('website-builder.html: production authority must load after trusted transport and CanvasSession');
+    errors.push('website-builder.html: Blueprint, App Check loader, CanvasSession, and production-authority load order is invalid');
   }
 
   if (!source.trusted.includes('prepareImmutableRelease') || !source.trusted.includes('createTrustedCheckpoint')) {
@@ -114,4 +138,4 @@ if (errors.length) {
   errors.forEach((error) => console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('Canvas-only release authority, migration-only compatibility, conflict resolution, and cutover boundaries passed.');
+console.log('App Check-gated Canvas-only release authority, migration-only compatibility, conflict resolution, and cutover boundaries passed.');
