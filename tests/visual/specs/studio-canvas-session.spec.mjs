@@ -124,74 +124,81 @@ async function insertDurableNode(page, name = 'QA Durable Card') {
   return { before, inserted, nodeId };
 }
 
-async function withJournalDatabase(page, storeNames, mode, callbackSource, argument) {
-  return page.evaluate(async ({ storeNames, mode, callbackSource, argument }) => {
+async function mutateJournal(page, action, payload) {
+  return page.evaluate(async ({ action, payload }) => {
     const database = await new Promise((resolve, reject) => {
       const request = indexedDB.open(window.EvaraStudioJournal.databaseName);
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error || new Error('Journal database could not open.'));
     });
+    const requestValue = (request) => new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error || new Error('Journal request failed.'));
+    });
     try {
-      const transaction = database.transaction(storeNames, mode);
-      const stores = Object.fromEntries(storeNames.map((name) => [name, transaction.objectStore(name)]));
-      const callback = new Function('stores', 'argument', `return (${callbackSource})(stores, argument);`);
-      const result = await callback(stores, argument);
-      await new Promise((resolve, reject) => {
-        transaction.oncomplete = resolve;
-        transaction.onerror = () => reject(transaction.error);
-        transaction.onabort = () => reject(transaction.error || new Error('Transaction aborted.'));
-      });
-      return result;
+      if (action === 'configure-scope') {
+        const transaction = database.transaction(['sessions'], 'readwrite');
+        const store = transaction.objectStore('sessions');
+        const session = await requestValue(store.get('local-studio-session'));
+        const next = { ...session, projectId: payload.projectId, branchId: payload.branchId, updatedAt: new Date().toISOString() };
+        store.put(next);
+        await new Promise((resolve, reject) => {
+          transaction.oncomplete = resolve;
+          transaction.onerror = () => reject(transaction.error);
+          transaction.onabort = () => reject(transaction.error || new Error('Transaction aborted.'));
+        });
+        return next;
+      }
+      if (action === 'corrupt-transaction') {
+        const transaction = database.transaction(['transactions'], 'readwrite');
+        const store = transaction.objectStore('transactions');
+        const record = await requestValue(store.get(payload.transactionId));
+        if (!record) throw new Error(`Missing transaction ${payload.transactionId}`);
+        record.operations = [];
+        store.put(record);
+        await new Promise((resolve, reject) => {
+          transaction.oncomplete = resolve;
+          transaction.onerror = () => reject(transaction.error);
+          transaction.onabort = () => reject(transaction.error || new Error('Transaction aborted.'));
+        });
+        return { transactionId: payload.transactionId, corrupted: true };
+      }
+      if (action === 'offset-graph-head') {
+        const transaction = database.transaction(['sessions'], 'readwrite');
+        const store = transaction.objectStore('sessions');
+        const session = await requestValue(store.get('local-studio-session'));
+        if (!session?.graphHeads?.[payload.graphId]) throw new Error(`Missing graph head ${payload.graphId}`);
+        session.graphHeads[payload.graphId] = {
+          ...session.graphHeads[payload.graphId],
+          revision: Number(session.graphHeads[payload.graphId].revision || 0) + 1,
+          updatedAt: new Date().toISOString()
+        };
+        if (session.activeGraphId === payload.graphId) session.activeGraphRevision = session.graphHeads[payload.graphId].revision;
+        store.put(session);
+        await new Promise((resolve, reject) => {
+          transaction.oncomplete = resolve;
+          transaction.onerror = () => reject(transaction.error);
+          transaction.onabort = () => reject(transaction.error || new Error('Transaction aborted.'));
+        });
+        return { graphId: payload.graphId, revision: session.graphHeads[payload.graphId].revision };
+      }
+      throw new Error(`Unsupported Journal test mutation: ${action}`);
     } finally {
       database.close();
     }
-  }, { storeNames, mode, callbackSource, argument });
+  }, { action, payload });
 }
 
 async function configureTrustedScope(page, projectId, branchId) {
-  return withJournalDatabase(page, ['sessions'], 'readwrite', async (stores, values) => {
-    const session = await new Promise((resolve, reject) => {
-      const request = stores.sessions.get('local-studio-session');
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-    const next = { ...session, projectId: values.projectId, branchId: values.branchId, updatedAt: new Date().toISOString() };
-    stores.sessions.put(next);
-    return next;
-  }.toString(), { projectId, branchId });
+  return mutateJournal(page, 'configure-scope', { projectId, branchId });
 }
 
 async function corruptTransaction(page, transactionId) {
-  return withJournalDatabase(page, ['transactions'], 'readwrite', async (stores, id) => {
-    const record = await new Promise((resolve, reject) => {
-      const request = stores.transactions.get(id);
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-    if (!record) throw new Error(`Missing transaction ${id}`);
-    record.operations = [];
-    stores.transactions.put(record);
-    return { transactionId: id, corrupted: true };
-  }.toString(), transactionId);
+  return mutateJournal(page, 'corrupt-transaction', { transactionId });
 }
 
 async function offsetGraphHead(page, graphId) {
-  return withJournalDatabase(page, ['sessions'], 'readwrite', async (stores, id) => {
-    const session = await new Promise((resolve, reject) => {
-      const request = stores.sessions.get('local-studio-session');
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-    if (!session?.graphHeads?.[id]) throw new Error(`Missing graph head ${id}`);
-    session.graphHeads[id] = {
-      ...session.graphHeads[id],
-      revision: Number(session.graphHeads[id].revision || 0) + 1,
-      updatedAt: new Date().toISOString()
-    };
-    if (session.activeGraphId === id) session.activeGraphRevision = session.graphHeads[id].revision;
-    stores.sessions.put(session);
-    return { graphId: id, revision: session.graphHeads[id].revision };
-  }.toString(), graphId);
+  return mutateJournal(page, 'offset-graph-head', { graphId });
 }
 
 async function reloadAndAttemptCanvasRecovery(page, { offsetGraphId = null } = {}) {
