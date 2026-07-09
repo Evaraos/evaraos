@@ -1,16 +1,29 @@
 /* EVARAOS DASHBOARD LAYOUT
    Structural ownership only. Theme surfaces live in dashboard-components.css and theme.css.
+   Legacy dashboard selectors remain stable while consuming the shared design-system contract.
 */
 
-.dashboard-body { min-height: 100vh; }
+.dashboard-body {
+  --dashboard-content-max: 86.25rem;
+  --dashboard-sidebar-width: 20rem;
+  --dashboard-top-offset: 6.5rem;
+  --dashboard-shell-gap: var(--space-5);
+  --dashboard-section-gap: var(--space-5);
+  --dashboard-panel-padding: var(--space-6);
+  --dashboard-card-padding: var(--space-5);
+  --dashboard-shell-radius: var(--radius-2xl);
+  --dashboard-panel-radius: var(--radius-xl);
+  --dashboard-card-radius: var(--radius-lg);
+  min-height: 100vh;
+}
 
 .dashboard-shell {
-  width: min(1380px, calc(100% - 24px));
-  margin: 104px auto 0;
-  padding-bottom: max(28px, env(safe-area-inset-bottom));
+  width: min(var(--dashboard-content-max), calc(100% - var(--space-6)));
+  margin: var(--dashboard-top-offset) auto 0;
+  padding-bottom: max(var(--space-7), env(safe-area-inset-bottom));
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
-  gap: 20px;
+  grid-template-columns: var(--dashboard-sidebar-width) minmax(0, 1fr);
+  gap: var(--dashboard-shell-gap);
   align-items: start;
   position: relative;
   z-index: 1;
@@ -18,15 +31,16 @@
 
 .dashboard-sidebar {
   position: sticky;
-  top: 102px;
+  top: calc(var(--dashboard-top-offset) - 2px);
   align-self: start;
+  min-width: 0;
 }
 
 .dashboard-sidebar-inner {
-  padding: 18px;
-  border-radius: 32px;
+  padding: var(--space-5);
+  border-radius: var(--dashboard-shell-radius);
   display: grid;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .dashboard-sidebar-search,
@@ -36,21 +50,22 @@
 .dashboard-hero-panel-copy,
 .dashboard-progress-copy {
   display: grid;
-  gap: 6px;
+  gap: var(--space-2);
+  min-width: 0;
 }
 
 .dashboard-search-shell {
-  min-height: 62px;
-  border-radius: 22px;
+  min-height: calc(var(--control-height-lg) + var(--space-2));
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 14px;
+  gap: var(--space-3);
+  padding-inline: var(--space-4);
 }
 
 .dashboard-search-icon {
-  width: 18px;
-  height: 18px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
   fill: currentColor;
   opacity: .76;
   flex: 0 0 auto;
@@ -58,6 +73,7 @@
 
 .dashboard-search-input {
   width: 100%;
+  min-width: 0;
   border: 0;
   outline: 0;
   background: transparent;
@@ -72,36 +88,39 @@
 .dashboard-progress-stack,
 .dashboard-role-grid {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
+  min-width: 0;
 }
 
 .dashboard-nav-link {
-  min-height: 54px;
-  padding: 0 14px;
-  border-radius: 18px;
+  min-height: var(--control-height-lg);
+  padding-inline: var(--space-4);
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   text-decoration: none;
-  font-weight: 800;
 }
 
 .dashboard-nav-icon {
-  width: 24px;
+  width: var(--icon-lg);
+  min-width: var(--icon-lg);
+  display: inline-grid;
+  place-items: center;
   text-align: center;
   flex: 0 0 auto;
 }
 
 .dashboard-sidebar-foot {
-  padding: 16px;
-  border-radius: 24px;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
   display: grid;
-  gap: 14px;
+  gap: var(--space-4);
 }
 
 .dashboard-main {
   display: grid;
-  gap: 20px;
+  gap: var(--dashboard-section-gap);
   min-width: 0;
 }
 
@@ -114,19 +133,21 @@
 .dashboard-role-card,
 .dashboard-progress-row,
 .dashboard-state-card {
-  border-radius: 30px;
+  border-radius: var(--dashboard-card-radius);
+  min-width: 0;
 }
 
 .dashboard-hero {
-  padding: 26px;
+  padding: var(--dashboard-panel-padding);
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr);
-  gap: 18px;
+  grid-template-columns: minmax(0, 1.2fr) minmax(18.75rem, .8fr);
+  gap: var(--space-5);
   align-items: stretch;
+  border-radius: var(--dashboard-panel-radius);
 }
 
 .dashboard-hero-copy {
-  gap: 14px;
+  gap: var(--space-4);
   align-content: center;
 }
 
@@ -134,93 +155,95 @@
 .dashboard-section-head {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .dashboard-section-head {
   align-items: flex-start;
   justify-content: space-between;
-  gap: 14px;
+  gap: var(--space-4);
 }
 
 .dashboard-hero-panel {
-  padding: 20px;
+  padding: var(--space-5);
   display: grid;
   align-content: space-between;
-  gap: 18px;
+  gap: var(--space-5);
   min-height: 100%;
+  border-radius: var(--dashboard-card-radius);
 }
 
 .dashboard-hero-panel-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .dashboard-hero-logo-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 116px;
+  min-height: 7.25rem;
 }
 
 .dashboard-hero-logo {
-  width: 92px;
-  height: 92px;
+  width: 5.75rem;
+  height: 5.75rem;
   object-fit: contain;
 }
 
 .dashboard-overview,
 .dashboard-panel {
-  padding: 22px;
+  padding: var(--dashboard-panel-padding);
   display: grid;
-  gap: 16px;
+  gap: var(--space-4);
+  border-radius: var(--dashboard-panel-radius);
 }
 
 .dashboard-stats-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  gap: var(--space-4);
 }
 
 .dashboard-stat-card {
-  min-height: 154px;
-  padding: 18px;
+  min-height: 10rem;
+  padding: var(--dashboard-card-padding);
   display: grid;
   align-content: space-between;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .dashboard-grid-2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  gap: var(--space-5);
 }
 
 .dashboard-list-item,
 .dashboard-feed-item,
 .dashboard-role-card {
-  min-height: 112px;
-  padding: 18px;
+  min-height: 7rem;
+  padding: var(--dashboard-card-padding);
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 14px;
+  gap: var(--space-4);
 }
 
 .dashboard-progress-row {
-  min-height: 104px;
-  padding: 18px;
-  border-radius: 24px;
+  min-height: 6.5rem;
+  padding: var(--dashboard-card-padding);
+  border-radius: var(--radius-lg);
   display: grid;
-  gap: 14px;
+  gap: var(--space-4);
 }
 
 .dashboard-progress-bar {
   width: 100%;
-  height: 12px;
-  border-radius: 999px;
+  height: var(--space-3);
+  border-radius: var(--radius-pill);
   overflow: hidden;
 }
 
@@ -235,28 +258,38 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-weight: 800;
+  flex: 0 0 auto;
 }
 
-.dashboard-avatar { width: 42px; height: 42px; }
-.dashboard-avatar-large { width: 58px; height: 58px; font-size: 1.18rem; }
-.dashboard-profile-card { padding: 8px 4px; }
+.dashboard-avatar {
+  width: var(--tap-target-min);
+  height: var(--tap-target-min);
+}
+
+.dashboard-avatar-large {
+  width: 3.625rem;
+  height: 3.625rem;
+  font-size: var(--text-lg);
+}
+
+.dashboard-profile-card { padding: var(--space-2) var(--space-1); }
 
 .dashboard-profile-main {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
+  min-width: 0;
 }
 
 .dashboard-state-card {
-  min-height: 180px;
-  padding: 22px;
+  min-height: 11.25rem;
+  padding: var(--dashboard-panel-padding);
   display: grid;
   place-items: center;
   text-align: center;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 68.75rem) {
   .dashboard-shell { grid-template-columns: 1fr; }
   .dashboard-sidebar { position: relative; top: 0; }
   .dashboard-hero,
@@ -264,24 +297,31 @@
   .dashboard-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-@media (max-width: 680px) {
+@media (max-width: 42.5rem) {
+  .dashboard-body {
+    --dashboard-panel-padding: var(--space-4);
+    --dashboard-card-padding: var(--space-4);
+    --dashboard-shell-gap: var(--space-4);
+    --dashboard-section-gap: var(--space-4);
+  }
+
   .dashboard-shell {
-    width: min(calc(100% - 16px), 100%);
-    margin-top: 98px;
-    gap: 16px;
+    width: min(calc(100% - var(--space-4)), 100%);
+    margin-top: 6.125rem;
   }
 
   .dashboard-sidebar-inner,
   .dashboard-overview,
   .dashboard-panel,
   .dashboard-hero {
-    padding: 18px;
-    border-radius: 26px;
+    border-radius: var(--radius-lg);
   }
 
   .dashboard-stats-grid,
   .dashboard-hero-actions { grid-template-columns: 1fr; }
+
   .dashboard-hero-actions { display: grid; }
+  .dashboard-hero-actions > * { width: 100%; }
 
   .dashboard-list-item,
   .dashboard-feed-item,
