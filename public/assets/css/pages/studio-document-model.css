@@ -11,12 +11,21 @@
   white-space: nowrap;
 }
 
-.studio-document-status[data-state="saving"] {
+.studio-document-status[data-state="saving"],
+.studio-document-status[data-state="syncing"] {
   color: var(--studio-text);
   border-color: color-mix(in srgb, var(--studio-accent) 42%, rgba(255, 255, 255, 0.14));
 }
 
-.studio-document-status[data-state="blocked"] {
+.studio-document-status[data-state="saved-locally"],
+.studio-document-status[data-state="recovered"] {
+  color: #b6f3c7;
+  border-color: rgba(132, 238, 164, 0.34);
+}
+
+.studio-document-status[data-state="blocked"],
+.studio-document-status[data-state="release-blocked"],
+.studio-document-status[data-state="recovery-required"] {
   color: #fff;
   background: color-mix(in srgb, #d92d20 70%, rgba(255, 255, 255, 0.08));
   border-color: rgba(255, 255, 255, 0.34);
@@ -64,6 +73,7 @@
 .studio-document-summary strong {
   margin-top: 5px;
   font-size: 0.72rem;
+  text-transform: capitalize;
 }
 
 .studio-document-valid,
@@ -106,11 +116,24 @@
   border-radius: 12px;
 }
 
+.studio-journal-heading {
+  margin: 16px 0 8px;
+  color: var(--studio-muted);
+  font-size: 0.67rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .studio-document-version-list {
   display: grid;
   gap: 8px;
-  max-height: min(46vh, 440px);
+  max-height: min(34vh, 320px);
   overflow: auto;
+}
+
+.studio-journal-transaction-list {
+  max-height: min(30vh, 280px);
 }
 
 .studio-document-version {
@@ -122,6 +145,10 @@
   border-radius: 15px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.055);
+}
+
+.studio-journal-transaction {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .studio-document-version-copy {
