@@ -1,12 +1,13 @@
-export const STUDIO_MODULE_VERSION = 'module-registry-v3';
+export const STUDIO_MODULE_VERSION = 'module-registry-v4';
 
 export const STUDIO_MODULES = Object.freeze([
   { id: 'core', name: 'Core Engine', status: 'active', progress: 92, permissions: ['owner', 'admin'], dependencies: ['permissions', 'design-system'], routes: ['/dashboard.html'] },
   { id: 'permissions', name: 'Permission Engine', status: 'active', progress: 100, permissions: ['owner', 'admin'], dependencies: [], routes: [] },
   { id: 'design-system', name: 'Design System', status: 'active', progress: 98, permissions: ['owner', 'admin'], dependencies: [], routes: [] },
-  { id: 'graph-core', name: 'Evara Graph Core', status: 'active', progress: 28, permissions: ['owner', 'admin'], dependencies: ['permissions'], routes: [] },
-  { id: 'operation-engine', name: 'Operation & History Engine', status: 'active', progress: 20, permissions: ['owner', 'admin'], dependencies: ['graph-core'], routes: [] },
-  { id: 'studio', name: 'Evara Studio', status: 'rebuild', progress: 56, permissions: ['owner', 'admin'], dependencies: ['permissions', 'design-system', 'components', 'blueprints', 'graph-core', 'operation-engine'], routes: ['/website-builder.html'] },
+  { id: 'graph-core', name: 'Evara Graph Core', status: 'active', progress: 38, permissions: ['owner', 'admin'], dependencies: ['permissions'], routes: [] },
+  { id: 'operation-engine', name: 'Operation & History Engine', status: 'active', progress: 32, permissions: ['owner', 'admin'], dependencies: ['graph-core'], routes: [] },
+  { id: 'canvas-engine', name: 'Canvas Engine', status: 'sandbox', progress: 45, permissions: ['owner', 'admin'], dependencies: ['design-system', 'graph-core', 'operation-engine'], routes: ['/website-builder.html'] },
+  { id: 'studio', name: 'Evara Studio', status: 'rebuild', progress: 62, permissions: ['owner', 'admin'], dependencies: ['permissions', 'design-system', 'components', 'blueprints', 'canvas-engine', 'graph-core', 'operation-engine'], routes: ['/website-builder.html'] },
   { id: 'components', name: 'Component Engine', status: 'active', progress: 70, permissions: ['owner', 'admin'], dependencies: ['design-system', 'graph-core'], routes: [] },
   { id: 'blueprints', name: 'Blueprint Engine', status: 'active', progress: 60, permissions: ['owner', 'admin'], dependencies: ['permissions', 'components', 'graph-core', 'operation-engine'], routes: [] },
   { id: 'operations', name: 'Operations OS', status: 'active', progress: 36, permissions: ['owner', 'admin', 'organization', 'vendor', 'staff'], dependencies: ['core'], routes: ['/jobs.html', '/leads.html', '/schedule.html'] },
