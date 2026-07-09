@@ -19,6 +19,10 @@ function diagnostics(page) {
 }
 
 async function openStudioCanvas(page) {
+  await page.addInitScript(() => {
+    localStorage.removeItem('evaraos-studio-visual-builder-v1');
+    localStorage.removeItem('evaraos-studio-auto-layout-v1');
+  });
   const response = await page.goto('/website-builder.html', { waitUntil: 'domcontentloaded' });
   expect(response).not.toBeNull();
   expect(response.status()).toBeLessThan(400);
