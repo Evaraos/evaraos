@@ -7,6 +7,11 @@ on:
       - "firestore.indexes.json"
       - "functions/**"
       - "tests/backend-security/**"
+      - "public/assets/js/access-control.js"
+      - "public/assets/js/route-guard.js"
+      - "public/assets/js/nav/nav-role-lockdown.js"
+      - "public/assets/js/studio/blueprint-drafts.js"
+      - "public/assets/js/studio/role-preview.js"
       - ".github/workflows/backend-security.yml"
   workflow_dispatch:
 
@@ -40,6 +45,15 @@ jobs:
           node --check functions/message-notifications.js
           node --check functions/push-notifications.js
           node --check functions/stats-rebuild.js
+          node --check functions/blueprint-security.js
+
+      - name: Validate authorization client syntax
+        run: |
+          node --experimental-default-type=module --check public/assets/js/access-control.js
+          node --experimental-default-type=module --check public/assets/js/route-guard.js
+          node --experimental-default-type=module --check public/assets/js/nav/nav-role-lockdown.js
+          node --experimental-default-type=module --check public/assets/js/studio/blueprint-drafts.js
+          node --experimental-default-type=module --check public/assets/js/studio/role-preview.js
 
       - name: Run Firebase rules emulator tests
         working-directory: tests/backend-security
