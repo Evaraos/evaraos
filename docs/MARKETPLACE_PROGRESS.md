@@ -4,9 +4,9 @@ Last updated: 2026-07-08
 
 ## Overall progress
 
-`[█████████░] 90%`
+`[█████████▌] 96%`
 
-The Marketplace workstream owns services, quotes, ordering, scheduling, maps, tracking, payments, subscriptions, invoices, customers, and vendors. Evara Studio is out of scope.
+The Marketplace workstream owns services, quotes, ordering, scheduling, maps, tracking, payments, subscriptions, invoices, customers, vendors, order changes, refunds, and fulfillment lifecycle communications. Evara Studio is out of scope.
 
 ## Delivery checklist
 
@@ -40,11 +40,19 @@ The Marketplace workstream owns services, quotes, ordering, scheduling, maps, tr
 - [x] Add invoice generation, open-balance checkout, and payment reconciliation
 - [x] Add vendor acceptance, rejection, and fulfillment handoff controls
 - [x] Release expired appointment holds and support safe checkout renewal
-- [ ] Add rescheduling, customer cancellation, and refund policy workflows
-- [ ] Add customer live order tracking and ETA presentation
-- [ ] Add marketplace notifications across every lifecycle transition
+- [x] Add company-configurable rescheduling and cancellation policies
+- [x] Move appointment capacity transactionally during approved reschedules
+- [x] Queue late reschedules and cancellations for operations review
+- [x] Add full-refund, partial-refund, no-refund, and manual-review policy outcomes
+- [x] Add deterministic refund request records
+- [x] Add Stripe-ready, idempotent refund execution
+- [x] Add customer live order tracking and ETA presentation
+- [x] Restrict customer tracking to assigned active workers and active service states
+- [x] Add event-driven customer, company, and assigned-staff lifecycle notifications
+- [x] Add customer order, notification, and refund self-service surfaces
+- [ ] Add the internal policy-exception review interface
 - [ ] Tighten remaining broad Firestore read rules for jobs, workforce locations, and subscriptions
-- [ ] Complete production deployment and end-to-end acceptance testing
+- [ ] Configure Stripe, deploy, and complete production acceptance testing
 
 ## Current transaction lifecycle
 
@@ -52,24 +60,43 @@ The Marketplace workstream owns services, quotes, ordering, scheduling, maps, tr
 2. A customer builds a single-provider cart with quantities and add-ons.
 3. The customer selects a saved or manual service property.
 4. Eligible companies are matched using configured state and city service areas.
-5. Appointment choices are generated using provider hours, service duration, lead time, booking horizon, blackout dates, and configured slot availability.
-6. The customer submits a structured Marketplace order request into the existing secure customer-lead workflow.
-7. The request records line items, estimated cents, property, provider, requested schedule, recurring-service interest, and capacity-validation status.
-8. A company prepares a customer-visible quote.
-9. The customer reviews every line item, chooses one-time or recurring billing when eligible, and accepts or rejects the quote.
-10. The trusted Cloud Function transaction verifies customer ownership, quote status, expiration, totals, provider capacity, and appointment availability.
-11. Deterministic invoice, optional subscription, order, and reservation records are created or reconciled idempotently.
-12. The appointment slot is held transactionally while Stripe Checkout is open.
-13. Stripe Checkout collects payment without exposing Stripe secrets to the browser.
-14. Signature-verified, idempotent webhooks reconcile the quote, invoice, subscription, appointment reservation, Stripe session, and order.
-15. Successful payment confirms the appointment and moves the order into vendor review.
-16. The assigned vendor accepts the order or rejects it back into dispatch review.
-17. Scheduled orders appear automatically in the realtime schedule and dispatch surfaces.
-18. Assigned field workers may share live location while the Dispatch Map is open.
+5. Appointment choices are generated using provider hours, duration, lead time, booking horizon, blackouts, and configured availability.
+6. The customer submits a structured Marketplace order request through the secure customer-lead workflow.
+7. A company prepares a customer-visible quote.
+8. The customer reviews line items, chooses one-time or recurring billing when eligible, and accepts or rejects the quote.
+9. A trusted Cloud Function verifies customer ownership, quote status, totals, provider capacity, and appointment availability.
+10. Deterministic invoice, optional subscription, order, and reservation records are created or reconciled idempotently.
+11. The appointment slot is held transactionally while Stripe Checkout is open.
+12. Stripe Checkout collects payment without exposing Stripe secrets to the browser.
+13. Signature-verified and idempotent webhooks reconcile all linked Marketplace records.
+14. Successful payment confirms the appointment and moves the order into vendor review.
+15. The vendor accepts the order or rejects it back into dispatch review.
+16. The customer may request a reschedule or cancellation from the order portal.
+17. Safe-window reschedules move capacity between appointment slots inside one Firestore transaction.
+18. Late policy exceptions are preserved as review requests instead of mutating the order automatically.
+19. Approved cancellations release appointment capacity and calculate refund eligibility from the company policy.
+20. Eligible refunds become deterministic refund requests ready for Stripe execution.
+21. Assigned field workers may share location during active fulfillment states.
+22. The customer receives a privacy-scoped ETA and map link only for the assigned active worker.
+23. Payment, schedule, vendor, service, policy-review, and refund transitions generate deterministic lifecycle notifications.
+
+## Operational policy model
+
+Companies may configure Marketplace policy values through `marketplacePolicies`, `orderPolicies`, or the existing cancellation-policy object.
+
+Current defaults:
+
+- reschedule notice window: 4 hours
+- full-refund window: 24 hours
+- partial-refund window: 6 hours
+- partial refund: 50%
+- booking horizon: 90 days
+- late cancellation: operations review
+- late reschedule: operations review
+
+The policy decision and policy version are stored with each change request so later configuration changes do not silently rewrite the original decision history.
 
 ## Self-audit gates
-
-Every Marketplace change must pass these checks before being marked complete.
 
 ### Scope
 
@@ -77,157 +104,129 @@ Every Marketplace change must pass these checks before being marked complete.
 - [x] No visual-builder logic introduced
 - [x] Changes remain within Marketplace production behavior
 
-### Customer ordering and commerce
+### Customer ordering and self-service
 
 - [x] Marketplace ordering is mounted inside the existing customer portal
-- [x] Existing service and company records are normalized without requiring one rigid schema
-- [x] Inactive, paused, archived, and deleted services are excluded
-- [x] Cart items from different assigned providers cannot be mixed
-- [x] A provider outside its configured service area cannot receive the order
-- [x] Customer requests preserve the existing secure customer-lead create contract
-- [x] Recent customer Marketplace requests use a customer-scoped realtime query
-- [x] Customer commerce data is returned by a customer-scoped callable instead of trusting browser filters
-- [x] Contact phone is sourced from the authenticated customer profile
-- [x] Quotes display line items, provider, appointment, expiration, totals, and payment state
-- [x] Customers can accept or reject only their own quotes
-- [x] Customers can restart invoice checkout when a valid checkout link is unavailable
+- [x] Customers can review and act only on their own quotes, invoices, subscriptions, and orders
+- [x] Customers can view active orders, schedules, payment state, provider state, refunds, and lifecycle updates
+- [x] Customers can request a future appointment change
+- [x] Customers receive a refund estimate before confirming cancellation
+- [x] Customers can see when a request requires policy review
+- [x] Customer operational reads are sanitized and server-scoped
 
 ### Data integrity
 
-- [x] Customer quote acceptance is idempotent
-- [x] Invoice, subscription, order, appointment reservation, and slot IDs are deterministic
-- [x] Quote ID remains attached throughout the financial and fulfillment lifecycle
-- [x] Customer and company ownership fields are preserved
+- [x] Quote acceptance remains idempotent
+- [x] Invoice, subscription, order, appointment, slot, change-request, notification, and refund IDs are deterministic
 - [x] Money remains represented in integer cents
-- [x] Existing paid order and invoice records are not reset by reconciliation
-- [x] Schedule fields support milliseconds, ISO strings, Dates, and Firestore timestamps
-- [x] Customer request line items preserve service IDs, quantities, add-ons, fees, duration, and estimate totals
-- [x] Customer order requests include explicit quote, order, scheduling, payment, and capacity states
-- [x] Stripe session metadata links quote, invoice, subscription, reservation, order, customer, and company IDs
+- [x] Existing linked order IDs are reused instead of creating parallel orders
+- [x] Schedule changes preserve the previous appointment timestamp
+- [x] Reschedule counts and decision records are retained
+- [x] Cancellation decisions preserve the policy snapshot and reason
+- [x] Refund records link the order, quote, invoice, customer, company, and provider payment reference
 
 ### Scheduling and capacity
 
-- [x] Provider business hours are supported
-- [x] Booking lead time is enforced in generated choices
-- [x] Booking horizon is enforced in generated choices
-- [x] Service duration prevents choices that extend beyond closing time
-- [x] Provider blackout dates are supported
-- [x] Configured per-slot availability can hide full slots
-- [x] Final slot capacity is validated inside a Firestore transaction
-- [x] Appointment holds are released after checkout expiration
-- [x] Reserved slot counts are decremented when payment fails or the hold expires
-- [x] Expired deterministic reservations can be safely reserved again
-- [x] Stale checkout URLs are cleared instead of being reused
+- [x] Provider hours, lead time, booking horizon, duration, and blackout dates remain supported
+- [x] Final capacity is validated inside Firestore transactions
+- [x] Safe rescheduling decrements the old slot and increments the new slot transactionally
+- [x] Same-slot reschedule requests do not double-count capacity
+- [x] Cancellation releases held or confirmed capacity only after policy approval
+- [x] Late requests do not release capacity until reviewed
+- [x] Checkout expiration and payment failure release capacity
 
-### Payments, invoices, and subscriptions
+### Cancellations and refunds
 
-- [x] Stripe secret keys are read only from Cloud Functions secrets
-- [x] Checkout sessions are created only by authenticated callable functions
-- [x] Customer ownership is verified before quote acceptance, invoice checkout, or subscription management
-- [x] Stripe webhook signatures are verified before any state mutation
-- [x] Stripe webhook event IDs prevent duplicate reconciliation
-- [x] Successful checkout updates all linked Marketplace records
-- [x] Payment failure releases appointment capacity and marks financial records past due or failed
-- [x] Subscription status follows Stripe creation, update, deletion, invoice-paid, and invoice-failed events
-- [x] Customers can pause, resume, or schedule cancellation of active Stripe subscriptions
-- [x] Checkout expiration is stored and validated before reusing a payment link
+- [x] Cancellation eligibility is calculated server-side
+- [x] Full and partial refund tiers are supported
+- [x] No-payment cancellations do not create unnecessary refund records
+- [x] Late cancellations may be routed to manual review
+- [x] Refund requests are deterministic and idempotent
+- [x] Refund execution is restricted to approved operations roles
+- [x] Refund execution uses Stripe idempotency keys
+- [x] Refund success updates the refund request, order, invoice, and customer notification
+- [ ] Stripe-backed refund execution requires the production Stripe secret and deployment
 
-### Vendor fulfillment
+### Tracking and privacy
 
-- [x] Vendor responses are processed through an authenticated callable function
-- [x] Vendor roles are explicitly allow-listed
-- [x] Non-platform vendor users can respond only to orders belonging to their company
-- [x] Accepted orders enter the vendor fulfillment workflow
-- [x] Rejected orders return to dispatch review with a rejection reason and reassignment flag
-- [x] Vendor controls are added without replacing the existing company and staff claim workflow
+- [x] Customer tracking data is returned by an authenticated server callable
+- [x] Only the authenticated customer's orders are evaluated
+- [x] Only workers assigned to the customer's order are considered
+- [x] Tracking appears only during active fulfillment states
+- [x] Offline or stale workforce locations are excluded
+- [x] Location coordinates are rounded before returning to the customer
+- [x] Distance uses the order destination and assigned-worker location
+- [x] ETA uses reported movement speed when available and a conservative fallback otherwise
+- [x] Customer access does not expose the company-wide workforce-location collection
 
-### Realtime lifecycle
+### Lifecycle notifications
 
-- [x] Firestore listeners are unsubscribed during page lifecycle cleanup
-- [x] GPS watches are stopped during page lifecycle cleanup
-- [x] Location writes are throttled
-- [x] Stopped tracking is represented as offline
-- [x] Realtime schedule changes render without a page reload
-- [x] Recent Marketplace requests update without a page reload
-- [x] Vendor handoff controls follow company-scoped order updates
-- [x] Customer financial status refreshes periodically and when the page regains focus
+- [x] Notification IDs are deterministic to prevent duplicate alerts
+- [x] Customers receive payment confirmation and payment-failure updates
+- [x] Customers receive schedule and vendor-assignment updates
+- [x] Customers receive service-started, completed, cancelled, and refunded updates
+- [x] Company operations receive new-order, payment, reassignment, exception-review, and refund alerts
+- [x] Assigned staff receive appointment and execution-state updates
+- [x] Change-request decisions generate customer notifications
+- [x] Refund-request transitions generate customer and operations notifications
 
 ### Security boundaries
 
-- [x] Customer Marketplace submission uses the existing customer-safe `leads` contract
-- [x] Financial mutations are server-authoritative and not performed by direct browser writes
-- [x] Customer financial reads are sanitized and customer-scoped server-side
-- [x] Callable commerce actions require Firebase Authentication and App Check
-- [x] Client queries are company-scoped where a company ID exists
-- [x] Platform-wide client access is limited to platform roles
-- [x] Location writes use the authenticated user's document ID
-- [x] Unsafe provider routing is blocked when no eligible provider serves the address
+- [x] Financial and order-change mutations are server-authoritative
+- [x] Callable Marketplace actions require Firebase Authentication and App Check
+- [x] Customer ownership is verified before every customer order mutation
+- [x] Operations refund execution uses an explicit role allow-list
+- [x] Non-platform actors remain company-scoped where company ownership applies
+- [x] Customer tracking reads use server-side document lookup instead of broad browser collection access
+- [x] Stripe secrets remain in Firebase Secret Manager
 - [ ] Firestore `jobs` reads must be company-scoped by server rules
 - [ ] Firestore `workforce_locations` reads must be company-scoped by server rules
 - [ ] Firestore `subscriptions` reads must be restricted to the customer or company
-- [ ] Firestore rules should explicitly document the server-only `quotes`, appointment, and Stripe collections
-- [ ] Staff-side quote creation and approval should move fully behind an authoritative callable workflow
+- [ ] Server-only change-request and refund collections should be explicitly documented in Firestore rules
+- [ ] Staff-side quote approval should move fully behind trusted server orchestration
 
 ### Verification
 
-- [x] Customer commerce dashboard JavaScript passed `node --check`
-- [x] Marketplace commerce Cloud Function runtime passed `node --check`
-- [x] Imports and referenced functions were manually reviewed
-- [x] Existing job, schedule, dispatch, proximity-dispatch, company, service, customer-lead, invoice, subscription, and Stripe field compatibility reviewed
-- [x] Route guard session-ready behavior was verified for Marketplace initialization
-- [x] Firestore transaction reads occur before transaction writes in the active commerce runtime
-- [x] The superseded commerce implementation was removed from the repository
+- [x] Marketplace operations core passed `node --check`
+- [x] Reschedule and cancellation functions passed `node --check`
+- [x] Refund executor passed `node --check`
+- [x] Customer operations snapshot passed `node --check`
+- [x] Lifecycle notification triggers passed `node --check`
+- [x] Customer operations browser module passed `node --check`
+- [x] New functions are exported by the active Functions entry point
+- [x] Customer portal contains all required order, notification, refund, and status roots
+- [x] Transaction reads were reviewed to occur before transaction writes
+- [x] No Studio file was changed
 - [ ] Firebase Functions emulator test pending
 - [ ] Browser smoke test pending
-- [ ] Stripe test-mode Checkout test pending
+- [ ] Stripe test-mode Checkout and refund tests pending
 - [ ] Signed Stripe webhook test pending
-- [ ] Appointment collision and expiration test pending
-- [ ] End-to-end customer order → quote → payment → vendor acceptance test pending
+- [ ] Appointment collision, reschedule, cancellation, and expiration tests pending
+- [ ] End-to-end request → quote → payment → vendor → tracking → completion test pending
 - [ ] No CI checks are currently attached to these commits
 
 ## Deployment checklist
 
-The implementation is committed but is not production-active until the following deployment steps are completed:
+The implementation is committed but is not production-active until deployment is completed.
 
-- [ ] Set the Firebase Functions secret `STRIPE_SECRET_KEY`
-- [ ] Set the Firebase Functions secret `STRIPE_WEBHOOK_SECRET`
-- [ ] Set `APP_BASE_URL` when production uses a hostname other than `https://evaraos-web.web.app`
+Stripe requirements may remain pending until the Stripe account is available:
+
+- [ ] Set `STRIPE_SECRET_KEY`
+- [ ] Set `STRIPE_WEBHOOK_SECRET`
+- [ ] Set `APP_BASE_URL` when production uses a different hostname
 - [ ] Deploy the updated Firebase Functions entry point
-- [ ] Register the deployed `stripeMarketplaceWebhook` HTTPS endpoint in Stripe
-- [ ] Subscribe the Stripe endpoint to Checkout, PaymentIntent, Invoice, and Subscription lifecycle events
-- [ ] Deploy Firebase Hosting so the actionable customer commerce and vendor handoff scripts are live
-- [ ] Run the test-mode end-to-end checklist before enabling live-mode payments
+- [ ] Register `stripeMarketplaceWebhook` in Stripe
+- [ ] Subscribe the Stripe endpoint to Checkout, PaymentIntent, Invoice, and Subscription events
+- [ ] Deploy Firebase Hosting
+- [ ] Run Checkout, refund, webhook, and subscription tests in Stripe test mode
+- [ ] Enable live-mode payments only after acceptance testing passes
 
-Recommended Stripe webhook events:
+The operational policy, cancellation, tracking, notification, and refund-queue layers do not require Stripe credentials to remain committed and ready. Actual payment capture and refund execution do require the Stripe configuration.
 
-- `checkout.session.completed`
-- `checkout.session.async_payment_succeeded`
-- `checkout.session.async_payment_failed`
-- `payment_intent.payment_failed`
-- `invoice.paid`
-- `invoice.payment_failed`
-- `customer.subscription.created`
-- `customer.subscription.updated`
-- `customer.subscription.deleted`
+## Remaining Marketplace phase
 
-## Current known dependencies
-
-Production completion requires coordinated Backend and Security ownership for:
-
-- deploying and configuring the new Cloud Functions
-- storing Stripe secrets in Firebase Secret Manager
-- configuring and testing the Stripe webhook endpoint
-- tightening broad Firestore reads for jobs, workforce locations, and subscriptions
-- moving staff-side quote approval fully behind trusted server orchestration
-- validating App Check behavior in production and emulator environments
-
-## Next Marketplace phase
-
-Complete operational hardening and the final customer experience:
-
-- rescheduling and cancellation policy engine
-- refund and partial-refund orchestration
-- customer live ETA and map tracking
-- lifecycle notifications for customer, vendor, dispatch, and staff
-- production test-mode acceptance suite
-- security-rule hardening handoff
+- internal operations interface for approving or rejecting late reschedule and cancellation requests
+- production Firebase deployment and Stripe connection
+- test-mode acceptance suite
+- Firestore security-rule hardening handoff
+- final browser and mobile quality assurance
