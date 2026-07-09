@@ -7,18 +7,28 @@ on:
       - 'public/assets/css/**'
       - 'public/assets/js/design-system/**'
       - 'public/assets/js/studio/**'
+      - 'public/assets/js/qa-v2.js'
+      - 'public/assets/js/access-control.js'
       - 'public/website-builder.html'
+      - 'public/qa-v2.html'
       - 'tools/design-system-audit.js'
+      - 'tools/visual-qa-audit.js'
       - 'tests/visual/**'
+      - 'docs/design-system/**'
       - '.github/workflows/design-system-visual-qa.yml'
   pull_request:
     paths:
       - 'public/assets/css/**'
       - 'public/assets/js/design-system/**'
       - 'public/assets/js/studio/**'
+      - 'public/assets/js/qa-v2.js'
+      - 'public/assets/js/access-control.js'
       - 'public/website-builder.html'
+      - 'public/qa-v2.html'
       - 'tools/design-system-audit.js'
+      - 'tools/visual-qa-audit.js'
       - 'tests/visual/**'
+      - 'docs/design-system/**'
       - '.github/workflows/design-system-visual-qa.yml'
   workflow_dispatch:
     inputs:
@@ -50,7 +60,7 @@ concurrency:
 
 jobs:
   static-audit:
-    name: Design-system ownership audit
+    name: Design-system and visual-QA audits
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -63,6 +73,9 @@ jobs:
 
       - name: Run design-system audit
         run: node tools/design-system-audit.js
+
+      - name: Run visual-QA architecture audit
+        run: node tools/visual-qa-audit.js
 
   authenticated-visual-qa:
     name: Authenticated visual regression
