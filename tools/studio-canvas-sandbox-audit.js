@@ -18,6 +18,7 @@ const files = {
   session: 'public/assets/js/studio/canvas/canvas-session.js',
   writerLease: 'public/assets/js/studio/canvas/canvas-writer-lease.js',
   writerGuard: 'public/assets/js/studio/canvas/canvas-writer-guard.js',
+  syncStatus: 'public/assets/js/studio/canvas/canvas-sync-status.js',
   sandbox: 'public/assets/js/studio/canvas/canvas-session-sandbox.js',
   css: 'public/assets/css/pages/studio-canvas-sandbox.css',
   sessionCss: 'public/assets/css/pages/studio-canvas-session.css',
@@ -44,6 +45,7 @@ if (!errors.length) {
   const session = read(files.session);
   const writerLease = read(files.writerLease);
   const writerGuard = read(files.writerGuard);
+  const syncStatus = read(files.syncStatus);
   const sandbox = read(files.sandbox);
   const css = read(files.css);
   const sessionCss = read(files.sessionCss);
@@ -64,6 +66,7 @@ if (!errors.length) {
     files.session,
     files.writerLease,
     files.writerGuard,
+    files.syncStatus,
     files.sandbox
   ]) {
     try {
@@ -123,7 +126,11 @@ if (!errors.length) {
   for (const marker of [
     'appendOperationTransaction', 'listOperationTransactions', 'getGraphHead',
     'replayOperations', 'direct-canvas-session', 'expectedHeadRevision',
-    'inverseOperations', 'commitOperation', 'pendingTransactions', 'recovery-required'
+    'inverseOperations', 'commitOperation', 'pendingTransactions', 'recovery-required',
+    'validateTransactionRecord', 'canvas-transaction-integrity', 'canvas-transaction-revision',
+    'canvas-operation-replay', 'canvas-graph-head-mismatch', 'expectedSequence',
+    'commitOperation startRevision', 'commitOperation endRevision', 'getDiagnostics',
+    'unsynchronizedChanges', "integrityState: 'verified'"
   ]) {
     if (!operationJournal.includes(marker)) errors.push(`canvas-operation-journal.js: missing ${marker}`);
   }
@@ -143,7 +150,9 @@ if (!errors.length) {
     'SelectionController', 'InteractionController', 'ViewportController',
     'LayoutResolver', 'SnapResolver', 'authored-blueprint-graph',
     'graph:canvas:', '#commitPrepared', 'await this.#journal.append',
-    'this.#graph = clone(prepared.graph)', 'pendingTransactions', 'undo()', 'redo()'
+    'this.#graph = clone(prepared.graph)', 'pendingTransactions', 'undo()', 'redo()',
+    'journalDiagnostics', 'refreshJournalDiagnostics', 'pendingTransactionCount',
+    'unsynchronizedChanges', 'integrityState', 'headSequence', 'lastTransactionId'
   ]) {
     if (!session.includes(marker)) errors.push(`canvas-session.js: missing ${marker}`);
   }
@@ -168,7 +177,20 @@ if (!errors.length) {
   ]) {
     if (!writerGuard.includes(marker)) errors.push(`canvas-writer-guard.js: missing ${marker}`);
   }
-  if (!writerGuard.includes("throw new Error(reason)")) errors.push('canvas-writer-guard.js: read-only writes must fail closed');
+  if (!writerGuard.includes('throw new Error(reason)')) errors.push('canvas-writer-guard.js: read-only writes must fail closed');
+
+  for (const marker of [
+    "STATUS_VERSION = 'canvas-sync-status-v1'", 'EvaraCanvasSyncStatus',
+    'data-canvas-sync-status', 'aria-live', 'canvasSyncState', 'canvasIntegrityState',
+    'canvasUnsynchronized', 'canvasPendingCount', 'pendingTransactionCount',
+    'unsynchronizedChanges', 'waiting for trusted sync', 'server confirmed',
+    'requestAnimationFrame(render)', 'header.dataset.pendingCount'
+  ]) {
+    if (!syncStatus.includes(marker)) errors.push(`canvas-sync-status.js: missing ${marker}`);
+  }
+  if (/indexedDB|localStorage|sessionStorage|fetch\(|XMLHttpRequest|firebase|firestore/i.test(syncStatus)) {
+    errors.push('canvas-sync-status.js: diagnostics must remain a read-only event projection');
+  }
 
   for (const marker of [
     'createCanvasSession', 'startMarquee', 'updateMarquee', 'startPan', 'updatePan',
@@ -181,12 +203,12 @@ if (!errors.length) {
     if (!sandbox.includes(marker)) errors.push(`canvas-session-sandbox.js: missing ${marker}`);
   }
 
-  for (const source of [fixture, projection, dispatcher, layout, controllers, operationJournal, history, session, writerLease, writerGuard, sandbox]) {
+  for (const source of [fixture, projection, dispatcher, layout, controllers, operationJournal, history, session, writerLease, writerGuard, syncStatus, sandbox]) {
     for (const unsafe of ['innerHTML', 'outerHTML', 'eval(', 'new Function']) {
       if (source.includes(unsafe)) errors.push(`Canvas runtime: unsafe sink detected: ${unsafe}`);
     }
   }
-  for (const source of [dispatcher, layout, controllers, operationJournal, history, session, writerLease, writerGuard, sandbox]) {
+  for (const source of [dispatcher, layout, controllers, operationJournal, history, session, writerLease, writerGuard, syncStatus, sandbox]) {
     for (const prohibited of ['localStorage', 'sessionStorage', 'firebase', 'firestore', 'fetch(']) {
       if (source.toLowerCase().includes(prohibited.toLowerCase())) errors.push(`Canvas runtime: prohibited dependency ${prohibited}`);
     }
@@ -213,23 +235,34 @@ if (!errors.length) {
     'data-canvas-writer-state="read-only"',
     'data-canvas-writer-state="refresh-required"',
     'another Studio tab owns this Canvas draft',
-    'reload before editing'
+    'reload before editing',
+    '.studio-canvas-sync-status',
+    'data-state="unsynchronized"',
+    'data-state="server-confirmed"',
+    'data-state="recovery-required"',
+    'data-canvas-unsynchronized="true"',
+    '@media (prefers-reduced-transparency: reduce)',
+    '@media (forced-colors: active)'
   ]) {
     if (!sessionCss.includes(selector)) errors.push(`studio-canvas-session.css: missing ${selector}`);
   }
 
   const cssImport = '/assets/css/pages/studio-canvas-sandbox.css?v=1';
-  const sessionCssImport = '/assets/css/pages/studio-canvas-session.css?v=2';
+  const sessionCssImport = '/assets/css/pages/studio-canvas-session.css?v=3';
   const guardImport = '/assets/js/studio/canvas/canvas-writer-guard.js?v=1';
-  const scriptImport = '/assets/js/studio/canvas/canvas-session-sandbox.js?v=1';
+  const scriptImport = '/assets/js/studio/canvas/canvas-session-sandbox.js?v=2';
+  const syncImport = '/assets/js/studio/canvas/canvas-sync-status.js?v=1';
   const oldScriptImport = '/assets/js/studio/canvas/canvas-sandbox.js?v=1';
   const blueprintOperationImport = '/assets/js/studio/blueprint-operation-adapter.js?v=1';
   if (!page.includes(cssImport) || !page.includes(sessionCssImport)) errors.push('public/website-builder.html: Canvas stylesheets are missing');
   if (!page.includes(guardImport)) errors.push('public/website-builder.html: Canvas writer guard is missing');
   if (!page.includes(scriptImport)) errors.push('public/website-builder.html: journaled CanvasSession runtime is missing');
+  if (!page.includes(syncImport)) errors.push('public/website-builder.html: Canvas sync diagnostics runtime is missing');
   if (page.includes(oldScriptImport)) errors.push('public/website-builder.html: rollback Canvas sandbox must not remain active');
-  if (!(page.indexOf(blueprintOperationImport) < page.indexOf(guardImport) && page.indexOf(guardImport) < page.indexOf(scriptImport))) {
-    errors.push('public/website-builder.html: Blueprint operations, writer guard, and CanvasSession load order is invalid');
+  if (!(page.indexOf(blueprintOperationImport) < page.indexOf(guardImport)
+    && page.indexOf(guardImport) < page.indexOf(scriptImport)
+    && page.indexOf(scriptImport) < page.indexOf(syncImport))) {
+    errors.push('public/website-builder.html: Blueprint operations, writer guard, CanvasSession, and sync diagnostics load order is invalid');
   }
 
   for (const marker of [
@@ -240,9 +273,18 @@ if (!errors.length) {
     'EvaraCanvasWriterGuard.release()',
     "toBe('writer')",
     'takeover.durable).toBe(true)',
-    'canvas-writer-lease.json'
+    'canvas-writer-lease.json',
+    'corrupted Canvas transaction fails closed with recovery-required',
+    'canvas-transaction-integrity',
+    'canvas-corrupt-transaction-recovery.json',
+    'graph-head mismatch fails closed and requires refresh',
+    'canvas-graph-head-mismatch',
+    'canvas-graph-head-mismatch-recovery.json',
+    'data-canvas-unsynchronized',
+    'pendingTransactionCount',
+    'integrityState'
   ]) {
-    if (!canvasTest.includes(marker)) errors.push(`studio-canvas-session.spec.mjs: missing writer-lease coverage ${marker}`);
+    if (!canvasTest.includes(marker)) errors.push(`studio-canvas-session.spec.mjs: missing Canvas recovery coverage ${marker}`);
   }
 
   if (!modules.includes("id: 'canvas-engine'")) errors.push('module-registry.js: Canvas Engine module is missing');
@@ -257,4 +299,4 @@ if (errors.length) {
   errors.forEach((error) => console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('CanvasSession, GraphProjection, semantic dispatcher, Flow/Grid/Spatial layout, controllers, durable history, shared journal, and graph-scoped writer lease boundaries passed.');
+console.log('CanvasSession, GraphProjection, semantic dispatcher, layout, controllers, durable history, shared Journal, writer lease, integrity recovery, and unsynchronized-change diagnostics passed.');
