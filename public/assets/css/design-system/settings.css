@@ -1,0 +1,872 @@
+/* EVARAOS DESIGN SYSTEM — SETTINGS & PREFERENCES
+   Reusable structure for settings hubs, account panels, appearance controls,
+   notification rows, workspace preferences, navigation pickers, and save bars.
+
+   Primary Liquid Glass rendering remains owned by theme/liquid-optics.css.
+   This layer only provides layout, typography, control anatomy, nested states,
+   accessibility, and responsive behavior.
+*/
+
+:root {
+  --settings-content-max: 73.75rem;
+  --settings-shell-top: 7.25rem;
+  --settings-shell-bottom: 5.75rem;
+  --settings-section-gap: var(--space-5);
+  --settings-panel-padding: clamp(var(--space-5), 3.5vw, var(--space-8));
+  --settings-card-padding: var(--space-5);
+  --settings-field-height: 3.25rem;
+  --settings-panel-radius: var(--radius-2xl);
+  --settings-card-radius: var(--radius-lg);
+  --settings-field-radius: var(--radius-md);
+  --settings-switch-width: 3.25rem;
+  --settings-switch-height: 1.875rem;
+  --settings-switch-thumb: 1.375rem;
+}
+
+/* Shell and primary sections */
+:where(.eva-settings-shell,.settings-shell,.settings-hub-shell,.workspace-shell) {
+  width: min(var(--settings-content-max), calc(100% - (var(--page-gutter) * 2)));
+  margin: 0 auto;
+  padding: var(--settings-shell-top) 0 var(--settings-shell-bottom);
+  display: grid;
+  gap: var(--settings-section-gap);
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+}
+
+:where(.eva-settings-panel,.settings-hero,.settings-block,.settings-save-panel,.settings-hub-hero,.settings-system-panel,.workspace-hero,.workspace-block,.workspace-save-bar) {
+  min-width: 0;
+  padding: var(--settings-panel-padding);
+  border-radius: var(--settings-panel-radius);
+}
+
+:where(.settings-hero,.settings-block,.settings-save-panel) {
+  display: grid;
+  gap: var(--space-5);
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Typography */
+:where(.eva-settings-kicker,.settings-kicker) {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  line-height: 1.2;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+
+:where(.eva-settings-hero,.settings-hero,.settings-hub-hero,.workspace-hero) h1 {
+  margin: 0;
+  max-width: 14ch;
+  color: var(--text-primary);
+  font-size: clamp(2.375rem, 5.5vw, 4.75rem);
+  font-weight: var(--weight-bold);
+  line-height: .96;
+  letter-spacing: -.055em;
+  text-wrap: balance;
+}
+
+:where(.eva-settings-hero,.settings-hero,.settings-hub-hero,.workspace-hero) > p:not(.settings-kicker) {
+  max-width: 48rem;
+  margin: var(--space-3) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--text-md);
+  line-height: var(--leading-relaxed);
+  text-wrap: pretty;
+}
+
+:where(.eva-settings-head,.settings-head) {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+:where(.eva-settings-head,.settings-head) h2,
+.settings-system-panel h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  text-wrap: balance;
+}
+
+:where(.eva-settings-head,.settings-head) > p:not(.settings-kicker) {
+  max-width: 48rem;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  text-wrap: pretty;
+}
+
+/* Section navigation and actions */
+:where(.settings-section-nav,.settings-footer-actions,.settings-hub-actions,.workspace-actions) {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+:where(.eva-settings-link,.settings-section-link) {
+  min-height: var(--tap-target-min);
+  padding-inline: var(--space-4);
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--motion), color var(--motion), opacity var(--motion);
+}
+
+:where(.eva-settings-link,.settings-section-link):hover {
+  transform: translateY(-1px);
+}
+
+:where(.eva-settings-link,.settings-section-link):focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* Generic settings grids */
+:where(.eva-settings-grid-2,.settings-grid-2,.workspace-grid) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+:where(.eva-settings-grid-3,.settings-grid-3) {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+/* Hub cards */
+:where(.eva-settings-hub-grid,.settings-hub-grid) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+:where(.eva-settings-hub-card,.settings-hub-card) {
+  min-height: 10.5rem;
+  padding: var(--settings-card-padding);
+  border-radius: var(--settings-card-radius);
+  display: grid;
+  grid-template-columns: 3.25rem minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--space-4);
+  color: var(--text-primary);
+  text-decoration: none;
+  min-width: 0;
+  transition: transform var(--motion), outline-color var(--motion);
+}
+
+:where(.eva-settings-hub-card,.settings-hub-card) h2 {
+  margin: var(--space-1) 0 var(--space-2);
+  color: var(--text-primary);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-tight);
+  text-wrap: balance;
+}
+
+:where(.eva-settings-hub-card,.settings-hub-card) p:not(.settings-kicker) {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  text-wrap: pretty;
+}
+
+:where(.eva-settings-icon,.settings-hub-card-icon,.settings-card-icon) {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: var(--radius-md);
+  display: grid;
+  place-items: center;
+  color: var(--text-primary);
+  background: rgba(var(--adaptive-ink-rgb), .045);
+  border: 1px solid var(--separator);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10);
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+:where(.settings-hub-card-icon,.settings-card-icon) .eva-icon {
+  width: var(--icon-lg);
+  height: var(--icon-lg);
+}
+
+.settings-hub-card-icon[data-evaraos-brand-icon] {
+  outline: 1px solid color-mix(in srgb, var(--evara-brand-red) 36%, transparent);
+  outline-offset: -1px;
+  background: color-mix(in srgb, var(--evara-brand-red) 8%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 var(--space-3) var(--space-7) color-mix(in srgb, var(--evara-brand-red) 18%, transparent);
+}
+
+.settings-hub-card-icon[data-evaraos-brand-icon]::before {
+  content: "";
+  width: 88%;
+  height: 88%;
+  display: block;
+  background: var(--evaraos-brand-icon) center / contain no-repeat;
+}
+
+.settings-hub-card-arrow {
+  align-self: center;
+  color: var(--text-secondary);
+}
+
+.settings-hub-card-arrow .eva-icon {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+}
+
+:where(.eva-settings-hub-card,.settings-hub-card):hover {
+  transform: translateY(-2px);
+}
+
+:where(.eva-settings-hub-card,.settings-hub-card):focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* Connected-system summary */
+:where(.eva-settings-system-grid,.settings-system-grid) {
+  margin-top: var(--space-4);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+:where(.eva-settings-system-item,.settings-system-item) {
+  min-width: 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: rgba(var(--adaptive-ink-rgb), .028);
+  border: 1px solid var(--separator);
+}
+
+:where(.eva-settings-system-item,.settings-system-item) span {
+  display: block;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  line-height: 1.2;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+:where(.eva-settings-system-item,.settings-system-item) strong {
+  display: block;
+  margin-top: var(--space-2);
+  color: var(--text-primary);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+}
+
+/* Fields */
+:where(.eva-settings-field,.settings-color-field,.workspace-field) {
+  min-width: 0;
+  min-height: 5.5rem;
+  padding: var(--space-4);
+  border-radius: var(--settings-card-radius);
+  display: grid;
+  align-content: center;
+  gap: var(--space-2);
+  background: rgba(var(--adaptive-ink-rgb), .026);
+  border: 1px solid var(--separator);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+.settings-color-field {
+  grid-template-columns: minmax(0, 1fr) minmax(4.5rem, 1fr);
+  align-items: center;
+  gap: var(--space-4);
+}
+
+:where(.eva-settings-field,.settings-color-field,.workspace-field) > span,
+:where(.eva-settings-field,.settings-color-field,.workspace-field) > label,
+.settings-image-controls > label,
+.settings-range-head label {
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+:where(.eva-settings-field,.settings-color-field,.workspace-field) :where(input,select,textarea),
+.settings-image-controls :where(input,select,textarea) {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--settings-field-height);
+  padding-inline: var(--space-4);
+  border-radius: var(--settings-field-radius);
+  color: var(--text-primary);
+  outline: 0;
+}
+
+:where(.eva-settings-field,.settings-color-field,.workspace-field) textarea,
+.settings-image-controls textarea {
+  min-height: 8rem;
+  padding-block: var(--space-4);
+  resize: vertical;
+}
+
+:where(.eva-settings-field,.settings-color-field,.workspace-field) :where(input,select,textarea):focus-visible,
+.settings-image-controls :where(input,select,textarea):focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring), var(--shadow-sm) !important;
+}
+
+.settings-color-field input[type="color"] {
+  justify-self: end;
+  width: 4.5rem;
+  height: 3rem;
+  min-height: 3rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.workspace-field.full { grid-column: 1 / -1; }
+
+/* Choice chips and segmented options */
+:where(.eva-settings-choice-grid,.appearance-choice-grid) {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+:where(.eva-settings-chip,.settings-chip) {
+  width: 100%;
+  min-height: var(--control-height-lg);
+  padding-inline: var(--space-4);
+  border-radius: var(--settings-field-radius);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+  text-align: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform var(--motion), outline-color var(--motion), background var(--motion);
+}
+
+:where(.eva-settings-chip,.settings-chip).is-active {
+  outline: 1px solid color-mix(in srgb, var(--accent-blue) 52%, var(--lg-edge));
+  outline-offset: -1px;
+  background: rgba(var(--adaptive-ink-rgb), .065) !important;
+}
+
+:where(.eva-settings-chip,.settings-chip):focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* Toggle preference rows */
+:where(.eva-settings-toggle-row,.settings-toggle-row,.workspace-toggle) {
+  min-width: 0;
+  min-height: 4.5rem;
+  padding: var(--space-4);
+  border-radius: var(--settings-card-radius);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  background: rgba(var(--adaptive-ink-rgb), .025);
+  border: 1px solid var(--separator);
+}
+
+.settings-toggle-row + .settings-toggle-row {
+  margin-top: var(--space-2);
+}
+
+:where(.eva-settings-toggle-copy,.settings-toggle-copy,.workspace-toggle > span) {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+:where(.eva-settings-toggle-copy,.settings-toggle-copy,.workspace-toggle > span) strong {
+  color: var(--text-primary);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+}
+
+:where(.eva-settings-toggle-copy,.settings-toggle-copy,.workspace-toggle > span) :where(span,small) {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  text-wrap: pretty;
+}
+
+.workspace-toggle-row {
+  display: grid;
+  gap: var(--space-3);
+}
+
+/* Unified switch */
+:where(.eva-settings-switch,.settings-switch,.workspace-toggle input[type="checkbox"]) {
+  appearance: none;
+  -webkit-appearance: none;
+  width: var(--settings-switch-width);
+  height: var(--settings-switch-height);
+  min-width: var(--settings-switch-width);
+  min-height: var(--settings-switch-height);
+  margin: 0;
+  padding: .1875rem;
+  border-radius: var(--radius-pill);
+  position: relative;
+  flex: 0 0 auto;
+  cursor: pointer;
+  color: var(--text-primary);
+  background: rgba(var(--adaptive-ink-rgb), .075);
+  border: 1px solid var(--separator-strong);
+  box-shadow: inset 0 1px 2px rgba(var(--adaptive-shadow-rgb), .12), inset 0 1px 0 rgba(255,255,255,.10);
+  transition: background var(--motion), border-color var(--motion), box-shadow var(--motion);
+}
+
+:where(.eva-settings-switch,.settings-switch,.workspace-toggle input[type="checkbox"])::before,
+:where(.eva-settings-switch,.settings-switch,.workspace-toggle input[type="checkbox"])::after {
+  content: "";
+  display: block;
+  position: absolute;
+  top: .1875rem;
+  left: .1875rem;
+  width: var(--settings-switch-thumb);
+  height: var(--settings-switch-thumb);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--text-primary) 16%, var(--lg-fill));
+  border: 1px solid color-mix(in srgb, var(--text-primary) 18%, var(--separator));
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,.24);
+  transform: translateX(0);
+  transition: transform var(--duration-fast) var(--ease-standard), background var(--motion);
+}
+
+:where(.eva-settings-switch,.settings-switch,.workspace-toggle input[type="checkbox"])::after {
+  display: none;
+}
+
+:where(.eva-settings-switch,.settings-switch,.workspace-toggle input[type="checkbox"]):checked {
+  background: color-mix(in srgb, var(--accent-blue) 56%, rgba(var(--adaptive-ink-rgb), .08));
+  border-color: color-mix(in srgb, var(--accent-blue) 48%, var(--separator-strong));
+}
+
+:where(.eva-settings-switch,.settings-switch,.workspace-toggle input[type="checkbox"]):checked::before {
+  transform: translateX(1.375rem);
+  background: var(--text-primary);
+}
+
+:where(.eva-settings-switch,.settings-switch,.workspace-toggle input[type="checkbox"]):focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring), inset 0 1px 2px rgba(var(--adaptive-shadow-rgb), .12);
+}
+
+:where(.eva-settings-switch,.settings-switch,.workspace-toggle input[type="checkbox"]):disabled {
+  opacity: .52;
+  cursor: not-allowed;
+}
+
+/* Appearance preview and image controls */
+.settings-image-panel[hidden] { display: none; }
+
+:where(.eva-settings-image-grid,.settings-image-grid) {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(17.5rem, .85fr);
+  gap: var(--space-5);
+  align-items: stretch;
+}
+
+:where(.eva-settings-image-preview,.settings-image-preview) {
+  min-height: 22.5rem;
+  border-radius: var(--settings-card-radius);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: 1px solid var(--separator-strong);
+  box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,.14);
+}
+
+:where(.eva-settings-image-controls,.settings-image-controls) {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+}
+
+:where(.eva-settings-image-picker,.settings-image-picker) {
+  min-height: 5rem;
+  padding: var(--space-4);
+  border-radius: var(--settings-card-radius);
+  display: grid;
+  gap: var(--space-1);
+  text-align: left;
+  cursor: pointer;
+  color: var(--text-primary);
+  background: rgba(var(--adaptive-ink-rgb), .035);
+  border: 1px solid var(--separator);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10);
+}
+
+:where(.eva-settings-image-picker,.settings-image-picker) strong {
+  color: var(--text-primary);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+
+:where(.eva-settings-image-picker,.settings-image-picker) span,
+.settings-help-text {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-normal);
+}
+
+.settings-range-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.settings-range-head strong {
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.settings-image-controls input[type="range"] {
+  min-height: 2rem;
+  padding: 0;
+  box-shadow: none !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.settings-preview {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.settings-preview-nav {
+  min-height: 5rem;
+  padding-inline: var(--space-5);
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.settings-preview-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.settings-preview-brand img {
+  width: var(--tap-target-min);
+  height: var(--tap-target-min);
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+.settings-preview-brand-copy {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.settings-preview-brand-copy strong { color: var(--text-primary); }
+.settings-preview-brand-copy span { color: var(--text-secondary); font-size: var(--text-sm); }
+
+.settings-preview-menu {
+  width: var(--tap-target-min);
+  height: var(--tap-target-min);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--text-primary);
+  background: rgba(var(--adaptive-ink-rgb), .045);
+  border: 1px solid var(--separator);
+}
+
+.settings-preview-card {
+  min-height: 11.375rem;
+  padding: var(--space-5);
+  border-radius: var(--settings-card-radius);
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+}
+
+.settings-preview-card h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+}
+
+.settings-preview-card p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+
+.settings-preview-btn {
+  width: 100%;
+  min-height: var(--control-height-lg);
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--weight-semibold);
+}
+
+/* Workspace navigation picker */
+:where(.eva-settings-nav-picker,.workspace-nav-picker) {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+:where(.eva-settings-nav-option,.workspace-nav-option) {
+  min-height: 5.5rem;
+  padding: var(--space-3);
+  border-radius: var(--settings-card-radius);
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  text-align: center;
+  cursor: pointer;
+  background: rgba(var(--adaptive-ink-rgb), .025);
+  border: 1px solid var(--separator);
+  transition: transform var(--motion), outline-color var(--motion), color var(--motion), background var(--motion);
+}
+
+.workspace-nav-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.workspace-nav-option .eva-icon {
+  width: var(--icon-lg);
+  height: var(--icon-lg);
+}
+
+.workspace-nav-option:has(input:checked) {
+  color: var(--text-primary);
+  outline: 1px solid color-mix(in srgb, var(--accent-blue) 52%, var(--lg-edge));
+  outline-offset: -1px;
+  background: rgba(var(--adaptive-ink-rgb), .065);
+}
+
+.workspace-nav-option:focus-within {
+  box-shadow: var(--focus-ring);
+}
+
+.workspace-role-note {
+  margin: 0;
+  padding: var(--space-4);
+  border-radius: var(--settings-field-radius);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  background: rgba(var(--adaptive-ink-rgb), .025);
+  border: 1px solid var(--separator);
+}
+
+/* Save panels */
+:where(.eva-settings-save,.settings-save-panel,.workspace-save-bar) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+:where(.eva-settings-save-status,.settings-save-panel > div:first-child,.workspace-save-status) {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+:where(.eva-settings-save-status,.settings-save-panel > div:first-child,.workspace-save-status) strong {
+  color: var(--text-primary);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+}
+
+:where(.eva-settings-save-status,.settings-save-panel > div:first-child,.workspace-save-status) span {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  text-wrap: pretty;
+}
+
+.workspace-save-bar {
+  position: sticky;
+  bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  z-index: 20;
+}
+
+:where(.settings-footer-actions,.workspace-actions) :where(button,.btn) {
+  min-height: var(--control-height-lg);
+}
+
+/* Responsive settings system */
+@media (max-width: 60rem) {
+  :where(.eva-settings-grid-3,.settings-grid-3),
+  :where(.eva-settings-system-grid,.settings-system-grid),
+  :where(.eva-settings-choice-grid,.appearance-choice-grid) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  :where(.eva-settings-image-grid,.settings-image-grid) {
+    grid-template-columns: 1fr;
+  }
+
+  :where(.eva-settings-nav-picker,.workspace-nav-picker) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 52.5rem) {
+  :where(.eva-settings-grid-2,.settings-grid-2,.workspace-grid),
+  :where(.eva-settings-grid-3,.settings-grid-3),
+  :where(.eva-settings-hub-grid,.settings-hub-grid),
+  :where(.eva-settings-system-grid,.settings-system-grid),
+  :where(.eva-settings-save,.settings-save-panel,.workspace-save-bar) {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace-field.full { grid-column: auto; }
+  .workspace-save-bar { align-items: stretch; }
+  :where(.settings-footer-actions,.workspace-actions) { width: 100%; }
+  :where(.settings-footer-actions,.workspace-actions) :where(button,.btn) { flex: 1 1 0; }
+}
+
+@media (max-width: 42.5rem) {
+  :root {
+    --settings-shell-top: 5.75rem;
+    --settings-shell-bottom: 2rem;
+    --settings-section-gap: var(--space-4);
+    --settings-panel-padding: var(--space-5);
+    --settings-card-padding: var(--space-4);
+  }
+
+  :where(.eva-settings-shell,.settings-shell,.settings-hub-shell,.workspace-shell) {
+    width: calc(100% - var(--space-4));
+  }
+
+  :where(.eva-settings-hero,.settings-hero,.settings-hub-hero,.workspace-hero) h1 {
+    font-size: clamp(2.125rem, 11vw, 3.5rem);
+  }
+
+  :where(.eva-settings-choice-grid,.appearance-choice-grid),
+  :where(.eva-settings-nav-picker,.workspace-nav-picker) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  :where(.eva-settings-hub-card,.settings-hub-card) {
+    min-height: 8.75rem;
+    grid-template-columns: 3rem minmax(0, 1fr) auto;
+    gap: var(--space-3);
+  }
+
+  :where(.eva-settings-icon,.settings-hub-card-icon,.settings-card-icon) {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  :where(.eva-settings-toggle-row,.settings-toggle-row,.workspace-toggle) {
+    align-items: flex-start;
+  }
+
+  .settings-color-field {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-color-field input[type="color"] {
+    justify-self: start;
+  }
+
+  :where(.settings-footer-actions,.workspace-actions) {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  :where(.settings-footer-actions,.workspace-actions) :where(button,.btn) {
+    width: 100%;
+  }
+
+  .workspace-save-bar {
+    bottom: calc(4.875rem + env(safe-area-inset-bottom));
+  }
+}
+
+@media (hover:hover) and (pointer:fine) {
+  :where(.eva-settings-chip,.settings-chip):hover,
+  :where(.eva-settings-nav-option,.workspace-nav-option):hover {
+    transform: translateY(-1px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(.eva-settings-link,.settings-section-link,.eva-settings-hub-card,.settings-hub-card,.eva-settings-chip,.settings-chip,.eva-settings-switch,.settings-switch,.workspace-toggle input[type="checkbox"],.eva-settings-nav-option,.workspace-nav-option),
+  :where(.eva-settings-switch,.settings-switch,.workspace-toggle input[type="checkbox"])::before {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+@media (forced-colors: active) {
+  :where(.eva-settings-icon,.settings-hub-card-icon,.settings-card-icon,.eva-settings-system-item,.settings-system-item,.eva-settings-field,.settings-color-field,.workspace-field,.eva-settings-toggle-row,.settings-toggle-row,.workspace-toggle,.eva-settings-image-picker,.settings-image-picker,.eva-settings-nav-option,.workspace-nav-option,.workspace-role-note) {
+    background: Canvas !important;
+    color: CanvasText !important;
+    border-color: CanvasText !important;
+    box-shadow: none !important;
+  }
+
+  :where(.eva-settings-switch,.settings-switch,.workspace-toggle input[type="checkbox"]) {
+    background: Canvas;
+    border: 2px solid CanvasText;
+    box-shadow: none;
+  }
+
+  :where(.eva-settings-switch,.settings-switch,.workspace-toggle input[type="checkbox"]):checked {
+    background: Highlight;
+  }
+}
