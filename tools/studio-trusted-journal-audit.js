@@ -16,6 +16,7 @@ const files = {
   firebaseConfig: 'firebase.json',
   localJournal: 'public/assets/js/studio/studio-document-model.js',
   authority: 'public/assets/js/studio/studio-journal-authority-v2.js',
+  idempotencyGuard: 'public/assets/js/studio/studio-journal-idempotency-guard.js',
   trustedAdapter: 'public/assets/js/studio/studio-trusted-journal.js',
   controls: 'public/assets/js/studio/studio-document-controls.js',
   operationJournal: 'public/assets/js/studio/canvas/canvas-operation-journal.js',
@@ -34,7 +35,18 @@ for (const file of Object.values(files)) {
 if (!errors.length) {
   const source = Object.fromEntries(Object.entries(files).map(([key, file]) => [key, read(file)]));
 
-  for (const file of [files.core, files.service, files.serviceTest, files.functionIndex, files.authority, files.trustedAdapter, files.controls, files.operationJournal]) {
+  for (const file of [
+    files.core,
+    files.service,
+    files.serviceTest,
+    files.functionIndex,
+    files.authority,
+    files.idempotencyGuard,
+    files.trustedAdapter,
+    files.controls,
+    files.operationJournal,
+    files.canvasTest
+  ]) {
     try {
       execFileSync(process.execPath, ['--check', path.join(root, file)], { stdio: 'pipe' });
     } catch (error) {
@@ -155,6 +167,22 @@ if (!errors.length) {
   }
 
   for (const marker of [
+    "GUARD_VERSION = 'studio-journal-idempotency-guard-v1'",
+    'semanticOperation',
+    'semanticCommand',
+    'semanticallyEqual',
+    'appendOperationTransaction: guardedAppend',
+    'local-idempotency-conflict',
+    'transaction-id-reused',
+    'reused with different content'
+  ]) {
+    if (!source.idempotencyGuard.includes(marker)) errors.push(`studio-journal-idempotency-guard.js: missing ${marker}`);
+  }
+  if (/requestHash\s*===|indexedDB|localStorage|firebase|firestore|fetch\(/i.test(source.idempotencyGuard)) {
+    errors.push('studio-journal-idempotency-guard.js: public idempotency must recompute semantic content without storage or network access');
+  }
+
+  for (const marker of [
     "ADAPTER_NAME = 'trusted-studio-journal'",
     "ADAPTER_VERSION = 'trusted-studio-journal-v2'",
     'onAuthStateChanged',
@@ -215,16 +243,18 @@ if (!errors.length) {
 
   const modelImport = '/assets/js/studio/studio-document-model.js?v=2';
   const authorityImport = '/assets/js/studio/studio-journal-authority-v2.js?v=1';
+  const idempotencyImport = '/assets/js/studio/studio-journal-idempotency-guard.js?v=1';
   const blueprintImport = '/assets/js/studio/blueprint-operation-adapter.js?v=1';
   const trustedImport = '/assets/js/studio/studio-trusted-journal.js?v=1';
   const guardImport = '/assets/js/studio/canvas/canvas-writer-guard.js?v=1';
   const canvasImport = '/assets/js/studio/canvas/canvas-session-sandbox.js?v=2';
   const controlsImport = '/assets/js/studio/studio-document-controls.js?v=3';
-  [modelImport, authorityImport, blueprintImport, trustedImport, guardImport, canvasImport, controlsImport].forEach((entry) => {
+  [modelImport, authorityImport, idempotencyImport, blueprintImport, trustedImport, guardImport, canvasImport, controlsImport].forEach((entry) => {
     if (!source.route.includes(entry)) errors.push(`public/website-builder.html: missing ${entry}`);
   });
   if (!(source.route.indexOf(modelImport) < source.route.indexOf(authorityImport)
-    && source.route.indexOf(authorityImport) < source.route.indexOf(controlsImport)
+    && source.route.indexOf(authorityImport) < source.route.indexOf(idempotencyImport)
+    && source.route.indexOf(idempotencyImport) < source.route.indexOf(controlsImport)
     && source.route.indexOf(blueprintImport) < source.route.indexOf(trustedImport)
     && source.route.indexOf(trustedImport) < source.route.indexOf(guardImport)
     && source.route.indexOf(guardImport) < source.route.indexOf(canvasImport))) {
@@ -249,9 +279,16 @@ if (!errors.length) {
     'recovery-required',
     'pendingTransactionCount',
     'unsynchronizedChanges',
-    'second tab is read-only and takes over after release'
+    'second tab is read-only and takes over after release',
+    'local transaction IDs are idempotent and conflicting reuse fails closed',
+    'trusted synchronization checkpoint and immutable release are server confirmed',
+    'canvas-local-idempotency.json',
+    'canvas-trusted-release.json'
   ]) {
     if (!source.canvasTest.includes(marker)) errors.push(`studio-canvas-session.spec.mjs: missing ${marker}`);
+  }
+  if (/new Function|eval\(/.test(source.canvasTest)) {
+    errors.push('studio-canvas-session.spec.mjs: dynamic code execution is prohibited even in QA helpers');
   }
 
   for (const marker of [
@@ -271,4 +308,4 @@ if (errors.length) {
   errors.forEach((error) => console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('Trusted graph-scoped branch commits, canonical sequences, idempotency, conflicts, checkpoints, recovery, synchronization, immutable release gates, Backend tests, and deployment contracts passed.');
+console.log('Trusted graph-scoped branch commits, canonical sequences, recomputed idempotency, conflicts, checkpoints, recovery, synchronization, immutable release gates, Backend tests, and deployment contracts passed.');
