@@ -1,6 +1,6 @@
 # EvaraOS Authenticated Visual QA
 
-This workspace runs authenticated route, layout, accessibility-smoke, and screenshot-regression checks against a deployed EvaraOS environment.
+This workspace runs authenticated route, layout, accessibility-smoke, Studio interaction, and screenshot-regression checks against a deployed EvaraOS environment.
 
 It does **not** bypass Firebase Authentication, Firestore profile verification, route permissions, or role policies. Every saved browser session is created through the production login form using dedicated QA accounts.
 
@@ -34,7 +34,7 @@ Owner credentials are required. Other role credentials are optional for critical
 - iPhone WebKit
 - Android Chromium
 
-### Diagnostics
+### Route diagnostics
 
 Each covered route checks:
 
@@ -50,6 +50,35 @@ Each covered route checks:
 - visible controls without accessible names
 
 Visual cases also compare deterministic viewport screenshots. Dynamic maps, live counters, timestamps, and realtime status values are masked so the baseline measures layout and visual treatment rather than volatile business data.
+
+### Focused Studio diagnostics
+
+The `studio` suite runs two authenticated owner tests in desktop Chromium.
+
+`studio-interactions.spec.mjs` checks:
+
+- categorized catalog search
+- component creation
+- required-field validation
+- property commits
+- undo and redo
+- Layers coordination
+- Auto Layout stack creation
+- Draft Journal checkpoint creation
+- panel exclusivity
+- screenshots and serialized local Studio state
+
+`studio-action-icon.spec.mjs` checks:
+
+- separation of action label, intent, and destination
+- permission-filtered route destinations
+- role-change authorization invalidation
+- canonical icon search and selection
+- SVG icon rendering
+- persisted `actionIntent`, `actionTarget`, and icon IDs
+- screenshots and serialized property state
+
+Both tests reset only Studio's browser-local draft keys. They do not clear authentication, appearance, or unrelated browser state, and they do not write production business records.
 
 ## Required environment
 
@@ -89,6 +118,17 @@ cd tests/visual
 npm install --no-audit --no-fund
 npx playwright install chromium webkit
 ```
+
+## Focused Studio suite
+
+```bash
+npx playwright test \
+  specs/studio-interactions.spec.mjs \
+  specs/studio-action-icon.spec.mjs \
+  --project=desktop-chromium
+```
+
+This is the smallest authenticated gate for Studio component authoring.
 
 ## Critical matrix
 
@@ -135,16 +175,24 @@ Workflow:
 .github/workflows/design-system-visual-qa.yml
 ```
 
-Automatic pushes and pull requests run only the zero-dependency design-system architecture audit.
+Automatic pushes and pull requests run four zero-dependency architecture checks:
 
-Authenticated visual QA is manual because it requires:
+1. Design System ownership audit
+2. Studio component catalog and inspector audit
+3. Studio action and icon audit
+4. Visual-QA architecture audit
+
+Authenticated QA is manual because it requires:
 
 - a deployed QA origin
 - dedicated Firebase test users
 - repository secrets
-- explicit selection of critical or full coverage
+- explicit selection of the `studio` or `all` suite
+- critical or full coverage selection for the `all` suite
 
-Configure the environment variables above as GitHub repository secrets. The workflow uploads reports, traces, videos, failure screenshots, and optional baseline candidates. It never uploads `.auth/`.
+The `studio` suite runs both focused Studio interaction specs. The `all` suite runs the full authenticated visual matrix and can optionally generate candidate baselines.
+
+Configure the environment variables above as GitHub repository secrets. The workflow uploads reports, traces, videos, failure screenshots, state diagnostics, and optional baseline candidates. It never uploads `.auth/`.
 
 ## Account requirements
 
@@ -183,6 +231,14 @@ Verify the Firestore profile exists and contains an active canonical role. The r
 ### A role test is skipped
 
 The corresponding email or password environment variable is missing.
+
+### The focused Studio suite is skipped
+
+The owner QA credentials are missing or the saved authenticated owner state could not be created by global setup.
+
+### An action destination is unavailable
+
+The route is not authorized for the current Studio preview role by `access-control.js`. Change the preview role or select an approved route; do not bypass the route policy.
 
 ### Screenshots differ only in business values
 
