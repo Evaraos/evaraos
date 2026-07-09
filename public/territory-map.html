@@ -12,39 +12,10 @@
   <link rel="stylesheet" href="./assets/css/nav.css" />
   <link rel="stylesheet" href="./assets/css/dashboard.css" />
   <link rel="stylesheet" href="./assets/css/app-system.css" />
-
-  <style>
-    .territory-map-shell {
-      min-height: 560px;
-      border-radius: 28px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    #territoryMapCanvas {
-      min-height: 560px;
-      width: 100%;
-      background: rgba(255, 255, 255, 0.06);
-    }
-
-    .territory-map-status {
-      position: absolute;
-      left: 18px;
-      right: 18px;
-      bottom: 18px;
-      z-index: 2;
-      padding: 14px 16px;
-      border-radius: 18px;
-      background: rgba(4, 7, 18, 0.82);
-      border: 1px solid rgba(255,255,255,0.14);
-      color: var(--text-muted, rgba(255,255,255,0.72));
-      font-size: 13px;
-      font-weight: 800;
-      backdrop-filter: blur(18px);
-    }
-  </style>
-<link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v1"></head>
-<body data-route-guard="private" class="dashboard-body app-loading">
+  <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v1" />
+  <link rel="stylesheet" href="/assets/css/pages/territory-map.css?v=1" />
+</head>
+<body data-route-guard="private" class="dashboard-body marketplace-page territory-map-page app-loading">
   <div id="universalNavRoot"></div>
   <div class="page-aurora" aria-hidden="true"></div>
   <div class="page-grid-overlay" aria-hidden="true"></div>
@@ -101,9 +72,9 @@
             </div>
           </div>
 
-          <div class="territory-map-shell glass-card">
+          <div class="territory-map-shell marketplace-map glass-card">
             <div id="territoryMapCanvas" aria-label="Evaraos territory map"></div>
-            <div id="territoryMapStatus" class="territory-map-status">Initializing map layer...</div>
+            <div id="territoryMapStatus" class="territory-map-status" aria-live="polite">Initializing map layer...</div>
           </div>
         </section>
 
@@ -115,7 +86,7 @@
             </div>
           </div>
 
-          <div id="territoryMapFeed" class="dashboard-list">
+          <div id="territoryMapFeed" class="dashboard-list" aria-live="polite">
             <div class="item muted">Loading map data...</div>
           </div>
         </section>
