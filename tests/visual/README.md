@@ -1,6 +1,6 @@
 # EvaraOS Authenticated Visual QA
 
-This workspace runs authenticated route, layout, accessibility-smoke, Studio interaction, and screenshot-regression checks against a deployed EvaraOS environment.
+This workspace runs authenticated route, layout, accessibility-smoke, Studio interaction, Blueprint serialization, and screenshot-regression checks against a deployed EvaraOS environment.
 
 It does **not** bypass Firebase Authentication, Firestore profile verification, route permissions, or role policies. Every saved browser session is created through the production login form using dedicated QA accounts.
 
@@ -49,13 +49,15 @@ Each covered route checks:
 - duplicate element IDs
 - visible controls without accessible names
 
-Visual cases also compare deterministic viewport screenshots. Dynamic maps, live counters, timestamps, and realtime status values are masked so the baseline measures layout and visual treatment rather than volatile business data.
+Visual cases compare deterministic viewport screenshots. Dynamic maps, live counters, timestamps, and realtime status values are masked so the baseline measures layout and visual treatment rather than volatile business data.
 
-### Focused Studio diagnostics
+## Focused Studio diagnostics
 
-The `studio` suite runs two authenticated owner tests in desktop Chromium.
+The `studio` suite runs three authenticated owner tests in desktop Chromium.
 
-`studio-interactions.spec.mjs` checks:
+### `studio-interactions.spec.mjs`
+
+Checks:
 
 - categorized catalog search
 - component creation
@@ -68,7 +70,9 @@ The `studio` suite runs two authenticated owner tests in desktop Chromium.
 - panel exclusivity
 - screenshots and serialized local Studio state
 
-`studio-action-icon.spec.mjs` checks:
+### `studio-action-icon.spec.mjs`
+
+Checks:
 
 - separation of action label, intent, and destination
 - permission-filtered route destinations
@@ -78,7 +82,24 @@ The `studio` suite runs two authenticated owner tests in desktop Chromium.
 - persisted `actionIntent`, `actionTarget`, and icon IDs
 - screenshots and serialized property state
 
-Both tests reset only Studio's browser-local draft keys. They do not clear authentication, appearance, or unrelated browser state, and they do not write production business records.
+### `studio-blueprint-serialization.spec.mjs`
+
+Checks:
+
+- `evara.blueprint.component-document` schema version `1.0.0`
+- page-scoped document identity
+- deterministic fingerprints independent of generation time
+- component definition references
+- properties, icons, and action bindings
+- grid span and Auto Layout metadata
+- responsive values
+- role visibility
+- round-trip Studio projection
+- compilation into Evara Graph
+- `component-instance`, `instantiates`, `visibleTo`, and `navigatesTo` graph contracts
+- Blueprint document, projection, graph summary, and screenshot artifacts
+
+All three tests reset only Studio's browser-local draft keys. They do not clear authentication, appearance, or unrelated browser state, and they do not write production business records.
 
 ## Required environment
 
@@ -125,10 +146,11 @@ npx playwright install chromium webkit
 npx playwright test \
   specs/studio-interactions.spec.mjs \
   specs/studio-action-icon.spec.mjs \
+  specs/studio-blueprint-serialization.spec.mjs \
   --project=desktop-chromium
 ```
 
-This is the smallest authenticated gate for Studio component authoring.
+This is the smallest authenticated gate for Studio component authoring and Blueprint serialization.
 
 ## Critical matrix
 
@@ -175,12 +197,13 @@ Workflow:
 .github/workflows/design-system-visual-qa.yml
 ```
 
-Automatic pushes and pull requests run four zero-dependency architecture checks:
+Automatic pushes and pull requests run five zero-dependency architecture checks:
 
 1. Design System ownership audit
 2. Studio component catalog and inspector audit
 3. Studio action and icon audit
-4. Visual-QA architecture audit
+4. Studio Blueprint serialization audit
+5. Visual-QA architecture audit
 
 Authenticated QA is manual because it requires:
 
@@ -190,9 +213,33 @@ Authenticated QA is manual because it requires:
 - explicit selection of the `studio` or `all` suite
 - critical or full coverage selection for the `all` suite
 
-The `studio` suite runs both focused Studio interaction specs. The `all` suite runs the full authenticated visual matrix and can optionally generate candidate baselines.
+The `studio` suite runs all three focused Studio specs. The `all` suite runs the full authenticated visual matrix and can optionally generate candidate baselines.
 
-Configure the environment variables above as GitHub repository secrets. The workflow uploads reports, traces, videos, failure screenshots, state diagnostics, and optional baseline candidates. It never uploads `.auth/`.
+Configure the environment variables above as GitHub repository secrets. The workflow uploads reports, traces, videos, failure screenshots, state diagnostics, Blueprint documents, graph summaries, and optional baseline candidates. It never uploads `.auth/`.
+
+## Blueprint authority boundary
+
+The current Blueprint serializer is a read-only compatibility projection.
+
+It may:
+
+- read the current browser-local Studio prototype state
+- produce a versioned Blueprint component document
+- validate the document
+- create a deterministic fingerprint
+- project the document back into a Studio page shape
+- compile the document into an Evara Graph fixture
+
+It may not:
+
+- call `saveBlueprintDraft`
+- call `publishBlueprint`
+- call `rollbackBlueprint`
+- write canonical graph state
+- bypass the Draft Journal
+- treat browser state as a published release
+
+The existing trusted Blueprint service currently accepts only the legacy navigation, sections, and component-ID projection. It must not receive the richer component-instance document until a reviewed server schema and migration are deployed.
 
 ## Account requirements
 
@@ -239,6 +286,14 @@ The owner QA credentials are missing or the saved authenticated owner state coul
 ### An action destination is unavailable
 
 The route is not authorized for the current Studio preview role by `access-control.js`. Change the preview role or select an approved route; do not bypass the route policy.
+
+### Blueprint validation reports a warning
+
+Review route authorization, icon normalization, unreferenced instances, repeated instance references, and migration metadata. A warning is not a publishing approval.
+
+### Blueprint compilation fails
+
+Confirm the document uses schema `1.0.0`, every section reference resolves to an instance, every component definition exists in the Studio registry, and all generated graph edges reference existing nodes.
 
 ### Screenshots differ only in business values
 
