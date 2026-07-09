@@ -7,6 +7,7 @@ const SESSION_ID = 'local-studio-session';
 const LEGACY_CONTENT_KEY = 'evaraos-studio-visual-builder-v1';
 const LEGACY_LAYOUT_KEY = 'evaraos-studio-auto-layout-v1';
 const LEGACY_LIVE_KEY = 'evaraos-studio-visual-builder-live-v1';
+const OPERATION_ENVELOPE_VERSION = 'studio-journal-operation-envelope-v1';
 const AUTOSAVE_DELAY = 320;
 const MAX_TRANSACTIONS = 120;
 const MAX_CHECKPOINTS = 12;
@@ -29,6 +30,7 @@ const safeParse = (value, fallback = null) => {
 };
 const text = (value, max = 200) => String(value ?? '').replace(/[\u0000-\u001f\u007f]/g, '').slice(0, max);
 const uid = (prefix) => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
+const integer = (value, fallback = 0) => Number.isInteger(Number(value)) && Number(value) >= 0 ? Number(value) : fallback;
 
 function readLegacyProjection() {
   return {
@@ -64,6 +66,10 @@ function defaultSession() {
     graphId: 'legacy-compatibility-projection',
     graphSchemaVersion: '0.1.0',
     operationProtocolVersion: '0.1.0',
+    operationEnvelopeVersion: OPERATION_ENVELOPE_VERSION,
+    graphHeads: {},
+    activeGraphId: null,
+    activeGraphRevision: 0,
     headRevision: 0,
     headSequence: 0,
     latestCheckpointId: null,
@@ -77,6 +83,37 @@ function defaultSession() {
     viewport: { device: 'desktop', width: 1440, height: 900, zoom: 1, panX: 0, panY: 0 },
     previewContext: { role: 'owner', themeMode: null, environment: 'draft' },
     updatedAt: timestamp
+  };
+}
+
+function normalizeSession(raw) {
+  const fallback = defaultSession();
+  const graphHeads = {};
+  if (raw?.graphHeads && typeof raw.graphHeads === 'object' && !Array.isArray(raw.graphHeads)) {
+    Object.entries(raw.graphHeads).slice(0, 100).forEach(([graphId, head]) => {
+      const id = text(graphId, 220);
+      if (!id) return;
+      graphHeads[id] = {
+        revision: integer(head?.revision),
+        sequence: integer(head?.sequence),
+        lastTransactionId: text(head?.lastTransactionId, 180) || null,
+        updatedAt: text(head?.updatedAt, 64) || null
+      };
+    });
+  }
+  return {
+    ...fallback,
+    ...(raw && typeof raw === 'object' ? clone(raw) : {}),
+    sessionId: SESSION_ID,
+    operationEnvelopeVersion: OPERATION_ENVELOPE_VERSION,
+    graphHeads,
+    activeGraphId: text(raw?.activeGraphId, 220) || null,
+    activeGraphRevision: integer(raw?.activeGraphRevision),
+    headRevision: integer(raw?.headRevision),
+    headSequence: integer(raw?.headSequence),
+    pendingTransactionIds: Array.isArray(raw?.pendingTransactionIds)
+      ? raw.pendingTransactionIds.map((item) => text(item, 180)).filter(Boolean).slice(-MAX_TRANSACTIONS)
+      : []
   };
 }
 
@@ -131,13 +168,13 @@ async function getSession() {
   const db = await openDatabase();
   const transaction = db.transaction([SESSION_STORE], 'readonly');
   const session = await requestValue(transaction.objectStore(SESSION_STORE).get(SESSION_ID));
-  sessionCache = session || defaultSession();
+  sessionCache = normalizeSession(session || defaultSession());
   if (!session) await putSession(sessionCache);
   return clone(sessionCache);
 }
 
 async function putSession(session) {
-  sessionCache = clone(session);
+  sessionCache = normalizeSession(session);
   await transact([SESSION_STORE], 'readwrite', ({ sessions }) => sessions.put(clone(sessionCache)));
   return clone(sessionCache);
 }
@@ -146,6 +183,12 @@ async function getAll(storeName) {
   const db = await openDatabase();
   const transaction = db.transaction([storeName], 'readonly');
   return requestValue(transaction.objectStore(storeName).getAll());
+}
+
+async function getRecord(storeName, id) {
+  const db = await openDatabase();
+  const transaction = db.transaction([storeName], 'readonly');
+  return requestValue(transaction.objectStore(storeName).get(id));
 }
 
 async function pruneStore(storeName, idField, maximum) {
@@ -172,6 +215,7 @@ function transactionEnvelope(session, projection, previousProjection, reason) {
   const operationId = uid('operation');
   const inverseId = uid('operation');
   return {
+    envelopeVersion: 'compatibility-projection-v1',
     transactionId,
     companyId: session.companyId,
     projectId: session.projectId,
@@ -207,6 +251,69 @@ function transactionEnvelope(session, projection, previousProjection, reason) {
   };
 }
 
+function normalizeProtocolOperation(operation, graphId, transactionId) {
+  if (!operation || typeof operation !== 'object' || Array.isArray(operation)) throw new TypeError('Journal operations must be objects.');
+  const operationId = text(operation.operationId, 180);
+  const type = text(operation.type, 120);
+  if (!operationId || !type) throw new TypeError('Journal operations require operationId and type.');
+  if (text(operation.graphId, 220) !== graphId) throw new Error(`Operation ${operationId} targets a different graph.`);
+  if (text(operation.transactionId, 180) !== transactionId) throw new Error(`Operation ${operationId} has a mismatched transactionId.`);
+  return clone(operation);
+}
+
+function normalizeOperationEnvelope(raw, session, projection = null) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new TypeError('Operation transaction envelope must be an object.');
+  const transactionId = text(raw.transactionId, 180);
+  const graphId = text(raw.graphId, 220);
+  const expectedHeadRevision = integer(raw.expectedHeadRevision, -1);
+  const acceptedHeadRevision = integer(raw.acceptedHeadRevision, -1);
+  if (!transactionId || !graphId) throw new TypeError('Operation transaction requires transactionId and graphId.');
+  if (expectedHeadRevision < 0 || acceptedHeadRevision < expectedHeadRevision) throw new Error('Operation transaction revisions are invalid.');
+  const operations = Array.isArray(raw.operations)
+    ? raw.operations.map((operation) => normalizeProtocolOperation(operation, graphId, transactionId))
+    : [];
+  if (!operations.length) throw new Error('Operation transaction requires at least one accepted operation.');
+  const inverseOperations = Array.isArray(raw.inverseOperations)
+    ? raw.inverseOperations.map((operation) => normalizeProtocolOperation(operation, graphId, transactionId))
+    : [];
+  const commitOperation = normalizeProtocolOperation(raw.commitOperation, graphId, transactionId);
+  if (commitOperation.type !== 'transaction.commit') throw new Error('Operation transaction requires a transaction.commit operation.');
+  const normalizedProjection = projection ? normalizeProjection(projection) : null;
+  return {
+    envelopeVersion: OPERATION_ENVELOPE_VERSION,
+    transactionId,
+    companyId: session.companyId,
+    projectId: session.projectId,
+    branchId: session.branchId,
+    graphId,
+    graphSchemaVersion: text(raw.graphSchemaVersion || operations[0]?.graphSchemaVersion || session.graphSchemaVersion, 80),
+    operationProtocolVersion: text(raw.operationProtocolVersion || operations[0]?.protocolVersion || session.operationProtocolVersion, 80),
+    expectedHeadRevision,
+    acceptedHeadRevision,
+    startSequence: integer(raw.startSequence, 0),
+    endSequence: integer(raw.endSequence, 0),
+    intent: text(raw.intent || raw.semanticCommand?.type || operations[0]?.metadata?.semanticIntent || 'system', 140),
+    summary: text(raw.summary || `Studio operation transaction ${transactionId}`, 500),
+    semanticCommand: raw.semanticCommand && typeof raw.semanticCommand === 'object' ? clone(raw.semanticCommand) : null,
+    operations,
+    inverseOperations,
+    commitOperation,
+    actor: raw.actor && typeof raw.actor === 'object' ? clone(raw.actor) : clone(session.actor),
+    clientSessionId: session.sessionId,
+    correlationId: text(raw.correlationId || operations[0]?.correlationId, 180) || null,
+    revertsTransactionId: text(raw.revertsTransactionId, 180) || null,
+    redoesTransactionId: text(raw.redoesTransactionId, 180) || null,
+    affectedNodeIds: Array.isArray(raw.affectedNodeIds)
+      ? [...new Set(raw.affectedNodeIds.map((item) => text(item, 180)).filter(Boolean))].slice(0, 5000)
+      : [],
+    sourceDocumentId: text(raw.sourceDocumentId, 220) || null,
+    sourceFingerprint: text(raw.sourceFingerprint, 120) || null,
+    createdAtClient: text(raw.createdAtClient || now(), 64),
+    durabilityState: 'saved-locally',
+    projectionHash: normalizedProjection ? projectionHash(normalizedProjection) : null
+  };
+}
+
 async function latestCheckpoint() {
   const checkpoints = await listCheckpoints();
   return checkpoints[0] || null;
@@ -232,11 +339,76 @@ async function appendTransaction(reason = 'system', options = {}) {
     transactions.put(envelope);
     sessions.put(nextSession);
   });
-  sessionCache = clone(nextSession);
+  sessionCache = normalizeSession(nextSession);
   lastProjectionHash = hash;
   await pruneStore(TRANSACTION_STORE, 'transactionId', MAX_TRANSACTIONS);
-  dispatchStatus('saved-locally', reason, { transactionId: envelope.transactionId });
+  dispatchStatus('saved-locally', reason, { transactionId: envelope.transactionId, envelopeVersion: envelope.envelopeVersion });
   return clone(envelope);
+}
+
+async function appendOperationTransaction(rawEnvelope, options = {}) {
+  await initialize();
+  const duplicate = await getRecord(TRANSACTION_STORE, text(rawEnvelope?.transactionId, 180));
+  if (duplicate) return clone(duplicate);
+  const session = await getSession();
+  const projection = options.projection ? normalizeProjection(options.projection) : null;
+  const envelope = normalizeOperationEnvelope(rawEnvelope, session, projection);
+  const currentHead = session.graphHeads?.[envelope.graphId] || { revision: 0, sequence: 0, lastTransactionId: null };
+  if (envelope.expectedHeadRevision !== integer(currentHead.revision)) {
+    dispatchStatus('conflict', envelope.intent, {
+      graphId: envelope.graphId,
+      transactionId: envelope.transactionId,
+      expectedHeadRevision: envelope.expectedHeadRevision,
+      actualHeadRevision: integer(currentHead.revision)
+    });
+    throw new Error(`Studio journal revision conflict for ${envelope.graphId}: expected ${envelope.expectedHeadRevision}, current ${integer(currentHead.revision)}.`);
+  }
+  const nextSequence = integer(currentHead.sequence) + 1;
+  envelope.startSequence = nextSequence;
+  envelope.endSequence = nextSequence;
+  const graphHeads = {
+    ...(session.graphHeads || {}),
+    [envelope.graphId]: {
+      revision: envelope.acceptedHeadRevision,
+      sequence: nextSequence,
+      lastTransactionId: envelope.transactionId,
+      updatedAt: now()
+    }
+  };
+  const nextSession = {
+    ...session,
+    graphHeads,
+    activeGraphId: envelope.graphId,
+    activeGraphRevision: envelope.acceptedHeadRevision,
+    durabilityState: 'saved-locally',
+    pendingTransactionIds: [...session.pendingTransactionIds, envelope.transactionId].slice(-MAX_TRANSACTIONS),
+    updatedAt: now()
+  };
+  await transact([TRANSACTION_STORE, SESSION_STORE], 'readwrite', ({ transactions, sessions }) => {
+    transactions.add(envelope);
+    sessions.put(nextSession);
+  });
+  sessionCache = normalizeSession(nextSession);
+  if (projection) lastProjectionHash = envelope.projectionHash;
+  await pruneStore(TRANSACTION_STORE, 'transactionId', MAX_TRANSACTIONS);
+  dispatchStatus('saved-locally', envelope.intent, {
+    graphId: envelope.graphId,
+    transactionId: envelope.transactionId,
+    envelopeVersion: OPERATION_ENVELOPE_VERSION,
+    expectedHeadRevision: envelope.expectedHeadRevision,
+    acceptedHeadRevision: envelope.acceptedHeadRevision,
+    operationCount: envelope.operations.length
+  });
+  window.dispatchEvent(new CustomEvent('evara:studio-operation-durable', { detail: clone(envelope) }));
+  return clone(envelope);
+}
+
+async function getGraphHead(graphId) {
+  await initialize();
+  const session = await getSession();
+  const id = text(graphId, 220);
+  const head = session.graphHeads?.[id] || { revision: 0, sequence: 0, lastTransactionId: null, updatedAt: null };
+  return { graphId: id, ...clone(head) };
 }
 
 async function createCheckpoint(reason = 'manual-checkpoint', options = {}) {
@@ -247,9 +419,9 @@ async function createCheckpoint(reason = 'manual-checkpoint', options = {}) {
     checkpointId: uid('checkpoint'),
     projectId: session.projectId,
     branchId: session.branchId,
-    graphId: session.graphId,
-    revision: session.headRevision,
-    sequence: session.headSequence,
+    graphId: session.activeGraphId || session.graphId,
+    revision: session.activeGraphId ? session.activeGraphRevision : session.headRevision,
+    sequence: session.activeGraphId ? integer(session.graphHeads?.[session.activeGraphId]?.sequence) : session.headSequence,
     reason: text(reason, 120),
     createdAt: now(),
     trusted: false,
@@ -261,7 +433,7 @@ async function createCheckpoint(reason = 'manual-checkpoint', options = {}) {
     checkpoints.put(checkpoint);
     sessions.put(nextSession);
   });
-  sessionCache = clone(nextSession);
+  sessionCache = normalizeSession(nextSession);
   await pruneStore(CHECKPOINT_STORE, 'checkpointId', MAX_CHECKPOINTS);
   dispatchStatus('saved-locally', reason, { checkpointId: checkpoint.checkpointId });
   return clone(checkpoint);
@@ -270,6 +442,12 @@ async function createCheckpoint(reason = 'manual-checkpoint', options = {}) {
 async function listTransactions() {
   const records = await getAll(TRANSACTION_STORE);
   return records.sort((a, b) => Date.parse(b.createdAtClient || 0) - Date.parse(a.createdAtClient || 0));
+}
+
+async function listOperationTransactions(graphId = '') {
+  const id = text(graphId, 220);
+  const records = await listTransactions();
+  return records.filter((record) => record.envelopeVersion === OPERATION_ENVELOPE_VERSION && (!id || record.graphId === id));
 }
 
 async function listCheckpoints() {
@@ -299,8 +477,8 @@ function dispatchStatus(state, reason, extra = {}) {
     detail: {
       state,
       reason,
-      revision: sessionCache?.headRevision || 0,
-      sequence: sessionCache?.headSequence || 0,
+      revision: sessionCache?.activeGraphId ? sessionCache.activeGraphRevision : sessionCache?.headRevision || 0,
+      sequence: sessionCache?.activeGraphId ? integer(sessionCache.graphHeads?.[sessionCache.activeGraphId]?.sequence) : sessionCache?.headSequence || 0,
       durabilityState: sessionCache?.durabilityState || state,
       ...extra
     }
@@ -383,11 +561,15 @@ async function getStatus() {
 
 window.EvaraStudioJournal = Object.freeze({
   databaseName: DB_NAME,
+  operationEnvelopeVersion: OPERATION_ENVELOPE_VERSION,
   initialize,
   getStatus,
+  getGraphHead,
   appendCompatibilityTransaction: appendTransaction,
+  appendOperationTransaction,
   createCheckpoint,
   listTransactions,
+  listOperationTransactions,
   listCheckpoints,
   restoreCheckpoint,
   registerServerAdapter,
