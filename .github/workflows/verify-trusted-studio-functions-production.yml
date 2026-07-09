@@ -1,0 +1,162 @@
+name: Verify Trusted Studio Functions Production
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [evaraos]
+    paths:
+      - '.github/workflows/verify-trusted-studio-functions-production.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: verify-trusted-studio-functions-production
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify deployed callable inventory
+    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'ops: verify trusted Studio Functions production inventory'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out exact verification source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools@latest
+
+      - name: Verify and record production inventory
+        id: verify
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EVARAOS_WEB }}
+          SOURCE_SHA: ${{ github.sha }}
+          WORKFLOW_RUN_ID: ${{ github.run_id }}
+        shell: bash
+        run: |
+          set -uo pipefail
+
+          STATUS="unverified"
+          REASON="verification-not-run"
+          MISSING_FUNCTIONS=""
+          INVENTORY_FILE="$RUNNER_TEMP/firebase-functions-list.txt"
+          CREDENTIAL_FILE="$RUNNER_TEMP/firebase-service-account.json"
+          REQUIRED_FUNCTIONS=(
+            openStudioBranch
+            commitStudioTransaction
+            getStudioOperationRange
+            createStudioCheckpoint
+            restoreStudioCheckpoint
+            createStudioBranch
+            closeStudioSession
+            prepareStudioRelease
+          )
+
+          cleanup() {
+            rm -f "$CREDENTIAL_FILE"
+          }
+          trap cleanup EXIT
+
+          if [ -z "${FIREBASE_SERVICE_ACCOUNT:-}" ]; then
+            REASON="missing-service-account-secret"
+          else
+            printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$CREDENTIAL_FILE"
+            chmod 600 "$CREDENTIAL_FILE"
+
+            if ! node -e "const value=JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8')); if(value.project_id !== 'evaraos-web') process.exit(2);" "$CREDENTIAL_FILE"; then
+              REASON="invalid-service-account-project"
+            else
+              export GOOGLE_APPLICATION_CREDENTIALS="$CREDENTIAL_FILE"
+              if firebase functions:list --project evaraos-web > "$INVENTORY_FILE" 2> "$RUNNER_TEMP/firebase-functions-list-error.txt"; then
+                for function_name in "${REQUIRED_FUNCTIONS[@]}"; do
+                  if ! grep -q "$function_name" "$INVENTORY_FILE"; then
+                    MISSING_FUNCTIONS="${MISSING_FUNCTIONS}${MISSING_FUNCTIONS:+,}${function_name}"
+                  fi
+                done
+                if [ -z "$MISSING_FUNCTIONS" ]; then
+                  STATUS="confirmed"
+                  REASON="all-required-callables-present"
+                else
+                  REASON="required-callables-missing"
+                fi
+              else
+                REASON="firebase-functions-list-failed"
+              fi
+            fi
+          fi
+
+          export STATUS REASON MISSING_FUNCTIONS
+          git fetch origin evaraos
+          git checkout -B deployment-verification origin/evaraos
+          mkdir -p docs/deployments
+
+          node <<'NODE'
+          const fs = require('fs');
+          const required = [
+            'openStudioBranch',
+            'commitStudioTransaction',
+            'getStudioOperationRange',
+            'createStudioCheckpoint',
+            'restoreStudioCheckpoint',
+            'createStudioBranch',
+            'closeStudioSession',
+            'prepareStudioRelease'
+          ];
+          const missing = String(process.env.MISSING_FUNCTIONS || '')
+            .split(',')
+            .map((value) => value.trim())
+            .filter(Boolean);
+          const proof = {
+            schemaVersion: 'evara.deployment-verification.v1',
+            status: process.env.STATUS,
+            reason: process.env.REASON,
+            projectId: 'evaraos-web',
+            region: 'us-central1',
+            scope: 'trusted-studio-functions',
+            verificationSourceCommit: process.env.SOURCE_SHA,
+            workflowRunId: process.env.WORKFLOW_RUN_ID,
+            verifiedAt: new Date().toISOString(),
+            verification: 'firebase functions:list',
+            requiredCallables: required,
+            missingCallables: missing,
+            secretsRecorded: false
+          };
+          fs.writeFileSync(
+            'docs/deployments/trusted-studio-functions-verification.json',
+            `${JSON.stringify(proof, null, 2)}\n`
+          );
+          NODE
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/deployments/trusted-studio-functions-verification.json
+          if ! git diff --cached --quiet; then
+            git commit -m "ops: record trusted Studio Functions verification [skip ci]"
+            git push origin HEAD:evaraos
+          fi
+
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+          echo "reason=$REASON" >> "$GITHUB_OUTPUT"
+
+          if [ "$STATUS" != "confirmed" ]; then
+            echo "Trusted Studio Functions inventory is not confirmed: $REASON"
+            exit 1
+          fi
+
+      - name: Verification summary
+        if: always()
+        run: |
+          echo "Status: ${{ steps.verify.outputs.status || 'unverified' }}"
+          echo "Reason: ${{ steps.verify.outputs.reason || 'unknown' }}"
+          echo "Project: evaraos-web"
+          echo "Required callable count: 8"
