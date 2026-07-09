@@ -1,4 +1,8 @@
-/* EVARAOS LIQUID GLASS
+/* EVARAOS LIQUID GLASS — AUTHORITATIVE MATERIAL ENGINE
+   This file exclusively paints glass fills, edges, refraction, highlights,
+   shadows, blur, and nested-surface behavior. Other files may only configure
+   the custom properties exposed here.
+
    Regular glass is used for floating UI. Nested content is flattened to avoid
    glass-on-glass. Optical gradients provide refraction without SVG backdrop
    filters, which are unstable in mobile WebKit compositing. */
@@ -15,32 +19,142 @@
   --lg-blur-thick:26px;
   --lg-saturation:178%;
 }
-html[data-theme="light"]{--lg-fill:rgba(255,255,255,.18);--lg-fill-strong:rgba(255,255,255,.27);--lg-fill-clear:rgba(255,255,255,.09);--lg-edge:rgba(255,255,255,.72);--lg-edge-soft:rgba(255,255,255,.42);--lg-shadow:rgba(34,53,76,.18);--lg-shadow-soft:rgba(34,53,76,.10)}
-html[data-theme="dark"]{--lg-fill:rgba(18,21,28,.15);--lg-fill-strong:rgba(18,21,28,.24);--lg-fill-clear:rgba(18,21,28,.075);--lg-edge:rgba(255,255,255,.24);--lg-edge-soft:rgba(255,255,255,.13);--lg-shadow:rgba(0,0,0,.46);--lg-shadow-soft:rgba(0,0,0,.25)}
-html[data-theme-mode="image"]{--lg-fill:rgba(var(--adaptive-glass-rgb),.10);--lg-fill-strong:rgba(var(--adaptive-glass-rgb),.17);--lg-fill-clear:rgba(var(--adaptive-glass-rgb),.045)}
 
-:where(.glass-card,.glass-shell,.liquid-glass,.aurora-card,.dashboard-sidebar-inner,.dashboard-panel,.dashboard-overview,.dashboard-hero,.dashboard-hero-panel,.dashboard-stat-card,.dashboard-list-item,.dashboard-feed-item,.dashboard-role-card,.dashboard-progress-row,.dashboard-state-card,.settings-card,.settings-block,.settings-hub-card,.workspace-block,.qa-card,.application-card,.customer-service-event,.eva-menu-card,[data-glass="card"],[data-glass="interactive"]){
-  --glass-x:22%;--glass-y:0%;position:relative;isolation:isolate;overflow:hidden;
+html[data-theme="light"]{
+  --lg-fill:rgba(255,255,255,.18);
+  --lg-fill-strong:rgba(255,255,255,.27);
+  --lg-fill-clear:rgba(255,255,255,.09);
+  --lg-edge:rgba(255,255,255,.72);
+  --lg-edge-soft:rgba(255,255,255,.42);
+  --lg-shadow:rgba(34,53,76,.18);
+  --lg-shadow-soft:rgba(34,53,76,.10);
+}
+
+html[data-theme="dark"]{
+  --lg-fill:rgba(18,21,28,.15);
+  --lg-fill-strong:rgba(18,21,28,.24);
+  --lg-fill-clear:rgba(18,21,28,.075);
+  --lg-edge:rgba(255,255,255,.24);
+  --lg-edge-soft:rgba(255,255,255,.13);
+  --lg-shadow:rgba(0,0,0,.46);
+  --lg-shadow-soft:rgba(0,0,0,.25);
+}
+
+html[data-theme-mode="image"]{
+  --lg-fill:rgba(var(--adaptive-glass-rgb),.10);
+  --lg-fill-strong:rgba(var(--adaptive-glass-rgb),.17);
+  --lg-fill-clear:rgba(var(--adaptive-glass-rgb),.045);
+}
+
+/* Regular floating surfaces */
+:where(
+  .glass-card,.glass-shell,.liquid-glass,.aurora-card,
+  .dashboard-sidebar-inner,.dashboard-panel,.dashboard-overview,.dashboard-hero,.dashboard-hero-panel,
+  .dashboard-stat-card,.dashboard-list-item,.dashboard-feed-item,.dashboard-role-card,
+  .dashboard-progress-row,.dashboard-state-card,.settings-card,.settings-block,.settings-hub-card,
+  .workspace-block,.qa-card,.application-card,.customer-service-event,.eva-menu-card,
+  .play-card,.game-card,
+  [data-glass="surface"],[data-glass="card"],[data-glass="interactive"]
+){
+  --glass-x:22%;
+  --glass-y:0%;
+  --lg-surface-fill:var(--lg-fill);
+  --lg-surface-edge:var(--lg-edge);
+  --lg-surface-blur:var(--lg-blur);
+  --lg-surface-saturation:var(--lg-saturation);
+  --lg-surface-contrast:106%;
+  --lg-surface-brightness:100%;
+  --lg-surface-top-alpha:.11;
+  --lg-surface-highlight-alpha:.32;
+  --lg-surface-refraction-alpha:.13;
+  --lg-surface-shadow-y:22px;
+  --lg-surface-shadow-blur:64px;
+  --lg-surface-shadow-spread:0px;
+  --lg-surface-soft-y:3px;
+  --lg-surface-soft-blur:12px;
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
   color:var(--text-primary)!important;
-  background:linear-gradient(180deg,rgba(255,255,255,.11),transparent 28%),var(--lg-fill)!important;
-  border:1px solid var(--lg-edge)!important;
-  box-shadow:0 22px 64px var(--lg-shadow),0 3px 12px var(--lg-shadow-soft),inset 0 1px 0 var(--lg-highlight),inset 0 -1px 0 rgba(255,255,255,.07)!important;
-  backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-saturation)) contrast(106%)!important;
-  -webkit-backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-saturation)) contrast(106%)!important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,var(--lg-surface-top-alpha)),transparent 28%),
+    var(--lg-surface-fill)!important;
+  border:1px solid var(--lg-surface-edge)!important;
+  box-shadow:
+    0 var(--lg-surface-shadow-y) var(--lg-surface-shadow-blur) var(--lg-surface-shadow-spread) var(--lg-shadow),
+    0 var(--lg-surface-soft-y) var(--lg-surface-soft-blur) var(--lg-shadow-soft),
+    inset 0 1px 0 var(--lg-highlight),
+    inset 0 -1px 0 rgba(255,255,255,.07)!important;
+  backdrop-filter:
+    blur(var(--lg-surface-blur))
+    saturate(var(--lg-surface-saturation))
+    contrast(var(--lg-surface-contrast))
+    brightness(var(--lg-surface-brightness))!important;
+  -webkit-backdrop-filter:
+    blur(var(--lg-surface-blur))
+    saturate(var(--lg-surface-saturation))
+    contrast(var(--lg-surface-contrast))
+    brightness(var(--lg-surface-brightness))!important;
 }
-:where(.glass-card,.glass-shell,.liquid-glass,.aurora-card,.dashboard-sidebar-inner,.dashboard-panel,.dashboard-overview,.dashboard-hero,.dashboard-hero-panel,.dashboard-stat-card,.dashboard-list-item,.dashboard-feed-item,.dashboard-role-card,.dashboard-progress-row,.dashboard-state-card,.settings-card,.settings-block,.settings-hub-card,.workspace-block,.qa-card,.application-card,.customer-service-event,.eva-menu-card,[data-glass="card"],[data-glass="interactive"])::before{
-  content:""!important;position:absolute!important;z-index:0!important;inset:0!important;pointer-events:none!important;border-radius:inherit!important;
-  background:radial-gradient(115% 72% at var(--glass-x) var(--glass-y),rgba(255,255,255,.32),transparent 45%),linear-gradient(116deg,rgba(255,255,255,.13),transparent 30% 72%,rgba(255,255,255,.04))!important;
-  opacity:.88!important;mix-blend-mode:screen!important;
-}
-:where(.glass-card,.glass-shell,.liquid-glass,.aurora-card,.dashboard-sidebar-inner,.dashboard-panel,.dashboard-overview,.dashboard-hero,.dashboard-hero-panel,.dashboard-stat-card,.dashboard-list-item,.dashboard-feed-item,.dashboard-role-card,.dashboard-progress-row,.dashboard-state-card,.settings-card,.settings-block,.settings-hub-card,.workspace-block,.qa-card,.application-card,.customer-service-event,.eva-menu-card,[data-glass="card"],[data-glass="interactive"])::after{
-  content:""!important;position:absolute!important;z-index:0!important;inset:0!important;pointer-events:none!important;border-radius:inherit!important;
-  background:linear-gradient(180deg,rgba(255,255,255,.13),transparent 22% 76%,rgba(var(--adaptive-shadow-rgb),.035))!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.64),inset 0 0 0 1px rgba(255,255,255,.055),inset 0 -14px 26px rgba(var(--adaptive-shadow-rgb),.035)!important;
-}
-:where(.glass-card,.glass-shell,.liquid-glass,.aurora-card,.dashboard-sidebar-inner,.dashboard-panel,.dashboard-overview,.dashboard-hero,.dashboard-hero-panel,.dashboard-stat-card,.dashboard-list-item,.dashboard-feed-item,.dashboard-role-card,.dashboard-progress-row,.dashboard-state-card,.settings-card,.settings-block,.settings-hub-card,.workspace-block,.qa-card,.application-card,.customer-service-event,.eva-menu-card,[data-glass="card"],[data-glass="interactive"])>*{position:relative;z-index:1}
 
-/* Larger floating surfaces simulate thicker glass and never perform a distracting full flip. */
+:where(
+  .glass-card,.glass-shell,.liquid-glass,.aurora-card,
+  .dashboard-sidebar-inner,.dashboard-panel,.dashboard-overview,.dashboard-hero,.dashboard-hero-panel,
+  .dashboard-stat-card,.dashboard-list-item,.dashboard-feed-item,.dashboard-role-card,
+  .dashboard-progress-row,.dashboard-state-card,.settings-card,.settings-block,.settings-hub-card,
+  .workspace-block,.qa-card,.application-card,.customer-service-event,.eva-menu-card,
+  .play-card,.game-card,
+  [data-glass="surface"],[data-glass="card"],[data-glass="interactive"]
+)::before{
+  content:""!important;
+  position:absolute!important;
+  z-index:0!important;
+  inset:0!important;
+  pointer-events:none!important;
+  border-radius:inherit!important;
+  background:
+    radial-gradient(115% 72% at var(--glass-x) var(--glass-y),rgba(255,255,255,var(--lg-surface-highlight-alpha)),transparent 45%),
+    linear-gradient(116deg,rgba(255,255,255,var(--lg-surface-refraction-alpha)),transparent 30% 72%,rgba(255,255,255,.04))!important;
+  opacity:.88!important;
+  mix-blend-mode:screen!important;
+}
+
+:where(
+  .glass-card,.glass-shell,.liquid-glass,.aurora-card,
+  .dashboard-sidebar-inner,.dashboard-panel,.dashboard-overview,.dashboard-hero,.dashboard-hero-panel,
+  .dashboard-stat-card,.dashboard-list-item,.dashboard-feed-item,.dashboard-role-card,
+  .dashboard-progress-row,.dashboard-state-card,.settings-card,.settings-block,.settings-hub-card,
+  .workspace-block,.qa-card,.application-card,.customer-service-event,.eva-menu-card,
+  .play-card,.game-card,
+  [data-glass="surface"],[data-glass="card"],[data-glass="interactive"]
+)::after{
+  content:""!important;
+  position:absolute!important;
+  z-index:0!important;
+  inset:0!important;
+  pointer-events:none!important;
+  border-radius:inherit!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.13),transparent 22% 76%,rgba(var(--adaptive-shadow-rgb),.035))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.64),
+    inset 0 0 0 1px rgba(255,255,255,.055),
+    inset 0 -14px 26px rgba(var(--adaptive-shadow-rgb),.035)!important;
+}
+
+:where(
+  .glass-card,.glass-shell,.liquid-glass,.aurora-card,
+  .dashboard-sidebar-inner,.dashboard-panel,.dashboard-overview,.dashboard-hero,.dashboard-hero-panel,
+  .dashboard-stat-card,.dashboard-list-item,.dashboard-feed-item,.dashboard-role-card,
+  .dashboard-progress-row,.dashboard-state-card,.settings-card,.settings-block,.settings-hub-card,
+  .workspace-block,.qa-card,.application-card,.customer-service-event,.eva-menu-card,
+  .play-card,.game-card,
+  [data-glass="surface"],[data-glass="card"],[data-glass="interactive"]
+)>*{
+  position:relative;
+  z-index:1;
+}
+
+/* Larger floating surfaces simulate thicker glass. */
 :where(.eva-menu-panel,dialog,[role="dialog"],.modal,.sheet,.drawer,.popup,.popover,[class*="-modal"],[class*="-sheet"],[class*="-dialog"]){
   background:linear-gradient(180deg,rgba(255,255,255,.12),transparent 24%),var(--lg-fill-strong)!important;
   border:1px solid var(--lg-edge)!important;
@@ -49,29 +163,61 @@ html[data-theme-mode="image"]{--lg-fill:rgba(var(--adaptive-glass-rgb),.10);--lg
   -webkit-backdrop-filter:blur(var(--lg-blur-thick)) saturate(188%) contrast(106%)!important;
 }
 
-/* Nested surfaces are thin overlays, not a second pane of glass. */
-:where(.glass-card,.glass-shell,.liquid-glass,.dashboard-panel,.settings-block,.eva-menu-panel) :where(.glass-card,.glass-shell,.liquid-glass,.dashboard-panel,.settings-card,.settings-block,.eva-menu-card,[data-glass="card"]){
-  background:rgba(var(--adaptive-ink-rgb),.045)!important;border-color:rgba(var(--adaptive-ink-rgb),.11)!important;
+/* Nested surfaces become thin overlays instead of a second pane of glass. */
+:where(.glass-card,.glass-shell,.liquid-glass,.dashboard-panel,.settings-block,.eva-menu-panel,[data-glass="card"])
+:where(.glass-card,.glass-shell,.liquid-glass,.dashboard-panel,.settings-card,.settings-block,.eva-menu-card,[data-glass="card"]){
+  background:rgba(var(--adaptive-ink-rgb),.045)!important;
+  border-color:rgba(var(--adaptive-ink-rgb),.11)!important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.13)!important;
-  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
 }
 
 /* Compact controls use the lightweight material. */
 :where(.btn,.settings-chip,.role-pill,.role-pill-option,.messages-icon-button,.messages-camera,.messages-send,.messages-compose,.eva-account-action,[data-glass="control"]){
-  position:relative;isolation:isolate;overflow:hidden;
-  color:var(--text-primary)!important;background:linear-gradient(180deg,rgba(255,255,255,.15),transparent 48%),var(--lg-fill-clear)!important;
-  border:1px solid var(--lg-edge-soft)!important;border-radius:999px;
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  color:var(--text-primary)!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.15),transparent 48%),var(--lg-fill-clear)!important;
+  border:1px solid var(--lg-edge-soft)!important;
+  border-radius:999px;
   box-shadow:0 10px 28px var(--lg-shadow-soft),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(255,255,255,.055)!important;
-  backdrop-filter:blur(11px) saturate(182%) contrast(106%)!important;-webkit-backdrop-filter:blur(11px) saturate(182%) contrast(106%)!important;
+  backdrop-filter:blur(11px) saturate(182%) contrast(106%)!important;
+  -webkit-backdrop-filter:blur(11px) saturate(182%) contrast(106%)!important;
 }
-:where(.liquid-clear,[data-liquid-variant="clear"]){background:var(--lg-fill-clear)!important;backdrop-filter:blur(7px) saturate(190%) contrast(107%)!important;-webkit-backdrop-filter:blur(7px) saturate(190%) contrast(107%)!important}
+
+:where(.liquid-clear,[data-liquid-variant="clear"]){
+  background:var(--lg-fill-clear)!important;
+  backdrop-filter:blur(7px) saturate(190%) contrast(107%)!important;
+  -webkit-backdrop-filter:blur(7px) saturate(190%) contrast(107%)!important;
+}
 
 /* Color is a translucent tint, never an opaque replacement material. */
 :where(.btn-theme-primary,.settings-chip.is-active,.role-pill.active,.role-pill-option.active){
-  color:#fff!important;background:linear-gradient(180deg,rgba(255,255,255,.22),transparent 36%),rgba(var(--accent-rgb),.52)!important;
-  border-color:rgba(255,255,255,.44)!important;box-shadow:0 14px 36px rgba(var(--accent-rgb),.24),inset 0 1px 0 rgba(255,255,255,.68)!important;
-  backdrop-filter:blur(10px) saturate(205%) contrast(108%)!important;-webkit-backdrop-filter:blur(10px) saturate(205%) contrast(108%)!important;
+  color:#fff!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.22),transparent 36%),rgba(var(--accent-rgb),.52)!important;
+  border-color:rgba(255,255,255,.44)!important;
+  box-shadow:0 14px 36px rgba(var(--accent-rgb),.24),inset 0 1px 0 rgba(255,255,255,.68)!important;
+  backdrop-filter:blur(10px) saturate(205%) contrast(108%)!important;
+  -webkit-backdrop-filter:blur(10px) saturate(205%) contrast(108%)!important;
 }
 
-@media(prefers-reduced-transparency:reduce){:root{--lg-fill:rgba(var(--adaptive-glass-rgb),.84);--lg-fill-strong:rgba(var(--adaptive-glass-rgb),.92);--lg-fill-clear:rgba(var(--adaptive-glass-rgb),.76)}:where(.glass-card,.glass-shell,.liquid-glass,.aurora-card,[data-glass="card"],[data-glass="interactive"]){backdrop-filter:none!important;-webkit-backdrop-filter:none!important}}
-@media(prefers-contrast:more){:root{--lg-edge:rgba(var(--adaptive-ink-rgb),.58);--lg-edge-soft:rgba(var(--adaptive-ink-rgb),.38)}}
+@media(prefers-reduced-transparency:reduce){
+  :root{
+    --lg-fill:rgba(var(--adaptive-glass-rgb),.84);
+    --lg-fill-strong:rgba(var(--adaptive-glass-rgb),.92);
+    --lg-fill-clear:rgba(var(--adaptive-glass-rgb),.76);
+  }
+  :where(.glass-card,.glass-shell,.liquid-glass,.aurora-card,.play-card,.game-card,[data-glass="surface"],[data-glass="card"],[data-glass="interactive"]){
+    backdrop-filter:none!important;
+    -webkit-backdrop-filter:none!important;
+  }
+}
+
+@media(prefers-contrast:more){
+  :root{
+    --lg-edge:rgba(var(--adaptive-ink-rgb),.58);
+    --lg-edge-soft:rgba(var(--adaptive-ink-rgb),.38);
+  }
+}
