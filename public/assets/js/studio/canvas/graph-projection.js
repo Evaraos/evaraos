@@ -3,6 +3,7 @@ import {
   cloneEvaraGraph,
   getOutgoingEdges
 } from '../core/evara-graph.js';
+import { LayoutResolver } from './layout-resolver.js';
 
 const DEVICE_WIDTHS = Object.freeze({
   desktop: 1180,
@@ -28,46 +29,76 @@ function containsChildren(graph, parentId) {
     .map((edge) => ({ edge, node: graph.nodes[edge.target] }))
     .filter((item) => item.node)
     .sort((left, right) => {
-      const leftOrder = Number(left.node.props?.layout?.order ?? left.edge.props?.order ?? 0);
-      const rightOrder = Number(right.node.props?.layout?.order ?? right.edge.props?.order ?? 0);
+      const leftOrder = Number(left.node.props?.layout?.order ?? left.node.props?.order ?? left.edge.props?.order ?? 0);
+      const rightOrder = Number(right.node.props?.layout?.order ?? right.node.props?.order ?? right.edge.props?.order ?? 0);
       return leftOrder - rightOrder || left.node.id.localeCompare(right.node.id);
     });
 }
 
+function responsiveSpan(node, device, fallback) {
+  const responsive = node.props?.responsive || {};
+  const candidate = responsive?.[device]?.span;
+  return number(candidate, fallback, 1, 12);
+}
+
 function effectiveSpan(node, device) {
-  const span = number(node.props?.layout?.span, 12, 1, 12);
-  if (device === 'mobile' && node.props?.componentType !== 'action-button') return 12;
-  if (device === 'tablet' && span < 6) return 6;
-  return span;
+  const sourceSpan = number(node.props?.layout?.span, 12, 1, 12);
+  const responsive = responsiveSpan(node, device, sourceSpan);
+  if (device === 'mobile' && node.props?.componentType !== 'action-button' && node.props?.definitionId !== 'action-button') return 12;
+  if (device === 'tablet' && responsive < 6) return 6;
+  return responsive;
+}
+
+function normalizeLayout(node, device) {
+  const layout = cloneEvaraGraph(node.props?.layout || {});
+  const style = layout.style && typeof layout.style === 'object' ? layout.style : {};
+  return {
+    mode: ['flow', 'grid', 'spatial'].includes(layout.mode) ? layout.mode : (node.kind === 'frame' ? 'grid' : 'flow'),
+    order: number(layout.order ?? node.props?.order, 0, 0, 1000),
+    span: effectiveSpan(node, device),
+    sourceSpan: number(layout.span, 12, 1, 12),
+    width: number(layout.width, 320, 40, 10000),
+    height: number(layout.height, 160, 40, 10000),
+    minWidth: number(layout.minWidth, 120, 40, 10000),
+    minHeight: number(layout.minHeight, 80, 40, 10000),
+    columns: number(layout.columns, 12, 1, 24),
+    gap: number(layout.gap, 20, 0, 400),
+    padding: cloneEvaraGraph(layout.padding ?? 24),
+    direction: layout.direction === 'row' ? 'row' : 'column',
+    align: ['start', 'center', 'end', 'stretch'].includes(layout.align) ? layout.align : 'stretch',
+    justify: ['start', 'center', 'end', 'space-between'].includes(layout.justify) ? layout.justify : 'start',
+    wrap: layout.wrap !== false,
+    x: number(layout.x, 0, -100000, 100000),
+    y: number(layout.y, 0, -100000, 100000),
+    zIndex: number(layout.zIndex, 0, -10000, 10000),
+    style
+  };
 }
 
 function projectNode(graph, node, parentId, device, visited) {
   if (visited.has(node.id)) throw new Error(`Canvas projection contains a cycle at ${node.id}.`);
   visited.add(node.id);
 
-  const layout = cloneEvaraGraph(node.props?.layout || {});
+  const componentType = node.props?.componentType || node.props?.definitionId || node.kind;
+  const content = node.props?.content || node.props?.props || {};
+  const layout = normalizeLayout(node, device);
   const projected = {
     id: node.id,
     graphRevision: node.revision,
     kind: node.kind,
     name: node.name || node.id,
-    componentType: node.props?.componentType || node.kind,
+    componentType,
     parentId,
-    content: cloneEvaraGraph(node.props?.content || {}),
-    style: cloneEvaraGraph(node.props?.style || {}),
+    content: cloneEvaraGraph(content),
+    icon: cloneEvaraGraph(node.props?.icon || null),
+    action: cloneEvaraGraph(node.props?.action || null),
+    style: cloneEvaraGraph(node.props?.style || layout.style || {}),
+    responsive: cloneEvaraGraph(node.props?.responsive || {}),
     visibility: cloneEvaraGraph(node.props?.visibility || { roles: {} }),
     tokenBindings: cloneEvaraGraph(node.props?.tokenBindings || {}),
     dataBindings: cloneEvaraGraph(node.props?.dataBindings || {}),
-    layout: {
-      mode: layout.mode || 'flow',
-      order: number(layout.order, 0, 0, 1000),
-      span: effectiveSpan(node, device),
-      sourceSpan: number(layout.span, 12, 1, 12),
-      width: number(layout.width, 320, 80, 4000),
-      height: number(layout.height, 160, 60, 4000),
-      minWidth: number(layout.minWidth, 120, 40, 4000),
-      minHeight: number(layout.minHeight, 80, 40, 4000)
-    },
+    layout,
+    resolvedLayout: null,
     children: []
   };
 
@@ -76,6 +107,17 @@ function projectNode(graph, node, parentId, device, visited) {
 
   visited.delete(node.id);
   return projected;
+}
+
+function resolveProjectionTree(node, viewportWidth, device) {
+  node.children.forEach((child) => resolveProjectionTree(child, child.layout.width || viewportWidth, device));
+  if (!node.children.length) return;
+  const resolution = LayoutResolver.resolve(node, node.children, { viewportWidth, device });
+  node.layoutResolution = resolution;
+  const itemMap = new Map(resolution.items.map((item) => [item.nodeId, item]));
+  node.children.forEach((child) => {
+    child.resolvedLayout = cloneEvaraGraph(itemMap.get(child.id) || null);
+  });
 }
 
 export function projectCanvasPage(graph, {
@@ -89,6 +131,7 @@ export function projectCanvasPage(graph, {
 
   const visited = new Set();
   const projectedPage = projectNode(graph, page, null, normalizedDevice, visited);
+  resolveProjectionTree(projectedPage, DEVICE_WIDTHS[normalizedDevice], normalizedDevice);
   const result = {
     graphId: graph.graphId,
     graphSchemaVersion: graph.schemaVersion,
