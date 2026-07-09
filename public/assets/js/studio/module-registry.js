@@ -3,7 +3,7 @@ export const STUDIO_MODULE_VERSION = 'module-registry-v2';
 export const STUDIO_MODULES = Object.freeze([
   { id: 'core', name: 'Core Engine', status: 'active', progress: 92, permissions: ['owner', 'admin'], dependencies: ['permissions', 'design-system'], routes: ['/dashboard.html'] },
   { id: 'permissions', name: 'Permission Engine', status: 'active', progress: 100, permissions: ['owner', 'admin'], dependencies: [], routes: [] },
-  { id: 'design-system', name: 'Design System', status: 'active', progress: 78, permissions: ['owner', 'admin'], dependencies: [], routes: [] },
+  { id: 'design-system', name: 'Design System', status: 'active', progress: 96, permissions: ['owner', 'admin'], dependencies: [], routes: [] },
   { id: 'graph-core', name: 'Evara Graph Core', status: 'active', progress: 20, permissions: ['owner', 'admin'], dependencies: ['permissions'], routes: [] },
   { id: 'operation-engine', name: 'Operation & History Engine', status: 'active', progress: 20, permissions: ['owner', 'admin'], dependencies: ['graph-core'], routes: [] },
   { id: 'studio', name: 'Evara Studio', status: 'rebuild', progress: 22, permissions: ['owner', 'admin'], dependencies: ['permissions', 'design-system', 'components', 'graph-core', 'operation-engine'], routes: ['/website-builder.html'] },
