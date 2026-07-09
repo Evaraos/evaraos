@@ -2,32 +2,153 @@
 <html lang="en" data-theme="adaptive" data-environment="light" data-theme-mode="image" data-appearance="adaptive-system">
 <head>
   <meta charset="UTF-8" />
-  <script src="/assets/js/adaptive-appearance-boot.js?v=1"></script><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <script src="/assets/js/adaptive-appearance-boot.js?v=1"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
+
   <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png" />
-  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/icon-192.png" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
   <meta name="theme-color" content="#eef5fb" />
-  <title>Scheduling • Evaraos Inc</title><style>
-    html.boot-pending body{margin:0;overflow-x:hidden}html.auth-pending body,body.auth-pending{opacity:0;pointer-events:none}body.schedule-page{margin:0;min-height:100vh;background:transparent}body.app-loading #appRoot{visibility:hidden}body.app-ready #appRoot{visibility:visible}
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Evaraos" />
+  <meta name="application-name" content="Evaraos" />
+
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin />
+  <link rel="dns-prefetch" href="https://www.gstatic.com" />
+  <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+  <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com" />
+
+  <title>Scheduling • Evaraos Inc</title>
+  <style>
+    html.boot-pending body { margin: 0; overflow: hidden; touch-action: none; }
+    html.auth-pending body, body.auth-pending { opacity: 0; pointer-events: none; }
+    body.schedule-page { margin: 0; min-height: 100vh; background: transparent; }
+    body.app-loading #appRoot { visibility: hidden; }
+    body.app-ready #appRoot { visibility: visible; }
   </style>
+
   <link rel="stylesheet" href="/assets/css/base.css?v=53" />
   <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v1" />
   <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v25-x-drawer" />
-  <link rel="stylesheet" href="/assets/css/dashboard.css?v=50" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css?v=51" />
   <link rel="stylesheet" href="/assets/css/app-system.css?v=50" />
   <link rel="stylesheet" href="/assets/css/design-system/marketplace.css?v=1" />
+  <link rel="stylesheet" href="/assets/css/pages/schedule.css?v=1" />
 </head>
 <body class="schedule-page marketplace-page auth-pending app-loading" data-route-guard="private">
-  <div id="universalNavRoot"></div><div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
-  <div id="appRoot"><div class="page-grid-overlay"></div><main class="schedule-wrap">
-    <section class="schedule-hero"><article class="glass-card aurora-card active-glow beam-target"><p class="schedule-kicker">OPERATIONS CALENDAR</p><h1 class="schedule-title">Schedule jobs, routes, and crews.</h1><p class="schedule-copy">Live operational calendar for dispatchers, field teams, and management scheduling.</p></article><aside class="glass-card aurora-card active-glow beam-target schedule-stats"><div class="schedule-stat"><strong id="scheduleJobs">—</strong><span>Scheduled jobs</span></div><div class="schedule-stat"><strong id="scheduleActive">—</strong><span>Active routes</span></div><div class="schedule-stat"><strong id="scheduleMonth">—</strong><span>Calendar month</span></div></aside></section>
-    <section class="glass-card aurora-card active-glow beam-target schedule-shell"><div class="calendar-toolbar"><button id="calendarPrev" class="btn btn-theme-secondary beam-target">Previous</button><h2 id="calendarTitle">Loading...</h2><button id="calendarNext" class="btn btn-theme-primary beam-target">Next</button></div><div id="calendarGrid" class="calendar-grid"></div></section>
-  </main></div>
-  <script src="/assets/js/loader.js"></script>
-  <script type="module" src="/assets/js/firebase.js"></script><script type="module" src="/assets/js/route-guard.js"></script><script type="module" src="/assets/js/schedule.js"></script>  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v1"></script>
+  <a class="schedule-skip-link" href="#scheduleMain">Skip to scheduling workspace</a>
+  <div id="universalNavRoot"></div>
+  <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
+
+  <div id="appRoot">
+    <div class="page-grid-overlay" aria-hidden="true"></div>
+
+    <main class="schedule-wrap" id="scheduleMain" tabindex="-1" aria-busy="true">
+      <section class="schedule-hero" aria-labelledby="scheduleTitle">
+        <article class="glass-card aurora-card active-glow beam-target schedule-hero-copy">
+          <p class="schedule-kicker">OPERATIONS CALENDAR</p>
+          <h1 class="schedule-title" id="scheduleTitle">Schedule jobs, routes, and crews.</h1>
+          <p class="schedule-copy">Plan upcoming work, scan operational capacity, and move between scheduling, dispatch, and field execution without losing context.</p>
+
+          <div class="schedule-hero-actions" aria-label="Schedule quick navigation">
+            <a href="/jobs.html" class="btn btn-theme-primary beam-target"><span data-evara-icon="jobs" aria-hidden="true"></span><span>Jobs</span></a>
+            <a href="/dispatch.html" class="btn btn-theme-secondary beam-target"><span data-evara-icon="dispatch" aria-hidden="true"></span><span>Dispatch</span></a>
+            <a href="/field.html" class="btn btn-theme-secondary beam-target"><span data-evara-icon="field" aria-hidden="true"></span><span>Field</span></a>
+          </div>
+        </article>
+
+        <aside class="glass-card aurora-card active-glow beam-target schedule-command-status" aria-label="Schedule status summary">
+          <div class="schedule-connection-row">
+            <span class="schedule-live-label"><span class="schedule-live-dot" aria-hidden="true"></span><span id="scheduleConnectionLabel">Connecting</span></span>
+            <button id="scheduleTodayBtn" type="button" class="btn btn-theme-secondary beam-target">Today</button>
+          </div>
+
+          <div class="schedule-stats" aria-label="Schedule performance indicators">
+            <div class="schedule-stat"><strong id="scheduleJobs" aria-live="polite">0</strong><span>Jobs this month</span></div>
+            <div class="schedule-stat"><strong id="scheduleActive" aria-live="polite">0</strong><span>Active this month</span></div>
+            <div class="schedule-stat"><strong id="scheduleToday" aria-live="polite">0</strong><span>Scheduled today</span></div>
+            <div class="schedule-stat"><strong id="scheduleMonth" aria-live="polite">—</strong><span>Calendar month</span></div>
+          </div>
+
+          <p class="schedule-status-copy" id="scheduleStatusCopy" role="status" aria-live="polite" aria-atomic="true">Preparing the role-scoped schedule feed.</p>
+        </aside>
+      </section>
+
+      <section class="glass-card aurora-card active-glow beam-target schedule-toolbar" aria-label="Schedule navigation and filters">
+        <div class="calendar-toolbar" aria-label="Calendar month navigation">
+          <button id="calendarPrev" type="button" class="btn btn-theme-secondary beam-target" aria-label="Show previous month">Previous</button>
+          <div class="calendar-title-wrap">
+            <p class="schedule-kicker">MONTH VIEW</p>
+            <h2 id="calendarTitle" aria-live="polite">Loading…</h2>
+          </div>
+          <button id="calendarNext" type="button" class="btn btn-theme-primary beam-target" aria-label="Show next month">Next</button>
+        </div>
+
+        <div class="schedule-filter-grid">
+          <div class="schedule-control schedule-search-control">
+            <label for="scheduleSearch">Search schedule</label>
+            <div class="schedule-input-shell input-shell">
+              <span data-evara-icon="search" aria-hidden="true"></span>
+              <input id="scheduleSearch" type="search" placeholder="Customer, service, team, city..." autocomplete="off" />
+            </div>
+          </div>
+
+          <div class="schedule-control">
+            <label for="scheduleStatusFilter">Status</label>
+            <select id="scheduleStatusFilter">
+              <option value="all">All scheduled work</option>
+              <option value="active">Active workflow</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled / failed</option>
+            </select>
+          </div>
+
+          <button id="scheduleClearFilters" type="button" class="btn btn-theme-secondary beam-target">Clear Filters</button>
+        </div>
+      </section>
+
+      <div class="schedule-content-grid">
+        <section class="glass-card aurora-card active-glow beam-target schedule-shell" aria-labelledby="calendarTitle">
+          <div class="calendar-weekdays" aria-hidden="true">
+            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+          </div>
+          <div class="calendar-viewport" id="calendarViewport">
+            <div id="calendarGrid" class="calendar-grid" role="grid" aria-label="Monthly operations calendar" aria-busy="true"></div>
+          </div>
+        </section>
+
+        <aside class="glass-card aurora-card active-glow beam-target schedule-agenda" aria-labelledby="scheduleAgendaTitle">
+          <div class="schedule-section-head">
+            <div>
+              <p class="schedule-kicker">NEXT UP</p>
+              <h2 id="scheduleAgendaTitle">Upcoming Agenda</h2>
+            </div>
+            <span id="scheduleAgendaCount" class="schedule-agenda-count" aria-label="Upcoming agenda item count">0</span>
+          </div>
+          <p class="schedule-agenda-summary" id="scheduleAgendaSummary">Upcoming scheduled work will appear here.</p>
+          <div class="schedule-agenda-list" id="scheduleAgenda" aria-live="polite" aria-busy="true">
+            <div class="schedule-state-card">Loading upcoming work…</div>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <script src="/assets/js/loader.js?v=36"></script>
+  <script type="module" src="/assets/js/firebase.js?v=36"></script>
+  <script type="module" src="/assets/js/route-guard.js?v=35"></script>
+  <script type="module" src="/assets/js/schedule.js?v=2"></script>
+  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v1"></script>
   <script type="module" src="/assets/js/nav.js?v=nav-v25-x-drawer"></script>
 </body>
 </html>
