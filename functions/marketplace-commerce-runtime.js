@@ -209,10 +209,10 @@ exports.acceptMarketplaceQuote = onCall(callableOptions(), async (request) => {
   const wantsSubscription = Boolean(request.data?.subscription);
   const interval = intervalFor(request.data?.interval);
   const quoteRef = db.doc(`quotes/${quoteId}`);
-  const invoiceRef = db.doc(`invoices/${idFor('invoice', quoteId)}`);
-  const subscriptionRef = wantsSubscription ? db.doc(`subscriptions/${idFor('subscription', quoteId)}`) : null;
-  const orderRef = db.doc(`jobs/${idFor('order', quoteId)}`);
-  const reservationRef = db.doc(`appointment_reservations/${idFor('reservation', quoteId)}`);
+  let invoiceRef = null;
+  let subscriptionRef = null;
+  let orderRef = null;
+  let reservationRef = null;
 
   const activation = await db.runTransaction(async (transaction) => {
     const quoteSnap = await transaction.get(quoteRef);
@@ -229,6 +229,13 @@ exports.acceptMarketplaceQuote = onCall(callableOptions(), async (request) => {
     const lines = quoteLines(quote);
     const totalCents = totalFor(quote, lines);
     if (!lines.length || totalCents <= 0) throw new HttpsError('failed-precondition', 'This quote has no payable items.');
+
+    invoiceRef = db.doc(`invoices/${text(quote.invoiceId, 180) || idFor('invoice', quoteId)}`);
+    subscriptionRef = wantsSubscription
+      ? db.doc(`subscriptions/${text(quote.subscriptionId, 180) || idFor('subscription', quoteId)}`)
+      : null;
+    orderRef = db.doc(`jobs/${text(quote.orderId, 180) || idFor('order', quoteId)}`);
+    reservationRef = db.doc(`appointment_reservations/${text(quote.appointmentReservationId, 180) || idFor('reservation', quoteId)}`);
 
     const scheduledAtMs = scheduleFor(quote);
     const companyRef = quote.companyId ? db.doc(`companies/${quote.companyId}`) : null;
