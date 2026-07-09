@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evaraos.com/schemas/evara-operation/0.1.0",
+  "title": "Evara Operation",
+  "description": "Typed reversible mutation envelope for Evara Graph drafts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["operationId", "protocolVersion", "graphSchemaVersion", "graphId", "type", "payload", "actor", "timestamp", "metadata"],
+  "properties": {
+    "operationId": { "type": "string", "minLength": 1 },
+    "protocolVersion": { "const": "0.1.0" },
+    "graphSchemaVersion": { "const": "0.1.0" },
+    "graphId": { "type": "string", "minLength": 1 },
+    "type": {
+      "enum": [
+        "node.create",
+        "node.delete",
+        "node.patch",
+        "edge.create",
+        "edge.delete",
+        "graph.meta.patch",
+        "selection.set",
+        "transaction.commit"
+      ]
+    },
+    "payload": { "type": "object", "additionalProperties": true },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "enum": ["user", "system", "service", "ai"] },
+        "role": { "type": ["string", "null"] }
+      }
+    },
+    "baseRevision": { "type": ["integer", "null"], "minimum": 0 },
+    "transactionId": { "type": ["string", "null"] },
+    "correlationId": { "type": ["string", "null"] },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "metadata": { "type": "object", "additionalProperties": true }
+  }
+}
