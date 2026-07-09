@@ -17,6 +17,7 @@ on:
       - 'tools/studio-component-catalog-audit.js'
       - 'tools/studio-action-icon-audit.js'
       - 'tools/studio-blueprint-serialization-audit.js'
+      - 'tools/studio-canvas-sandbox-audit.js'
       - 'tests/visual/**'
       - 'docs/design-system/**'
       - 'docs/schemas/**'
@@ -36,6 +37,7 @@ on:
       - 'tools/studio-component-catalog-audit.js'
       - 'tools/studio-action-icon-audit.js'
       - 'tools/studio-blueprint-serialization-audit.js'
+      - 'tools/studio-canvas-sandbox-audit.js'
       - 'tests/visual/**'
       - 'docs/design-system/**'
       - 'docs/schemas/**'
@@ -100,6 +102,9 @@ jobs:
 
       - name: Run Studio Blueprint serialization audit
         run: node tools/studio-blueprint-serialization-audit.js
+
+      - name: Run Studio Canvas sandbox audit
+        run: node tools/studio-canvas-sandbox-audit.js
 
       - name: Run visual-QA architecture audit
         run: node tools/visual-qa-audit.js
