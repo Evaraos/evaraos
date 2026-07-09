@@ -44,6 +44,14 @@ function pageFor(state, pageId = '') {
   return state.pages.find((page) => page.id === (pageId || state.activePageId)) || state.pages[0];
 }
 
+function safeId(value = '') {
+  return String(value || 'item')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'item';
+}
+
 function emit(name, detail) {
   window.dispatchEvent(new CustomEvent(name, { detail }));
 }
@@ -54,7 +62,7 @@ export function captureStudioBlueprint(pageId = '', options = {}) {
   const page = pageFor(studioState, pageId);
   if (!page) throw new Error('The requested Studio page is unavailable.');
   const blueprint = getBlueprint(page.role || studioState.previewRole || 'customer');
-  const document = serializeStudioPageToBlueprint({
+  const captured = serializeStudioPageToBlueprint({
     studioState,
     autoLayoutState: readAutoLayoutState(),
     pageId: page.id,
@@ -63,6 +71,15 @@ export function captureStudioBlueprint(pageId = '', options = {}) {
     actorId: options.actorId || actorId(),
     generatedAt: options.generatedAt || ''
   });
+  captured.documentId = `blueprint-document:${safeId(captured.blueprintId)}:${safeId(page.id)}`;
+  captured.metadata = {
+    ...(captured.metadata || {}),
+    migration: {
+      ...(captured.metadata?.migration || {}),
+      sourcePageId: page.id
+    }
+  };
+  const document = migrateBlueprintDocument(captured);
   emit('evara:blueprint-document-captured', {
     documentId: document.documentId,
     pageId: page.id,
