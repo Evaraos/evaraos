@@ -1,0 +1,334 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evaraos.com/schemas/blueprint-component-document.schema.json",
+  "title": "EvaraOS Blueprint Component Document",
+  "description": "Versioned, non-executable component-instance document used by Evara Studio and compiled into Evara Graph.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "schemaVersion",
+    "documentId",
+    "blueprintId",
+    "name",
+    "role",
+    "state",
+    "revision",
+    "pages",
+    "instances",
+    "metadata",
+    "validation"
+  ],
+  "properties": {
+    "kind": { "const": "evara.blueprint.component-document" },
+    "schemaVersion": { "const": "1.0.0" },
+    "documentId": { "type": "string", "minLength": 3, "maxLength": 180 },
+    "blueprintId": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "name": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "role": { "$ref": "#/$defs/role" },
+    "state": {
+      "enum": ["draft", "review", "release-candidate", "published", "archived"]
+    },
+    "revision": { "type": "integer", "minimum": 0 },
+    "pages": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 50,
+      "items": { "$ref": "#/$defs/page" }
+    },
+    "instances": {
+      "type": "object",
+      "maxProperties": 5000,
+      "additionalProperties": { "$ref": "#/$defs/componentInstance" }
+    },
+    "metadata": { "$ref": "#/$defs/documentMetadata" },
+    "validation": { "$ref": "#/$defs/validation" }
+  },
+  "$defs": {
+    "role": {
+      "enum": [
+        "platform_admin",
+        "owner",
+        "admin",
+        "manager",
+        "sales",
+        "technician",
+        "cleaner",
+        "customer",
+        "vendor"
+      ]
+    },
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "route", "role", "order", "sections"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "route": { "type": "string", "maxLength": 240 },
+        "role": { "$ref": "#/$defs/role" },
+        "order": { "type": "integer", "minimum": 0 },
+        "navigation": {
+          "type": "array",
+          "maxItems": 50,
+          "items": { "type": "string", "maxLength": 100 }
+        },
+        "sections": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 50,
+          "items": { "$ref": "#/$defs/section" }
+        }
+      }
+    },
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "order", "layout", "instanceIds"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "order": { "type": "integer", "minimum": 0 },
+        "layout": { "$ref": "#/$defs/sectionLayout" },
+        "instanceIds": {
+          "type": "array",
+          "maxItems": 5000,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 120 }
+        }
+      }
+    },
+    "sectionLayout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "columns", "groups"],
+      "properties": {
+        "mode": { "enum": ["grid", "auto-layout", "mixed"] },
+        "columns": { "const": 12 },
+        "groups": {
+          "type": "array",
+          "maxItems": 50,
+          "items": { "$ref": "#/$defs/autoLayoutGroup" }
+        }
+      }
+    },
+    "autoLayoutGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "direction", "gap", "padding", "align", "wrap", "children"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "direction": { "enum": ["row", "column"] },
+        "gap": { "type": "number", "minimum": 0, "maximum": 48 },
+        "padding": { "type": "number", "minimum": 0, "maximum": 48 },
+        "align": { "enum": ["start", "center", "end", "stretch"] },
+        "wrap": { "type": "boolean" },
+        "children": {
+          "type": "array",
+          "maxItems": 100,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 120 }
+        }
+      }
+    },
+    "componentInstance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "schemaVersion",
+        "definition",
+        "props",
+        "icon",
+        "action",
+        "layout",
+        "responsive",
+        "visibility",
+        "validation",
+        "migration"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "kind": { "const": "component-instance" },
+        "schemaVersion": { "const": "1.0.0" },
+        "definition": { "$ref": "#/$defs/definitionReference" },
+        "props": {
+          "type": "object",
+          "maxProperties": 60,
+          "additionalProperties": true
+        },
+        "icon": { "$ref": "#/$defs/iconReference" },
+        "action": { "$ref": "#/$defs/actionBinding" },
+        "layout": { "$ref": "#/$defs/instanceLayout" },
+        "responsive": { "$ref": "#/$defs/responsive" },
+        "visibility": { "$ref": "#/$defs/visibility" },
+        "validation": { "$ref": "#/$defs/validation" },
+        "migration": { "$ref": "#/$defs/migration" }
+      }
+    },
+    "definitionReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "studioVersion", "designSystemVersion", "contractId"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "studioVersion": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "designSystemVersion": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "contractId": { "type": "string", "minLength": 1, "maxLength": 100 }
+      }
+    },
+    "iconReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["registry", "id"],
+      "properties": {
+        "registry": { "const": "icon-registry-v1" },
+        "id": { "type": "string", "minLength": 1, "maxLength": 100 }
+      }
+    },
+    "actionBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "label", "intent", "target", "routeAllowed"],
+      "properties": {
+        "version": { "const": "action-binding-v1" },
+        "label": { "type": "string", "maxLength": 240 },
+        "intent": {
+          "enum": ["none", "navigate", "message", "schedule", "submit", "approve", "open-panel"]
+        },
+        "target": { "type": "string", "maxLength": 240 },
+        "routeAllowed": { "type": "boolean" }
+      }
+    },
+    "instanceLayout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "span", "order", "groupId", "style"],
+      "properties": {
+        "mode": { "enum": ["grid", "auto-layout"] },
+        "span": { "enum": [3, 4, 6, 8, 12] },
+        "order": { "type": "integer", "minimum": 0 },
+        "groupId": { "type": "string", "maxLength": 120 },
+        "style": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["radius", "glass"],
+          "properties": {
+            "radius": { "type": "number", "minimum": 8, "maximum": 48 },
+            "glass": { "type": "number", "minimum": 20, "maximum": 100 }
+          }
+        }
+      }
+    },
+    "responsive": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["base", "tablet", "mobile"],
+      "properties": {
+        "base": { "$ref": "#/$defs/responsiveMode" },
+        "tablet": { "$ref": "#/$defs/responsiveMode" },
+        "mobile": { "$ref": "#/$defs/responsiveMode" }
+      }
+    },
+    "responsiveMode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["span", "hidden"],
+      "properties": {
+        "span": { "enum": [3, 4, 6, 8, 12] },
+        "hidden": { "type": "boolean" }
+      }
+    },
+    "visibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["roles"],
+      "properties": {
+        "roles": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "platform_admin",
+            "owner",
+            "admin",
+            "manager",
+            "sales",
+            "technician",
+            "cleaner",
+            "customer",
+            "vendor"
+          ],
+          "properties": {
+            "platform_admin": { "type": "boolean" },
+            "owner": { "type": "boolean" },
+            "admin": { "type": "boolean" },
+            "manager": { "type": "boolean" },
+            "sales": { "type": "boolean" },
+            "technician": { "type": "boolean" },
+            "cleaner": { "type": "boolean" },
+            "customer": { "type": "boolean" },
+            "vendor": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "migration": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["source", "sourceVersion", "migrated", "originalDefinitionId"],
+      "properties": {
+        "source": { "type": "string", "maxLength": 100 },
+        "sourceVersion": { "type": "number", "minimum": 0 },
+        "migrated": { "type": "boolean" },
+        "originalDefinitionId": { "type": "string", "maxLength": 100 }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "errors", "warnings"],
+      "properties": {
+        "valid": { "type": "boolean" },
+        "status": { "enum": ["valid", "warning", "invalid"] },
+        "errors": {
+          "type": "array",
+          "items": { "type": "string", "maxLength": 500 }
+        },
+        "warnings": {
+          "type": "array",
+          "items": { "type": "string", "maxLength": 500 }
+        }
+      }
+    },
+    "documentMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "serializerVersion",
+        "componentEngineVersion",
+        "designSystemVersion",
+        "iconRegistryVersion",
+        "actionBindingVersion",
+        "source",
+        "generatedAt",
+        "generatedBy",
+        "migration",
+        "fingerprint"
+      ],
+      "properties": {
+        "serializerVersion": { "const": "blueprint-serializer-v1" },
+        "componentEngineVersion": { "type": "string", "minLength": 1 },
+        "designSystemVersion": { "type": "string", "minLength": 1 },
+        "iconRegistryVersion": { "const": "icon-registry-v1" },
+        "actionBindingVersion": { "const": "action-binding-v1" },
+        "source": { "type": "string", "maxLength": 120 },
+        "generatedAt": { "type": "string", "format": "date-time" },
+        "generatedBy": { "type": "string", "maxLength": 160 },
+        "migration": { "type": "object", "additionalProperties": true },
+        "fingerprint": { "type": "string", "pattern": "^bp_[0-9a-f]{8}$" }
+      }
+    }
+  }
+}
