@@ -1,3 +1,4 @@
+// Temporary PR-only authenticated verification for production dashboard release gating.
 import { test, expect } from '@playwright/test';
 import { credentialsFor, ROLE_DEFINITIONS, storageStatePath } from '../visual-matrix.mjs';
 
