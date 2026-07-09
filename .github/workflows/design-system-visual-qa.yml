@@ -47,11 +47,12 @@ on:
   workflow_dispatch:
     inputs:
       suite:
-        description: Authenticated QA suite
+        description: QA suite
         required: true
-        default: studio
+        default: static
         type: choice
         options:
+          - static
           - studio
           - all
       matrix:
@@ -116,7 +117,7 @@ jobs:
 
   authenticated-visual-qa:
     name: Authenticated visual regression
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && inputs.suite != 'static'
     needs: static-audit
     runs-on: ubuntu-latest
     timeout-minutes: 45
