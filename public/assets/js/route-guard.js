@@ -1,7 +1,12 @@
 import {
   auth,
+  db,
+  doc,
+  getDoc,
   onAuthStateChanged,
-  hydrateUserProfile,
+  saveUserRole,
+  saveUserProfile,
+  applyUserToUi,
   clearSavedUserRole,
   clearSavedUserProfile
 } from './firebase.js';
@@ -96,11 +101,6 @@ function accountIsActive(profile = {}) {
     && approval !== 'rejected';
 }
 
-function verifiedRole(profile, verifiedUser) {
-  if (!profile || !verifiedUser || profile.uid !== verifiedUser.uid) return '';
-  return normalizeAccessRole(profile.role || 'customer');
-}
-
 function safeDestinationForRole(path, role) {
   const fallback = defaultRouteForRole(role);
   if (!path) return fallback;
@@ -130,17 +130,40 @@ function waitForVerifiedFirebaseUser() {
   });
 }
 
+async function readVerifiedProfile(user) {
+  if (!user?.uid) return null;
+
+  const snapshot = await getDoc(doc(db, 'users', user.uid));
+  if (!snapshot.exists()) return null;
+
+  const data = snapshot.data() || {};
+  const profile = {
+    ...data,
+    uid: user.uid,
+    id: user.uid,
+    email: user.email || data.email || ''
+  };
+
+  if (!profile.role || !accountIsActive(profile)) return null;
+
+  saveUserRole(profile.role);
+  saveUserProfile(profile);
+  applyUserToUi(profile);
+  return profile;
+}
+
 async function resolveVerifiedSession() {
   const user = await waitForVerifiedFirebaseUser();
   if (!user) return { user: null, profile: null, role: '' };
 
-  const profile = await hydrateUserProfile(user, { requireFresh: true });
-  const role = verifiedRole(profile, user);
-  if (!role || !accountIsActive(profile)) {
-    return { user, profile: null, role: '' };
-  }
+  const profile = await readVerifiedProfile(user);
+  if (!profile) return { user, profile: null, role: '' };
 
-  return { user, profile, role };
+  return {
+    user,
+    profile,
+    role: normalizeAccessRole(profile.role)
+  };
 }
 
 async function handlePrivateRoute() {
