@@ -8,6 +8,7 @@ on:
       - 'public/assets/js/design-system/**'
       - 'public/assets/js/icons/**'
       - 'public/assets/js/studio/**'
+      - 'public/assets/js/firebase.js'
       - 'public/assets/js/qa-v2.js'
       - 'public/assets/js/access-control.js'
       - 'public/website-builder.html'
@@ -21,7 +22,9 @@ on:
       - 'tools/studio-blueprint-serialization-audit.js'
       - 'tools/studio-blueprint-operation-audit.js'
       - 'tools/studio-canvas-sandbox-audit.js'
+      - 'tools/studio-app-check-audit.js'
       - 'tools/studio-trusted-journal-audit.js'
+      - 'tools/studio-production-authority-audit.js'
       - 'tests/visual/**'
       - 'docs/design-system/**'
       - 'docs/schemas/**'
@@ -32,6 +35,7 @@ on:
       - 'public/assets/js/design-system/**'
       - 'public/assets/js/icons/**'
       - 'public/assets/js/studio/**'
+      - 'public/assets/js/firebase.js'
       - 'public/assets/js/qa-v2.js'
       - 'public/assets/js/access-control.js'
       - 'public/website-builder.html'
@@ -45,7 +49,9 @@ on:
       - 'tools/studio-blueprint-serialization-audit.js'
       - 'tools/studio-blueprint-operation-audit.js'
       - 'tools/studio-canvas-sandbox-audit.js'
+      - 'tools/studio-app-check-audit.js'
       - 'tools/studio-trusted-journal-audit.js'
+      - 'tools/studio-production-authority-audit.js'
       - 'tests/visual/**'
       - 'docs/design-system/**'
       - 'docs/schemas/**'
@@ -89,7 +95,7 @@ concurrency:
 
 jobs:
   static-audit:
-    name: Design-system, Studio, Backend Journal, and visual-QA audits
+    name: Design-system, Studio, App Check, Backend Journal, and visual-QA audits
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -118,8 +124,14 @@ jobs:
       - name: Run Studio CanvasSession audit
         run: node tools/studio-canvas-sandbox-audit.js
 
+      - name: Run Studio App Check audit
+        run: node tools/studio-app-check-audit.js
+
       - name: Run trusted Studio Journal audit
         run: node tools/studio-trusted-journal-audit.js
+
+      - name: Run Studio production authority audit
+        run: node tools/studio-production-authority-audit.js
 
       - name: Run visual-QA architecture audit
         run: node tools/visual-qa-audit.js
