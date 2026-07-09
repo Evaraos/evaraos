@@ -156,7 +156,6 @@ exports.writeSecurityAudit = require("./audit-events").writeSecurityAudit;
 exports.bootstrapMessageChannels = require("./messaging-registry").bootstrapMessageChannels;
 exports.resolveMessageRecipient = require("./messaging-registry").resolveMessageRecipient;
 exports.migrateMessageRegistry = require("./messaging-registry").migrateMessageRegistry;
-exports.aiCommand = require("./ai-command").aiCommand;
 
 const marketplaceCommerce = require("./marketplace-commerce-runtime");
 exports.acceptMarketplaceQuote = marketplaceCommerce.acceptMarketplaceQuote;
@@ -167,6 +166,16 @@ exports.vendorRespondMarketplaceOrder = marketplaceCommerce.vendorRespondMarketp
 exports.stripeMarketplaceWebhook = marketplaceCommerce.stripeMarketplaceWebhook;
 exports.releaseExpiredMarketplaceReservations = marketplaceCommerce.releaseExpiredMarketplaceReservations;
 exports.getMarketplaceCommerceSnapshot = require("./marketplace-commerce-read").getMarketplaceCommerceSnapshot;
+
+exports.aiCommand = require("./ai-command").aiCommand;
+
+const actionGovernance = require("./intelligence/action-governance");
+const actionExecutor = require("./intelligence/action-executor");
+exports.getAiActionQueue = actionGovernance.getAiActionQueue;
+exports.reviewAiActionRequest = actionGovernance.reviewAiActionRequest;
+exports.cancelAiActionRequest = actionGovernance.cancelAiActionRequest;
+exports.executeAiActionRequest = actionExecutor.executeAiActionRequest;
+exports.rollbackAiActionRequest = actionExecutor.rollbackAiActionRequest;
 
 const blueprintSecurity = require("./blueprint-security");
 exports.saveBlueprintDraft = blueprintSecurity.saveBlueprintDraft;

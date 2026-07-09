@@ -13,7 +13,7 @@ const STRIPE_SECRET_KEY = defineSecret('STRIPE_SECRET_KEY');
 const STRIPE_WEBHOOK_SECRET = defineSecret('STRIPE_WEBHOOK_SECRET');
 const APP_BASE_URL = defineString('APP_BASE_URL', { default: 'https://evaraos-web.web.app' });
 const REGION = 'us-central1';
-const HOLD_MS = 30 * 60 * 1000;
+const HOLD_MS = 35 * 60 * 1000;
 const ACCEPTABLE_QUOTES = new Set(['pending', 'sent', 'viewed']);
 const VENDOR_ROLES = new Set(['owner', 'super_admin', 'admin', 'manager', 'operations_manager', 'operations_coordinator', 'field_manager', 'dispatcher', 'sales_manager', 'sales', 'sales_rep']);
 
@@ -244,7 +244,12 @@ exports.acceptMarketplaceQuote = onCall(callableOptions(), async (request) => {
     ]);
 
     const company = companySnap?.exists ? companySnap.data() || {} : {};
-    let reservation = reservationSnap.exists ? { id: reservationSnap.id, ...reservationSnap.data() } : null;
+    const storedReservation = reservationSnap.exists ? { id: reservationSnap.id, ...reservationSnap.data() } : null;
+    const reservationStatus = norm(storedReservation?.status);
+    const reservationActive = reservationStatus === 'confirmed' || (
+      reservationStatus === 'held' && Number(storedReservation?.expiresAtMs || 0) > Date.now()
+    );
+    let reservation = reservationActive ? storedReservation : null;
     if (scheduledAtMs && !reservation) {
       const slot = slotSnap?.exists ? slotSnap.data() || {} : {};
       const capacity = Math.max(1, int(quote.slotCapacity || quote.metadata?.slotCapacity || company.bookingConfig?.defaultSlotCapacity || company.defaultSlotCapacity, 1));
@@ -271,7 +276,22 @@ exports.acceptMarketplaceQuote = onCall(callableOptions(), async (request) => {
       transaction.set(reservationRef, stamp(reservation), { merge: true });
     }
 
-    const invoice = invoiceSnap.exists ? { id: invoiceSnap.id, ...invoiceSnap.data() } : {
+    const existingInvoice = invoiceSnap.exists ? { id: invoiceSnap.id, ...invoiceSnap.data() } : null;
+    const reusableCheckout = Boolean(
+      existingInvoice?.paymentUrl &&
+      existingInvoice?.stripeSessionId &&
+      ['checkout_ready', 'processing'].includes(norm(existingInvoice.paymentStatus)) &&
+      (!scheduledAtMs || reservationActive)
+    );
+    const invoice = existingInvoice ? {
+      ...existingInvoice,
+      status: norm(existingInvoice.status) === 'paid' ? 'paid' : 'sent',
+      paymentStatus: reusableCheckout ? existingInvoice.paymentStatus : 'checkout_pending',
+      paymentUrl: reusableCheckout ? existingInvoice.paymentUrl : '',
+      stripeSessionId: reusableCheckout ? existingInvoice.stripeSessionId : '',
+      checkoutStatus: reusableCheckout ? existingInvoice.checkoutStatus : 'pending',
+      appointmentReservationId: reservation?.id || existingInvoice.appointmentReservationId || ''
+    } : {
       id: invoiceRef.id,
       invoiceNumber: invoiceNumber(quoteId),
       quoteId,
@@ -368,7 +388,7 @@ exports.acceptMarketplaceQuote = onCall(callableOptions(), async (request) => {
 
   try {
     const session = await createQuoteCheckout({ ...activation, user });
-    const patch = stamp({ stripeSessionId: session.id, paymentUrl: session.url || '', checkoutStatus: session.status || 'open', paymentStatus: 'checkout_ready' });
+    const patch = stamp({ stripeSessionId: session.id, paymentUrl: session.url || '', checkoutStatus: session.status || 'open', checkoutExpiresAtMs: Number(session.expires_at || 0) * 1000, paymentStatus: 'checkout_ready' });
     const batch = db.batch();
     batch.set(invoiceRef, patch, { merge: true });
     batch.set(quoteRef, patch, { merge: true });
@@ -435,10 +455,17 @@ exports.createMarketplaceInvoiceCheckout = onCall(callableOptions(), async (requ
   const invoice = { id: snap.id, ...snap.data() };
   if (!owns(invoice, user.uid)) throw new HttpsError('permission-denied', 'This invoice does not belong to your account.');
   if (['paid', 'void', 'uncollectible'].includes(norm(invoice.status))) throw new HttpsError('failed-precondition', 'This invoice cannot be paid.');
-  if (invoice.paymentUrl && invoice.stripeSessionId) return { invoiceId, checkoutUrl: invoice.paymentUrl, stripeSessionId: invoice.stripeSessionId, reused: true };
+  const reusableCheckout = Boolean(
+    invoice.paymentUrl &&
+    invoice.stripeSessionId &&
+    norm(invoice.checkoutStatus) !== 'expired' &&
+    !['expired', 'failed'].includes(norm(invoice.paymentStatus)) &&
+    (!invoice.checkoutExpiresAtMs || Number(invoice.checkoutExpiresAtMs) > Date.now())
+  );
+  if (reusableCheckout) return { invoiceId, checkoutUrl: invoice.paymentUrl, stripeSessionId: invoice.stripeSessionId, reused: true };
   const session = await createInvoiceCheckout(invoice, user);
   const batch = db.batch();
-  batch.set(ref, stamp({ paymentUrl: session.url || '', stripeSessionId: session.id, checkoutStatus: session.status || 'open', paymentStatus: 'checkout_ready' }), { merge: true });
+  batch.set(ref, stamp({ paymentUrl: session.url || '', stripeSessionId: session.id, checkoutStatus: session.status || 'open', checkoutExpiresAtMs: Number(session.expires_at || 0) * 1000, paymentStatus: 'checkout_ready' }), { merge: true });
   batch.set(db.doc(`stripe_sessions/${session.id}`), stamp({ id: session.id, providerSessionId: session.id, status: session.status || 'open', paymentStatus: session.payment_status || 'unpaid', mode: 'payment', checkoutUrl: session.url || '', invoiceId, quoteId: invoice.quoteId || '', subscriptionId: invoice.subscriptionId || '', customerId: user.uid, companyId: invoice.companyId || '', amountCents: cents(invoice.balanceDueCents || invoice.totalCents), currency: 'usd', expiresAtMs: Number(session.expires_at || 0) * 1000, createdAtMs: Date.now(), createdAt: FieldValue.serverTimestamp() }), { merge: true });
   await batch.commit();
   return { invoiceId, checkoutUrl: session.url || '', stripeSessionId: session.id, reused: false };
@@ -602,8 +629,8 @@ exports.releaseExpiredMarketplaceReservations = onSchedule({ schedule: 'every 15
       const reservation = freshSnap.data() || {};
       if (norm(reservation.status) !== 'held' || Number(reservation.expiresAtMs || 0) > Date.now()) return;
       await releaseReservation(transaction, docSnap.ref, reservation, 'checkout_expired');
-      if (reservation.invoiceId) transaction.set(db.doc(`invoices/${reservation.invoiceId}`), stamp({ status: 'void', paymentStatus: 'expired', voidReason: 'Checkout reservation expired' }), { merge: true });
-      if (reservation.quoteId) transaction.set(db.doc(`quotes/${reservation.quoteId}`), stamp({ paymentStatus: 'expired', checkoutStatus: 'expired', acceptanceExpiredAtMs: Date.now() }), { merge: true });
+      if (reservation.invoiceId) transaction.set(db.doc(`invoices/${reservation.invoiceId}`), stamp({ status: 'void', paymentStatus: 'expired', checkoutStatus: 'expired', paymentUrl: '', stripeSessionId: '', voidReason: 'Checkout reservation expired' }), { merge: true });
+      if (reservation.quoteId) transaction.set(db.doc(`quotes/${reservation.quoteId}`), stamp({ paymentStatus: 'expired', checkoutStatus: 'expired', paymentUrl: '', stripeSessionId: '', acceptanceExpiredAtMs: Date.now() }), { merge: true });
       if (reservation.orderId) transaction.set(db.doc(`jobs/${reservation.orderId}`), stamp({ paymentStatus: 'expired', status: 'cancelled', scheduleStatus: 'released' }), { merge: true });
     });
   }
