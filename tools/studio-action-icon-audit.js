@@ -7,7 +7,9 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const errors = [];
 const requiredFiles = [
+  '.github/workflows/design-system-visual-qa.yml',
   'public/assets/js/icons/icon-registry.js',
+  'public/assets/js/studio/studio-property-bridge.js',
   'public/assets/js/studio/studio-action-icon-config-v2.js',
   'public/assets/js/access-control.js',
   'public/assets/css/pages/studio-action-icon-config.css',
@@ -27,7 +29,9 @@ if (exists('public/assets/js/studio/studio-action-icon-config.js')) {
 }
 
 if (!errors.length) {
+  const workflow = read('.github/workflows/design-system-visual-qa.yml');
   const icons = read('public/assets/js/icons/icon-registry.js');
+  const bridge = read('public/assets/js/studio/studio-property-bridge.js');
   const config = read('public/assets/js/studio/studio-action-icon-config-v2.js');
   const access = read('public/assets/js/access-control.js');
   const css = read('public/assets/css/pages/studio-action-icon-config.css');
@@ -51,6 +55,19 @@ if (!errors.length) {
   }
 
   for (const marker of [
+    "STORAGE_KEY = 'evaraos-studio-visual-builder-v1'",
+    'bridgeFields',
+    'actionIntent',
+    'actionTarget',
+    'data-catalog-field-bridge',
+    'element.prepend(fragment)',
+    'MutationObserver(installPropertyBridges)',
+    "version: 'canonical-property-bridge-v1'"
+  ]) {
+    if (!bridge.includes(marker)) errors.push(`studio-property-bridge.js: missing ${marker}`);
+  }
+
+  for (const marker of [
     "ACTION_BINDING_VERSION = 'action-binding-v1'",
     'pagesForRole',
     'canAccessPageName',
@@ -68,10 +85,10 @@ if (!errors.length) {
     if (!config.includes(marker)) errors.push(`studio-action-icon-config-v2.js: missing ${marker}`);
   }
 
-  if (/localStorage\.setItem\s*\(/.test(config)) {
-    errors.push('studio-action-icon-config-v2.js: action/icon configuration must not create a second persistence writer');
+  if (/localStorage\.setItem\s*\(/.test(config) || /localStorage\.setItem\s*\(/.test(bridge)) {
+    errors.push('Studio action/icon layers must not create a second persistence writer');
   }
-  if (/innerHTML|outerHTML|eval\(|new Function/.test(config) || /innerHTML|outerHTML|eval\(|new Function/.test(icons)) {
+  if (/innerHTML|outerHTML|eval\(|new Function/.test(config) || /innerHTML|outerHTML|eval\(|new Function/.test(icons) || /innerHTML|outerHTML|eval\(|new Function/.test(bridge)) {
     errors.push('Studio action/icon runtime: unsafe DOM or code execution sink detected');
   }
   if (!config.includes("STORAGE_KEY = 'evaraos-studio-visual-builder-v1'")) {
@@ -92,14 +109,16 @@ if (!errors.length) {
     if (!css.includes(selector)) errors.push(`studio-action-icon-config.css: missing ${selector}`);
   }
 
-  if (!page.includes('/assets/css/pages/studio-action-icon-config.css?v=1')) {
-    errors.push('public/website-builder.html: action/icon stylesheet is missing');
-  }
-  if (!page.includes('/assets/js/studio/studio-action-icon-config-v2.js?v=2')) {
-    errors.push('public/website-builder.html: hardened action/icon runtime is missing');
-  }
-  if (page.includes('/assets/js/studio/studio-action-icon-config.js')) {
-    errors.push('public/website-builder.html: superseded action/icon runtime must not be loaded');
+  const builderImport = '/assets/js/studio/studio-visual-builder.js?v=2';
+  const bridgeImport = '/assets/js/studio/studio-property-bridge.js?v=1';
+  const inspectorImport = '/assets/js/studio/studio-component-inspector.js?v=1';
+  const actionIconImport = '/assets/js/studio/studio-action-icon-config-v2.js?v=2';
+  if (!page.includes('/assets/css/pages/studio-action-icon-config.css?v=1')) errors.push('public/website-builder.html: action/icon stylesheet is missing');
+  if (!page.includes(bridgeImport)) errors.push('public/website-builder.html: canonical property bridge is missing');
+  if (!page.includes(actionIconImport)) errors.push('public/website-builder.html: hardened action/icon runtime is missing');
+  if (page.includes('/assets/js/studio/studio-action-icon-config.js')) errors.push('public/website-builder.html: superseded action/icon runtime must not be loaded');
+  if (!(page.indexOf(builderImport) < page.indexOf(bridgeImport) && page.indexOf(bridgeImport) < page.indexOf(inspectorImport) && page.indexOf(inspectorImport) < page.indexOf(actionIconImport))) {
+    errors.push('public/website-builder.html: builder, property bridge, inspector, and action/icon load order is invalid');
   }
 
   for (const marker of [
@@ -114,6 +133,9 @@ if (!errors.length) {
   ]) {
     if (!test.includes(marker)) errors.push(`studio-action-icon.spec.mjs: missing ${marker} coverage`);
   }
+
+  if (!workflow.includes('node tools/studio-action-icon-audit.js')) errors.push('.github/workflows/design-system-visual-qa.yml: Studio action/icon audit is not wired');
+  if (!workflow.includes('specs/studio-interactions.spec.mjs specs/studio-action-icon.spec.mjs')) errors.push('.github/workflows/design-system-visual-qa.yml: both focused Studio suites must run together');
 }
 
 console.log(`EvaraOS Studio action/icon audit: ${requiredFiles.length} required assets checked.`);
@@ -122,4 +144,4 @@ if (errors.length) {
   errors.forEach((error) => console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('Studio action labels, semantic intents, permission-aware destinations, icon IDs, safe SVG rendering, and history boundaries passed.');
+console.log('Studio action labels, semantic intents, permission-aware destinations, icon IDs, canonical property bridges, safe SVG rendering, and history boundaries passed.');
