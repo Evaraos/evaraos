@@ -6,7 +6,7 @@ import {
   assertSucceeds
 } from '@firebase/rules-unit-testing';
 import { doc, setDoc } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getBytes } from 'firebase/storage';
+import { ref, uploadBytes, getBytes } from 'firebase/storage';
 
 const PROJECT_ID = 'evaraos-security-test';
 let env;
@@ -22,7 +22,7 @@ const profiles = Object.freeze({
 });
 
 function storageFor(profile) {
-  return getStorage(env.authenticatedContext(profile.uid).app);
+  return env.authenticatedContext(profile.uid).storage();
 }
 
 async function seedFirestore() {
