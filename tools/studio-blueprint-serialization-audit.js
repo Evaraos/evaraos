@@ -99,7 +99,7 @@ if (!errors.length) {
     'inspectBlueprintDocument',
     "authority: 'read-only-compatibility-projection'",
     'trustedPublishRequired: true',
-    'data-blueprint-schema'
+    'dataset.blueprintSchema'
   ]) {
     if (!bridge.includes(marker)) errors.push(`studio-blueprint-serialization.js: missing ${marker}`);
   }
