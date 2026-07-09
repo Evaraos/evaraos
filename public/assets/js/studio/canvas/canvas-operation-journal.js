@@ -5,7 +5,8 @@ import {
 import { replayOperations } from '../core/operation-protocol.js';
 
 const OPERATION_ENVELOPE_VERSION = 'studio-journal-operation-envelope-v1';
-const CONFIRMED_STATES = new Set(['server-confirmed', 'rejected']);
+const FINAL_STATES = new Set(['server-confirmed', 'rejected']);
+const REPLAY_EXCLUDED_STATES = new Set(['rejected']);
 
 function clone(value) {
   return cloneEvaraGraph(value);
@@ -18,8 +19,8 @@ function integer(value, fallback = -1) {
 
 function chronological(records = []) {
   return [...records].sort((left, right) => {
-    const sequence = Number(left.startSequence || 0) - Number(right.startSequence || 0);
-    return sequence || Date.parse(left.createdAtClient || 0) - Date.parse(right.createdAtClient || 0);
+    const revision = integer(left.expectedHeadRevision, 0) - integer(right.expectedHeadRevision, 0);
+    return revision || Date.parse(left.createdAtClient || 0) - Date.parse(right.createdAtClient || 0);
   });
 }
 
@@ -91,13 +92,19 @@ function validateTransactionRecord(record, {
     errors.push(`Expected revision chain ${expectedRevision}, transaction declares ${record.expectedHeadRevision}.`);
   }
   if (integer(record.acceptedHeadRevision) < expectedRevision) errors.push('acceptedHeadRevision is invalid.');
-  if (integer(record.startSequence) !== expectedSequence + 1) {
-    errors.push(`Expected sequence ${expectedSequence + 1}, transaction declares ${record.startSequence}.`);
-  }
-  if (integer(record.endSequence) !== integer(record.startSequence)) errors.push('Transaction sequence range must contain exactly one Journal sequence.');
   if (!record.createdAtClient || Number.isNaN(Date.parse(record.createdAtClient))) errors.push('createdAtClient is invalid.');
   if (!Array.isArray(record.operations) || !record.operations.length) errors.push('Accepted operations are required.');
   if (!Array.isArray(record.inverseOperations)) errors.push('inverseOperations must be an array.');
+
+  const width = Math.max(1, record.operations?.length || 0);
+  const startSequence = integer(record.startSequence);
+  const endSequence = integer(record.endSequence);
+  if (startSequence !== expectedSequence + 1) {
+    errors.push(`Expected sequence ${expectedSequence + 1}, transaction declares ${record.startSequence}.`);
+  }
+  if (endSequence !== startSequence + width - 1) {
+    errors.push(`Transaction sequence range must contain exactly ${width} accepted operation${width === 1 ? '' : 's'}.`);
+  }
 
   (record.operations || []).forEach((operation, index) => {
     errors.push(...validateOperationReference(operation, record, `operations[${index}]`));
@@ -115,22 +122,35 @@ function validateTransactionRecord(record, {
   return { valid: errors.length === 0, errors };
 }
 
-function diagnosticsFor(records, head, graph = null) {
-  const pending = records.filter((record) => !CONFIRMED_STATES.has(record.durabilityState));
-  const latest = records.at(-1) || null;
-  const transactionCount = records.length;
-  const pendingCount = pending.length;
+function syncStateFor(records = []) {
+  const pending = records.filter((record) => !FINAL_STATES.has(record.durabilityState));
+  if (pending.some((record) => record.durabilityState === 'recovery-required')) return 'recovery-required';
+  if (pending.some((record) => record.durabilityState === 'conflict')) return 'conflict';
+  if (pending.some((record) => record.durabilityState === 'offline')) return 'offline';
+  if (pending.some((record) => record.durabilityState === 'syncing')) return 'syncing';
+  return pending.length ? 'saved-locally' : (records.length ? 'server-confirmed' : 'saved-locally');
+}
+
+function diagnosticsFor(records, head, graph = null, checkpoint = null) {
+  const pending = records.filter((record) => !FINAL_STATES.has(record.durabilityState));
+  const replayed = records.filter((record) => !REPLAY_EXCLUDED_STATES.has(record.durabilityState));
+  const latest = replayed.at(-1) || null;
   return {
     graphId: head?.graphId || graph?.graphId || null,
-    graphRevision: graph?.revision ?? integer(latest?.acceptedHeadRevision, 0),
-    headRevision: integer(head?.revision, 0),
-    headSequence: integer(head?.sequence, 0),
+    graphRevision: graph?.revision ?? integer(latest?.acceptedHeadRevision, checkpoint?.revision || 0),
+    headRevision: integer(head?.revision, checkpoint?.revision || 0),
+    headSequence: integer(head?.sequence, checkpoint?.sequence || 0),
     lastTransactionId: head?.lastTransactionId || latest?.transactionId || null,
-    transactionCount,
-    pendingCount,
-    unsynchronizedChanges: pendingCount > 0,
-    syncState: pendingCount > 0 || transactionCount === 0 ? 'saved-locally' : 'server-confirmed',
-    integrityState: 'verified'
+    transactionCount: records.length,
+    rejectedCount: records.filter((record) => record.durabilityState === 'rejected').length,
+    pendingCount: pending.length,
+    unsynchronizedChanges: pending.length > 0,
+    syncState: syncStateFor(records),
+    integrityState: 'verified',
+    checkpointId: checkpoint?.checkpointId || null,
+    checkpointRevision: integer(checkpoint?.revision, 0),
+    checkpointSequence: integer(checkpoint?.sequence, 0),
+    trustedCheckpoint: Boolean(checkpoint?.trusted)
   };
 }
 
@@ -148,13 +168,22 @@ export class CanvasOperationJournal {
     const api = journalApi();
     await api.initialize();
     const records = chronological(await api.listOperationTransactions(this.#graphId));
-    let graph = clone(this.#baseGraph);
-    graph.revision = 0;
-    let expectedRevision = 0;
-    let expectedSequence = 0;
+    const checkpoint = api.latestTrustedCheckpoint ? await api.latestTrustedCheckpoint(this.#graphId) : null;
+    let graph = checkpoint?.graphSnapshot ? clone(checkpoint.graphSnapshot) : clone(this.#baseGraph);
+    let expectedRevision = checkpoint ? integer(checkpoint.revision, 0) : 0;
+    let expectedSequence = checkpoint ? integer(checkpoint.sequence, 0) : 0;
+    graph.revision = expectedRevision;
 
     try {
-      for (const record of records) {
+      assertValidEvaraGraph(graph);
+      if (graph.graphId !== this.#graphId) {
+        throw recoveryError('canvas-checkpoint-graph-id', `Trusted checkpoint graph ${graph.graphId} does not match ${this.#graphId}.`);
+      }
+      const replayable = records.filter((record) => (
+        !REPLAY_EXCLUDED_STATES.has(record.durabilityState)
+        && integer(record.acceptedHeadRevision, 0) > expectedRevision
+      ));
+      for (const record of replayable) {
         const validation = validateTransactionRecord(record, {
           graphId: this.#graphId,
           expectedRevision,
@@ -186,12 +215,13 @@ export class CanvasOperationJournal {
       const recovery = error?.name === 'CanvasJournalRecoveryError'
         ? error
         : recoveryError('canvas-operation-replay', `Canvas operation recovery failed: ${error?.message || error}`, error);
-      emitRecovery(recovery, this.#graphId, { expectedRevision, expectedSequence });
+      emitRecovery(recovery, this.#graphId, { expectedRevision, expectedSequence, checkpointId: checkpoint?.checkpointId || null });
       throw recovery;
     }
 
     const head = await api.getGraphHead(this.#graphId);
-    const latest = records.at(-1) || null;
+    const active = records.filter((record) => !REPLAY_EXCLUDED_STATES.has(record.durabilityState));
+    const latest = active.at(-1) || null;
     if (integer(head.revision, 0) !== graph.revision
       || integer(head.sequence, 0) !== expectedSequence
       || (latest && head.lastTransactionId !== latest.transactionId)) {
@@ -203,16 +233,18 @@ export class CanvasOperationJournal {
         journalRevision: integer(head.revision, 0),
         replayRevision: graph.revision,
         journalSequence: integer(head.sequence, 0),
-        replaySequence: expectedSequence
+        replaySequence: expectedSequence,
+        checkpointId: checkpoint?.checkpointId || null
       });
       throw error;
     }
 
-    const diagnostics = diagnosticsFor(records, head, graph);
+    const diagnostics = diagnosticsFor(records, head, graph, checkpoint);
     return {
       graph,
       transactions: records.map(clone),
       head: clone(head),
+      checkpoint: checkpoint ? clone(checkpoint) : null,
       diagnostics,
       durabilityState: diagnostics.syncState
     };
@@ -251,7 +283,8 @@ export class CanvasOperationJournal {
       affectedEdgeIds: affected.edgeIds,
       sourceDocumentId: options.sourceDocumentId || null,
       sourceFingerprint: options.sourceFingerprint || null,
-      createdAtClient: options.createdAtClient || new Date().toISOString()
+      createdAtClient: options.createdAtClient || new Date().toISOString(),
+      metadata: { source: 'canvas-session', compatibilityProjection: false }
     };
     const durable = await api.appendOperationTransaction(envelope);
     const diagnostics = await this.getDiagnostics();
@@ -269,8 +302,10 @@ export class CanvasOperationJournal {
   }
 
   async pendingTransactions() {
+    const api = journalApi();
+    if (api.listPendingOperationTransactions) return api.listPendingOperationTransactions(this.#graphId);
     const records = await this.listTransactions();
-    return records.filter((record) => !CONFIRMED_STATES.has(record.durabilityState)).map(clone);
+    return records.filter((record) => !FINAL_STATES.has(record.durabilityState)).map(clone);
   }
 
   async getHead() {
@@ -278,11 +313,13 @@ export class CanvasOperationJournal {
   }
 
   async getDiagnostics() {
-    const [records, head] = await Promise.all([
+    const api = journalApi();
+    const [records, head, checkpoint] = await Promise.all([
       this.listTransactions(),
-      this.getHead()
+      this.getHead(),
+      api.latestTrustedCheckpoint ? api.latestTrustedCheckpoint(this.#graphId) : Promise.resolve(null)
     ]);
-    return diagnosticsFor(records, head);
+    return diagnosticsFor(records, head, null, checkpoint);
   }
 }
 
