@@ -36,7 +36,6 @@ jobs:
     name: Validate production release
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    environment: production
     outputs:
       validated_sha: ${{ steps.source.outputs.sha }}
 
