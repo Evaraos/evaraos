@@ -1,9 +1,25 @@
 name: Backend Security Validation
 
 on:
+  push:
+    branches:
+      - "security/zero-trust-rbac-phase-1"
+    paths:
+      - "firebase/**"
+      - "firebase.json"
+      - "firestore.indexes.json"
+      - "functions/**"
+      - "tests/backend-security/**"
+      - "public/assets/js/access-control.js"
+      - "public/assets/js/route-guard.js"
+      - "public/assets/js/nav/nav-role-lockdown.js"
+      - "public/assets/js/studio/blueprint-drafts.js"
+      - "public/assets/js/studio/role-preview.js"
+      - ".github/workflows/backend-security.yml"
   pull_request:
     paths:
       - "firebase/**"
+      - "firebase.json"
       - "firestore.indexes.json"
       - "functions/**"
       - "tests/backend-security/**"
@@ -46,6 +62,8 @@ jobs:
           node --check functions/push-notifications.js
           node --check functions/stats-rebuild.js
           node --check functions/blueprint-security.js
+          node --check functions/marketplace-commerce-runtime.js
+          node --check functions/marketplace-commerce-read.js
 
       - name: Validate authorization client syntax
         run: |
