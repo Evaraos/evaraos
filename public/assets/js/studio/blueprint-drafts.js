@@ -1,78 +1,211 @@
+import { functions, httpsCallable, getSavedUserProfile } from '../firebase.js';
 import { getBlueprint } from './blueprint-registry.js';
 
-const DRAFT_KEY = 'evaraos-blueprint-drafts-v1';
-const LIVE_KEY = 'evaraos-blueprint-live-v1';
-const HISTORY_KEY = 'evaraos-blueprint-history-v1';
+const DRAFT_CACHE_KEY = 'evaraos-blueprint-draft-cache-v2';
+const COMPANY_SCOPE_KEY = 'evaraos-studio-company-id';
 
-function read(key) { try { return JSON.parse(localStorage.getItem(key) || '{}') || {}; } catch { return {}; } }
-function write(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} }
-function clone(value) { return JSON.parse(JSON.stringify(value || {})); }
-function now() { return new Date().toISOString(); }
+const saveDraftCall = httpsCallable(functions, 'saveBlueprintDraft');
+const publishCall = httpsCallable(functions, 'publishBlueprint');
+const rollbackCall = httpsCallable(functions, 'rollbackBlueprint');
+const getStateCall = httpsCallable(functions, 'getBlueprintState');
+
+function readCache() {
+  try {
+    return JSON.parse(localStorage.getItem(DRAFT_CACHE_KEY) || '{}') || {};
+  } catch {
+    return {};
+  }
+}
+
+function writeCache(value) {
+  try {
+    localStorage.setItem(DRAFT_CACHE_KEY, JSON.stringify(value || {}));
+  } catch {}
+}
+
+function clone(value) {
+  return JSON.parse(JSON.stringify(value || {}));
+}
+
+function now() {
+  return new Date().toISOString();
+}
+
+function companyScope(explicitCompanyId = '') {
+  const profile = getSavedUserProfile?.() || {};
+  return String(
+    explicitCompanyId ||
+    profile.companyId ||
+    localStorage.getItem(COMPANY_SCOPE_KEY) ||
+    ''
+  ).trim();
+}
+
+function cacheDraft(blueprint) {
+  const cache = readCache();
+  cache[blueprint.id] = clone(blueprint);
+  writeCache(cache);
+  return cache[blueprint.id];
+}
+
+function event(name, detail = {}) {
+  window.dispatchEvent(new CustomEvent(name, { detail }));
+}
+
+function statePayload(idOrRole, options = {}) {
+  const base = getBlueprint(idOrRole);
+  return {
+    blueprintId: base.id,
+    companyId: companyScope(options.companyId)
+  };
+}
+
+function errorMessage(error) {
+  return String(error?.message || error?.code || 'Blueprint request failed.');
+}
+
+export function setBlueprintCompanyScope(companyId = '') {
+  const value = String(companyId || '').trim();
+  if (value) localStorage.setItem(COMPANY_SCOPE_KEY, value);
+  else localStorage.removeItem(COMPANY_SCOPE_KEY);
+  return value;
+}
 
 export function getDraftBlueprint(idOrRole = 'customer') {
-  const drafts = read(DRAFT_KEY);
+  const cache = readCache();
   const base = getBlueprint(idOrRole);
-  return drafts[base.id] || { ...clone(base), draftVersion: 1, draftStatus: 'draft', updatedAt: now() };
+  return cache[base.id] || {
+    ...clone(base),
+    draftVersion: 0,
+    draftStatus: 'local_only',
+    syncStatus: 'not_synced',
+    updatedAt: now()
+  };
 }
 
-export function saveDraftBlueprint(idOrRole, patch = {}) {
-  const drafts = read(DRAFT_KEY);
+export async function saveDraftBlueprint(idOrRole, patch = {}, options = {}) {
   const current = getDraftBlueprint(idOrRole);
-  const next = { ...current, ...clone(patch), draftStatus: 'draft', updatedAt: now(), draftVersion: Number(current.draftVersion || 1) + 1 };
-  drafts[current.id] = next;
-  write(DRAFT_KEY, drafts);
-  window.dispatchEvent(new CustomEvent('evara:blueprint-draft-saved', { detail: { blueprint: next } }));
-  return next;
-}
+  const optimistic = cacheDraft({
+    ...current,
+    ...clone(patch),
+    id: current.id,
+    role: current.role,
+    draftStatus: 'draft',
+    syncStatus: 'syncing',
+    updatedAt: now()
+  });
 
-export function publishBlueprint(idOrRole = 'customer') {
-  const live = read(LIVE_KEY);
-  const history = read(HISTORY_KEY);
-  const draft = getDraftBlueprint(idOrRole);
-  const previous = live[draft.id];
-  if (previous) {
-    history[draft.id] = Array.isArray(history[draft.id]) ? history[draft.id] : [];
-    history[draft.id].unshift({ ...previous, archivedAt: now() });
-    history[draft.id] = history[draft.id].slice(0, 10);
+  event('evara:blueprint-draft-saving', { blueprint: optimistic });
+
+  try {
+    const response = await saveDraftCall({
+      ...statePayload(idOrRole, options),
+      blueprint: optimistic
+    });
+    const state = response?.data?.state || {};
+    const confirmed = cacheDraft({
+      ...(state.draft || optimistic),
+      draftVersion: Number(state.draftVersion || state.draft?.draftVersion || 0),
+      draftStatus: state.draftStatus || 'draft',
+      syncStatus: 'synced',
+      serverConfirmedAt: now()
+    });
+    event('evara:blueprint-draft-saved', { blueprint: confirmed, state });
+    return confirmed;
+  } catch (error) {
+    const failed = cacheDraft({
+      ...optimistic,
+      syncStatus: 'failed',
+      syncError: errorMessage(error)
+    });
+    event('evara:blueprint-draft-error', { blueprint: failed, error });
+    throw error;
   }
-  const published = { ...clone(draft), draftStatus: 'published', publishedAt: now(), liveVersion: Number(previous?.liveVersion || 0) + 1 };
-  live[draft.id] = published;
-  write(LIVE_KEY, live);
-  write(HISTORY_KEY, history);
-  window.dispatchEvent(new CustomEvent('evara:blueprint-published', { detail: { blueprint: published } }));
-  return published;
 }
 
-export function rollbackBlueprint(idOrRole = 'customer') {
-  const base = getBlueprint(idOrRole);
-  const live = read(LIVE_KEY);
-  const history = read(HISTORY_KEY);
-  const previous = Array.isArray(history[base.id]) ? history[base.id].shift() : null;
-  if (!previous) return null;
-  live[base.id] = { ...previous, rollbackAt: now() };
-  write(LIVE_KEY, live);
-  write(HISTORY_KEY, history);
-  window.dispatchEvent(new CustomEvent('evara:blueprint-rollback', { detail: { blueprint: live[base.id] } }));
-  return live[base.id];
+export async function publishBlueprint(idOrRole = 'customer', options = {}) {
+  const response = await publishCall(statePayload(idOrRole, options));
+  const state = response?.data?.state || {};
+  if (!state.live) throw new Error('The trusted publishing service returned no live blueprint.');
+
+  cacheDraft({
+    ...(state.draft || state.live),
+    draftVersion: Number(state.draftVersion || 0),
+    liveVersion: Number(state.liveVersion || 0),
+    draftStatus: state.draftStatus || 'published',
+    syncStatus: 'synced',
+    serverConfirmedAt: now()
+  });
+
+  event('evara:blueprint-published', { blueprint: state.live, state });
+  return state.live;
 }
 
-export function getLiveBlueprint(idOrRole = 'customer') {
-  const base = getBlueprint(idOrRole);
-  return read(LIVE_KEY)[base.id] || base;
+export async function rollbackBlueprint(idOrRole = 'customer', options = {}) {
+  const response = await rollbackCall(statePayload(idOrRole, options));
+  const state = response?.data?.state || {};
+  if (!state.live) throw new Error('The trusted rollback service returned no live blueprint.');
+
+  cacheDraft({
+    ...(state.draft || state.live),
+    draftVersion: Number(state.draftVersion || 0),
+    liveVersion: Number(state.liveVersion || 0),
+    draftStatus: state.draftStatus || 'published',
+    syncStatus: 'synced',
+    serverConfirmedAt: now()
+  });
+
+  event('evara:blueprint-rollback', { blueprint: state.live, state });
+  return state.live;
 }
 
-export function blueprintDraftSummary() {
-  const drafts = read(DRAFT_KEY);
-  const live = read(LIVE_KEY);
-  return Object.values(drafts).map((draft) => ({
-    id: draft.id,
-    name: draft.name,
-    role: draft.role,
-    draftVersion: draft.draftVersion || 1,
-    liveVersion: live[draft.id]?.liveVersion || 0,
-    status: draft.draftStatus || 'draft',
-    updatedAt: draft.updatedAt
+export async function syncBlueprintState(idOrRole = 'customer', options = {}) {
+  const response = await getStateCall(statePayload(idOrRole, options));
+  const state = response?.data?.state || {};
+
+  if (state.draft) {
+    cacheDraft({
+      ...state.draft,
+      draftVersion: Number(state.draftVersion || state.draft.draftVersion || 0),
+      liveVersion: Number(state.liveVersion || 0),
+      draftStatus: state.draftStatus || 'draft',
+      syncStatus: 'synced',
+      serverConfirmedAt: now()
+    });
+  }
+
+  event('evara:blueprint-state-synced', { state });
+  return state;
+}
+
+export async function getLiveBlueprint(idOrRole = 'customer', options = {}) {
+  const state = await syncBlueprintState(idOrRole, options);
+  return state.live || getBlueprint(idOrRole);
+}
+
+export async function blueprintDraftSummary(options = {}) {
+  const response = await getStateCall({ companyId: companyScope(options.companyId) });
+  const states = Array.isArray(response?.data?.states) ? response.data.states : [];
+  return states.map((state) => ({
+    id: state.blueprintId,
+    name: state.draft?.name || state.live?.name || `${state.blueprintId} Blueprint`,
+    role: state.draft?.role || state.live?.role || state.blueprintId,
+    draftVersion: Number(state.draftVersion || 0),
+    liveVersion: Number(state.liveVersion || 0),
+    status: state.draftStatus || 'none',
+    updatedAtMs: state.updatedAtMs || null,
+    publishedAtMs: state.publishedAtMs || null
   }));
 }
 
-window.EvaraBlueprintDrafts = { getDraft: getDraftBlueprint, saveDraft: saveDraftBlueprint, publish: publishBlueprint, rollback: rollbackBlueprint, getLive: getLiveBlueprint, summary: blueprintDraftSummary };
+window.EvaraBlueprintDrafts = {
+  getDraft: getDraftBlueprint,
+  saveDraft: saveDraftBlueprint,
+  publish: publishBlueprint,
+  rollback: rollbackBlueprint,
+  getLive: getLiveBlueprint,
+  sync: syncBlueprintState,
+  summary: blueprintDraftSummary,
+  setCompanyScope: setBlueprintCompanyScope,
+  authority: 'trusted-server'
+};
