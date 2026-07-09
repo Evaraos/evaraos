@@ -15,6 +15,7 @@ const requiredFiles = [
   'public/assets/js/studio/studio-auto-layout.js',
   'public/assets/css/pages/studio-component-catalog.css',
   'public/assets/css/pages/studio-auto-layout.css',
+  'public/assets/css/pages/studio-auto-layout-widths.css',
   'public/website-builder.html'
 ];
 
@@ -33,6 +34,7 @@ if (!errors.length) {
   const autoLayout = read('public/assets/js/studio/studio-auto-layout.js');
   const catalogCss = read('public/assets/css/pages/studio-component-catalog.css');
   const autoLayoutCss = read('public/assets/css/pages/studio-auto-layout.css');
+  const autoLayoutWidths = read('public/assets/css/pages/studio-auto-layout-widths.css');
   const studioPage = read('public/website-builder.html');
 
   if (!componentRegistry.includes("STUDIO_COMPONENT_VERSION = 'component-engine-v4'")) {
@@ -133,6 +135,9 @@ if (!errors.length) {
   if (!studioPage.includes('/assets/css/pages/studio-auto-layout.css?v=1')) {
     errors.push('public/website-builder.html: Auto Layout stylesheet is missing');
   }
+  if (!studioPage.includes('/assets/css/pages/studio-auto-layout-widths.css?v=1')) {
+    errors.push('public/website-builder.html: compatible Auto Layout width stylesheet is missing');
+  }
   if (!studioPage.includes('/assets/js/studio/studio-auto-layout.js?v=1')) {
     errors.push('public/website-builder.html: Auto Layout runtime is missing');
   }
@@ -143,6 +148,12 @@ if (!errors.length) {
     '@media (max-width: 720px)'
   ]) {
     if (!autoLayoutCss.includes(selector)) errors.push(`studio-auto-layout.css: missing ${selector}`);
+  }
+
+  for (const span of ['3', '4', '6', '8', '12']) {
+    if (!autoLayoutWidths.includes(`data-span="${span}"`)) {
+      errors.push(`studio-auto-layout-widths.css: missing explicit ${span}/12 width rule`);
+    }
   }
 
   for (const id of expectedComponents.filter((id) => !['glass-card', 'action-button', 'metric-card', 'map-block', 'image-block', 'dev-block'].includes(id))) {
