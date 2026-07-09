@@ -12,8 +12,10 @@
   <link rel="stylesheet" href="./assets/css/nav.css" />
   <link rel="stylesheet" href="./assets/css/dashboard.css" />
   <link rel="stylesheet" href="./assets/css/app-system.css" />
-<link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v1"></head>
-<body data-route-guard="private" class="dashboard-body app-loading">
+  <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v1" />
+  <link rel="stylesheet" href="/assets/css/design-system/marketplace.css?v=1" />
+</head>
+<body data-route-guard="private" class="dashboard-body marketplace-page marketplace-payouts-page app-loading">
   <div id="universalNavRoot"></div>
   <div class="page-aurora" aria-hidden="true"></div>
   <div class="page-grid-overlay" aria-hidden="true"></div>
@@ -85,12 +87,12 @@
       <section class="dashboard-grid-2">
         <section class="dashboard-panel glass-card">
           <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Payout Intelligence</p><h2>Summary</h2></div></div>
-          <div id="marketplacePayoutSummaryRoot" class="dashboard-list"><div class="item muted">Loading payout summary...</div></div>
+          <div id="marketplacePayoutSummaryRoot" class="dashboard-list" aria-live="polite"><div class="item muted">Loading payout summary...</div></div>
         </section>
 
         <section class="dashboard-panel glass-card">
           <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Split Intelligence</p><h2>Allocation Breakdown</h2></div></div>
-          <div id="marketplaceSplitRoot" class="dashboard-list"><div class="item muted">Loading split intelligence...</div></div>
+          <div id="marketplaceSplitRoot" class="dashboard-list" aria-live="polite"><div class="item muted">Loading split intelligence...</div></div>
         </section>
       </section>
 
@@ -102,7 +104,7 @@
           </div>
           <span class="dashboard-mini-badge">Realtime</span>
         </div>
-        <div id="marketplacePayoutRoot" class="dashboard-list"><div class="item muted">Loading marketplace payouts...</div></div>
+        <div id="marketplacePayoutRoot" class="dashboard-list" aria-live="polite"><div class="item muted">Loading marketplace payouts...</div></div>
       </section>
     </section>
   </main>
