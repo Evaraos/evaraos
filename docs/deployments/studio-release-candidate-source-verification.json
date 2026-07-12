@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "evara.source-verification.v1",
+  "status": "failed",
+  "sourceCommit": "48794f3e601704fe0605750693052666eb8fba75",
+  "workflowRunId": "29182635823",
+  "verifiedAt": "2026-07-12T06:25:52.734Z",
+  "gates": {
+    "app-check-audit": {
+      "exitCode": 0,
+      "passed": true
+    },
+    "trusted-journal-audit": {
+      "exitCode": 1,
+      "passed": false
+    },
+    "production-authority-audit": {
+      "exitCode": 1,
+      "passed": false
+    },
+    "canvas-audit": {
+      "exitCode": 1,
+      "passed": false
+    },
+    "master-visual-audit": {
+      "exitCode": 0,
+      "passed": true
+    },
+    "functions-install": {
+      "exitCode": 0,
+      "passed": true
+    },
+    "trusted-journal-tests": {
+      "exitCode": 0,
+      "passed": true
+    }
+  },
+  "secretsRequired": false
+}
