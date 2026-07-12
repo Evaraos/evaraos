@@ -50,8 +50,9 @@ jobs:
           REASON="verification-not-run"
           MISSING_FUNCTIONS=""
           EVIDENCE_DIR="$RUNNER_TEMP/trusted-studio-inventory"
-          INVENTORY_FILE="$EVIDENCE_DIR/firebase-functions-list.txt"
-          ERROR_FILE="$EVIDENCE_DIR/firebase-functions-list-error.txt"
+          INVENTORY_FILE="$EVIDENCE_DIR/firebase-functions-list.json"
+          RAW_ERROR_FILE="$EVIDENCE_DIR/firebase-functions-list-raw.txt"
+          DIAGNOSTIC_FILE="$EVIDENCE_DIR/firebase-functions-list-diagnostic.txt"
           PROOF_FILE="$EVIDENCE_DIR/trusted-studio-functions-verification.json"
           CREDENTIAL_FILE="$RUNNER_TEMP/firebase-service-account.json"
           mkdir -p "$EVIDENCE_DIR"
@@ -67,23 +68,66 @@ jobs:
           )
 
           cleanup() {
-            rm -f "$CREDENTIAL_FILE"
+            rm -f "$CREDENTIAL_FILE" "$RAW_ERROR_FILE" firebase-debug.log
           }
           trap cleanup EXIT
 
+          classify_failure() {
+            local input="$1"
+            if grep -Eqi 'permission.?denied|does not have permission|forbidden|HTTP Error: 403|status.?[:=].?403' "$input"; then
+              REASON="insufficient-service-account-permissions"
+            elif grep -Eqi 'API.*has not been used|API.*disabled|serviceusage.services.use|cloudfunctions.googleapis.com.*disabled' "$input"; then
+              REASON="cloud-functions-api-disabled"
+            elif grep -Eqi 'billing.*required|billing account|Blaze plan|upgrade.*billing' "$input"; then
+              REASON="billing-required"
+            elif grep -Eqi 'invalid_grant|unauthenticated|authentication.*failed|invalid credential|could not load.*credential' "$input"; then
+              REASON="service-account-authentication-failed"
+            elif grep -Eqi 'project.*not found|requested entity was not found|HTTP Error: 404|status.?[:=].?404' "$input"; then
+              REASON="project-not-found-or-inaccessible"
+            else
+              REASON="firebase-functions-list-failed"
+            fi
+          }
+
+          sanitize_diagnostic() {
+            local input="$1"
+            local output="$2"
+            node - "$input" "$output" <<'NODE'
+          const fs = require('fs');
+          const [input, output] = process.argv.slice(2);
+          const raw = fs.existsSync(input) ? fs.readFileSync(input, 'utf8') : '';
+          const selected = raw
+            .split(/\r?\n/)
+            .filter((line) => /error|permission|denied|forbidden|status|403|404|api|disabled|billing|unauth|credential|not found|cloudfunctions|serviceusage/i.test(line))
+            .slice(-40)
+            .map((line) => line
+              .replace(/Bearer\s+[A-Za-z0-9._~+\/-]+=*/gi, 'Bearer [REDACTED]')
+              .replace(/ya29\.[A-Za-z0-9._~+\/-]+/g, '[REDACTED_OAUTH_TOKEN]')
+              .replace(/eyJ[A-Za-z0-9._-]+\.[A-Za-z0-9._-]+\.[A-Za-z0-9._-]+/g, '[REDACTED_JWT]')
+              .replace(/-----BEGIN PRIVATE KEY-----[\s\S]*?-----END PRIVATE KEY-----/g, '[REDACTED_PRIVATE_KEY]')
+              .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.iam\.gserviceaccount\.com/g, '[REDACTED_SERVICE_ACCOUNT]'));
+          fs.writeFileSync(output, `${selected.join('\n') || 'No classified Firebase diagnostic line was emitted.'}\n`);
+          NODE
+          }
+
           if [ -z "${FIREBASE_SERVICE_ACCOUNT:-}" ]; then
             REASON="missing-service-account-secret"
-            printf '%s\n' "FIREBASE_SERVICE_ACCOUNT_EVARAOS_WEB is not configured." > "$ERROR_FILE"
+            printf '%s\n' "FIREBASE_SERVICE_ACCOUNT_EVARAOS_WEB is not configured." > "$DIAGNOSTIC_FILE"
           else
             printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$CREDENTIAL_FILE"
             chmod 600 "$CREDENTIAL_FILE"
 
             if ! node -e "const value=JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8')); if(value.project_id !== 'evaraos-web') process.exit(2);" "$CREDENTIAL_FILE"; then
               REASON="invalid-service-account-project"
-              printf '%s\n' "Service account project_id is not evaraos-web." > "$ERROR_FILE"
+              printf '%s\n' "Service account project_id is not evaraos-web." > "$DIAGNOSTIC_FILE"
             else
               export GOOGLE_APPLICATION_CREDENTIALS="$CREDENTIAL_FILE"
-              if firebase functions:list --project evaraos-web > "$INVENTORY_FILE" 2> "$ERROR_FILE"; then
+              set +e
+              firebase functions:list --project evaraos-web --json --debug > "$INVENTORY_FILE" 2> "$RAW_ERROR_FILE"
+              LIST_CODE=$?
+              set -e
+              if [ -f firebase-debug.log ]; then cat firebase-debug.log >> "$RAW_ERROR_FILE"; fi
+              if [ "$LIST_CODE" -eq 0 ]; then
                 for function_name in "${REQUIRED_FUNCTIONS[@]}"; do
                   if ! grep -q "$function_name" "$INVENTORY_FILE"; then
                     MISSING_FUNCTIONS="${MISSING_FUNCTIONS}${MISSING_FUNCTIONS:+,}${function_name}"
@@ -92,11 +136,14 @@ jobs:
                 if [ -z "$MISSING_FUNCTIONS" ]; then
                   STATUS="confirmed"
                   REASON="all-required-callables-present"
+                  printf '%s\n' "Firebase Functions inventory returned successfully and contains all eight required callables." > "$DIAGNOSTIC_FILE"
                 else
                   REASON="required-callables-missing"
+                  printf 'Firebase inventory is reachable but missing: %s\n' "$MISSING_FUNCTIONS" > "$DIAGNOSTIC_FILE"
                 fi
               else
-                REASON="firebase-functions-list-failed"
+                classify_failure "$RAW_ERROR_FILE"
+                sanitize_diagnostic "$RAW_ERROR_FILE" "$DIAGNOSTIC_FILE"
               fi
             fi
           fi
@@ -128,7 +175,7 @@ jobs:
             verificationSourceCommit: process.env.SOURCE_SHA,
             workflowRunId: process.env.WORKFLOW_RUN_ID,
             verifiedAt: new Date().toISOString(),
-            verification: 'firebase functions:list',
+            verification: 'firebase functions:list --json',
             requiredCallables: required,
             missingCallables: missing,
             secretsRecorded: false
@@ -137,8 +184,8 @@ jobs:
           NODE
 
           cp "$PROOF_FILE" "$GITHUB_WORKSPACE/trusted-studio-functions-verification.json"
-          if [ -f "$INVENTORY_FILE" ]; then cp "$INVENTORY_FILE" "$GITHUB_WORKSPACE/firebase-functions-list.txt"; fi
-          if [ -f "$ERROR_FILE" ]; then cp "$ERROR_FILE" "$GITHUB_WORKSPACE/firebase-functions-list-error.txt"; fi
+          cp "$DIAGNOSTIC_FILE" "$GITHUB_WORKSPACE/firebase-functions-list-diagnostic.txt"
+          if [ "$STATUS" = "confirmed" ]; then cp "$INVENTORY_FILE" "$GITHUB_WORKSPACE/firebase-functions-list.json"; fi
 
           git fetch origin evaraos
           git checkout -B deployment-verification origin/evaraos
@@ -167,8 +214,8 @@ jobs:
           name: trusted-studio-functions-inventory-${{ github.run_id }}
           path: |
             trusted-studio-functions-verification.json
-            firebase-functions-list.txt
-            firebase-functions-list-error.txt
+            firebase-functions-list.json
+            firebase-functions-list-diagnostic.txt
           if-no-files-found: warn
           retention-days: 30
 
@@ -195,10 +242,11 @@ jobs:
               'Evidence:',
               '- Repository proof: `docs/deployments/trusted-studio-functions-verification.json`',
               '- Workflow artifact: `trusted-studio-functions-inventory-' + process.env.WORKFLOW_RUN_ID + '`',
+              '- Sanitized diagnostic: `firebase-functions-list-diagnostic.txt`',
               '',
               status === 'confirmed'
                 ? 'All eight trusted Studio callables are present in Firebase inventory. Gate D may advance to 10/10 after proof review.'
-                : 'Gate D remains blocked. Use the recorded reason and artifact to repair credentials, Firebase access, or missing callables.'
+                : 'Gate D remains blocked. Use the classified reason and sanitized diagnostic to repair Firebase access or deployment.'
             ].join('\n');
             await github.rest.issues.createComment({
               owner: context.repo.owner,
