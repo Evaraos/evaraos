@@ -6,9 +6,24 @@ on:
     branches: [evaraos]
     paths:
       - '.github/workflows/verify-studio-release-candidate-once.yml'
+      - 'functions/studio-journal-core.js'
+      - 'functions/studio-journal-core.test.js'
+      - 'functions/studio-journal-service.js'
+      - 'functions/index-stats.js'
+      - 'functions/package.json'
+      - 'public/assets/js/firebase.js'
+      - 'public/assets/js/studio/**'
+      - 'public/assets/css/pages/studio-production-authority.css'
+      - 'public/website-builder.html'
+      - 'tools/studio-app-check-audit.js'
+      - 'tools/studio-trusted-journal-audit.js'
+      - 'tools/studio-production-authority-audit.js'
+      - 'tools/studio-canvas-sandbox-audit.js'
+      - 'tools/visual-qa-audit.js'
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: verify-studio-release-candidate-source
@@ -17,7 +32,6 @@ concurrency:
 jobs:
   verify:
     name: Verify Studio source gates
-    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'ops: verify Studio release candidate source'
     runs-on: ubuntu-latest
     timeout-minutes: 25
 
@@ -33,8 +47,8 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Run source gates and record proof
-        id: verify
+      - name: Run source gates
+        id: gates
         env:
           SOURCE_SHA: ${{ github.sha }}
           WORKFLOW_RUN_ID: ${{ github.run_id }}
@@ -43,6 +57,7 @@ jobs:
           set -uo pipefail
           mkdir -p "$RUNNER_TEMP/studio-verification"
           RESULT_FILE="$RUNNER_TEMP/studio-verification/results.tsv"
+          PROOF_FILE="$RUNNER_TEMP/studio-verification/studio-release-candidate-source-verification.json"
           : > "$RESULT_FILE"
 
           run_gate() {
@@ -65,7 +80,7 @@ jobs:
           run_gate master-visual-audit node tools/visual-qa-audit.js
 
           set +e
-          npm install --prefix functions --ignore-scripts --no-audit --no-fund >"$RUNNER_TEMP/studio-verification/functions-install.log" 2>&1
+          npm install --prefix functions --package-lock=false --ignore-scripts --no-audit --no-fund >"$RUNNER_TEMP/studio-verification/functions-install.log" 2>&1
           INSTALL_CODE=$?
           set -e
           printf 'functions-install\t%s\n' "$INSTALL_CODE" >> "$RESULT_FILE"
@@ -76,10 +91,7 @@ jobs:
             printf 'trusted-journal-tests\t99\n' >> "$RESULT_FILE"
           fi
 
-          export RESULT_FILE
-          git fetch origin evaraos
-          git checkout -B source-verification origin/evaraos
-          mkdir -p docs/deployments
+          export RESULT_FILE PROOF_FILE
           node <<'NODE'
           const fs = require('fs');
           const lines = fs.readFileSync(process.env.RESULT_FILE, 'utf8')
@@ -100,12 +112,32 @@ jobs:
             gates,
             secretsRequired: false
           };
-          fs.writeFileSync(
-            'docs/deployments/studio-release-candidate-source-verification.json',
-            `${JSON.stringify(proof, null, 2)}\n`
-          );
+          fs.writeFileSync(process.env.PROOF_FILE, `${JSON.stringify(proof, null, 2)}\n`);
           NODE
 
+          STATUS=$(node -e "const p=require(process.env.PROOF_FILE); process.stdout.write(p.status)")
+          cp "$PROOF_FILE" "$GITHUB_WORKSPACE/studio-release-candidate-source-verification.json"
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+          echo "proof_file=$PROOF_FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Upload source-verification proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: studio-source-verification-${{ github.run_id }}
+          path: studio-release-candidate-source-verification.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Commit proof to authoritative branch
+        if: always() && hashFiles('studio-release-candidate-source-verification.json') != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin evaraos
+          git checkout -B source-verification origin/evaraos
+          mkdir -p docs/deployments
+          cp "$GITHUB_WORKSPACE/studio-release-candidate-source-verification.json" docs/deployments/studio-release-candidate-source-verification.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/deployments/studio-release-candidate-source-verification.json
@@ -114,16 +146,45 @@ jobs:
             git push origin HEAD:evaraos
           fi
 
-          STATUS=$(node -e "const p=require('./docs/deployments/studio-release-candidate-source-verification.json'); process.stdout.write(p.status)")
-          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
-          if [ "$STATUS" != "confirmed" ]; then
-            echo "One or more Studio source gates failed."
+      - name: Update activation tracker
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          VERIFICATION_STATUS: ${{ steps.gates.outputs.status || 'unverified' }}
+          SOURCE_SHA: ${{ github.sha }}
+          WORKFLOW_RUN_ID: ${{ github.run_id }}
+        with:
+          script: |
+            const status = process.env.VERIFICATION_STATUS;
+            const icon = status === 'confirmed' ? '✅' : status === 'failed' ? '⛔' : '🟡';
+            const body = [
+              '## Gate B — Source verification result',
+              '',
+              `${icon} Status: **${status}**`,
+              `Source SHA: \`${process.env.SOURCE_SHA}\``,
+              `Workflow run: \`${process.env.WORKFLOW_RUN_ID}\``,
+              '',
+              'Evidence:',
+              '- Workflow artifact: `studio-source-verification-' + process.env.WORKFLOW_RUN_ID + '`',
+              '- Repository proof: `docs/deployments/studio-release-candidate-source-verification.json`',
+              '',
+              status === 'confirmed'
+                ? 'Gate B may advance after the repository proof is reviewed.'
+                : 'Gate B remains blocked. Review the uploaded gate logs and repair every failing source check.'
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: 29,
+              body
+            });
+
+      - name: Enforce source-verification result
+        if: always()
+        env:
+          VERIFICATION_STATUS: ${{ steps.gates.outputs.status || 'unverified' }}
+        run: |
+          if [ "$VERIFICATION_STATUS" != "confirmed" ]; then
+            echo "Studio source verification is not confirmed: $VERIFICATION_STATUS"
             exit 1
           fi
-
-      - name: Verification summary
-        if: always()
-        run: |
-          echo "Status: ${{ steps.verify.outputs.status || 'unverified' }}"
-          echo "Source: ${{ github.sha }}"
-          echo "Proof: docs/deployments/studio-release-candidate-source-verification.json"
