@@ -114,7 +114,7 @@ if (!errors.length) {
   if (!source.controls.includes("document.body.dataset.canvasWriterState !== 'writer'")) {
     errors.push('studio-document-controls.js: only the active writer may prepare a release');
   }
-  if (!source.controls.includes('Unsynchronized Canvas transaction') || !source.controls.includes('integrityState')) {
+  if (!source.controls.includes('snapshot.integrityState') || !/unsynchronized Canvas transaction/i.test(source.controls)) {
     errors.push('studio-document-controls.js: integrity and unsynchronized release gates are missing');
   }
 
