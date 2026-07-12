@@ -143,18 +143,22 @@ jobs:
 
       - name: Install Firebase Functions dependencies
         working-directory: functions
-        run: npm install --no-audit --no-fund
+        run: npm install --package-lock=false --ignore-scripts --no-audit --no-fund
 
       - name: Run trusted Studio Journal backend tests
         working-directory: functions
         run: npm run test:studio-journal
 
   authenticated-visual-qa:
-    name: Authenticated visual regression
+    name: Authenticated deployed-origin verification
     if: github.event_name == 'workflow_dispatch' && inputs.suite != 'static'
     needs: static-audit
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 50
+    environment: production
+    permissions:
+      contents: write
+      issues: write
     env:
       EVARA_QA_BASE_URL: ${{ secrets.EVARA_QA_BASE_URL }}
       EVARA_QA_MATRIX: ${{ inputs.matrix }}
@@ -178,20 +182,48 @@ jobs:
       EVARA_QA_CUSTOMER_PASSWORD: ${{ secrets.EVARA_QA_CUSTOMER_PASSWORD }}
       EVARA_QA_VENDOR_EMAIL: ${{ secrets.EVARA_QA_VENDOR_EMAIL }}
       EVARA_QA_VENDOR_PASSWORD: ${{ secrets.EVARA_QA_VENDOR_PASSWORD }}
-    defaults:
-      run:
-        working-directory: tests/visual
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
 
-      - name: Validate required QA secrets
+    steps:
+      - name: Check out verification source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify confirmed full-release proof
+        id: release
         shell: bash
         run: |
+          set -euo pipefail
+          PROOF_FILE="docs/deployments/firebase-production-release.json"
+          test -f "$PROOF_FILE"
+          STATUS=$(node -e "const p=require('./$PROOF_FILE'); process.stdout.write(String(p.status || ''))")
+          RELEASE_SHA=$(node -e "const p=require('./$PROOF_FILE'); process.stdout.write(String(p.validatedCommit || ''))")
+          COMPONENTS=$(node -e "const p=require('./$PROOF_FILE'); process.stdout.write([p.components?.hosting,p.components?.functions,p.components?.firestore,p.components?.storage].every(Boolean) ? 'all' : 'partial')")
+          if [ "$STATUS" != "confirmed" ] || [ "$COMPONENTS" != "all" ] || [ -z "$RELEASE_SHA" ]; then
+            echo "Authenticated production QA requires a confirmed full Firebase release proof."
+            exit 1
+          fi
+          git merge-base --is-ancestor "$RELEASE_SHA" HEAD
+          git diff --quiet "$RELEASE_SHA..HEAD" -- \
+            public/assets/js/firebase.js \
+            public/assets/js/studio \
+            public/assets/css/pages/studio-production-authority.css \
+            public/website-builder.html \
+            functions/studio-journal-core.js \
+            functions/studio-journal-service.js \
+            functions/index-stats.js \
+            tests/visual/specs/studio-canvas-session.spec.mjs
+          echo "sha=$RELEASE_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Validate required QA secrets and deployed origin
+        shell: bash
+        run: |
+          set -euo pipefail
           if [[ -z "$EVARA_QA_BASE_URL" || -z "$EVARA_QA_OWNER_EMAIL" || -z "$EVARA_QA_OWNER_PASSWORD" || -z "$EVARA_QA_APP_CHECK_DEBUG_TOKEN" ]]; then
             echo "EVARA_QA_BASE_URL, owner QA credentials, and EVARA_QA_APP_CHECK_DEBUG_TOKEN must be configured as encrypted repository secrets."
             exit 1
           fi
+          node -e "const u=new URL(process.env.EVARA_QA_BASE_URL); if(!['https:'].includes(u.protocol)) throw new Error('EVARA_QA_BASE_URL must use HTTPS'); if(['localhost','127.0.0.1'].includes(u.hostname)) throw new Error('Production QA cannot target localhost');"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -199,24 +231,68 @@ jobs:
           node-version: '22'
 
       - name: Install visual QA dependencies
+        working-directory: tests/visual
         run: npm install --no-audit --no-fund
 
       - name: Install browser engines
+        working-directory: tests/visual
         run: npx playwright install --with-deps chromium webkit
 
       - name: Run focused Studio validation
-        if: ${{ inputs.suite == 'studio' }}
+        id: studio_tests
+        if: inputs.suite == 'studio'
+        continue-on-error: true
+        working-directory: tests/visual
         run: npx playwright test specs/studio-interactions.spec.mjs specs/studio-action-icon.spec.mjs specs/studio-blueprint-serialization.spec.mjs specs/studio-blueprint-operations.spec.mjs specs/studio-canvas-session.spec.mjs --project=desktop-chromium
 
       - name: Run visual QA
-        if: ${{ inputs.suite == 'all' && !inputs.update_snapshots }}
+        id: all_tests
+        if: inputs.suite == 'all' && !inputs.update_snapshots
+        continue-on-error: true
+        working-directory: tests/visual
         run: npx playwright test
 
       - name: Generate candidate baselines
-        if: ${{ inputs.suite == 'all' && inputs.update_snapshots }}
+        id: baseline_tests
+        if: inputs.suite == 'all' && inputs.update_snapshots
+        continue-on-error: true
+        working-directory: tests/visual
         run: npx playwright test --update-snapshots
 
-      - name: Upload Playwright report
+      - name: Create authenticated runtime proof
+        if: always() && inputs.suite == 'studio'
+        env:
+          TEST_OUTCOME: ${{ steps.studio_tests.outcome || 'not-run' }}
+          RELEASE_SHA: ${{ steps.release.outputs.sha }}
+          WORKFLOW_RUN_ID: ${{ github.run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/studio-runtime-proof"
+          node <<'NODE'
+          const fs = require('fs');
+          const passed = process.env.TEST_OUTCOME === 'success';
+          const proof = {
+            schemaVersion: 'evara.studio-runtime-verification.v1',
+            status: passed ? 'confirmed' : 'failed',
+            releaseCommit: process.env.RELEASE_SHA || null,
+            workflowSourceCommit: process.env.GITHUB_SHA,
+            workflowRunId: process.env.WORKFLOW_RUN_ID,
+            verifiedAt: new Date().toISOString(),
+            suite: 'studio',
+            target: 'configured-https-deployed-origin',
+            appCheckDebugTokenUsed: true,
+            secretsRecorded: false,
+            playwrightOutcome: process.env.TEST_OUTCOME
+          };
+          fs.writeFileSync(
+            `${process.env.RUNNER_TEMP}/studio-runtime-proof/studio-authenticated-runtime-verification.json`,
+            `${JSON.stringify(proof, null, 2)}\n`
+          );
+          NODE
+          cp "$RUNNER_TEMP/studio-runtime-proof/studio-authenticated-runtime-verification.json" "$GITHUB_WORKSPACE/studio-authenticated-runtime-verification.json"
+
+      - name: Upload Playwright and runtime evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -224,14 +300,84 @@ jobs:
           path: |
             tests/visual/playwright-report
             tests/visual/test-results
+            studio-authenticated-runtime-verification.json
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 30
 
       - name: Upload candidate baselines
-        if: ${{ always() && inputs.suite == 'all' && inputs.update_snapshots }}
+        if: always() && inputs.suite == 'all' && inputs.update_snapshots
         uses: actions/upload-artifact@v4
         with:
           name: evaraos-visual-baseline-candidates-${{ github.run_id }}
           path: tests/visual/specs/__screenshots__
           if-no-files-found: warn
           retention-days: 14
+
+      - name: Commit authenticated runtime proof
+        if: always() && inputs.suite == 'studio' && hashFiles('studio-authenticated-runtime-verification.json') != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin evaraos
+          git checkout -B authenticated-runtime-proof origin/evaraos
+          mkdir -p docs/deployments
+          cp "$GITHUB_WORKSPACE/studio-authenticated-runtime-verification.json" docs/deployments/studio-authenticated-runtime-verification.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/deployments/studio-authenticated-runtime-verification.json
+          if ! git diff --cached --quiet; then
+            git commit -m "ops: record authenticated Studio runtime verification [skip ci]"
+            git push origin HEAD:evaraos
+          fi
+
+      - name: Update activation tracker
+        if: always() && inputs.suite == 'studio'
+        uses: actions/github-script@v7
+        env:
+          TEST_OUTCOME: ${{ steps.studio_tests.outcome || 'not-run' }}
+          RELEASE_SHA: ${{ steps.release.outputs.sha }}
+          WORKFLOW_RUN_ID: ${{ github.run_id }}
+        with:
+          script: |
+            const passed = process.env.TEST_OUTCOME === 'success';
+            const body = [
+              '## Gate F — Authenticated deployed-origin Studio QA',
+              '',
+              `${passed ? '✅' : '⛔'} Status: **${passed ? 'confirmed' : 'failed'}**`,
+              `Release commit: \`${process.env.RELEASE_SHA || 'unresolved'}\``,
+              `Workflow run: \`${process.env.WORKFLOW_RUN_ID}\``,
+              '',
+              'Evidence:',
+              '- `docs/deployments/studio-authenticated-runtime-verification.json`',
+              '- `evaraos-visual-qa-report-' + process.env.WORKFLOW_RUN_ID + '`',
+              '',
+              passed
+                ? 'Gate F may advance to 15/15 after artifact review.'
+                : 'Gate F remains blocked. Review Playwright failures and retain the failed proof.'
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: 29,
+              body
+            });
+
+      - name: Enforce authenticated verification result
+        if: always() && inputs.suite == 'studio'
+        env:
+          TEST_OUTCOME: ${{ steps.studio_tests.outcome || 'not-run' }}
+        run: |
+          if [ "$TEST_OUTCOME" != "success" ]; then
+            echo "Authenticated Studio verification failed: $TEST_OUTCOME"
+            exit 1
+          fi
+
+      - name: Enforce all-suite result
+        if: always() && inputs.suite == 'all' && !inputs.update_snapshots
+        env:
+          TEST_OUTCOME: ${{ steps.all_tests.outcome || 'not-run' }}
+        run: |
+          if [ "$TEST_OUTCOME" != "success" ]; then
+            echo "Authenticated visual QA failed: $TEST_OUTCOME"
+            exit 1
+          fi
