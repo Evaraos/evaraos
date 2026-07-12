@@ -1,9 +1,9 @@
 {
   "schemaVersion": "evara.source-verification.v1",
-  "status": "failed",
-  "sourceCommit": "a6e0deb2c7da9e6a7a437dc8a3aaa297c2561d54",
-  "workflowRunId": "29182927553",
-  "verifiedAt": "2026-07-12T06:37:33.928Z",
+  "status": "confirmed",
+  "sourceCommit": "096a00e35f474c9c8d6db49f131e9b27033b4360",
+  "workflowRunId": "29182941582",
+  "verifiedAt": "2026-07-12T06:38:10.100Z",
   "gates": {
     "app-check-audit": {
       "exitCode": 0,
@@ -18,8 +18,8 @@
       "passed": true
     },
     "canvas-audit": {
-      "exitCode": 1,
-      "passed": false
+      "exitCode": 0,
+      "passed": true
     },
     "master-visual-audit": {
       "exitCode": 0,
