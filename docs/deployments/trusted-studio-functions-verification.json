@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "evara.deployment-verification.v1",
+  "status": "unverified",
+  "reason": "firebase-functions-list-failed",
+  "projectId": "evaraos-web",
+  "region": "us-central1",
+  "scope": "trusted-studio-functions",
+  "verificationSourceCommit": "ec132efe2bcc5e8fda5ee17439c40045bd31396d",
+  "workflowRunId": "29183211258",
+  "verifiedAt": "2026-07-12T06:49:05.741Z",
+  "verification": "firebase functions:list",
+  "requiredCallables": [
+    "openStudioBranch",
+    "commitStudioTransaction",
+    "getStudioOperationRange",
+    "createStudioCheckpoint",
+    "restoreStudioCheckpoint",
+    "createStudioBranch",
+    "closeStudioSession",
+    "prepareStudioRelease"
+  ],
+  "missingCallables": [],
+  "secretsRecorded": false
+}
