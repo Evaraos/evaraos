@@ -117,15 +117,19 @@ jobs:
 
           STATUS=$(node -e "const p=require(process.env.PROOF_FILE); process.stdout.write(p.status)")
           cp "$PROOF_FILE" "$GITHUB_WORKSPACE/studio-release-candidate-source-verification.json"
+          mkdir -p "$GITHUB_WORKSPACE/studio-source-gate-logs"
+          cp "$RUNNER_TEMP/studio-verification"/*.log "$GITHUB_WORKSPACE/studio-source-gate-logs/" || true
+          cp "$RESULT_FILE" "$GITHUB_WORKSPACE/studio-source-gate-logs/results.tsv"
           echo "status=$STATUS" >> "$GITHUB_OUTPUT"
-          echo "proof_file=$PROOF_FILE" >> "$GITHUB_OUTPUT"
 
-      - name: Upload source-verification proof
+      - name: Upload source-verification evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: studio-source-verification-${{ github.run_id }}
-          path: studio-release-candidate-source-verification.json
+          path: |
+            studio-release-candidate-source-verification.json
+            studio-source-gate-logs
           if-no-files-found: error
           retention-days: 30
 
@@ -167,10 +171,11 @@ jobs:
               'Evidence:',
               '- Workflow artifact: `studio-source-verification-' + process.env.WORKFLOW_RUN_ID + '`',
               '- Repository proof: `docs/deployments/studio-release-candidate-source-verification.json`',
+              '- Detailed logs are included in the artifact under `studio-source-gate-logs/`.',
               '',
               status === 'confirmed'
                 ? 'Gate B may advance after the repository proof is reviewed.'
-                : 'Gate B remains blocked. Review the uploaded gate logs and repair every failing source check.'
+                : 'Gate B remains blocked. Repair every failing source check listed in the proof and logs.'
             ].join('\n');
             await github.rest.issues.createComment({
               owner: context.repo.owner,
