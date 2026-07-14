@@ -2,56 +2,175 @@
 <html lang="en" data-theme="adaptive" data-environment="light" data-theme-mode="image" data-appearance="adaptive-system">
 <head>
   <meta charset="UTF-8" />
-  <script src="/assets/js/adaptive-appearance-boot.js?v=1"></script><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <script src="/assets/js/adaptive-appearance-boot.js?v=1"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
+
   <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png" />
-  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/icon-192.png" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
   <meta name="theme-color" content="#eef5fb" />
-  <title>Dispatch Board • Evaraos Inc</title><style>
-    html.boot-pending body{margin:0;overflow-x:hidden}html.auth-pending body,body.auth-pending{opacity:0;pointer-events:none}body.dispatch-page{margin:0;min-height:100vh;background:transparent}body.app-loading #appRoot{visibility:hidden}body.app-ready #appRoot{visibility:visible}
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Evaraos" />
+  <meta name="application-name" content="Evaraos" />
+
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin />
+  <link rel="dns-prefetch" href="https://www.gstatic.com" />
+  <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+  <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com" />
+
+  <title>Dispatch Board • Evaraos Inc</title>
+  <style>
+    html.boot-pending body { margin: 0; overflow: hidden; touch-action: none; }
+    html.auth-pending body, body.auth-pending { opacity: 0; pointer-events: none; }
+    body.dispatch-page { margin: 0; min-height: 100vh; background: transparent; }
+    body.app-loading #appRoot { visibility: hidden; }
+    body.app-ready #appRoot { visibility: visible; }
   </style>
+
   <link rel="stylesheet" href="/assets/css/base.css?v=53" />
   <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v1" />
   <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v25-x-drawer" />
-  <link rel="stylesheet" href="/assets/css/dashboard.css?v=50" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css?v=51" />
   <link rel="stylesheet" href="/assets/css/app-system.css?v=50" />
-  <link rel="stylesheet" href="/assets/css/pages/dispatch.css?v=2" />
+  <link rel="stylesheet" href="/assets/css/pages/dispatch.css?v=3" />
 </head>
 <body class="dispatch-page marketplace-page auth-pending app-loading" data-route-guard="private">
+  <a class="dispatch-skip-link" href="#dispatchMain">Skip to dispatch board</a>
   <div id="universalNavRoot"></div>
   <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
+
   <div id="appRoot">
-    <div class="page-grid-overlay"></div>
-    <main class="dispatch-wrap">
-      <section class="dispatch-hero">
-        <article class="glass-card aurora-card active-glow beam-target">
+    <div class="page-grid-overlay" aria-hidden="true"></div>
+
+    <main class="dispatch-wrap" id="dispatchMain" tabindex="-1" aria-busy="true">
+      <section class="dispatch-hero" aria-labelledby="dispatchTitle">
+        <article class="glass-card aurora-card active-glow beam-target dispatch-hero-copy">
           <p class="dispatch-kicker">LIVE DISPATCH</p>
-          <h1 class="dispatch-title">Route jobs, crews, and field work.</h1>
-          <p class="dispatch-copy">Track new leads, claimed jobs, in-progress assignments, and completed work across companies and markets.</p>
+          <h1 class="dispatch-title" id="dispatchTitle">Route jobs, crews, and field work.</h1>
+          <p class="dispatch-copy">Review incoming jobs, coordinate claimed work, and move field execution forward from one focused operations board.</p>
+
+          <div class="dispatch-hero-actions" aria-label="Dispatch quick navigation">
+            <a href="/jobs.html" class="btn btn-theme-primary beam-target"><span data-evara-icon="jobs" aria-hidden="true"></span><span>Jobs</span></a>
+            <a href="/schedule.html" class="btn btn-theme-secondary beam-target"><span data-evara-icon="schedule" aria-hidden="true"></span><span>Schedule</span></a>
+            <a href="/field.html" class="btn btn-theme-secondary beam-target"><span data-evara-icon="field" aria-hidden="true"></span><span>Field</span></a>
+          </div>
         </article>
-        <aside class="glass-card aurora-card active-glow beam-target dispatch-stats">
-          <div class="dispatch-stat"><strong id="dispatchTotal">—</strong><span>Total records</span></div>
-          <div class="dispatch-stat"><strong id="dispatchOpen">—</strong><span>Open queue</span></div>
-          <div class="dispatch-stat"><strong id="dispatchActive">—</strong><span>Active work</span></div>
+
+        <aside class="glass-card aurora-card active-glow beam-target dispatch-command-status" aria-label="Dispatch status summary">
+          <div class="dispatch-connection-row">
+            <span class="dispatch-live-label"><span class="dispatch-live-dot" aria-hidden="true"></span><span id="dispatchConnectionLabel">Connecting</span></span>
+            <button id="dispatchRefresh" type="button" class="btn btn-theme-secondary beam-target">Refresh</button>
+          </div>
+
+          <div class="dispatch-stats" aria-label="Visible dispatch records">
+            <div class="dispatch-stat"><strong id="dispatchTotal" aria-live="polite">0</strong><span>Visible records</span></div>
+            <div class="dispatch-stat"><strong id="dispatchOpen" aria-live="polite">0</strong><span>New / review</span></div>
+            <div class="dispatch-stat"><strong id="dispatchClaimedTotal" aria-live="polite">0</strong><span>Claimed / scheduled</span></div>
+            <div class="dispatch-stat"><strong id="dispatchActive" aria-live="polite">0</strong><span>Active / complete</span></div>
+          </div>
+
+          <p class="dispatch-status-copy" id="dispatchStatusCopy" role="status" aria-live="polite" aria-atomic="true">Preparing the dispatch queue.</p>
         </aside>
       </section>
-      <section class="glass-card aurora-card active-glow beam-target dispatch-toolbar">
-        <input id="dispatchSearch" type="search" placeholder="Search customer, service, city, company..." />
-        <select id="dispatchCompanyFilter"><option value="all">All companies</option><option value="supreme-true-clean">Supreme True Clean</option><option value="oneofone-cleaning">OneofOne Cleaning</option><option value="evaraos">Evaraos Inc</option></select>
-        <button id="dispatchRefresh" type="button" class="btn btn-theme-secondary beam-target">Refresh</button>
+
+      <section class="glass-card aurora-card active-glow beam-target dispatch-toolbar" aria-label="Dispatch filters">
+        <div class="dispatch-control dispatch-search-control">
+          <label for="dispatchSearch">Search dispatch</label>
+          <div class="dispatch-input-shell input-shell">
+            <span data-evara-icon="search" aria-hidden="true"></span>
+            <input id="dispatchSearch" type="search" placeholder="Customer, service, city, company..." autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="dispatch-control">
+          <label for="dispatchCompanyFilter">Company</label>
+          <select id="dispatchCompanyFilter">
+            <option value="all">All companies</option>
+          </select>
+        </div>
+
+        <div class="dispatch-control">
+          <label for="dispatchStatusFilter">Workflow</label>
+          <select id="dispatchStatusFilter">
+            <option value="all">All workflow stages</option>
+            <option value="open">New / review</option>
+            <option value="claimed">Claimed / scheduled</option>
+            <option value="active">In progress</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+
+        <button id="dispatchClearFilters" type="button" class="btn btn-theme-secondary beam-target">Clear Filters</button>
       </section>
-      <section class="dispatch-board">
-        <div class="glass-card aurora-card active-glow beam-target dispatch-column"><h2>New / Review</h2><div id="dispatchNew" class="dispatch-list"><div class="empty-card">Loading queue...</div></div></div>
-        <div class="glass-card aurora-card active-glow beam-target dispatch-column"><h2>Claimed / Scheduled</h2><div id="dispatchClaimed" class="dispatch-list"><div class="empty-card">Loading claimed work...</div></div></div>
-        <div class="glass-card aurora-card active-glow beam-target dispatch-column"><h2>In Progress / Done</h2><div id="dispatchActiveList" class="dispatch-list"><div class="empty-card">Loading active work...</div></div></div>
+
+      <section class="dispatch-board-shell" aria-labelledby="dispatchBoardTitle">
+        <div class="dispatch-board-heading">
+          <div>
+            <p class="dispatch-kicker">OPERATIONS PIPELINE</p>
+            <h2 id="dispatchBoardTitle">Dispatch Board</h2>
+          </div>
+          <span id="dispatchVisibleSummary" class="dispatch-visible-summary" aria-live="polite">Loading records…</span>
+        </div>
+
+        <div class="dispatch-board" id="dispatchBoard">
+          <section class="glass-card aurora-card active-glow beam-target dispatch-column" aria-labelledby="dispatchNewTitle">
+            <header class="dispatch-column-head">
+              <div>
+                <span class="dispatch-column-step">01</span>
+                <h3 id="dispatchNewTitle">New / Review</h3>
+              </div>
+              <span class="dispatch-column-count" id="dispatchNewCount" aria-label="New and review record count">0</span>
+            </header>
+            <div id="dispatchNew" class="dispatch-list" aria-live="polite" aria-busy="true">
+              <div class="empty-card">Loading queue...</div>
+            </div>
+          </section>
+
+          <section class="glass-card aurora-card active-glow beam-target dispatch-column" aria-labelledby="dispatchClaimedTitle">
+            <header class="dispatch-column-head">
+              <div>
+                <span class="dispatch-column-step">02</span>
+                <h3 id="dispatchClaimedTitle">Claimed / Scheduled</h3>
+              </div>
+              <span class="dispatch-column-count" id="dispatchClaimedCount" aria-label="Claimed and scheduled record count">0</span>
+            </header>
+            <div id="dispatchClaimed" class="dispatch-list" aria-live="polite" aria-busy="true">
+              <div class="empty-card">Loading claimed work...</div>
+            </div>
+          </section>
+
+          <section class="glass-card aurora-card active-glow beam-target dispatch-column" aria-labelledby="dispatchActiveTitle">
+            <header class="dispatch-column-head">
+              <div>
+                <span class="dispatch-column-step">03</span>
+                <h3 id="dispatchActiveTitle">In Progress / Done</h3>
+              </div>
+              <span class="dispatch-column-count" id="dispatchActiveCount" aria-label="In progress and completed record count">0</span>
+            </header>
+            <div id="dispatchActiveList" class="dispatch-list" aria-live="polite" aria-busy="true">
+              <div class="empty-card">Loading active work...</div>
+            </div>
+          </section>
+        </div>
       </section>
     </main>
   </div>
+
   <script src="/assets/js/loader.js?v=36"></script>
-  <script type="module" src="/assets/js/firebase.js?v=36"></script><script type="module" src="/assets/js/route-guard.js?v=35"></script><script type="module" src="/assets/js/dispatch.js?v=1"></script>  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v1"></script>
+  <script type="module" src="/assets/js/firebase.js?v=36"></script>
+  <script type="module" src="/assets/js/route-guard.js?v=35"></script>
+  <script type="module" src="/assets/js/dispatch.js?v=2"></script>
+  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v1"></script>
   <script type="module" src="/assets/js/nav.js?v=nav-v25-x-drawer"></script>
 </body>
 </html>
