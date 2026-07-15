@@ -3,7 +3,7 @@ name: Backend Security Validation
 on:
   push:
     branches:
-      - "security/zero-trust-rbac-phase-1"
+      - "evaraos"
     paths:
       - "firebase/**"
       - "firebase.json"
@@ -48,6 +48,12 @@ jobs:
         with:
           node-version: 20
 
+      - name: Use Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
       - name: Install security test dependencies
         working-directory: tests/backend-security
         run: npm install --no-audit --no-fund
@@ -75,4 +81,16 @@ jobs:
 
       - name: Run Firebase rules emulator tests
         working-directory: tests/backend-security
-        run: npm test
+        shell: bash
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee security-test-output.log
+
+      - name: Preserve security test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-security-test-output
+          path: tests/backend-security/security-test-output.log
+          if-no-files-found: warn
+          retention-days: 7
