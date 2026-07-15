@@ -6,20 +6,16 @@ service firebase.storage {
       return request.auth != null;
     }
 
-    function currentUserExists() {
-      return signedIn() && firestore.exists(/databases/(default)/documents/users/$(request.auth.uid));
-    }
-
     function currentUserData() {
       return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data;
     }
 
     function userRole() {
-      return currentUserExists() ? currentUserData().role : null;
+      return currentUserData().role;
     }
 
     function userCompanyId() {
-      return currentUserExists() ? currentUserData().companyId : null;
+      return currentUserData().companyId;
     }
 
     function hasCompany(companyId) {
@@ -27,7 +23,7 @@ service firebase.storage {
     }
 
     function accountActive() {
-      return currentUserExists()
+      return signedIn()
         && currentUserData().status in ['active', 'approved']
         && currentUserData().approvalStatus == 'approved';
     }
@@ -95,26 +91,20 @@ service firebase.storage {
       return isPlatformAdmin() || sameCompany(companyId);
     }
 
-    function userExists(userId) {
-      return firestore.exists(/databases/(default)/documents/users/$(userId));
+    function targetUserData(userId) {
+      return firestore.get(/databases/(default)/documents/users/$(userId)).data;
     }
 
     function targetUserCompany(userId) {
-      return userExists(userId)
-        ? firestore.get(/databases/(default)/documents/users/$(userId)).data.companyId
-        : null;
+      return targetUserData(userId).companyId;
     }
 
-    function jobExists(jobId) {
-      return firestore.exists(/databases/(default)/documents/jobs/$(jobId));
-    }
-
-    function job(jobId) {
+    function jobData(jobId) {
       return firestore.get(/databases/(default)/documents/jobs/$(jobId)).data;
     }
 
     function assignedToJob(jobId) {
-      let data = job(jobId);
+      let data = jobData(jobId);
       return accountActive() && (
         (data.keys().hasAny(['assignedTo']) && data.assignedTo is list && request.auth.uid in data.assignedTo) ||
         (data.keys().hasAny(['assignedTeamIds']) && data.assignedTeamIds is list && request.auth.uid in data.assignedTeamIds) ||
@@ -125,42 +115,36 @@ service firebase.storage {
     }
 
     function customerOwnsJob(jobId) {
-      let data = job(jobId);
+      let data = jobData(jobId);
       return accountActive() && userRole() in ['customer', 'Customer', 'CUSTOMER'] && (
         (data.keys().hasAny(['customerUid']) && data.customerUid == request.auth.uid) ||
         (data.keys().hasAny(['customerId']) && data.customerId == request.auth.uid)
       );
     }
 
-    function registryExists(conversationId) {
-      return firestore.exists(/databases/(default)/documents/channels/_group_registry/messages/$(conversationId));
-    }
-
-    function registry(conversationId) {
+    function registryData(conversationId) {
       return firestore.get(/databases/(default)/documents/channels/_group_registry/messages/$(conversationId)).data;
     }
 
     function conversationMember(conversationId) {
-      let data = registry(conversationId);
-      return accountActive()
-        && registryExists(conversationId)
-        && (
-          isPlatformAdmin()
-          || (
-            data.kind in ['group_meta', 'direct_meta']
-            && (
-              (data.memberUids is list && request.auth.uid in data.memberUids)
-              || (data.adminUids is list && request.auth.uid in data.adminUids)
-            )
-            && (!hasCompany(data.companyId) || sameCompany(data.companyId))
+      let data = registryData(conversationId);
+      return accountActive() && (
+        isPlatformAdmin()
+        || (
+          data.kind in ['group_meta', 'direct_meta']
+          && (
+            (data.memberUids is list && request.auth.uid in data.memberUids)
+            || (data.adminUids is list && request.auth.uid in data.adminUids)
           )
-          || (
-            data.kind == 'role_meta'
-            && data.allowedRoles is list
-            && userRole() in data.allowedRoles
-            && sameCompany(data.companyId)
-          )
-        );
+          && (!hasCompany(data.companyId) || sameCompany(data.companyId))
+        )
+        || (
+          data.kind == 'role_meta'
+          && data.allowedRoles is list
+          && userRole() in data.allowedRoles
+          && sameCompany(data.companyId)
+        )
+      );
     }
 
     function isSafeImage() {
@@ -208,20 +192,19 @@ service firebase.storage {
     }
 
     match /jobs/{jobId}/{allFiles=**} {
-      allow read: if jobExists(jobId) && (
+      allow read: if accountActive() && (
         isPlatformAdmin()
         || customerOwnsJob(jobId)
-        || (sameCompany(job(jobId).companyId) && (isOperationsPlus() || assignedToJob(jobId)))
+        || (sameCompany(jobData(jobId).companyId) && (isOperationsPlus() || assignedToJob(jobId)))
       );
-      allow create, update: if jobExists(jobId)
-        && isStaff()
-        && sameCompanyOrPlatform(job(jobId).companyId)
+      allow create, update: if isStaff()
+        && sameCompanyOrPlatform(jobData(jobId).companyId)
         && (isOperationsPlus() || assignedToJob(jobId))
         && isSafeImage()
         && ownerMetadataMatches();
-      allow delete: if jobExists(jobId) && (
+      allow delete: if accountActive() && (
         isPlatformAdmin()
-        || (isOperationsPlus() && sameCompany(job(jobId).companyId))
+        || (isOperationsPlus() && sameCompany(jobData(jobId).companyId))
         || (assignedToJob(jobId) && resource.metadata.ownerUid == request.auth.uid)
       );
     }
@@ -260,7 +243,6 @@ service firebase.storage {
         request.auth.uid == applicationId
         || isPlatformAdmin()
         || (isOperationsPlus()
-          && firestore.exists(/databases/(default)/documents/staff_applications/$(applicationId))
           && sameCompany(firestore.get(/databases/(default)/documents/staff_applications/$(applicationId)).data.companyId))
       );
       allow create, update: if signedIn()
