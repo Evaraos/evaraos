@@ -186,10 +186,10 @@ if (!errors.length) {
     }
   }
 
-  const journalModelImport = '/assets/js/studio/studio-document-model.js?v=2';
-  const journalControlsImport = '/assets/js/studio/studio-document-controls.js?v=2';
-  const builderImport = '/assets/js/studio/studio-visual-builder.js?v=2';
-  const inspectorImport = '/assets/js/studio/studio-component-inspector.js?v=1';
+  const journalModelImport = '/assets/js/studio/studio-document-model.js';
+  const journalControlsImport = '/assets/js/studio/studio-document-controls.js';
+  const builderImport = '/assets/js/studio/studio-visual-builder.js';
+  const inspectorImport = '/assets/js/studio/studio-component-inspector.js';
   if (!studioPage.includes('/assets/css/pages/studio-component-catalog.css?v=1')) {
     errors.push('public/website-builder.html: expanded catalog preview stylesheet is missing');
   }
