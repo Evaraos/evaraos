@@ -7,10 +7,6 @@ on:
         description: Type DEPLOY TRUSTED STUDIO FUNCTIONS
         required: true
         type: string
-  push:
-    branches: [evaraos]
-    paths:
-      - '.github/workflows/deploy-trusted-studio-functions-once.yml'
 
 permissions:
   contents: write
@@ -23,7 +19,6 @@ concurrency:
 jobs:
   validate:
     name: Validate trusted Studio Functions
-    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'deploy: run trusted Studio Functions production release'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     outputs:
