@@ -1,0 +1,62 @@
+name: Apply Manual Trusted Studio Deployment Fix
+
+on:
+  push:
+    branches:
+      - ci/manual-only-trusted-studio-deploy
+    paths:
+      - '.github/workflows/apply-manual-trusted-studio-deploy-fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repair branch
+        uses: actions/checkout@v4
+        with:
+          ref: ci/manual-only-trusted-studio-deploy
+          fetch-depth: 0
+
+      - name: Make production deployment manual-only
+        shell: python
+        run: |
+          from pathlib import Path
+
+          target = Path('.github/workflows/deploy-trusted-studio-functions-once.yml')
+          helper = Path('.github/workflows/apply-manual-trusted-studio-deploy-fix.yml')
+          text = target.read_text(encoding='utf-8')
+
+          push_block = """  push:
+            branches: [evaraos]
+            paths:
+              - '.github/workflows/deploy-trusted-studio-functions-once.yml'
+          """
+          conditional = "    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'deploy: run trusted Studio Functions production release'\n"
+
+          if push_block not in text:
+              raise SystemExit('Expected automatic push trigger was not found.')
+          if conditional not in text:
+              raise SystemExit('Expected push-only job condition was not found.')
+
+          text = text.replace(push_block, '', 1).replace(conditional, '', 1)
+          target.write_text(text, encoding='utf-8')
+          helper.unlink()
+
+          updated = target.read_text(encoding='utf-8')
+          assert 'workflow_dispatch:' in updated
+          assert '  push:' not in updated
+          assert 'github.event.head_commit.message' not in updated
+          assert 'DEPLOY TRUSTED STUDIO FUNCTIONS' in updated
+
+      - name: Commit isolated workflow repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/workflows/deploy-trusted-studio-functions-once.yml .github/workflows/apply-manual-trusted-studio-deploy-fix.yml
+          git commit -m "ci: make trusted Studio production deployment manual-only"
+          git push origin HEAD:ci/manual-only-trusted-studio-deploy
