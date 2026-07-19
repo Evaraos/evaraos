@@ -24,31 +24,34 @@ jobs:
       - name: Make production deployment manual-only
         shell: python
         run: |
+          import re
           from pathlib import Path
 
           target = Path('.github/workflows/deploy-trusted-studio-functions-once.yml')
           helper = Path('.github/workflows/apply-manual-trusted-studio-deploy-fix.yml')
           text = target.read_text(encoding='utf-8')
 
-          push_block = """  push:
-            branches: [evaraos]
-            paths:
-              - '.github/workflows/deploy-trusted-studio-functions-once.yml'
-          """
+          trigger_pattern = re.compile(
+              r"(?m)^  push:\n"
+              r"    branches: \[evaraos\]\n"
+              r"    paths:\n"
+              r"      - '\.github/workflows/deploy-trusted-studio-functions-once\.yml'\n"
+          )
           conditional = "    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'deploy: run trusted Studio Functions production release'\n"
 
-          if push_block not in text:
-              raise SystemExit('Expected automatic push trigger was not found.')
+          text, trigger_count = trigger_pattern.subn('', text, count=1)
+          if trigger_count != 1:
+              raise SystemExit(f'Expected one automatic push trigger, found {trigger_count}.')
           if conditional not in text:
               raise SystemExit('Expected push-only job condition was not found.')
 
-          text = text.replace(push_block, '', 1).replace(conditional, '', 1)
+          text = text.replace(conditional, '', 1)
           target.write_text(text, encoding='utf-8')
           helper.unlink()
 
           updated = target.read_text(encoding='utf-8')
           assert 'workflow_dispatch:' in updated
-          assert '  push:' not in updated
+          assert '\n  push:\n' not in updated
           assert 'github.event.head_commit.message' not in updated
           assert 'DEPLOY TRUSTED STUDIO FUNCTIONS' in updated
 
