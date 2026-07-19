@@ -1,0 +1,56 @@
+name: Apply Studio Audit Repair
+
+on:
+  push:
+    branches:
+      - ci/studio-audit-repair
+    paths:
+      - '.github/workflows/apply-studio-audit-repair.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repair branch
+        uses: actions/checkout@v4
+        with:
+          ref: ci/studio-audit-repair
+
+      - name: Make Studio import audit cache-version agnostic
+        shell: python
+        run: |
+          from pathlib import Path
+
+          audit = Path('tools/studio-component-catalog-audit.js')
+          text = audit.read_text(encoding='utf-8')
+          replacements = {
+              "const journalModelImport = '/assets/js/studio/studio-document-model.js?v=2';": "const journalModelImport = '/assets/js/studio/studio-document-model.js';",
+              "const journalControlsImport = '/assets/js/studio/studio-document-controls.js?v=2';": "const journalControlsImport = '/assets/js/studio/studio-document-controls.js';",
+              "const builderImport = '/assets/js/studio/studio-visual-builder.js?v=2';": "const builderImport = '/assets/js/studio/studio-visual-builder.js';",
+              "const inspectorImport = '/assets/js/studio/studio-component-inspector.js?v=1';": "const inspectorImport = '/assets/js/studio/studio-component-inspector.js';",
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'Expected audit marker not found: {old}')
+              text = text.replace(old, new, 1)
+          audit.write_text(text, encoding='utf-8')
+
+          for temporary in (
+              Path('.github/workflows/studio-component-audit-diagnostic.yml'),
+              Path('.github/workflows/apply-studio-audit-repair.yml'),
+          ):
+              temporary.unlink(missing_ok=True)
+
+      - name: Commit focused repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'ci: make Studio import audit version agnostic'
+          git push origin HEAD:ci/studio-audit-repair
