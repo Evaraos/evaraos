@@ -1,4 +1,4 @@
-name: Apply Manual Trusted Studio Deployment Fix
+name: Prepare Manual Trusted Studio Deployment Fix
 
 on:
   pull_request:
@@ -9,10 +9,10 @@ on:
       - '.github/workflows/apply-manual-trusted-studio-deploy-fix.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  apply:
+  prepare:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repair branch
@@ -21,15 +21,16 @@ jobs:
           ref: ci/manual-only-trusted-studio-deploy
           fetch-depth: 0
 
-      - name: Make production deployment manual-only
+      - name: Prepare production deployment workflow repair
         shell: python
         run: |
           import re
           from pathlib import Path
 
-          target = Path('.github/workflows/deploy-trusted-studio-functions-once.yml')
-          helper = Path('.github/workflows/apply-manual-trusted-studio-deploy-fix.yml')
-          text = target.read_text(encoding='utf-8')
+          source = Path('.github/workflows/deploy-trusted-studio-functions-once.yml')
+          output_dir = Path('ci-output')
+          output_dir.mkdir(exist_ok=True)
+          text = source.read_text(encoding='utf-8')
 
           trigger_pattern = re.compile(
               r"(?m)^  push:\n"
@@ -46,21 +47,30 @@ jobs:
               raise SystemExit('Expected push-only job condition was not found.')
 
           text = text.replace(conditional, '', 1)
-          target.write_text(text, encoding='utf-8')
-          helper.unlink()
+          repaired = output_dir / 'deploy-trusted-studio-functions-once.yml'
+          repaired.write_text(text, encoding='utf-8')
 
-          updated = target.read_text(encoding='utf-8')
+          updated = repaired.read_text(encoding='utf-8')
           assert 'workflow_dispatch:' in updated
           assert '\n  push:\n' not in updated
           assert 'github.event.head_commit.message' not in updated
           assert 'DEPLOY TRUSTED STUDIO FUNCTIONS' in updated
 
-      - name: Commit isolated workflow repair
+      - name: Capture complete branch inventory
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .github/workflows/deploy-trusted-studio-functions-once.yml .github/workflows/apply-manual-trusted-studio-deploy-fix.yml
-          git commit -m "ci: make trusted Studio production deployment manual-only"
-          git push origin HEAD:ci/manual-only-trusted-studio-deploy
+          git for-each-ref --format='%(refname:short)' refs/remotes/origin \
+            | sed 's#^origin/##' \
+            | grep -v '^HEAD$' \
+            | sort -u \
+            > ci-output/branch-inventory.txt
+          cat ci-output/branch-inventory.txt
+
+      - name: Upload reviewed repair and branch inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: trusted-studio-manual-only-repair-${{ github.run_id }}
+          path: ci-output
+          if-no-files-found: error
+          retention-days: 2
