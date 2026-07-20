@@ -6,7 +6,7 @@
 .dashboard-body {
   --dashboard-content-max: 86.25rem;
   --dashboard-sidebar-width: 20rem;
-  --dashboard-top-offset: 6.5rem;
+  --dashboard-top-offset: var(--eva-page-top-space);
   --dashboard-shell-gap: var(--space-5);
   --dashboard-section-gap: var(--space-5);
   --dashboard-panel-padding: var(--space-6);
@@ -307,7 +307,7 @@
 
   .dashboard-shell {
     width: min(calc(100% - var(--space-4)), 100%);
-    margin-top: 6.125rem;
+    margin-top: var(--eva-page-top-space-compact);
   }
 
   .dashboard-sidebar-inner,

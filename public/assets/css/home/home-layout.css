@@ -5,7 +5,7 @@
 .home-shell {
   width: min(1280px, calc(100% - 24px));
   margin: 0 auto 72px;
-  padding-top: max(132px, var(--eva-page-top-space, 116px));
+  padding-top: var(--eva-page-top-space);
   padding-bottom: 28px;
   display: grid;
   gap: 22px;
@@ -151,7 +151,7 @@
   .home-shell {
     width: min(calc(100% - 16px), 100%);
     margin-bottom: 72px;
-    padding-top: max(112px, calc(var(--eva-page-nav-clearance, 86px) + 26px));
+    padding-top: var(--eva-page-top-space-compact);
     padding-bottom: calc(132px + env(safe-area-inset-bottom));
   }
 

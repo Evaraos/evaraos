@@ -8,7 +8,7 @@
 
 :root {
   --workflow-content-max: 77.5rem;
-  --workflow-shell-top: 7.25rem;
+  --workflow-shell-top: var(--eva-page-top-space);
   --workflow-shell-bottom: 4.5rem;
   --workflow-section-gap: var(--space-6);
   --workflow-panel-padding: clamp(var(--space-6), 4vw, var(--space-10));
@@ -817,7 +817,7 @@
 
 @media (max-width: 42.5rem) {
   :root {
-    --workflow-shell-top: 5.75rem;
+    --workflow-shell-top: var(--eva-page-top-space-compact);
     --workflow-shell-bottom: 2rem;
     --workflow-section-gap: var(--space-4);
     --workflow-panel-padding: var(--space-5);

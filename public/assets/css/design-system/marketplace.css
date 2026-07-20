@@ -10,7 +10,7 @@
 
 :root {
   --marketplace-content-max: 82.5rem;
-  --marketplace-shell-top: 7.5rem;
+  --marketplace-shell-top: var(--eva-page-top-space);
   --marketplace-shell-bottom: 4.5rem;
   --marketplace-section-gap: var(--space-5);
   --marketplace-panel-padding: clamp(var(--space-5), 3.5vw, var(--space-8));
@@ -781,7 +781,7 @@ body.marketplace-page .empty-card,
 
 @media (max-width: 50rem) {
   :root {
-    --marketplace-shell-top: 6rem;
+    --marketplace-shell-top: var(--eva-page-top-space-compact);
     --marketplace-shell-bottom: 2.5rem;
     --marketplace-section-gap: var(--space-4);
     --marketplace-panel-padding: var(--space-5);

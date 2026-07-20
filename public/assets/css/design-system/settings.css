@@ -9,7 +9,7 @@
 
 :root {
   --settings-content-max: 73.75rem;
-  --settings-shell-top: 7.25rem;
+  --settings-shell-top: var(--eva-page-top-space);
   --settings-shell-bottom: 5.75rem;
   --settings-section-gap: var(--space-5);
   --settings-panel-padding: clamp(var(--space-5), 3.5vw, var(--space-8));
@@ -780,7 +780,7 @@
 
 @media (max-width: 42.5rem) {
   :root {
-    --settings-shell-top: 5.75rem;
+    --settings-shell-top: var(--eva-page-top-space-compact);
     --settings-shell-bottom: 2rem;
     --settings-section-gap: var(--space-4);
     --settings-panel-padding: var(--space-5);

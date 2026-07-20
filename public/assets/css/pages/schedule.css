@@ -435,7 +435,7 @@
 
 .schedule-agenda {
   position: sticky;
-  top: calc(env(safe-area-inset-top) + 6.5rem);
+  top: var(--eva-page-sticky-top);
   display: grid;
   gap: var(--space-4);
 }
@@ -659,7 +659,7 @@
 @media (max-width: 50rem) {
   .schedule-wrap {
     width: calc(100% - 16px);
-    padding-top: 6rem;
+    padding-top: var(--eva-page-top-space-compact);
   }
 
   .schedule-hero-copy,
