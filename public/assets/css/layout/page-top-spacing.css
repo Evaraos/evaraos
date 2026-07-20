@@ -1,0 +1,107 @@
+/* EVARAOS PAGE TOP SPACING
+   One source of truth for the space below the universal navigation.
+   This layer intentionally overrides legacy inline page-shell values while
+   preserving section spacing, scroll margins, and bottom safe-area padding.
+*/
+
+:root {
+  --eva-page-top-space: calc(env(safe-area-inset-top, 0px) + 84px);
+  --eva-page-top-space-compact: calc(env(safe-area-inset-top, 0px) + 74px);
+  --eva-page-sticky-top: var(--eva-page-top-space);
+}
+
+/* Padding-based application shells. */
+:where(
+  .home-shell,
+  .page-shell,
+  .jobs-page-shell,
+  .qa2-shell,
+  .studio-shell,
+  .customer-page-wrap,
+  .notifications-shell,
+  .eva-marketplace-shell,
+  .schedule-wrap,
+  .dispatch-wrap,
+  .field-wrap,
+  .eva-settings-shell,
+  .settings-shell,
+  .settings-hub-shell,
+  .workspace-shell,
+  .legacy-page-wrap,
+  .ledger-wrap,
+  .onboarding-wrap,
+  .map-wrap
+) {
+  padding-top: var(--eva-page-top-space) !important;
+}
+
+/* Compact single-file command-center pages use a generic main.wrap shell. */
+body[data-route-guard="private"] #appRoot > main.wrap {
+  padding-top: var(--eva-page-top-space) !important;
+}
+
+/* Margin-based shells. */
+:where(
+  .dashboard-shell,
+  .login-shell,
+  .signup-shell,
+  .reset-shell,
+  .eva-workflow-shell,
+  .applications-wrap,
+  .staff-application-page .application-wrap
+) {
+  margin-top: var(--eva-page-top-space) !important;
+}
+
+/* Keep sticky page navigation aligned with the normalized content start. */
+.jobs-sidebar-inner,
+.schedule-agenda {
+  top: var(--eva-page-sticky-top) !important;
+}
+
+@media (max-width: 760px) {
+  :where(
+    .home-shell,
+    .page-shell,
+    .jobs-page-shell,
+    .qa2-shell,
+    .studio-shell,
+    .customer-page-wrap,
+    .notifications-shell,
+    .eva-marketplace-shell,
+    .schedule-wrap,
+    .dispatch-wrap,
+    .field-wrap,
+    .eva-settings-shell,
+    .settings-shell,
+    .settings-hub-shell,
+    .workspace-shell,
+    .legacy-page-wrap,
+    .ledger-wrap,
+    .onboarding-wrap,
+    .map-wrap
+  ) {
+    padding-top: var(--eva-page-top-space-compact) !important;
+  }
+
+  body[data-route-guard="private"] #appRoot > main.wrap {
+    padding-top: var(--eva-page-top-space-compact) !important;
+  }
+
+  :where(
+    .dashboard-shell,
+    .login-shell,
+    .signup-shell,
+    .reset-shell,
+    .eva-workflow-shell,
+    .applications-wrap,
+    .staff-application-page .application-wrap
+  ) {
+    margin-top: var(--eva-page-top-space-compact) !important;
+  }
+
+  .jobs-sidebar-inner,
+  .schedule-agenda {
+    top: var(--eva-page-top-space-compact) !important;
+  }
+}
