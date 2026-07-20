@@ -1,0 +1,139 @@
+name: Mobile Boot Security Verification
+
+on:
+  pull_request:
+    branches: [evaraos]
+    paths:
+      - '.github/workflows/mobile-boot-security-verification.yml'
+      - 'public/**'
+
+permissions:
+  contents: write
+
+jobs:
+  tighten-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: performance/mobile-boot-loader-fix
+          fetch-depth: 0
+
+      - name: Preserve verified route security while sharing hydration
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          firebase = Path('public/assets/js/firebase.js')
+          text = firebase.read_text(encoding='utf-8')
+          replacement = '''export async function hydrateUserProfile(user = auth.currentUser, options = {}) {
+            if (!user) return null;
+            const requireVerified = options?.requireVerified === true;
+            const cached = getSavedUserProfile();
+
+            if (!profileHydrationPromise || profileHydrationUid !== user.uid) {
+              profileHydrationUid = user.uid;
+              profileHydrationPromise = (async () => {
+                const snap = await getDoc(doc(db, "users", user.uid));
+                const data = snap.exists() ? snap.data() : {};
+                const role = data.role || cached?.role || getSavedUserRole() || "customer";
+
+                const profile = {
+                  uid: user.uid,
+                  id: user.uid,
+                  email: user.email || data.email || cached?.email || "",
+                  displayName: data.displayName || data.fullName || cached?.displayName || user.displayName || user.email || "",
+                  fullName: data.fullName || data.displayName || cached?.fullName || cached?.displayName || user.displayName || "",
+                  name: data.name || data.fullName || data.displayName || cached?.name || cached?.fullName || cached?.displayName || user.displayName || "",
+                  username: data.username || cached?.username || "",
+                  role,
+                  companyId: data.companyId || cached?.companyId || "",
+                  companyName: data.companyName || cached?.companyName || "",
+                  approvalStatus: data.approvalStatus || cached?.approvalStatus || "",
+                  status: data.status || cached?.status || "active"
+                };
+
+                saveUserRole(role);
+                saveUserProfile(profile);
+                applyUserToUi(profile);
+                dispatchSessionReady({ authenticated: true, role });
+                return profile;
+              })().catch((error) => {
+                profileHydrationPromise = null;
+                profileHydrationUid = "";
+                throw error;
+              });
+            }
+
+            try {
+              return await profileHydrationPromise;
+            } catch (error) {
+              console.warn("User profile hydration skipped:", error);
+              if (requireVerified) return null;
+              if (cached) applyUserToUi(cached);
+              dispatchSessionReady({ authenticated: true, role: cached?.role || getSavedUserRole() });
+              return cached;
+            }
+          }
+
+          export function startGlobalAuthSync() {'''
+          text, count = re.subn(
+              r'export function hydrateUserProfile\(user = auth\.currentUser\) \{.*?\n\}\n\nexport function startGlobalAuthSync\(\) \{',
+              replacement,
+              text,
+              count=1,
+              flags=re.S,
+          )
+          if count != 1 and 'options?.requireVerified === true' not in text:
+              raise SystemExit('Could not tighten shared profile hydration.')
+          firebase.write_text(text, encoding='utf-8')
+
+          route = Path('public/assets/js/route-guard.js')
+          text = route.read_text(encoding='utf-8')
+          old = 'const profile = await hydrateUserProfile(user);'
+          new = 'const profile = await hydrateUserProfile(user, { requireVerified: true });'
+          if old in text:
+              text = text.replace(old, new, 1)
+          elif new not in text:
+              raise SystemExit('Could not require verified route hydration.')
+          route.write_text(text, encoding='utf-8')
+
+          index = Path('public/index.html')
+          text = index.read_text(encoding='utf-8')
+          for line in (
+              '  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />\n',
+              '  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />\n',
+              '  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin />\n',
+              '  <link rel="preload" as="image" href="/assets/img/evaraos_logo.png" />\n',
+          ):
+              text = text.replace(line, '')
+          index.write_text(text, encoding='utf-8')
+
+      - name: Validate security and public boot contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-default-type=module --check public/assets/js/firebase.js
+          node --experimental-default-type=module --check public/assets/js/route-guard.js
+          grep -q 'options?.requireVerified === true' public/assets/js/firebase.js
+          grep -q 'hydrateUserProfile(user, { requireVerified: true })' public/assets/js/route-guard.js
+          grep -q 'if (requireVerified) return null;' public/assets/js/firebase.js
+          ! grep -q 'firestore.googleapis.com' public/index.html
+          ! grep -q 'identitytoolkit.googleapis.com' public/index.html
+          ! grep -q 'www.gstatic.com' public/index.html
+          ! grep -q 'preload.*evaraos_logo' public/index.html
+
+      - name: Commit security-preserving optimization
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public
+          if git diff --cached --quiet; then
+            echo "Verified hydration already secured."
+          else
+            git commit -m "perf: preserve verified route hydration"
+            git push origin HEAD:performance/mobile-boot-loader-fix
+          fi
