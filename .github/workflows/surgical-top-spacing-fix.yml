@@ -1,0 +1,248 @@
+name: Surgical Top Spacing Fix
+
+on:
+  pull_request:
+    branches: [evaraos]
+    paths:
+      - '.github/workflows/surgical-top-spacing-fix.yml'
+      - 'public/**'
+      - 'settings/**'
+      - '*.html'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ui/surgical-top-spacing-fix
+          fetch-depth: 0
+
+      - name: Edit source spacing owners
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          DESKTOP = 'var(--eva-page-top-space)'
+          COMPACT = 'var(--eva-page-top-space-compact)'
+          STICKY = 'var(--eva-page-sticky-top)'
+
+          def replace_regex(path, pattern, replacement, required=True):
+              file = Path(path)
+              text = file.read_text(encoding='utf-8')
+              updated, count = re.subn(pattern, lambda _match: replacement, text, flags=re.MULTILINE)
+              if count == 0:
+                  if replacement in text:
+                      return 0
+                  if required:
+                      raise SystemExit(f'Missing expected source rule in {path}: {pattern}')
+                  return 0
+              file.write_text(updated, encoding='utf-8')
+              return count
+
+          base = Path('public/assets/css/base.css')
+          base_text = base.read_text(encoding='utf-8')
+          base_text = re.sub(r'\A@import url\("\./layout/page-top-spacing\.css\?v=1"\);\s*', '', base_text)
+          if '--eva-page-top-space:' not in base_text:
+              base_text = base_text.replace(
+                  '  --loader-z: 2147483647;\n',
+                  '  --loader-z: 2147483647;\n'
+                  '  --eva-page-top-space: calc(env(safe-area-inset-top, 0px) + 84px);\n'
+                  '  --eva-page-top-space-compact: calc(env(safe-area-inset-top, 0px) + 74px);\n'
+                  '  --eva-page-sticky-top: var(--eva-page-top-space);\n'
+              )
+          base_text = base_text.replace(
+              'padding:84px 16px 32px',
+              'padding:var(--eva-page-top-space) 16px 32px'
+          ).replace(
+              'padding:74px 12px 24px',
+              'padding:var(--eva-page-top-space-compact) 12px 24px'
+          )
+          base.write_text(base_text, encoding='utf-8')
+
+          override = Path('public/assets/css/layout/page-top-spacing.css')
+          if override.exists():
+              override.unlink()
+
+          literal_rules = {
+              'public/assets/css/auth/auth-layout.css': [
+                  (r'margin:\s*104px\s+auto\s+64px', f'margin: {DESKTOP} auto 64px'),
+                  (r'margin:\s*92px\s+auto\s+56px', f'margin: {COMPACT} auto 56px'),
+              ],
+              'public/assets/css/dashboard/dashboard-layout.css': [
+                  (r'--dashboard-top-offset:\s*6\.5rem', f'--dashboard-top-offset: {DESKTOP}'),
+                  (r'margin-top:\s*6\.125rem', f'margin-top: {COMPACT}'),
+              ],
+              'public/assets/css/design-system/marketplace.css': [
+                  (r'--marketplace-shell-top:\s*7\.5rem', f'--marketplace-shell-top: {DESKTOP}'),
+                  (r'--marketplace-shell-top:\s*6rem', f'--marketplace-shell-top: {COMPACT}'),
+              ],
+              'public/assets/css/design-system/settings.css': [
+                  (r'--settings-shell-top:\s*7\.25rem', f'--settings-shell-top: {DESKTOP}'),
+                  (r'--settings-shell-top:\s*5\.75rem', f'--settings-shell-top: {COMPACT}'),
+              ],
+              'public/assets/css/design-system/workflows.css': [
+                  (r'--workflow-shell-top:\s*7\.25rem', f'--workflow-shell-top: {DESKTOP}'),
+                  (r'--workflow-shell-top:\s*5\.75rem', f'--workflow-shell-top: {COMPACT}'),
+              ],
+              'public/assets/css/home/home-layout.css': [
+                  (r'padding-top:\s*max\(132px,\s*var\(--eva-page-top-space,\s*116px\)\)', f'padding-top: {DESKTOP}'),
+                  (r'padding-top:\s*max\(112px,\s*calc\(var\(--eva-page-nav-clearance,\s*86px\)\s*\+\s*26px\)\)', f'padding-top: {COMPACT}'),
+              ],
+              'public/assets/css/onboarding-entry.css': [
+                  (r'margin:\s*104px\s+auto\s+72px', f'margin: {DESKTOP} auto 72px'),
+              ],
+              'public/assets/css/pages/customer-portal.css': [
+                  (r'padding:\s*118px\s+0\s+120px', f'padding:{DESKTOP} 0 120px'),
+                  (r'padding-top:\s*104px', f'padding-top:{COMPACT}'),
+              ],
+              'public/assets/css/pages/dispatch.css': [
+                  (r'padding-top:\s*6rem', f'padding-top: {COMPACT}'),
+              ],
+              'public/assets/css/pages/jobs.css': [
+                  (r'padding:\s*clamp\(6\.5rem,\s*9vw,\s*8\.5rem\)\s+0\s+clamp\(3\.5rem,\s*6vw,\s*5rem\)', f'padding: {DESKTOP} 0 clamp(3.5rem, 6vw, 5rem)'),
+                  (r'top:\s*calc\(env\(safe-area-inset-top\)\s*\+\s*6\.5rem\)', f'top: {STICKY}'),
+                  (r'padding-top:\s*5\.75rem', f'padding-top: {COMPACT}'),
+              ],
+              'public/assets/css/pages/notifications-center.css': [
+                  (r'padding:\s*calc\(var\(--eva-page-nav-clearance,\s*86px\)\s*\+\s*22px\)\s+0', f'padding:{DESKTOP} 0'),
+              ],
+              'public/assets/css/pages/qa-v2.css': [
+                  (r'padding:\s*7\.25rem\s+0\s+6\.875rem', f'padding: {DESKTOP} 0 6.875rem'),
+                  (r'padding-top:\s*6\.25rem', f'padding-top: {COMPACT}'),
+              ],
+              'public/assets/css/pages/schedule.css': [
+                  (r'top:\s*calc\(env\(safe-area-inset-top\)\s*\+\s*6\.5rem\)', f'top: {STICKY}'),
+                  (r'padding-top:\s*6rem', f'padding-top: {COMPACT}'),
+              ],
+              'public/assets/css/pages/website-builder.css': [
+                  (r'padding:\s*104px\s+0\s+118px', f'padding:{DESKTOP} 0 118px'),
+                  (r'padding-top:\s*92px', f'padding-top:{COMPACT}'),
+              ],
+          }
+
+          for path, rules in literal_rules.items():
+              for pattern, replacement in rules:
+                  replace_regex(path, pattern, replacement)
+
+          for path in ['audit.html', 'org.html', 'performance.html', 'sales_reps.html']:
+              replace_regex(path, r'padding:\s*132px\s+0\s+56px', f'padding: {DESKTOP} 0 56px')
+              replace_regex(path, r'padding-top:\s*112px', f'padding-top: {COMPACT}')
+
+          standard_pages = [
+              'public/analytics.html',
+              'public/company_intelligence.html',
+              'public/customer_bills.html',
+              'public/dispatch_intelligence.html',
+              'public/dispatch_map.html',
+              'public/job_billing.html',
+              'public/payment_ops.html',
+              'public/payroll.html',
+              'public/predictive_ops.html',
+              'public/proximity_dispatch.html',
+              'public/revenue.html',
+              'public/territory_intelligence.html',
+          ]
+          for path in standard_pages:
+              replace_regex(path, r'padding:\s*128px\s+0\s+70px', f'padding:{DESKTOP} 0 70px')
+              replace_regex(path, r'padding-top:\s*112px', f'padding-top:{COMPACT}')
+
+          for path, bottom in [
+              ('public/ledger.html', '78px'),
+              ('public/operations_map.html', '78px'),
+          ]:
+              replace_regex(path, rf'padding:\s*128px\s+0\s+{bottom}', f'padding:{DESKTOP} 0 {bottom}')
+              replace_regex(path, r'padding-top:\s*112px', f'padding-top:{COMPACT}')
+
+          replace_regex('public/onboarding.html', r'padding:\s*132px\s+0\s+70px', f'padding:{DESKTOP} 0 70px')
+          replace_regex('public/onboarding.html', r'padding-top:\s*112px', f'padding-top:{COMPACT}')
+
+      - name: Verify surgical source edits
+        shell: python
+        run: |
+          from pathlib import Path
+
+          if Path('public/assets/css/layout/page-top-spacing.css').exists():
+              raise SystemExit('Override file still exists.')
+
+          base = Path('public/assets/css/base.css').read_text(encoding='utf-8')
+          if 'page-top-spacing.css' in base:
+              raise SystemExit('Override import still exists in base.css.')
+          for token in ('--eva-page-top-space:', '--eva-page-top-space-compact:', '--eva-page-sticky-top:'):
+              if token not in base:
+                  raise SystemExit(f'Missing shared token in base.css: {token}')
+
+          target_files = [
+              'audit.html', 'org.html', 'performance.html', 'sales_reps.html',
+              'public/assets/css/auth/auth-layout.css',
+              'public/assets/css/dashboard/dashboard-layout.css',
+              'public/assets/css/design-system/marketplace.css',
+              'public/assets/css/design-system/settings.css',
+              'public/assets/css/design-system/workflows.css',
+              'public/assets/css/home/home-layout.css',
+              'public/assets/css/onboarding-entry.css',
+              'public/assets/css/pages/customer-portal.css',
+              'public/assets/css/pages/dispatch.css',
+              'public/assets/css/pages/jobs.css',
+              'public/assets/css/pages/notifications-center.css',
+              'public/assets/css/pages/qa-v2.css',
+              'public/assets/css/pages/schedule.css',
+              'public/assets/css/pages/website-builder.css',
+              'public/analytics.html', 'public/company_intelligence.html', 'public/customer_bills.html',
+              'public/dispatch_intelligence.html', 'public/dispatch_map.html', 'public/job_billing.html',
+              'public/payment_ops.html', 'public/payroll.html', 'public/predictive_ops.html',
+              'public/proximity_dispatch.html', 'public/revenue.html', 'public/territory_intelligence.html',
+              'public/ledger.html', 'public/onboarding.html', 'public/operations_map.html',
+          ]
+          for path in target_files:
+              text = Path(path).read_text(encoding='utf-8')
+              if '--eva-page-top-space' not in text:
+                  raise SystemExit(f'Source owner was not normalized: {path}')
+
+          forbidden = {
+              'padding: 132px 0 56px',
+              'padding:128px 0 70px',
+              'padding: 128px 0 70px',
+              'padding:128px 0 78px',
+              'padding: 128px 0 78px',
+              'padding:132px 0 70px',
+              'padding: 132px 0 70px',
+              'padding:118px 0 120px',
+              'padding: 118px 0 120px',
+              'padding:104px 0 118px',
+              'padding: 104px 0 118px',
+              'padding: clamp(6.5rem, 9vw, 8.5rem)',
+              '--marketplace-shell-top: 7.5rem',
+              '--settings-shell-top: 7.25rem',
+              '--workflow-shell-top: 7.25rem',
+              '--dashboard-top-offset: 6.5rem',
+              'padding: 7.25rem 0 6.875rem',
+          }
+          violations = []
+          for path in target_files:
+              text = Path(path).read_text(encoding='utf-8')
+              for old in forbidden:
+                  if old in text:
+                      violations.append(f'{path}: {old}')
+          if violations:
+              raise SystemExit('Legacy page-start values remain:\n' + '\n'.join(violations))
+
+          print(f'Surgical spacing contract verified across {len(target_files)} source owners.')
+
+      - name: Commit surgical spacing edits
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public settings '*.html' 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "Source spacing is already normalized."
+          else
+            git commit -m "ui: fix page top spacing at source"
+            git push origin HEAD:ui/surgical-top-spacing-fix
+          fi
