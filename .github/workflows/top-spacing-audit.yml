@@ -1,0 +1,83 @@
+name: Top Spacing Audit
+
+on:
+  pull_request:
+    branches: [evaraos]
+    paths:
+      - '.github/workflows/top-spacing-audit.yml'
+      - 'public/**'
+      - 'settings/**'
+      - '*.html'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan page top spacing
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          roots = [Path('public'), Path('settings')]
+          files = []
+          for root in roots:
+              if root.exists():
+                  files.extend(root.rglob('*.css'))
+                  files.extend(root.rglob('*.html'))
+          files.extend(Path('.').glob('*.html'))
+
+          declaration = re.compile(
+              r'(?P<prop>padding(?:-top)?|margin(?:-top)?|top)\s*:\s*(?P<value>[^;}{]+)',
+              re.I,
+          )
+          number = re.compile(r'(?P<num>\d+(?:\.\d+)?)\s*(?P<unit>px|rem)', re.I)
+          shell_hint = re.compile(
+              r'(shell|wrap|page|main|dashboard|hero|content|application|settings|marketplace|workflow|agenda|sidebar)',
+              re.I,
+          )
+
+          findings = []
+          for path in sorted(set(files)):
+              text = path.read_text(encoding='utf-8', errors='ignore')
+              for match in declaration.finditer(text):
+                  value = match.group('value').strip()
+                  values = []
+                  for token in number.finditer(value):
+                      numeric = float(token.group('num'))
+                      px = numeric * 16 if token.group('unit').lower() == 'rem' else numeric
+                      values.append(px)
+                  if not values or max(values) < 90:
+                      continue
+                  before = text[max(0, match.start() - 220):match.start()]
+                  selector = before.rsplit('}', 1)[-1].rsplit('{', 1)[0].strip().replace('\n', ' ')
+                  if not shell_hint.search(selector + ' ' + path.name):
+                      continue
+                  line = text.count('\n', 0, match.start()) + 1
+                  findings.append((str(path), line, selector[-180:], match.group('prop'), value, round(max(values), 1)))
+
+          report = Path('top-spacing-audit.txt')
+          with report.open('w', encoding='utf-8') as out:
+              out.write('EvaraOS top spacing audit\n')
+              out.write('Baseline: 84px desktop / 74px compact\n')
+              out.write(f'Candidates at or above 90px: {len(findings)}\n\n')
+              for path, line, selector, prop, value, px in findings:
+                  out.write(f'{path}:{line}\n')
+                  out.write(f'  selector: {selector}\n')
+                  out.write(f'  {prop}: {value}  (~{px}px max)\n\n')
+          print(report.read_text(encoding='utf-8'))
+
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: top-spacing-audit-${{ github.run_id }}
+          path: top-spacing-audit.txt
+          if-no-files-found: error
+          retention-days: 3
