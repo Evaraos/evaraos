@@ -1,6 +1,8 @@
 name: Public Home Cold Start Repair
 
 on:
+  push:
+    branches: [performance/public-home-cold-start-v2]
   pull_request:
     branches: [evaraos]
     paths:
