@@ -128,7 +128,7 @@ function waitForVerifiedFirebaseUser() {
 async function readVerifiedProfile(user) {
   if (!user?.uid) return null;
 
-  const profile = await hydrateUserProfile(user);
+  const profile = await hydrateUserProfile(user, { requireVerified: true });
   if (!profile || profile.uid !== user.uid || !profile.role || !accountIsActive(profile)) return null;
   return profile;
 }
