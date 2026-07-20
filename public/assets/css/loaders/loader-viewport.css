@@ -1,10 +1,11 @@
 /* ===============================
-   EVARAOS LOADER VIEWPORT LOCK
-   Keeps loaders centered while scrolling
+   EVARAOS LOADERS
+   First-launch welcome experience + compact page navigation feedback.
    =============================== */
 
 .evara-global-loader,
-.evara-loader-fast {
+.evara-loader-fast,
+.evara-welcome-loader {
   position: fixed !important;
   inset: 0 !important;
   width: 100vw !important;
@@ -14,25 +15,64 @@
   overflow: hidden !important;
   transform: none !important;
   z-index: 2147483647 !important;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .18s ease, visibility 0s linear .18s;
 }
 
-.evara-global-loader.active,
-.evara-loader-fast.active {
+.evara-loader-fast.active,
+.evara-welcome-loader.active,
+.evara-global-loader.active {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.evara-loader-fast.is-entering,
+.evara-welcome-loader.is-entering {
+  opacity: 0;
+}
+
+.evara-loader-fast.is-exiting,
+.evara-welcome-loader.is-exiting {
+  opacity: 0;
+  pointer-events: none !important;
 }
 
 .evara-loader-fast {
   pointer-events: none !important;
+  background: color-mix(in srgb, var(--bg-primary, #eef5fb) 34%, transparent);
+  backdrop-filter: blur(6px) saturate(125%);
+  -webkit-backdrop-filter: blur(6px) saturate(125%);
 }
 
-.evara-global-loader {
+.evara-global-loader,
+.evara-welcome-loader {
   pointer-events: auto !important;
 }
 
+.evara-welcome-loader {
+  padding:
+    calc(env(safe-area-inset-top, 0px) + 24px)
+    max(20px, env(safe-area-inset-right, 0px))
+    calc(env(safe-area-inset-bottom, 0px) + 24px)
+    max(20px, env(safe-area-inset-left, 0px));
+  color: var(--text-primary, #0b0c12);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--bg-primary, #eef5fb) 40%, transparent), color-mix(in srgb, var(--bg-primary, #eef5fb) 68%, transparent)),
+    var(--evara-wallpaper-image, linear-gradient(145deg, #f7fbff, #dbe9f7 52%, #f6e9ec));
+  background-position: center;
+  background-size: cover;
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+}
+
 .evara-loader-box,
-.evara-loader-fast-wrap {
+.evara-loader-fast-wrap,
+.evara-welcome-card {
   position: relative !important;
   transform: none !important;
   margin: auto !important;
@@ -44,20 +84,55 @@
   border-radius: 28px !important;
   display: grid !important;
   place-items: center !important;
-  background: linear-gradient(145deg, rgba(255,255,255,.18), rgba(255,255,255,.06)) !important;
-  border: 1px solid rgba(255,255,255,.28) !important;
-  box-shadow: 0 24px 70px rgba(0,0,0,.34), 0 0 44px rgba(227,6,19,.2) !important;
+  background: linear-gradient(145deg, rgba(255,255,255,.22), rgba(255,255,255,.08)) !important;
+  border: 1px solid rgba(255,255,255,.34) !important;
+  box-shadow: 0 24px 70px rgba(0,0,0,.22), 0 0 44px rgba(227,6,19,.16) !important;
   backdrop-filter: blur(18px) saturate(1.35) !important;
   -webkit-backdrop-filter: blur(18px) saturate(1.35) !important;
+}
+
+.evara-welcome-card {
+  width: min(430px, calc(100vw - 40px));
+  min-height: 360px;
+  padding: 38px 28px 30px;
+  border-radius: 38px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 14px;
+  text-align: center;
+  background: linear-gradient(145deg, rgba(255,255,255,.32), rgba(255,255,255,.11));
+  border: 1px solid rgba(255,255,255,.46);
+  box-shadow: 0 32px 110px rgba(27,32,48,.24), inset 0 1px 0 rgba(255,255,255,.72);
+  backdrop-filter: blur(30px) saturate(170%);
+  -webkit-backdrop-filter: blur(30px) saturate(170%);
+}
+
+.evara-welcome-brand {
+  position: relative;
+  width: 104px;
+  height: 104px;
+  margin-bottom: 6px;
+  border-radius: 34px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, rgba(255,255,255,.24), rgba(255,255,255,.08));
+  border: 1px solid rgba(255,255,255,.42);
+  box-shadow: 0 22px 62px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.64);
 }
 
 .evara-loader-orbit {
   position: absolute !important;
   inset: 8px !important;
-  border-radius: 24px !important;
-  border: 2px solid rgba(227,6,19,.18) !important;
+  border-radius: 28px !important;
+  border: 2px solid rgba(227,6,19,.16) !important;
   border-top-color: #e30613 !important;
   animation: evaraLoaderSpin .88s linear infinite !important;
+}
+
+.evara-welcome-brand .evara-loader-orbit {
+  inset: 10px !important;
+  border-radius: 30px !important;
 }
 
 .evara-loader-core {
@@ -68,14 +143,85 @@
   place-items: center !important;
   color: #fff !important;
   background: radial-gradient(circle at 30% 20%, #ff4141, #e30613 58%, #780006) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.34), 0 10px 28px rgba(227,6,19,.34) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.34), 0 10px 28px rgba(227,6,19,.30) !important;
+}
+
+.evara-welcome-brand .evara-loader-core {
+  width: 58px !important;
+  height: 58px !important;
+  border-radius: 20px !important;
 }
 
 .evara-loader-mark {
   width: 30px !important;
   height: 30px !important;
-  fill: currentColor !important;
+  object-fit: contain !important;
+}
+
+.evara-welcome-brand .evara-loader-mark {
+  width: 42px !important;
+  height: 42px !important;
+}
+
+.evara-welcome-eyebrow {
+  font-size: .76rem;
+  font-weight: 900;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--text-secondary, rgba(10,12,18,.66));
+}
+
+.evara-welcome-card strong {
+  max-width: 12ch;
+  font-size: clamp(2rem, 8vw, 3.15rem);
+  line-height: .94;
+  letter-spacing: -.055em;
+  text-wrap: balance;
+}
+
+.evara-welcome-card > span:not(.evara-welcome-eyebrow):not(.evara-welcome-progress) {
+  max-width: 30ch;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--text-secondary, rgba(10,12,18,.66));
+}
+
+.evara-welcome-progress {
+  width: min(220px, 70%);
+  height: 5px;
+  margin-top: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255,255,255,.30);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.10);
+}
+
+.evara-welcome-progress i {
+  display: block;
+  width: 42%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ff4141, #e30613, #ff7d86);
+  box-shadow: 0 0 18px rgba(227,6,19,.38);
+  animation: evaraLoaderProgress 1.15s cubic-bezier(.4,0,.2,1) infinite;
 }
 
 @keyframes evaraLoaderSpin { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .evara-loader-orbit { animation: none !important; } }
+@keyframes evaraLoaderProgress {
+  0% { transform: translateX(-125%); }
+  100% { transform: translateX(340%); }
+}
+
+@media (max-width: 520px) {
+  .evara-welcome-card {
+    width: min(360px, calc(100vw - 28px));
+    min-height: 330px;
+    padding: 32px 22px 26px;
+    border-radius: 34px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .evara-loader-orbit,
+  .evara-welcome-progress i { animation: none !important; }
+}

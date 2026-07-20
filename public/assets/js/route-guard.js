@@ -1,12 +1,7 @@
 import {
   auth,
-  db,
-  doc,
-  getDoc,
   onAuthStateChanged,
-  saveUserRole,
-  saveUserProfile,
-  applyUserToUi,
+  hydrateUserProfile,
   clearSavedUserRole,
   clearSavedUserProfile
 } from './firebase.js';
@@ -133,22 +128,8 @@ function waitForVerifiedFirebaseUser() {
 async function readVerifiedProfile(user) {
   if (!user?.uid) return null;
 
-  const snapshot = await getDoc(doc(db, 'users', user.uid));
-  if (!snapshot.exists()) return null;
-
-  const data = snapshot.data() || {};
-  const profile = {
-    ...data,
-    uid: user.uid,
-    id: user.uid,
-    email: user.email || data.email || ''
-  };
-
-  if (!profile.role || !accountIsActive(profile)) return null;
-
-  saveUserRole(profile.role);
-  saveUserProfile(profile);
-  applyUserToUi(profile);
+  const profile = await hydrateUserProfile(user, { requireVerified: true });
+  if (!profile || profile.uid !== user.uid || !profile.role || !accountIsActive(profile)) return null;
   return profile;
 }
 

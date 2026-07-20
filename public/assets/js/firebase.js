@@ -116,6 +116,8 @@ const STORAGE_KEYS = {
 let currentUser = null;
 let useSessionStorageForProfile = false;
 let globalAuthSyncStarted = false;
+let profileHydrationPromise = null;
+let profileHydrationUid = "";
 
 function dispatchSessionReady(detail = {}) {
   window.dispatchEvent(
@@ -545,38 +547,50 @@ export function requireRole(allowedRoles = [], fallbackPath = "./login.html") {
   });
 }
 
-export async function hydrateUserProfile(user = auth.currentUser) {
+export async function hydrateUserProfile(user = auth.currentUser, options = {}) {
   if (!user) return null;
-
+  const requireVerified = options?.requireVerified === true;
   const cached = getSavedUserProfile();
 
+  if (!profileHydrationPromise || profileHydrationUid !== user.uid) {
+    profileHydrationUid = user.uid;
+    profileHydrationPromise = (async () => {
+      const snap = await getDoc(doc(db, "users", user.uid));
+      const data = snap.exists() ? snap.data() : {};
+      const role = data.role || cached?.role || getSavedUserRole() || "customer";
+
+      const profile = {
+        uid: user.uid,
+        id: user.uid,
+        email: user.email || data.email || cached?.email || "",
+        displayName: data.displayName || data.fullName || cached?.displayName || user.displayName || user.email || "",
+        fullName: data.fullName || data.displayName || cached?.fullName || cached?.displayName || user.displayName || "",
+        name: data.name || data.fullName || data.displayName || cached?.name || cached?.fullName || cached?.displayName || user.displayName || "",
+        username: data.username || cached?.username || "",
+        role,
+        companyId: data.companyId || cached?.companyId || "",
+        companyName: data.companyName || cached?.companyName || "",
+        approvalStatus: data.approvalStatus || cached?.approvalStatus || "",
+        status: data.status || cached?.status || "active"
+      };
+
+      saveUserRole(role);
+      saveUserProfile(profile);
+      applyUserToUi(profile);
+      dispatchSessionReady({ authenticated: true, role });
+      return profile;
+    })().catch((error) => {
+      profileHydrationPromise = null;
+      profileHydrationUid = "";
+      throw error;
+    });
+  }
+
   try {
-    const snap = await getDoc(doc(db, "users", user.uid));
-    const data = snap.exists() ? snap.data() : {};
-    const role = data.role || cached?.role || getSavedUserRole() || "customer";
-
-    const profile = {
-      uid: user.uid,
-      id: user.uid,
-      email: user.email || data.email || cached?.email || "",
-      displayName: data.displayName || data.fullName || cached?.displayName || user.displayName || user.email || "",
-      fullName: data.fullName || data.displayName || cached?.fullName || cached?.displayName || user.displayName || "",
-      name: data.name || data.fullName || data.displayName || cached?.name || cached?.fullName || cached?.displayName || user.displayName || "",
-      username: data.username || cached?.username || "",
-      role,
-      companyId: data.companyId || cached?.companyId || "",
-      companyName: data.companyName || cached?.companyName || "",
-      approvalStatus: data.approvalStatus || cached?.approvalStatus || "",
-      status: data.status || cached?.status || "active"
-    };
-
-    saveUserRole(role);
-    saveUserProfile(profile);
-    applyUserToUi(profile);
-    dispatchSessionReady({ authenticated: true, role });
-    return profile;
+    return await profileHydrationPromise;
   } catch (error) {
     console.warn("User profile hydration skipped:", error);
+    if (requireVerified) return null;
     if (cached) applyUserToUi(cached);
     dispatchSessionReady({ authenticated: true, role: cached?.role || getSavedUserRole() });
     return cached;
@@ -594,6 +608,8 @@ export function startGlobalAuthSync() {
       currentUser = user;
 
       if (!user) {
+        profileHydrationPromise = null;
+        profileHydrationUid = "";
         clearSavedUserRole();
         clearSavedUserProfile();
         hideGlobalLoader();
