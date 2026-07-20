@@ -151,7 +151,7 @@
   .home-shell {
     width: min(calc(100% - 16px), 100%);
     margin-bottom: 72px;
-    padding-top: calc(var(--eva-page-nav-clearance, 86px) + 12px);
+    padding-top: calc(env(safe-area-inset-top, 0px) + 86px);
     padding-bottom: calc(132px + env(safe-area-inset-bottom));
   }
 
