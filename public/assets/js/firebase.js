@@ -116,6 +116,8 @@ const STORAGE_KEYS = {
 let currentUser = null;
 let useSessionStorageForProfile = false;
 let globalAuthSyncStarted = false;
+let profileHydrationPromise = null;
+let profileHydrationUid = "";
 
 function dispatchSessionReady(detail = {}) {
   window.dispatchEvent(
@@ -545,42 +547,48 @@ export function requireRole(allowedRoles = [], fallbackPath = "./login.html") {
   });
 }
 
-export async function hydrateUserProfile(user = auth.currentUser) {
-  if (!user) return null;
+export function hydrateUserProfile(user = auth.currentUser) {
+  if (!user) return Promise.resolve(null);
+  if (profileHydrationPromise && profileHydrationUid === user.uid) return profileHydrationPromise;
 
-  const cached = getSavedUserProfile();
+  profileHydrationUid = user.uid;
+  profileHydrationPromise = (async () => {
+    const cached = getSavedUserProfile();
 
-  try {
-    const snap = await getDoc(doc(db, "users", user.uid));
-    const data = snap.exists() ? snap.data() : {};
-    const role = data.role || cached?.role || getSavedUserRole() || "customer";
+    try {
+      const snap = await getDoc(doc(db, "users", user.uid));
+      const data = snap.exists() ? snap.data() : {};
+      const role = data.role || cached?.role || getSavedUserRole() || "customer";
 
-    const profile = {
-      uid: user.uid,
-      id: user.uid,
-      email: user.email || data.email || cached?.email || "",
-      displayName: data.displayName || data.fullName || cached?.displayName || user.displayName || user.email || "",
-      fullName: data.fullName || data.displayName || cached?.fullName || cached?.displayName || user.displayName || "",
-      name: data.name || data.fullName || data.displayName || cached?.name || cached?.fullName || cached?.displayName || user.displayName || "",
-      username: data.username || cached?.username || "",
-      role,
-      companyId: data.companyId || cached?.companyId || "",
-      companyName: data.companyName || cached?.companyName || "",
-      approvalStatus: data.approvalStatus || cached?.approvalStatus || "",
-      status: data.status || cached?.status || "active"
-    };
+      const profile = {
+        uid: user.uid,
+        id: user.uid,
+        email: user.email || data.email || cached?.email || "",
+        displayName: data.displayName || data.fullName || cached?.displayName || user.displayName || user.email || "",
+        fullName: data.fullName || data.displayName || cached?.fullName || cached?.displayName || user.displayName || "",
+        name: data.name || data.fullName || data.displayName || cached?.name || cached?.fullName || cached?.displayName || user.displayName || "",
+        username: data.username || cached?.username || "",
+        role,
+        companyId: data.companyId || cached?.companyId || "",
+        companyName: data.companyName || cached?.companyName || "",
+        approvalStatus: data.approvalStatus || cached?.approvalStatus || "",
+        status: data.status || cached?.status || "active"
+      };
 
-    saveUserRole(role);
-    saveUserProfile(profile);
-    applyUserToUi(profile);
-    dispatchSessionReady({ authenticated: true, role });
-    return profile;
-  } catch (error) {
-    console.warn("User profile hydration skipped:", error);
-    if (cached) applyUserToUi(cached);
-    dispatchSessionReady({ authenticated: true, role: cached?.role || getSavedUserRole() });
-    return cached;
-  }
+      saveUserRole(role);
+      saveUserProfile(profile);
+      applyUserToUi(profile);
+      dispatchSessionReady({ authenticated: true, role });
+      return profile;
+    } catch (error) {
+      console.warn("User profile hydration skipped:", error);
+      if (cached) applyUserToUi(cached);
+      dispatchSessionReady({ authenticated: true, role: cached?.role || getSavedUserRole() });
+      return cached;
+    }
+  })();
+
+  return profileHydrationPromise;
 }
 
 export function startGlobalAuthSync() {
@@ -594,6 +602,8 @@ export function startGlobalAuthSync() {
       currentUser = user;
 
       if (!user) {
+        profileHydrationPromise = null;
+        profileHydrationUid = "";
         clearSavedUserRole();
         clearSavedUserProfile();
         hideGlobalLoader();
