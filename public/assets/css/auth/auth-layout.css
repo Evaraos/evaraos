@@ -26,7 +26,7 @@
 .signup-shell,
 .reset-shell {
   width: min(var(--auth-shell-max), calc(100% - 24px));
-  margin: 104px auto 64px;
+  margin: var(--eva-page-top-space) auto 64px;
   position: relative;
   z-index: 2;
 }
@@ -217,7 +217,7 @@ textarea.input {
   .signup-shell,
   .reset-shell {
     width: min(calc(100% - 16px), 100%);
-    margin: 92px auto 56px;
+    margin: var(--eva-page-top-space-compact) auto 56px;
   }
 
   .auth-panel,

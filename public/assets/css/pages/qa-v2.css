@@ -6,7 +6,7 @@
 .qa2-shell {
   width: min(76rem, calc(100% - (var(--page-gutter) * 2)));
   margin: 0 auto;
-  padding: 7.25rem 0 6.875rem;
+  padding: var(--eva-page-top-space) 0 6.875rem;
   display: grid;
   gap: var(--space-5);
   position: relative;
@@ -501,7 +501,7 @@
 @media (max-width: 50rem) {
   .qa2-shell {
     width: calc(100% - var(--space-4));
-    padding-top: 6.25rem;
+    padding-top: var(--eva-page-top-space-compact);
     gap: var(--space-4);
   }
 

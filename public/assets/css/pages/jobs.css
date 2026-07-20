@@ -5,7 +5,7 @@
 .jobs-page-shell {
   width: min(92rem, calc(100% - (var(--page-gutter, 24px) * 2)));
   margin: 0 auto;
-  padding: clamp(6.5rem, 9vw, 8.5rem) 0 clamp(3.5rem, 6vw, 5rem);
+  padding: var(--eva-page-top-space) 0 clamp(3.5rem, 6vw, 5rem);
   display: grid;
   grid-template-columns: minmax(17rem, 20rem) minmax(0, 1fr);
   gap: clamp(1rem, 2vw, 1.5rem);
@@ -46,7 +46,7 @@
 
 .jobs-sidebar-inner {
   position: sticky;
-  top: calc(env(safe-area-inset-top) + 6.5rem);
+  top: var(--eva-page-sticky-top);
   min-width: 0;
   padding: 14px;
   border-radius: var(--radius-2xl, 28px);
@@ -548,7 +548,7 @@
 @media (max-width: 680px) {
   .jobs-page-shell {
     width: calc(100% - 16px);
-    padding-top: 5.75rem;
+    padding-top: var(--eva-page-top-space-compact);
     gap: 12px;
   }
 
