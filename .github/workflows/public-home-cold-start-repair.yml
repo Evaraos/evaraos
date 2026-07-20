@@ -1,0 +1,177 @@
+name: Public Home Cold Start Repair
+
+on:
+  pull_request:
+    branches: [evaraos]
+    paths:
+      - '.github/workflows/public-home-cold-start-repair.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: performance/public-home-cold-start-v2
+          fetch-depth: 0
+
+      - name: Apply exact public-entry repairs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_exact(path, old, new):
+              p = Path(path)
+              text = p.read_text()
+              if old not in text:
+                  raise SystemExit(f"Missing expected pattern in {path}: {old[:90]!r}")
+              p.write_text(text.replace(old, new, 1))
+
+          replace_exact(
+              'public/assets/css/home/home-layout.css',
+              'padding-top: calc(var(--eva-page-nav-clearance, 86px) + 12px);',
+              'padding-top: calc(env(safe-area-inset-top, 0px) + 86px);'
+          )
+
+          replace_exact(
+              'public/assets/css/home.css',
+              '@import url("./home/home-layout.css?v=3");\n@import url("./home/home-components.css?v=2");',
+              '@import url("./home/home-layout.css?v=5");\n@import url("./home/home-components.css?v=3");'
+          )
+
+          theme = Path('public/assets/js/theme.js')
+          theme.write_text('''import * as Core from "./theme-core-adaptive.js?v=adaptive-liquid-v11";
+
+export const EVARAOS_THEME_BUILD = "adaptive-liquid-v13-public-critical";
+export const applyAppearance = Core.applyAppearance;
+export const setAppearance = Core.setAppearance;
+export const getAppearance = Core.getAppearance;
+export const getTheme = Core.getTheme;
+export const getThemeMode = Core.getThemeMode;
+export const setTheme = Core.setTheme;
+export const setThemeMode = Core.setThemeMode;
+
+function runIdle(task, timeout = 1800) {
+  if ("requestIdleCallback" in window) requestIdleCallback(task, { timeout });
+  else setTimeout(task, 260);
+}
+
+function loadOptional(path) {
+  return import(path).catch((error) => console.warn("Optional theme module failed:", path, error));
+}
+
+async function loadPageEnhancements() {
+  const body = document.body;
+  if (!body) return;
+  const isEntryPage = body.matches(".login-page,.signup-page,.staff-application-page");
+  const isStaffApplication = body.classList.contains("staff-application-page");
+
+  if (isEntryPage) await loadOptional("./onboarding-entry.js?v=3");
+  if (isStaffApplication) {
+    await loadOptional("./staff-application-dedupe.js?v=3");
+    await loadOptional("./staff-application-experience.js?v=2");
+  }
+
+  runIdle(() => loadOptional("./liquid-interaction.js?v=3").then((module) => module?.installLiquidInteraction?.()));
+  if (document.querySelector(".site-footer-right,.social-link")) {
+    runIdle(() => loadOptional("./social-links.js?v=2"), 2400);
+  }
+}
+
+function enforceUniversalTheme(detail) {
+  const root = document.documentElement;
+  const appearance = Core.getAppearance();
+  const environment = detail && (detail.resolved || detail.environment) ? (detail.resolved || detail.environment) : Core.resolvedTheme(appearance);
+  root.dataset.theme = "adaptive";
+  root.dataset.environment = environment;
+  root.dataset.themeMode = appearance.mode;
+  root.dataset.appearance = "adaptive-" + appearance.mode;
+  root.dataset.evaraThemeAuthority = "runtime";
+  root.style.colorScheme = environment === "dark" ? "dark" : "light";
+  if (window.EvaraTheme) window.EvaraTheme.getTheme = function(){ return "adaptive"; };
+}
+
+addEventListener("evara:theme-applied", function(event){ enforceUniversalTheme(event.detail || {}); });
+addEventListener("pageshow", function(){ enforceUniversalTheme({}); });
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", function(){ enforceUniversalTheme({}); loadPageEnhancements(); }, { once: true });
+} else {
+  enforceUniversalTheme({});
+  loadPageEnhancements();
+}
+''')
+
+          replace_exact(
+              'public/assets/js/loader.js',
+              'const WELCOME_SESSION_KEY="evaraos-welcome-loader-session-v1";',
+              'const WELCOME_SESSION_KEY="evaraos-welcome-loader-session-v2";'
+          )
+
+          replace_exact(
+              'public/assets/js/loader.js',
+              "  function firstBootThisSession(){\n    try{\n      if(sessionStorage.getItem(WELCOME_SESSION_KEY)==='1')return false;\n      sessionStorage.setItem(WELCOME_SESSION_KEY,'1');\n      return true;\n    }catch{return true}\n  }",
+              "  function isColdDocumentLaunch(){\n    try{\n      const navigation=performance.getEntriesByType('navigation')[0];\n      const sameOriginReferrer=document.referrer&&new URL(document.referrer).origin===location.origin;\n      return !sameOriginReferrer&&navigation?.type!=='back_forward';\n    }catch{return !document.referrer}\n  }\n\n  function firstBootThisSession(){\n    try{\n      if(isColdDocumentLaunch()){\n        sessionStorage.setItem(WELCOME_SESSION_KEY,'1');\n        return true;\n      }\n      if(sessionStorage.getItem(WELCOME_SESSION_KEY)==='1')return false;\n      sessionStorage.setItem(WELCOME_SESSION_KEY,'1');\n      return true;\n    }catch{return true}\n  }"
+          )
+
+          replace_exact(
+              'public/assets/js/loader.js',
+              "document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init,{once:true}):init();",
+              "document.body?init():document.addEventListener('DOMContentLoaded',init,{once:true});"
+          )
+
+          index = Path('public/index.html')
+          html = index.read_text()
+          html = html.replace(
+              '  <link rel="manifest" href="/manifest.json" />',
+              '  <link rel="manifest" href="/manifest.json" />\n  <link rel="preload" as="image" href="/assets/brand/evaraos-app-icon.png?v=brand-icon-12" />',
+              1
+          )
+          html = html.replace(
+              '  <link rel="stylesheet" href="/assets/css/home.css?v=54" />',
+              '  <link rel="stylesheet" href="/assets/css/home/home-layout.css?v=5" />\n  <link rel="stylesheet" href="/assets/css/home/home-components.css?v=3" />',
+              1
+          )
+          html = html.replace(
+              '<body class="home-page app-loading" data-route-guard="public">',
+              '<body class="home-page app-loading" data-route-guard="public">\n  <script src="/assets/js/loader.js?v=42"></script>',
+              1
+          )
+          html = html.replace('  <script src="/assets/js/loader.js?v=41"></script>\n', '', 1)
+          html = html.replace(
+              '<script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v10"></script>',
+              '<script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v13-public-critical"></script>',
+              1
+          )
+          index.write_text(html)
+          PY
+
+      - name: Verify repaired critical path
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-default-type=module --check public/assets/js/theme.js
+          node --check public/assets/js/loader.js
+          grep -q 'safe-area-inset-top, 0px) + 86px' public/assets/css/home/home-layout.css
+          grep -q 'home/home-layout.css?v=5' public/index.html
+          grep -q 'loader.js?v=42' public/index.html
+          ! grep -q '^import .*staff-application-experience' public/assets/js/theme.js
+          ! grep -q 'assets/css/home.css?v=54' public/index.html
+
+      - name: Commit source repairs
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- public; then
+            echo 'Source repairs already applied.'
+            exit 0
+          fi
+          git config user.name 'Evaraos CI'
+          git config user.email 'evaraos.inc@gmail.com'
+          git add public/index.html public/assets/css/home.css public/assets/css/home/home-layout.css public/assets/js/theme.js public/assets/js/loader.js
+          git commit -m 'Performance: fix public cold start at source'
+          git push origin HEAD:performance/public-home-cold-start-v2
