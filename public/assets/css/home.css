@@ -1,4 +1,4 @@
 /* EVARAOS HOME SYSTEM
    Entry point only. No independent light/dark theme authority. */
-@import url("./home/home-layout.css?v=2");
+@import url("./home/home-layout.css?v=3");
 @import url("./home/home-components.css?v=2");
