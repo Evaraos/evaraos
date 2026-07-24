@@ -1,4 +1,4 @@
-const NAV_BUILD="nav-v56-public-fast";
+const NAV_BUILD="nav-v57-loader-gate";
 let NAV_STATE,getNavShell,renderNav,applyProgress,bindScrollBehavior,animateNav;
 let accountSystemsPromise=null;
 
@@ -28,18 +28,18 @@ function isPublicHome(){
   return mode==="public"&&(path==="/"||path.endsWith("/index.html"));
 }
 
-function authGateIsPending(){
-  const mode=document.body?.dataset?.routeGuard||"";
-  if(mode!=="private"&&mode!=="auth")return false;
-  return document.documentElement.classList.contains("auth-pending")||document.body?.classList.contains("auth-pending");
-}
-
 function ready(){
   requestAnimationFrame(()=>{
     document.documentElement.dataset.evaraosNavReady="true";
-    if(authGateIsPending())return;
-    if(window.EvaraLoader?.markAppReady)window.EvaraLoader.markAppReady();
-    else{document.body.classList.remove("app-loading");document.body.classList.add("app-ready")}
+    window.EvaraLoader?.markNavReady?.();
+    window.dispatchEvent(new CustomEvent("evara:nav-ready",{detail:{build:NAV_BUILD,at:Date.now()}}));
+    if(!window.EvaraLoader){
+      const mode=document.body?.dataset?.routeGuard||"";
+      const authPending=(mode==="private"||mode==="auth")&&(
+        document.documentElement.classList.contains("auth-pending")||document.body?.classList.contains("auth-pending")
+      );
+      if(!authPending){document.body?.classList.remove("app-loading");document.body?.classList.add("app-ready")}
+    }
   });
 }
 
