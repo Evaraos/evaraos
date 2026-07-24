@@ -39,17 +39,25 @@ function normalizePath(path = '') {
   }
 }
 
-function setReadyState() {
+function clearAuthPendingState() {
   document.documentElement.classList.remove('auth-pending');
-  document.body?.classList.remove('auth-pending', 'app-loading');
+  document.body?.classList.remove('auth-pending');
+}
+
+function revealWithoutLoader() {
+  document.body?.classList.remove('app-loading');
   document.body?.classList.add('app-ready');
 }
 
 function safeMarkReady(detail = {}) {
   if (hasFinishedRouteGuard) return;
   hasFinishedRouteGuard = true;
-  setReadyState();
-  window.EvaraLoader?.markAppReady?.();
+  clearAuthPendingState();
+  if (window.EvaraLoader?.markSessionReady) {
+    window.EvaraLoader.markSessionReady(detail);
+  } else {
+    revealWithoutLoader();
+  }
   emit('evara:session-ready', detail);
 }
 
