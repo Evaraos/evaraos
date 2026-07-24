@@ -35,10 +35,10 @@ function ready(){
     window.dispatchEvent(new CustomEvent("evara:nav-ready",{detail:{build:NAV_BUILD,at:Date.now()}}));
     if(!window.EvaraLoader){
       const mode=document.body?.dataset?.routeGuard||"";
-      const authPending=(mode==="private"||mode==="auth")&&(
-        document.documentElement.classList.contains("auth-pending")||document.body?.classList.contains("auth-pending")
-      );
-      if(!authPending){document.body?.classList.remove("app-loading");document.body?.classList.add("app-ready")}
+      if(mode!=="private"&&mode!=="auth"){
+        document.body?.classList.remove("app-loading");
+        document.body?.classList.add("app-ready");
+      }
     }
   });
 }
