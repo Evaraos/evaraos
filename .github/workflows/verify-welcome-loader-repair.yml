@@ -4,6 +4,16 @@ on:
   push:
     branches:
       - ui/welcome-loader-logo-readiness
+  pull_request:
+    branches:
+      - evaraos
+    paths:
+      - public/assets/js/loader.js
+      - public/assets/js/nav.js
+      - public/assets/js/nav/nav-main-v6.js
+      - public/assets/js/route-guard.js
+      - public/index.html
+      - .github/workflows/verify-welcome-loader-repair.yml
   workflow_dispatch:
 
 permissions:
