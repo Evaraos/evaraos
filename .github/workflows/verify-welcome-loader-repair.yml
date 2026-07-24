@@ -56,7 +56,7 @@ jobs:
             [loader.includes('markNavReady') && loader.includes('markSessionReady'), 'loader waits for independent nav and session signals'],
             [nav.includes('evara:nav-ready'), 'navigation emits nav-ready instead of unlocking the app directly'],
             [!nav.includes('markAppReady'), 'navigation cannot mark the whole app ready'],
-            [guard.includes("window.EvaraLoader?.markSessionReady?.()"), 'route guard reports verified session readiness'],
+            [guard.includes('window.EvaraLoader.markSessionReady(detail)'), 'route guard reports verified session readiness'],
             [!guard.includes("classList.remove('auth-pending', 'app-loading')"), 'route guard no longer bypasses the loader lifecycle'],
             [index.includes('/assets/brand/evaraos-mark.png?v=brand-png-2'), 'first-paint loader uses the PNG mark'],
             [index.includes('/assets/js/loader.js?v=42'), 'homepage requests the new loader build'],
