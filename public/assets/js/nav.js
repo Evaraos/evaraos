@@ -1,11 +1,11 @@
-import "./nav/nav-main-v6.js?v=nav-v56-public-fast";
-import "./nav/nav-bottom.js?v=nav-v56-public-fast";
-import "./nav/nav-drawer-close.js?v=nav-v56-public-fast";
-import "./nav/pull-to-refresh.js?v=nav-v56-public-fast";
-import "./nav/avatar-sync.js?v=nav-v56-public-fast";
+import "./nav/nav-main-v6.js?v=nav-v57-loader-gate";
+import "./nav/nav-bottom.js?v=nav-v57-loader-gate";
+import "./nav/nav-drawer-close.js?v=nav-v57-loader-gate";
+import "./nav/pull-to-refresh.js?v=nav-v57-loader-gate";
+import "./nav/avatar-sync.js?v=nav-v57-loader-gate";
 import "./ui/icon-hydrator.js?v=13";
 
-const NAV_ENTRY_BUILD = "nav-v56-public-fast";
+const NAV_ENTRY_BUILD = "nav-v57-loader-gate";
 const guardMode = document.body?.dataset?.routeGuard || "";
 const pathname = location.pathname.toLowerCase();
 const isPublicHome = guardMode === "public" && (pathname === "/" || pathname.endsWith("/index.html"));
