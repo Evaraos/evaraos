@@ -1,0 +1,80 @@
+name: Verify welcome loader repair
+
+on:
+  push:
+    branches:
+      - ui/welcome-loader-logo-readiness
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Check changed JavaScript syntax
+        run: |
+          node --check public/assets/js/loader.js
+          node --check public/assets/js/nav.js
+          node --check public/assets/js/nav/nav-main-v6.js
+          node --check public/assets/js/route-guard.js
+
+      - name: Verify loader and PNG ownership contract
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const loader = fs.readFileSync('public/assets/js/loader.js', 'utf8');
+          const nav = fs.readFileSync('public/assets/js/nav/nav-main-v6.js', 'utf8');
+          const guard = fs.readFileSync('public/assets/js/route-guard.js', 'utf8');
+          const index = fs.readFileSync('public/index.html', 'utf8');
+
+          const checks = [
+            [loader.includes("const BRAND_MARK_SRC='/assets/brand/evaraos-mark.png?v=brand-png-2'"), 'loader uses the transparent PNG mark'],
+            [loader.includes("const APP_ICON_SRC='/assets/brand/evaraos-app-icon.png?v=brand-png-1'"), 'loader keeps the square PNG app icon for install surfaces'],
+            [!loader.includes('evaraos-official-app-icon-v4') && !loader.includes('evaraos-user-app-icon-v3'), 'loader no longer accepts stale logo override keys'],
+            [loader.includes('function criticalReady()') && loader.includes('routeRequiresSession()'), 'loader has an explicit readiness gate'],
+            [loader.includes('markNavReady') && loader.includes('markSessionReady'), 'loader waits for independent nav and session signals'],
+            [nav.includes("dispatchEvent(new CustomEvent('evara:nav-ready'"), 'navigation emits nav-ready instead of unlocking the app directly'],
+            [!nav.includes('markAppReady'), 'navigation cannot mark the whole app ready'],
+            [guard.includes("window.EvaraLoader?.markSessionReady?.()"), 'route guard reports verified session readiness'],
+            [!guard.includes("classList.remove('auth-pending', 'app-loading')"), 'route guard no longer bypasses the loader lifecycle'],
+            [index.includes('/assets/brand/evaraos-mark.png?v=brand-png-2'), 'first-paint loader uses the PNG mark'],
+            [index.includes('/assets/js/loader.js?v=42'), 'homepage requests the new loader build'],
+            [index.includes('/assets/js/nav.js?v=nav-v57-loader-gate'), 'homepage requests the new nav build']
+          ];
+
+          const failed = checks.filter(([passed]) => !passed).map(([, label]) => label);
+          for (const [passed, label] of checks) console.log(`${passed ? 'PASS' : 'FAIL'}: ${label}`);
+          if (failed.length) {
+            console.error(`\nLoader repair contract failed: ${failed.join('; ')}`);
+            process.exit(1);
+          }
+          NODE
+
+      - name: Run design-system audit
+        run: node tools/design-system-audit.js
+
+      - name: Run visual-QA architecture audit
+        run: node tools/visual-qa-audit.js
+
+      - name: Run Studio component catalog audit
+        run: node tools/studio-component-catalog-audit.js
+
+      - name: Run Studio action and icon audit
+        run: node tools/studio-action-icon-audit.js
+
+      - name: Run Studio App Check audit
+        run: node tools/studio-app-check-audit.js
+
+      - name: Run Studio production authority audit
+        run: node tools/studio-production-authority-audit.js
