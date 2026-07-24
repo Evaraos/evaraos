@@ -15,7 +15,7 @@
   let domReady=document.readyState!=="loading";
   let windowLoaded=document.readyState==="complete";
   let navReady=document.documentElement.dataset.evaraosNavReady==="true";
-  let sessionReady=!routeRequiresSession();
+  let sessionReady=false;
   let bootResolved=false;
 
   function routeMode(){return document.body?.dataset?.routeGuard||""}
@@ -269,7 +269,7 @@
     domReady=document.readyState!=='loading';
     windowLoaded=document.readyState==='complete';
     navReady=navReady||document.documentElement.dataset.evaraosNavReady==='true';
-    sessionReady=sessionReady||!routeRequiresSession();
+    if(!routeRequiresSession())sessionReady=true;
     const welcome=document.getElementById(WELCOME_ID);
     const preRenderedWelcome=welcome?.classList.contains('active')===true;
     const firstBoot=preRenderedWelcome||firstBootThisSession();
@@ -307,8 +307,7 @@
     addEventListener('pageshow',event=>{
       windowLoaded=document.readyState==='complete';
       applyBrand();
-      if(event.persisted&&!authPending()){
-        bootResolved=true;
+      if(event.persisted&&(!routeRequiresSession()||sessionReady)&&!authPending()){
         finishLoad(true);
         return;
       }
@@ -317,7 +316,7 @@
     addEventListener('pagehide',resetLeavingFrame);
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{domReady=true;maybeCompleteBoot(false)},{once:true});
     forceTimer=setTimeout(()=>{
-      if(routeRequiresSession()&&authPending()){
+      if(routeRequiresSession()&&(!sessionReady||authPending())){
         shellWatchdog();
         return;
       }
