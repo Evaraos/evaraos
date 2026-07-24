@@ -10,6 +10,15 @@ on:
       - 'public/assets/js/route-guard.js'
       - 'public/index.html'
       - '.github/workflows/welcome-loader-readiness-audit.yml'
+  pull_request:
+    branches: [evaraos]
+    paths:
+      - 'public/assets/js/loader.js'
+      - 'public/assets/js/nav.js'
+      - 'public/assets/js/nav/nav-main-v6.js'
+      - 'public/assets/js/route-guard.js'
+      - 'public/index.html'
+      - '.github/workflows/welcome-loader-readiness-audit.yml'
 
 permissions:
   contents: read
