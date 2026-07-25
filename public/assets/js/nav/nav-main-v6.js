@@ -1,25 +1,29 @@
-const NAV_BUILD="nav-v57-loader-gate";
+const NAV_BUILD="nav-v58-critical-shell";
 let NAV_STATE,getNavShell,renderNav,applyProgress,bindScrollBehavior,animateNav;
 let accountSystemsPromise=null;
 
 async function loadCore(){
-  const [config,utils,renderer,scroll]=await Promise.all([
+  const [config,utils,renderer]=await Promise.all([
     import(`./nav-config.js?v=${NAV_BUILD}`),
     import(`./nav-utils.js?v=${NAV_BUILD}`),
-    import(`./nav-render.js?v=${NAV_BUILD}`),
-    import(`./nav-scroll.js?v=${NAV_BUILD}`)
+    import(`./nav-render.js?v=${NAV_BUILD}`)
   ]);
   NAV_STATE=config.NAV_STATE;
   getNavShell=utils.getNavShell;
   renderNav=renderer.renderNav;
-  applyProgress=scroll.applyProgress;
-  bindScrollBehavior=scroll.bindScrollBehavior;
-  animateNav=scroll.animateNav;
 }
 
 async function optional(path){
   try{return await import(`${path}?v=${NAV_BUILD}`)}
   catch(error){console.warn("Optional nav module failed:",path,error);return null}
+}
+
+async function loadMotionSystems(){
+  const scroll=await optional("./nav-scroll.js");
+  if(!scroll)return;
+  applyProgress=scroll.applyProgress;
+  bindScrollBehavior=scroll.bindScrollBehavior;
+  animateNav=scroll.animateNav;
 }
 
 function isPublicHome(){
@@ -61,7 +65,6 @@ async function bindCoreSystems(){
   try{events?.bindAllNavEvents?.()}catch(error){console.warn("Nav events binding failed:",error)}
   try{menu?.bindMenu?.()}catch(error){console.warn("Menu binding failed:",error)}
   try{interactions?.bindNavInteractions?.()}catch(error){console.warn("Nav interactions failed:",error)}
-  try{bindScrollBehavior?.()}catch(error){console.warn("Nav scroll binding failed:",error)}
   try{session?.bindRuntimeRefresh?.()}catch(error){console.warn("Nav session refresh failed:",error)}
   try{window.EvaraBrand?.apply?.();window.EvaraTheme?.updateThemeControls?.();window.EvaraTheme?.refreshAdaptiveGlass?.()}catch(error){console.warn("Nav theme refresh failed:",error)}
 }
@@ -89,6 +92,10 @@ function scheduleAccountSystems(){
 }
 
 async function bindSystems(){
+  await loadMotionSystems();
+  try{applyProgress?.()}catch(error){console.warn("Nav progress binding failed:",error)}
+  try{animateNav?.()}catch(error){console.warn("Nav animation failed:",error)}
+  try{bindScrollBehavior?.()}catch(error){console.warn("Nav scroll binding failed:",error)}
   await bindCoreSystems();
   scheduleAccountSystems();
 }
@@ -103,8 +110,6 @@ export async function initNav(){
     if(!renderNav()){ready();return}
     const shell=getNavShell();
     if(shell)shell.dataset.navBuild=NAV_BUILD;
-    applyProgress?.();
-    animateNav?.();
     keepVisible();
     setTimeout(keepVisible,600);
     ready();
