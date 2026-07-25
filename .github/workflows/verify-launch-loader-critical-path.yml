@@ -1,0 +1,91 @@
+name: Verify launch loader critical path
+
+on:
+  push:
+    branches:
+      - performance/launch-loader-critical-path
+  pull_request:
+    paths:
+      - 'public/assets/js/loader.js'
+      - 'public/assets/js/nav.js'
+      - 'public/assets/js/nav/nav-main-v6.js'
+      - 'public/index.html'
+      - '.github/workflows/verify-launch-loader-critical-path.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Check changed JavaScript syntax
+        run: |
+          node --check public/assets/js/loader.js
+          node --check public/assets/js/nav.js
+          node --check public/assets/js/nav/nav-main-v6.js
+
+      - name: Verify launch loader and critical path contract
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const loader = fs.readFileSync('public/assets/js/loader.js', 'utf8');
+          const nav = fs.readFileSync('public/assets/js/nav.js', 'utf8');
+          const main = fs.readFileSync('public/assets/js/nav/nav-main-v6.js', 'utf8');
+          const index = fs.readFileSync('public/index.html', 'utf8');
+
+          const checks = [
+            [loader.includes('evaraos-internal-navigation-v1'), 'loader uses internal-navigation handoff'],
+            [loader.includes('markInternalNavigation()'), 'page transitions mark the handoff'],
+            [!loader.includes('WELCOME_SESSION_KEY'), 'session-scoped welcome suppression is removed'],
+            [loader.includes("launchMode=internal?'internal':'launch'"), 'loader distinguishes internal navigation from real launch'],
+            [loader.includes("return domReady&&navGate&&sessionGate&&!authPending()"), 'critical readiness does not wait for window.load'],
+            [loader.includes('routeRequiresSession()&&(!sessionReady||authPending())'), 'protected routes cannot force reveal without session readiness'],
+            [loader.includes("BRAND_MARK_SRC='/assets/brand/evaraos-mark.png?v=brand-png-3'"), 'visible loader uses fresh transparent PNG mark'],
+            [loader.includes('ensureCriticalStyles()'), 'loader has synchronous critical styling'],
+            [index.includes("const key='evaraos-internal-navigation-v1'"), 'homepage first paint consumes navigation handoff'],
+            [index.includes("dataset.evaraLaunchMode=mode"), 'homepage communicates launch mode to runtime'],
+            [index.includes('/assets/brand/evaraos-mark.png?v=brand-png-3'), 'homepage preloads the fresh PNG mark'],
+            [index.includes('/assets/js/loader.js?v=43'), 'homepage requests the new loader build'],
+            [index.includes('/assets/js/nav.js?v=nav-v58-critical-shell'), 'homepage requests the new nav build'],
+            [(nav.match(/^import /gm) || []).length === 1, 'nav entry has only one render-critical static import'],
+            [nav.includes('loadNavEnhancements()'), 'secondary navigation modules are deferred'],
+            [main.includes('const [config,utils,renderer]=await Promise.all'), 'nav core excludes scroll from render gate'],
+            [main.includes('async function loadMotionSystems()'), 'scroll and motion load after shell render'],
+            [main.indexOf('ready();') < main.indexOf('bindSystems().catch'), 'navigation signals ready before deferred systems']
+          ];
+
+          const failed = checks.filter(([passed]) => !passed).map(([, label]) => label);
+          for (const [passed, label] of checks) console.log(`${passed ? 'PASS' : 'FAIL'}: ${label}`);
+          if (failed.length) {
+            console.error(`\nCritical-path contract failed: ${failed.join('; ')}`);
+            process.exit(1);
+          }
+          NODE
+
+      - name: Run design-system audit
+        run: node tools/design-system-audit.js
+
+      - name: Run visual-QA architecture audit
+        run: node tools/visual-qa-audit.js
+
+      - name: Run Studio component catalog audit
+        run: node tools/studio-component-catalog-audit.js
+
+      - name: Run Studio action and icon audit
+        run: node tools/studio-action-icon-audit.js
+
+      - name: Run Studio App Check audit
+        run: node tools/studio-app-check-audit.js
+
+      - name: Run Studio production authority audit
+        run: node tools/studio-production-authority-audit.js
