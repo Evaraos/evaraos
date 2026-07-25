@@ -8,7 +8,7 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <link rel="manifest" href="/manifest.json" />
-  <link rel="preload" as="image" href="/assets/brand/evaraos-mark.png?v=brand-png-2" />
+  <link rel="preload" as="image" href="/assets/brand/evaraos-mark.png?v=brand-png-3" fetchpriority="high" />
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/icon-192.png" />
@@ -29,6 +29,12 @@
     body.app-ready #appRoot{visibility:visible}
     .install-cta-wrap{display:flex;justify-content:center;margin-top:12px}
     #installBtn{display:none}
+    #evaraWelcomeLoader{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;z-index:2147483647!important;display:none;align-items:center!important;justify-content:center!important;padding:max(20px,env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) max(20px,env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));background:#eef5fb;opacity:0;visibility:hidden}
+    #evaraWelcomeLoader.active{display:flex!important;opacity:1!important;visibility:visible!important}
+    #evaraWelcomeLoader .evara-welcome-card{width:min(430px,calc(100vw - 40px));min-height:330px;padding:32px 24px;border-radius:34px;display:grid;place-items:center;align-content:center;gap:14px;text-align:center;background:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.88);box-shadow:0 32px 110px rgba(27,32,48,.22);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%)}
+    #evaraWelcomeLoader .evara-welcome-brand{position:relative;width:104px;height:104px;display:grid;place-items:center}
+    #evaraWelcomeLoader .evara-loader-core{display:grid;place-items:center}
+    #evaraWelcomeLoader .evara-loader-mark{width:42px;height:42px;object-fit:contain}
   </style>
   <link rel="stylesheet" href="/assets/css/base.css?v=54" />
   <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v10" />
@@ -41,7 +47,7 @@
 <body class="home-page app-loading" data-route-guard="public">
   <div id="evaraWelcomeLoader" class="evara-welcome-loader" aria-hidden="true" style="display:none">
     <section class="evara-welcome-card" role="status" aria-live="polite" aria-label="Opening EvaraOS">
-      <div class="evara-welcome-brand"><span class="evara-loader-orbit"></span><span class="evara-loader-core"><img class="evara-loader-mark" src="/assets/brand/evaraos-mark.png?v=brand-png-2" alt="" aria-hidden="true"></span></div>
+      <div class="evara-welcome-brand"><span class="evara-loader-orbit"></span><span class="evara-loader-core"><img class="evara-loader-mark" src="/assets/brand/evaraos-mark.png?v=brand-png-3" fetchpriority="high" decoding="async" alt="" aria-hidden="true"></span></div>
       <span class="evara-welcome-eyebrow">EVARAOS</span>
       <strong data-evara-welcome-title>Welcome to Evaraos</strong>
       <span data-evara-welcome-subtitle>Preparing your operating system.</span>
@@ -49,7 +55,7 @@
     </section>
   </div>
   <script>
-    (()=>{const node=document.getElementById('evaraWelcomeLoader');try{const nav=performance.getEntriesByType('navigation')[0];const same=document.referrer&&new URL(document.referrer).origin===location.origin;const cold=!same&&nav?.type!=='back_forward';const key='evaraos-welcome-loader-session-v3';if(cold)sessionStorage.removeItem(key);const first=sessionStorage.getItem(key)!=='1';sessionStorage.setItem(key,'1');if(!first){node.remove();return}node.style.display='flex';node.classList.add('active');node.setAttribute('aria-hidden','false')}catch{node.style.display='flex';node.classList.add('active');node.setAttribute('aria-hidden','false')}})();
+    (()=>{const node=document.getElementById('evaraWelcomeLoader');const key='evaraos-internal-navigation-v1';let internal=false;try{const started=Number(sessionStorage.getItem(key)||0);sessionStorage.removeItem(key);internal=started>0&&Date.now()-started<15000}catch{}const mode=internal?'internal':'launch';document.documentElement.dataset.evaraLaunchMode=mode;if(internal){node.remove();return}node.style.display='flex';node.classList.add('active');node.setAttribute('aria-hidden','false')})();
   </script>
   <div id="universalNavRoot"></div>
   <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
@@ -97,8 +103,8 @@
       </div>
     </footer>
   </div>
-  <script src="/assets/js/loader.js?v=42"></script>
+  <script src="/assets/js/loader.js?v=43"></script>
   <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v13-public-critical"></script>
-  <script type="module" src="/assets/js/nav.js?v=nav-v57-loader-gate"></script>
+  <script type="module" src="/assets/js/nav.js?v=nav-v58-critical-shell"></script>
 </body>
 </html>
