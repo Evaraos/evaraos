@@ -3,31 +3,55 @@
   const WELCOME_ID="evaraWelcomeLoader";
   const TRANSITION_ID="evaPageTransition";
   const STYLE_ID="evaraLoaderStyles";
-  const WELCOME_SESSION_KEY="evaraos-welcome-loader-session-v3";
+  const CRITICAL_STYLE_ID="evaraLoaderCriticalStyles";
+  const INTERNAL_NAV_KEY="evaraos-internal-navigation-v1";
+  const INTERNAL_NAV_TTL=15000;
+  const LONG_RESUME_MS=45000;
   const NAV_DELAY=90;
-  const FORCE_UNLOCK=8000;
-  const WATCHDOG_MS=3200;
+  const FORCE_UNLOCK=6000;
+  const WATCHDOG_MS=2600;
   const EXIT_MS=180;
   const WELCOME_MIN_MS=1200;
-  const BRAND_MARK_SRC='/assets/brand/evaraos-mark.png?v=brand-png-2';
+  const BRAND_MARK_SRC='/assets/brand/evaraos-mark.png?v=brand-png-3';
   const APP_ICON_SRC='/assets/brand/evaraos-app-icon.png?v=brand-png-1';
-  let timer=null,forceTimer=null,watchdogTimer=null,isTransitioning=false,welcomeStartedAt=0;
+  let timer=null,forceTimer=null,watchdogTimer=null,isTransitioning=false,welcomeStartedAt=0,hiddenAt=0;
   let domReady=document.readyState!=="loading";
   let windowLoaded=document.readyState==="complete";
   let navReady=document.documentElement.dataset.evaraosNavReady==="true";
   let sessionReady=false;
   let bootResolved=false;
+  let launchMode=document.documentElement.dataset.evaraLaunchMode||"";
 
   function routeMode(){return document.body?.dataset?.routeGuard||""}
-  function routeRequiresSession(){const mode=document.body?.dataset?.routeGuard||"";return mode==="private"||mode==="auth"}
+  function routeRequiresSession(){const mode=routeMode();return mode==="private"||mode==="auth"}
   function navRequired(){return Boolean(document.getElementById("universalNavRoot"))}
-  function markHtml(){return '<img class="evara-loader-mark" src="'+BRAND_MARK_SRC+'" alt="" aria-hidden="true">'}
+  function markHtml(){return '<img class="evara-loader-mark" src="'+BRAND_MARK_SRC+'" fetchpriority="high" decoding="async" alt="" aria-hidden="true">'}
   function transition(){return document.getElementById(TRANSITION_ID)}
   function authPending(){return document.documentElement.classList.contains('auth-pending')||document.body?.classList.contains('auth-pending')}
   function appPending(){return !bootResolved||authPending()||document.documentElement.classList.contains('boot-pending')||document.body?.classList.contains('app-loading')||isTransitioning}
   function clearTimers(){if(timer)clearTimeout(timer);if(forceTimer)clearTimeout(forceTimer);timer=forceTimer=null}
 
+  function ensureCriticalStyles(){
+    if(document.getElementById(CRITICAL_STYLE_ID))return;
+    const style=document.createElement('style');
+    style.id=CRITICAL_STYLE_ID;
+    style.textContent=[
+      '#evaraWelcomeLoader,#evaraFastLoader{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;z-index:2147483647!important;align-items:center!important;justify-content:center!important}',
+      '#evaraWelcomeLoader.active,#evaraFastLoader.active{display:flex!important;opacity:1!important;visibility:visible!important}',
+      '#evaraWelcomeLoader{padding:max(20px,env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) max(20px,env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));background:var(--bg-primary,#eef5fb)}',
+      '#evaraFastLoader{background:color-mix(in srgb,var(--bg-primary,#eef5fb) 34%,transparent);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}',
+      '.evara-welcome-card{width:min(430px,calc(100vw - 40px));min-height:330px;padding:32px 24px;border-radius:34px;display:grid;place-items:center;align-content:center;gap:14px;text-align:center;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.45);box-shadow:0 32px 110px rgba(27,32,48,.24);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%)}',
+      '.evara-welcome-brand,.evara-loader-fast-wrap{position:relative;display:grid;place-items:center}',
+      '.evara-welcome-brand{width:104px;height:104px}',
+      '.evara-loader-fast-wrap{width:76px;height:76px}',
+      '.evara-loader-core{display:grid;place-items:center}',
+      '.evara-loader-mark{width:42px;height:42px;object-fit:contain}'
+    ].join('');
+    document.head.appendChild(style);
+  }
+
   function ensureStyles(){
+    ensureCriticalStyles();
     if(document.getElementById(STYLE_ID)||document.querySelector('link[href*="/assets/css/loaders/loader-viewport.css"]'))return;
     const link=document.createElement('link');
     link.id=STYLE_ID;
@@ -56,6 +80,24 @@
     ensureIconLink('icon',APP_ICON_SRC);
     ensureIconLink('shortcut icon',APP_ICON_SRC);
     ensureIconLink('apple-touch-icon',APP_ICON_SRC);
+  }
+
+  function markInternalNavigation(){
+    try{sessionStorage.setItem(INTERNAL_NAV_KEY,String(Date.now()))}catch{}
+  }
+
+  function resolveLaunchMode(){
+    if(launchMode)return launchMode;
+    const preset=document.documentElement.dataset.evaraLaunchMode;
+    if(preset){launchMode=preset;return launchMode}
+    try{
+      const started=Number(sessionStorage.getItem(INTERNAL_NAV_KEY)||0);
+      sessionStorage.removeItem(INTERNAL_NAV_KEY);
+      const internal=started>0&&Date.now()-started<INTERNAL_NAV_TTL;
+      launchMode=internal?'internal':'launch';
+    }catch{launchMode='launch'}
+    document.documentElement.dataset.evaraLaunchMode=launchMode;
+    return launchMode;
   }
 
   function createFastLoader(){
@@ -168,7 +210,7 @@
   function criticalReady(){
     const navGate=!navRequired()||navReady||document.documentElement.dataset.evaraosNavReady==='true';
     const sessionGate=!routeRequiresSession()||sessionReady;
-    return domReady&&windowLoaded&&navGate&&sessionGate&&!authPending();
+    return domReady&&navGate&&sessionGate&&!authPending();
   }
 
   function maybeCompleteBoot(immediate=false){
@@ -193,23 +235,16 @@
     maybeCompleteBoot(false);
   }
 
-  function firstBootThisSession(){
-    try{
-      if(sessionStorage.getItem(WELCOME_SESSION_KEY)==='1')return false;
-      sessionStorage.setItem(WELCOME_SESSION_KEY,'1');
-      return true;
-    }catch{return true}
-  }
-
-  function beginNavigationLoad(options={}){
+  function beginNavigationLoad(){
     if(isTransitioning)return;
     isTransitioning=true;
     bootResolved=false;
+    markInternalNavigation();
     clearTimers();
     ensure();
     document.body?.classList.add('eva-page-leaving');
     transition()?.classList.add('active');
-    timer=setTimeout(()=>showFastLoader(options),NAV_DELAY);
+    timer=setTimeout(showFastLoader,NAV_DELAY);
     forceTimer=setTimeout(()=>{if(authPending())showFastLoader();else finishLoad(true)},FORCE_UNLOCK);
   }
 
@@ -232,6 +267,7 @@
     return{
       path:location.pathname,
       routeMode:routeMode(),
+      launchMode:resolveLaunchMode(),
       appReady:document.body?.classList.contains('app-ready')===true,
       pending:appPending(),
       authPending:authPending(),
@@ -258,12 +294,25 @@
     if(appPending()&&!document.querySelector('#evaraFastLoader.active,#evaraWelcomeLoader.active'))showFastLoader();
     const root=document.getElementById('universalNavRoot');
     if(root&&!root.querySelector('.eva-nav-layer')&&!document.documentElement.dataset.evaraosNavReady){
-      import('/assets/js/nav.js?v=nav-v57-loader-gate').catch(error=>console.warn('Nav watchdog import failed:',error));
+      import('/assets/js/nav.js?v=nav-v58-critical-shell').catch(error=>console.warn('Nav watchdog import failed:',error));
     }
     window.dispatchEvent(new CustomEvent('evaraos:shell-watchdog',{detail:{...health()}}));
   }
 
+  function handleVisibilityChange(){
+    if(document.visibilityState==='hidden'){
+      hiddenAt=Date.now();
+      return;
+    }
+    if(!hiddenAt||Date.now()-hiddenAt<LONG_RESUME_MS||isTransitioning)return;
+    hiddenAt=0;
+    bootResolved=false;
+    showWelcomeLoader({title:'Welcome back to Evaraos',subtitle:'Refreshing your workspace.'});
+    requestAnimationFrame(()=>maybeCompleteBoot(false));
+  }
+
   function init(){
+    ensureCriticalStyles();
     applyBrand();
     ensure();
     domReady=document.readyState!=='loading';
@@ -272,11 +321,9 @@
     if(!routeRequiresSession())sessionReady=true;
     const welcome=document.getElementById(WELCOME_ID);
     const preRenderedWelcome=welcome?.classList.contains('active')===true;
-    const firstBoot=preRenderedWelcome||firstBootThisSession();
-    if(document.body?.classList.contains('app-loading')){
-      if(firstBoot)showWelcomeLoader();
-      else showFastLoader();
-    }
+    const mode=resolveLaunchMode();
+    if(preRenderedWelcome||mode==='launch')showWelcomeLoader();
+    else if(document.body?.classList.contains('app-loading'))showFastLoader();
     window.EvaraBrand={mark:BRAND_MARK_SRC,appIcon:APP_ICON_SRC,apply:applyBrand,hydrate:async()=>applyBrand()};
     window.EvaraLoader={
       beginNavigationLoad,
@@ -303,7 +350,7 @@
     });
     addEventListener('evara:nav-ready',markNavReady);
     addEventListener('evara:session-ready',markSessionReady);
-    addEventListener('load',()=>{windowLoaded=true;applyBrand();if(!maybeCompleteBoot(false))shellWatchdog()});
+    addEventListener('load',()=>{windowLoaded=true;applyBrand();maybeCompleteBoot(false)});
     addEventListener('pageshow',event=>{
       windowLoaded=document.readyState==='complete';
       applyBrand();
@@ -314,6 +361,7 @@
       if(!maybeCompleteBoot(true)&&appPending()&&!document.querySelector('#evaraFastLoader.active,#evaraWelcomeLoader.active'))showFastLoader();
     });
     addEventListener('pagehide',resetLeavingFrame);
+    document.addEventListener('visibilitychange',handleVisibilityChange);
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{domReady=true;maybeCompleteBoot(false)},{once:true});
     forceTimer=setTimeout(()=>{
       if(routeRequiresSession()&&(!sessionReady||authPending())){
