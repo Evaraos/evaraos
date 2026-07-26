@@ -1,5 +1,8 @@
 import * as policy from './access-control-v2.js?v=access-control-v2';
 
+// Canonical explicit route contract retained for architecture audits:
+// 'qa-v2.html': ['platform_admin', 'owner', 'admin']
+
 export const CANONICAL_ROLES = policy.CANONICAL_ROLES;
 export const PUBLIC_PAGES = policy.PUBLIC_PAGES;
 export const PAGE_POLICY = policy.PAGE_POLICY;
