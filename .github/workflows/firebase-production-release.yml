@@ -198,7 +198,7 @@ jobs:
         if: inputs.release_scope == 'functions' || inputs.release_scope == 'backend' || inputs.release_scope == 'all'
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
-        run: firebase functions:list --project evaraos-web --json >/dev/null
+        run: firebase functions:list --project evaraos --json >/dev/null
 
       - name: Verify required Firebase Functions secrets
         if: inputs.release_scope == 'functions' || inputs.release_scope == 'backend' || inputs.release_scope == 'all'
