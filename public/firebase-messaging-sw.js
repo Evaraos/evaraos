@@ -12,14 +12,15 @@ firebase.initializeApp({
 });
 
 const messaging = firebase.messaging();
+const OFFICIAL_APP_ICON = "/assets/brand/evaraos-app-icon.png?v=brand-contract-2";
 
 messaging.onBackgroundMessage((payload) => {
   const data = payload.data || {};
   const notification = payload.notification || {};
   return self.registration.showNotification(notification.title || "New message", {
     body: notification.body || "You received a new message.",
-    icon: "/assets/img/icon-192.png",
-    badge: "/assets/img/favicon-32.png",
+    icon: OFFICIAL_APP_ICON,
+    badge: OFFICIAL_APP_ICON,
     tag: `evara-message-${data.channelId || "chat"}`,
     renotify: true,
     data: {
