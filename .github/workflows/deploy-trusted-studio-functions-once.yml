@@ -1,4 +1,4 @@
-name: Trusted Studio Functions Production Deployment
+name: Trusted Studio and Experience Functions Production Deployment
 
 on:
   workflow_dispatch:
@@ -16,18 +16,21 @@ concurrency:
   group: trusted-studio-functions-production
   cancel-in-progress: true
 
+env:
+  FIREBASE_PROJECT_ID: evaraos-web
+  TRUSTED_FUNCTIONS: openStudioBranch,commitStudioTransaction,getStudioOperationRange,createStudioCheckpoint,restoreStudioCheckpoint,createStudioBranch,closeStudioSession,prepareStudioRelease,getExperienceEditorState,saveExperienceDraft,publishExperienceConfig,uploadExperienceAsset,getPublicExperienceConfig
+
 jobs:
   validate:
-    name: Validate trusted Studio Functions
+    name: Validate trusted Studio and Experience Functions
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     outputs:
       validated_sha: ${{ steps.source.outputs.sha }}
       source_proof_sha: ${{ steps.source_proof.outputs.sha }}
 
     steps:
       - name: Verify manual confirmation
-        if: github.event_name == 'workflow_dispatch'
         shell: bash
         run: |
           set -euo pipefail
@@ -68,17 +71,26 @@ jobs:
             functions/studio-journal-core.js \
             functions/studio-journal-core.test.js \
             functions/studio-journal-service.js \
+            functions/experience-config-service.js \
             functions/index-stats.js \
             functions/package.json \
             public/assets/js/firebase.js \
             public/assets/js/studio \
+            public/assets/js/experience \
+            public/assets/js/loader.js \
+            public/assets/js/nav.js \
+            public/assets/js/nav \
             public/assets/css/pages/studio-production-authority.css \
+            public/assets/css/pages/studio-experience-builder.css \
+            public/index.html \
             public/website-builder.html \
+            firebase.json \
             tests/visual/specs/studio-canvas-session.spec.mjs \
             tools/studio-app-check-audit.js \
             tools/studio-trusted-journal-audit.js \
             tools/studio-production-authority-audit.js \
             tools/studio-canvas-sandbox-audit.js \
+            tools/owner-experience-builder-audit.js \
             tools/visual-qa-audit.js
           echo "sha=$PROOF_SHA" >> "$GITHUB_OUTPUT"
           echo "Confirmed source proof: $PROOF_SHA"
@@ -91,28 +103,31 @@ jobs:
       - name: Install Functions dependencies
         run: npm install --prefix functions --package-lock=false --ignore-scripts --no-audit --no-fund
 
-      - name: Validate trusted Studio source syntax
+      - name: Validate trusted source syntax
         run: |
           set -euo pipefail
           node --check functions/index-stats.js
           node --check functions/studio-journal-core.js
           node --check functions/studio-journal-service.js
           node --check functions/studio-journal-core.test.js
+          node --check functions/experience-config-service.js
+          node --check public/assets/js/loader.js
+          node --experimental-default-type=module --check public/assets/js/experience/experience-runtime.js
+          node --experimental-default-type=module --check public/assets/js/experience/experience-config-client.js
+          node --experimental-default-type=module --check public/assets/js/experience/owner-experience-publisher.js
+          node --experimental-default-type=module --check public/assets/js/studio/studio-experience-builder.js
 
       - name: Run trusted Studio Journal tests
         run: npm run test:studio-journal --prefix functions
 
-      - name: Run Studio App Check audit
-        run: node tools/studio-app-check-audit.js
-
-      - name: Run trusted Journal architecture audit
-        run: node tools/studio-trusted-journal-audit.js
-
-      - name: Run Studio production authority audit
-        run: node tools/studio-production-authority-audit.js
-
-      - name: Run CanvasSession audit
-        run: node tools/studio-canvas-sandbox-audit.js
+      - name: Run trusted architecture audits
+        run: |
+          set -euo pipefail
+          node tools/studio-app-check-audit.js
+          node tools/studio-trusted-journal-audit.js
+          node tools/studio-production-authority-audit.js
+          node tools/studio-canvas-sandbox-audit.js
+          node tools/owner-experience-builder-audit.js
 
       - name: Verify Firebase service account
         shell: bash
@@ -130,6 +145,11 @@ jobs:
 
       - name: Install Firebase CLI
         run: npm install -g firebase-tools@latest
+
+      - name: Verify Firebase inventory access
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: firebase functions:list --project "$FIREBASE_PROJECT_ID" --json >/dev/null
 
       - name: Report validation failure
         if: failure()
@@ -155,10 +175,10 @@ jobs:
         run: rm -f "$RUNNER_TEMP/firebase-service-account.json"
 
   deploy:
-    name: Deploy trusted Studio Functions
+    name: Deploy trusted Studio and Experience Functions
     needs: validate
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     environment: production
 
     steps:
@@ -169,21 +189,17 @@ jobs:
           fetch-depth: 0
 
       - name: Verify validated source
-        shell: bash
-        run: |
-          set -euo pipefail
-          test "$(git rev-parse HEAD)" = "${{ needs.validate.outputs.validated_sha }}"
+        run: test "$(git rev-parse HEAD)" = "${{ needs.validate.outputs.validated_sha }}"
 
       - name: Use Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Install Functions dependencies
-        run: npm install --prefix functions --package-lock=false --ignore-scripts --no-audit --no-fund
-
-      - name: Install Firebase CLI
-        run: npm install -g firebase-tools@latest
+      - name: Install Functions dependencies and Firebase CLI
+        run: |
+          npm install --prefix functions --package-lock=false --ignore-scripts --no-audit --no-fund
+          npm install -g firebase-tools@latest
 
       - name: Write Firebase service account
         shell: bash
@@ -191,58 +207,44 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EVARAOS_WEB }}
         run: |
           set -euo pipefail
-          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
-            echo "FIREBASE_SERVICE_ACCOUNT_EVARAOS_WEB is not configured."
-            exit 1
-          fi
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
           chmod 600 "$RUNNER_TEMP/firebase-service-account.json"
           node -e "const value=JSON.parse(require('fs').readFileSync(process.env.RUNNER_TEMP + '/firebase-service-account.json','utf8')); if(value.project_id!=='evaraos-web') throw new Error('Service account project_id must be evaraos-web');"
 
-      - name: Deploy eight trusted Studio callables
+      - name: Deploy thirteen trusted Studio and Experience functions
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
         shell: bash
         run: |
           set -euo pipefail
-          firebase deploy \
-            --only functions:openStudioBranch,functions:commitStudioTransaction,functions:getStudioOperationRange,functions:createStudioCheckpoint,functions:restoreStudioCheckpoint,functions:createStudioBranch,functions:closeStudioSession,functions:prepareStudioRelease \
-            --project evaraos-web \
-            --non-interactive
+          ONLY=$(printf 'functions:%s,' ${TRUSTED_FUNCTIONS//,/ } | sed 's/,$//')
+          firebase deploy --only "$ONLY" --project "$FIREBASE_PROJECT_ID" --non-interactive
 
-      - name: Verify deployed callable inventory
+      - name: Verify deployed function inventory
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
         shell: bash
         run: |
           set -euo pipefail
-          firebase functions:list --project evaraos-web > "$RUNNER_TEMP/firebase-functions-list.txt"
-          for function_name in \
-            openStudioBranch \
-            commitStudioTransaction \
-            getStudioOperationRange \
-            createStudioCheckpoint \
-            restoreStudioCheckpoint \
-            createStudioBranch \
-            closeStudioSession \
-            prepareStudioRelease
-          do
-            grep -q "$function_name" "$RUNNER_TEMP/firebase-functions-list.txt"
+          firebase functions:list --project "$FIREBASE_PROJECT_ID" --json > "$RUNNER_TEMP/firebase-functions-list.json"
+          IFS=',' read -ra FUNCTIONS <<< "$TRUSTED_FUNCTIONS"
+          for function_name in "${FUNCTIONS[@]}"; do
+            grep -q "$function_name" "$RUNNER_TEMP/firebase-functions-list.json"
           done
-          printf 'project=evaraos-web\ncommit=%s\nsource_proof=%s\ndeployed_at=%s\nfunctions=8\n' \
+          printf 'project=%s\ncommit=%s\nsource_proof=%s\ndeployed_at=%s\nfunctions=13\n' \
+            "$FIREBASE_PROJECT_ID" \
             "${{ needs.validate.outputs.validated_sha }}" \
             "${{ needs.validate.outputs.source_proof_sha }}" \
             "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             > "$RUNNER_TEMP/trusted-studio-deployment-proof.txt"
-          cat "$RUNNER_TEMP/trusted-studio-deployment-proof.txt"
 
       - name: Upload deployment proof
         uses: actions/upload-artifact@v4
         with:
-          name: trusted-studio-functions-deployment-${{ github.run_id }}
+          name: trusted-studio-experience-functions-deployment-${{ github.run_id }}
           path: |
             ${{ runner.temp }}/trusted-studio-deployment-proof.txt
-            ${{ runner.temp }}/firebase-functions-list.txt
+            ${{ runner.temp }}/firebase-functions-list.json
           if-no-files-found: error
           retention-days: 30
 
@@ -251,6 +253,7 @@ jobs:
           VALIDATED_SHA: ${{ needs.validate.outputs.validated_sha }}
           SOURCE_PROOF_SHA: ${{ needs.validate.outputs.source_proof_sha }}
           WORKFLOW_RUN_ID: ${{ github.run_id }}
+          TRUSTED_FUNCTIONS: ${{ env.TRUSTED_FUNCTIONS }}
         shell: bash
         run: |
           set -euo pipefail
@@ -260,36 +263,25 @@ jobs:
           node <<'NODE'
           const fs = require('fs');
           const proof = {
-            schemaVersion: 'evara.deployment-proof.v1',
+            schemaVersion: 'evara.deployment-proof.v2',
             status: 'confirmed',
             projectId: 'evaraos-web',
             region: 'us-central1',
-            scope: 'trusted-studio-functions',
+            scope: 'trusted-studio-experience-functions',
             validatedCommit: process.env.VALIDATED_SHA,
             sourceProofCommit: process.env.SOURCE_PROOF_SHA,
             workflowRunId: process.env.WORKFLOW_RUN_ID,
             deployedAt: new Date().toISOString(),
             verification: 'firebase functions:list',
-            callables: [
-              'openStudioBranch',
-              'commitStudioTransaction',
-              'getStudioOperationRange',
-              'createStudioCheckpoint',
-              'restoreStudioCheckpoint',
-              'createStudioBranch',
-              'closeStudioSession',
-              'prepareStudioRelease'
-            ]
+            functions: String(process.env.TRUSTED_FUNCTIONS || '').split(',').filter(Boolean)
           };
           fs.writeFileSync('docs/deployments/trusted-studio-functions-production.json', `${JSON.stringify(proof, null, 2)}\n`);
           NODE
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/deployments/trusted-studio-functions-production.json
-          if git diff --cached --quiet; then
-            echo "Deployment proof already matches the confirmed deployment."
-          else
-            git commit -m "ops: confirm trusted Studio Functions deployment [skip ci]"
+          if ! git diff --cached --quiet; then
+            git commit -m "ops: confirm trusted Studio and Experience Functions deployment [skip ci]"
             git push origin HEAD:evaraos
           fi
 
@@ -302,35 +294,14 @@ jobs:
               repo: context.repo.repo,
               issue_number: 29,
               body: [
-                '## Gate C — Trusted Functions deployment confirmed',
+                '## Gate C — Trusted Studio and Experience Functions deployment confirmed',
                 '',
-                '✅ All eight trusted Studio callables are deployed and present in Firebase inventory.',
+                '✅ All thirteen trusted functions are deployed and present in Firebase inventory.',
                 `Validated commit: \`${{ toJSON(needs.validate.outputs.validated_sha) }}\``,
                 `Source proof commit: \`${{ toJSON(needs.validate.outputs.source_proof_sha) }}\``,
                 `Workflow run: \`${context.runId}\``,
                 '',
-                'Repository proof: `docs/deployments/trusted-studio-functions-production.json`',
-                '',
-                'Verified production activation advances to **55%** after proof review.'
-              ].join('\n')
-            });
-
-      - name: Report deployment failure
-        if: failure()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: 29,
-              body: [
-                '## Gate C — Trusted Functions deployment failed',
-                '',
-                `Validated commit: \`${{ toJSON(needs.validate.outputs.validated_sha) }}\``,
-                `Workflow run: \`${context.runId}\``,
-                '',
-                'Gate C remains blocked. Review the deployment job logs; no production confirmation is recorded without the proof file.'
+                'Repository proof: `docs/deployments/trusted-studio-functions-production.json`'
               ].join('\n')
             });
 
@@ -340,8 +311,8 @@ jobs:
 
       - name: Deployment summary
         run: |
-          echo "Trusted Studio Functions deployment completed."
-          echo "Project: evaraos-web"
+          echo "Trusted Studio and Experience Functions deployment completed."
+          echo "Project: $FIREBASE_PROJECT_ID"
           echo "Commit: ${{ needs.validate.outputs.validated_sha }}"
           echo "Source proof: ${{ needs.validate.outputs.source_proof_sha }}"
-          echo "Callable count: 8"
+          echo "Function count: 13"
