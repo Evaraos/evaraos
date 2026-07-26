@@ -1,15 +1,16 @@
-import "./nav/nav-main-v6.js?v=nav-v58-critical-shell";
+import "./nav/nav-main-v6.js?v=nav-v59-experience-builder";
 
-const NAV_ENTRY_BUILD = "nav-v58-critical-shell";
+const NAV_ENTRY_BUILD = "nav-v59-experience-builder";
 const guardMode = document.body?.dataset?.routeGuard || "";
 const pathname = location.pathname.toLowerCase();
 const isPublicHome = guardMode === "public" && (pathname === "/" || pathname.endsWith("/index.html"));
 const isStudioRoute = /(?:website-builder|studio|blueprint|design-system)/.test(pathname);
-const ownerRoles = new Set(["owner", "super_admin", "admin"]);
+const ownerRoles = new Set(["owner", "super_admin", "platform_admin", "admin"]);
 let ownerEditorRequested = false;
 let navEnhancementsRequested = false;
 let privateRuntimeRequested = false;
 let studioRuntimeRequested = false;
+let experienceRuntimeRequested = false;
 
 function safeImport(path) {
   return import(path).catch((error) => {
@@ -38,7 +39,16 @@ function storedRole() {
 function maybeLoadOwnerEditor(role = "") {
   if (ownerEditorRequested || !ownerRoles.has(String(role || "").trim().toLowerCase())) return;
   ownerEditorRequested = true;
-  runWhenIdle(() => safeImport("./owner-editor.js?v=5"));
+  runWhenIdle(() => Promise.all([
+    safeImport("./owner-editor.js?v=6"),
+    safeImport("./experience/owner-experience-publisher.js?v=1")
+  ]).catch(() => {}));
+}
+
+function loadExperienceRuntime() {
+  if (experienceRuntimeRequested) return;
+  experienceRuntimeRequested = true;
+  safeImport("./experience/experience-runtime.js?v=1");
 }
 
 function loadNavEnhancements() {
@@ -46,13 +56,13 @@ function loadNavEnhancements() {
   navEnhancementsRequested = true;
 
   Promise.all([
-    safeImport("./nav/nav-bottom.js?v=nav-v58-critical-shell"),
-    safeImport("./nav/nav-drawer-close.js?v=nav-v58-critical-shell")
+    safeImport("./nav/nav-bottom.js?v=nav-v59-experience-builder"),
+    safeImport("./nav/nav-drawer-close.js?v=nav-v59-experience-builder")
   ]).catch(() => {});
 
   runWhenIdle(() => Promise.all([
-    safeImport("./nav/pull-to-refresh.js?v=nav-v58-critical-shell"),
-    safeImport("./nav/avatar-sync.js?v=nav-v58-critical-shell"),
+    safeImport("./nav/pull-to-refresh.js?v=nav-v59-experience-builder"),
+    safeImport("./nav/avatar-sync.js?v=nav-v59-experience-builder"),
     safeImport("./ui/icon-hydrator.js?v=13")
   ]).catch(() => {}), 1800);
 }
@@ -82,6 +92,7 @@ function loadStudioRuntime() {
 }
 
 function onNavReady() {
+  loadExperienceRuntime();
   loadNavEnhancements();
   loadPrivateRuntime();
   loadStudioRuntime();
