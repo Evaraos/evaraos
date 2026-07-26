@@ -1,84 +1,62 @@
 (() => {
   'use strict';
 
-  const BRAND_VERSION = 'brand-contract-2';
-  const OFFICIAL_ICON = '/assets/brand/evaraos-app-icon.png?v=' + BRAND_VERSION;
-  const OWNER_ROLES = new Set(['owner', 'super_admin', 'admin']);
+  const VERSION = 'brand-canonical-20260726-1';
+  const MARK_SRC = `/assets/brand/evaraos-mark.png?v=${VERSION}`;
+  const APP_ICON_SRC = `/assets/brand/evaraos-app-icon.png?v=${VERSION}`;
+  const LEGACY_KEYS = [
+    'evaraos-app-icon-snapshot-v2',
+    'evaraos-official-app-icon-v1',
+    'evaraos-official-app-icon-v2',
+    'evaraos-official-app-icon-v3',
+    'evaraos-official-app-icon-v4',
+    'evaraos-user-app-icon-v1',
+    'evaraos-user-app-icon-v2',
+    'evaraos-user-app-icon-v3'
+  ];
 
-  function canonicalIcon() {
-    return String(
-      window.EvaraBrandAssets?.icon ||
-      window.EvaraBrand?.appIcon ||
-      window.EvaraAppBuilder?.getConfig?.()?.brand?.appIconUrl ||
-      OFFICIAL_ICON
-    );
+  function clearLegacyOverrides() {
+    try { LEGACY_KEYS.forEach((key) => localStorage.removeItem(key)); } catch {}
   }
 
-  function ensureOwnerAccess(role = '') {
-    const normalized = String(role || '').toLowerCase().replace(/\s+/g, '_');
-    const allowed = OWNER_ROLES.has(normalized);
-    document.querySelectorAll('[data-owner-icon-tools]').forEach(panel => {
-      panel.hidden = !allowed;
-      panel.setAttribute('aria-hidden', String(!allowed));
+  function activeIcon() {
+    return window.EvaraosAppIcons?.activeIcon?.()
+      || window.EvaraosBrandAssets?.activeIcon?.()
+      || APP_ICON_SRC;
+  }
+
+  function forceImages() {
+    clearLegacyOverrides();
+    window.EvaraosAppIcons?.forcePreviewSync?.();
+    window.EvaraosBrandAssets?.apply?.();
+    document.querySelectorAll('[data-evaraos-brand-icon]').forEach((node) => {
+      node.style.setProperty('--evaraos-brand-icon', `url("${MARK_SRC}")`);
+      node.style.backgroundImage = `url("${MARK_SRC}")`;
+      node.style.backgroundSize = 'contain';
+      node.style.backgroundPosition = 'center';
+      node.style.backgroundRepeat = 'no-repeat';
     });
-  }
-
-  function bindOwnerAccess() {
-    ensureOwnerAccess(document.documentElement.dataset.evaraosRole || document.body?.dataset?.role || '');
-    window.addEventListener('evara:session-ready', event => ensureOwnerAccess(event.detail?.role || ''), { passive: true });
-  }
-
-  function bindOfficialPreviewNotice() {
-    document.querySelectorAll('[data-official-icon-upload]').forEach(input => {
-      if (input.dataset.brandContractBound === 'true') return;
-      input.dataset.brandContractBound = 'true';
-      input.addEventListener('change', event => {
-        event.preventDefault();
-        const file = input.files?.[0];
-        if (file && window.EvaraosAppIcons) {
-          const personalInput = document.querySelector('[data-custom-icon-upload]');
-          if (personalInput) {
-            const transfer = new DataTransfer();
-            transfer.items.add(file);
-            personalInput.files = transfer.files;
-            personalInput.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-        }
-        input.value = '';
-      });
-    });
-  }
-
-  function repair() {
-    if (window.EvaraosAppIcons?.repair) {
-      window.EvaraosAppIcons.repair();
-      return;
-    }
-    const src = canonicalIcon();
-    document.querySelectorAll('[data-evaraos-brand-icon]').forEach(node => {
-      if (node.tagName === 'IMG') node.src = src;
-      else {
-        node.style.setProperty('--evaraos-brand-icon', `url("${src}")`);
-        node.style.backgroundImage = `url("${src}")`;
-        node.style.backgroundSize = 'contain';
-        node.style.backgroundPosition = 'center';
-        node.style.backgroundRepeat = 'no-repeat';
-      }
-    });
+    return activeIcon();
   }
 
   function boot() {
-    bindOwnerAccess();
-    bindOfficialPreviewNotice();
-    repair();
+    forceImages();
+    window.addEventListener('evaraos:app-icon-change', forceImages);
+    window.addEventListener('evara:app-builder-ready', forceImages);
+    window.addEventListener('evara:app-builder-updated', forceImages);
+    window.addEventListener('pageshow', forceImages);
   }
 
-  window.EvaraosIconGuard = {
-    repair,
-    activeIcon: canonicalIcon,
-    hydrateOfficialIcon: async () => canonicalIcon(),
-    forceImages: repair
-  };
+  window.EvaraosIconGuard = Object.freeze({
+    version: VERSION,
+    mark: MARK_SRC,
+    canonicalIcon: APP_ICON_SRC,
+    activeIcon,
+    forceImages,
+    repair: forceImages
+  });
 
-  document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', boot, { once: true }) : boot();
+  document.readyState === 'loading'
+    ? document.addEventListener('DOMContentLoaded', boot, { once: true })
+    : boot();
 })();
