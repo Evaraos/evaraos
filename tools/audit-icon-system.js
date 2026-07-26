@@ -69,18 +69,20 @@ assertPng(LOGO_PATH, "OG brand logo", failures);
 assertPng(ICON_PATH, "E app icon", failures);
 
 const loader = read("public/assets/js/loader.js");
-if (!loader.includes(`BRAND_LOGO_SRC='${LOGO_URL}'`)) failures.push("Loader does not declare the canonical OG PNG logo");
-if (!loader.includes(`BRAND_ICON_SRC='${ICON_URL}'`)) failures.push("Loader does not declare the canonical E PNG icon");
+if (!loader.includes("const BRAND_VERSION='brand-contract-2'")) failures.push("Loader brand contract version is missing");
+if (!loader.includes("const BRAND_LOGO_SRC='/assets/img/evaraos_logo.png?v='+BRAND_VERSION")) failures.push("Loader does not declare the canonical OG PNG logo");
+if (!loader.includes("const BRAND_ICON_SRC='/assets/brand/evaraos-app-icon.png?v='+BRAND_VERSION")) failures.push("Loader does not declare the canonical E PNG icon");
 if (!loader.includes("[data-evaraos-brand-logo],.sidebar-logo")) failures.push("Loader does not repair visible logo surfaces");
 if (!loader.includes("[data-evaraos-brand-icon]")) failures.push("Loader does not repair icon surfaces");
-if (!loader.includes(`MANIFEST_SRC='${MANIFEST_URL}'`)) failures.push("Loader does not version the canonical manifest");
+if (!loader.includes("const MANIFEST_SRC='/manifest.json?v='+BRAND_VERSION")) failures.push("Loader does not version the canonical manifest");
 
 const home = read("public/index.html");
 if (!home.includes(`data-evaraos-brand-logo src="${LOGO_URL}"`)) failures.push("Homepage first paint does not use the OG PNG logo");
 if (!home.includes(`rel="manifest" href="${MANIFEST_URL}"`)) failures.push("Homepage does not request the versioned manifest");
 
 const iconStudio = read("public/assets/js/app-icon-studio-single-source.js");
-if (!iconStudio.includes(`const OFFICIAL_ICON = '${ICON_URL}'`)) failures.push("App Icon Studio does not use the canonical E PNG icon");
+if (!iconStudio.includes("const BRAND_VERSION = 'brand-contract-2'")) failures.push("App Icon Studio brand contract version is missing");
+if (!iconStudio.includes("const OFFICIAL_ICON = '/assets/brand/evaraos-app-icon.png?v=' + BRAND_VERSION")) failures.push("App Icon Studio does not use the canonical E PNG icon");
 if (/const\s+ICON\s*=\s*['"]data:image\//.test(iconStudio)) failures.push("App Icon Studio embeds a stale image as icon authority");
 if (iconStudio.includes("evaraos-official-app-icon-v4") && !iconStudio.includes("LEGACY_KEYS")) failures.push("App Icon Studio still trusts the legacy official-icon key");
 
