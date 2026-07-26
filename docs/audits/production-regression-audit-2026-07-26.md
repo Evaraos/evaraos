@@ -2,12 +2,13 @@
 
 ## Executive finding
 
-The customer and branding regressions came from a split release line, not one isolated typo.
+The customer, navigation, editor-publishing, and branding regressions came from a split release line plus competing client authorities, not one isolated typo.
 
 - Firebase Hosting was deployed from `fadec0085c0ab5a2186635edc882344849e18079` at 2026-07-26T06:59:02Z.
 - That production commit is on a line 59 commits ahead of the shared merge base and outside the current default-branch history.
 - The default branch later received a destructive icon-consolidation change, while customer and brand repairs remained in separate draft branches.
-- Firestore was not deployed with the hosting release, so the live browser bundle and live rules were not released as one tested contract.
+- Hosting and Firestore were not released as one tested application contract.
+- This recovery work is intentionally based on the exact deployed production commit to avoid rolling back the live Studio line.
 
 ## Customer login and portal
 
@@ -15,53 +16,72 @@ The customer and branding regressions came from a split release line, not one is
 
 Authentication itself can succeed. The failure occurs after sign-in:
 
-1. Login redirects a customer to `customer_dashboard.html`.
-2. The private route guard immediately requires a fresh Firestore profile.
-3. The production portal then performs unrestricted reads of jobs, services, subscriptions, and users.
-4. Firestore rules require customer-owned scoped queries and treated customers like approval-gated staff.
-5. The portal swallows denied queries as empty arrays, and one profile-hydration failure path never releases the loading shell.
+1. The private route guard requires a fresh Firestore profile after Firebase Authentication.
+2. A transient profile-read failure cleared the saved session and redirected the customer to login.
+3. The production portal performed unrestricted collection reads and converted denied queries to empty arrays.
+4. Firestore requires customer-owned query constraints.
+5. The UI could therefore loop, stay blank, or falsely report no service history.
 
-This presents as a login loop, blank page, or false empty service history.
+### Surgical recovery
 
-### Recovery patch
+- Publish a sanitized verified route-session profile from the route guard.
+- Permit an exact-UID cached profile only as a routing fallback when Firebase Authentication is still valid; Firestore remains the data authority.
+- Query `jobs`, `customer_services`, `subscriptions`, and `customer_service_history` by `customerUid`, `customerId`, and `userId` equality constraints.
+- Remove unrestricted collection and whole-users reads.
+- Track successful and failed queries separately.
+- Never render “No service history” when every secure query failed.
+- Always unlock the visual shell and render a retryable diagnostic state.
+- Allow pending/non-rejected customer sessions to read only their own UID-owned records while preserving cross-customer denial.
 
-- Publish a verified route-session object from the route guard.
-- Start the customer portal only from that verified session.
-- Query `jobs`, `customer_services`, and `subscriptions` with equality constraints on `customerUid`, `customerId`, and `userId`.
-- Remove the whole-users-collection download.
-- Add a visible 12-second timeout/failure state and retry control.
-- Permit pending/non-rejected customer profiles to read only records carrying their own UID and public service-catalog entries.
-- Keep unrestricted collection reads, cross-customer records, private catalog records, and suspended/rejected accounts denied.
-
-## Canonical role engine
+## Universal navigation
 
 ### Root cause
 
-Three independent browser policies existed:
+The global drawer was intended to be role-based, but page boot order changed which client state won:
 
-- `public/assets/js/access-control.js`
-- `public/assets/js/roles.js`
-- a third handwritten `ROLE_PERMISSIONS` map inside `public/assets/js/app.js`
+- `nav-utils.js` prioritized the globally stored Studio preview role.
+- `nav-role-lockdown.js` removed real menu links using that preview role.
+- Some pages loaded the route guard before navigation, so navigation missed the verified-session event and rendered from stale cache.
+- Authentication was also inferred from page loading state on some paths.
 
-They disagreed about aliases, nested Settings paths, legacy pages, vendors, and unknown roles. Most critically, an unknown role was normalized to `customer`, which is not fail-closed.
+This made the menu appear page-dependent even though the app registry itself is role-based.
 
-### Recovery patch
+### Surgical recovery
 
-- Make `access-control.js` the canonical browser policy.
-- Normalize known legacy aliases into nine canonical roles.
-- Return no role for unknown values and send unsupported stored roles back to login.
-- Preserve path-specific Settings policies so `/settings/notifications.html` does not collide with the operations-only `/notifications.html`.
-- Route `roles.js` and `app.js` through the canonical policy instead of maintaining competing matrices.
-- Recognize the stored `platform_admin` role in Firestore authority.
-- Add an executable role matrix and focused Firestore customer-ownership emulator tests.
+- Add one navigation authority module that accepts the verified route session first and never reads Studio preview role.
+- Build menu sections only from the verified actual role and the central app registry.
+- Make page location affect only the active-link highlight.
+- Reconcile navigation immediately at boot in case the verified session event already fired.
+- Keep role preview presentation-only; it cannot add or remove real drawer links.
+- Lock navigation clicks and visible links to the actual signed-in role.
+- Add an audit requiring the stable `nav.js` entrypoint on pages that mount the universal drawer.
 
-### Current role readiness
+## Owner and administrator publishing
 
-- Customer: recovery implementation complete; awaiting exact-head CI, emulator, merge, and coordinated Hosting + Firestore deployment.
-- Platform owner/admin: browser normalization repaired; authenticated runtime verification still required.
-- Manager and field roles: existing tenant boundaries retained; full page/data matrix remains a follow-up audit.
-- Vendor: present in browser policy, but backend authority is not yet fully aligned. Treat vendor workflows as incomplete until scoped emulator coverage is added.
-- Staff application approval: app-side onboarding writes exist, but current rules still deny `staff_profiles` writes and reviewer profile promotion outside platform authority.
+### Root cause
+
+The editor treated the owner like a tenant administrator:
+
+- Publishing required `profile.companyId` for every editor user.
+- The runtime only loaded and saved `companies/{companyId}.appBuilder`.
+- Therefore an owner without a company workspace received the incorrect message that publishing was blocked.
+
+### Correct authority contract
+
+- `platform_admin` and `owner` are platform owners with ultimate access to every registered page and feature.
+- Platform owners publish global settings to `public_app_config/global`; no company workspace is required.
+- `admin` remains tenant-scoped and must have a company workspace.
+- An admin may update only `appBuilder` and `appBuilderUpdatedAt` on their own company document.
+- An admin cannot publish globally, change company identity fields, or update another company.
+- The app runtime loads owner global settings as the baseline and layers a company override on top when present.
+
+## Canonical role engine
+
+- `access-control.js` remains the single browser policy entrypoint.
+- Unknown roles fail closed instead of becoming customers.
+- Legacy `roles.js` and `app.js` delegate to the canonical policy.
+- Owner/platform owner bypasses restrictions only for registered application pages and features; unknown routes still fail closed.
+- Nested personal Settings paths remain distinct from operations pages with similar filenames.
 
 ## Logo and icon
 
@@ -72,27 +92,35 @@ They disagreed about aliases, nested Settings paths, legacy pages, vendors, and 
 
 `public/assets/brand/evaraos-mark.png` is retained only as a compatibility alias to the OG PNG logo. It is not a third design.
 
-### Root cause
-
-- The app icon and visible logo were routed through competing paths.
-- App Icon Studio embedded an old official image directly in JavaScript.
-- A guard promoted that embedded image to localStorage and repeatedly restored it.
-- The browser manifest could be replaced by a blob URL.
-- Several legacy-sized favicon files still carried earlier artwork.
-
-### Recovery patch
+### Recovery
 
 - Restore validated OG-logo and E-icon payloads.
 - Restore correct E-icon variants for favicon, 192px, Apple touch, 512px, and ICO compatibility paths.
-- Version all canonical URLs with `brand-contract-2`.
-- Make loader, first paint, login badges, sidebar, and topbar use the OG PNG.
-- Make favicon, manifest, Apple touch, notifications, and App Icon Studio use the E PNG.
-- Remove embedded official-image authority and mutation/timer overwrite loops.
-- Clear only obsolete icon keys; do not delete unrelated App Builder state.
+- Version canonical URLs with `brand-contract-2`.
+- Use the OG PNG for loaders, login badges, sidebar, topbar, and visible branding.
+- Use the E PNG for favicon, manifest, Apple touch, notifications, settings icon surfaces, and App Icon Studio.
+- Remove embedded official-image authority, blob-manifest replacement, and mutation/timer overwrite loops.
+- Clear only obsolete icon keys; do not delete unrelated App Builder or Studio state.
 
-## Additional 24-hour risk discovered
+## Automated gates added
 
-The staff application work added app-side approval/onboarding behavior that updates `users/{uid}` and writes `staff_profiles/{uid}`, but the current Firestore rules do not authorize that complete reviewer transaction. Expanded role support and onboarding rules were not released as a verified pair. This is intentionally not bundled into the customer-access emergency patch; it is the next backend recovery task after customer access is stable.
+- JavaScript syntax checks for activated role, route, navigation, customer, builder, and publishing runtimes.
+- A canonical role matrix including owner ultimate access and unknown-role fail-closed behavior.
+- A deep navigation/customer/owner source audit.
+- Firestore Emulator tests proving:
+  - owner without a company can publish globally;
+  - admin cannot publish globally;
+  - admin can update only app-builder fields on the assigned company;
+  - admin cannot cross company boundaries;
+  - pending customers can query their own portal records but cannot enumerate or cross accounts.
+
+## Remaining release work
+
+- PR #48 remains draft and is not merged or deployed.
+- Authenticated browser smoke tests are still required for an approved customer, a pending customer, owner global publishing, admin company publishing, and cross-page navigation stability.
+- Staff application approval still needs a separate verified transaction/rules patch for `staff_profiles/{uid}` writes.
+- Vendor backend authority remains a separate role-alignment task.
+- The divergent production line must be reconciled into the default branch after the emergency recovery, not replaced by the default branch.
 
 ## Release discipline going forward
 
@@ -100,4 +128,4 @@ The staff application work added app-side approval/onboarding behavior that upda
 2. Hosting and Firestore contracts must be tested together before either is released.
 3. No source-verification commit may be deployed if its application source is outside the reviewed release branch.
 4. Every release must record the exact deployed SHA and verify deployed asset hashes.
-5. The divergent production line must be reconciled into the default branch after the emergency hotfix, not replaced by the default branch.
+5. Navigation, role policy, and publishing scope must each have one source of truth.
