@@ -40,6 +40,22 @@ async function openCleanStudio(page) {
   await expect(page.locator('[data-layout-tool="layers"]')).toBeVisible();
   await expect(page.locator('[data-auto-layout-tool]')).toBeVisible();
   await expect(page.locator('.studio-document-history-button')).toBeVisible();
+  await expect(page.locator('[data-catalog-field-bridge]')).toHaveCount(0);
+  await expect(page.locator('.owner-edit-dock')).toHaveCount(0);
+
+  const shell = await page.evaluate(() => {
+    const root = document.querySelector('#appRoot');
+    const studio = document.querySelector('[data-visual-studio]');
+    const workspace = document.querySelector('.studio-workspace');
+    return {
+      rootTransform: root ? getComputedStyle(root).transform : '',
+      studioHeight: studio?.getBoundingClientRect().height || 0,
+      workspaceHeight: workspace?.getBoundingClientRect().height || 0
+    };
+  });
+  expect(shell.rootTransform).toBe('none');
+  expect(shell.studioHeight).toBeGreaterThan(600);
+  expect(shell.workspaceHeight).toBeGreaterThan(480);
   await page.addStyleTag({
     content: `
       *, *::before, *::after {

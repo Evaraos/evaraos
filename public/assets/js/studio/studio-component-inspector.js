@@ -111,16 +111,8 @@ function createControl(component, field, value) {
   return make('input', { ...common, type: 'text', placeholder: labelFor(field) });
 }
 
-function ensureFieldBridges(element, node, component) {
-  fieldsFor(component).forEach((field) => {
-    if (element.querySelector(`[data-catalog-field-bridge][data-field="${CSS.escape(field)}"]`)) return;
-    element.append(make('span', {
-      className: 'studio-catalog-field-bridge',
-      text: valueFor(node, component, field),
-      dataset: { catalogFieldBridge: 'true', editableText: 'true', field },
-      attrs: { tabindex: '-1', 'aria-hidden': 'true' }
-    }));
-  });
+function removeLegacyFieldBridges(element) {
+  element.querySelectorAll(':scope > [data-catalog-field-bridge]').forEach((bridge) => bridge.remove());
 }
 
 function applyMetadata(element, node, component) {
@@ -154,7 +146,7 @@ function enhanceNodes() {
     const node = page.nodes?.find((item) => item.id === element.dataset.nodeId);
     const component = getStudioComponent(node?.type);
     if (!node || !component) return;
-    ensureFieldBridges(element, node, component);
+    removeLegacyFieldBridges(element);
     applyMetadata(element, node, component);
   });
 }
@@ -289,15 +281,13 @@ function commitField(control) {
   if (!validate(control)) return;
   const field = control.dataset.propertyField;
   const element = selectedElement();
-  const bridge = element?.querySelector(`[data-catalog-field-bridge][data-field="${CSS.escape(field || '')}"]`);
-  if (!field || !bridge) return;
-  bridge.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
-  setTimeout(() => {
-    const editor = selectedElement()?.querySelector(`[data-catalog-field-bridge][data-field="${CSS.escape(field)}"]`);
-    if (!editor) return;
-    editor.textContent = clean(control.value).trim();
-    editor.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
-  }, 50);
+  if (!field || !element) return;
+  window.EvaraStudioPropertyBridge?.updateNodeField?.(
+    element.dataset.nodeId,
+    field,
+    clean(control.value).trim()
+  );
+  scheduleEnhance();
 }
 
 function bindEvents() {

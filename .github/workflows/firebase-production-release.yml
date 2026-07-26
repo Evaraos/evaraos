@@ -93,7 +93,18 @@ jobs:
             functions/index-stats.js \
             functions/package.json \
             public/assets/js/firebase.js \
+            public/assets/js/nav.js \
+            public/assets/js/nav \
+            public/assets/js/owner-editor.js \
+            public/assets/js/owner-publish-runtime.js \
             public/assets/js/studio \
+            public/assets/css/nav.css \
+            public/assets/css/nav \
+            public/assets/css/pages/studio-component-inspector.css \
+            public/assets/css/pages/studio-owner-v2.css \
+            public/assets/css/pages/studio-shell-authority.css \
+            public/assets/css/pages/studio-visual-builder.css \
+            public/assets/css/pages/studio-visual-builder-runtime.css \
             public/assets/css/pages/studio-production-authority.css \
             public/website-builder.html \
             tests/visual/specs/studio-canvas-session.spec.mjs \

@@ -227,6 +227,7 @@ select.studio-property-control {
 }
 
 .studio-catalog-field-bridge {
+  display: none !important;
   position: absolute !important;
   width: 1px !important;
   height: 1px !important;

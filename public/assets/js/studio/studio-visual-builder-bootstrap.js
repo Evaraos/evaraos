@@ -1,6 +1,7 @@
 import { getSavedUserProfile, getSavedUserRole, normalizeRole } from '../firebase.js';
 
 const ALLOWED_ROLES = new Set(['owner', 'admin']);
+const STUDIO_BUILD = 'studio-owner-builder-v6';
 let started = false;
 
 function currentRole() {
@@ -36,7 +37,8 @@ async function start() {
   }
   started = true;
   try {
-    await import('./studio-visual-builder.js?v=3-owner-session-gate');
+    document.documentElement.dataset.studioBuild = STUDIO_BUILD;
+    await import('./studio-visual-builder.js?v=4-boundary-accessibility');
   } catch (error) {
     started = false;
     console.error('Evara Studio failed to load:', error);

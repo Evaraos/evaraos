@@ -1,4 +1,8 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  initializeApp,
+  getApp,
+  getApps
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   initializeAppCheck,
   ReCaptchaEnterpriseProvider
@@ -53,10 +57,11 @@ const firebaseConfig = {
   measurementId: "G-296N94CKPR"
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const appCheckSiteKey = "6LczbtQsAAAAAOHLSS25b38mXh1uTMAWvDjPIiOy";
+const APP_CHECK_SINGLETON = "__evaraosAppCheck";
 
-export let appCheck = null;
+export let appCheck = globalThis[APP_CHECK_SINGLETON] || null;
 
 try {
   const host = window.location.hostname;
@@ -67,10 +72,15 @@ try {
     self.FIREBASE_APPCHECK_DEBUG_TOKEN = debugToken;
   }
 
-  appCheck = initializeAppCheck(app, {
-    provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey),
-    isTokenAutoRefreshEnabled: true
-  });
+  if (!isLocalDev || debugToken) {
+    if (!appCheck) {
+      appCheck = initializeAppCheck(app, {
+        provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey),
+        isTokenAutoRefreshEnabled: true
+      });
+      globalThis[APP_CHECK_SINGLETON] = appCheck;
+    }
+  }
 } catch (error) {
   console.warn("Evaraos App Check initialization skipped:", error);
 }
@@ -78,6 +88,27 @@ try {
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const functions = getFunctions(app, "us-central1");
+
+export async function logoutAndRedirect(redirectTo = "/login.html") {
+  let target = "/login.html";
+  try {
+    const candidate = new URL(String(redirectTo || target), window.location.origin);
+    if (candidate.origin === window.location.origin) {
+      target = `${candidate.pathname}${candidate.search}${candidate.hash}`;
+    }
+  } catch {}
+
+  try {
+    await signOut(auth);
+  } finally {
+    clearSavedUserRole();
+    clearSavedUserProfile();
+    navigateWithLoader(target, {
+      title: "Signing out",
+      subtitle: "Returning to the secure sign-in screen."
+    }, true);
+  }
+}
 
 const HISTORY_SKIP_COLLECTIONS = new Set(["audit_logs", "history_timeline", "operation_events"]);
 

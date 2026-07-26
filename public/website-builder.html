@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="adaptive" data-environment="light" data-theme-mode="image" data-appearance="adaptive-system">
+<html lang="en" data-theme="adaptive" data-environment="light" data-theme-mode="image" data-appearance="adaptive-system" data-studio-build="studio-owner-builder-v6">
 <head>
   <meta charset="UTF-8">
   <script src="/assets/js/adaptive-appearance-boot.js?v=1"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="evara-studio-build" content="studio-owner-builder-v6">
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
   <link rel="manifest" href="/manifest.json?v=studio-graph-workbench-5">
   <link rel="icon" type="image/png" href="/assets/brand/evaraos-app-icon.png?v=studio-graph-workbench-5">
@@ -11,13 +12,13 @@
   <title>Evara Studio • Graph App Builder</title>
   <link rel="stylesheet" href="/assets/css/base.css?v=53">
   <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v11">
-  <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v59-owner-builder">
+  <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v60-studio-boundaries">
   <link rel="stylesheet" href="/assets/css/design-system.css?v=2" data-evara-design-system="ds-v2">
   <link rel="stylesheet" href="/assets/css/pages/studio-visual-builder.css?v=1">
   <link rel="stylesheet" href="/assets/css/pages/studio-component-catalog.css?v=1">
-  <link rel="stylesheet" href="/assets/css/pages/studio-component-inspector.css?v=1">
+  <link rel="stylesheet" href="/assets/css/pages/studio-component-inspector.css?v=2">
   <link rel="stylesheet" href="/assets/css/pages/studio-action-icon-config.css?v=1">
-  <link rel="stylesheet" href="/assets/css/pages/studio-visual-builder-runtime.css?v=2">
+  <link rel="stylesheet" href="/assets/css/pages/studio-visual-builder-runtime.css?v=3">
   <link rel="stylesheet" href="/assets/css/pages/studio-layout-engine.css?v=1">
   <link rel="stylesheet" href="/assets/css/pages/studio-auto-layout.css?v=1">
   <link rel="stylesheet" href="/assets/css/pages/studio-auto-layout-widths.css?v=1">
@@ -25,9 +26,10 @@
   <link rel="stylesheet" href="/assets/css/pages/studio-canvas-sandbox.css?v=1">
   <link rel="stylesheet" href="/assets/css/pages/studio-canvas-session.css?v=3">
   <link rel="stylesheet" href="/assets/css/pages/studio-production-authority.css?v=1">
-  <link rel="stylesheet" href="/assets/css/pages/studio-owner-v2.css?v=2">
+  <link rel="stylesheet" href="/assets/css/pages/studio-owner-v2.css?v=3">
   <link rel="stylesheet" href="/assets/css/pages/studio-canvas-workbench-v5.css?v=1">
   <link rel="stylesheet" href="/assets/css/pages/studio-release-activation-v1.css?v=1">
+  <link rel="stylesheet" href="/assets/css/pages/studio-shell-authority.css?v=1">
   <style>#evaraWelcomeLoader{display:flex;position:fixed;inset:0;z-index:2147483647;align-items:center;justify-content:center;background:#eef5fb}.evara-welcome-card{display:grid;place-items:center;gap:14px;width:min(430px,calc(100vw - 40px));min-height:330px;padding:32px 24px;border-radius:34px;background:rgba(255,255,255,.78);box-shadow:0 32px 110px rgba(27,32,48,.18);color:#141826;text-align:center}.evara-loader-mark{width:64px;height:64px;object-fit:contain}.evara-welcome-progress{width:min(240px,70vw);height:8px;border-radius:999px;background:rgba(20,24,38,.1);overflow:hidden}.evara-welcome-progress i{display:block;width:62%;height:100%;background:linear-gradient(90deg,#f2172d,#ff7181);animation:evaraBoot 1.2s ease-in-out infinite alternate}@keyframes evaraBoot{to{width:92%}}</style>
 </head>
 <body class="auth-pending app-loading" data-route-guard="private">
@@ -35,23 +37,23 @@
   <div id="universalNavRoot"></div>
   <div id="appRoot" aria-live="polite"></div>
   <script src="/assets/js/loader.js?v=studio-graph-workbench-5"></script>
-  <script type="module" src="/assets/js/firebase.js?v=36"></script>
+  <script type="module" src="/assets/js/firebase.js?v=37"></script>
   <script type="module" src="/assets/js/route-guard.js?v=35"></script>
   <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v12"></script>
-  <script type="module" src="/assets/js/nav.js?v=nav-v59-owner-builder"></script>
+  <script type="module" src="/assets/js/nav.js?v=nav-v60-studio-boundaries"></script>
   <script type="module" src="/assets/js/studio/studio-document-model.js?v=2"></script>
   <script type="module" src="/assets/js/studio/studio-journal-authority-v2.js?v=1"></script>
   <script type="module" src="/assets/js/studio/studio-journal-idempotency-guard.js?v=1"></script>
-  <script type="module" src="/assets/js/studio/studio-visual-builder-bootstrap.js?v=2"></script>
-  <!-- Authenticated bootstrap contract: /assets/js/studio/studio-visual-builder.js?v=2 -->
+  <script type="module" src="/assets/js/studio/studio-visual-builder-bootstrap.js?v=3"></script>
+  <!-- Authenticated bootstrap contract: /assets/js/studio/studio-visual-builder.js?v=4 -->
   <script type="module" src="/assets/js/studio/studio-owner-control-center.js?v=2"></script>
-  <script type="module" src="/assets/js/studio/studio-property-bridge.js?v=1"></script>
+  <script type="module" src="/assets/js/studio/studio-property-bridge.js?v=2"></script>
   <script type="module" src="/assets/js/studio/studio-layout-engine.js?v=1"></script>
   <script type="module" src="/assets/js/studio/studio-auto-layout.js?v=1"></script>
   <script type="module" src="/assets/js/studio/studio-auto-layout-bridge.js?v=1"></script>
   <script type="module" src="/assets/js/studio/studio-document-controls.js?v=3"></script>
-  <script type="module" src="/assets/js/studio/studio-component-inspector.js?v=1"></script>
-  <script type="module" src="/assets/js/studio/studio-action-icon-config-v2.js?v=2"></script>
+  <script type="module" src="/assets/js/studio/studio-component-inspector.js?v=2"></script>
+  <script type="module" src="/assets/js/studio/studio-action-icon-config-v2.js?v=3"></script>
   <script type="module" src="/assets/js/studio/studio-blueprint-serialization.js?v=1"></script>
   <script type="module" src="/assets/js/studio/blueprint-operation-adapter.js?v=1"></script>
   <script type="module" src="/assets/js/studio/studio-trusted-journal-loader.js?v=1"></script>

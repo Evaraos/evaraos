@@ -1,9 +1,20 @@
 const THRESHOLD = 92;
 const MAX_PULL = 138;
+const DISABLED_ROUTE = /(?:website-builder|studio|blueprint|design-system)/i.test(location.pathname);
 let tracking = false;
 let startY = 0;
 let distance = 0;
 let refreshing = false;
+
+function isDisabled() {
+  return DISABLED_ROUTE
+    || document.body?.classList.contains("studio-visual-page")
+    || Boolean(document.querySelector("[data-visual-studio]"));
+}
+
+function setRootPullActive(active) {
+  document.body?.classList.toggle("eva-pull-active", Boolean(active) && !isDisabled());
+}
 
 function ensureStyles() {
   if (document.getElementById("evaPullRefreshStyles")) return;
@@ -27,9 +38,11 @@ function indicator() {
 }
 
 function setPull(value) {
+  if (isDisabled()) return reset();
   distance = Math.max(0, Math.min(MAX_PULL, value));
   const node = indicator();
   const progress = Math.min(1, distance / THRESHOLD);
+  setRootPullActive(distance > 3);
   node.classList.toggle("is-active", distance > 3);
   node.style.setProperty("--pull-progress", progress.toFixed(3));
   node.style.transform = `translate3d(-50%, ${Math.max(-72, -70 + distance * .72)}px, 0)`;
@@ -41,6 +54,7 @@ function setPull(value) {
 function reset() {
   tracking = false;
   distance = 0;
+  setRootPullActive(false);
   const node = indicator();
   node.classList.remove("is-active", "is-ready", "is-refreshing");
   node.style.transform = "translate3d(-50%,-72px,0)";
@@ -50,6 +64,7 @@ function reset() {
 function hardRefresh() {
   if (refreshing) return;
   refreshing = true;
+  setRootPullActive(true);
   const node = indicator();
   node.classList.add("is-active", "is-refreshing");
   node.querySelector("strong").textContent = "Refreshing Evaraos…";
@@ -58,7 +73,7 @@ function hardRefresh() {
 }
 
 function begin(clientY) {
-  if ((window.scrollY || 0) > 0 || document.body.classList.contains("nav-menu-open")) return;
+  if (isDisabled() || (window.scrollY || 0) > 0 || document.body.classList.contains("nav-menu-open")) return;
   tracking = true;
   startY = clientY;
   distance = 0;
@@ -80,6 +95,11 @@ function end() {
 }
 
 function bind() {
+  if (isDisabled()) {
+    document.documentElement.style.setProperty("--eva-pull-offset", "0px");
+    setRootPullActive(false);
+    return;
+  }
   ensureStyles();
   window.addEventListener("touchstart", (event) => begin(event.touches?.[0]?.clientY || 0), { passive: true });
   window.addEventListener("touchmove", (event) => move(event.touches?.[0]?.clientY || 0, event), { passive: false });
