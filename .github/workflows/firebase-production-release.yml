@@ -309,7 +309,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          firebase functions:list --project evaraos --json > "$RUNNER_TEMP/firebase-functions-list.json"
+          firebase functions:list --project evaraos-web --json > "$RUNNER_TEMP/firebase-functions-list.json"
           for name in openStudioBranch commitStudioTransaction getStudioOperationRange createStudioCheckpoint restoreStudioCheckpoint createStudioBranch closeStudioSession prepareStudioRelease; do
             grep -q "$name" "$RUNNER_TEMP/firebase-functions-list.json"
           done
