@@ -22,6 +22,7 @@ jobs:
           node --check public/assets/js/access-control-v2.js
           node --check public/assets/js/roles.js
           node --check public/assets/js/app.js
+          node --check public/assets/js/adaptive-appearance-boot.js
           node --check public/assets/js/loader.js
           node --check public/assets/js/route-guard.js
           node --check public/assets/js/route-guard-v2.js
@@ -31,10 +32,12 @@ jobs:
           node --check public/assets/js/owner-publish-runtime-v2.js
           node --check public/assets/js/nav.js
           node --check public/assets/js/nav/nav-authority-v1.js
+          node --check public/assets/js/nav/nav-utils.js
           node --check public/assets/js/nav/nav-utils-v2.js
           node --check public/assets/js/nav/nav-render-v2.js
           node --check public/assets/js/nav/nav-session-v2.js
           node --check public/assets/js/nav/nav-role-lockdown-v2.js
+          node --check public/assets/js/nav/nav-bottom.js
           node --check public/assets/js/nav/nav-main-v7.js
           node --check public/assets/js/app-icon-preferences.js
           node --check public/assets/js/app-icon-studio-single-source.js
@@ -45,5 +48,7 @@ jobs:
         run: node tools/role-engine-audit.mjs
       - name: Audit customer and brand recovery
         run: node tools/customer-brand-recovery-audit.js
-      - name: Audit navigation owner and customer contracts
-        run: node tools/navigation-owner-customer-audit.js
+      - name: Audit navigation customer and owner runtime contracts
+        run: node tools/navigation-owner-customer-audit.js runtime
+      - name: Audit universal navigation page boot inventory
+        run: node tools/navigation-owner-customer-audit.js pages
