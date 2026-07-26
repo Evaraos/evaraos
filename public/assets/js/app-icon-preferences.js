@@ -4,8 +4,8 @@
   const STORAGE_KEY = 'evaraos-app-icon-selection-v2';
   const CUSTOM_KEY = 'evaraos-custom-app-icon-v2';
   const SNAPSHOT_KEY = 'evaraos-app-icon-snapshot-v2';
-  const MARK_SRC = '/assets/img/icon-512.png?v=brand-logo-1';
-  const APP_ICON_SRC = '/assets/img/icon-512.png?v=brand-logo-1';
+  const MARK_SRC = '/assets/brand/evaraos-mark.png?v=brand-png-1';
+  const APP_ICON_SRC = '/assets/brand/evaraos-app-icon.png?v=brand-png-1';
   let manifestBlobUrl = '';
   let saveTimer = null;
 
