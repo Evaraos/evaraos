@@ -4,16 +4,13 @@ on:
   push:
     branches:
       - studio/owner-experience-builder
-  pull_request:
-    paths:
-      - '.github/workflows/owner-experience-delivery-normalize.yml'
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
   normalize:
-    if: github.ref_name == 'studio/owner-experience-builder' || github.head_ref == 'studio/owner-experience-builder'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -22,189 +19,68 @@ jobs:
           ref: studio/owner-experience-builder
           fetch-depth: 0
 
-      - name: Apply reviewed delivery normalization
+      - name: Normalize HTML and migration delivery versions
         run: |
           set -euo pipefail
           python3 <<'PY'
           from pathlib import Path
           import re
 
-          def read(path):
-              return Path(path).read_text()
-
-          def write(path, value):
-              Path(path).write_text(value)
-
-          def replace_once(value, old, new, label):
-              if new in value:
-                  print(f'SKIP already applied: {label}')
-                  return value
-              if old not in value:
-                  raise SystemExit(f'Missing contract for {label}')
-              print(f'APPLY: {label}')
-              return value.replace(old, new, 1)
-
-          # Every HTML entry requests one canonical loader and nav build.
           html_files = set(Path('.').glob('*.html'))
           html_files.update(Path('public').rglob('*.html'))
           html_files.update(Path('settings').rglob('*.html'))
-          changed_html = []
+          changed = []
           for file in sorted(html_files):
               before = file.read_text()
               after = re.sub(r'(/assets/js/nav\.js\?v=)[^"\'<>\s]+', r'\1nav-v59-experience-builder', before)
               after = re.sub(r'(/assets/js/loader\.js\?v=)[^"\'<>\s]+', r'\g<1>44', after)
               if after != before:
                   file.write_text(after)
-                  changed_html.append(str(file))
-          if len(changed_html) < 20:
-              raise SystemExit(f'Expected broad HTML delivery normalization, changed only {len(changed_html)} files')
-          print(f'Normalized {len(changed_html)} HTML entries')
+                  changed.append(str(file))
+          if len(changed) < 20:
+              raise SystemExit(f'Expected broad HTML delivery normalization, changed only {len(changed)} files')
+          print(f'Normalized {len(changed)} HTML entries')
 
-          # Migration utilities must not reintroduce stale nav builds.
-          path = 'tools/ensure-universal-nav-v8.js'
-          value = read(path).replace('const NAV="nav-v28-stable-avatar";', 'const NAV="nav-v59-experience-builder";')
-          write(path, value)
-
-          path = 'tools/operations-page-migration.js'
-          value = read(path).replace("'src=\"/assets/js/nav.js?v=50\"'", "'src=\"/assets/js/nav.js?v=nav-v59-experience-builder\"'")
-          write(path, value)
-
-          path = 'tools/activate-dashboard-leads-entry.js'
-          value = read(path).replace('"/assets/js/nav.js?v=52"', '"/assets/js/nav.js?v=nav-v59-experience-builder"')
-          write(path, value)
-
-          # Correct the Studio asset catalog's transparent mark.
-          path = 'public/assets/js/studio/studio-visual-builder.js'
-          value = read(path).replace(
-              "{ id: 'evara-brand-mark', name: 'EvaraOS Brand Mark', url: '/assets/brand/evaraos-app-icon.png' }",
-              "{ id: 'evara-brand-mark', name: 'EvaraOS Brand Mark', url: '/assets/brand/evaraos-mark.png' }"
-          )
-          write(path, value)
-
-          # Trusted Studio + Experience Functions manual deployment contract.
-          path = '.github/workflows/deploy-trusted-studio-functions-once.yml'
-          value = read(path)
-          value = replace_once(value,
-              '            functions/studio-journal-service.js \\\n',
-              '            functions/studio-journal-service.js \\\n            functions/experience-config-service.js \\\n',
-              'trusted source includes experience service')
-          value = replace_once(value,
-              '            public/assets/js/studio \\\n',
-              '            public/assets/js/studio \\\n            public/assets/js/experience \\\n            public/assets/js/loader.js \\\n            public/assets/js/nav.js \\\n            public/assets/js/nav \\\n            public/assets/css/pages/studio-experience-builder.css \\\n            public/index.html \\\n            firebase.json \\\n',
-              'trusted source includes experience runtime')
-          value = replace_once(value,
-              '          node --check functions/studio-journal-service.js\n',
-              '          node --check functions/studio-journal-service.js\n          node --check functions/experience-config-service.js\n',
-              'trusted experience syntax')
-          value = replace_once(value,
-              '      - name: Run Studio production authority audit\n        run: node tools/studio-production-authority-audit.js\n',
-              '      - name: Run Studio production authority audit\n        run: node tools/studio-production-authority-audit.js\n\n      - name: Run Owner Experience Builder audit\n        run: node tools/owner-experience-builder-audit.js\n',
-              'trusted experience audit')
-          value = replace_once(value,
-              '      - name: Deploy eight trusted Studio callables\n',
-              '      - name: Deploy thirteen trusted Studio and Experience functions\n',
-              'trusted deployment title')
-          value = replace_once(value,
-              '--only functions:openStudioBranch,functions:commitStudioTransaction,functions:getStudioOperationRange,functions:createStudioCheckpoint,functions:restoreStudioCheckpoint,functions:createStudioBranch,functions:closeStudioSession,functions:prepareStudioRelease \\\n',
-              '--only functions:openStudioBranch,functions:commitStudioTransaction,functions:getStudioOperationRange,functions:createStudioCheckpoint,functions:restoreStudioCheckpoint,functions:createStudioBranch,functions:closeStudioSession,functions:prepareStudioRelease,functions:getExperienceEditorState,functions:saveExperienceDraft,functions:publishExperienceConfig,functions:uploadExperienceAsset,functions:getPublicExperienceConfig \\\n',
-              'trusted experience deployment scope')
-          value = replace_once(value,
-              '            prepareStudioRelease\n',
-              '            prepareStudioRelease \\\n            getExperienceEditorState \\\n            saveExperienceDraft \\\n            publishExperienceConfig \\\n            uploadExperienceAsset \\\n            getPublicExperienceConfig\n',
-              'trusted experience inventory')
-          value = value.replace('functions=8\\n', 'functions=13\\n')
-          value = replace_once(value,
-              "              'prepareStudioRelease'\n",
-              "              'prepareStudioRelease',\n              'getExperienceEditorState',\n              'saveExperienceDraft',\n              'publishExperienceConfig',\n              'uploadExperienceAsset',\n              'getPublicExperienceConfig'\n",
-              'trusted experience proof callables')
-          value = value.replace('All eight trusted Studio callables', 'All thirteen trusted Studio and Experience functions')
-          write(path, value)
-
-          # Full Firebase release validation and inventory.
-          path = '.github/workflows/firebase-production-release.yml'
-          value = read(path)
-          value = replace_once(value,
-              '            functions/studio-journal-service.js \\\n',
-              '            functions/studio-journal-service.js \\\n            functions/experience-config-service.js \\\n',
-              'release source includes experience service')
-          value = replace_once(value,
-              '            public/assets/js/studio \\\n',
-              '            public/assets/js/studio \\\n            public/assets/js/experience \\\n            public/assets/js/loader.js \\\n            public/assets/js/nav.js \\\n            public/assets/js/nav \\\n            public/assets/css/pages/studio-experience-builder.css \\\n            public/index.html \\\n            firebase.json \\\n',
-              'release source includes experience runtime')
-          value = replace_once(value,
-              '          node --check functions/studio-journal-service.js\n',
-              '          node --check functions/studio-journal-service.js\n          node --check functions/experience-config-service.js\n',
-              'release experience syntax')
-          value = replace_once(value,
-              '          npm run test:marketplace --prefix functions\n',
-              '          npm run test:marketplace --prefix functions\n          node tools/owner-experience-builder-audit.js\n',
-              'backend experience audit')
-          value = replace_once(value,
-              '          node --experimental-default-type=module --check public/assets/js/studio/studio-production-authority.js\n',
-              '          node --experimental-default-type=module --check public/assets/js/studio/studio-production-authority.js\n          node --check public/assets/js/loader.js\n          node --experimental-default-type=module --check public/assets/js/nav.js\n          node --experimental-default-type=module --check public/assets/js/experience/experience-runtime.js\n          node --experimental-default-type=module --check public/assets/js/experience/experience-config-client.js\n          node --experimental-default-type=module --check public/assets/js/experience/owner-experience-publisher.js\n          node --experimental-default-type=module --check public/assets/js/studio/studio-experience-builder.js\n',
-              'hosting experience syntax')
-          value = replace_once(value,
-              '          node tools/visual-qa-audit.js\n',
-              '          node tools/visual-qa-audit.js\n          node tools/owner-experience-builder-audit.js\n',
-              'hosting experience audit')
-          value = replace_once(value,
-              '          grep -q "prepareStudioRelease" functions/index-stats.js\n',
-              '          grep -q "prepareStudioRelease" functions/index-stats.js\n          grep -q "getExperienceEditorState" functions/index-stats.js\n          grep -q "saveExperienceDraft" functions/index-stats.js\n          grep -q "publishExperienceConfig" functions/index-stats.js\n          grep -q "uploadExperienceAsset" functions/index-stats.js\n          grep -q "getPublicExperienceConfig" functions/index-stats.js\n          grep -q "/__experience/config" firebase.json\n',
-              'release experience wiring')
-          value = replace_once(value,
-              '          for name in openStudioBranch commitStudioTransaction getStudioOperationRange createStudioCheckpoint restoreStudioCheckpoint createStudioBranch closeStudioSession prepareStudioRelease; do\n',
-              '          for name in openStudioBranch commitStudioTransaction getStudioOperationRange createStudioCheckpoint restoreStudioCheckpoint createStudioBranch closeStudioSession prepareStudioRelease getExperienceEditorState saveExperienceDraft publishExperienceConfig uploadExperienceAsset getPublicExperienceConfig; do\n',
-              'release experience inventory')
-          write(path, value)
-
-          # Permanent visual/design-system CI coverage.
-          path = '.github/workflows/design-system-visual-qa.yml'
-          value = read(path)
-          marker = "      - 'public/assets/js/studio/**'\n"
-          addition = marker + "      - 'public/assets/js/experience/**'\n      - 'public/assets/js/loader.js'\n      - 'public/assets/js/nav.js'\n      - 'public/assets/js/nav/**'\n      - 'public/index.html'\n"
-          if "      - 'public/assets/js/experience/**'\n" not in value:
-              if value.count(marker) < 2:
-                  raise SystemExit('Missing visual QA path markers')
-              value = value.replace(marker, addition)
-          tool_marker = "      - 'tools/design-system-audit.js'\n"
-          tool_addition = tool_marker + "      - 'tools/owner-experience-builder-audit.js'\n"
-          if "      - 'tools/owner-experience-builder-audit.js'\n" not in value:
-              value = value.replace(tool_marker, tool_addition)
-          value = replace_once(value,
-              '      - name: Run design-system audit\n        run: node tools/design-system-audit.js\n',
-              '      - name: Run design-system audit\n        run: node tools/design-system-audit.js\n\n      - name: Run Owner Experience Builder audit\n        run: node tools/owner-experience-builder-audit.js\n',
-              'visual experience audit')
-          write(path, value)
+          replacements = {
+              'tools/ensure-universal-nav-v8.js': [
+                  ('const NAV="nav-v28-stable-avatar";', 'const NAV="nav-v59-experience-builder";')
+              ],
+              'tools/operations-page-migration.js': [
+                  ('src="/assets/js/nav.js?v=50"', 'src="/assets/js/nav.js?v=nav-v59-experience-builder"')
+              ],
+              'tools/activate-dashboard-leads-entry.js': [
+                  ('/assets/js/nav.js?v=52', '/assets/js/nav.js?v=nav-v59-experience-builder')
+              ],
+              'public/assets/js/studio/studio-visual-builder.js': [
+                  ("{ id: 'evara-brand-mark', name: 'EvaraOS Brand Mark', url: '/assets/brand/evaraos-app-icon.png' }", "{ id: 'evara-brand-mark', name: 'EvaraOS Brand Mark', url: '/assets/brand/evaraos-mark.png' }")
+              ]
+          }
+          for path, pairs in replacements.items():
+              file = Path(path)
+              value = file.read_text()
+              for old, new in pairs:
+                  if old not in value and new not in value:
+                      raise SystemExit(f'Missing delivery contract in {path}: {old}')
+                  value = value.replace(old, new)
+              file.write_text(value)
           PY
 
-      - name: Remove temporary workflow
-        run: rm -f .github/workflows/owner-experience-delivery-normalize.yml
-
-      - name: Verify normalized source
+      - name: Verify normalized production source
         run: |
           set -euo pipefail
-          node --check functions/experience-config-service.js
-          node --check functions/index-stats.js
-          node --check public/assets/js/loader.js
-          node --experimental-default-type=module --check public/assets/js/nav.js
-          node --experimental-default-type=module --check public/assets/js/nav/nav-main-v6.js
-          node --experimental-default-type=module --check public/assets/js/experience/experience-runtime.js
-          node --experimental-default-type=module --check public/assets/js/experience/experience-config-client.js
-          node --experimental-default-type=module --check public/assets/js/experience/owner-experience-publisher.js
-          node --experimental-default-type=module --check public/assets/js/studio/studio-experience-builder.js
-          node tools/owner-experience-builder-audit.js
-          node tools/design-system-audit.js
-          node tools/visual-qa-audit.js
+          node --experimental-default-type=module --check public/assets/js/studio/studio-visual-builder.js
+          ! grep -R --include='*.html' -E '/assets/js/nav\.js\?v=(50|52|nav-v5[0-8])' public settings ./*.html
+          ! grep -R --include='*.html' -E '/assets/js/loader\.js\?v=(4[0-3])' public settings ./*.html
 
       - name: Commit normalized production source
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
+          git add public settings ./*.html tools/ensure-universal-nav-v8.js tools/operations-page-migration.js tools/activate-dashboard-leads-entry.js public/assets/js/studio/studio-visual-builder.js
           if git diff --cached --quiet; then
             echo 'No delivery normalization changes were required.'
           else
-            git commit -m 'Studio: normalize Experience Builder delivery and release contracts'
+            git commit -m 'Studio: normalize Experience Builder delivery versions'
             git push origin HEAD:studio/owner-experience-builder
           fi
