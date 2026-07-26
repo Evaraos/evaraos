@@ -3,6 +3,7 @@
 const admin = require('firebase-admin');
 const { randomUUID } = require('crypto');
 const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https');
+const { normalizeRole, isActiveProfile, canPublishStudio } = require('./studio-journal-core');
 
 const db = admin.firestore();
 const bucket = admin.storage().bucket();
@@ -202,21 +203,14 @@ function mergeObjects(base, patch) {
   return output;
 }
 
-function accountIsActive(profile = {}) {
-  const status = cleanText(profile.status || 'active', 40).toLowerCase();
-  const approval = cleanText(profile.approvalStatus || '', 40).toLowerCase();
-  return !['inactive', 'suspended', 'disabled', 'rejected'].includes(status) && approval !== 'rejected';
-}
-
 async function resolveOwner(request) {
   const uid = request.auth?.uid;
   if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required.');
   const snapshot = await db.doc(`users/${uid}`).get();
   if (!snapshot.exists) throw new HttpsError('permission-denied', 'A verified user profile is required.');
   const profile = snapshot.data() || {};
-  const role = cleanText(profile.role, 80).toLowerCase().replace(/[\s-]+/g, '_');
-  const elevatedAdmin = role === 'admin' && profile.platformAccess === true;
-  if (!accountIsActive(profile) || (!['owner', 'super_admin', 'platform_admin'].includes(role) && !elevatedAdmin)) {
+  const role = normalizeRole(profile.role);
+  if (!isActiveProfile(profile) || !canPublishStudio(profile)) {
     throw new HttpsError('permission-denied', 'Owner experience authority is required.');
   }
   return {
