@@ -11,6 +11,7 @@ const CALLABLE_OPTIONS = Object.freeze({ region: 'us-central1', enforceAppCheck:
 const CONFIG_REF = db.doc('experience_configs/global');
 const SCHEMA_VERSION = 'evara.experience.v1';
 const MAX_ASSET_BYTES = 2 * 1024 * 1024;
+const MAX_CONFIG_BYTES = 700 * 1024;
 
 const DEFAULT_CONFIG = Object.freeze({
   schemaVersion: SCHEMA_VERSION,
@@ -89,7 +90,9 @@ function safeAssetUrl(value, fallback = '') {
   if (candidate.startsWith('/assets/')) return candidate;
   try {
     const url = new URL(candidate);
-    if (url.protocol !== 'https:') return fallback;
+    const expectedPrefix = `/v0/b/${bucket.name}/o/`;
+    if (url.protocol !== 'https:' || url.hostname !== 'firebasestorage.googleapis.com') return fallback;
+    if (!url.pathname.startsWith(expectedPrefix) || url.searchParams.get('alt') !== 'media') return fallback;
     return url.href;
   } catch {
     return fallback;
@@ -107,22 +110,22 @@ function normalizeStyle(raw = {}) {
 
 function normalizePageOverrides(raw = {}) {
   const output = {};
-  Object.entries(raw && typeof raw === 'object' ? raw : {}).slice(0, 100).forEach(([pageKey, page]) => {
+  Object.entries(raw && typeof raw === 'object' ? raw : {}).slice(0, 60).forEach(([pageKey, page]) => {
     const safePage = cleanId(pageKey, 140);
     if (!safePage) return;
     const text = {};
     const media = {};
     const style = {};
-    Object.entries(page?.text || {}).slice(0, 300).forEach(([key, value]) => {
+    Object.entries(page?.text || {}).slice(0, 200).forEach(([key, value]) => {
       const safeKey = cleanId(key, 180);
       if (safeKey) text[safeKey] = cleanText(value, 4000);
     });
-    Object.entries(page?.media || {}).slice(0, 100).forEach(([key, value]) => {
+    Object.entries(page?.media || {}).slice(0, 80).forEach(([key, value]) => {
       const safeKey = cleanId(key, 180);
       const url = safeAssetUrl(value);
       if (safeKey && url) media[safeKey] = url;
     });
-    Object.entries(page?.style || {}).slice(0, 300).forEach(([key, value]) => {
+    Object.entries(page?.style || {}).slice(0, 200).forEach(([key, value]) => {
       const safeKey = cleanId(key, 180);
       if (safeKey) style[safeKey] = normalizeStyle(value);
     });
@@ -177,6 +180,18 @@ function normalizeConfig(raw = {}) {
   };
 }
 
+function assertConfigSize(config) {
+  const bytes = Buffer.byteLength(JSON.stringify(config), 'utf8');
+  if (bytes > MAX_CONFIG_BYTES) {
+    throw new HttpsError('resource-exhausted', 'The experience draft is too large. Remove unused page overrides before saving.', {
+      code: 'experience-config-too-large',
+      bytes,
+      maxBytes: MAX_CONFIG_BYTES
+    });
+  }
+  return bytes;
+}
+
 function mergeObjects(base, patch) {
   if (!patch || typeof patch !== 'object' || Array.isArray(patch)) return base;
   const output = { ...(base || {}) };
@@ -201,7 +216,7 @@ async function resolveOwner(request) {
   const profile = snapshot.data() || {};
   const role = cleanText(profile.role, 80).toLowerCase().replace(/[\s-]+/g, '_');
   const elevatedAdmin = role === 'admin' && profile.platformAccess === true;
-  if (!accountIsActive(profile) || !['owner', 'super_admin', 'platform_admin'].includes(role) && !elevatedAdmin) {
+  if (!accountIsActive(profile) || (!['owner', 'super_admin', 'platform_admin'].includes(role) && !elevatedAdmin)) {
     throw new HttpsError('permission-denied', 'Owner experience authority is required.');
   }
   return {
@@ -251,22 +266,24 @@ exports.saveExperienceDraft = onCall(CALLABLE_OPTIONS, async (request) => {
     const snapshot = await transaction.get(CONFIG_REF);
     const current = snapshot.exists ? snapshot.data() || {} : {};
     const draft = normalizeConfig(mergeObjects(current.draft || current.published || DEFAULT_CONFIG, patch));
+    const bytes = assertConfigSize(draft);
     const revision = integer(current.draftRevision, 0, 0, Number.MAX_SAFE_INTEGER - 1) + 1;
     transaction.set(CONFIG_REF, {
       schemaVersion: SCHEMA_VERSION,
       draft,
       draftRevision: revision,
+      draftBytes: bytes,
       draftUpdatedAt: FieldValue.serverTimestamp(),
       draftUpdatedByUid: owner.uid,
       createdAt: current.createdAt || FieldValue.serverTimestamp()
     }, { merge: true });
     transaction.set(db.collection('audit_logs').doc(), auditRecord(owner, 'experience_draft_saved', {
       changedFields: Object.keys(patch).slice(0, 50),
-      metadata: { draftRevision: revision }
+      metadata: { draftRevision: revision, bytes }
     }));
-    return { draft, revision };
+    return { draft, revision, bytes };
   });
-  return { ok: true, draft: result.draft, draftRevision: result.revision };
+  return { ok: true, draft: result.draft, draftRevision: result.revision, bytes: result.bytes };
 });
 
 exports.publishExperienceConfig = onCall(CALLABLE_OPTIONS, async (request) => {
@@ -284,19 +301,21 @@ exports.publishExperienceConfig = onCall(CALLABLE_OPTIONS, async (request) => {
       });
     }
     const published = normalizeConfig(current.draft || current.published || DEFAULT_CONFIG);
+    const bytes = assertConfigSize(published);
     const publishedVersion = integer(current.publishedVersion, 0, 0, Number.MAX_SAFE_INTEGER - 1) + 1;
     transaction.set(CONFIG_REF, {
       schemaVersion: SCHEMA_VERSION,
       published,
       publishedVersion,
+      publishedBytes: bytes,
       publishedAt: FieldValue.serverTimestamp(),
       publishedByUid: owner.uid
     }, { merge: true });
     transaction.set(db.collection('audit_logs').doc(), auditRecord(owner, 'experience_config_published', {
       changedFields: ['published', 'publishedVersion'],
-      metadata: { draftRevision, publishedVersion }
+      metadata: { draftRevision, publishedVersion, bytes }
     }));
-    return { published, publishedVersion, draftRevision };
+    return { published, publishedVersion, draftRevision, bytes };
   });
   return { ok: true, ...result };
 });
@@ -367,3 +386,4 @@ exports.getPublicExperienceConfig = onRequest({ region: 'us-central1', cors: tru
 
 exports.DEFAULT_EXPERIENCE_CONFIG = DEFAULT_CONFIG;
 exports.normalizeExperienceConfig = normalizeConfig;
+exports.assertExperienceConfigSize = assertConfigSize;
