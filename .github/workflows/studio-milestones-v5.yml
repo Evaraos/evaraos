@@ -5,17 +5,27 @@ on:
     branches: [evaraos]
     paths:
       - 'public/assets/js/studio/**'
+      - 'public/assets/js/nav.js'
       - 'public/assets/css/pages/studio-*.css'
       - 'public/website-builder.html'
+      - 'functions/studio-release-runtime-service.js'
+      - 'functions/index-stats.js'
+      - 'firebase/storage.rules'
       - 'tools/studio-milestones-v5-audit.js'
+      - 'tools/studio-release-runtime-audit.js'
       - 'tests/visual/specs/studio-workbench-v5.spec.mjs'
       - '.github/workflows/studio-milestones-v5.yml'
   pull_request:
     paths:
       - 'public/assets/js/studio/**'
+      - 'public/assets/js/nav.js'
       - 'public/assets/css/pages/studio-*.css'
       - 'public/website-builder.html'
+      - 'functions/studio-release-runtime-service.js'
+      - 'functions/index-stats.js'
+      - 'firebase/storage.rules'
       - 'tools/studio-milestones-v5-audit.js'
+      - 'tools/studio-release-runtime-audit.js'
       - 'tests/visual/specs/studio-workbench-v5.spec.mjs'
       - '.github/workflows/studio-milestones-v5.yml'
   workflow_dispatch:
@@ -29,7 +39,7 @@ concurrency:
 
 jobs:
   milestone-contracts:
-    name: All eight Studio milestone contracts
+    name: All eight Studio milestone contracts and live release runtime
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -42,6 +52,9 @@ jobs:
 
       - name: Run Studio milestone audit
         run: node tools/studio-milestones-v5-audit.js
+
+      - name: Run active release runtime audit
+        run: node tools/studio-release-runtime-audit.js
 
       - name: Check authenticated Workbench spec syntax
         run: node --check tests/visual/specs/studio-workbench-v5.spec.mjs
