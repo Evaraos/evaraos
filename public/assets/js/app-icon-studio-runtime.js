@@ -1,8 +1,8 @@
 import { getSavedUserProfile, getSavedUserRole, normalizeRole } from './firebase.js';
 
-const FALLBACK_ICON = '/assets/brand/evaraos-app-icon.png?v=brand-png-1';
+const FALLBACK_ICON = '/assets/brand/evaraos-app-icon.png?v=brand-canonical-20260726-1';
 const PERSONAL_ICON_KEY = 'evaraos-custom-app-icon-v5';
-const OWNER_ROLES = new Set(['owner']);
+const OWNER_ROLES = new Set(['owner', 'super_admin', 'admin']);
 
 function personalIcon() {
   try {
