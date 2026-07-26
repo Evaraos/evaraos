@@ -21,9 +21,29 @@ service cloud.firestore {
         || (role() == 'admin' && user().platformAccess == true)
       );
     }
-    function operations() { return platform() || (active() && role() in ['admin', 'manager', 'operations_manager', 'operations_coordinator', 'hr', 'hr_manager']); }
-    function manager() { return platform() || (active() && role() in ['admin', 'manager', 'operations_manager', 'operations_coordinator', 'field_manager', 'sales_manager', 'dispatcher', 'hr', 'hr_manager']); }
-    function staff() { return platform() || (active() && role() in ['admin', 'manager', 'operations_manager', 'operations_coordinator', 'field_manager', 'dispatcher', 'quality_control', 'sales', 'sales_rep', 'technician', 'lead_technician', 'cleaner', 'lead_cleaner', 'staff', 'field_staff', 'crew_lead', 'customer_support']); }
+    function operations() {
+      return platform() || (active() && role() in [
+        'admin', 'manager', 'operations_manager', 'operations_coordinator',
+        'field_manager', 'sales_manager', 'dispatcher', 'hr', 'hr_manager',
+        'customer_support', 'customer_support_manager'
+      ]);
+    }
+    function manager() {
+      return platform() || (active() && role() in [
+        'admin', 'manager', 'operations_manager', 'operations_coordinator',
+        'field_manager', 'sales_manager', 'dispatcher', 'hr', 'hr_manager',
+        'customer_support', 'customer_support_manager'
+      ]);
+    }
+    function staff() {
+      return platform() || (active() && role() in [
+        'admin', 'manager', 'operations_manager', 'operations_coordinator',
+        'field_manager', 'sales_manager', 'dispatcher', 'quality_control',
+        'sales', 'sales_rep', 'lead_generator', 'technician', 'lead_technician',
+        'cleaner', 'lead_cleaner', 'staff', 'field_staff', 'crew_lead',
+        'customer_support', 'customer_support_manager', 'hr', 'hr_manager'
+      ]);
+    }
     function own(userId) { return signedIn() && request.auth.uid == userId; }
     function sameCompany(value) { return active() && hasCompany(company()) && hasCompany(value) && company() == value; }
     function scoped(value) { return platform() || sameCompany(value); }
@@ -48,6 +68,87 @@ service cloud.firestore {
     function tenantWrite(data) { return platform() || (operations() && sameCompany(data.companyId)); }
     function immutableCompany() { return request.resource.data.companyId == resource.data.companyId; }
     function publicRecord(data) { return (data.keys().hasAny(['isPublic']) && data.isPublic == true) || (data.keys().hasAny(['public']) && data.public == true); }
+
+    function assignableStaffRole(value) {
+      return value in [
+        'sales', 'sales_rep', 'lead_generator', 'sales_manager',
+        'technician', 'lead_technician', 'cleaner', 'lead_cleaner',
+        'staff', 'field_staff', 'crew_lead', 'dispatcher',
+        'operations_coordinator', 'field_manager', 'quality_control',
+        'customer_support', 'hr'
+      ];
+    }
+    function promotionApplication(userId) {
+      return getAfter(/databases/$(database)/documents/staff_applications/$(userId)).data;
+    }
+    function promotionUser(userId) {
+      return getAfter(/databases/$(database)/documents/users/$(userId)).data;
+    }
+    function promotionProfile(userId) {
+      return getAfter(/databases/$(database)/documents/staff_profiles/$(userId)).data;
+    }
+    function staffPromotionContract(userId) {
+      let application = promotionApplication(userId);
+      let targetUser = promotionUser(userId);
+      let profile = promotionProfile(userId);
+      return platform()
+        && application.applicantUid == userId
+        && application.status == 'approved'
+        && application.verificationStatus == 'verified'
+        && assignableStaffRole(application.roleRequested)
+        && targetUser.uid == userId
+        && targetUser.id == userId
+        && targetUser.role == application.roleRequested
+        && targetUser.status == 'active'
+        && targetUser.approvalStatus == 'approved'
+        && hasCompany(targetUser.companyId)
+        && targetUser.staffApplicationId == userId
+        && profile.uid == userId
+        && profile.userId == userId
+        && profile.applicationId == userId
+        && profile.role == targetUser.role
+        && profile.companyId == targetUser.companyId
+        && profile.status == 'active'
+        && profile.approvalStatus == 'approved';
+    }
+    function platformApplicationReview(userId) {
+      let nextStatus = request.resource.data.status;
+      let nextVerification = request.resource.data.verificationStatus;
+      return platform()
+        && resource.data.applicantUid == userId
+        && request.resource.data.applicantUid == resource.data.applicantUid
+        && request.resource.data.roleRequested == resource.data.roleRequested
+        && resource.data.status in ['submitted', 'needs_more_info']
+        && nextStatus in ['approved', 'rejected', 'needs_more_info']
+        && nextVerification in ['verified', 'rejected', 'needs_more_info']
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status', 'verificationStatus', 'reviewNotes',
+          'reviewedAt', 'reviewedBy', 'reviewedByEmail', 'reviewedByName',
+          'approvedAt', 'approvedBy', 'approvedByEmail', 'approvedByName',
+          'rejectedAt', 'rejectedBy', 'rejectedByEmail', 'rejectedByName',
+          'updatedAt', 'updatedAtMs'
+        ])
+        && (nextStatus != 'approved' || staffPromotionContract(userId));
+    }
+    function platformStaffProfileWrite(userId) {
+      return platform() && staffPromotionContract(userId);
+    }
+    function selfStaffProfileUpdate(userId) {
+      return own(userId)
+        && active()
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.companyId == resource.data.companyId
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.approvalStatus == resource.data.approvalStatus
+        && request.resource.data.applicationId == resource.data.applicationId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'phone', 'availability', 'profilePhotoURL',
+          'onboardingStage', 'onboardingTasks', 'updatedAt', 'updatedAtMs'
+        ]);
+    }
+
     function selfCreate(userId) {
       return own(userId)
         && request.resource.data.keys().hasOnly(['uid','id','email','username','usernameLower','displayName','fullName','name','role','phone','bio','status','approvalStatus','companyId','companyName','companySlug','companyCategory','createdAt','updatedAt','createdAtMs','updatedAtMs'])
@@ -117,18 +218,20 @@ service cloud.firestore {
     match /staff_applications/{id} {
       allow create: if signedIn() && id == request.auth.uid && request.resource.data.applicantUid == request.auth.uid && request.resource.data.status == 'submitted' && request.resource.data.verificationStatus == 'pending_review';
       allow read: if own(id) || platform() || (operations() && sameCompany(resource.data.companyId));
-      allow update: if own(id)
-        && resource.data.status in ['submitted','needs_more_info']
-        && request.resource.data.applicantUid == resource.data.applicantUid
-        && request.resource.data.roleRequested == resource.data.roleRequested
-        && request.resource.data.status in ['submitted','needs_more_info']
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fullName','phone','address','city','state','zip','dateOfBirth','workAuthorization','hasDriversLicense','driversLicenseState','hasReliableTransportation','availability','experienceSummary','emergencyContactName','emergencyContactPhone','attachments','status','verificationStatus','updatedAt','updatedAtMs']);
+      allow update: if (own(id)
+          && resource.data.status in ['submitted','needs_more_info']
+          && request.resource.data.applicantUid == resource.data.applicantUid
+          && request.resource.data.roleRequested == resource.data.roleRequested
+          && request.resource.data.status in ['submitted','needs_more_info']
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fullName','phone','address','city','state','zip','dateOfBirth','workAuthorization','hasDriversLicense','driversLicenseState','hasReliableTransportation','availability','experienceSummary','emergencyContactName','emergencyContactPhone','attachments','status','verificationStatus','updatedAt','updatedAtMs']))
+        || platformApplicationReview(id);
       allow delete: if platform();
     }
 
     match /staff_profiles/{id} {
       allow read: if own(id) || platform() || (operations() && sameCompany(resource.data.companyId));
-      allow write: if false;
+      allow create, update: if platformStaffProfileWrite(id) || selfStaffProfileUpdate(id);
+      allow delete: if platform();
     }
 
     match /invites/{id} { allow read: if platform() || (operations() && sameCompany(resource.data.companyId)); allow write: if false; }
