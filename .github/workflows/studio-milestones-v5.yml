@@ -8,6 +8,7 @@ on:
       - 'public/assets/css/pages/studio-*.css'
       - 'public/website-builder.html'
       - 'tools/studio-milestones-v5-audit.js'
+      - 'tests/visual/specs/studio-workbench-v5.spec.mjs'
       - '.github/workflows/studio-milestones-v5.yml'
   pull_request:
     paths:
@@ -15,6 +16,7 @@ on:
       - 'public/assets/css/pages/studio-*.css'
       - 'public/website-builder.html'
       - 'tools/studio-milestones-v5-audit.js'
+      - 'tests/visual/specs/studio-workbench-v5.spec.mjs'
       - '.github/workflows/studio-milestones-v5.yml'
   workflow_dispatch:
 
@@ -40,6 +42,9 @@ jobs:
 
       - name: Run Studio milestone audit
         run: node tools/studio-milestones-v5-audit.js
+
+      - name: Check authenticated Workbench spec syntax
+        run: node --check tests/visual/specs/studio-workbench-v5.spec.mjs
 
       - name: Verify authoritative route has one editor
         shell: bash
