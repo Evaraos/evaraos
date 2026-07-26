@@ -99,6 +99,7 @@ function onNavReady() {
   if (!isPublicHome) runWhenIdle(() => safeImport("./design-system.js?v=3"));
 }
 
+loadExperienceRuntime();
 window.addEventListener("evara:nav-ready", onNavReady, { once: true });
 if (document.documentElement.dataset.evaraosNavReady === "true") onNavReady();
 
