@@ -6,8 +6,8 @@ import { pathToFileURL } from 'node:url';
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const read = (relative) => fs.readFileSync(path.join(root, relative), 'utf8');
-const accessSource = read('public/assets/js/access-control.js');
-const accessModule = await import(`data:text/javascript;base64,${Buffer.from(accessSource).toString('base64')}`);
+const accessPath = path.join(root, 'public/assets/js/access-control-v2.js');
+const accessModule = await import(`${pathToFileURL(accessPath).href}?audit=${Date.now()}`);
 
 const {
   CANONICAL_ROLES,
@@ -15,7 +15,8 @@ const {
   canAccessPageName,
   canUseFeature,
   defaultRouteForRole,
-  isKnownRole
+  isKnownRole,
+  isPlatformOwner
 } = accessModule;
 
 const matrix = [
@@ -43,11 +44,17 @@ assert.equal(canAccessPageName('/customer_dashboard.html', 'customer'), true, 'c
 assert.equal(canAccessPageName('/dashboard.html', 'customer'), false, 'customer must not reach staff dashboard');
 assert.equal(canAccessPageName('/website-builder.html', 'customer'), false, 'customer must not reach Studio');
 assert.equal(canAccessPageName('/website-builder.html', 'owner'), true, 'owner must reach Studio');
+assert.equal(canAccessPageName('/customer_dashboard.html', 'owner'), true, 'owner ultimate access must include customer portal');
 assert.equal(canAccessPageName('/settings/notifications.html', 'customer'), true, 'customer must reach personal notification settings');
 assert.equal(canAccessPageName('/notifications.html', 'customer'), false, 'customer must not reach operations notifications');
 assert.equal(canAccessPageName('/jobs.html', 'vendor'), true, 'vendor UI policy must include jobs');
 assert.equal(canUseFeature('orderServices', 'customer'), true, 'customer must be able to order services');
 assert.equal(canUseFeature('manageUsers', 'customer'), false, 'customer must not manage users');
+assert.equal(canUseFeature('orderServices', 'owner'), true, 'owner ultimate access must include all registered features');
+assert.equal(isPlatformOwner('owner'), true, 'owner must be recognized as platform owner');
+
+const accessEntry = read('public/assets/js/access-control.js');
+assert.match(accessEntry, /access-control-v2\.js/, 'access-control.js must activate v2');
 
 const rolesSource = read('public/assets/js/roles.js');
 assert.match(rolesSource, /from '\.\/access-control\.js'/, 'roles.js must delegate to canonical access control');
@@ -58,13 +65,18 @@ assert.match(appSource, /from '\.\/access-control\.js'/, 'app.js must delegate t
 assert.doesNotMatch(appSource, /const ROLE_PERMISSIONS\s*=/, 'app.js must not carry a third permission matrix');
 assert.match(appSource, /Unsupported account role/, 'app.js must reject unsupported stored roles');
 
-const routeGuardSource = read('public/assets/js/route-guard.js');
+const routeEntry = read('public/assets/js/route-guard.js');
+assert.match(routeEntry, /route-guard-v2\.js/, 'route guard entry must activate v2');
+const routeGuardSource = read('public/assets/js/route-guard-v2.js');
 assert.match(routeGuardSource, /source: 'verified-route-guard'/, 'route guard must publish a verified session');
+assert.match(routeGuardSource, /source: 'verified-route-guard-cache'/, 'route guard must publish its UID-matched cache fallback');
 assert.match(routeGuardSource, /if \(!session\.user \|\| !session\.profile \|\| !session\.role\)/, 'route guard must fail closed without verified role data');
 
-const portalSource = read('public/assets/js/customer-portal-v2.js');
-assert.match(portalSource, /filters:\s*\[\{ field, op: ["']==["'], value: identity \}\]/, 'customer portal must issue identity-scoped queries');
-assert.doesNotMatch(portalSource, /safeFetch\(["']users["']\)/, 'customer portal must not enumerate all users');
+const portalEntry = read('public/assets/js/customer-portal-v2.js');
+assert.match(portalEntry, /customer-portal-v4\.js/, 'customer portal entry must activate v4');
+const portalSource = read('public/assets/js/customer-portal-v4.js');
+assert.match(portalSource, /where\(field, '==', uid\)/, 'customer portal must issue identity-scoped queries');
+assert.doesNotMatch(portalSource, /fetchAllCollection/, 'customer portal must not enumerate unrestricted collections');
 assert.match(portalSource, /evara:customer-portal-ready/, 'customer portal must publish visual readiness');
 
 console.log(`Role engine audit passed for ${CANONICAL_ROLES.length} canonical roles.`);
