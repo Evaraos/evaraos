@@ -55,14 +55,12 @@ if (!errors.length) {
   }
 
   for (const marker of [
-    "STORAGE_KEY = 'evaraos-studio-visual-builder-v1'",
-    'bridgeFields',
-    'actionIntent',
-    'actionTarget',
-    'catalogFieldBridge',
-    'element.prepend(fragment)',
+    "BRIDGE_VERSION = 'canonical-property-bridge-v2'",
+    'bridge.remove()',
+    'EvaraStudioVisualBuilder',
+    'updateNodeField',
     'MutationObserver(installPropertyBridges)',
-    "version: 'canonical-property-bridge-v1'"
+    'version: BRIDGE_VERSION'
   ]) {
     if (!bridge.includes(marker)) errors.push(`studio-property-bridge.js: missing ${marker}`);
   }
@@ -75,8 +73,8 @@ if (!errors.length) {
     'SAFE_ROUTES',
     'actionIntent',
     'actionTarget',
-    'findBridge',
-    'data-editable-text',
+    'EvaraStudioPropertyBridge',
+    'updateNodeField',
     'commitAction',
     'studio-action-permission',
     'studio-icon-picker-grid',
@@ -103,16 +101,19 @@ if (!errors.length) {
     '.studio-action-permission[data-action-permission="critical"]',
     '.studio-icon-picker-grid',
     '.studio-icon-picker-option',
-    '.studio-action-icon-field-bridge',
     '.studio-node[data-action-allowed="false"]'
   ]) {
     if (!css.includes(selector)) errors.push(`studio-action-icon-config.css: missing ${selector}`);
   }
 
-  const builderImport = '/assets/js/studio/studio-visual-builder.js?v=2';
-  const bridgeImport = '/assets/js/studio/studio-property-bridge.js?v=1';
-  const inspectorImport = '/assets/js/studio/studio-component-inspector.js?v=1';
-  const actionIconImport = '/assets/js/studio/studio-action-icon-config-v2.js?v=2';
+  if (bridge.includes('catalogFieldBridge') || bridge.includes('element.prepend(fragment)') || config.includes('findBridge')) {
+    errors.push('Studio action/icon layers must not restore hidden DOM field bridges');
+  }
+
+  const builderImport = '/assets/js/studio/studio-visual-builder.js?v=4';
+  const bridgeImport = '/assets/js/studio/studio-property-bridge.js?v=2';
+  const inspectorImport = '/assets/js/studio/studio-component-inspector.js?v=2';
+  const actionIconImport = '/assets/js/studio/studio-action-icon-config-v2.js?v=3';
   if (!page.includes('/assets/css/pages/studio-action-icon-config.css?v=1')) errors.push('public/website-builder.html: action/icon stylesheet is missing');
   if (!page.includes(bridgeImport)) errors.push('public/website-builder.html: canonical property bridge is missing');
   if (!page.includes(actionIconImport)) errors.push('public/website-builder.html: hardened action/icon runtime is missing');

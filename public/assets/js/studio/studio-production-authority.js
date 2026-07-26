@@ -36,8 +36,12 @@ function trustedAdapter() {
 
 function assertCanvasGraph(graph, action) {
   const graphId = text(graph?.graphId, 220);
+  const activeSession = canvasSession()?.snapshot?.() || {};
   if (!graphId.startsWith(CANVAS_GRAPH_PREFIX)) {
     throw new Error(`${action} requires the authoritative CanvasSession graph. Compatibility projections are migration-only.`);
+  }
+  if (activeSession.source !== 'authored-blueprint-graph' || !activeSession.sourceDocumentId) {
+    throw new Error(`${action} requires an authenticated authored Graph Canvas. Recovery fixtures cannot be published.`);
   }
   return graphId;
 }

@@ -1,4 +1,4 @@
-const NAV_BUILD="nav-v58-critical-shell";
+const NAV_BUILD="nav-v60-studio-boundaries";
 let NAV_STATE,getNavShell,renderNav,applyProgress,bindScrollBehavior,animateNav;
 let accountSystemsPromise=null;
 

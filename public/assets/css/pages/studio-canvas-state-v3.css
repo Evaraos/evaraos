@@ -1,0 +1,15 @@
+[data-studio-canvas] [data-studio-hidden='true'] {
+  display: revert !important;
+  opacity: 0.22 !important;
+  filter: grayscale(1);
+  outline: 1px dashed rgba(255, 255, 255, 0.55);
+  outline-offset: 3px;
+}
+
+[data-studio-canvas] [data-studio-hidden='true']::after {
+  content: 'Hidden';
+}
+
+[data-studio-canvas] [data-studio-locked='true'].studio-canvas-selected {
+  outline-style: dashed !important;
+}

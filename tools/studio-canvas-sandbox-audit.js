@@ -296,7 +296,7 @@ if (!errors.length) {
   const routeOrder = [
     '/assets/js/studio/blueprint-operation-adapter.js?v=1',
     '/assets/js/studio/canvas/canvas-writer-guard.js?v=1',
-    '/assets/js/studio/canvas/canvas-session-sandbox.js?v=2',
+    '/assets/js/studio/canvas/canvas-session-sandbox.js?v=3',
     '/assets/js/studio/canvas/canvas-sync-status.js?v=1'
   ];
   routeOrder.forEach((entry) => {

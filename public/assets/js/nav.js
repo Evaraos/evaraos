@@ -1,6 +1,8 @@
-import "./nav/nav-main-v6.js?v=nav-v58-critical-shell";
+import "./nav/nav-main-v6.js?v=nav-v60-studio-boundaries";
+import "./app-builder-runtime.js?v=1";
+import "./studio/studio-published-graph-runtime-v1.js?v=1";
 
-const NAV_ENTRY_BUILD = "nav-v58-critical-shell";
+const NAV_ENTRY_BUILD = "nav-v60-studio-boundaries";
 const guardMode = document.body?.dataset?.routeGuard || "";
 const pathname = location.pathname.toLowerCase();
 const isPublicHome = guardMode === "public" && (pathname === "/" || pathname.endsWith("/index.html"));
@@ -36,9 +38,12 @@ function storedRole() {
 }
 
 function maybeLoadOwnerEditor(role = "") {
-  if (ownerEditorRequested || !ownerRoles.has(String(role || "").trim().toLowerCase())) return;
+  if (ownerEditorRequested || isStudioRoute || !ownerRoles.has(String(role || "").trim().toLowerCase())) return;
   ownerEditorRequested = true;
-  runWhenIdle(() => safeImport("./owner-editor.js?v=5"));
+  runWhenIdle(() => Promise.all([
+    safeImport("./owner-editor.js?v=7-boundary-accessibility"),
+    safeImport("./owner-publish-runtime.js?v=1")
+  ]).catch(() => {}));
 }
 
 function loadNavEnhancements() {
@@ -46,13 +51,13 @@ function loadNavEnhancements() {
   navEnhancementsRequested = true;
 
   Promise.all([
-    safeImport("./nav/nav-bottom.js?v=nav-v58-critical-shell"),
-    safeImport("./nav/nav-drawer-close.js?v=nav-v58-critical-shell")
+    safeImport("./nav/nav-bottom.js?v=nav-v60-studio-boundaries"),
+    safeImport("./nav/nav-drawer-close.js?v=nav-v60-studio-boundaries")
   ]).catch(() => {});
 
   runWhenIdle(() => Promise.all([
-    safeImport("./nav/pull-to-refresh.js?v=nav-v58-critical-shell"),
-    safeImport("./nav/avatar-sync.js?v=nav-v58-critical-shell"),
+    safeImport("./nav/pull-to-refresh.js?v=nav-v60-studio-boundaries"),
+    safeImport("./nav/avatar-sync.js?v=nav-v60-studio-boundaries"),
     safeImport("./ui/icon-hydrator.js?v=13")
   ]).catch(() => {}), 1800);
 }

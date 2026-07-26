@@ -91,6 +91,16 @@ service firebase.storage {
       return isPlatformAdmin() || sameCompany(companyId);
     }
 
+    function canManageStudio(companyId) {
+      return accountActive()
+        && sameCompanyOrPlatform(companyId)
+        && userRole() in [
+          'owner', 'Owner', 'OWNER',
+          'super_admin', 'Super Admin', 'SUPER_ADMIN',
+          'admin', 'Admin', 'ADMIN'
+        ];
+    }
+
     function targetUserData(userId) {
       return firestore.get(/databases/(default)/documents/users/$(userId)).data;
     }
@@ -154,6 +164,15 @@ service firebase.storage {
         && request.resource.contentType.matches('image/.*');
     }
 
+    function isSafeStudioMedia() {
+      return request.resource != null
+        && request.resource.size > 0
+        && (
+          (request.resource.size < 16 * 1024 * 1024 && request.resource.contentType.matches('image/.*'))
+          || (request.resource.size < 80 * 1024 * 1024 && request.resource.contentType.matches('video/.*'))
+        );
+    }
+
     function isSafeApplicationAttachment() {
       return request.resource != null
         && request.resource.size > 0
@@ -169,6 +188,13 @@ service firebase.storage {
         && request.resource.metadata.ownerUid == request.auth.uid;
     }
 
+    function studioMetadataMatches(companyId) {
+      return request.resource != null
+        && request.resource.metadata.companyId == companyId
+        && request.resource.metadata.uploadedBy == request.auth.uid
+        && request.resource.metadata.studioVersion == 'studio-canvas-workbench-v5';
+    }
+
     match /users/{userId}/{fileName} {
       allow read: if signedIn() && (
         request.auth.uid == userId
@@ -180,6 +206,14 @@ service firebase.storage {
         && isSafeImage()
         && ownerMetadataMatches();
       allow delete: if request.auth.uid == userId || isPlatformAdmin();
+    }
+
+    match /companies/{companyId}/studio/media/{allFiles=**} {
+      allow read: if sameCompanyOrPlatform(companyId);
+      allow create, update: if canManageStudio(companyId)
+        && isSafeStudioMedia()
+        && studioMetadataMatches(companyId);
+      allow delete: if canManageStudio(companyId);
     }
 
     match /companies/{companyId}/{fileName} {

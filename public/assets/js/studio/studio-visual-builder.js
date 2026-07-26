@@ -2,6 +2,7 @@ import { getSavedUserProfile, getSavedUserRole, normalizeRole } from '../firebas
 import { STUDIO_COMPONENTS } from './component-registry.js';
 
 const OWNER_ROLES = new Set(['owner', 'super_admin', 'admin']);
+const STUDIO_BUILD = 'studio-owner-builder-v6';
 const STORAGE_KEY = 'evaraos-studio-visual-builder-v1';
 const LIVE_KEY = 'evaraos-studio-visual-builder-live-v1';
 const HISTORY_LIMIT = 40;
@@ -214,6 +215,28 @@ function mutate(callback) {
   renderApp();
 }
 
+function updateNodeField(nodeId, field, value) {
+  const page = activePage();
+  const node = page?.nodes?.find((item) => item.id === text(nodeId, 120));
+  const normalizedField = text(field, 60);
+  if (!node || !normalizedField) return false;
+
+  const next = text(value, 2000).trim();
+  if (node.props[normalizedField] === next) return true;
+  mutate(() => {
+    node.props[normalizedField] = next;
+    state.selectedNodeId = node.id;
+  });
+  toast('Component updated');
+  return true;
+}
+
+window.EvaraStudioVisualBuilder = Object.freeze({
+  version: STUDIO_BUILD,
+  updateNodeField,
+  snapshot: () => clone(state)
+});
+
 function undo() {
   if (!history.length) return;
   future.push(clone(state));
@@ -250,7 +273,7 @@ function nodeShell(node, className, children) {
   const shell = el('article', {
     className: `studio-node ${className}${node.id === state.selectedNodeId ? ' is-selected' : ''}`,
     dataset: { nodeId: node.id, nodeType: node.type, span: node.span, hiddenInPreview: String(!roleCanSee(node)) }
-  }, [el('span', { className: 'studio-node-badge', text: node.type.replaceAll('-', ' ') }), ...children]);
+  }, [el('span', { className: 'studio-node-badge', text: node.type.replaceAll('-', ' '), attrs: { 'aria-hidden': 'true' } }), ...children]);
   shell.style.setProperty('--node-radius', `${clamp(node.style.radius, 8, 48)}px`);
   shell.style.setProperty('--node-glass', String(clamp(node.style.glass, 20, 100)));
   shell.style.setProperty('--node-glass-opacity', String(clamp(node.style.glass, 20, 100) / 100));
@@ -305,7 +328,7 @@ function renderCanvas() {
   page.nodes.filter((node) => node.type === 'hero-block').forEach((node) => canvas.append(renderNode(node)));
   const grid = el('section', { className: 'studio-node-grid' });
   page.nodes.filter((node) => node.type !== 'hero-block').forEach((node) => grid.append(renderNode(node)));
-  canvas.append(grid, el('div', { className: 'studio-drop-indicator', text: 'Drop component here' }));
+  canvas.append(grid, el('div', { className: 'studio-drop-indicator', text: 'Drop component here', attrs: { 'aria-hidden': 'true' } }));
   return canvas;
 }
 
@@ -329,7 +352,7 @@ function renderTopbar() {
       el('div', { className: 'studio-brand-copy' }, [el('strong', { text: 'Evara Studio' }), el('span', { text: 'Visual operating system builder' })]),
       pageSelect
     ]),
-    el('div', { className: 'studio-viewport-switcher', attrs: { 'aria-label': 'Viewport' } }, ['desktop', 'tablet', 'mobile'].map((device) => el('button', { type: 'button', className: state.device === device ? 'is-active' : '', text: device === 'desktop' ? '▱' : device === 'tablet' ? '▯' : '▥', title: device, dataset: { device } }))),
+    el('div', { className: 'studio-viewport-switcher', attrs: { 'aria-label': 'Viewport' } }, ['desktop', 'tablet', 'mobile'].map((device) => el('button', { type: 'button', className: state.device === device ? 'is-active' : '', text: device === 'desktop' ? '▱' : device === 'tablet' ? '▯' : '▥', title: device, attrs: { 'aria-label': `${device} preview`, 'aria-pressed': String(state.device === device) }, dataset: { device } }))),
     el('div', { className: 'studio-top-actions' }, [
       el('div', { className: 'studio-role-preview' }, [roleSelect]),
       el('button', { type: 'button', className: 'studio-icon-button', text: '↶', title: 'Undo', disabled: history.length === 0, dataset: { action: 'undo' } }),
@@ -448,7 +471,7 @@ function renderApp() {
   document.documentElement.style.setProperty('--studio-glass-blur', `${Math.max(14, state.theme.glass / 2)}px`);
   const root = document.querySelector('#appRoot');
   if (!root) return;
-  const main = el('main', { className: `visual-studio${state.preview ? ' is-preview' : ''}`, dataset: { visualStudio: 'true' } });
+  const main = el('main', { className: `visual-studio${state.preview ? ' is-preview' : ''}`, dataset: { visualStudio: 'true', studioBuild: STUDIO_BUILD } });
   const workspace = el('section', { className: 'studio-workspace' });
   const stage = el('div', { className: `studio-stage${state.preview ? ' is-previewing' : ''}`, dataset: { device: state.device } }, [renderCanvas()]);
   workspace.append(renderDock());
@@ -567,7 +590,7 @@ function handleContextAction(action) {
 
 function bindEvents() {
   document.addEventListener('click', (event) => {
-    const device = event.target.closest('[data-device]');
+    const device = event.target.closest('.studio-viewport-switcher button[data-device]');
     if (device) { state.device = DEVICES.has(device.dataset.device) ? device.dataset.device : 'desktop'; persist(); renderApp(); return; }
     const node = event.target.closest('[data-node-id]');
     if (node && !state.preview) {

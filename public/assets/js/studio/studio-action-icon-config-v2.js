@@ -97,35 +97,16 @@ function resolvedTarget(intent, role, current = '') {
   return '';
 }
 
-function findBridge(element, field) {
-  return element?.querySelector(`[data-editable-text="true"][data-field="${CSS.escape(field)}"]`) || null;
-}
-
-function ensureBridge(element, field, value = '') {
-  const existing = findBridge(element, field);
-  if (existing) return existing;
-  const bridge = make('span', {
-    className: 'studio-action-icon-field-bridge',
-    text: value,
-    dataset: { actionIconFieldBridge: 'true', editableText: 'true', field },
-    attrs: { tabindex: '-1', 'aria-hidden': 'true' }
-  });
-  element?.append(bridge);
-  return bridge;
-}
-
 async function commitField(field, value) {
   const element = selectedElement();
   if (!element || !field) return false;
-  const bridge = ensureBridge(element, field, value);
-  bridge.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
-  await wait(80);
-  const editor = findBridge(selectedElement(), field);
-  if (!editor) return false;
-  editor.textContent = clean(value, 2000).trim();
-  editor.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
-  await wait(80);
-  return true;
+  const updated = window.EvaraStudioPropertyBridge?.updateNodeField?.(
+    element.dataset.nodeId,
+    field,
+    clean(value, 2000).trim()
+  );
+  await wait(40);
+  return updated === true;
 }
 
 async function commitAction(intent, target) {
@@ -282,9 +263,6 @@ function enhancePanel() {
   const node = selectedNode(state);
   const component = getStudioComponent(node?.type);
   if (!panel || !node || !component) return;
-  const element = selectedElement();
-  ensureBridge(element, 'actionIntent', node.props?.actionIntent || 'none');
-  ensureBridge(element, 'actionTarget', node.props?.actionTarget || '');
   enhanceActions(panel, node, component);
   enhanceIconPicker(panel, node, component);
   renderIcon(panel.querySelector('.studio-property-contract > span'), iconIdFor(component, node), DEFAULT_COMPONENT_ICONS[component.id]);

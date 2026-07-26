@@ -207,3 +207,7 @@ exports.restoreStudioCheckpoint = studioJournal.restoreStudioCheckpoint;
 exports.createStudioBranch = studioJournal.createStudioBranch;
 exports.closeStudioSession = studioJournal.closeStudioSession;
 exports.prepareStudioRelease = studioJournal.prepareStudioRelease;
+
+const studioReleaseRuntime = require("./studio-release-runtime-service");
+exports.activateStudioRelease = studioReleaseRuntime.activateStudioRelease;
+exports.getPublishedStudioRelease = studioReleaseRuntime.getPublishedStudioRelease;

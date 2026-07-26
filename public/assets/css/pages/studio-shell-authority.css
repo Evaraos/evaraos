@@ -1,0 +1,111 @@
+/*
+ * Evara Studio owns a viewport application shell. Universal page motion may
+ * decorate the surrounding site, but it must not become Studio's fixed-position
+ * containing block or add document scrolling to the canvas.
+ */
+body.studio-visual-page {
+  overflow: hidden !important;
+  --studio-text: rgba(248, 249, 252, 0.98);
+  --studio-muted: rgba(232, 236, 246, 0.72);
+}
+
+body.studio-visual-page > #appRoot {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
+  max-height: 100dvh;
+  padding: 0 !important;
+  overflow: hidden;
+  transform: none !important;
+  filter: none !important;
+  border-radius: 0 !important;
+}
+
+body.studio-visual-page.nav-menu-open > #appRoot {
+  transform: none !important;
+  filter: none !important;
+  pointer-events: auto !important;
+}
+
+body.studio-visual-page .visual-studio {
+  position: fixed;
+  inset: var(--eva-page-nav-clearance, 92px) 0 0;
+  width: 100%;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  grid-template-rows: 62px minmax(0, 1fr);
+}
+
+body.studio-visual-page .studio-topbar {
+  position: relative !important;
+  top: auto !important;
+  color: var(--studio-text) !important;
+  grid-template-columns: minmax(330px, 0.65fr) auto minmax(620px, 1.35fr);
+}
+
+body.studio-visual-page .studio-topbar button,
+body.studio-visual-page .studio-topbar select,
+body.studio-visual-page .studio-topbar strong,
+body.studio-visual-page .studio-topbar .studio-save-status,
+body.studio-visual-page .studio-dock button,
+body.studio-visual-page .studio-context-toolbar button {
+  color: var(--studio-text) !important;
+}
+
+body.studio-visual-page .studio-topbar .studio-brand-copy span,
+body.studio-visual-page .studio-dock button small {
+  color: var(--studio-muted) !important;
+}
+
+body.studio-visual-page .studio-top-actions > * {
+  flex: 0 0 auto;
+}
+
+/*
+ * The full authority/status cluster is wider than the available action column
+ * on standard desktop displays. Keep every actionable control available while
+ * collapsing duplicate status copy that is also exposed by the Journal,
+ * Graph, and save controls.
+ */
+@media (max-width: 1680px) {
+  body.studio-visual-page .studio-top-actions .studio-document-status,
+  body.studio-visual-page .studio-top-actions .studio-layout-save-status,
+  body.studio-visual-page .studio-top-actions .studio-production-authority-badge {
+    display: none;
+  }
+}
+
+body.studio-visual-page .studio-workspace {
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+@media (max-width: 720px) {
+  body.studio-visual-page .visual-studio {
+    inset: var(--eva-page-nav-clearance, 86px) 0 0;
+    grid-template-rows: 58px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 980px) {
+  body.studio-visual-page .studio-topbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+@media (min-width: 721px) and (max-width: 1180px) {
+  body.studio-visual-page .studio-topbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  body.studio-visual-page .studio-brand-copy,
+  body.studio-visual-page .studio-viewport-switcher,
+  body.studio-visual-page .studio-top-actions .studio-text-button[data-action="save"] {
+    display: none;
+  }
+}

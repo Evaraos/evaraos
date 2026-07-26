@@ -38,10 +38,12 @@ if (!errors.length) {
     'ReCaptchaEnterpriseProvider',
     'firebase-app-check.js',
     'const appCheckSiteKey =',
+    'const APP_CHECK_SINGLETON =',
     'new ReCaptchaEnterpriseProvider(appCheckSiteKey)',
     'isTokenAutoRefreshEnabled: true',
-    'export let appCheck = null',
-    'appCheck = initializeAppCheck(app'
+    'export let appCheck = globalThis[APP_CHECK_SINGLETON] || null',
+    'appCheck = initializeAppCheck(app',
+    'globalThis[APP_CHECK_SINGLETON] = appCheck'
   ]) {
     if (!source.firebase.includes(marker)) errors.push(`firebase.js: missing ${marker}`);
   }
@@ -91,7 +93,7 @@ if (!errors.length) {
 
   const loaderImport = '/assets/js/studio/studio-trusted-journal-loader.js?v=1';
   const trustedImport = '/assets/js/studio/studio-trusted-journal.js?v=1';
-  const firebaseImport = '/assets/js/firebase.js?v=36';
+  const firebaseImport = '/assets/js/firebase.js?v=37';
   const blueprintImport = '/assets/js/studio/blueprint-operation-adapter.js?v=1';
   const writerGuardImport = '/assets/js/studio/canvas/canvas-writer-guard.js?v=1';
   if (!source.route.includes(loaderImport)) errors.push('website-builder.html: App Check trusted-Journal loader is missing');

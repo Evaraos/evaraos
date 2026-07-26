@@ -15,6 +15,8 @@ on:
       - "public/assets/js/nav/nav-role-lockdown.js"
       - "public/assets/js/studio/blueprint-drafts.js"
       - "public/assets/js/studio/role-preview.js"
+      - "public/assets/js/studio/studio-release-activation-v1.js"
+      - "public/assets/js/studio/studio-published-graph-runtime-v1.js"
       - ".github/workflows/backend-security.yml"
   pull_request:
     paths:
@@ -28,6 +30,8 @@ on:
       - "public/assets/js/nav/nav-role-lockdown.js"
       - "public/assets/js/studio/blueprint-drafts.js"
       - "public/assets/js/studio/role-preview.js"
+      - "public/assets/js/studio/studio-release-activation-v1.js"
+      - "public/assets/js/studio/studio-published-graph-runtime-v1.js"
       - ".github/workflows/backend-security.yml"
   workflow_dispatch:
 
@@ -70,6 +74,8 @@ jobs:
           node --check functions/blueprint-security.js
           node --check functions/marketplace-commerce-runtime.js
           node --check functions/marketplace-commerce-read.js
+          node --check functions/studio-journal-service.js
+          node --check functions/studio-release-runtime-service.js
 
       - name: Validate authorization client syntax
         run: |
@@ -78,6 +84,8 @@ jobs:
           node --experimental-default-type=module --check public/assets/js/nav/nav-role-lockdown.js
           node --experimental-default-type=module --check public/assets/js/studio/blueprint-drafts.js
           node --experimental-default-type=module --check public/assets/js/studio/role-preview.js
+          node --experimental-default-type=module --check public/assets/js/studio/studio-release-activation-v1.js
+          node --experimental-default-type=module --check public/assets/js/studio/studio-published-graph-runtime-v1.js
 
       - name: Run Firebase rules emulator tests
         working-directory: tests/backend-security

@@ -491,7 +491,9 @@ body.studio-visual-page {
 
 .visual-studio.is-preview .studio-dock,
 .visual-studio.is-preview .studio-sheet,
-.visual-studio.is-preview .studio-context-toolbar { display: none !important; }
+.visual-studio.is-preview .studio-context-toolbar,
+.visual-studio.is-preview .studio-drop-indicator,
+.visual-studio.is-preview [data-catalog-field-bridge] { display: none !important; }
 .visual-studio.is-preview .studio-stage-scroll { padding-left: 40px; padding-right: 40px; }
 .visual-studio.is-preview .studio-node { border-color: transparent !important; box-shadow: none; }
 .visual-studio.is-preview .studio-node-badge { display: none !important; }

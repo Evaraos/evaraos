@@ -22,6 +22,7 @@ const requiredFiles = [
   'public/assets/css/pages/studio-auto-layout.css',
   'public/assets/css/pages/studio-auto-layout-widths.css',
   'public/assets/css/pages/studio-document-model.css',
+  'public/assets/css/pages/studio-shell-authority.css',
   'public/website-builder.html'
 ];
 
@@ -47,6 +48,7 @@ if (!errors.length) {
   const autoLayoutCss = read('public/assets/css/pages/studio-auto-layout.css');
   const autoLayoutWidths = read('public/assets/css/pages/studio-auto-layout-widths.css');
   const journalCss = read('public/assets/css/pages/studio-document-model.css');
+  const shellCss = read('public/assets/css/pages/studio-shell-authority.css');
   const studioPage = read('public/website-builder.html');
 
   if (!componentRegistry.includes("STUDIO_COMPONENT_VERSION = 'component-engine-v4'")) {
@@ -86,6 +88,12 @@ if (!errors.length) {
   }
   if (!builder.includes('node.type.replaceAll')) {
     errors.push('studio-visual-builder.js: generic registered component fallback is missing');
+  }
+  if (!builder.includes("closest('.studio-viewport-switcher button[data-device]')")) {
+    errors.push('studio-visual-builder.js: viewport controls must use the scoped button selector');
+  }
+  if (builder.includes("closest('[data-device]')")) {
+    errors.push('studio-visual-builder.js: broad viewport selector blocks canvas component selection');
   }
 
   if (!layout.includes("node?.dataset.nodeType === 'hero-block'")) {
@@ -158,10 +166,10 @@ if (!errors.length) {
     'CATEGORY_ORDER',
     'catalogSearch',
     'propertyField',
-    'catalogFieldBridge',
-    "editableText: 'true'",
-    "new FocusEvent('focusout'",
-    "new MouseEvent('dblclick'",
+    'removeLegacyFieldBridges',
+    'EvaraStudioPropertyBridge',
+    'updateNodeField',
+    "matches('input[data-property-field], textarea[data-property-field]')",
     'REQUIRED_FIELDS',
     'SELECT_OPTIONS',
     'MutationObserver'
@@ -193,7 +201,7 @@ if (!errors.length) {
   if (!studioPage.includes('/assets/css/pages/studio-component-catalog.css?v=1')) {
     errors.push('public/website-builder.html: expanded catalog preview stylesheet is missing');
   }
-  if (!studioPage.includes('/assets/css/pages/studio-component-inspector.css?v=1')) {
+  if (!studioPage.includes('/assets/css/pages/studio-component-inspector.css?v=2')) {
     errors.push('public/website-builder.html: property inspector stylesheet is missing');
   }
   if (!studioPage.includes('/assets/css/pages/studio-auto-layout.css?v=1')) {
@@ -204,6 +212,9 @@ if (!errors.length) {
   }
   if (!studioPage.includes('/assets/css/pages/studio-document-model.css?v=1')) {
     errors.push('public/website-builder.html: draft journal stylesheet is missing');
+  }
+  if (!studioPage.includes('/assets/css/pages/studio-shell-authority.css?v=2')) {
+    errors.push('public/website-builder.html: Studio shell authority stylesheet is missing');
   }
   if (!studioPage.includes('/assets/js/studio/studio-auto-layout.js?v=1')) {
     errors.push('public/website-builder.html: Auto Layout runtime is missing');
@@ -236,6 +247,16 @@ if (!errors.length) {
   }
   for (const selector of ['data-state="syncing"', 'data-state="saved-locally"', '.studio-journal-heading']) {
     if (!journalCss.includes(selector)) errors.push(`studio-document-model.css: missing ${selector}`);
+  }
+  for (const marker of [
+    'body.studio-visual-page > #appRoot',
+    'transform: none !important',
+    'grid-template-rows: 62px minmax(0, 1fr)',
+    '.studio-top-actions > *',
+    '@media (max-width: 1680px)',
+    '.studio-production-authority-badge'
+  ]) {
+    if (!shellCss.includes(marker)) errors.push(`studio-shell-authority.css: missing ${marker}`);
   }
 
   for (const id of expectedComponents.filter((id) => !['glass-card', 'action-button', 'metric-card', 'map-block', 'image-block', 'dev-block'].includes(id))) {

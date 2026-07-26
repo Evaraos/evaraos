@@ -72,9 +72,14 @@ function compiledBlueprintGraph() {
   }
 }
 
-function initialGraph() {
+function initialGraph(options = {}) {
   const authored = compiledBlueprintGraph();
   if (authored) return authored;
+  if (options.requireAuthoredGraph === true) {
+    const error = new Error('The authenticated Studio draft is not ready for Graph Canvas compilation.');
+    error.code = 'authored-graph-required';
+    throw error;
+  }
   const graph = createCanvasSandboxFixture();
   graph.graphId = 'graph:canvas:sandbox:owner-dashboard';
   graph.revision = 0;
@@ -163,7 +168,7 @@ export class CanvasSession {
     if (this.#ready) return this.snapshot();
     const source = this.options.graph
       ? { graph: clone(this.options.graph), source: 'provided-graph', sourceDocumentId: null, sourceFingerprint: null }
-      : initialGraph();
+      : initialGraph({ requireAuthoredGraph: this.options.requireAuthoredGraph });
     assertValidEvaraGraph(source.graph);
     this.#source = source;
     this.#pageId = this.options.pageId || Object.values(source.graph.nodes).find((node) => node.kind === 'page')?.id || null;

@@ -4,7 +4,8 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "test": "firebase emulators:exec --config ../../firebase.json --only firestore,storage \"node --test security-rules.test.cjs\""
+    "test": "firebase emulators:exec --config ../../firebase.json --only firestore,storage \"node --test --test-concurrency=1 security-rules.test.cjs studio-storage-rules.test.cjs\"",
+    "test:studio-storage": "firebase emulators:exec --config ../../firebase.json --only firestore,storage \"node --test studio-storage-rules.test.cjs\""
   },
   "dependencies": {
     "@firebase/rules-unit-testing": "5.0.1",

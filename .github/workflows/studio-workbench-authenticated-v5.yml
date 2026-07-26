@@ -1,0 +1,74 @@
+name: Studio Workbench Authenticated V5
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: Optional deployed HTTPS origin override
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: studio-workbench-authenticated-v5
+  cancel-in-progress: false
+
+jobs:
+  authenticated-workbench:
+    name: Authenticated Graph Workbench completion proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    environment: production
+    env:
+      EVARA_QA_BASE_URL: ${{ inputs.base_url || secrets.EVARA_QA_BASE_URL }}
+      EVARA_QA_APP_CHECK_DEBUG_TOKEN: ${{ secrets.EVARA_QA_APP_CHECK_DEBUG_TOKEN }}
+      EVARA_QA_OWNER_EMAIL: ${{ secrets.EVARA_QA_OWNER_EMAIL }}
+      EVARA_QA_OWNER_PASSWORD: ${{ secrets.EVARA_QA_OWNER_PASSWORD }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate deployed QA configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$EVARA_QA_BASE_URL" || -z "$EVARA_QA_OWNER_EMAIL" || -z "$EVARA_QA_OWNER_PASSWORD" || -z "$EVARA_QA_APP_CHECK_DEBUG_TOKEN" ]]; then
+            echo "EVARA_QA_BASE_URL, owner credentials, and EVARA_QA_APP_CHECK_DEBUG_TOKEN are required as encrypted repository secrets."
+            exit 1
+          fi
+          node -e "const u=new URL(process.env.EVARA_QA_BASE_URL); if(u.protocol!=='https:') throw new Error('QA origin must use HTTPS'); if(['localhost','127.0.0.1'].includes(u.hostname)) throw new Error('QA origin must be deployed');"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install visual QA dependencies
+        working-directory: tests/visual
+        run: npm install --no-audit --no-fund
+
+      - name: Install Chromium
+        working-directory: tests/visual
+        run: npx playwright install --with-deps chromium
+
+      - name: Authenticate QA roles
+        working-directory: tests/visual
+        run: npx playwright test specs/auth.setup.mjs --project=auth-setup
+
+      - name: Run all-milestone Workbench proof
+        working-directory: tests/visual
+        run: npx playwright test specs/studio-workbench-v5.spec.mjs --project=desktop-chromium
+
+      - name: Upload failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: studio-workbench-v5-failure-evidence
+          path: |
+            tests/visual/test-results
+            tests/visual/playwright-report
+          if-no-files-found: ignore
+          retention-days: 14

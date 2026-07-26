@@ -209,7 +209,7 @@ if (!errors.length) {
 
   const serializationImport = '/assets/js/studio/studio-blueprint-serialization.js?v=1';
   const operationImport = '/assets/js/studio/blueprint-operation-adapter.js?v=1';
-  const canvasImport = '/assets/js/studio/canvas/canvas-session-sandbox.js?v=2';
+  const canvasImport = '/assets/js/studio/canvas/canvas-session-sandbox.js?v=3';
   const syncImport = '/assets/js/studio/canvas/canvas-sync-status.js?v=1';
   const rollbackImport = '/assets/js/studio/canvas/canvas-sandbox.js?v=1';
   if (!page.includes(operationImport)) errors.push('public/website-builder.html: Blueprint operation adapter is missing');

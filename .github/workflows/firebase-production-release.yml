@@ -93,7 +93,18 @@ jobs:
             functions/index-stats.js \
             functions/package.json \
             public/assets/js/firebase.js \
+            public/assets/js/nav.js \
+            public/assets/js/nav \
+            public/assets/js/owner-editor.js \
+            public/assets/js/owner-publish-runtime.js \
             public/assets/js/studio \
+            public/assets/css/nav.css \
+            public/assets/css/nav \
+            public/assets/css/pages/studio-component-inspector.css \
+            public/assets/css/pages/studio-owner-v2.css \
+            public/assets/css/pages/studio-shell-authority.css \
+            public/assets/css/pages/studio-visual-builder.css \
+            public/assets/css/pages/studio-visual-builder-runtime.css \
             public/assets/css/pages/studio-production-authority.css \
             public/website-builder.html \
             tests/visual/specs/studio-canvas-session.spec.mjs \
@@ -194,10 +205,17 @@ jobs:
       - name: Install Firebase CLI
         run: npm install -g firebase-tools@latest
 
-      - name: Verify Firebase inventory access
+      - name: Verify Firebase Functions inventory access
+        if: inputs.release_scope == 'functions' || inputs.release_scope == 'backend' || inputs.release_scope == 'all'
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
-        run: firebase functions:list --project evaraos-web --json >/dev/null
+        run: firebase functions:list --project evaraos-web --json
+
+      - name: Verify Firebase Hosting access
+        if: inputs.release_scope == 'hosting'
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: firebase hosting:sites:list --project evaraos-web --json
 
       - name: Verify required Firebase Functions secrets
         if: inputs.release_scope == 'functions' || inputs.release_scope == 'backend' || inputs.release_scope == 'all'
