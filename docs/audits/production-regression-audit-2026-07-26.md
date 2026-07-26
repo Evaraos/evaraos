@@ -18,7 +18,7 @@ Authentication itself can succeed. The failure occurs after sign-in:
 1. Login redirects a customer to `customer_dashboard.html`.
 2. The private route guard immediately requires a fresh Firestore profile.
 3. The production portal then performs unrestricted reads of jobs, services, subscriptions, and users.
-4. Firestore rules require customer-owned scoped queries and approved customer status for service records.
+4. Firestore rules require customer-owned scoped queries and treated customers like approval-gated staff.
 5. The portal swallows denied queries as empty arrays, and one profile-hydration failure path never releases the loading shell.
 
 This presents as a login loop, blank page, or false empty service history.
@@ -30,7 +30,38 @@ This presents as a login loop, blank page, or false empty service history.
 - Query `jobs`, `customer_services`, and `subscriptions` with equality constraints on `customerUid`, `customerId`, and `userId`.
 - Remove the whole-users-collection download.
 - Add a visible 12-second timeout/failure state and retry control.
-- Preserve current Firestore rules in the hosting hotfix. Pending-account access policy requires emulator tests before a rules change.
+- Permit pending/non-rejected customer profiles to read only records carrying their own UID and public service-catalog entries.
+- Keep unrestricted collection reads, cross-customer records, private catalog records, and suspended/rejected accounts denied.
+
+## Canonical role engine
+
+### Root cause
+
+Three independent browser policies existed:
+
+- `public/assets/js/access-control.js`
+- `public/assets/js/roles.js`
+- a third handwritten `ROLE_PERMISSIONS` map inside `public/assets/js/app.js`
+
+They disagreed about aliases, nested Settings paths, legacy pages, vendors, and unknown roles. Most critically, an unknown role was normalized to `customer`, which is not fail-closed.
+
+### Recovery patch
+
+- Make `access-control.js` the canonical browser policy.
+- Normalize known legacy aliases into nine canonical roles.
+- Return no role for unknown values and send unsupported stored roles back to login.
+- Preserve path-specific Settings policies so `/settings/notifications.html` does not collide with the operations-only `/notifications.html`.
+- Route `roles.js` and `app.js` through the canonical policy instead of maintaining competing matrices.
+- Recognize the stored `platform_admin` role in Firestore authority.
+- Add an executable role matrix and focused Firestore customer-ownership emulator tests.
+
+### Current role readiness
+
+- Customer: recovery implementation complete; awaiting exact-head CI, emulator, merge, and coordinated Hosting + Firestore deployment.
+- Platform owner/admin: browser normalization repaired; authenticated runtime verification still required.
+- Manager and field roles: existing tenant boundaries retained; full page/data matrix remains a follow-up audit.
+- Vendor: present in browser policy, but backend authority is not yet fully aligned. Treat vendor workflows as incomplete until scoped emulator coverage is added.
+- Staff application approval: app-side onboarding writes exist, but current rules still deny `staff_profiles` writes and reviewer profile promotion outside platform authority.
 
 ## Logo and icon
 
@@ -61,7 +92,7 @@ This presents as a login loop, blank page, or false empty service history.
 
 ## Additional 24-hour risk discovered
 
-The staff application work added app-side approval/onboarding behavior that writes `staff_profiles/{uid}`, but the current Firestore rules still deny all writes to `staff_profiles`. Expanded role support and the manual rules patch were not released as a verified pair. This is not included in the emergency hosting patch; it is the next backend recovery task after customer access is stable.
+The staff application work added app-side approval/onboarding behavior that updates `users/{uid}` and writes `staff_profiles/{uid}`, but the current Firestore rules do not authorize that complete reviewer transaction. Expanded role support and onboarding rules were not released as a verified pair. This is intentionally not bundled into the customer-access emergency patch; it is the next backend recovery task after customer access is stable.
 
 ## Release discipline going forward
 
