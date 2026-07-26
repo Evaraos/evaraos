@@ -82,6 +82,7 @@ function loadStudioRuntime() {
 }
 
 function onNavReady() {
+  window.EvaraBrand?.apply?.();
   loadNavEnhancements();
   loadPrivateRuntime();
   loadStudioRuntime();
