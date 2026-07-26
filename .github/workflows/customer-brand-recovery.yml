@@ -50,5 +50,26 @@ jobs:
         run: node tools/customer-brand-recovery-audit.js
       - name: Audit navigation customer and owner runtime contracts
         run: node tools/navigation-owner-customer-audit.js runtime
-      - name: Audit universal navigation page boot inventory
-        run: node tools/navigation-owner-customer-audit.js pages
+      - name: Generate universal navigation page inventory
+        shell: bash
+        run: |
+          set +e
+          node tools/navigation-owner-customer-audit.js pages > universal-nav-page-inventory.log 2>&1
+          code=$?
+          echo "$code" > universal-nav-page-inventory.exit
+          cat universal-nav-page-inventory.log
+          exit 0
+      - name: Upload universal navigation inventory
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: universal-navigation-page-inventory
+          path: |
+            universal-nav-page-inventory.log
+            universal-nav-page-inventory.exit
+          if-no-files-found: error
+          retention-days: 7
+      - name: Enforce universal navigation page inventory
+        shell: bash
+        run: |
+          test "$(cat universal-nav-page-inventory.exit)" = "0"
