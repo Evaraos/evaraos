@@ -71,6 +71,7 @@ export const PAGE_POLICY = Object.freeze({
   'settings-v2.html': ALL_AUTHENTICATED,
   'messages.html': ALL_AUTHENTICATED,
   'customer-messaging.html': ALL_AUTHENTICATED,
+  'profile.html': ALL_AUTHENTICATED,
 
   'website-builder.html': ['platform_admin', 'owner', 'admin'],
   'evara-studio.html': ['platform_admin', 'owner', 'admin'],
@@ -78,6 +79,10 @@ export const PAGE_POLICY = Object.freeze({
   'users.html': ['platform_admin', 'owner', 'admin', 'manager'],
   'org.html': ['platform_admin', 'owner', 'admin', 'manager'],
   'applications.html': ['platform_admin', 'owner', 'admin', 'manager'],
+  'sales_reps.html': ['platform_admin', 'owner', 'admin', 'manager', 'sales'],
+  'audit.html': ['platform_admin', 'owner', 'admin'],
+  'performance.html': ['platform_admin', 'owner', 'admin', 'manager'],
+  'security.html': ['platform_admin', 'owner', 'admin'],
   'qa.html': ['platform_admin', 'owner', 'admin'],
   'qa-v2.html': ['platform_admin', 'owner', 'admin'],
 
@@ -128,6 +133,15 @@ export const PAGE_POLICY = Object.freeze({
   'customer_portal.html': ['customer'],
   'customer_bills.html': ['customer', ...TENANT_LEADERSHIP],
   'onboarding.html': ALL_AUTHENTICATED
+});
+
+const PATH_POLICY = Object.freeze({
+  '/settings/account.html': ALL_AUTHENTICATED,
+  '/settings/appearance.html': ALL_AUTHENTICATED,
+  '/settings/icons.html': ALL_AUTHENTICATED,
+  '/settings/notifications.html': ALL_AUTHENTICATED,
+  '/settings/workspace.html': ALL_AUTHENTICATED,
+  '/settings/workspace-v2.html': ALL_AUTHENTICATED
 });
 
 export const FEATURE_POLICY = Object.freeze({
@@ -200,9 +214,14 @@ export function canUseFeature(feature = '', role = '') {
 }
 
 export function canAccessPageName(pageName = '', role = '') {
-  const page = String(pageName || '').split('?')[0].split('#')[0].split('/').pop() || 'index.html';
-  if (PUBLIC_PAGES.has(page)) return true;
+  const resource = String(pageName || '').trim().split('?')[0].split('#')[0];
+  const isAbsoluteUrl = /^[a-z][a-z0-9+.-]*:/i.test(resource);
+  const path = isAbsoluteUrl ? '' : `/${resource.replace(/^\.?\//, '').replace(/^\/+/, '')}`;
   const normalizedRole = normalizeAccessRole(role);
+  const pathAllowed = PATH_POLICY[path];
+  if (Array.isArray(pathAllowed)) return Boolean(normalizedRole) && pathAllowed.includes(normalizedRole);
+  const page = resource.split('/').pop() || 'index.html';
+  if (PUBLIC_PAGES.has(page)) return true;
   if (!normalizedRole) return false;
   const allowed = PAGE_POLICY[page];
   return Array.isArray(allowed) && allowed.includes(normalizedRole);
@@ -224,7 +243,7 @@ export function permissionsForRole(role = '') {
 export function pagesForRole(role = '') {
   const normalized = normalizeAccessRole(role);
   if (!normalized) return [];
-  return Object.entries(PAGE_POLICY)
+  return [...Object.entries(PAGE_POLICY), ...Object.entries(PATH_POLICY)]
     .filter(([, allowed]) => allowed.includes(normalized))
     .map(([page]) => page);
 }
