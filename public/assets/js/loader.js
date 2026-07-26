@@ -12,8 +12,8 @@
   const WATCHDOG_MS=2600;
   const EXIT_MS=180;
   const WELCOME_MIN_MS=1200;
-  const BRAND_MARK_SRC='/assets/brand/evaraos-mark.png?v=brand-png-3';
-  const APP_ICON_SRC='/assets/brand/evaraos-app-icon.png?v=brand-png-1';
+  const BRAND_MARK_SRC='/assets/img/icon-512.png?v=brand-logo-1';
+  const APP_ICON_SRC='/assets/img/icon-512.png?v=brand-logo-1';
   let timer=null,forceTimer=null,watchdogTimer=null,isTransitioning=false,welcomeStartedAt=0,hiddenAt=0;
   let domReady=document.readyState!=="loading";
   let windowLoaded=document.readyState==="complete";

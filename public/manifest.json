@@ -15,13 +15,13 @@
   "dir": "ltr",
   "icons": [
     {
-      "src": "/assets/brand/evaraos-app-icon.png?v=brand-png-1",
+      "src": "/assets/img/icon-512.png?v=brand-logo-1",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/assets/brand/evaraos-app-icon.png?v=brand-png-1",
+      "src": "/assets/img/icon-512.png?v=brand-logo-1",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -33,14 +33,14 @@
       "short_name": "Dashboard",
       "description": "Open the Evaraos dashboard.",
       "url": "/dashboard.html",
-      "icons": [{"src":"/assets/brand/evaraos-app-icon.png?v=brand-png-1","sizes":"512x512","type":"image/png"}]
+      "icons": [{"src":"/assets/img/icon-512.png?v=brand-logo-1","sizes":"512x512","type":"image/png"}]
     },
     {
       "name": "Settings",
       "short_name": "Settings",
       "description": "Open Evaraos settings.",
       "url": "/settings.html",
-      "icons": [{"src":"/assets/brand/evaraos-app-icon.png?v=brand-png-1","sizes":"512x512","type":"image/png"}]
+      "icons": [{"src":"/assets/img/icon-512.png?v=brand-logo-1","sizes":"512x512","type":"image/png"}]
     }
   ]
 }

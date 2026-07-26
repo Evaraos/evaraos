@@ -20,8 +20,8 @@ const PAGE_LIBRARY = [
 ];
 
 const DEFAULT_ASSETS = [
-  { id: 'evara-app-icon', name: 'EvaraOS App Icon', url: '/assets/brand/evaraos-app-icon.png' },
-  { id: 'evara-brand-mark', name: 'EvaraOS Brand Mark', url: '/assets/brand/evaraos-app-icon.png' }
+  { id: 'evara-app-icon', name: 'EvaraOS App Icon', url: '/assets/img/icon-512.png?v=brand-logo-1' },
+  { id: 'evara-brand-mark', name: 'EvaraOS Brand Mark', url: '/assets/img/icon-512.png?v=brand-logo-1' }
 ];
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, Number(value) || min));

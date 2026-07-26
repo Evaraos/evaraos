@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const ASSET_ICON = '/assets/brand/evaraos-app-icon.png?v=brand-icon-final-7';
+  const ASSET_ICON = '/assets/img/icon-512.png?v=brand-logo-1';
   const OFFICIAL_KEY = 'evaraos-official-app-icon-v4';
   const USER_ICON_KEY = 'evaraos-user-app-icon-v3';
   const BAD_LEGACY_KEYS = ['evaraos-official-app-icon-v1','evaraos-official-app-icon-v2','evaraos-official-app-icon-v3','evaraos-user-app-icon-v1','evaraos-user-app-icon-v2','evaraos-custom-app-icon-v5','evaraos-custom-app-icon-v4','evaraos-custom-app-icon-v3','evaraos-custom-icon-v1','evaraos-custom-app-icon-v2'];

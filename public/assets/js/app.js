@@ -75,7 +75,7 @@ export function renderSidebar(role, active = "") {
   return `
     <div class="sidebar-inner">
       <a class="sidebar-logo-wrap" href="${getAssetPath("index.html")}">
-        <img src="${getAssetPath("assets/img/evaraos_logo.png")}" alt="Evaraos Logo" class="sidebar-logo" />
+        <img src="${getAssetPath("assets/img/icon-512.png?v=brand-logo-1")}" alt="Evaraos Logo" class="sidebar-logo" />
       </a>
       <nav class="sidebar-nav">
         ${links.filter((link) => link.roles.includes(normalizedRole)).map((link) => `
@@ -161,7 +161,7 @@ export async function bindTopbar(user, title = "Dashboard") {
     <div class="topbar-inner">
       <div class="topbar-left">
         <a class="brand-link" href="/index.html">
-          <img src="/assets/img/evaraos_logo.png" alt="Evaraos Logo" class="brand-logo" />
+          <img src="/assets/img/icon-512.png?v=brand-logo-1" alt="Evaraos Logo" class="brand-logo" />
           <span class="brand-text">Evaraos</span>
         </a>
       </div>

@@ -1,8 +1,8 @@
 const ASSET_KEY = 'evaraos-studio-assets-v1';
 const DEFAULT_ASSETS = [
-  { id: 'official-app-icon', name: 'Official App Icon', type: 'brand', url: '/assets/brand/evaraos-app-icon.png' },
-  { id: 'favicon', name: 'Favicon', type: 'brand', url: '/assets/brand/evaraos-app-icon.png' },
-  { id: 'brand-mark', name: 'Brand Mark', type: 'brand', url: '/assets/brand/evaraos-app-icon.png' }
+  { id: 'official-app-icon', name: 'Official App Icon', type: 'brand', url: '/assets/img/icon-512.png?v=brand-logo-1' },
+  { id: 'favicon', name: 'Favicon', type: 'brand', url: '/assets/img/icon-512.png?v=brand-logo-1' },
+  { id: 'brand-mark', name: 'Brand Mark', type: 'brand', url: '/assets/img/icon-512.png?v=brand-logo-1' }
 ];
 function isModeOn() { return localStorage.getItem('evaraos-studio-mode-enabled') === 'true'; }
 function selected() { return document.querySelector('.studio-mode-selected'); }
