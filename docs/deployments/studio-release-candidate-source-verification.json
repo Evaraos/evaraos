@@ -1,10 +1,9 @@
 {
   "schemaVersion": "evara.source-verification.v1",
   "status": "confirmed",
-  "sourceCommit": "7bb46c45138baddfb5cfa6230bfb52a9dce48d44",
-  "workflowRunId": null,
-  "verificationMode": "local-exact-gate-replay",
-  "verifiedAt": "2026-07-22T19:19:04Z",
+  "sourceCommit": "71a093a6f594054800cead4e0b580fed0923b90d",
+  "workflowRunId": "30191235443",
+  "verifiedAt": "2026-07-26T06:33:14.021Z",
   "gates": {
     "app-check-audit": {
       "exitCode": 0,
@@ -35,12 +34,5 @@
       "passed": true
     }
   },
-  "runtime": {
-    "node": "20.20.2",
-    "npm": "10.8.2",
-    "baseBranch": "evaraos",
-    "sourceCheckout": "clean"
-  },
-  "secretsRequired": false,
-  "deploymentPerformed": false
+  "secretsRequired": false
 }
