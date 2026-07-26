@@ -43,6 +43,7 @@ The global drawer was intended to be role-based, but page boot order changed whi
 - `nav-role-lockdown.js` removed real menu links using that preview role.
 - Some pages loaded the route guard before navigation, so navigation missed the verified-session event and rendered from stale cache.
 - Authentication was also inferred from page loading state on some paths.
+- Nineteen legacy pages loaded `nav.js` twice under two different query-string URLs, causing duplicate entrypoint side effects and page-specific timing.
 
 This made the menu appear page-dependent even though the app registry itself is role-based.
 
@@ -53,8 +54,11 @@ This made the menu appear page-dependent even though the app registry itself is 
 - Make page location affect only the active-link highlight.
 - Reconcile navigation immediately at boot in case the verified session event already fired.
 - Keep role preview presentation-only; it cannot add or remove real drawer links.
-- Lock navigation clicks and visible links to the actual signed-in role.
-- Add an audit requiring the stable `nav.js` entrypoint on pages that mount the universal drawer.
+- Lock navigation clicks, drawer links, and bottom-navigation items to the actual signed-in role.
+- Route legacy navigation utilities through the same verified authority.
+- Add loader and earliest-appearance-boot recovery so every page mounting `#universalNavRoot` receives the canonical entrypoint.
+- Normalize all 19 duplicate pages to one `/assets/js/nav.js?v=nav-v61-role-authority` script.
+- Add separate runtime-contract and page-boot-inventory CI gates.
 
 ## Owner and administrator publishing
 
@@ -107,6 +111,7 @@ The editor treated the owner like a tenant administrator:
 - JavaScript syntax checks for activated role, route, navigation, customer, builder, and publishing runtimes.
 - A canonical role matrix including owner ultimate access and unknown-role fail-closed behavior.
 - A deep navigation/customer/owner source audit.
+- A universal page inventory that rejects duplicate or missing canonical navigation boot paths.
 - Firestore Emulator tests proving:
   - owner without a company can publish globally;
   - admin cannot publish globally;
