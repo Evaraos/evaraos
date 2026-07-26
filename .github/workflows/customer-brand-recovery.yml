@@ -1,0 +1,28 @@
+name: Customer and Brand Recovery
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  recovery-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Validate JavaScript syntax
+        run: |
+          node --check public/assets/js/loader.js
+          node --check public/assets/js/route-guard.js
+          node --check public/assets/js/customer-portal-v2.js
+          node --check public/assets/js/app-icon-preferences.js
+          node --check public/assets/js/app-icon-studio-single-source.js
+          node --check public/assets/js/app-icon-studio-final-guard.js
+      - name: Audit customer and brand recovery
+        run: node tools/customer-brand-recovery-audit.js
