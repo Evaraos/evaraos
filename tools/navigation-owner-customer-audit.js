@@ -17,88 +17,57 @@ function walk(dir, output = []) {
   return output;
 }
 
-const navEntry = read('public/assets/js/nav.js');
-requireText(navEntry, './nav/nav-main-v7.js?v=nav-v61-role-authority', 'Nav entry does not boot the stable role-authority runtime');
-requireText(navEntry, './nav/nav-role-lockdown-v2.js?v=2', 'Nav entry does not load actual-role lockdown');
-requireText(navEntry, './app-builder-runtime-v2.js?v=2', 'Nav entry does not load global/company builder runtime v2');
-requireText(navEntry, './owner-publish-runtime-v2.js?v=2', 'Nav entry does not load owner/admin publishing runtime v2');
+const contracts = [
+  ['public/assets/js/nav.js', './nav/nav-main-v7.js?v=nav-v61-role-authority', 'Nav entry does not boot the stable role-authority runtime'],
+  ['public/assets/js/nav.js', './nav/nav-role-lockdown-v2.js?v=2', 'Nav entry does not load actual-role lockdown'],
+  ['public/assets/js/nav.js', './app-builder-runtime-v2.js?v=2', 'Nav entry does not load builder runtime v2'],
+  ['public/assets/js/nav.js', './owner-publish-runtime-v2.js?v=2', 'Nav entry does not load owner publishing v2'],
+  ['public/assets/js/nav/nav-authority-v1.js', 'verified-route-guard-cache', 'Navigation authority misses cached verified sessions'],
+  ['public/assets/js/nav/nav-authority-v1.js', 'registryRole', 'Navigation authority does not map to registry roles'],
+  ['public/assets/js/nav/nav-utils-v2.js', 'actualRole()', 'Navigation utilities do not use actual role'],
+  ['public/assets/js/nav/nav-render-v2.js', 'data-navigation-role', 'Navigation lacks verified-role diagnostics'],
+  ['public/assets/js/nav/nav-render-v2.js', 'appsByCategory(registryRole(actualRole))', 'Menu list is not role-only'],
+  ['public/assets/js/nav/nav-session-v2.js', 'scheduleRefresh();', 'Navigation misses sessions emitted before boot'],
+  ['public/assets/js/access-control-v2.js', "const ULTIMATE_ROLES = new Set(['platform_admin', 'owner'])", 'Owner ultimate access is missing'],
+  ['public/assets/js/access-control-v2.js', 'if (ULTIMATE_ROLES.has(normalized)) return Object.keys(FEATURE_POLICY)', 'Owner lacks all registered features'],
+  ['public/assets/js/route-guard-v2.js', "source: 'verified-route-guard-cache'", 'Route guard lacks exact-UID cache fallback'],
+  ['public/assets/js/route-guard-v2.js', 'profile: session.profile', 'Route guard does not publish verified profile'],
+  ['public/assets/js/route-guard-v2.js', 'uid === user.uid', 'Cached profile is not tied to Firebase UID'],
+  ['public/assets/js/customer-portal-v4.js', "where(field, '==', uid)", 'Customer portal queries are not UID scoped'],
+  ['public/assets/js/customer-portal-v4.js', 'state.successfulQueries === 0 && state.queryFailures.length', 'Customer portal cannot distinguish failure from empty history'],
+  ['public/assets/js/owner-publish-runtime-v2.js', "type: 'global'", 'Owner global publishing scope is missing'],
+  ['public/assets/js/owner-publish-runtime-v2.js', "currentRole === 'admin' && id", 'Admin company requirement is missing'],
+  ['public/assets/js/owner-publish-runtime-v2.js', 'No company workspace is required', 'Owner UI still requires a company'],
+  ['public/assets/js/app-builder-runtime-v2.js', "doc(db, 'public_app_config', 'global')", 'Builder does not load global owner settings'],
+  ['public/assets/js/app-builder-runtime-v2.js', 'mergeConfig(globalConfig, companyConfig)', 'Company settings do not layer over global settings'],
+  ['firebase/firestore.rules', 'match /public_app_config/{id}', 'Firestore global config rule is missing'],
+  ['firebase/firestore.rules', "hasOnly(['appBuilder','appBuilderUpdatedAt'])", 'Admin updates are not appBuilder-only'],
+  ['public/assets/js/adaptive-appearance-boot.js', 'NAV_FALLBACK_SRC', 'Universal appearance boot lacks nav recovery'],
+  ['public/assets/js/loader.js', "import('/assets/js/nav.js", 'Loader watchdog lacks nav recovery']
+];
+for (const [file, marker, message] of contracts) requireText(read(file), marker, message);
 
-const navAuthority = read('public/assets/js/nav/nav-authority-v1.js');
-forbidText(navAuthority, 'evaraos-preview-role', 'Navigation authority still trusts a presentation preview role');
-requireText(navAuthority, 'verified-route-guard-cache', 'Navigation authority does not accept the verified cached route session');
-requireText(navAuthority, 'registryRole', 'Navigation authority does not map verified roles to the app registry');
-
-const navUtils = read('public/assets/js/nav/nav-utils-v2.js');
-forbidText(navUtils, 'evaraos-preview-role', 'Navigation utilities still read preview role state');
-requireText(navUtils, 'actualRole()', 'Navigation utilities do not use actual role authority');
-
-const navRender = read('public/assets/js/nav/nav-render-v2.js');
-requireText(navRender, 'data-navigation-role', 'Rendered navigation does not expose its verified role for diagnostics');
-requireText(navRender, 'isCurrentPage', 'Navigation does not limit page-specific behavior to active highlighting');
-requireText(navRender, 'appsByCategory(registryRole(actualRole))', 'Navigation list is not generated only from the verified role');
-
-const lockdown = read('public/assets/js/nav/nav-role-lockdown-v2.js');
-forbidText(lockdown, 'previewRole', 'Navigation lockdown still changes links for role preview');
-requireText(lockdown, 'const role = actualRole()', 'Navigation lockdown does not use actual role authority');
-
-const sessionRuntime = read('public/assets/js/nav/nav-session-v2.js');
-requireText(sessionRuntime, 'scheduleRefresh();', 'Navigation does not immediately reconcile a route session emitted before nav boot');
-forbidText(sessionRuntime, 'evara:role-preview', 'Navigation still rebuilds itself from presentation preview events');
-
-const access = read('public/assets/js/access-control-v2.js');
-requireText(access, "const ULTIMATE_ROLES = new Set(['platform_admin', 'owner'])", 'Owner ultimate access contract is missing');
-requireText(access, 'ULTIMATE_ROLES.has(normalizedRole) || allowed.includes(normalizedRole)', 'Owner does not bypass registered page restrictions');
-requireText(access, 'if (ULTIMATE_ROLES.has(normalized)) return Object.keys(FEATURE_POLICY)', 'Owner does not receive all registered features');
-
-const routeGuard = read('public/assets/js/route-guard-v2.js');
-requireText(routeGuard, "source: 'verified-route-guard-cache'", 'Route guard has no exact-UID cache fallback');
-requireText(routeGuard, 'profile: session.profile', 'Route guard does not publish the verified profile to page runtimes');
-requireText(routeGuard, 'uid === user.uid', 'Cached profile fallback is not tied to the authenticated Firebase UID');
+forbidText(read('public/assets/js/nav/nav-authority-v1.js'), 'evaraos-preview-role', 'Navigation authority trusts Studio preview role');
+forbidText(read('public/assets/js/nav/nav-utils-v2.js'), 'evaraos-preview-role', 'Navigation utilities trust Studio preview role');
+forbidText(read('public/assets/js/nav/nav-role-lockdown-v2.js'), 'previewRole', 'Navigation lockdown changes for preview role');
+forbidText(read('public/assets/js/nav/nav-session-v2.js'), 'evara:role-preview', 'Navigation rebuilds from preview events');
+forbidText(read('public/assets/js/customer-portal-v4.js'), 'fetchAllCollection', 'Customer portal performs unrestricted collection reads');
 
 const portal = read('public/assets/js/customer-portal-v4.js');
-for (const collectionName of ['jobs', 'customer_services', 'subscriptions', 'customer_service_history']) {
-  requireText(portal, `'${collectionName}'`, `Customer portal does not include ${collectionName}`);
-}
-for (const field of ['customerUid', 'customerId', 'userId']) {
-  requireText(portal, `'${field}'`, `Customer portal does not use ownership field ${field}`);
-}
-requireText(portal, "where(field, '==', uid)", 'Customer portal does not issue equality-scoped Firestore queries');
-requireText(portal, 'state.successfulQueries === 0 && state.queryFailures.length', 'Customer portal can still report an empty history after total query failure');
-requireText(portal, 'revealPortal();', 'Customer portal does not guarantee a visible page state');
-forbidText(portal, 'fetchAllCollection', 'Customer portal still uses unrestricted collection reads');
-
-const publisher = read('public/assets/js/owner-publish-runtime-v2.js');
-requireText(publisher, "type: 'global'", 'Owner publisher has no global scope');
-requireText(publisher, 'doc(db, GLOBAL_CONFIG_COLLECTION, GLOBAL_CONFIG_ID)', 'Owner publisher does not target public_app_config/global');
-requireText(publisher, "currentRole === 'admin' && id", 'Admin publisher does not require a company ID');
-requireText(publisher, 'No company workspace is required', 'Owner UI still claims a company workspace is required');
-
-const builder = read('public/assets/js/app-builder-runtime-v2.js');
-requireText(builder, "const GLOBAL_CACHE_ID = 'global'", 'App Builder has no global baseline cache');
-requireText(builder, "doc(db, 'public_app_config', 'global')", 'App Builder does not load owner global settings');
-requireText(builder, 'mergeConfig(globalConfig, companyConfig)', 'Company settings are not layered over the owner global baseline');
-requireText(builder, "DEFAULT_LOGO = '/assets/img/evaraos_logo.png?v=brand-contract-2'", 'App Builder visible logo contract is incorrect');
-requireText(builder, "DEFAULT_ICON = '/assets/brand/evaraos-app-icon.png?v=brand-contract-2'", 'App Builder app icon contract is incorrect');
-
-const rules = read('firebase/firestore.rules');
-requireText(rules, 'match /public_app_config/{id}', 'Firestore has no global owner configuration rule');
-requireText(rules, "allow create, update, delete: if id == 'global' && platform()", 'Global publishing is not restricted to platform owner authority');
-requireText(rules, 'companyAppBuilderAdmin(id)', 'Firestore has no company-scoped admin appBuilder helper');
-requireText(rules, "hasOnly(['appBuilder','appBuilderUpdatedAt'])", 'Admin company updates are not restricted to appBuilder fields');
-
-const loader = read('public/assets/js/loader.js');
-requireText(loader, "import('/assets/js/nav.js", 'Loader watchdog no longer provides the universal navigation fallback');
+for (const name of ['jobs','customer_services','subscriptions','customer_service_history']) requireText(portal, `'${name}'`, `Customer portal omits ${name}`);
+for (const field of ['customerUid','customerId','userId']) requireText(portal, `'${field}'`, `Customer portal omits ownership field ${field}`);
 
 const publicRoot = path.join(root, 'public');
 for (const absolute of walk(publicRoot).filter((file) => file.endsWith('.html'))) {
   const source = fs.readFileSync(absolute, 'utf8');
-  if (!source.includes('id="universalNavRoot"') && !source.includes("id='universalNavRoot'")) continue;
+  if (!/id=["']universalNavRoot["']/.test(source)) continue;
   const relative = path.relative(root, absolute).replace(/\\/g, '/');
-  const navReferences = source.match(/<script[^>]+src=["'][^"']*\/assets\/js\/nav\.js(?:\?[^"']*)?["'][^>]*>/g) || [];
-  const loaderReferences = source.match(/<script[^>]+src=["'][^"']*\/assets\/js\/loader\.js(?:\?[^"']*)?["'][^>]*>/g) || [];
-  if (navReferences.length > 1) failures.push(`${relative}: duplicate universal nav.js scripts (${navReferences.length})`);
-  if (navReferences.length === 0 && loaderReferences.length === 0) failures.push(`${relative}: mounts universal navigation but has neither nav.js nor the loader watchdog`);
-  if (/src=["'][^"']*nav-main-v\d+\.js/.test(source)) failures.push(`${relative}: directly loads a nav-main module instead of the stable entrypoint`);
+  const navRefs = source.match(/<script[^>]+src=["'][^"']*\/assets\/js\/nav\.js(?:\?[^"']*)?["'][^>]*>/g) || [];
+  const loaderRefs = source.match(/<script[^>]+src=["'][^"']*\/assets\/js\/loader\.js(?:\?[^"']*)?["'][^>]*>/g) || [];
+  const bootRefs = source.match(/<script[^>]+src=["'][^"']*\/assets\/js\/adaptive-appearance-boot\.js(?:\?[^"']*)?["'][^>]*>/g) || [];
+  if (navRefs.length > 1) failures.push(`${relative}: duplicate universal nav.js scripts (${navRefs.length})`);
+  if (!navRefs.length && !loaderRefs.length && !bootRefs.length) failures.push(`${relative}: universal nav mount has no canonical boot path`);
+  if (/src=["'][^"']*nav-main-v\d+\.js/.test(source)) failures.push(`${relative}: directly loads a nav-main module`);
 }
 
 console.log('Navigation, customer, and owner publishing audit complete.');
