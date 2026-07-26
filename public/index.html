@@ -7,13 +7,11 @@
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="manifest" href="/manifest.json" />
-  <link rel="preload" as="image" href="/assets/img/icon-512.png?v=brand-logo-1" fetchpriority="high" />
-  <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16.png" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png" />
-  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/icon-192.png" />
-  <link rel="shortcut icon" href="/assets/img/favicon-32.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
+  <link rel="manifest" href="/manifest.json?v=brand-contract-2" />
+  <link rel="preload" as="image" href="/assets/img/evaraos_logo.png?v=brand-contract-2" fetchpriority="high" />
+  <link rel="icon" type="image/png" href="/assets/brand/evaraos-app-icon.png?v=brand-contract-2" />
+  <link rel="shortcut icon" type="image/png" href="/assets/brand/evaraos-app-icon.png?v=brand-contract-2" />
+  <link rel="apple-touch-icon" href="/assets/brand/evaraos-app-icon.png?v=brand-contract-2" />
   <meta name="theme-color" content="#eef5fb" />
   <meta name="msapplication-TileColor" content="#eef5fb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -32,9 +30,9 @@
     #evaraWelcomeLoader{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;z-index:2147483647!important;display:none;align-items:center!important;justify-content:center!important;padding:max(20px,env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) max(20px,env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));background:#eef5fb;opacity:0;visibility:hidden}
     #evaraWelcomeLoader.active{display:flex!important;opacity:1!important;visibility:visible!important}
     #evaraWelcomeLoader .evara-welcome-card{width:min(430px,calc(100vw - 40px));min-height:330px;padding:32px 24px;border-radius:34px;display:grid;place-items:center;align-content:center;gap:14px;text-align:center;background:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.88);box-shadow:0 32px 110px rgba(27,32,48,.22);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%)}
-    #evaraWelcomeLoader .evara-welcome-brand{position:relative;width:104px;height:104px;display:grid;place-items:center}
+    #evaraWelcomeLoader .evara-welcome-brand{position:relative;width:112px;height:112px;display:grid;place-items:center}
     #evaraWelcomeLoader .evara-loader-core{display:grid;place-items:center}
-    #evaraWelcomeLoader .evara-loader-mark{width:42px;height:42px;object-fit:contain}
+    #evaraWelcomeLoader .evara-loader-mark{width:72px;height:72px;object-fit:contain}
   </style>
   <link rel="stylesheet" href="/assets/css/base.css?v=54" />
   <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v10" />
@@ -47,7 +45,7 @@
 <body class="home-page app-loading" data-route-guard="public">
   <div id="evaraWelcomeLoader" class="evara-welcome-loader" aria-hidden="true" style="display:none">
     <section class="evara-welcome-card" role="status" aria-live="polite" aria-label="Opening EvaraOS">
-      <div class="evara-welcome-brand"><span class="evara-loader-orbit"></span><span class="evara-loader-core"><img class="evara-loader-mark" src="/assets/img/icon-512.png?v=brand-logo-1" fetchpriority="high" decoding="async" alt="" aria-hidden="true"></span></div>
+      <div class="evara-welcome-brand"><span class="evara-loader-orbit"></span><span class="evara-loader-core"><img class="evara-loader-mark" data-evaraos-brand-logo src="/assets/img/evaraos_logo.png?v=brand-contract-2" fetchpriority="high" decoding="async" alt="" aria-hidden="true"></span></div>
       <span class="evara-welcome-eyebrow">EVARAOS</span>
       <strong data-evara-welcome-title>Welcome to Evaraos</strong>
       <span data-evara-welcome-subtitle>Preparing your operating system.</span>
@@ -103,7 +101,7 @@
       </div>
     </footer>
   </div>
-  <script src="/assets/js/loader.js?v=43"></script>
+  <script src="/assets/js/loader.js?v=brand-contract-2"></script>
   <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v13-public-critical"></script>
   <script type="module" src="/assets/js/nav.js?v=nav-v58-critical-shell"></script>
 </body>
