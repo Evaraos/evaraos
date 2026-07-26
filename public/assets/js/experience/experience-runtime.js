@@ -40,7 +40,10 @@ function safeAssetUrl(value, fallback = '') {
   if (candidate.startsWith('/assets/')) return candidate;
   try {
     const url = new URL(candidate, location.origin);
-    return url.protocol === 'https:' || url.origin === location.origin ? url.href : fallback;
+    const expectedPrefix = '/v0/b/evaraos-web.firebasestorage.app/o/';
+    if (url.protocol !== 'https:' || url.hostname !== 'firebasestorage.googleapis.com') return fallback;
+    if (!url.pathname.startsWith(expectedPrefix) || url.searchParams.get('alt') !== 'media') return fallback;
+    return url.href;
   } catch {
     return fallback;
   }

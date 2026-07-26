@@ -61,6 +61,15 @@
       const cacheKey='evaraos-experience-config-v1';
       let internal=false;
       let config=null;
+      const safeAsset=(value,fallback)=>{
+        const candidate=String(value||'').trim().slice(0,2200);
+        if(candidate.startsWith('/assets/'))return candidate;
+        try{
+          const url=new URL(candidate,location.origin);
+          const prefix='/v0/b/evaraos-web.firebasestorage.app/o/';
+          return url.protocol==='https:'&&url.hostname==='firebasestorage.googleapis.com'&&url.pathname.startsWith(prefix)&&url.searchParams.get('alt')==='media'?url.href:fallback;
+        }catch{return fallback}
+      };
       try{
         const started=Number(sessionStorage.getItem(navigationKey)||0);
         sessionStorage.removeItem(navigationKey);
@@ -73,11 +82,14 @@
       if(config){
         const theme=config.loaderTheme||{};
         const welcome=config.loaders?.welcome||{};
-        document.documentElement.style.setProperty('--evara-loader-background',theme.background||'#eef5fb');
-        document.documentElement.style.setProperty('--evara-loader-radius',`${Number(theme.radius)||34}px`);
-        document.documentElement.style.setProperty('--evara-loader-mark-size',`${Number(theme.markSize)||42}px`);
+        const background=/^#[0-9a-f]{6}$/i.test(String(theme.background||''))?theme.background:'#eef5fb';
+        const radius=Math.min(52,Math.max(16,Number(theme.radius)||34));
+        const markSize=Math.min(96,Math.max(24,Number(theme.markSize)||42));
+        document.documentElement.style.setProperty('--evara-loader-background',background);
+        document.documentElement.style.setProperty('--evara-loader-radius',`${radius}px`);
+        document.documentElement.style.setProperty('--evara-loader-mark-size',`${markSize}px`);
         const image=node.querySelector('.evara-loader-mark');
-        if(image&&config.brand?.markUrl)image.src=config.brand.markUrl;
+        if(image)image.src=safeAsset(config.brand?.markUrl,image.getAttribute('src')||'/assets/brand/evaraos-mark.png');
         const eyebrow=node.querySelector('.evara-welcome-eyebrow');
         const title=node.querySelector('[data-evara-welcome-title]');
         const subtitle=node.querySelector('[data-evara-welcome-subtitle]');

@@ -3,23 +3,14 @@ import {
   saveExperienceDraftPatch,
   publishExperienceDraft
 } from './experience-config-client.js';
-import { getSavedUserProfile, getSavedUserRole, normalizeRole } from '../firebase.js';
-
-const OWNER_ROLES = new Set(['owner', 'super_admin', 'platform_admin', 'admin']);
+import { canPublishExperience } from './experience-authority.js';
 const LOCAL_DRAFT_KEY = 'evaraos-owner-page-drafts-v4';
 let installed = false;
 let busy = false;
 let state = null;
 
-function currentRole() {
-  const profile = getSavedUserProfile?.() || {};
-  return normalizeRole?.(profile.role || getSavedUserRole?.() || '') || '';
-}
-
 function allowed() {
-  const role = currentRole();
-  if (role === 'admin') return Boolean((getSavedUserProfile?.() || {}).platformAccess);
-  return OWNER_ROLES.has(role);
+  return canPublishExperience();
 }
 
 function pageKey() {

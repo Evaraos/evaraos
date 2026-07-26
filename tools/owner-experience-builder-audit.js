@@ -19,6 +19,7 @@ const service = read('functions/experience-config-service.js');
 const exportsFile = read('functions/index-stats.js');
 const firebase = JSON.parse(read('firebase.json'));
 const runtime = read('public/assets/js/experience/experience-runtime.js');
+const clientAuthority = read('public/assets/js/experience/experience-authority.js');
 const client = read('public/assets/js/experience/experience-config-client.js');
 const publisher = read('public/assets/js/experience/owner-experience-publisher.js');
 const builder = read('public/assets/js/studio/studio-experience-builder.js');
@@ -65,6 +66,9 @@ check(runtime.includes('window.EvaraLoader?.configure?.(config)'), 'loader behav
 check(runtime.includes('[data-experience-text]'), 'registered text slots are supported');
 check(runtime.includes('pageOverrides'), 'published existing-page overrides are supported');
 check(runtime.includes('MutationObserver'), 'late-rendered application surfaces receive published configuration');
+check(runtime.includes("url.hostname !== 'firebasestorage.googleapis.com'"), 'runtime rejects unapproved cached asset origins');
+check(clientAuthority.includes('canPublishExperience'), 'owner surfaces share one client publisher authority');
+check(clientAuthority.includes("permissions.has('studio.publish')"), 'client authority mirrors Studio publisher permissions');
 
 check(client.includes("'getExperienceEditorState'"), 'owner client loads draft and live versions');
 check(client.includes("'saveExperienceDraft'"), 'owner client saves secure drafts');
@@ -84,6 +88,7 @@ check(loader.includes("addEventListener('evara:experience-config'"), 'loader acc
 check(loader.includes('configure:configureExperience'), 'loader exposes one configuration method');
 check(loader.includes('experience.loaders.page.enabled'), 'page-loader enablement is enforced on future transitions');
 check(loader.includes('experience.loaders.resume.minimumAwayMs'), 'resume timing is enforced by the loader authority');
+check(loader.includes("url.hostname!=='firebasestorage.googleapis.com'"), 'loader rejects unapproved cached asset origins');
 
 check(nav.includes('./experience/experience-runtime.js?v=1'), 'navigation loads the published runtime');
 check(nav.includes('./experience/owner-experience-publisher.js?v=1'), 'owner sessions receive trusted Live Edit publishing');

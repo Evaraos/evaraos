@@ -5,9 +5,7 @@ import {
   uploadExperienceAsset
 } from '../experience/experience-config-client.js';
 import { normalizeExperienceConfig } from '../experience/experience-runtime.js';
-import { getSavedUserProfile, getSavedUserRole, normalizeRole } from '../firebase.js';
-
-const OWNER_ROLES = new Set(['owner', 'super_admin', 'platform_admin', 'admin']);
+import { canPublishExperience } from '../experience/experience-authority.js';
 const TABS = ['brand', 'welcome', 'page', 'resume', 'home', 'overrides'];
 let mounted = false;
 let shell = null;
@@ -20,15 +18,8 @@ let previewMode = 'welcome';
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const text = (value, max = 4000) => String(value ?? '').replace(/[\u0000-\u001f\u007f]/g, '').slice(0, max);
 
-function role() {
-  const profile = getSavedUserProfile?.() || {};
-  return normalizeRole?.(profile.role || getSavedUserRole?.() || '') || '';
-}
-
 function allowed() {
-  const current = role();
-  if (current === 'admin') return Boolean((getSavedUserProfile?.() || {}).platformAccess);
-  return OWNER_ROLES.has(current);
+  return canPublishExperience();
 }
 
 function el(tag, options = {}, children = []) {

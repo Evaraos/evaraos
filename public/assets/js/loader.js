@@ -35,7 +35,13 @@
   function safeAssetUrl(value,fallback){
     const candidate=String(value||'').trim().slice(0,2200);
     if(candidate.startsWith('/assets/'))return candidate;
-    try{const url=new URL(candidate,location.origin);return url.protocol==='https:'||url.origin===location.origin?url.href:fallback}catch{return fallback}
+    try{
+      const url=new URL(candidate,location.origin);
+      const expectedPrefix='/v0/b/evaraos-web.firebasestorage.app/o/';
+      if(url.protocol!=='https:'||url.hostname!=='firebasestorage.googleapis.com')return fallback;
+      if(!url.pathname.startsWith(expectedPrefix)||url.searchParams.get('alt')!=='media')return fallback;
+      return url.href;
+    }catch{return fallback}
   }
   function bool(value,fallback){return typeof value==='boolean'?value:fallback}
   function normalizeExperience(raw={}){
