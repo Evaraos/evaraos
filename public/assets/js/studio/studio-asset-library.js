@@ -1,19 +1,37 @@
 const ASSET_KEY = 'evaraos-studio-assets-v1';
+const VERSION = 'brand-canonical-20260726-1';
+const APP_ICON_URL = `/assets/brand/evaraos-app-icon.png?v=${VERSION}`;
+const BRAND_MARK_URL = `/assets/brand/evaraos-mark.png?v=${VERSION}`;
 const DEFAULT_ASSETS = [
-  { id: 'official-app-icon', name: 'Official App Icon', type: 'brand', url: '/assets/img/icon-512.png?v=brand-logo-1' },
-  { id: 'favicon', name: 'Favicon', type: 'brand', url: '/assets/img/icon-512.png?v=brand-logo-1' },
-  { id: 'brand-mark', name: 'Brand Mark', type: 'brand', url: '/assets/img/icon-512.png?v=brand-logo-1' }
+  { id: 'official-app-icon', name: 'Official App Icon', type: 'brand', url: APP_ICON_URL },
+  { id: 'favicon', name: 'Favicon', type: 'brand', url: APP_ICON_URL },
+  { id: 'brand-mark', name: 'Brand Mark', type: 'brand', url: BRAND_MARK_URL }
 ];
+
 function isModeOn() { return localStorage.getItem('evaraos-studio-mode-enabled') === 'true'; }
 function selected() { return document.querySelector('.studio-mode-selected'); }
+
+function normalizeAsset(asset = {}) {
+  if (asset.id === 'official-app-icon' || asset.id === 'favicon') return { ...asset, url: APP_ICON_URL };
+  if (asset.id === 'brand-mark') return { ...asset, url: BRAND_MARK_URL };
+  return asset;
+}
+
 function readAssets() {
   try {
     const saved = JSON.parse(localStorage.getItem(ASSET_KEY) || '[]');
-    return Array.isArray(saved) && saved.length ? saved : DEFAULT_ASSETS;
-  } catch { return DEFAULT_ASSETS; }
+    if (!Array.isArray(saved) || !saved.length) return DEFAULT_ASSETS;
+    const normalized = saved.map(normalizeAsset);
+    localStorage.setItem(ASSET_KEY, JSON.stringify(normalized));
+    return normalized;
+  } catch {
+    return DEFAULT_ASSETS;
+  }
 }
+
 function writeAssets(list) { try { localStorage.setItem(ASSET_KEY, JSON.stringify(list)); } catch {} }
 function uid() { return `asset-${Date.now()}-${Math.random().toString(16).slice(2)}`; }
+
 function ensureStyles() {
   if (document.getElementById('evaraStudioAssetLibraryStyles')) return;
   const style = document.createElement('style');
@@ -24,6 +42,7 @@ function ensureStyles() {
   `;
   document.head.appendChild(style);
 }
+
 function ensureLibrary() {
   if (document.querySelector('.studio-asset-library')) return;
   const panel = document.createElement('aside');
@@ -33,8 +52,10 @@ function ensureLibrary() {
   panel.querySelector('[data-add-asset]').addEventListener('click', addAsset);
   renderAssets();
 }
+
 function openLibrary() { ensureStyles(); ensureLibrary(); document.querySelector('.studio-asset-library')?.classList.add('is-open'); renderAssets(); }
 function closeLibrary() { document.querySelector('.studio-asset-library')?.classList.remove('is-open'); }
+
 function addAsset() {
   const url = document.querySelector('[data-asset-url]')?.value?.trim();
   const name = document.querySelector('[data-asset-name]')?.value?.trim() || 'Untitled Asset';
@@ -47,32 +68,48 @@ function addAsset() {
   document.querySelector('[data-asset-name]').value = '';
   renderAssets();
 }
+
 function applyAsset(asset) {
   const node = selected();
   if (!node) return;
   if (node.tagName === 'IMG') node.src = asset.url;
   else {
     node.style.backgroundImage = `linear-gradient(rgba(0,0,0,.18),rgba(0,0,0,.18)), url('${asset.url}')`;
-    node.style.backgroundSize = 'cover';
+    node.style.backgroundSize = asset.id === 'brand-mark' || asset.id === 'official-app-icon' ? 'contain' : 'cover';
+    node.style.backgroundRepeat = 'no-repeat';
     node.style.backgroundPosition = 'center';
     node.dataset.studioAsset = asset.id;
   }
   window.dispatchEvent(new CustomEvent('evara:studio-asset-applied', { detail: { asset } }));
   closeLibrary();
 }
+
 function renderAssets() {
   const root = document.querySelector('[data-asset-grid]');
   if (!root) return;
   root.innerHTML = readAssets().map((asset) => `<button type="button" class="studio-asset-card" data-asset-id="${asset.id}"><img src="${asset.url}" alt=""><strong>${asset.name}</strong><small>${asset.type}</small></button>`).join('');
 }
+
 function bind() {
-  ensureStyles(); ensureLibrary();
+  ensureStyles();
+  ensureLibrary();
   document.addEventListener('click', (event) => {
     const assetsButton = event.target.closest('[data-studio-action="assets"]');
-    if (assetsButton && isModeOn()) { event.preventDefault(); event.stopPropagation(); openLibrary(); return; }
+    if (assetsButton && isModeOn()) {
+      event.preventDefault();
+      event.stopPropagation();
+      openLibrary();
+      return;
+    }
     const assetButton = event.target.closest('[data-asset-id]');
-    if (assetButton) { event.preventDefault(); const asset = readAssets().find((item) => item.id === assetButton.dataset.assetId); if (asset) applyAsset(asset); }
+    if (assetButton) {
+      event.preventDefault();
+      const asset = readAssets().find((item) => item.id === assetButton.dataset.assetId);
+      if (asset) applyAsset(asset);
+    }
     if (isModeOn() && !event.target.closest('.studio-asset-library') && !event.target.closest('[data-studio-action="assets"]')) closeLibrary();
   }, true);
 }
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once: true }); else bind();
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once: true });
+else bind();

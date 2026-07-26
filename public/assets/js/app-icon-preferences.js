@@ -1,73 +1,128 @@
 (() => {
   'use strict';
 
-  const BRAND_VERSION = 'brand-contract-2';
-  const OFFICIAL_ICON = '/assets/brand/evaraos-app-icon.png?v=' + BRAND_VERSION;
-  const MANIFEST = '/manifest.json?v=' + BRAND_VERSION;
+  const VERSION = 'brand-canonical-20260726-1';
+  const VERSION_KEY = 'evaraos-brand-runtime-version';
+  const PERSONAL_KEY = 'evaraos-custom-app-icon-v5';
+  const MARK_SRC = `/assets/brand/evaraos-mark.png?v=${VERSION}`;
+  const APP_ICON_SRC = `/assets/brand/evaraos-app-icon.png?v=${VERSION}`;
   const LEGACY_KEYS = [
-    'evaraos-app-icon-selection-v2','evaraos-app-icon-snapshot-v2',
-    'evaraos-custom-app-icon-v2','evaraos-custom-app-icon-v3','evaraos-custom-app-icon-v4','evaraos-custom-app-icon-v5',
-    'evaraos-official-app-icon-v1','evaraos-official-app-icon-v2','evaraos-official-app-icon-v3','evaraos-official-app-icon-v4',
-    'evaraos-user-app-icon-v1','evaraos-user-app-icon-v2','evaraos-user-app-icon-v3','evaraos-custom-icon-v1'
+    'evaraos-app-icon-snapshot-v2',
+    'evaraos-official-app-icon-v1',
+    'evaraos-official-app-icon-v2',
+    'evaraos-official-app-icon-v3',
+    'evaraos-official-app-icon-v4',
+    'evaraos-user-app-icon-v1',
+    'evaraos-user-app-icon-v2',
+    'evaraos-user-app-icon-v3',
+    'evaraos-custom-app-icon-v1',
+    'evaraos-custom-app-icon-v2',
+    'evaraos-custom-app-icon-v3',
+    'evaraos-custom-app-icon-v4',
+    'evaraos-custom-icon-v1'
   ];
 
-  function clearLegacyOverrides() {
-    try { LEGACY_KEYS.forEach(key => localStorage.removeItem(key)); } catch {}
+  function isDataImage(value = '') {
+    return /^data:image\/(png|jpeg|webp);base64,/i.test(String(value || ''));
   }
 
-  function ensureLink(rel, href, type = 'image/png') {
+  function safePublishedUrl(value = '') {
+    const candidate = String(value || '').trim();
+    if (!candidate) return '';
+    if (candidate.startsWith('/assets/')) return candidate;
+    try {
+      const url = new URL(candidate, location.origin);
+      if (url.origin === location.origin) return url.href;
+      if (['firebasestorage.googleapis.com', 'storage.googleapis.com'].includes(url.hostname)) return url.href;
+    } catch {}
+    return '';
+  }
+
+  function publishedIcon() {
+    const configured = safePublishedUrl(window.EvaraAppBuilder?.getConfig?.()?.brand?.appIconUrl);
+    return configured || APP_ICON_SRC;
+  }
+
+  function personalIcon() {
+    try {
+      const saved = localStorage.getItem(PERSONAL_KEY) || '';
+      return isDataImage(saved) ? saved : '';
+    } catch {
+      return '';
+    }
+  }
+
+  function activeIcon() {
+    return personalIcon() || publishedIcon();
+  }
+
+  function ensureLink(rel, href) {
     let link = document.querySelector(`link[rel="${rel}"]`);
     if (!link) {
       link = document.createElement('link');
       link.rel = rel;
       document.head.appendChild(link);
     }
-    if (type) link.type = type;
+    link.type = 'image/png';
     link.href = href;
   }
 
-  function applyCanonicalIcon() {
-    ensureLink('icon', OFFICIAL_ICON);
-    ensureLink('shortcut icon', OFFICIAL_ICON);
-    ensureLink('apple-touch-icon', OFFICIAL_ICON);
-    ensureLink('manifest', MANIFEST, 'application/manifest+json');
-    document.querySelectorAll('[data-evaraos-brand-icon]').forEach(node => {
-      if (node.tagName === 'IMG') node.src = OFFICIAL_ICON;
-      else {
-        node.style.setProperty('--evaraos-brand-icon', `url("${OFFICIAL_ICON}")`);
-        node.style.backgroundImage = `url("${OFFICIAL_ICON}")`;
-        node.style.backgroundSize = 'contain';
-        node.style.backgroundPosition = 'center';
-        node.style.backgroundRepeat = 'no-repeat';
-      }
-    });
+  function migrateLegacyState() {
+    try {
+      if (localStorage.getItem(VERSION_KEY) === VERSION) return;
+      LEGACY_KEYS.forEach((key) => localStorage.removeItem(key));
+      localStorage.setItem('evaraos-app-icon-selection-v2', 'none');
+      localStorage.setItem(VERSION_KEY, VERSION);
+    } catch {}
   }
 
-  function restoreOriginal() {
-    clearLegacyOverrides();
-    applyCanonicalIcon();
-    window.dispatchEvent(new CustomEvent('evaraos:app-icon-change', {
-      detail: { option: { id: 'none', label: 'Official E Icon' }, snapshot: OFFICIAL_ICON, officialIcon: OFFICIAL_ICON }
+  function apply() {
+    migrateLegacyState();
+    const icon = activeIcon();
+    document.documentElement.style.setProperty('--evaraos-brand-icon', `url("${MARK_SRC}")`);
+    document.querySelectorAll('[data-evaraos-brand-icon]').forEach((node) => {
+      node.style.setProperty('--evaraos-brand-icon', `url("${MARK_SRC}")`);
+      node.style.backgroundImage = `url("${MARK_SRC}")`;
+      node.style.backgroundSize = 'contain';
+      node.style.backgroundPosition = 'center';
+      node.style.backgroundRepeat = 'no-repeat';
+    });
+    ['icon', 'shortcut icon', 'apple-touch-icon'].forEach((rel) => ensureLink(rel, icon));
+    window.EvaraBrand = {
+      ...(window.EvaraBrand || {}),
+      version: VERSION,
+      mark: MARK_SRC,
+      appIcon: icon,
+      canonicalAppIcon: APP_ICON_SRC,
+      apply
+    };
+    window.dispatchEvent(new CustomEvent('evaraos:brand-applied', {
+      detail: { version: VERSION, mark: MARK_SRC, appIcon: icon }
     }));
+    return { version: VERSION, mark: MARK_SRC, appIcon: icon };
   }
 
   function boot() {
-    clearLegacyOverrides();
-    applyCanonicalIcon();
+    apply();
+    window.addEventListener('evara:app-builder-ready', apply);
+    window.addEventListener('evara:app-builder-updated', apply);
+    window.addEventListener('pageshow', apply);
   }
 
-  if (!window.EvaraosAppIcons) {
-    window.EvaraosAppIcons = {
-      options: [],
-      selectOption: restoreOriginal,
-      restoreOriginal,
-      applySelection: async () => restoreOriginal(),
-      repair: applyCanonicalIcon,
-      officialIcon: OFFICIAL_ICON,
-      currentIconId: () => 'none'
-    };
-  }
+  window.EvaraosBrandAssets = Object.freeze({
+    version: VERSION,
+    mark: MARK_SRC,
+    canonicalAppIcon: APP_ICON_SRC,
+    activeIcon,
+    apply
+  });
+  window.EvaraosAppIcons = {
+    ...(window.EvaraosAppIcons || {}),
+    applySelection: apply,
+    currentIconId: () => personalIcon() ? 'personal' : 'official'
+  };
 
-  window.addEventListener('pageshow', applyCanonicalIcon);
-  document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', boot, { once: true }) : boot();
+  document.readyState === 'loading'
+    ? document.addEventListener('DOMContentLoaded', boot, { once: true })
+    : boot();
 })();
