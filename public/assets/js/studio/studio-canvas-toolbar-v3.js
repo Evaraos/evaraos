@@ -20,6 +20,19 @@ function installStyles(){
   document.head.append(style);
 }
 
+function setLabel(toolbar,command,label){const button=toolbar.querySelector(`[data-canvas-command="${command}"]`);if(button)button.textContent=label}
+function syncSelection(toolbar,nodes=[]){
+  const count=nodes.length;
+  const allLocked=count>0&&nodes.every(node=>node.dataset.studioLocked==='true');
+  const anyHidden=nodes.some(node=>node.dataset.studioHidden==='true');
+  toolbar.querySelector('[data-canvas-selection-count]').textContent=count?`${count} selected${allLocked?' · locked':''}`:'Nothing selected';
+  toolbar.querySelectorAll('[data-canvas-command]').forEach(button=>{if(!['undo','redo'].includes(button.dataset.canvasCommand))button.disabled=!count});
+  const destructive=['delete','front','forward','backward','back'];
+  destructive.forEach(command=>{const button=toolbar.querySelector(`[data-canvas-command="${command}"]`);if(button)button.disabled=!count||allLocked});
+  setLabel(toolbar,'lock',allLocked?'Unlock':'Lock');
+  setLabel(toolbar,'hide',anyHidden?'Show':'Hide');
+}
+
 function mount(){
   if(document.querySelector('[data-studio-canvas-toolbar]'))return;
   installStyles();
@@ -31,11 +44,7 @@ function mount(){
   toolbar.innerHTML=`<span data-canvas-selection-count>Nothing selected</span><div>${COMMANDS.map(([command,label])=>`<button type="button" data-canvas-command="${command}">${label}</button>`).join('')}</div>`;
   document.body.append(toolbar);
   toolbar.addEventListener('click',event=>{const button=event.target.closest('[data-canvas-command]');if(button&&!button.disabled)emit(button.dataset.canvasCommand)});
-  window.addEventListener('evara:studio-selection',event=>{
-    const count=event.detail?.nodes?.length||0;
-    toolbar.querySelector('[data-canvas-selection-count]').textContent=count?`${count} selected`:'Nothing selected';
-    toolbar.querySelectorAll('[data-canvas-command]').forEach(button=>{if(!['undo','redo'].includes(button.dataset.canvasCommand))button.disabled=!count});
-  });
+  window.addEventListener('evara:studio-selection',event=>syncSelection(toolbar,event.detail?.nodes||[]));
   window.addEventListener('evara:studio-history',event=>{
     const undo=toolbar.querySelector('[data-canvas-command="undo"]');
     const redo=toolbar.querySelector('[data-canvas-command="redo"]');
