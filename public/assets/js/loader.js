@@ -5,16 +5,23 @@
   const STYLE_ID="evaraLoaderStyles";
   const CRITICAL_STYLE_ID="evaraLoaderCriticalStyles";
   const INTERNAL_NAV_KEY="evaraos-internal-navigation-v1";
+  const EXPERIENCE_CACHE_KEY="evaraos-experience-config-v1";
   const INTERNAL_NAV_TTL=15000;
-  const LONG_RESUME_MS=45000;
   const NAV_DELAY=90;
   const FORCE_UNLOCK=6000;
   const WATCHDOG_MS=2600;
   const EXIT_MS=180;
-  const WELCOME_MIN_MS=1200;
-  const BRAND_MARK_SRC='/assets/brand/evaraos-mark.png?v=brand-png-3';
-  const APP_ICON_SRC='/assets/brand/evaraos-app-icon.png?v=brand-png-1';
-  let timer=null,forceTimer=null,watchdogTimer=null,isTransitioning=false,welcomeStartedAt=0,hiddenAt=0;
+  const DEFAULT_EXPERIENCE=Object.freeze({
+    brand:{markUrl:'/assets/brand/evaraos-mark.png?v=brand-png-3',appIconUrl:'/assets/brand/evaraos-app-icon.png?v=brand-png-1'},
+    loaderTheme:{accent:'#f2172d',background:'#eef5fb',radius:34,markSize:42,showProgress:true},
+    loaders:{
+      welcome:{enabled:true,eyebrow:'EVARAOS',title:'Welcome to Evaraos',subtitle:'Preparing your operating system.',minimumMs:1200},
+      page:{enabled:true,label:'Loading EvaraOS'},
+      resume:{enabled:true,title:'Welcome back to Evaraos',subtitle:'Refreshing your workspace.',minimumAwayMs:45000}
+    }
+  });
+  let experience=readExperienceCache();
+  let timer=null,forceTimer=null,watchdogTimer=null,isTransitioning=false,welcomeStartedAt=0,activeWelcomeMinimum=1200,hiddenAt=0;
   let domReady=document.readyState!=="loading";
   let windowLoaded=document.readyState==="complete";
   let navReady=document.documentElement.dataset.evaraosNavReady==="true";
@@ -22,10 +29,60 @@
   let bootResolved=false;
   let launchMode=document.documentElement.dataset.evaraLaunchMode||"";
 
+  function text(value,fallback,max=500){const clean=String(value??'').replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(0,max);return clean||fallback}
+  function integer(value,fallback,min,max){const number=Number(value);return Number.isFinite(number)?Math.min(max,Math.max(min,Math.round(number))):fallback}
+  function hex(value,fallback){return /^#[0-9a-f]{6}$/i.test(String(value||''))?String(value).toLowerCase():fallback}
+  function safeAssetUrl(value,fallback){
+    const candidate=String(value||'').trim().slice(0,2200);
+    if(candidate.startsWith('/assets/'))return candidate;
+    try{const url=new URL(candidate,location.origin);return url.protocol==='https:'||url.origin===location.origin?url.href:fallback}catch{return fallback}
+  }
+  function bool(value,fallback){return typeof value==='boolean'?value:fallback}
+  function normalizeExperience(raw={}){
+    const defaults=DEFAULT_EXPERIENCE;
+    return{
+      brand:{
+        markUrl:safeAssetUrl(raw?.brand?.markUrl,defaults.brand.markUrl),
+        appIconUrl:safeAssetUrl(raw?.brand?.appIconUrl,defaults.brand.appIconUrl)
+      },
+      loaderTheme:{
+        accent:hex(raw?.loaderTheme?.accent,defaults.loaderTheme.accent),
+        background:hex(raw?.loaderTheme?.background,defaults.loaderTheme.background),
+        radius:integer(raw?.loaderTheme?.radius,defaults.loaderTheme.radius,16,52),
+        markSize:integer(raw?.loaderTheme?.markSize,defaults.loaderTheme.markSize,24,96),
+        showProgress:bool(raw?.loaderTheme?.showProgress,defaults.loaderTheme.showProgress)
+      },
+      loaders:{
+        welcome:{
+          enabled:bool(raw?.loaders?.welcome?.enabled,defaults.loaders.welcome.enabled),
+          eyebrow:text(raw?.loaders?.welcome?.eyebrow,defaults.loaders.welcome.eyebrow,80),
+          title:text(raw?.loaders?.welcome?.title,defaults.loaders.welcome.title,180),
+          subtitle:text(raw?.loaders?.welcome?.subtitle,defaults.loaders.welcome.subtitle,320),
+          minimumMs:integer(raw?.loaders?.welcome?.minimumMs,defaults.loaders.welcome.minimumMs,400,5000)
+        },
+        page:{
+          enabled:bool(raw?.loaders?.page?.enabled,defaults.loaders.page.enabled),
+          label:text(raw?.loaders?.page?.label,defaults.loaders.page.label,160)
+        },
+        resume:{
+          enabled:bool(raw?.loaders?.resume?.enabled,defaults.loaders.resume.enabled),
+          title:text(raw?.loaders?.resume?.title,defaults.loaders.resume.title,180),
+          subtitle:text(raw?.loaders?.resume?.subtitle,defaults.loaders.resume.subtitle,320),
+          minimumAwayMs:integer(raw?.loaders?.resume?.minimumAwayMs,defaults.loaders.resume.minimumAwayMs,10000,600000)
+        }
+      }
+    }
+  }
+  function readExperienceCache(){
+    try{const stored=JSON.parse(localStorage.getItem(EXPERIENCE_CACHE_KEY)||'null');return normalizeExperience(stored?.config||stored||DEFAULT_EXPERIENCE)}
+    catch{return normalizeExperience(DEFAULT_EXPERIENCE)}
+  }
   function routeMode(){return document.body?.dataset?.routeGuard||""}
   function routeRequiresSession(){const mode=routeMode();return mode==="private"||mode==="auth"}
   function navRequired(){return Boolean(document.getElementById("universalNavRoot"))}
-  function markHtml(){return '<img class="evara-loader-mark" src="'+BRAND_MARK_SRC+'" fetchpriority="high" decoding="async" alt="" aria-hidden="true">'}
+  function brandMarkSrc(){return experience.brand.markUrl}
+  function appIconSrc(){return experience.brand.appIconUrl}
+  function markHtml(){return '<img class="evara-loader-mark" src="'+brandMarkSrc()+'" fetchpriority="high" decoding="async" alt="" aria-hidden="true">'}
   function transition(){return document.getElementById(TRANSITION_ID)}
   function authPending(){return document.documentElement.classList.contains('auth-pending')||document.body?.classList.contains('auth-pending')}
   function appPending(){return !bootResolved||authPending()||document.documentElement.classList.contains('boot-pending')||document.body?.classList.contains('app-loading')||isTransitioning}
@@ -38,14 +95,14 @@
     style.textContent=[
       '#evaraWelcomeLoader,#evaraFastLoader{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;z-index:2147483647!important;align-items:center!important;justify-content:center!important}',
       '#evaraWelcomeLoader.active,#evaraFastLoader.active{display:flex!important;opacity:1!important;visibility:visible!important}',
-      '#evaraWelcomeLoader{padding:max(20px,env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) max(20px,env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));background:var(--bg-primary,#eef5fb)}',
-      '#evaraFastLoader{background:color-mix(in srgb,var(--bg-primary,#eef5fb) 34%,transparent);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}',
-      '.evara-welcome-card{width:min(430px,calc(100vw - 40px));min-height:330px;padding:32px 24px;border-radius:34px;display:grid;place-items:center;align-content:center;gap:14px;text-align:center;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.45);box-shadow:0 32px 110px rgba(27,32,48,.24);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%)}',
+      '#evaraWelcomeLoader{padding:max(20px,env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) max(20px,env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));background:var(--evara-loader-background,var(--bg-primary,#eef5fb))}',
+      '#evaraFastLoader{background:color-mix(in srgb,var(--evara-loader-background,var(--bg-primary,#eef5fb)) 34%,transparent);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}',
+      '.evara-welcome-card{width:min(430px,calc(100vw - 40px));min-height:330px;padding:32px 24px;border-radius:var(--evara-loader-radius,34px);display:grid;place-items:center;align-content:center;gap:14px;text-align:center;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.45);box-shadow:0 32px 110px rgba(27,32,48,.24);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%)}',
       '.evara-welcome-brand,.evara-loader-fast-wrap{position:relative;display:grid;place-items:center}',
       '.evara-welcome-brand{width:104px;height:104px}',
       '.evara-loader-fast-wrap{width:76px;height:76px}',
       '.evara-loader-core{display:grid;place-items:center}',
-      '.evara-loader-mark{width:42px;height:42px;object-fit:contain}'
+      '.evara-loader-mark{width:var(--evara-loader-mark-size,42px);height:var(--evara-loader-mark-size,42px);object-fit:contain}'
     ].join('');
     document.head.appendChild(style);
   }
@@ -68,23 +125,50 @@
   }
 
   function applyBrand(){
-    document.documentElement.style.setProperty('--evaraos-brand-icon','url("'+BRAND_MARK_SRC+'")');
+    const mark=brandMarkSrc();
+    document.documentElement.style.setProperty('--evaraos-brand-icon','url("'+mark.replaceAll('"','%22')+'")');
     document.querySelectorAll('[data-evaraos-brand-icon]').forEach(node=>{
-      node.style.setProperty('--evaraos-brand-icon','url("'+BRAND_MARK_SRC+'")');
-      node.style.backgroundImage='url("'+BRAND_MARK_SRC+'")';
+      node.style.setProperty('--evaraos-brand-icon','url("'+mark.replaceAll('"','%22')+'")');
+      node.style.backgroundImage='url("'+mark.replaceAll('"','%22')+'")';
       node.style.backgroundSize='contain';
       node.style.backgroundPosition='center';
       node.style.backgroundRepeat='no-repeat';
     });
-    document.querySelectorAll('.evara-loader-mark').forEach(img=>img.src=BRAND_MARK_SRC);
-    ensureIconLink('icon',APP_ICON_SRC);
-    ensureIconLink('shortcut icon',APP_ICON_SRC);
-    ensureIconLink('apple-touch-icon',APP_ICON_SRC);
+    document.querySelectorAll('.evara-loader-mark').forEach(img=>img.src=mark);
+    ensureIconLink('icon',appIconSrc());
+    ensureIconLink('shortcut icon',appIconSrc());
+    ensureIconLink('apple-touch-icon',appIconSrc());
   }
 
-  function markInternalNavigation(){
-    try{sessionStorage.setItem(INTERNAL_NAV_KEY,String(Date.now()))}catch{}
+  function applyLoaderSettings(){
+    const theme=experience.loaderTheme;
+    const welcome=experience.loaders.welcome;
+    document.documentElement.style.setProperty('--evara-experience-accent',theme.accent);
+    document.documentElement.style.setProperty('--evara-loader-background',theme.background);
+    document.documentElement.style.setProperty('--evara-loader-radius',theme.radius+'px');
+    document.documentElement.style.setProperty('--evara-loader-mark-size',theme.markSize+'px');
+    const welcomeNode=document.getElementById(WELCOME_ID);
+    if(welcomeNode)welcomeNode.style.background=theme.background;
+    document.querySelectorAll('.evara-welcome-card').forEach(node=>node.style.borderRadius=theme.radius+'px');
+    document.querySelectorAll('.evara-loader-mark').forEach(node=>{node.style.width=theme.markSize+'px';node.style.height=theme.markSize+'px'});
+    document.querySelectorAll('.evara-welcome-eyebrow').forEach(node=>node.textContent=welcome.eyebrow);
+    document.querySelectorAll('[data-evara-welcome-title]').forEach(node=>node.textContent=welcome.title);
+    document.querySelectorAll('[data-evara-welcome-subtitle]').forEach(node=>node.textContent=welcome.subtitle);
+    document.querySelectorAll('.evara-welcome-progress').forEach(node=>node.hidden=!theme.showProgress);
+    document.querySelectorAll('.evara-welcome-progress i').forEach(node=>node.style.background=theme.accent);
+    document.querySelectorAll('#evaraFastLoader [role="status"]').forEach(node=>node.setAttribute('aria-label',experience.loaders.page.label));
+    if(!welcome.enabled)deactivate(document.getElementById(WELCOME_ID),true);
+    if(!experience.loaders.page.enabled)deactivate(document.getElementById(FAST_ID),true);
   }
+
+  function configureExperience(raw){
+    experience=normalizeExperience(raw||DEFAULT_EXPERIENCE);
+    ensureCriticalStyles();
+    applyBrand();
+    applyLoaderSettings();
+  }
+
+  function markInternalNavigation(){try{sessionStorage.setItem(INTERNAL_NAV_KEY,String(Date.now()))}catch{}}
 
   function resolveLaunchMode(){
     if(launchMode)return launchMode;
@@ -105,7 +189,7 @@
     node.id=FAST_ID;
     node.className='evara-loader-fast evara-loader-fast--compact';
     node.setAttribute('aria-hidden','true');
-    node.innerHTML='<div class="evara-loader-fast-wrap" role="status" aria-live="polite" aria-label="Loading EvaraOS"><span class="evara-loader-orbit"></span><span class="evara-loader-core">'+markHtml()+'</span></div>';
+    node.innerHTML='<div class="evara-loader-fast-wrap" role="status" aria-live="polite" aria-label="'+experience.loaders.page.label.replaceAll('"','&quot;')+'"><span class="evara-loader-orbit"></span><span class="evara-loader-core">'+markHtml()+'</span></div>';
     node.style.display='none';
     document.body.appendChild(node);
   }
@@ -118,9 +202,9 @@
     node.innerHTML=[
       '<section class="evara-welcome-card" role="status" aria-live="polite" aria-label="Opening EvaraOS">',
       '  <div class="evara-welcome-brand"><span class="evara-loader-orbit"></span><span class="evara-loader-core">'+markHtml()+'</span></div>',
-      '  <span class="evara-welcome-eyebrow">EVARAOS</span>',
-      '  <strong data-evara-welcome-title>Welcome to Evaraos</strong>',
-      '  <span data-evara-welcome-subtitle>Preparing your operating system.</span>',
+      '  <span class="evara-welcome-eyebrow"></span>',
+      '  <strong data-evara-welcome-title></strong>',
+      '  <span data-evara-welcome-subtitle></span>',
       '  <span class="evara-welcome-progress" aria-hidden="true"><i></i></span>',
       '</section>'
     ].join('');
@@ -139,6 +223,8 @@
     }
     if(!document.getElementById(FAST_ID))createFastLoader();
     if(!document.getElementById(WELCOME_ID))createWelcomeLoader();
+    applyBrand();
+    applyLoaderSettings();
   }
 
   function activate(node){
@@ -164,26 +250,34 @@
 
   function showFastLoader(){
     ensure();
+    if(!experience.loaders.page.enabled)return;
     deactivate(document.getElementById(WELCOME_ID),true);
     activate(document.getElementById(FAST_ID));
   }
 
   function showWelcomeLoader(options={}){
     ensure();
+    const variant=options.variant==='resume'?'resume':'welcome';
+    const settings=experience.loaders[variant];
+    if(!settings.enabled)return false;
     const node=document.getElementById(WELCOME_ID);
+    const eyebrow=node?.querySelector('.evara-welcome-eyebrow');
     const title=node?.querySelector('[data-evara-welcome-title]');
     const subtitle=node?.querySelector('[data-evara-welcome-subtitle]');
-    if(title)title.textContent=options.title||'Welcome to Evaraos';
-    if(subtitle)subtitle.textContent=options.subtitle||'Preparing your operating system.';
+    if(eyebrow)eyebrow.textContent=variant==='welcome'?experience.loaders.welcome.eyebrow:'EVARAOS';
+    if(title)title.textContent=options.title||settings.title;
+    if(subtitle)subtitle.textContent=options.subtitle||settings.subtitle;
+    activeWelcomeMinimum=integer(options.minimumMs,variant==='welcome'?experience.loaders.welcome.minimumMs:Math.min(1600,experience.loaders.welcome.minimumMs),400,5000);
     if(!node?.classList.contains('active')||!welcomeStartedAt)welcomeStartedAt=performance.now();
     deactivate(document.getElementById(FAST_ID),true);
     activate(node);
+    return true;
   }
 
   function hideWelcomeLoader(immediate=false){
     const node=document.getElementById(WELCOME_ID);
     if(!node)return;
-    const remaining=immediate?0:Math.max(0,WELCOME_MIN_MS-(performance.now()-welcomeStartedAt));
+    const remaining=immediate?0:Math.max(0,activeWelcomeMinimum-(performance.now()-welcomeStartedAt));
     setTimeout(()=>deactivate(node,immediate),remaining);
   }
 
@@ -224,16 +318,8 @@
     maybeCompleteBoot(immediate);
   }
 
-  function markNavReady(){
-    navReady=true;
-    document.documentElement.dataset.evaraosNavReady='true';
-    maybeCompleteBoot(false);
-  }
-
-  function markSessionReady(){
-    sessionReady=true;
-    maybeCompleteBoot(false);
-  }
+  function markNavReady(){navReady=true;document.documentElement.dataset.evaraosNavReady='true';maybeCompleteBoot(false)}
+  function markSessionReady(){sessionReady=true;maybeCompleteBoot(false)}
 
   function beginNavigationLoad(){
     if(isTransitioning)return;
@@ -244,7 +330,7 @@
     ensure();
     document.body?.classList.add('eva-page-leaving');
     transition()?.classList.add('active');
-    timer=setTimeout(showFastLoader,NAV_DELAY);
+    if(experience.loaders.page.enabled)timer=setTimeout(showFastLoader,NAV_DELAY);
     forceTimer=setTimeout(()=>{if(authPending())showFastLoader();else finishLoad(true)},FORCE_UNLOCK);
   }
 
@@ -280,8 +366,9 @@
       duplicateLoaders:document.querySelectorAll('#evaraFastLoader,#evaraWelcomeLoader,#evaraGlobalLoader').length,
       welcomeVisible:document.getElementById(WELCOME_ID)?.classList.contains('active')===true,
       compactVisible:document.getElementById(FAST_ID)?.classList.contains('active')===true,
-      brandMark:BRAND_MARK_SRC,
-      appIcon:APP_ICON_SRC
+      brandMark:brandMarkSrc(),
+      appIcon:appIconSrc(),
+      experience:JSON.parse(JSON.stringify(experience))
     };
   }
 
@@ -294,27 +381,24 @@
     if(appPending()&&!document.querySelector('#evaraFastLoader.active,#evaraWelcomeLoader.active'))showFastLoader();
     const root=document.getElementById('universalNavRoot');
     if(root&&!root.querySelector('.eva-nav-layer')&&!document.documentElement.dataset.evaraosNavReady){
-      import('/assets/js/nav.js?v=nav-v58-critical-shell').catch(error=>console.warn('Nav watchdog import failed:',error));
+      import('/assets/js/nav.js?v=nav-v59-experience-builder').catch(error=>console.warn('Nav watchdog import failed:',error));
     }
     window.dispatchEvent(new CustomEvent('evaraos:shell-watchdog',{detail:{...health()}}));
   }
 
   function handleVisibilityChange(){
-    if(document.visibilityState==='hidden'){
-      hiddenAt=Date.now();
-      return;
-    }
-    if(!hiddenAt||Date.now()-hiddenAt<LONG_RESUME_MS||isTransitioning)return;
+    if(document.visibilityState==='hidden'){hiddenAt=Date.now();return}
+    if(!hiddenAt||Date.now()-hiddenAt<experience.loaders.resume.minimumAwayMs||isTransitioning)return;
     hiddenAt=0;
     bootResolved=false;
-    showWelcomeLoader({title:'Welcome back to Evaraos',subtitle:'Refreshing your workspace.'});
-    requestAnimationFrame(()=>maybeCompleteBoot(false));
+    if(showWelcomeLoader({variant:'resume'}))requestAnimationFrame(()=>maybeCompleteBoot(false));
+    else maybeCompleteBoot(true);
   }
 
   function init(){
     ensureCriticalStyles();
-    applyBrand();
     ensure();
+    configureExperience(experience);
     domReady=document.readyState!=='loading';
     windowLoaded=document.readyState==='complete';
     navReady=navReady||document.documentElement.dataset.evaraosNavReady==='true';
@@ -322,9 +406,15 @@
     const welcome=document.getElementById(WELCOME_ID);
     const preRenderedWelcome=welcome?.classList.contains('active')===true;
     const mode=resolveLaunchMode();
-    if(preRenderedWelcome||mode==='launch')showWelcomeLoader();
+    if(!experience.loaders.welcome.enabled&&preRenderedWelcome)deactivate(welcome,true);
+    else if(preRenderedWelcome||mode==='launch')showWelcomeLoader({variant:'welcome'});
     else if(document.body?.classList.contains('app-loading'))showFastLoader();
-    window.EvaraBrand={mark:BRAND_MARK_SRC,appIcon:APP_ICON_SRC,apply:applyBrand,hydrate:async()=>applyBrand()};
+    window.EvaraBrand={
+      get mark(){return brandMarkSrc()},
+      get appIcon(){return appIconSrc()},
+      apply:applyBrand,
+      hydrate:async()=>applyBrand()
+    };
     window.EvaraLoader={
       beginNavigationLoad,
       completeNavigationLoad,
@@ -336,6 +426,7 @@
       markNavReady,
       markSessionReady,
       markAppReady:()=>maybeCompleteBoot(false),
+      configure:configureExperience,
       runShellWatchdog:shellWatchdog,
       getState:health,
       health
@@ -350,6 +441,7 @@
     });
     addEventListener('evara:nav-ready',markNavReady);
     addEventListener('evara:session-ready',markSessionReady);
+    addEventListener('evara:experience-config',event=>configureExperience(event.detail?.config||{}));
     addEventListener('load',()=>{windowLoaded=true;applyBrand();maybeCompleteBoot(false)});
     addEventListener('pageshow',event=>{
       windowLoaded=document.readyState==='complete';
@@ -364,10 +456,7 @@
     document.addEventListener('visibilitychange',handleVisibilityChange);
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{domReady=true;maybeCompleteBoot(false)},{once:true});
     forceTimer=setTimeout(()=>{
-      if(routeRequiresSession()&&(!sessionReady||authPending())){
-        shellWatchdog();
-        return;
-      }
+      if(routeRequiresSession()&&(!sessionReady||authPending())){shellWatchdog();return}
       if(!maybeCompleteBoot(true))finishLoad(true);
     },FORCE_UNLOCK);
     watchdogTimer=setTimeout(shellWatchdog,WATCHDOG_MS);
