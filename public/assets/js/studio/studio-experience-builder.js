@@ -39,7 +39,9 @@ function el(tag, options = {}, children = []) {
   if (options.value !== undefined) node.value = String(options.value);
   if (options.checked !== undefined) node.checked = Boolean(options.checked);
   if (options.disabled !== undefined) node.disabled = Boolean(options.disabled);
-  if (options.attrs) Object.entries(options.attrs).forEach(([key, value]) => node.setAttribute(key, String(value)));
+  if (options.attrs) Object.entries(options.attrs).forEach(([key, value]) => {
+    if (value !== '' && value !== undefined && value !== null) node.setAttribute(key, String(value));
+  });
   if (options.dataset) Object.entries(options.dataset).forEach(([key, value]) => { node.dataset[key] = String(value); });
   (Array.isArray(children) ? children : [children]).filter(Boolean).forEach((child) => node.append(child));
   return node;
@@ -63,14 +65,14 @@ function field(label, path, options = {}) {
   const current = getPath(draft, path);
   let control;
   if (options.type === 'textarea') {
-    control = el('textarea', { text: current, dataset: { experienceField: path }, attrs: { maxlength: options.max || 1200 } });
+    control = el('textarea', { dataset: { experienceField: path }, attrs: { maxlength: options.max || 1200 } });
     control.value = current || '';
   } else if (options.type === 'checkbox') {
     control = el('input', { type: 'checkbox', checked: current, dataset: { experienceField: path } });
     return el('label', { className: 'experience-toggle' }, [el('span', { text: label }), control]);
   } else if (options.type === 'color') {
-    const picker = el('input', { type: 'color', value: current, dataset: { experienceField: path } });
-    const textInput = el('input', { type: 'text', value: current, dataset: { experienceField: path }, attrs: { maxlength: 7, pattern: '#[0-9a-fA-F]{6}' } });
+    const picker = el('input', { type: 'color', value: current, dataset: { experienceField: path, colorPeer: 'picker' } });
+    const textInput = el('input', { type: 'text', value: current, dataset: { experienceField: path, colorPeer: 'text' }, attrs: { maxlength: 7, pattern: '#[0-9a-fA-F]{6}' } });
     control = el('div', { className: 'experience-color-input' }, [picker, textInput]);
   } else {
     control = el('input', {
@@ -78,9 +80,9 @@ function field(label, path, options = {}) {
       value: options.transformOut ? options.transformOut(current) : current,
       dataset: { experienceField: path, transform: options.transform || '' },
       attrs: {
-        min: options.min ?? '',
-        max: options.max ?? '',
-        step: options.step ?? '',
+        min: options.min,
+        max: options.max,
+        step: options.step,
         maxlength: options.maxLength ?? 2200,
         placeholder: options.placeholder || ''
       }
@@ -158,7 +160,7 @@ function overrideCounts() {
 
 function renderOverrides(fields) {
   const counts = overrideCounts();
-  fields.append(section('Existing page overrides', 'Use Live Edit on any page to change existing text, images, cards, radius, padding, and glass. Those edits join this same draft and publish pipeline.', [
+  fields.append(section('Existing page overrides', 'Use Live Edit on any page to publish existing text, images, card radius, padding, and glass. New placeholder blocks remain drafts until they are converted into registered Studio components.', [
     el('div', { className: 'experience-overrides-summary' }, [
       el('div', {}, [el('strong', { text: counts.pages }), el('span', { text: 'Pages' })]),
       el('div', {}, [el('strong', { text: counts.text }), el('span', { text: 'Text edits' })]),
@@ -180,16 +182,20 @@ function renderFields() {
 }
 
 function renderPreview() {
-  const config = draft;
-  const source = previewMode === 'resume' ? config.loaders.resume : config.loaders.welcome;
+  const config = normalizeExperienceConfig(clone(draft));
+  const source = previewMode === 'resume'
+    ? config.loaders.resume
+    : previewMode === 'page'
+      ? { title: config.loaders.page.label, subtitle: '' }
+      : config.loaders.welcome;
   const card = el('section', { className: 'experience-loader-preview' }, [
     el('div', { className: 'experience-loader-orbit' }, [el('img', { attrs: { src: config.brand.markUrl, alt: '' } })]),
     el('small', { text: previewMode === 'welcome' ? config.loaders.welcome.eyebrow : 'EVARAOS' }),
     el('strong', { text: source.title || config.loaders.page.label }),
-    el('p', { text: source.subtitle || config.loaders.page.label }),
+    el('p', { text: source.subtitle || '' }),
     el('span', { className: 'experience-preview-progress', attrs: { 'aria-hidden': 'true' } })
   ]);
-  if (!config.loaderTheme.showProgress) card.querySelector('.experience-preview-progress').hidden = true;
+  if (!config.loaderTheme.showProgress || previewMode === 'page') card.querySelector('.experience-preview-progress').hidden = true;
   const stage = el('div', { className: `experience-preview-stage${previewMode === 'page' ? ' experience-preview-page' : ''}` }, [card]);
   stage.style.setProperty('--experience-preview-background', config.loaderTheme.background);
   stage.style.setProperty('--experience-preview-accent', config.loaderTheme.accent);
@@ -197,10 +203,15 @@ function renderPreview() {
   stage.style.setProperty('--experience-preview-mark-size', `${config.loaderTheme.markSize}px`);
   return el('section', { className: 'experience-builder-preview' }, [
     el('div', { className: 'experience-preview-toolbar' }, [el('strong', { text: 'Live loader preview' }), el('div', {}, [
-      ...['welcome', 'page', 'resume'].map((mode) => el('button', { type: 'button', text: mode, dataset: { experiencePreview: mode } }))
+      ...['welcome', 'page', 'resume'].map((mode) => el('button', { type: 'button', className: mode === previewMode ? 'is-active' : '', text: mode, dataset: { experiencePreview: mode } }))
     ])]),
     stage
   ]);
+}
+
+function refreshPreview() {
+  const current = shell?.querySelector('.experience-builder-preview');
+  if (current) current.replaceWith(renderPreview());
 }
 
 function render() {
@@ -220,7 +231,8 @@ function render() {
 }
 
 function editablePatch() {
-  return clone({ brand: draft.brand, loaderTheme: draft.loaderTheme, loaders: draft.loaders, home: draft.home });
+  const normalized = normalizeExperienceConfig(clone(draft));
+  return clone({ brand: normalized.brand, loaderTheme: normalized.loaderTheme, loaders: normalized.loaders, home: normalized.home });
 }
 
 function setBusy(next, message = '') {
@@ -261,11 +273,19 @@ async function handleUpload(input) {
   try {
     const result = await uploadExperienceAsset(file);
     draft.brand.markUrl = result.url;
-    window.EvaraExperience?.applyConfig?.(draft);
+    window.EvaraExperience?.applyConfig?.(normalizeExperienceConfig(draft));
     setBusy(false, 'Logo uploaded. Save the draft, then publish it live.');
   } catch (error) {
     setBusy(false, error.message || 'Unable to upload that image.');
   }
+}
+
+function syncColorPeers(control) {
+  if (!control.dataset.colorPeer) return;
+  const path = control.dataset.experienceField;
+  shell?.querySelectorAll(`[data-experience-field="${CSS.escape(path)}"]`).forEach((peer) => {
+    if (peer !== control && /^#[0-9a-f]{6}$/i.test(control.value)) peer.value = control.value;
+  });
 }
 
 function bindShell() {
@@ -278,7 +298,7 @@ function bindShell() {
     if (event.target.closest('[data-experience-save]')) { saveDraft(); return; }
     if (event.target.closest('[data-experience-publish]')) { publish(); return; }
     const preview = event.target.closest('[data-experience-preview]');
-    if (preview) { previewMode = preview.dataset.experiencePreview; render(); return; }
+    if (preview) { previewMode = preview.dataset.experiencePreview; refreshPreview(); return; }
     if (event.target.closest('[data-experience-open-live-edit]')) location.assign('/index.html?ownerEdit=1');
   });
   shell.addEventListener('input', (event) => {
@@ -289,9 +309,9 @@ function bindShell() {
     if (control.dataset.transform === 'seconds') value = Math.round(Number(value || 45) * 1000);
     else if (control.type === 'number') value = Number(value);
     setPath(draft, path, value);
-    draft = normalizeExperienceConfig(draft);
-    window.EvaraExperience?.applyConfig?.(draft);
-    render();
+    syncColorPeers(control);
+    window.EvaraExperience?.applyConfig?.(normalizeExperienceConfig(draft));
+    refreshPreview();
   });
   shell.addEventListener('change', (event) => {
     const upload = event.target.closest('[data-experience-upload]');
