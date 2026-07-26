@@ -1,0 +1,68 @@
+name: Apply Owner Experience Builder hardening
+
+on:
+  push:
+    branches:
+      - studio/owner-experience-builder
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: studio/owner-experience-builder
+          fetch-depth: 0
+      - name: Apply reviewed source hardening
+        run: python3 tools/owner-experience-builder-hardening.py
+      - name: Commit direct source changes
+        run: |
+          if git diff --quiet; then
+            echo 'No source changes required.'
+          else
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add functions/experience-config-service.js public/assets/js/loader.js public/assets/js/nav.js public/assets/js/experience/experience-runtime.js public/assets/js/studio/studio-experience-builder.js
+            git commit -m 'Studio: harden Experience Builder runtime and authority'
+            git push origin HEAD:studio/owner-experience-builder
+          fi
+      - name: Verify source contracts
+        run: |
+          node --check functions/experience-config-service.js
+          node --check public/assets/js/loader.js
+          node --check public/assets/js/nav.js
+          node --check public/assets/js/experience/experience-runtime.js
+          node --check public/assets/js/experience/experience-config-client.js
+          node --check public/assets/js/experience/owner-experience-publisher.js
+          node --check public/assets/js/studio/studio-experience-builder.js
+          node <<'NODE'
+          const fs=require('fs');
+          const service=fs.readFileSync('functions/experience-config-service.js','utf8');
+          const loader=fs.readFileSync('public/assets/js/loader.js','utf8');
+          const nav=fs.readFileSync('public/assets/js/nav.js','utf8');
+          const runtime=fs.readFileSync('public/assets/js/experience/experience-runtime.js','utf8');
+          const builder=fs.readFileSync('public/assets/js/studio/studio-experience-builder.js','utf8');
+          const checks=[
+            [service.includes('canPublishStudio(profile)'), 'trusted publisher authority'],
+            [service.includes("source: 'trusted_experience_config_service'"), 'audit records'],
+            [loader.includes('cachedExperience()'), 'cached loader boot'],
+            [loader.includes('applyExperienceConfig'), 'loader config API'],
+            [loader.includes('if(!pageEnabled)return'), 'page loader toggle'],
+            [nav.indexOf('loadExperienceRuntime();') < nav.indexOf('evara:nav-ready'), 'early runtime import'],
+            [runtime.includes("--evaraos-brand-icon"), 'global logo propagation'],
+            [runtime.includes('requestIdleCallback(refresh'), 'idle config refresh'],
+            [builder.includes('preview.replaceWith(renderPreview())'), 'stable typing preview']
+          ];
+          checks.forEach(([ok,label])=>console.log(`${ok?'PASS':'FAIL'}: ${label}`));
+          if(checks.some(([ok])=>!ok))process.exit(1);
+          NODE
+          node tools/design-system-audit.js
+          node tools/visual-qa-audit.js
+          node tools/studio-component-catalog-audit.js
+          node tools/studio-action-icon-audit.js
+          node tools/studio-app-check-audit.js
+          node tools/studio-production-authority-audit.js
