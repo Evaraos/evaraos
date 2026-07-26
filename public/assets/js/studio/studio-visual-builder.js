@@ -21,7 +21,7 @@ const PAGE_LIBRARY = [
 
 const DEFAULT_ASSETS = [
   { id: 'evara-app-icon', name: 'EvaraOS App Icon', url: '/assets/brand/evaraos-app-icon.png' },
-  { id: 'evara-brand-mark', name: 'EvaraOS Brand Mark', url: '/assets/brand/evaraos-app-icon.png' }
+  { id: 'evara-brand-mark', name: 'EvaraOS Brand Mark', url: '/assets/brand/evaraos-mark.png' }
 ];
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, Number(value) || min));

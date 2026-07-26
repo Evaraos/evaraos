@@ -3,7 +3,7 @@ const fs=require("fs");
 const path=require("path");
 const root=path.resolve(__dirname,"../public");
 const THEME="adaptive-liquid-v8";
-const NAV="nav-v28-stable-avatar";
+const NAV="nav-v59-experience-builder";
 const BOOT="/assets/js/adaptive-appearance-boot-v4.js?v=4";
 
 function walk(dir,out=[]){

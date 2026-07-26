@@ -46,7 +46,7 @@ function migrate(content) {
     .replace(/href="\/assets\/css\/nav\.css(?:\?v=[^"]+)?"/gi, 'href="/assets/css/nav.css?v=nav-v4"')
     .replace(/href="\/assets\/css\/dashboard\.css(?:\?v=[^"]+)?"/gi, 'href="/assets/css/dashboard.css?v=50"')
     .replace(/href="\/assets\/css\/app-system\.css(?:\?v=[^"]+)?"/gi, 'href="/assets/css/app-system.css?v=50"')
-    .replace(/src="\/assets\/js\/nav\.js(?:\?v=[^"]+)?"/gi, 'src="/assets/js/nav.js?v=50"')
+    .replace(/src="\/assets\/js\/nav\.js(?:\?v=[^"]+)?"/gi, 'src="/assets/js/nav.js?v=nav-v59-experience-builder"')
     .replace(/html,body\{background:#f4f7f6\}/g, "")
     .replace(/body\{margin:0;background:#f4f7f6\}/g, "body{margin:0;background:transparent}")
     .replace(/background:rgba\(255,255,255,\.1\)/g, "background:linear-gradient(180deg,var(--liquid-bg-top),var(--liquid-bg-bottom))")
