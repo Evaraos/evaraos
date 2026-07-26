@@ -18,10 +18,10 @@ function walk(dir, output = []) {
 }
 
 const navEntry = read('public/assets/js/nav.js');
-requireText(navEntry, "./nav/nav-main-v7.js?v=nav-v61-role-authority", 'Nav entry does not boot the stable role-authority runtime');
-requireText(navEntry, "./nav/nav-role-lockdown-v2.js?v=2", 'Nav entry does not load actual-role lockdown');
-requireText(navEntry, "./app-builder-runtime-v2.js?v=2", 'Nav entry does not load global/company builder runtime v2');
-requireText(navEntry, "./owner-publish-runtime-v2.js?v=2", 'Nav entry does not load owner/admin publishing runtime v2');
+requireText(navEntry, './nav/nav-main-v7.js?v=nav-v61-role-authority', 'Nav entry does not boot the stable role-authority runtime');
+requireText(navEntry, './nav/nav-role-lockdown-v2.js?v=2', 'Nav entry does not load actual-role lockdown');
+requireText(navEntry, './app-builder-runtime-v2.js?v=2', 'Nav entry does not load global/company builder runtime v2');
+requireText(navEntry, './owner-publish-runtime-v2.js?v=2', 'Nav entry does not load owner/admin publishing runtime v2');
 
 const navAuthority = read('public/assets/js/nav/nav-authority-v1.js');
 forbidText(navAuthority, 'evaraos-preview-role', 'Navigation authority still trusts a presentation preview role');
@@ -43,7 +43,7 @@ requireText(lockdown, 'const role = actualRole()', 'Navigation lockdown does not
 
 const sessionRuntime = read('public/assets/js/nav/nav-session-v2.js');
 requireText(sessionRuntime, 'scheduleRefresh();', 'Navigation does not immediately reconcile a route session emitted before nav boot');
-forbidText(sessionRuntime, "evara:role-preview", 'Navigation still rebuilds itself from presentation preview events');
+forbidText(sessionRuntime, 'evara:role-preview', 'Navigation still rebuilds itself from presentation preview events');
 
 const access = read('public/assets/js/access-control-v2.js');
 requireText(access, "const ULTIMATE_ROLES = new Set(['platform_admin', 'owner'])", 'Owner ultimate access contract is missing');
@@ -69,7 +69,7 @@ forbidText(portal, 'fetchAllCollection', 'Customer portal still uses unrestricte
 
 const publisher = read('public/assets/js/owner-publish-runtime-v2.js');
 requireText(publisher, "type: 'global'", 'Owner publisher has no global scope');
-requireText(publisher, "doc(db, GLOBAL_CONFIG_COLLECTION, GLOBAL_CONFIG_ID)", 'Owner publisher does not target public_app_config/global');
+requireText(publisher, 'doc(db, GLOBAL_CONFIG_COLLECTION, GLOBAL_CONFIG_ID)', 'Owner publisher does not target public_app_config/global');
 requireText(publisher, "currentRole === 'admin' && id", 'Admin publisher does not require a company ID');
 requireText(publisher, 'No company workspace is required', 'Owner UI still claims a company workspace is required');
 
@@ -86,13 +86,18 @@ requireText(rules, "allow create, update, delete: if id == 'global' && platform(
 requireText(rules, 'companyAppBuilderAdmin(id)', 'Firestore has no company-scoped admin appBuilder helper');
 requireText(rules, "hasOnly(['appBuilder','appBuilderUpdatedAt'])", 'Admin company updates are not restricted to appBuilder fields');
 
+const loader = read('public/assets/js/loader.js');
+requireText(loader, "import('/assets/js/nav.js", 'Loader watchdog no longer provides the universal navigation fallback');
+
 const publicRoot = path.join(root, 'public');
 for (const absolute of walk(publicRoot).filter((file) => file.endsWith('.html'))) {
   const source = fs.readFileSync(absolute, 'utf8');
   if (!source.includes('id="universalNavRoot"') && !source.includes("id='universalNavRoot'")) continue;
   const relative = path.relative(root, absolute).replace(/\\/g, '/');
   const navReferences = source.match(/<script[^>]+src=["'][^"']*\/assets\/js\/nav\.js(?:\?[^"']*)?["'][^>]*>/g) || [];
-  if (navReferences.length !== 1) failures.push(`${relative}: expected exactly one universal nav.js script, found ${navReferences.length}`);
+  const loaderReferences = source.match(/<script[^>]+src=["'][^"']*\/assets\/js\/loader\.js(?:\?[^"']*)?["'][^>]*>/g) || [];
+  if (navReferences.length > 1) failures.push(`${relative}: duplicate universal nav.js scripts (${navReferences.length})`);
+  if (navReferences.length === 0 && loaderReferences.length === 0) failures.push(`${relative}: mounts universal navigation but has neither nav.js nor the loader watchdog`);
   if (/src=["'][^"']*nav-main-v\d+\.js/.test(source)) failures.push(`${relative}: directly loads a nav-main module instead of the stable entrypoint`);
 }
 
