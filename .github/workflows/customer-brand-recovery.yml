@@ -1,4 +1,4 @@
-name: Customer, Role, and Brand Recovery
+name: Customer, Navigation, Owner, Role, and Brand Recovery
 
 on:
   pull_request:
@@ -19,15 +19,31 @@ jobs:
       - name: Validate JavaScript syntax
         run: |
           node --check public/assets/js/access-control.js
+          node --check public/assets/js/access-control-v2.js
           node --check public/assets/js/roles.js
           node --check public/assets/js/app.js
           node --check public/assets/js/loader.js
           node --check public/assets/js/route-guard.js
+          node --check public/assets/js/route-guard-v2.js
           node --check public/assets/js/customer-portal-v2.js
+          node --check public/assets/js/customer-portal-v4.js
+          node --check public/assets/js/app-builder-runtime-v2.js
+          node --check public/assets/js/owner-publish-runtime-v2.js
+          node --check public/assets/js/nav.js
+          node --check public/assets/js/nav/nav-authority-v1.js
+          node --check public/assets/js/nav/nav-utils-v2.js
+          node --check public/assets/js/nav/nav-render-v2.js
+          node --check public/assets/js/nav/nav-session-v2.js
+          node --check public/assets/js/nav/nav-role-lockdown-v2.js
+          node --check public/assets/js/nav/nav-main-v7.js
           node --check public/assets/js/app-icon-preferences.js
           node --check public/assets/js/app-icon-studio-single-source.js
           node --check public/assets/js/app-icon-studio-final-guard.js
+          node --check tools/customer-brand-recovery-audit.js
+          node --check tools/navigation-owner-customer-audit.js
       - name: Audit canonical role engine
         run: node tools/role-engine-audit.mjs
       - name: Audit customer and brand recovery
         run: node tools/customer-brand-recovery-audit.js
+      - name: Audit navigation owner and customer contracts
+        run: node tools/navigation-owner-customer-audit.js
