@@ -5,7 +5,9 @@ import {
   getDoc,
   setDoc,
   serverTimestamp,
-  getSavedUserProfile
+  getSavedUserProfile,
+  getSavedUserRole,
+  normalizeRole
 } from '../../firebase.js';
 import { STUDIO_COMPONENTS } from '../component-registry.js';
 import {
@@ -25,6 +27,7 @@ const ALLOWED_SPANS = [3, 4, 6, 8, 12];
 const DEVICES = ['desktop', 'tablet', 'mobile'];
 const ACTION_TYPES = ['navigate', 'open-modal', 'send-email', 'call', 'toggle-visibility'];
 const TRIGGERS = ['click', 'submit', 'load'];
+const EDITOR_ROLES = new Set(['owner', 'super_admin', 'admin']);
 const STYLE_FIELDS = new Set([
   'background', 'backgroundColor', 'color', 'borderColor', 'borderWidth', 'borderStyle',
   'borderRadius', 'boxShadow', 'opacity', 'filter', 'fontFamily', 'fontSize', 'fontWeight',
@@ -77,6 +80,11 @@ function profile() {
 
 function companyId() {
   return text(profile().companyId || window.__EVARA_COMPANY_ID__ || '', 160);
+}
+
+function authorizedSessionReady() {
+  const role = normalizeRole?.(profile().role || getSavedUserRole?.() || '') || '';
+  return Boolean(auth.currentUser && companyId() && EDITOR_ROLES.has(role));
 }
 
 function sandbox() {
@@ -175,27 +183,55 @@ function persistLocalMeta() {
 
 async function readRemoteWorkbench() {
   const id = companyId();
-  if (!id || !auth.currentUser) return null;
+  const graphId = snapshot()?.graphId || '';
+  if (!id || !graphId || !auth.currentUser) return null;
   const company = await getDoc(doc(db, 'companies', id));
-  return company.exists() ? company.data()?.appBuilder?.studioWorkbench || null : null;
+  if (!company.exists()) return null;
+  const appBuilder = company.data()?.appBuilder || {};
+  const shared = appBuilder.studioWorkbench && typeof appBuilder.studioWorkbench === 'object'
+    ? appBuilder.studioWorkbench
+    : null;
+  const scoped = appBuilder.studioWorkbenches?.[graphId] || null;
+  if (!shared && !scoped) return null;
+  const compatibleLegacy = shared && (!shared.graphId || shared.graphId === graphId) ? shared : {};
+  return {
+    ...compatibleLegacy,
+    ...(scoped || {}),
+    assets: Array.isArray(shared?.assets) ? shared.assets : (scoped?.assets || compatibleLegacy.assets || []),
+    reusableComponents: Array.isArray(shared?.reusableComponents)
+      ? shared.reusableComponents
+      : (scoped?.reusableComponents || compatibleLegacy.reusableComponents || []),
+    updatedAtMs: Math.max(Number(shared?.updatedAtMs) || 0, Number(scoped?.updatedAtMs) || 0)
+  };
 }
 
 async function persistRemoteMeta() {
   const id = companyId();
-  if (!id || !auth.currentUser) throw new Error('An authenticated company workspace is required.');
+  const graphId = snapshot()?.graphId || '';
+  if (!id || !graphId || !auth.currentUser) throw new Error('An authenticated company Graph workspace is required.');
   const companyRef = doc(db, 'companies', id);
-  const current = await getDoc(companyRef);
-  const appBuilder = current.exists() && current.data()?.appBuilder ? current.data().appBuilder : {};
+  const updatedAtMs = Date.now();
+  const shared = {
+    version: 5,
+    assets: clone(state.meta.assets),
+    reusableComponents: clone(state.meta.reusableComponents),
+    updatedBy: auth.currentUser.uid,
+    updatedAt: state.meta.updatedAt,
+    updatedAtMs
+  };
+  const scoped = {
+    version: 5,
+    graphId,
+    versions: clone(state.meta.versions),
+    publish: clone(state.meta.publish),
+    updatedBy: auth.currentUser.uid,
+    updatedAt: state.meta.updatedAt,
+    updatedAtMs
+  };
   await setDoc(companyRef, {
     appBuilder: {
-      ...appBuilder,
-      studioWorkbench: {
-        ...clone(state.meta),
-        graphId: snapshot()?.graphId || null,
-        graphRevision: snapshot()?.graphRevision ?? null,
-        updatedBy: auth.currentUser.uid,
-        updatedAtMs: Date.now()
-      }
+      studioWorkbench: shared,
+      studioWorkbenches: { [graphId]: scoped }
     },
     appBuilderUpdatedAt: serverTimestamp()
   }, { merge: true });
@@ -646,28 +682,52 @@ function applyStyle(article, node) {
 }
 
 function applyMedia(article, node) {
-  article.querySelectorAll('[data-workbench-media]').forEach((item) => item.remove());
   const url = safeUrl(node.content?.assetUrl || node.content?.mediaUrl || '');
-  if (!url) return;
+  const current = article.querySelector('[data-workbench-media]');
+  if (!url) {
+    current?.remove();
+    return;
+  }
   const type = node.content?.assetType === 'video' ? 'video' : 'image';
-  const media = el(type === 'video' ? 'video' : 'img', {
-    className: 'studio-workbench-node-media',
-    dataset: { workbenchMedia: 'true' },
-    attrs: type === 'video'
-      ? { src: url, controls: '', playsinline: '', preload: 'metadata' }
-      : { src: url, alt: text(node.content?.alt || node.name, 240), loading: 'lazy' }
-  });
+  const expectedTag = type === 'video' ? 'VIDEO' : 'IMG';
+  let media = current;
+  if (!media || media.tagName !== expectedTag) {
+    const replacement = el(type === 'video' ? 'video' : 'img', {
+      className: 'studio-workbench-node-media',
+      dataset: { workbenchMedia: 'true' }
+    });
+    current?.replaceWith(replacement);
+    media = replacement;
+  }
+  if (media.getAttribute('src') !== url) media.setAttribute('src', url);
+  if (type === 'video') {
+    media.setAttribute('controls', '');
+    media.setAttribute('playsinline', '');
+    media.setAttribute('preload', 'metadata');
+  } else {
+    media.setAttribute('alt', text(node.content?.alt || node.name, 240));
+    media.setAttribute('loading', 'lazy');
+  }
   media.style.objectFit = node.style?.objectFit || 'cover';
   media.style.objectPosition = node.style?.objectPosition || 'center';
   const content = article.querySelector('.studio-canvas-graph-card,.studio-canvas-graph-hero,.studio-canvas-graph-metric,.studio-canvas-graph-map');
-  (content || article).prepend(media);
+  if (!media.isConnected) (content || article).prepend(media);
 }
 
 function addResizeHandles(article, node) {
-  article.querySelectorAll('[data-workbench-resize]').forEach((handle) => handle.remove());
+  const existing = [...article.querySelectorAll('[data-workbench-resize]')];
   article.querySelector('[data-sandbox-resize-handle]')?.setAttribute('hidden', '');
-  if (!article.classList.contains('is-selected') || nodeRules(node).locked) return;
-  ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'].forEach((direction) => {
+  if (!article.classList.contains('is-selected') || nodeRules(node).locked) {
+    existing.forEach((handle) => handle.remove());
+    return;
+  }
+  const directions = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+  const existingDirections = existing.map((handle) => handle.dataset.workbenchResize);
+  if (existing.length === directions.length
+    && directions.every((direction, index) => existingDirections[index] === direction)
+    && existing.every((handle) => handle.dataset.nodeId === node.id)) return;
+  existing.forEach((handle) => handle.remove());
+  directions.forEach((direction) => {
     article.append(el('button', {
       type: 'button',
       className: `studio-workbench-resize is-${direction}`,
@@ -1213,8 +1273,13 @@ async function hydrateMeta() {
 }
 
 async function promoteGraphCanvas() {
+  if (!authorizedSessionReady()) return false;
   if (!sandbox()?.open) return false;
   await sandbox().open();
+  const activeSnapshot = snapshot();
+  if (activeSnapshot?.source !== 'authored-blueprint-graph' || !activeSnapshot.sourceDocumentId) {
+    throw new Error('Graph Canvas refused to promote a recovery fixture as the Studio authoring surface.');
+  }
   await hydrateMeta();
   mountPanel();
   injectWorkbenchToggle();
@@ -1229,6 +1294,7 @@ async function promoteGraphCanvas() {
 
 async function boot() {
   if (state.mounted) return;
+  if (!authorizedSessionReady()) return;
   state.mounted = true;
   bindEvents();
   state.observer = new MutationObserver(() => {
@@ -1258,6 +1324,18 @@ window.EvaraStudioWorkbench = Object.freeze({
   getSelectedNode: () => clone(selectedNode())
 });
 
-window.addEventListener('evara:session-ready', () => setTimeout(boot, 120));
+window.addEventListener('evara:session-ready', () => {
+  setTimeout(async () => {
+    if (!state.mounted) {
+      await boot();
+      return;
+    }
+    if (snapshot()?.ready && authorizedSessionReady()) {
+      await hydrateMeta();
+      applyPresentation();
+      renderPanel();
+    }
+  }, 120);
+});
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(boot, 500), { once: true });
 else setTimeout(boot, 500);

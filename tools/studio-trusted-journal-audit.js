@@ -204,7 +204,7 @@ if (!errors.length) {
     '/assets/js/studio/blueprint-operation-adapter.js?v=1',
     '/assets/js/studio/studio-trusted-journal-loader.js?v=1',
     '/assets/js/studio/canvas/canvas-writer-guard.js?v=1',
-    '/assets/js/studio/canvas/canvas-session-sandbox.js?v=2'
+    '/assets/js/studio/canvas/canvas-session-sandbox.js?v=3'
   ];
   routeOrder.forEach((entry) => {
     if (!source.route.includes(entry)) errors.push(`website-builder.html: missing ${entry}`);

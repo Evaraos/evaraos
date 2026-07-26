@@ -1,4 +1,4 @@
-import { createCanvasSession } from './canvas-session.js';
+import { createCanvasSession } from './canvas-session.js?v=2';
 import { findProjectedNode, flattenGraphProjection } from './graph-projection.js';
 import { CANVAS_SEMANTIC_COMMANDS } from './mock-operation-dispatcher.js';
 
@@ -84,9 +84,8 @@ function selectedNode() {
 async function ensureSession() {
   if (session) return session;
   session = await createCanvasSession({
-    projectId: 'evara-studio-canvas',
-    branchId: 'local-draft',
-    actor: { id: 'studio-canvas-owner', type: 'user', role: 'owner' }
+    requireAuthoredGraph: true,
+    actor: { id: 'canvas-session-local', type: 'user', role: 'owner' }
   });
   snapshot = session.snapshot();
   session.subscribe((next, event) => {
@@ -98,7 +97,10 @@ async function ensureSession() {
 }
 
 async function command(type, payload, options = {}) {
-  if (busy) return null;
+  if (busy) {
+    if (options.throwOnError) throw new Error('Graph Canvas is already processing another semantic command.');
+    return null;
+  }
   busy = true;
   refreshBusyState();
   try {
@@ -108,6 +110,7 @@ async function command(type, payload, options = {}) {
     return result;
   } catch (error) {
     showMessage(error?.message || 'Canvas command failed.', 'error');
+    if (options.throwOnError) throw error;
     return null;
   } finally {
     busy = false;
@@ -771,7 +774,7 @@ window.EvaraCanvasSandbox = Object.freeze({
   getSession: () => session,
   getGraph: () => session?.getGraph() || null,
   getProjection: () => session?.getProjection() || null,
-  dispatch: (type, payload) => command(type, payload),
+  dispatch: (type, payload) => command(type, payload, { throwOnError: true }),
   undo: () => session?.undo(),
   redo: () => session?.redo(),
   pendingTransactions: () => session?.pendingTransactions() || Promise.resolve([])

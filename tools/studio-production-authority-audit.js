@@ -84,11 +84,11 @@ if (!errors.length) {
   }
 
   const authorityCss = '/assets/css/pages/studio-production-authority.css?v=1';
-  const authorityJs = '/assets/js/studio/studio-production-authority.js?v=1';
+  const authorityJs = '/assets/js/studio/studio-production-authority.js?v=2';
   const loaderJs = '/assets/js/studio/studio-trusted-journal-loader.js?v=1';
   const trustedJs = '/assets/js/studio/studio-trusted-journal.js?v=1';
   const blueprintJs = '/assets/js/studio/blueprint-operation-adapter.js?v=1';
-  const canvasJs = '/assets/js/studio/canvas/canvas-session-sandbox.js?v=2';
+  const canvasJs = '/assets/js/studio/canvas/canvas-session-sandbox.js?v=3';
   if (!source.route.includes(authorityCss)) errors.push('website-builder.html: production-authority stylesheet is missing');
   if (!source.route.includes(authorityJs)) errors.push('website-builder.html: production-authority runtime is missing');
   if (!source.route.includes(loaderJs)) errors.push('website-builder.html: App Check trusted-Journal loader is missing');

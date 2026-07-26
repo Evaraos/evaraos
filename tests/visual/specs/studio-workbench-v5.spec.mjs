@@ -50,6 +50,8 @@ async function openWorkbench(page) {
   await page.waitForFunction(() => document.body?.classList.contains('app-ready'), null, { timeout: 30_000 });
   await page.waitForFunction(() => Boolean(
     window.EvaraCanvasSandbox?.getSession?.()?.snapshot?.().ready
+    && window.EvaraCanvasSandbox.getSession().snapshot().source === 'authored-blueprint-graph'
+    && window.EvaraCanvasSandbox.getSession().snapshot().sourceDocumentId
     && window.EvaraStudioWorkbench?.version === 'studio-canvas-workbench-v5'
     && window.EvaraStudioReleaseActivation?.version === 'studio-release-activation-v1'
     && window.EvaraAppCheckReadiness?.snapshot?.().state === 'ready'
@@ -103,6 +105,10 @@ test.describe('authenticated Graph Workbench — all eight Studio milestones', (
     if (testInfo.project.name !== 'desktop-chromium') test.skip();
     const runtime = diagnostics(page);
     await openWorkbench(page);
+    const source = await page.evaluate(() => window.EvaraCanvasSandbox.getSession().snapshot());
+    expect(source.source).toBe('authored-blueprint-graph');
+    expect(source.sourceDocumentId).toBeTruthy();
+    expect(source.sourceFingerprint).toBeTruthy();
     const article = await selectFirstComponent(page);
 
     const beforeRevision = await page.evaluate(() => window.EvaraCanvasSandbox.getSession().getGraph().revision);
@@ -120,10 +126,35 @@ test.describe('authenticated Graph Workbench — all eight Studio milestones', (
     await changeField(page, 'layout.mode', 'spatial');
     await changeField(page, 'layout.x', '24');
     await changeField(page, 'layout.y', '32');
-    await changeField(page, 'style.borderRadius', '30');
+    await changeField(page, 'style.radius', '30');
     await changeField(page, 'style.opacity', '0.95');
     await expect(article).toHaveCSS('opacity', '0.95');
     await expect(page.locator('[data-workbench-resize]')).toHaveCount(8);
+    const handleMutations = await page.evaluate(async () => {
+      const selected = document.querySelector('[data-sandbox-node-id].is-selected');
+      let count = 0;
+      const observer = new MutationObserver((records) => {
+        count += records.filter((record) => record.type === 'childList').length;
+      });
+      observer.observe(selected, { childList: true, subtree: true });
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      observer.disconnect();
+      return count;
+    });
+    expect(handleMutations).toBeLessThan(8);
+    const rejected = await page.evaluate(async () => {
+      try {
+        await window.EvaraCanvasSandbox.dispatch('canvas.property.set', {
+          nodeId: 'missing-authoritative-node',
+          property: 'content.title',
+          value: 'must fail'
+        });
+        return false;
+      } catch {
+        return true;
+      }
+    });
+    expect(rejected).toBe(true);
 
     await chooseWorkbenchTab(page, 'responsive');
     await changeField(page, 'responsive.tablet.span', '6');
@@ -145,6 +176,15 @@ test.describe('authenticated Graph Workbench — all eight Studio milestones', (
     const countBeforeReusable = await page.locator('[data-sandbox-node-id]').count();
     await page.locator('[data-workbench-action="save-reusable"]').click();
     await expect(page.locator('.studio-workbench-row', { hasText: reusableName })).toBeVisible({ timeout: 20_000 });
+    await page.evaluate(() => {
+      Object.keys(localStorage)
+        .filter((key) => key.startsWith('evaraos-studio-workbench-v5:'))
+        .forEach((key) => localStorage.removeItem(key));
+    });
+    await openWorkbench(page);
+    await chooseWorkbenchTab(page, 'components');
+    await expect(page.locator('.studio-workbench-row', { hasText: reusableName })).toBeVisible({ timeout: 20_000 });
+    await selectFirstComponent(page);
     await page.locator('.studio-workbench-row', { hasText: reusableName }).locator('[data-workbench-action="insert-reusable"]').click();
     await expect.poll(() => page.locator('[data-sandbox-node-id]').count()).toBe(countBeforeReusable + 1);
 

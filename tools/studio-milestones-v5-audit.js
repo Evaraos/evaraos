@@ -38,10 +38,10 @@ if (!errors.length) {
   const routeImports = [
     '/assets/css/pages/studio-canvas-sandbox.css?v=1',
     '/assets/css/pages/studio-canvas-workbench-v5.css?v=1',
-    '/assets/js/studio/canvas/canvas-session-sandbox.js?v=2',
-    '/assets/js/studio/canvas/studio-canvas-workbench-v5.js?v=1',
+    '/assets/js/studio/canvas/canvas-session-sandbox.js?v=3',
+    '/assets/js/studio/canvas/studio-canvas-workbench-v5.js?v=2',
     '/assets/js/studio/studio-trusted-journal-loader.js?v=1',
-    '/assets/js/studio/studio-production-authority.js?v=1'
+    '/assets/js/studio/studio-production-authority.js?v=2'
   ];
   routeImports.forEach((marker) => {
     if (!source.route.includes(marker)) errors.push(`website-builder.html: missing authoritative Studio import ${marker}`);
@@ -64,7 +64,8 @@ if (!errors.length) {
     'canvas.property.set', 'canvas.visibility.set', 'SelectionController',
     'HistoryController', 'SnapResolver', 'studio-workbench-resize',
     "['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w']",
-    'startSpatialDrag', 'pasteClipboard', 'layerSelected'
+    'startSpatialDrag', 'pasteClipboard', 'layerSelected', 'requireAuthoredGraph: true',
+    'options.throwOnError', 'existingDirections'
   ];
   milestoneOne.forEach((marker) => {
     const combined = `${source.workbench}\n${source.canvas}\n${source.session}\n${source.dispatcher}`;
@@ -163,6 +164,9 @@ if (!errors.length) {
   }
   if (!source.workbench.includes('localStorage.setItem(localKey()') || !source.workbench.includes('persistRemoteMeta')) {
     errors.push('Studio persistence: local draft and company workspace metadata writers are both required');
+  }
+  if (!source.workbench.includes('studioWorkbenches') || !source.workbench.includes("activeSnapshot?.source !== 'authored-blueprint-graph'")) {
+    errors.push('Studio persistence and boot must remain graph-scoped and reject recovery fixtures');
   }
 }
 

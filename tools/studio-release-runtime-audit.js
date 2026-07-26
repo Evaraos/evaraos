@@ -34,7 +34,7 @@ if (!errors.length) {
     catch (error) { errors.push(`${file}: CommonJS syntax check failed: ${String(error.stderr || error.message).trim()}`); }
   }
   for (const file of [files.activation, files.runtime, files.workbench, files.graphProjection, files.authenticatedSpec]) {
-    try { execFileSync(process.execPath, ['--experimental-default-type=module', '--check', path.join(root, file)], { stdio: 'pipe' }); }
+    try { execFileSync(process.execPath, ['--check', path.join(root, file)], { stdio: 'pipe' }); }
     catch (error) { errors.push(`${file}: module syntax check failed: ${String(error.stderr || error.message).trim()}`); }
   }
 
