@@ -1,0 +1,49 @@
+name: Studio Milestones V5
+
+on:
+  push:
+    branches: [evaraos]
+    paths:
+      - 'public/assets/js/studio/**'
+      - 'public/assets/css/pages/studio-*.css'
+      - 'public/website-builder.html'
+      - 'tools/studio-milestones-v5-audit.js'
+      - '.github/workflows/studio-milestones-v5.yml'
+  pull_request:
+    paths:
+      - 'public/assets/js/studio/**'
+      - 'public/assets/css/pages/studio-*.css'
+      - 'public/website-builder.html'
+      - 'tools/studio-milestones-v5-audit.js'
+      - '.github/workflows/studio-milestones-v5.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: studio-milestones-v5-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  milestone-contracts:
+    name: All eight Studio milestone contracts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run Studio milestone audit
+        run: node tools/studio-milestones-v5-audit.js
+
+      - name: Verify authoritative route has one editor
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(grep -c 'studio-canvas-workbench-v5.js' public/website-builder.html)" -eq 1
+          ! grep -Eq 'studio-canvas-engine-v3|studio-inspector-v3|studio-platform-v4' public/website-builder.html
