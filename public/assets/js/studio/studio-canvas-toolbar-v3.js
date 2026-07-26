@@ -5,8 +5,24 @@ const COMMANDS=[
 
 const emit=(command)=>window.dispatchEvent(new CustomEvent('evara:studio-command',{detail:{command}}));
 
+function installStyles(){
+  if(document.getElementById('studioCanvasToolbarStyles'))return;
+  const style=document.createElement('style');
+  style.id='studioCanvasToolbarStyles';
+  style.textContent=`
+    .studio-canvas-toolbar{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:10024;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 32px);padding:9px 11px;border:1px solid rgba(255,255,255,.26);border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.22),rgba(8,10,16,.9));box-shadow:0 18px 52px rgba(0,0,0,.34);backdrop-filter:blur(24px) saturate(1.3);color:var(--text-primary,#fff);transform:translateX(-50%)}
+    .studio-canvas-toolbar>span{flex:0 0 auto;font-size:11px;font-weight:850;color:var(--text-secondary,rgba(255,255,255,.7))}
+    .studio-canvas-toolbar>div{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}.studio-canvas-toolbar>div::-webkit-scrollbar{display:none}
+    .studio-canvas-toolbar button{flex:0 0 auto;border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:8px 9px;background:rgba(255,255,255,.09);color:inherit;font-size:11px;font-weight:850}
+    .studio-canvas-toolbar button:disabled{opacity:.34;cursor:not-allowed}
+    @media(max-width:760px){.studio-canvas-toolbar{left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));max-width:none;transform:none}.studio-canvas-toolbar>span{display:none}.studio-canvas-toolbar>div{width:100%}}
+  `;
+  document.head.append(style);
+}
+
 function mount(){
   if(document.querySelector('[data-studio-canvas-toolbar]'))return;
+  installStyles();
   const toolbar=document.createElement('div');
   toolbar.className='studio-canvas-toolbar';
   toolbar.dataset.studioCanvasToolbar='true';
