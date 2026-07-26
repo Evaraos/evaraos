@@ -1,0 +1,66 @@
+name: Align Experience authority
+
+on:
+  push:
+    branches:
+      - studio/owner-experience-builder
+
+permissions:
+  contents: write
+
+jobs:
+  align:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: studio/owner-experience-builder
+          fetch-depth: 0
+
+      - name: Apply trusted Studio authority
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('functions/experience-config-service.js')
+          value = path.read_text()
+          import_line = "const { normalizeRole, isActiveProfile, canPublishStudio } = require('./studio-journal-core');\n"
+          anchor = "const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https');\n"
+          if import_line not in value:
+              if anchor not in value:
+                  raise SystemExit('Missing HTTPS import anchor')
+              value = value.replace(anchor, anchor + import_line, 1)
+
+          value, count = re.subn(
+              r"\nfunction accountIsActive\(profile = \{\}\) \{.*?\n\}\n\nasync function resolveOwner",
+              "\nasync function resolveOwner",
+              value,
+              count=1,
+              flags=re.S,
+          )
+          if count not in (0, 1):
+              raise SystemExit('Unexpected accountIsActive replacement count')
+
+          old = "  const role = cleanText(profile.role, 80).toLowerCase().replace(/[\\s-]+/g, '_');\n  const elevatedAdmin = role === 'admin' && profile.platformAccess === true;\n  if (!accountIsActive(profile) || (!['owner', 'super_admin', 'platform_admin'].includes(role) && !elevatedAdmin)) {\n"
+          new = "  const role = normalizeRole(profile.role);\n  if (!isActiveProfile(profile) || !canPublishStudio(profile)) {\n"
+          if new not in value:
+              if old not in value:
+                  raise SystemExit('Missing owner authority contract')
+              value = value.replace(old, new, 1)
+          path.write_text(value)
+          PY
+
+      - name: Verify and commit source
+        run: |
+          set -euo pipefail
+          node --check functions/experience-config-service.js
+          node tools/owner-experience-builder-audit.js
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add functions/experience-config-service.js
+          if ! git diff --cached --quiet; then
+            git commit -m 'Security: align Experience publishing with trusted Studio authority'
+            git push origin HEAD:studio/owner-experience-builder
+          fi
