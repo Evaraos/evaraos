@@ -4,8 +4,9 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "test": "firebase emulators:exec --config ../../firebase.json --only firestore,storage \"node --test --test-concurrency=1 security-rules.test.cjs customer-role-rules.test.cjs studio-storage-rules.test.cjs\"",
+    "test": "firebase emulators:exec --config ../../firebase.json --only firestore,storage \"node --test --test-concurrency=1 security-rules.test.cjs customer-role-rules.test.cjs staff-approval-rules.test.cjs studio-storage-rules.test.cjs\"",
     "test:customer-role": "firebase emulators:exec --config ../../firebase.json --only firestore \"node --test customer-role-rules.test.cjs\"",
+    "test:staff-approval": "firebase emulators:exec --config ../../firebase.json --only firestore \"node --test staff-approval-rules.test.cjs\"",
     "test:studio-storage": "firebase emulators:exec --config ../../firebase.json --only firestore,storage \"node --test studio-storage-rules.test.cjs\""
   },
   "dependencies": {
