@@ -1,0 +1,71 @@
+name: One-shot duplicate navigation normalizer
+
+on:
+  push:
+    branches:
+      - hotfix/customer-brand-recovery-2026-07-26
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hotfix/customer-brand-recovery-2026-07-26
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Remove duplicate universal navigation entries
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const root = path.resolve('public');
+          const canonical = '  <script type="module" src="/assets/js/nav.js?v=nav-v61-role-authority"></script>';
+          const navPattern = /\s*<script\b[^>]*\bsrc=["'][^"']*\/assets\/js\/nav\.js(?:\?[^"']*)?["'][^>]*><\/script>\s*/gi;
+          const changed = [];
+
+          function walk(dir) {
+            for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+              const file = path.join(dir, entry.name);
+              if (entry.isDirectory()) walk(file);
+              else if (entry.name.endsWith('.html')) normalize(file);
+            }
+          }
+
+          function normalize(file) {
+            const source = fs.readFileSync(file, 'utf8');
+            const matches = source.match(navPattern) || [];
+            if (matches.length <= 1) return;
+            let next = source.replace(navPattern, '\n');
+            next = next.replace(/\s*<\/body>/i, `\n${canonical}\n</body>`);
+            next = next.replace(/\n{3,}/g, '\n\n');
+            fs.writeFileSync(file, next, 'utf8');
+            changed.push(path.relative(process.cwd(), file).replace(/\\/g, '/'));
+          }
+
+          walk(root);
+          console.log(`Normalized ${changed.length} page(s).`);
+          for (const file of changed) console.log(`- ${file}`);
+          if (changed.length !== 19) {
+            console.error(`Expected 19 duplicate-page repairs, found ${changed.length}.`);
+            process.exit(1);
+          }
+          NODE
+      - name: Remove temporary workflow and commit repairs
+        shell: bash
+        run: |
+          rm .github/workflows/one-shot-nav-normalizer.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public .github/workflows/one-shot-nav-normalizer.yml
+          git diff --cached --check
+          git commit -m "Normalize universal navigation entry across legacy pages"
+          git push origin HEAD:hotfix/customer-brand-recovery-2026-07-26
