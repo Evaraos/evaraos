@@ -1,0 +1,94 @@
+name: Owner Experience Builder Audit
+
+on:
+  push:
+    branches:
+      - evaraos
+    paths:
+      - 'functions/experience-config-service.js'
+      - 'functions/index-stats.js'
+      - 'firebase.json'
+      - 'public/assets/js/loader.js'
+      - 'public/assets/js/nav.js'
+      - 'public/assets/js/nav/**'
+      - 'public/assets/js/experience/**'
+      - 'public/assets/js/studio/studio-experience-builder.js'
+      - 'public/assets/js/studio/studio-visual-builder.js'
+      - 'public/assets/css/pages/studio-experience-builder.css'
+      - 'public/index.html'
+      - 'public/website-builder.html'
+      - 'tools/owner-experience-builder-audit.js'
+      - 'docs/design-system/OWNER_EXPERIENCE_BUILDER_2026-07-25.md'
+      - '.github/workflows/owner-experience-builder-audit.yml'
+      - '.github/workflows/deploy-trusted-studio-functions-once.yml'
+  pull_request:
+    paths:
+      - 'functions/experience-config-service.js'
+      - 'functions/index-stats.js'
+      - 'firebase.json'
+      - 'public/assets/js/loader.js'
+      - 'public/assets/js/nav.js'
+      - 'public/assets/js/nav/**'
+      - 'public/assets/js/experience/**'
+      - 'public/assets/js/studio/studio-experience-builder.js'
+      - 'public/assets/js/studio/studio-visual-builder.js'
+      - 'public/assets/css/pages/studio-experience-builder.css'
+      - 'public/index.html'
+      - 'public/website-builder.html'
+      - 'tools/owner-experience-builder-audit.js'
+      - 'docs/design-system/OWNER_EXPERIENCE_BUILDER_2026-07-25.md'
+      - '.github/workflows/owner-experience-builder-audit.yml'
+      - '.github/workflows/deploy-trusted-studio-functions-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: owner-experience-builder-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Check Experience source syntax
+        run: |
+          set -euo pipefail
+          node --check functions/experience-config-service.js
+          node --check functions/index-stats.js
+          node --check public/assets/js/loader.js
+          node --experimental-default-type=module --check public/assets/js/nav.js
+          node --experimental-default-type=module --check public/assets/js/nav/nav-main-v6.js
+          node --experimental-default-type=module --check public/assets/js/experience/experience-runtime.js
+          node --experimental-default-type=module --check public/assets/js/experience/experience-config-client.js
+          node --experimental-default-type=module --check public/assets/js/experience/owner-experience-publisher.js
+          node --experimental-default-type=module --check public/assets/js/studio/studio-experience-builder.js
+
+      - name: Run Owner Experience Builder architecture audit
+        run: node tools/owner-experience-builder-audit.js
+
+      - name: Run shared design and Studio audits
+        run: |
+          set -euo pipefail
+          node tools/design-system-audit.js
+          node tools/visual-qa-audit.js
+          node tools/studio-component-catalog-audit.js
+          node tools/studio-action-icon-audit.js
+          node tools/studio-app-check-audit.js
+          node tools/studio-production-authority-audit.js
+
+      - name: Install Functions dependencies
+        run: npm install --prefix functions --package-lock=false --ignore-scripts --no-audit --no-fund
+
+      - name: Run trusted Studio backend tests
+        run: npm run test:studio-journal --prefix functions
