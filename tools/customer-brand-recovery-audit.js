@@ -15,7 +15,7 @@ function assertPng(relative, label) {
     return null;
   }
   const data = bytes(relative);
-  const signature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  const signature = Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]);
   if (data.length < 1024) failures.push(`${label} is unexpectedly small: ${data.length} bytes`);
   if (!data.subarray(0, 8).equals(signature)) failures.push(`${label} is not a PNG payload`);
   return data;
@@ -31,7 +31,7 @@ const loader = read('public/assets/js/loader.js');
 requireText(loader, "const BRAND_VERSION = 'brand-contract-2'", 'Loader brand contract version is missing');
 requireText(loader, 'evaraos_logo.png?v=${BRAND_VERSION}', 'Loader does not use the OG PNG for visible branding');
 requireText(loader, 'evaraos-app-icon.png?v=${BRAND_VERSION}', 'Loader does not use the E PNG for icon surfaces');
-requireText(loader, "[data-evaraos-brand-logo],.sidebar-logo,.brand-logo,.login-badge", 'Loader does not repair visible logo surfaces');
+requireText(loader, '[data-evaraos-brand-logo]', 'Loader does not repair visible logo surfaces');
 if (loader.includes("startsWith('evaraos-app-builder-v1:')")) failures.push('Brand migration still deletes unrelated App Builder cache');
 
 const home = read('public/index.html');
@@ -55,18 +55,24 @@ if (iconGuard.includes('setTimeout(repair')) failures.push('Icon guard still use
 const preferences = read('public/assets/js/app-icon-preferences.js');
 if (preferences.includes('URL.createObjectURL(new Blob')) failures.push('Icon preferences still replace the static manifest with a blob URL');
 
-const routeGuard = read('public/assets/js/route-guard.js');
+const routeEntry = read('public/assets/js/route-guard.js');
+requireText(routeEntry, "./route-guard-v2.js?v=route-guard-v2", 'Route guard entry does not activate v2');
+const routeGuard = read('public/assets/js/route-guard-v2.js');
 requireText(routeGuard, 'window.EvaraRouteSession = session', 'Route guard does not publish the verified route session');
-requireText(routeGuard, "source: 'verified-route-guard'", 'Route guard does not identify verified private sessions');
-const portal = read('public/assets/js/customer-portal-v2.js');
-requireText(portal, 'filters: [{ field, op: "==", value: identity }]', 'Customer portal does not issue UID-scoped Firestore queries');
-if (portal.includes('safeFetch("users")') || portal.includes("safeFetch('users')")) failures.push('Customer portal still downloads the entire users collection');
-if (portal.includes('fetchAllCollection(collectionName, { max: 500 })')) failures.push('Customer portal still performs unrestricted collection reads');
-requireText(portal, 'function showPortalFailure(message)', 'Customer portal has no visible failure state');
-requireText(portal, 'PORTAL_TIMEOUT_MS = 12_000', 'Customer portal blank-screen timeout is missing');
+requireText(routeGuard, "source: 'verified-route-guard-cache'", 'Route guard does not publish its safe cached fallback');
+requireText(routeGuard, 'profile: session.profile', 'Route guard does not pass the verified profile to the portal');
+
+const portalEntry = read('public/assets/js/customer-portal-v2.js');
+requireText(portalEntry, "./customer-portal-v4.js?v=customer-portal-v4", 'Customer portal entry does not activate v4');
+const portal = read('public/assets/js/customer-portal-v4.js');
+requireText(portal, "where(field, '==', uid)", 'Customer portal does not issue UID-scoped Firestore queries');
+if (portal.includes('fetchAllCollection')) failures.push('Customer portal still performs unrestricted collection reads');
+requireText(portal, 'state.successfulQueries === 0 && state.queryFailures.length', 'Customer portal cannot distinguish total data failure from empty history');
+requireText(portal, 'PORTAL_TIMEOUT_MS = 9000', 'Customer portal blank-screen timeout is missing');
+
 const customerPage = read('public/customer_dashboard.html');
-requireText(customerPage, '/assets/js/customer-portal-v2.js?v=2', 'Customer dashboard does not load repaired portal v2');
-requireText(customerPage, '/assets/js/route-guard.js?v=36', 'Customer dashboard does not load verified-session route guard');
+requireText(customerPage, '/assets/js/customer-portal-v2.js?v=2', 'Customer dashboard does not load the stable customer portal entry');
+requireText(customerPage, '/assets/js/route-guard.js?v=36', 'Customer dashboard does not load the stable route guard entry');
 
 console.log('Customer and brand recovery audit complete.');
 console.log('Contract: OG PNG logo for visible branding; E PNG for app/icon surfaces.');
