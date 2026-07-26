@@ -6,7 +6,7 @@ Branch: `audit/surgical-fixes-2026-07-26`
 
 This audit focuses on the three reported regressions:
 
-1. Brand/app icon rendering.
+1. Brand logo and app icon rendering.
 2. Evara Studio website builder startup.
 3. Blank or empty customer portal after the Firestore update.
 
@@ -33,8 +33,6 @@ The existing code swallowed those permission errors and returned an empty array.
 - Updated `public/customer_dashboard.html` to load v3.
 
 ### Verification
-
-Static verification required before merge:
 
 - Customer portal references `customer-portal-v3.js` only.
 - v3 queries include a customer identity equality constraint.
@@ -63,9 +61,7 @@ The visual builder had its own 450 ms fallback boot. It marked itself as booted 
 
 ### Verification
 
-Static verification required before merge:
-
-- The page no longer directly imports `studio-visual-builder.js`.
+- The page no longer directly executes the visual builder before the authorization gate.
 - The gate imports the builder only after a verified owner/admin role or a valid cached owner/admin session.
 - The builder module remains unchanged outside the startup gate.
 
@@ -75,31 +71,59 @@ Run an authenticated browser test under throttled network conditions and verify 
 
 ---
 
-## Task 3 — Brand mark and install icon separation
+## Task 3 — OG PNG logo and E PNG icon contract
 
-### Root cause
+### Confirmed asset roles
 
-The icon consolidation commit pointed both `BRAND_MARK_SRC` and `APP_ICON_SRC` to the same square 512 px installation icon and removed the transparent mark/logo assets. That made a launcher icon appear in loader, navigation, and brand-logo surfaces where a transparent mark is expected.
+- **Visible brand logo:** `public/assets/img/evaraos_logo.png` — the OG PNG logo.
+- **App/brand icon:** `public/assets/brand/evaraos-app-icon.png` — the E-shaped PNG used for favicons, installed-app metadata, notification icons, and icon surfaces.
+
+These files are separate assets and must never be aliases for one another.
+
+### Deep root cause
+
+The problem was not one cache or one incorrect `<img>` tag. Multiple authorities were competing:
+
+1. The production/default branch still contains the icon-consolidation commit; the corrective pull requests remain unmerged drafts, so production has not received the fixes.
+2. The consolidation commit removed the separate logo/mark files and rewired many logo preloads and visible surfaces to `icon-512.png`.
+3. App Icon Studio embedded an older PNG directly inside JavaScript instead of loading the repository PNG.
+4. A second “final guard” script detected that embedded data URL, saved it under `evaraos-official-app-icon-v4`, and repeatedly forced it back into the page through startup repairs, timers, page lifecycle handlers, and a mutation observer.
+5. The legacy icon-preference runtime could replace favicon and manifest links with a stored snapshot/data URL.
+6. The manifest and push notification service worker still pointed to the consolidated legacy icon files.
+7. Navigation can render after the loader applies branding, so the brand contract must be reapplied on `evara:nav-ready`.
+8. Firebase Hosting already sends `no-cache, no-store`; the push service worker does not precache the application shell. HTTP cache and service-worker app-shell caching were therefore not the primary root causes.
 
 ### Surgical patch
 
-- Restore `public/assets/brand/evaraos-mark.png` as the transparent in-app mark.
-- Restore `public/assets/brand/evaraos-app-icon.png` as the install/PWA icon alias.
-- Restore `public/assets/img/evaraos_logo.png` for legacy sidebar/topbar consumers.
-- Restore the immediately preceding `loader.js` and `app.js` versions, whose only changes in the consolidation commit were the two asset references.
-- Keep the current `icon-512.png`, favicons, and manifest-facing installation icon intact.
+- Added a versioned `brand-contract-2` runtime contract.
+- `loader.js` now declares separate `BRAND_LOGO_SRC` and `BRAND_ICON_SRC` constants.
+- Loader, sidebar, and `[data-evaraos-brand-logo]` surfaces use the OG PNG logo.
+- `[data-evaraos-brand-icon]`, favicon, Apple touch icon, manifest, and notification surfaces use the E PNG icon.
+- Added a one-time migration that removes obsolete icon snapshots, official-icon keys, user-icon keys, and stale `evaraos-app-builder-v1:*` cache records.
+- Removed the embedded base64 icon authority from `app-icon-studio-single-source.js`.
+- Replaced the final guard overwrite loop with a compatibility shim that delegates to the canonical icon runtime.
+- Retired the legacy manifest-blob behavior in `app-icon-preferences.js`.
+- Updated `public/settings/icons.html`, `public/index.html`, `public/manifest.json`, and `public/firebase-messaging-sw.js` to use the correct assets.
+- Updated `nav.js` to reapply the brand contract immediately after navigation renders.
 
 ### Verification
 
-Static verification required before merge:
+- Both canonical files are checked as real PNG payloads by CI, including PNG signatures and nontrivial byte length.
+- Homepage first paint uses the OG PNG logo.
+- App Icon Studio and manifest use the E PNG icon.
+- The icon runtime no longer contains an embedded `const ICON = data:image/...` authority.
+- The final guard no longer discovers embedded images, starts timed repair loops, or creates a mutation observer.
+- The legacy preferences runtime no longer creates a blob manifest.
+- Manifest icons and shortcut icons must all resolve to the canonical E PNG path.
+- The strengthened `tools/audit-icon-system.js` now fails CI if these contracts regress.
 
-- Loader brand mark and app icon paths are different.
-- Sidebar/topbar uses the restored transparent logo asset.
-- Manifest/install icon remains the current square icon.
+### Deployment state
+
+These fixes are on draft PR #45. They are not live in production until the PR is reviewed, merged, and deployed through the protected Firebase release workflow. An already installed iOS PWA may still require removal and reinstallation after deployment because iOS snapshots installed-app icons independently from normal web cache behavior.
 
 ### Next task
 
-Run visual QA on loader, login, dashboard, navigation drawer, Studio, and installed-PWA surfaces at 1x/2x scale.
+Run browser visual QA for homepage first paint, login, dashboard navigation, App Icon Studio, favicon, notification icon, and a fresh PWA install. Then merge/deploy the exact validated commit.
 
 ---
 
@@ -119,8 +143,8 @@ The safe rule design should separate **identity ownership** from **account appro
 
 ## Remaining repository audit queue
 
-1. Firestore Emulator rule tests and the smallest verified rules patch.
-2. Browser smoke tests for customer and Studio flows.
-3. Search for remaining square install-icon references used as in-app logos.
-4. Validate App Check behavior and profile hydration failure states.
-5. Add automated regression tests for blank-screen locks and Studio role hydration.
+1. Complete CI on the strengthened brand-contract audit.
+2. Run visual browser/PWA verification against the PR head.
+3. Run Firestore Emulator tests and apply only the smallest verified rules patch.
+4. Run authenticated Studio role and slow-network smoke tests.
+5. Add browser regression coverage for blank-screen locks and installed-icon update guidance.
