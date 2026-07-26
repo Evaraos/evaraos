@@ -69,6 +69,7 @@ jobs:
           node --check public/assets/js/loader.js
           node --experimental-default-type=module --check public/assets/js/nav.js
           node --experimental-default-type=module --check public/assets/js/nav/nav-main-v6.js
+          node --experimental-default-type=module --check public/assets/js/experience/experience-authority.js
           node --experimental-default-type=module --check public/assets/js/experience/experience-runtime.js
           node --experimental-default-type=module --check public/assets/js/experience/experience-config-client.js
           node --experimental-default-type=module --check public/assets/js/experience/owner-experience-publisher.js
