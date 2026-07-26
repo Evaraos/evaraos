@@ -31,7 +31,7 @@ const loader = read('public/assets/js/loader.js');
 requireText(loader, "const BRAND_VERSION = 'brand-contract-2'", 'Loader brand contract version is missing');
 requireText(loader, 'evaraos_logo.png?v=${BRAND_VERSION}', 'Loader does not use the OG PNG for visible branding');
 requireText(loader, 'evaraos-app-icon.png?v=${BRAND_VERSION}', 'Loader does not use the E PNG for icon surfaces');
-requireText(loader, "[data-evaraos-brand-logo],.sidebar-logo,.brand-logo,.login-badge", 'Loader does not repair visible logo surfaces');
+requireText(loader, '[data-evaraos-brand-logo],.sidebar-logo,.brand-logo,.login-badge', 'Loader does not repair visible logo surfaces');
 if (loader.includes("startsWith('evaraos-app-builder-v1:')")) failures.push('Brand migration still deletes unrelated App Builder cache');
 
 const home = read('public/index.html');
@@ -55,18 +55,26 @@ if (iconGuard.includes('setTimeout(repair')) failures.push('Icon guard still use
 const preferences = read('public/assets/js/app-icon-preferences.js');
 if (preferences.includes('URL.createObjectURL(new Blob')) failures.push('Icon preferences still replace the static manifest with a blob URL');
 
-const routeGuard = read('public/assets/js/route-guard.js');
+const routeWrapper = read('public/assets/js/route-guard.js');
+requireText(routeWrapper, 'route-guard-v2.js', 'Stable route-guard wrapper does not load v2 authority');
+const routeGuard = read('public/assets/js/route-guard-v2.js');
 requireText(routeGuard, 'window.EvaraRouteSession = session', 'Route guard does not publish the verified route session');
 requireText(routeGuard, "source: 'verified-route-guard'", 'Route guard does not identify verified private sessions');
-const portal = read('public/assets/js/customer-portal-v2.js');
-requireText(portal, 'filters: [{ field, op: "==", value: identity }]', 'Customer portal does not issue UID-scoped Firestore queries');
+requireText(routeGuard, "source: 'verified-route-guard-cache'", 'Route guard does not identify exact-UID cache fallback');
+
+const portalWrapper = read('public/assets/js/customer-portal-v2.js');
+requireText(portalWrapper, 'customer-portal-v4.js', 'Stable customer-portal wrapper does not load v4 authority');
+const portal = read('public/assets/js/customer-portal-v4.js');
+requireText(portal, "where(field, '==', uid)", 'Customer portal does not issue UID-scoped Firestore queries');
 if (portal.includes('safeFetch("users")') || portal.includes("safeFetch('users')")) failures.push('Customer portal still downloads the entire users collection');
-if (portal.includes('fetchAllCollection(collectionName, { max: 500 })')) failures.push('Customer portal still performs unrestricted collection reads');
-requireText(portal, 'function showPortalFailure(message)', 'Customer portal has no visible failure state');
-requireText(portal, 'PORTAL_TIMEOUT_MS = 12_000', 'Customer portal blank-screen timeout is missing');
+if (portal.includes('fetchAllCollection')) failures.push('Customer portal still performs unrestricted collection reads');
+requireText(portal, 'state.queryFailures', 'Customer portal has no visible diagnostic failure state');
+requireText(portal, 'PORTAL_TIMEOUT_MS = 9000', 'Customer portal blank-screen timeout is missing');
+requireText(portal, 'revealPortal();', 'Customer portal does not guarantee a visible page state');
+
 const customerPage = read('public/customer_dashboard.html');
-requireText(customerPage, '/assets/js/customer-portal-v2.js?v=2', 'Customer dashboard does not load repaired portal v2');
-requireText(customerPage, '/assets/js/route-guard.js?v=36', 'Customer dashboard does not load verified-session route guard');
+requireText(customerPage, '/assets/js/customer-portal-v2.js?v=2', 'Customer dashboard does not load stable customer portal entrypoint');
+requireText(customerPage, '/assets/js/route-guard.js?v=36', 'Customer dashboard does not load stable verified-session route guard');
 
 console.log('Customer and brand recovery audit complete.');
 console.log('Contract: OG PNG logo for visible branding; E PNG for app/icon surfaces.');
