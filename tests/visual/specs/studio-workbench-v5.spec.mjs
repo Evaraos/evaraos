@@ -19,19 +19,28 @@ function diagnostics(page) {
   return { pageErrors, consoleErrors };
 }
 
+async function installAppCheck(page) {
+  if (!appCheckDebugToken) return;
+  await page.addInitScript((token) => {
+    self.FIREBASE_APPCHECK_DEBUG_TOKEN = token;
+  }, appCheckDebugToken);
+}
+
 async function openWorkbench(page) {
-  if (appCheckDebugToken) {
-    await page.addInitScript((token) => {
-      self.FIREBASE_APPCHECK_DEBUG_TOKEN = token;
-    }, appCheckDebugToken);
-  }
+  await installAppCheck(page);
   await page.addInitScript(() => {
     window.__evaraWorkbenchEvents = [];
     window.addEventListener('evara:studio-workbench-ready', (event) => {
       window.__evaraWorkbenchEvents.push({ type: 'ready', detail: JSON.parse(JSON.stringify(event.detail || {})) });
     });
     window.addEventListener('evara:studio-release-complete', (event) => {
-      window.__evaraWorkbenchEvents.push({ type: 'release', detail: JSON.parse(JSON.stringify(event.detail || {})) });
+      window.__evaraWorkbenchEvents.push({ type: 'prepared', detail: JSON.parse(JSON.stringify(event.detail || {})) });
+    });
+    window.addEventListener('evara:studio-release-active', (event) => {
+      window.__evaraWorkbenchEvents.push({ type: 'active', detail: JSON.parse(JSON.stringify(event.detail || {})) });
+    });
+    window.addEventListener('evara:published-studio-release-rendered', (event) => {
+      window.__evaraWorkbenchEvents.push({ type: 'rendered', detail: JSON.parse(JSON.stringify(event.detail || {})) });
     });
   });
 
@@ -42,6 +51,7 @@ async function openWorkbench(page) {
   await page.waitForFunction(() => Boolean(
     window.EvaraCanvasSandbox?.getSession?.()?.snapshot?.().ready
     && window.EvaraStudioWorkbench?.version === 'studio-canvas-workbench-v5'
+    && window.EvaraStudioReleaseActivation?.version === 'studio-release-activation-v1'
     && window.EvaraAppCheckReadiness?.snapshot?.().state === 'ready'
     && window.EvaraTrustedStudioJournal?.snapshot
   ), null, { timeout: 45_000 });
@@ -89,7 +99,7 @@ test.describe('authenticated Graph Workbench — all eight Studio milestones', (
   test.skip(Boolean(process.env.CI) && !appCheckDebugToken, 'EVARA_QA_APP_CHECK_DEBUG_TOKEN is required for authenticated CI.');
   test.use({ storageState: ownerRole ? storageStatePath(ownerRole.id) : undefined });
 
-  test('@critical edits, responsive rules, media, logic, versions, and immutable release', async ({ page }, testInfo) => {
+  test('@critical edits, responsive rules, media, logic, versions, activation, and live rendering', async ({ page }, testInfo) => {
     if (testInfo.project.name !== 'desktop-chromium') test.skip();
     const runtime = diagnostics(page);
     await openWorkbench(page);
@@ -150,6 +160,14 @@ test.describe('authenticated Graph Workbench — all eight Studio milestones', (
     await assetRow.locator('[data-workbench-action="apply-asset"]').click();
     await expect.poll(() => selectedGraphNode(page).then((node) => node?.props?.content?.assetUrl || '')).toMatch(/^https:\/\//);
     await expect(page.locator('.studio-workbench-node-media')).toBeVisible();
+    await page.evaluate(async () => {
+      const session = window.EvaraCanvasSandbox.getSession();
+      const nodeId = session.snapshot().selection.selectedIds[0];
+      await window.EvaraCanvasSandbox.dispatch('canvas.property.set', { nodeId, property: 'content.assetUrl', value: '' });
+      await window.EvaraCanvasSandbox.dispatch('canvas.property.set', { nodeId, property: 'content.assetType', value: '' });
+    });
+    await assetRow.locator('[data-workbench-action="delete-asset"]').click();
+    await expect(assetRow).toHaveCount(0);
 
     await chooseWorkbenchTab(page, 'logic');
     await changeField(page, 'action.trigger', 'click');
@@ -171,21 +189,33 @@ test.describe('authenticated Graph Workbench — all eight Studio milestones', (
     await expect(versionRow.locator('[data-workbench-action="restore-version"]')).toBeEnabled();
 
     await chooseWorkbenchTab(page, 'publish');
-    const slug = `qa-workbench-${Date.now()}`;
     await changeField(page, 'publish-channel', 'staging');
-    await changeField(page, 'publish-slug', slug);
+    await changeField(page, 'publish-slug', 'owner-dashboard');
     await changeField(page, 'publish-title', 'Evara Studio authenticated QA');
-    await page.locator('[data-workbench-local-field="publish-description"]').fill('Authenticated immutable-release verification for the Graph Workbench.');
+    await page.locator('[data-workbench-local-field="publish-description"]').fill('Authenticated active-release verification for the Graph Workbench.');
     await page.locator('[data-workbench-action="publish"]').click();
-    await expect(page.locator('[data-workbench-status]')).toContainText(/immutable release prepared/i, { timeout: 90_000 });
-    const release = await page.evaluate(() => window.EvaraStudioWorkbench.getMeta().publish.lastRelease);
-    expect(release.releaseId).toContain('staging');
-    expect(release.checkpointId).toBeTruthy();
-    expect(release.graphId).toMatch(/^graph:canvas:/);
+    await expect(page.locator('[data-workbench-status]')).toContainText(/active on staging\/owner-dashboard/i, { timeout: 120_000 });
+    await expect(page.locator('[data-studio-active-release]')).toContainText('Active release');
+    const activation = await page.evaluate(() => window.EvaraStudioReleaseActivation.snapshot().lastActivation);
+    expect(activation.releaseId).toContain('staging-owner-dashboard');
+    expect(activation.checkpointId).toBeTruthy();
+    expect(activation.status).toBe('active');
+    expect(activation.channel).toBe('staging');
+    expect(activation.slug).toBe('owner-dashboard');
 
-    await chooseWorkbenchTab(page, 'media');
-    await assetRow.locator('[data-workbench-action="delete-asset"]').click();
-    await expect(assetRow).toHaveCount(0);
+    await page.goto('/dashboard.html?studioReleaseChannel=staging', { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => document.body?.classList.contains('app-ready'), null, { timeout: 30_000 });
+    await page.waitForFunction(() => Boolean(
+      window.EvaraPublishedStudioRuntime?.snapshot?.().active
+      && window.EvaraPublishedStudioRuntime.snapshot().release?.releaseId
+    ), null, { timeout: 90_000 });
+    await expect(page.locator('[data-studio-published-root]')).toBeVisible();
+    const live = await page.evaluate(() => window.EvaraPublishedStudioRuntime.snapshot());
+    expect(live.release.releaseId).toBe(activation.releaseId);
+    expect(live.release.status).toBe('active');
+    expect(live.channel).toBe('staging');
+    expect(live.slug).toBe('owner-dashboard');
+    await expect(page.locator('[data-studio-published-root]')).toContainText(updatedTitle);
 
     expect(runtime.pageErrors).toEqual([]);
     expect(runtime.consoleErrors.filter((message) => !/favicon|ResizeObserver loop/i.test(message))).toEqual([]);
