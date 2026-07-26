@@ -28,7 +28,7 @@ const navMain = read('public/assets/js/nav/nav-main-v6.js');
 const studio = read('public/website-builder.html');
 const home = read('public/index.html');
 const trustedDeploy = read('.github/workflows/deploy-trusted-studio-functions-once.yml');
-const productionRelease = read('.github/workflows/firebase-production-release.yml');
+const permanentWorkflow = read('.github/workflows/owner-experience-builder-audit.yml');
 
 const callableNames = [
   'getExperienceEditorState',
@@ -40,6 +40,9 @@ const allFunctionNames = [...callableNames, 'getPublicExperienceConfig'];
 
 check(service.includes("const CALLABLE_OPTIONS = Object.freeze({ region: 'us-central1', enforceAppCheck: true"), 'owner editor callables enforce App Check');
 callableNames.forEach((name) => check(service.includes(`exports.${name} = onCall(CALLABLE_OPTIONS`), `${name} uses the trusted callable policy`));
+check(service.includes("require('./studio-journal-core')"), 'Experience publishing reuses trusted Studio authority');
+check(service.includes('canPublishStudio(profile)'), 'publisher authority is resolved by the Studio policy');
+check(service.includes('isActiveProfile(profile)'), 'inactive profiles cannot publish experiences');
 check(service.includes("exports.getPublicExperienceConfig = onRequest"), 'public experience endpoint is an HTTP function');
 check(service.includes('data.published || DEFAULT_CONFIG'), 'public endpoint reads only published configuration');
 check(!/getPublicExperienceConfig[\s\S]*data\.draft/.test(service), 'public endpoint never exposes draft configuration');
@@ -58,12 +61,11 @@ check(catchAllRewrite < 0 || experienceRewrite < catchAllRewrite, 'experience en
 
 check(runtime.includes("const ENDPOINT = '/__experience/config'"), 'runtime refreshes the same-origin published endpoint');
 check(runtime.includes("const CACHE_KEY = 'evaraos-experience-config-v1'"), 'runtime has a first-paint cache');
-check(runtime.includes("window.EvaraLoader?.configure?.(config)"), 'loader behavior is configured through one authority');
-check(runtime.includes("[data-experience-text]"), 'registered text slots are supported');
+check(runtime.includes('window.EvaraLoader?.configure?.(config)'), 'loader behavior is configured through one authority');
+check(runtime.includes('[data-experience-text]'), 'registered text slots are supported');
 check(runtime.includes('pageOverrides'), 'published existing-page overrides are supported');
 check(runtime.includes('MutationObserver'), 'late-rendered application surfaces receive published configuration');
 
-callableNames.forEach((name) => check(client.includes(`'${name}'`) || client.includes(`'${name.replace('Experience', 'Experience')}'`), `owner client references ${name}`));
 check(client.includes("'getExperienceEditorState'"), 'owner client loads draft and live versions');
 check(client.includes("'saveExperienceDraft'"), 'owner client saves secure drafts');
 check(client.includes("'publishExperienceConfig'"), 'owner client publishes live configuration');
@@ -77,13 +79,13 @@ check(builder.includes('uploadExperienceAsset'), 'Studio supports owner image up
 check(publisher.includes("pageOverrides: { [pageKey()]: readLocalPage() }"), 'Live Edit joins the shared page-override draft');
 check(publisher.includes('publishExperienceDraft()'), 'Live Edit can publish existing page changes');
 
-check(loader.includes("const EXPERIENCE_CACHE_KEY=\"evaraos-experience-config-v1\""), 'loader reads cached Experience configuration before runtime refresh');
+check(loader.includes('const EXPERIENCE_CACHE_KEY="evaraos-experience-config-v1"'), 'loader reads cached Experience configuration before runtime refresh');
 check(loader.includes("addEventListener('evara:experience-config'"), 'loader accepts published runtime updates');
 check(loader.includes('configure:configureExperience'), 'loader exposes one configuration method');
-check(loader.includes("experience.loaders.page.enabled"), 'page-loader enablement is enforced on future transitions');
-check(loader.includes("experience.loaders.resume.minimumAwayMs"), 'resume timing is enforced by the loader authority');
+check(loader.includes('experience.loaders.page.enabled'), 'page-loader enablement is enforced on future transitions');
+check(loader.includes('experience.loaders.resume.minimumAwayMs'), 'resume timing is enforced by the loader authority');
 
-check(nav.includes('./experience/experience-runtime.js?v=1'), 'navigation loads the lightweight published runtime');
+check(nav.includes('./experience/experience-runtime.js?v=1'), 'navigation loads the published runtime');
 check(nav.includes('./experience/owner-experience-publisher.js?v=1'), 'owner sessions receive trusted Live Edit publishing');
 check(nav.includes('nav-v59-experience-builder'), 'navigation entry uses the Experience Builder build');
 check(navMain.includes('nav-v59-experience-builder'), 'navigation core uses the same Experience Builder build');
@@ -95,10 +97,13 @@ check(home.includes("const cacheKey='evaraos-experience-config-v1'"), 'homepage 
   check(home.includes(`data-experience-text=\"${slot}\"`), `homepage registers ${slot}`);
 });
 
-allFunctionNames.forEach((name) => check(trustedDeploy.includes(name), `trusted Studio deployment inventory includes ${name}`));
-check(trustedDeploy.includes('functions/experience-config-service.js'), 'trusted Studio validation checks the experience service');
-allFunctionNames.forEach((name) => check(productionRelease.includes(name), `production release inventory includes ${name}`));
-check(productionRelease.includes('node tools/owner-experience-builder-audit.js'), 'production release runs the Experience Builder audit');
+allFunctionNames.forEach((name) => check(trustedDeploy.includes(name), `trusted manual deployment includes ${name}`));
+check(trustedDeploy.includes('functions/experience-config-service.js'), 'trusted deployment validates the experience service');
+check(trustedDeploy.includes('node tools/owner-experience-builder-audit.js'), 'trusted deployment runs the Experience Builder audit');
+check(permanentWorkflow.includes('name: Owner Experience Builder Audit'), 'dedicated Experience Builder CI is permanent');
+check(permanentWorkflow.includes('node tools/owner-experience-builder-audit.js'), 'dedicated CI runs the architecture audit');
+check(permanentWorkflow.includes("public/assets/js/experience/**"), 'dedicated CI watches runtime changes');
+check(permanentWorkflow.includes('functions/experience-config-service.js'), 'dedicated CI watches trusted backend changes');
 
 if (failures.length) {
   console.error(`\nOwner Experience Builder audit failed with ${failures.length} issue(s).`);
