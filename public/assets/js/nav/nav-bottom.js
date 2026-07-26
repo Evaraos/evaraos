@@ -78,6 +78,7 @@ function start() {
     observer.observe(document.documentElement, { childList: true, subtree: true });
     window.setTimeout(() => observer.disconnect(), 12000);
   }
+  window.addEventListener("evara:nav-rendered", () => mountBottomNav(true));
   window.addEventListener("evara:session-ready", () => mountBottomNav(true));
   window.addEventListener("evara:workspace-updated", () => mountBottomNav(true));
   window.addEventListener("storage", (event) => { if (["evaraos-workspace", "evaraos-user", "evaraos-role"].includes(event.key)) mountBottomNav(true); });

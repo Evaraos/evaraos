@@ -413,7 +413,35 @@ body.studio-visual-page {
   background: rgba(255,255,255,.11);
   border: 1px solid rgba(255,255,255,.14);
 }
-.studio-asset-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.studio-asset-thumb img {
+  width: 100%;
+  height: 100%;
+  padding: 5px;
+  box-sizing: border-box;
+  object-fit: contain;
+  object-position: center;
+}
+.studio-asset-upload-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--studio-accent) 42%, rgba(255,255,255,.24));
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--studio-accent) 14%, rgba(255,255,255,.08));
+  cursor: pointer;
+}
+.studio-asset-upload-button input { width: min(150px, 42%); color: var(--studio-muted); font-size: .7rem; }
+.studio-asset-upload-button span { min-width: 0; }
+.studio-asset-upload-button strong,
+.studio-asset-upload-button small { display: block; }
+.studio-asset-upload-button small,
+.studio-asset-status { color: var(--studio-muted); font-size: .72rem; }
+.studio-asset-upload-button small { margin-top: 3px; }
+.studio-asset-status { margin: 0 0 12px; }
+.studio-asset-status[data-tone="success"] { color: #78ecad; }
+.studio-asset-status[data-tone="error"] { color: #ff9da7; }
 .studio-component-tile strong,
 .studio-page-tile strong,
 .studio-asset-tile strong { display: block; font-size: .86rem; }

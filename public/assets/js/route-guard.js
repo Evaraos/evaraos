@@ -18,6 +18,18 @@ const ROUTES = Object.freeze({
 const AUTH_WAIT_TIMEOUT_MS = 4500;
 let hasFinishedRouteGuard = false;
 
+function publishRouteSession(detail = {}) {
+  const session = Object.freeze({
+    authenticated: Boolean(detail.authenticated),
+    role: String(detail.role || ''),
+    userId: String(detail.userId || ''),
+    source: String(detail.source || ''),
+    at: Date.now()
+  });
+  window.EvaraRouteSession = session;
+  return session;
+}
+
 function emit(name, detail = {}) {
   window.dispatchEvent(new CustomEvent(name, {
     detail: { at: Date.now(), ...detail }
@@ -25,7 +37,7 @@ function emit(name, detail = {}) {
 }
 
 function pageName() {
-  return window.location.pathname.split('/').pop() || 'index.html';
+  return window.location.pathname || '/index.html';
 }
 
 function normalizePath(path = '') {
@@ -58,7 +70,7 @@ function safeMarkReady(detail = {}) {
   } else {
     revealWithoutLoader();
   }
-  emit('evara:session-ready', detail);
+  emit('evara:session-ready', publishRouteSession(detail));
 }
 
 function clearUserSession() {

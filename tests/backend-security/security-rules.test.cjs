@@ -57,6 +57,12 @@ async function seed() {
     for (const user of users) await setDoc(doc(db, "users", user.uid), user);
     await setDoc(doc(db, "companies", "company-a"), { name: "Company A" });
     await setDoc(doc(db, "companies", "company-b"), { name: "Company B" });
+    await setDoc(doc(db, "public_app_config", "global"), {
+      appBuilder: { brand: { name: "Evaraos" } }
+    });
+    await setDoc(doc(db, "public_app_config", "private"), {
+      appBuilder: { brand: { name: "Private" } }
+    });
 
     await setDoc(doc(db, "jobs", "job-a"), {
       companyId: "company-a",
@@ -94,6 +100,26 @@ async function seed() {
       companyId: "company-b",
       customerUid: "customerB",
       status: "open"
+    });
+    await setDoc(doc(db, "customer_services", "service-a"), {
+      companyId: "company-a",
+      customerId: "customerA",
+      status: "active"
+    });
+    await setDoc(doc(db, "customer_services", "service-b"), {
+      companyId: "company-b",
+      customerId: "customerB",
+      status: "active"
+    });
+    await setDoc(doc(db, "subscriptions", "subscription-a"), {
+      companyId: "company-a",
+      userId: "customerA",
+      status: "active"
+    });
+    await setDoc(doc(db, "subscriptions", "subscription-b"), {
+      companyId: "company-b",
+      userId: "customerB",
+      status: "active"
     });
 
     await setDoc(doc(db, "channels", "_group_registry", "messages", "direct-a"), {
@@ -176,6 +202,40 @@ test("customers only read their own financial records", async () => {
   const customerDb = env.authenticatedContext("customerA").firestore();
   await assertSucceeds(getDoc(doc(customerDb, "invoices", "invoice-a")));
   await assertFails(getDoc(doc(customerDb, "invoices", "invoice-b")));
+});
+
+test("customers can query only records constrained to their identity", async () => {
+  const customerDb = env.authenticatedContext("customerA").firestore();
+  await assertSucceeds(getDocs(query(
+    collection(customerDb, "jobs"),
+    where("customerUid", "==", "customerA")
+  )));
+  await assertSucceeds(getDocs(query(
+    collection(customerDb, "customer_services"),
+    where("customerId", "==", "customerA")
+  )));
+  await assertSucceeds(getDocs(query(
+    collection(customerDb, "subscriptions"),
+    where("userId", "==", "customerA")
+  )));
+  await assertFails(getDocs(collection(customerDb, "jobs")));
+  await assertFails(getDocs(collection(customerDb, "customer_services")));
+  await assertFails(getDocs(collection(customerDb, "subscriptions")));
+});
+
+test("global app branding is public while writes remain platform-only", async () => {
+  const publicDb = env.unauthenticatedContext().firestore();
+  const ownerDb = env.authenticatedContext("owner").firestore();
+  const customerDb = env.authenticatedContext("customerA").firestore();
+
+  await assertSucceeds(getDoc(doc(publicDb, "public_app_config", "global")));
+  await assertFails(getDoc(doc(publicDb, "public_app_config", "private")));
+  await assertSucceeds(setDoc(doc(ownerDb, "public_app_config", "global"), {
+    appBuilder: { brand: { name: "Evaraos Updated" } }
+  }));
+  await assertFails(setDoc(doc(customerDb, "public_app_config", "global"), {
+    appBuilder: { brand: { name: "Forged" } }
+  }));
 });
 
 test("conversation membership gates direct and role messages", async () => {

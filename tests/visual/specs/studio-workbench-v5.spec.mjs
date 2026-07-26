@@ -59,6 +59,9 @@ async function openWorkbench(page) {
   ), null, { timeout: 45_000 });
   await expect(page.locator('[data-canvas-sandbox]')).toBeVisible();
   await expect(page.locator('body')).toHaveAttribute('data-studio-primary-surface', 'graph-canvas');
+  await expect(page.locator('body')).toHaveAttribute('data-studio-graph-status', 'ready');
+  await expect(page.locator('[data-compatibility-migration-notice]')).toHaveAttribute('data-state', 'ready');
+  await expect(page.locator('[data-compatibility-migration-title]')).toHaveText('Legacy editor — migration tools');
   await page.locator('[data-workbench-toggle]').click();
   await expect(page.locator('[data-canvas-workbench]')).toHaveClass(/is-open/);
 }
@@ -274,5 +277,17 @@ test.describe('authenticated Graph Workbench — all eight Studio milestones', (
     await page.locator('[data-workbench-toggle]').click();
     await expect(page.locator('[data-canvas-workbench]')).toHaveClass(/is-open/);
     await expect(page.locator('[data-workbench-tab="responsive"]')).toBeVisible();
+  });
+
+  test('shared menu dismisses Studio overlays and asset logos remain contained', async ({ page }, testInfo) => {
+    if (testInfo.project.name !== 'desktop-chromium') test.skip();
+    await openWorkbench(page);
+    await page.locator('[data-workbench-action="close-workbench"]').click();
+    await page.locator('[data-sheet="assets"]').click();
+    await expect(page.locator('[data-studio-sheet]')).toBeVisible();
+    await expect(page.locator('.studio-asset-thumb img').first()).toHaveCSS('object-fit', 'contain');
+    await page.locator('#evaMenuBtn').click();
+    await expect(page.locator('body')).toHaveClass(/nav-menu-open/);
+    await expect(page.locator('[data-studio-sheet]')).toHaveCount(0);
   });
 });

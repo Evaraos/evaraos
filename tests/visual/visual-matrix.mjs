@@ -14,7 +14,7 @@ export const ROLE_DEFINITIONS = Object.freeze([
     id: 'owner',
     secret: 'OWNER',
     required: true,
-    routes: ['/dashboard.html', '/settings-v2.html', '/messages.html', '/website-builder.html', '/applications.html', '/jobs.html', '/dispatch.html', '/schedule.html', '/field.html', '/territory-map.html', '/marketplace-payouts.html', '/live-operations-command.html', '/operations-visibility.html', '/qa-v2.html'],
+    routes: ['/dashboard.html', '/settings-v2.html', '/settings/account.html', '/settings/appearance.html', '/settings/icons.html', '/settings/notifications.html', '/settings/workspace-v2.html', '/messages.html', '/website-builder.html', '/applications.html', '/jobs.html', '/dispatch.html', '/schedule.html', '/field.html', '/territory-map.html', '/marketplace-payouts.html', '/live-operations-command.html', '/operations-visibility.html', '/qa-v2.html'],
     criticalRoutes: ['/dashboard.html', '/settings-v2.html', '/messages.html', '/website-builder.html', '/qa-v2.html']
   },
   {

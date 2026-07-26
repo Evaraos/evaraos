@@ -1,13 +1,16 @@
 import {
-  requireAuth,
-  hasPermission,
   fetchAllCollection,
   loadCompany,
   saveUserProfile
 } from "./app.js";
+import { getSavedUserProfile } from "./firebase.js";
 import { iconSvg } from "./ui/icons.js";
 
 const state = { user: null, records: [], users: new Map(), companies: new Map(), editing: false };
+let portalStarted = false;
+let portalReady = false;
+let portalTimeout = null;
+const PORTAL_TIMEOUT_MS = 12_000;
 
 function clean(value = "") {
   return String(value ?? "")
@@ -51,18 +54,24 @@ function photos(record = {}, type = "before") {
   return candidates.flatMap((value) => Array.isArray(value) ? value : value ? [value] : []).filter(Boolean);
 }
 
-async function safeFetch(collectionName) {
-  try { return await fetchAllCollection(collectionName, { max: 500 }); }
+async function safeFetch(collectionName, options = {}) {
+  try { return await fetchAllCollection(collectionName, { max: 200, ...options }); }
   catch (error) { console.warn(`Customer portal skipped ${collectionName}:`, error); return []; }
 }
 
 async function loadRecords(user) {
-  const sources = ["jobs", "customer_services", "services", "subscriptions"];
-  const rows = [];
-  for (const sourceCollection of sources) {
-    const docs = await safeFetch(sourceCollection);
-    docs.filter((item) => customerMatches(item, user)).forEach((item) => rows.push({ ...item, sourceCollection }));
-  }
+  const sources = ["jobs", "customer_services", "subscriptions"];
+  const identity = first(user.uid, user.id);
+  const ownershipFields = ["customerUid", "customerId", "userId"];
+  const requests = sources.flatMap((sourceCollection) => ownershipFields.map(async (field) => {
+    const docs = await safeFetch(sourceCollection, {
+      filters: [{ field, op: "==", value: identity }]
+    });
+    return docs
+      .filter((item) => customerMatches(item, user))
+      .map((item) => ({ ...item, sourceCollection }));
+  }));
+  const rows = (await Promise.all(requests)).flat();
   const unique = new Map();
   rows.forEach((row) => unique.set(`${row.sourceCollection}:${row.id}`, row));
   return [...unique.values()].sort((a, b) => {
@@ -73,10 +82,7 @@ async function loadRecords(user) {
 }
 
 async function hydratePeopleAndCompanies(records) {
-  const userIds = [...new Set(records.map(staffId).filter(Boolean))];
   const companyIds = [...new Set(records.map(companyId).filter(Boolean))];
-  const allUsers = await safeFetch("users");
-  allUsers.filter((user) => userIds.includes(user.id) || userIds.includes(user.uid)).forEach((user) => state.users.set(user.id || user.uid, user));
   await Promise.all(companyIds.map(async (id) => {
     const company = await loadCompany(id);
     if (company) state.companies.set(id, company);
@@ -213,18 +219,68 @@ function bind() {
   });
 }
 
-function init() {
-  bind();
-  requireAuth(async (user) => {
-    if (!hasPermission(user, "customer_dashboard")) { window.location.href = "/dashboard.html"; return; }
-    state.user = user;
-    state.records = await loadRecords(user);
+function revealPortal() {
+  portalReady = true;
+  clearTimeout(portalTimeout);
+  document.documentElement.classList.remove("auth-pending");
+  document.body.classList.remove("app-loading", "auth-pending");
+  document.body.classList.add("app-ready");
+  window.EvaraLoader?.markAppReady?.();
+  window.dispatchEvent(new CustomEvent("evara:customer-portal-ready", {
+    detail: { at: Date.now(), state: "visible" }
+  }));
+}
+
+function showPortalFailure(message) {
+  clearTimeout(portalTimeout);
+  const root = document.getElementById("customerServiceTimeline");
+  if (root) {
+    root.innerHTML = `<div class="customer-empty-state glass-card">${iconSvg("bell")}<h3>Customer portal needs attention</h3><p>${clean(message)}</p><button type="button" class="btn btn-theme-primary" data-customer-retry>Try again</button></div>`;
+    root.querySelector("[data-customer-retry]")?.addEventListener("click", () => window.location.reload(), { once: true });
+  }
+  revealPortal();
+}
+
+async function startPortal(session = {}) {
+  if (portalStarted) return;
+  portalStarted = true;
+  const saved = getSavedUserProfile?.() || {};
+  const identity = first(saved.uid, saved.id, session.userId);
+  const user = { ...saved, uid: identity, id: identity };
+  const role = normalize(session.role || user.role);
+  if (!session.authenticated || role !== "customer" || !(user.uid || user.id)) {
+    showPortalFailure("Your customer session could not be verified. Reload the page or sign in again.");
+    return;
+  }
+
+  try {
+    state.user = { ...user, role };
+    state.records = await loadRecords(state.user);
     await hydratePeopleAndCompanies(state.records);
     renderPortal();
-    document.body.classList.remove("app-loading", "auth-pending");
-    document.body.classList.add("app-ready");
-    window.EvaraLoader?.markAppReady?.();
-  });
+    revealPortal();
+  } catch (error) {
+    console.error("Customer portal initialization failed:", error);
+    showPortalFailure(error?.message || "Your services could not be loaded.");
+  }
+}
+
+function acceptVerifiedSession(session = {}) {
+  if (session.source !== "verified-route-guard") return;
+  startPortal(session);
+}
+
+function init() {
+  bind();
+  portalTimeout = setTimeout(() => {
+    if (!portalReady) showPortalFailure(
+      portalStarted
+        ? "Your customer data took too long to load. Your account is safe; reload to try again."
+        : "Secure session verification timed out. Reload the page or sign in again."
+    );
+  }, PORTAL_TIMEOUT_MS);
+  window.addEventListener("evara:session-ready", (event) => acceptVerifiedSession(event.detail || {}));
+  acceptVerifiedSession(window.EvaraRouteSession || {});
 }
 
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });

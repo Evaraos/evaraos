@@ -13,6 +13,7 @@ import { getApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.j
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
 
 const CACHE_PREFIX = 'evaraos-app-builder-v1:';
+const GLOBAL_SCOPE_ID = 'evaraos-platform';
 const DEFAULTS = {
   version: 1,
   brand: {
@@ -49,7 +50,17 @@ let storage = null;
 function profile() { return getSavedUserProfile?.() || {}; }
 function role() { return normalizeRole?.(profile().role || getSavedUserRole?.() || '') || ''; }
 function allowed() { return role() === 'owner'; }
-function companyId() { return String(profile().companyId || '').trim(); }
+function companyId() {
+  const assigned = String(profile().companyId || '').trim();
+  if (assigned) return assigned;
+  return role() === 'owner' ? GLOBAL_SCOPE_ID : '';
+}
+function scopeLabel(id = companyId()) { return id === GLOBAL_SCOPE_ID ? 'global EvaraOS' : 'company workspace'; }
+function configDocument(id = companyId()) {
+  return id === GLOBAL_SCOPE_ID
+    ? doc(db, 'public_app_config', 'global')
+    : doc(db, 'companies', id);
+}
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
 function merge(base, next) {
   if (!next || typeof next !== 'object' || Array.isArray(next)) return next ?? base;
@@ -117,7 +128,7 @@ function panelMarkup() {
 
       <section class="studio-owner-config-section"><h3>Compact loader</h3><p>The smaller loader used for internal page changes.</p><div class="studio-owner-grid"><label class="studio-owner-field">Label<input data-config-path="loaders.compact.label" maxlength="120"></label><label class="studio-owner-field">Background<input data-config-path="loaders.compact.background"></label><label class="studio-owner-field is-wide">Logo URL<input data-config-path="loaders.compact.logoUrl"></label></div><div class="studio-owner-upload"><img data-upload-preview="loaders.compact.logoUrl" alt="Compact loader preview"><div class="studio-owner-upload-actions"><strong>Upload compact logo</strong><input type="file" accept="image/*" data-upload-target="loaders.compact.logoUrl"><small>Keep this simple so it stays clear at a small size.</small></div></div></section>
 
-      <section class="studio-owner-config-section"><h3>Page text and existing UI</h3><p>Open any app page and use the owner Live Edit drawer. Select existing text, cards, images, or buttons, save the draft, then choose Publish Page. Published content is shared with the company workspace.</p><button class="studio-owner-button" type="button" data-open-current-page-editor>Open current page with Live Edit</button></section>
+      <section class="studio-owner-config-section"><h3>Page text and existing UI</h3><p>Open any app page and use the owner Live Edit drawer. Select existing text, cards, images, or buttons, save the draft, then choose Publish Page. Published content is shared with the active publishing scope.</p><button class="studio-owner-button" type="button" data-open-current-page-editor>Open current page with Live Edit</button></section>
     </div>
     <footer class="studio-owner-control-foot"><span data-studio-owner-status>Loading workspace settings…</span><div><button class="studio-owner-button" type="button" data-studio-owner-preview>Preview</button> <button class="studio-owner-button" type="button" data-studio-owner-reset>Reset form</button> <button class="studio-owner-button is-primary" type="button" data-studio-owner-publish>Publish live</button></div></footer>`;
 }
@@ -150,16 +161,16 @@ async function load() {
   const id = companyId();
   if (!id) {
     fill(DEFAULTS);
-    status('This owner account needs a company workspace before settings can be published.', 'error');
+    status('Select a company workspace before publishing tenant settings.', 'error');
     return;
   }
   try {
-    const snapshot = await getDoc(doc(db, 'companies', id));
+    const snapshot = await getDoc(configDocument(id));
     const existing = snapshot.exists() ? snapshot.data()?.appBuilder : null;
     fill(existing || DEFAULTS);
     cache(state);
     dispatch(state);
-    status(existing ? 'Workspace settings loaded.' : 'No published settings yet. Defaults are ready.', 'success');
+    status(existing ? `${scopeLabel(id)} settings loaded.` : `No ${scopeLabel(id)} settings yet. Defaults are ready.`, 'success');
   } catch (error) {
     console.error('Owner App Builder load failed:', error);
     fill(DEFAULTS);
@@ -170,21 +181,22 @@ async function load() {
 async function publish() {
   if (!allowed()) return status('Owner access is required.', 'error');
   const id = companyId();
-  if (!id) return status('Assign this owner account to a company workspace first.', 'error');
+  if (!id) return status('Select a company workspace before publishing.', 'error');
   status('Publishing app settings…');
   try {
-    const snapshot = await getDoc(doc(db, 'companies', id));
+    const target = configDocument(id);
+    const snapshot = await getDoc(target);
     const existing = snapshot.exists() ? snapshot.data()?.appBuilder || {} : {};
     const input = formConfig();
     const next = merge(existing, input);
     next.pages = existing.pages || input.pages || {};
     next.updatedAtMs = Date.now();
     next.updatedBy = auth.currentUser?.uid || profile().uid || '';
-    await setDoc(doc(db, 'companies', id), { appBuilder: next, appBuilderUpdatedAt: serverTimestamp() }, { merge: true });
+    await setDoc(target, { appBuilder: next, appBuilderUpdatedAt: serverTimestamp() }, { merge: true });
     state = next;
     cache(next);
     dispatch(next);
-    status('Published live to this company workspace.', 'success');
+    status(`Published live to the ${scopeLabel(id)} scope.`, 'success');
   } catch (error) {
     console.error('Owner App Builder publish failed:', error);
     status(error?.message || 'Settings could not be published.', 'error');
@@ -195,7 +207,7 @@ async function upload(target, file) {
   if (!file || !file.type.startsWith('image/')) return status('Choose an image file.', 'error');
   if (file.size > 8 * 1024 * 1024) return status('Keep logo uploads under 8 MB.', 'error');
   const id = companyId();
-  if (!id) return status('A company workspace is required before uploading.', 'error');
+  if (!id) return status('Select a company workspace before uploading.', 'error');
   status(`Uploading ${file.name}…`);
   try {
     storage ||= getStorage(getApp());
@@ -234,6 +246,7 @@ function mount() {
   panel.querySelector('[data-studio-owner-preview]')?.addEventListener('click', () => { state = formConfig(); dispatch(state); status('Preview applied on this device.', 'success'); });
   panel.querySelector('[data-studio-owner-reset]')?.addEventListener('click', () => { fill(DEFAULTS); dispatch(DEFAULTS); status('Form reset to defaults. Nothing is published yet.'); });
   panel.querySelector('[data-studio-owner-publish]')?.addEventListener('click', publish);
+  window.addEventListener('evara:menu-open', () => toggle(false));
   panel.querySelector('[data-open-current-page-editor]')?.addEventListener('click', () => { location.assign('/dashboard.html#live-edit'); });
   panel.querySelectorAll('[data-config-path]').forEach((input) => input.addEventListener('input', () => {
     const preview = panel.querySelector(`[data-upload-preview="${CSS.escape(input.dataset.configPath)}"]`);

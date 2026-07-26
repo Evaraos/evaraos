@@ -42,6 +42,9 @@ export function openMenu() {
   zone.classList.add("open");
   btn.setAttribute("aria-expanded", "true");
   expandNav(true, "tap");
+  window.dispatchEvent(new CustomEvent("evara:menu-open", {
+    detail: { at: Date.now(), source: "shared-navigation" }
+  }));
 
   requestAnimationFrame(() => {
     window.EvaraTheme?.refreshAdaptiveGlass?.();
@@ -58,6 +61,9 @@ export function closeMenu(keepExpanded = true) {
   zone.classList.remove("open");
   btn.setAttribute("aria-expanded", "false");
   unlockBodyScroll();
+  window.dispatchEvent(new CustomEvent("evara:menu-close", {
+    detail: { at: Date.now(), source: "shared-navigation" }
+  }));
 
   if (keepExpanded) {
     NAV_STATE.navPinnedOpen = true;

@@ -86,6 +86,18 @@ test('owner and same-company admin can upload Studio images and videos', async (
   await assertSucceeds(getMetadata(adminVideo));
 });
 
+test('platform owner can upload Studio media to the global EvaraOS scope', async () => {
+  const ownerStorage = env.authenticatedContext('owner').storage();
+  const target = ref(ownerStorage, 'companies/evaraos-platform/studio/media/global-mark.png');
+
+  await assertSucceeds(uploadBytes(
+    target,
+    new Uint8Array([137, 80, 78, 71]),
+    metadata('owner', 'evaraos-platform', 'image/png')
+  ));
+  await assertSucceeds(getMetadata(target));
+});
+
 test('Studio uploads reject managers, cross-company admins, and forged metadata', async () => {
   const managerStorage = env.authenticatedContext('managerA').storage();
   const adminBStorage = env.authenticatedContext('adminB').storage();

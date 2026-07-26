@@ -83,8 +83,15 @@ function showToast(message, tone = 'info') {
   showToast.timer = setTimeout(() => toast.classList.remove('is-visible'), 4200);
 }
 
-function openCanvas() {
-  return window.EvaraCanvasSandbox?.open?.();
+async function openCanvas() {
+  const canvas = window.EvaraCanvasSandbox;
+  if (!canvas?.open) {
+    throw new Error('Graph Canvas is still loading. Your Blueprint remains safe; try again in a moment.');
+  }
+  await canvas.open();
+  if (!document.body.classList.contains('is-canvas-sandbox-open')) {
+    throw new Error('Graph Canvas could not open this Blueprint. Open the Draft Journal for recovery details.');
+  }
 }
 
 function injectAuthorityBadge() {
@@ -111,22 +118,42 @@ function injectAuthorityBadge() {
 
 function injectMigrationNotice() {
   const workspace = document.querySelector('.studio-workspace');
-  if (!workspace || workspace.querySelector('[data-compatibility-migration-notice]')) return;
-  workspace.prepend(node('section', {
-    className: 'studio-compatibility-migration-notice',
-    dataset: { compatibilityMigrationNotice: 'true' },
-    attrs: { role: 'note' }
-  }, [
-    node('div', {}, [
-      node('strong', { text: 'Compatibility projection — migration only' }),
-      node('p', { text: 'This legacy visual surface remains available for Blueprint migration, comparison, export, and rollback. Only Graph Canvas can create trusted checkpoints or immutable releases.' })
-    ]),
-    node('button', {
-      type: 'button',
-      text: 'Open production Canvas',
-      dataset: { productionAuthorityAction: 'open-canvas' }
-    })
-  ]));
+  if (!workspace) return;
+  const ready = document.body.dataset.studioPrimarySurface === 'graph-canvas';
+  let notice = workspace.querySelector('[data-compatibility-migration-notice]');
+  if (!notice) {
+    notice = node('section', {
+      className: 'studio-compatibility-migration-notice',
+      dataset: { compatibilityMigrationNotice: 'true' },
+      attrs: { role: 'note' }
+    }, [
+      node('div', {}, [
+        node('strong', { dataset: { compatibilityMigrationTitle: 'true' } }),
+        node('p', { dataset: { compatibilityMigrationCopy: 'true' } })
+      ]),
+      node('button', {
+        type: 'button',
+        dataset: { productionAuthorityAction: 'open-canvas' }
+      })
+    ]);
+    workspace.prepend(notice);
+  }
+  notice.dataset.state = ready ? 'ready' : (document.body.dataset.studioGraphStatus || 'loading');
+  const title = ready
+    ? 'Legacy editor — migration tools'
+    : 'Graph Canvas is preparing your Blueprint';
+  const copy = ready
+    ? 'Graph Canvas is the active production editor. This legacy view remains available only for import, comparison, export, and rollback.'
+    : 'Your current Blueprint is preserved while the production editor starts. You can open Graph Canvas manually or review the Draft Journal if startup needs attention.';
+  const action = ready
+    ? 'Return to Graph Canvas'
+    : 'Open Graph Canvas';
+  const titleNode = notice.querySelector('[data-compatibility-migration-title]');
+  const copyNode = notice.querySelector('[data-compatibility-migration-copy]');
+  const actionNode = notice.querySelector('[data-production-authority-action]');
+  if (titleNode.textContent !== title) titleNode.textContent = title;
+  if (copyNode.textContent !== copy) copyNode.textContent = copy;
+  if (actionNode.textContent !== action) actionNode.textContent = action;
 }
 
 function closeConflictPanel() {
@@ -245,6 +272,7 @@ function boot() {
     renderConflictPanel();
   });
   window.addEventListener('evara:canvas-session-change', enhance);
+  window.addEventListener('evara:studio-workbench-ready', enhance);
   observer = new MutationObserver(enhance);
   const root = document.querySelector('#appRoot');
   if (root) observer.observe(root, { childList: true, subtree: true });

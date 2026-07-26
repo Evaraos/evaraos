@@ -10,6 +10,10 @@ import {
 
 const matrixMode = process.env.EVARA_QA_MATRIX === 'full' ? 'full' : 'critical';
 const criticalProjects = new Set(['desktop-chromium', 'iphone-webkit']);
+const ownerRole = ROLE_DEFINITIONS.find((role) => role.id === 'owner');
+const ownerAvailable = Boolean(ownerRole && credentialsFor(ownerRole).available);
+const customerRole = ROLE_DEFINITIONS.find((role) => role.id === 'customer');
+const customerAvailable = Boolean(customerRole && credentialsFor(customerRole).available);
 const dynamicMaskSelector = [
   'canvas',
   'iframe',
@@ -205,3 +209,49 @@ for (const visualCase of visualCases) {
     }
   });
 }
+
+test.describe('owner settings navigation regression', () => {
+  test.skip(!ownerAvailable, 'Owner QA credentials are not configured.');
+  test.use({ storageState: ownerRole ? storageStatePath(ownerRole.id) : undefined });
+
+  test('@critical settings cards keep their authorized destination', async ({ page, baseURL }, testInfo) => {
+    if (testInfo.project.name !== 'desktop-chromium') test.skip();
+    const destinations = [
+      '/settings/account.html',
+      '/settings/appearance.html',
+      '/settings/icons.html',
+      '/settings/notifications.html',
+      '/settings/workspace-v2.html'
+    ];
+
+    for (const destination of destinations) {
+      await openRoute(page, '/settings-v2.html', APPEARANCES[0], baseURL);
+      await page.locator(`a[href="${destination}"]`).click();
+      await page.waitForFunction(() => document.body?.classList.contains('app-ready'), null, { timeout: 30_000 });
+      expect(new URL(page.url()).pathname).toBe(destination);
+    }
+  });
+});
+
+test.describe('customer portal regression', () => {
+  test.skip(!customerAvailable, 'Customer QA credentials are not configured.');
+  test.use({ storageState: customerRole ? storageStatePath(customerRole.id) : undefined });
+
+  test('@critical customer portal renders and profile controls respond', async ({ page, baseURL }, testInfo) => {
+    if (testInfo.project.name !== 'desktop-chromium') test.skip();
+    const diagnostics = collectRuntimeDiagnostics(page);
+    await openRoute(page, '/customer_dashboard.html', APPEARANCES[0], baseURL);
+
+    await expect(page.locator('.customer-page-wrap')).toBeVisible();
+    await expect(page.locator('.customer-kicker').first()).toHaveText('CUSTOMER PORTAL');
+    await expect(page.locator('#customerServiceTimeline')).not.toContainText('Loading your service history');
+    await page.locator('#customerEditProfile').click();
+    await expect(page.locator('#customerProfileForm')).toBeVisible();
+    await expect(page.locator('#customerProfileView')).toBeHidden();
+    await page.locator('#customerCancelEdit').click();
+    await expect(page.locator('#customerProfileView')).toBeVisible();
+
+    expect(diagnostics.pageErrors).toEqual([]);
+    expect.soft(diagnostics.consoleErrors).toEqual([]);
+  });
+});

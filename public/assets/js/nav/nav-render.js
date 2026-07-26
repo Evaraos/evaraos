@@ -89,6 +89,9 @@ export function renderNav() {
 
   mount.innerHTML = `<div class="eva-nav-layer" data-render-build="${NAV_RENDER_BUILD}"><header class="eva-nav-shell is-visible" id="evaNavShell"><div class="eva-nav-pill" id="evaNavPill"><div class="eva-menu-zone" id="evaMenuZone"><button class="eva-profile-trigger eva-top-action${groups.authed && profile.image ? " has-avatar" : ""}" type="button" id="evaMenuBtn" aria-expanded="false" aria-label="Open Evaraos menu">${menuContent}</button></div><button class="eva-top-alert eva-top-action" id="globalNotificationsBell" type="button" aria-expanded="false" aria-label="Open notifications">${iconSvg("bell", "eva-top-action-icon")}<span id="globalNotificationsCount" class="eva-alert-count" hidden>0</span></button></div></header><div class="eva-backdrop" id="evaBackdrop"></div><aside class="eva-menu-panel" id="evaMenuPanel" aria-label="Evaraos menu"><div class="eva-drawer-profile"><div class="eva-drawer-avatar">${avatar}</div><div class="eva-drawer-identity"><strong>${clean(profile.name)}</strong><span>${clean(role)} · Adaptive Glass</span></div><div class="eva-drawer-actions"><button type="button" id="evaMenuThemeBtn" data-theme-toggle="true" aria-label="Change appearance" title="Change appearance">${iconSvg("appearance")}</button><button type="button" id="evaMenuCloseBtn" aria-label="Close menu">${iconSvg("close")}</button></div></div><nav class="eva-menu-apps" id="evaLinks" data-nav-role="${clean(role)}">${accountGroup(groups.authed)}${groups.authed ? appSections(groups.role) : ""}</nav>${aiGroup(groups.authed)}</aside></div>`;
 
+  window.dispatchEvent(new CustomEvent("evara:nav-rendered", {
+    detail: { build: NAV_RENDER_BUILD, role, at: Date.now() }
+  }));
   requestAnimationFrame(() => window.EvaraTheme?.refreshAdaptiveGlass?.());
   return true;
 }

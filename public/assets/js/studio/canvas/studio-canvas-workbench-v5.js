@@ -20,6 +20,7 @@ import {
 
 const WORKBENCH_VERSION = 'studio-canvas-workbench-v5';
 const LOCAL_PREFIX = 'evaraos-studio-workbench-v5:';
+const GLOBAL_SCOPE_ID = 'evaraos-platform';
 const MAX_ASSETS = 120;
 const MAX_COMPONENTS = 80;
 const MAX_VERSIONS = 30;
@@ -37,6 +38,7 @@ const STYLE_FIELDS = new Set([
 
 const state = {
   mounted: false,
+  booting: false,
   open: false,
   tab: 'inspector',
   busy: false,
@@ -78,13 +80,35 @@ function profile() {
   return getSavedUserProfile?.() || {};
 }
 
+function role() {
+  return normalizeRole?.(
+    profile().role
+      || window.EvaraRouteSession?.role
+      || document.documentElement.dataset.evaraosAccessRole
+      || getSavedUserRole?.()
+      || ''
+  ) || '';
+}
+
+function isPlatformEditor() {
+  const current = role();
+  return current === 'owner' || (current === 'admin' && profile().platformAccess === true);
+}
+
 function companyId() {
-  return text(profile().companyId || window.__EVARA_COMPANY_ID__ || '', 160);
+  const assigned = text(profile().companyId || window.__EVARA_COMPANY_ID__ || '', 160);
+  if (assigned) return assigned;
+  return isPlatformEditor() ? GLOBAL_SCOPE_ID : '';
+}
+
+function configDocument(id = companyId()) {
+  return id === GLOBAL_SCOPE_ID
+    ? doc(db, 'public_app_config', 'global')
+    : doc(db, 'companies', id);
 }
 
 function authorizedSessionReady() {
-  const role = normalizeRole?.(profile().role || getSavedUserRole?.() || '') || '';
-  return Boolean(auth.currentUser && companyId() && EDITOR_ROLES.has(role));
+  return Boolean(auth.currentUser && companyId() && EDITOR_ROLES.has(role()));
 }
 
 function sandbox() {
@@ -185,9 +209,9 @@ async function readRemoteWorkbench() {
   const id = companyId();
   const graphId = snapshot()?.graphId || '';
   if (!id || !graphId || !auth.currentUser) return null;
-  const company = await getDoc(doc(db, 'companies', id));
-  if (!company.exists()) return null;
-  const appBuilder = company.data()?.appBuilder || {};
+  const config = await getDoc(configDocument(id));
+  if (!config.exists()) return null;
+  const appBuilder = config.data()?.appBuilder || {};
   const shared = appBuilder.studioWorkbench && typeof appBuilder.studioWorkbench === 'object'
     ? appBuilder.studioWorkbench
     : null;
@@ -208,8 +232,8 @@ async function readRemoteWorkbench() {
 async function persistRemoteMeta() {
   const id = companyId();
   const graphId = snapshot()?.graphId || '';
-  if (!id || !graphId || !auth.currentUser) throw new Error('An authenticated company Graph workspace is required.');
-  const companyRef = doc(db, 'companies', id);
+  if (!id || !graphId || !auth.currentUser) throw new Error('An authenticated Graph workspace is required.');
+  const companyRef = configDocument(id);
   const updatedAtMs = Date.now();
   const shared = {
     version: 5,
@@ -850,7 +874,7 @@ async function saveReusable() {
 async function uploadAsset(file) {
   if (!file) return;
   const id = companyId();
-  if (!id || !auth.currentUser) throw new Error('An authenticated company workspace is required for uploads.');
+  if (!id || !auth.currentUser) throw new Error('An authenticated Studio workspace is required for uploads.');
   if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) throw new Error('Only image and video files are supported.');
   const maxBytes = file.type.startsWith('video/') ? 80 * 1024 * 1024 : 16 * 1024 * 1024;
   if (file.size > maxBytes) throw new Error(`File exceeds the ${file.type.startsWith('video/') ? '80 MB' : '16 MB'} limit.`);
@@ -1275,6 +1299,7 @@ async function hydrateMeta() {
 async function promoteGraphCanvas() {
   if (!authorizedSessionReady()) return false;
   if (!sandbox()?.open) return false;
+  document.body.dataset.studioGraphStatus = 'opening';
   await sandbox().open();
   const activeSnapshot = snapshot();
   if (activeSnapshot?.source !== 'authored-blueprint-graph' || !activeSnapshot.sourceDocumentId) {
@@ -1286,31 +1311,49 @@ async function promoteGraphCanvas() {
   applyPresentation();
   renderPanel();
   document.body.dataset.studioPrimarySurface = 'graph-canvas';
+  document.body.dataset.studioGraphStatus = 'ready';
   window.dispatchEvent(new CustomEvent('evara:studio-workbench-ready', {
-    detail: { version: WORKBENCH_VERSION, graphId: snapshot()?.graphId || null }
+    detail: {
+      version: WORKBENCH_VERSION,
+      graphId: snapshot()?.graphId || null,
+      scope: companyId() === GLOBAL_SCOPE_ID ? 'global' : 'company'
+    }
   }));
   return true;
 }
 
 async function boot() {
-  if (state.mounted) return;
-  if (!authorizedSessionReady()) return;
-  state.mounted = true;
-  bindEvents();
-  state.observer = new MutationObserver(() => {
-    injectWorkbenchToggle();
-    applyPresentation();
-  });
-  state.observer.observe(document.body, { childList: true, subtree: true });
-  for (let attempt = 0; attempt < 40; attempt += 1) {
-    try {
-      if (await promoteGraphCanvas()) return;
-    } catch (error) {
-      setStatus(error?.message || 'Graph Canvas could not initialize.', 'error');
+  if (state.mounted || state.booting) return;
+  state.booting = true;
+  try {
+    for (let attempt = 0; attempt < 40 && !authorizedSessionReady(); attempt += 1) {
+      document.body.dataset.studioGraphStatus = 'waiting-for-session';
+      await new Promise((resolve) => setTimeout(resolve, 250));
     }
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    if (!authorizedSessionReady()) {
+      document.body.dataset.studioGraphStatus = 'authorization-required';
+      return;
+    }
+    state.mounted = true;
+    bindEvents();
+    state.observer = new MutationObserver(() => {
+      injectWorkbenchToggle();
+      applyPresentation();
+    });
+    state.observer.observe(document.body, { childList: true, subtree: true });
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      try {
+        if (await promoteGraphCanvas()) return;
+      } catch (error) {
+        setStatus(error?.message || 'Graph Canvas could not initialize.', 'error');
+        document.body.dataset.studioGraphStatus = 'initialization-failed';
+      }
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+    state.mounted = false;
+  } finally {
+    state.booting = false;
   }
-  state.mounted = false;
 }
 
 window.EvaraStudioWorkbench = Object.freeze({

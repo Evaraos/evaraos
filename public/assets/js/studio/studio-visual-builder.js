@@ -1,8 +1,11 @@
-import { getSavedUserProfile, getSavedUserRole, normalizeRole } from '../firebase.js';
+import { auth, getSavedUserProfile, getSavedUserRole, normalizeRole } from '../firebase.js';
+import { getApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
 import { STUDIO_COMPONENTS } from './component-registry.js';
 
 const OWNER_ROLES = new Set(['owner', 'super_admin', 'admin']);
 const STUDIO_BUILD = 'studio-owner-builder-v6';
+const GLOBAL_SCOPE_ID = 'evaraos-platform';
 const STORAGE_KEY = 'evaraos-studio-visual-builder-v1';
 const LIVE_KEY = 'evaraos-studio-visual-builder-live-v1';
 const HISTORY_LIMIT = 40;
@@ -22,8 +25,9 @@ const PAGE_LIBRARY = [
 
 const DEFAULT_ASSETS = [
   { id: 'evara-app-icon', name: 'EvaraOS App Icon', url: '/assets/brand/evaraos-app-icon.png' },
-  { id: 'evara-brand-mark', name: 'EvaraOS Brand Mark', url: '/assets/brand/evaraos-app-icon.png' }
+  { id: 'evara-brand-mark', name: 'EvaraOS Brand Mark', url: '/assets/brand/evaraos-mark.png' }
 ];
+let assetStorage = null;
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, Number(value) || min));
 const text = (value, max = 500) => String(value ?? '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').slice(0, max);
@@ -36,7 +40,10 @@ function safeAssetUrl(value) {
   if (candidate.startsWith('/')) return candidate;
   try {
     const url = new URL(candidate, location.origin);
-    return url.origin === location.origin && ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+    const trustedHost = url.origin === location.origin
+      || url.hostname === 'firebasestorage.googleapis.com'
+      || url.hostname === 'storage.googleapis.com';
+    return trustedHost && url.protocol === 'https:' ? url.href : '';
   } catch {
     return '';
   }
@@ -154,11 +161,17 @@ function normalizeState(raw) {
         : fallback.pages.find((page) => page.id === definition.id).nodes
     };
   });
-  const assets = Array.isArray(raw?.assets) ? raw.assets.slice(0, 100).map((asset) => ({
-    id: text(asset?.id, 100) || uid('asset'),
-    name: text(asset?.name, 160) || 'Asset',
-    url: safeAssetUrl(asset?.url)
-  })).filter((asset) => asset.url) : DEFAULT_ASSETS;
+  const assets = Array.isArray(raw?.assets) ? raw.assets.slice(0, 100).map((asset) => {
+    const id = text(asset?.id, 100) || uid('asset');
+    const savedUrl = id === 'evara-brand-mark' && String(asset?.url || '').includes('evaraos-app-icon')
+      ? '/assets/brand/evaraos-mark.png'
+      : asset?.url;
+    return {
+      id,
+      name: text(asset?.name, 160) || 'Asset',
+      url: safeAssetUrl(savedUrl)
+    };
+  }).filter((asset) => asset.url) : DEFAULT_ASSETS;
   return {
     ...fallback,
     activePageId: PAGE_LIBRARY.some((page) => page.id === raw?.activePageId) ? raw.activePageId : fallback.activePageId,
@@ -181,6 +194,13 @@ function readState() {
 function currentRole() {
   const profile = getSavedUserProfile?.() || {};
   return normalizeRole?.(profile.role || getSavedUserRole?.() || '') || '';
+}
+
+function studioScopeId() {
+  const profile = getSavedUserProfile?.() || {};
+  const assigned = String(profile.companyId || '').trim();
+  if (assigned) return assigned;
+  return currentRole() === 'owner' ? GLOBAL_SCOPE_ID : '';
 }
 
 function isAllowed() { return OWNER_ROLES.has(currentRole()); }
@@ -396,8 +416,76 @@ function renderPagesSheet(sheet) {
   sheet.append(list);
 }
 
+function setAssetStatus(message, tone = '') {
+  const node = document.querySelector('[data-studio-asset-status]');
+  if (!node) return;
+  node.textContent = text(message, 240);
+  node.dataset.tone = tone;
+}
+
+async function uploadStudioAsset(file) {
+  if (!file || !file.type.startsWith('image/')) {
+    setAssetStatus('Choose a PNG, JPG, WebP, or GIF image.', 'error');
+    return;
+  }
+  if (file.size > 15 * 1024 * 1024) {
+    setAssetStatus('Keep Studio images under 15 MB.', 'error');
+    return;
+  }
+  const companyId = studioScopeId();
+  const uploadedBy = auth.currentUser?.uid || getSavedUserProfile?.()?.uid || '';
+  if (!companyId || !uploadedBy) {
+    setAssetStatus('A verified owner workspace is required before uploading.', 'error');
+    return;
+  }
+
+  setAssetStatus(`Uploading ${file.name}…`);
+  try {
+    assetStorage ||= getStorage(getApp());
+    const safeName = file.name.replace(/[^a-z0-9._-]/gi, '-').slice(-120) || 'studio-image';
+    const fileRef = ref(assetStorage, `companies/${companyId}/studio/media/${Date.now()}-${safeName}`);
+    await uploadBytes(fileRef, file, {
+      contentType: file.type,
+      customMetadata: {
+        companyId,
+        uploadedBy,
+        studioVersion: 'studio-canvas-workbench-v5'
+      }
+    });
+    const url = await getDownloadURL(fileRef);
+    mutate(() => {
+      state.assets.unshift({
+        id: uid('asset'),
+        name: text(file.name.replace(/\.[^.]+$/, ''), 160) || 'Uploaded image',
+        url
+      });
+      state.activeSheet = 'assets';
+    });
+    requestAnimationFrame(() => setAssetStatus('Upload complete. Select the image to use it.', 'success'));
+  } catch (error) {
+    console.error('Studio asset upload failed:', error);
+    setAssetStatus(error?.message || 'The image could not be uploaded.', 'error');
+  }
+}
+
 function renderAssetsSheet(sheet) {
-  sheet.append(sheetHeader('Assets', 'Select an image to apply it to the chosen image block.'));
+  sheet.append(sheetHeader('Assets', 'Upload an image, then apply it to the selected image block.'));
+  const upload = el('label', { className: 'studio-asset-upload-button' }, [
+    el('input', {
+      type: 'file',
+      attrs: { accept: 'image/png,image/jpeg,image/webp,image/gif' },
+      dataset: { studioAssetUpload: 'true' }
+    }),
+    el('span', {}, [
+      el('strong', { text: 'Upload image' }),
+      el('small', { text: 'PNG, JPG, WebP, or GIF up to 15 MB' })
+    ])
+  ]);
+  sheet.append(upload, el('p', {
+    className: 'studio-asset-status',
+    text: 'Uploads are saved to the active workspace.',
+    dataset: { studioAssetStatus: 'true' }
+  }));
   const list = el('div', { className: 'studio-asset-list' });
   state.assets.forEach((asset) => {
     const thumb = el('span', { className: 'studio-asset-thumb' });
@@ -651,6 +739,12 @@ function bindEvents() {
   });
 
   document.addEventListener('change', (event) => {
+    if (event.target.matches('[data-studio-asset-upload]')) {
+      const input = event.target;
+      uploadStudioAsset(input.files?.[0]);
+      input.value = '';
+      return;
+    }
     if (event.target.matches('[data-page-picker]')) { state.activePageId = event.target.value; state.selectedNodeId = null; persist(); renderApp(); return; }
     if (event.target.matches('[data-preview-role]')) { state.previewRole = ROLES.includes(event.target.value) ? event.target.value : 'owner'; persist(); renderApp(); return; }
     if (event.target.matches('[data-role-visibility]')) {
@@ -692,6 +786,12 @@ function bindEvents() {
   });
 
   window.addEventListener('resize', positionToolbar);
+  window.addEventListener('evara:menu-open', () => {
+    if (!state.activeSheet) return;
+    state.activeSheet = null;
+    persist();
+    renderApp();
+  });
   document.addEventListener('scroll', positionToolbar, true);
 }
 

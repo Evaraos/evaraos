@@ -127,6 +127,15 @@ export const PAGE_POLICY = Object.freeze({
   'onboarding.html': ALL_AUTHENTICATED
 });
 
+const PATH_POLICY = Object.freeze({
+  '/settings/account.html': ALL_AUTHENTICATED,
+  '/settings/appearance.html': ALL_AUTHENTICATED,
+  '/settings/icons.html': ALL_AUTHENTICATED,
+  '/settings/notifications.html': ALL_AUTHENTICATED,
+  '/settings/workspace.html': ALL_AUTHENTICATED,
+  '/settings/workspace-v2.html': ALL_AUTHENTICATED
+});
+
 export const FEATURE_POLICY = Object.freeze({
   studioView: ['platform_admin', 'owner', 'admin'],
   studioEdit: ['platform_admin', 'owner', 'admin'],
@@ -192,7 +201,14 @@ export function canUseFeature(feature = '', role = 'customer') {
 }
 
 export function canAccessPageName(pageName = '', role = 'customer') {
-  const page = String(pageName || '').split('?')[0].split('#')[0].split('/').pop() || 'index.html';
+  const resource = String(pageName || '').trim().split('?')[0].split('#')[0];
+  const isAbsoluteUrl = /^[a-z][a-z0-9+.-]*:/i.test(resource);
+  const path = isAbsoluteUrl
+    ? ''
+    : `/${resource.replace(/^\.?\//, '').replace(/^\/+/, '')}`;
+  const pathAllowed = PATH_POLICY[path];
+  if (Array.isArray(pathAllowed)) return pathAllowed.includes(normalizeAccessRole(role));
+  const page = resource.split('/').pop() || 'index.html';
   if (PUBLIC_PAGES.has(page)) return true;
   const allowed = PAGE_POLICY[page];
   if (!Array.isArray(allowed)) return false;
@@ -212,7 +228,7 @@ export function permissionsForRole(role = 'customer') {
 
 export function pagesForRole(role = 'customer') {
   const normalized = normalizeAccessRole(role);
-  return Object.entries(PAGE_POLICY)
+  return [...Object.entries(PAGE_POLICY), ...Object.entries(PATH_POLICY)]
     .filter(([, allowed]) => allowed.includes(normalized))
     .map(([page]) => page);
 }

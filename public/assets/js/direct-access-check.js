@@ -11,7 +11,7 @@ function currentRole() {
 }
 
 function currentPage() {
-  return (location.pathname.split('/').pop() || 'index.html');
+  return location.pathname || '/index.html';
 }
 
 export function checkDirectPageAccess() {

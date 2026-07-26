@@ -26,6 +26,19 @@
   function routeRequiresSession(){const mode=routeMode();return mode==="private"||mode==="auth"}
   function navRequired(){return Boolean(document.getElementById("universalNavRoot"))}
   function markHtml(){return '<img class="evara-loader-mark" src="'+BRAND_MARK_SRC+'" fetchpriority="high" decoding="async" alt="" aria-hidden="true">'}
+  function cachedBuilderConfig(){
+    try{return JSON.parse(localStorage.getItem('evaraos-app-builder-v1:evaraos-platform')||'null')||{}}
+    catch{return{}}
+  }
+  function runtimeBrand(){
+    const config=window.EvaraAppBuilder?.getConfig?.()||cachedBuilderConfig();
+    return{
+      mark:String(config.brand?.markUrl||BRAND_MARK_SRC),
+      icon:String(config.brand?.appIconUrl||APP_ICON_SRC),
+      launchLogo:String(config.loaders?.launch?.logoUrl||config.brand?.markUrl||BRAND_MARK_SRC),
+      compactLogo:String(config.loaders?.compact?.logoUrl||config.brand?.markUrl||BRAND_MARK_SRC)
+    }
+  }
   function transition(){return document.getElementById(TRANSITION_ID)}
   function authPending(){return document.documentElement.classList.contains('auth-pending')||document.body?.classList.contains('auth-pending')}
   function appPending(){return !bootResolved||authPending()||document.documentElement.classList.contains('boot-pending')||document.body?.classList.contains('app-loading')||isTransitioning}
@@ -68,18 +81,21 @@
   }
 
   function applyBrand(){
-    document.documentElement.style.setProperty('--evaraos-brand-icon','url("'+BRAND_MARK_SRC+'")');
+    const brand=runtimeBrand();
+    document.documentElement.style.setProperty('--evaraos-brand-icon','url("'+brand.mark+'")');
     document.querySelectorAll('[data-evaraos-brand-icon]').forEach(node=>{
-      node.style.setProperty('--evaraos-brand-icon','url("'+BRAND_MARK_SRC+'")');
-      node.style.backgroundImage='url("'+BRAND_MARK_SRC+'")';
+      node.style.setProperty('--evaraos-brand-icon','url("'+brand.mark+'")');
+      node.style.backgroundImage='url("'+brand.mark+'")';
       node.style.backgroundSize='contain';
       node.style.backgroundPosition='center';
       node.style.backgroundRepeat='no-repeat';
     });
-    document.querySelectorAll('.evara-loader-mark').forEach(img=>img.src=BRAND_MARK_SRC);
-    ensureIconLink('icon',APP_ICON_SRC);
-    ensureIconLink('shortcut icon',APP_ICON_SRC);
-    ensureIconLink('apple-touch-icon',APP_ICON_SRC);
+    document.querySelectorAll('#evaraWelcomeLoader .evara-loader-mark').forEach(img=>img.src=brand.launchLogo);
+    document.querySelectorAll('#evaraFastLoader .evara-loader-mark').forEach(img=>img.src=brand.compactLogo);
+    ensureIconLink('icon',brand.icon);
+    ensureIconLink('shortcut icon',brand.icon);
+    ensureIconLink('apple-touch-icon',brand.icon);
+    if(window.EvaraBrand){window.EvaraBrand.mark=brand.mark;window.EvaraBrand.appIcon=brand.icon}
   }
 
   function markInternalNavigation(){
@@ -264,6 +280,7 @@
   }
 
   function health(){
+    const brand=runtimeBrand();
     return{
       path:location.pathname,
       routeMode:routeMode(),
@@ -280,8 +297,8 @@
       duplicateLoaders:document.querySelectorAll('#evaraFastLoader,#evaraWelcomeLoader,#evaraGlobalLoader').length,
       welcomeVisible:document.getElementById(WELCOME_ID)?.classList.contains('active')===true,
       compactVisible:document.getElementById(FAST_ID)?.classList.contains('active')===true,
-      brandMark:BRAND_MARK_SRC,
-      appIcon:APP_ICON_SRC
+      brandMark:brand.mark,
+      appIcon:brand.icon
     };
   }
 
@@ -324,7 +341,8 @@
     const mode=resolveLaunchMode();
     if(preRenderedWelcome||mode==='launch')showWelcomeLoader();
     else if(document.body?.classList.contains('app-loading'))showFastLoader();
-    window.EvaraBrand={mark:BRAND_MARK_SRC,appIcon:APP_ICON_SRC,apply:applyBrand,hydrate:async()=>applyBrand()};
+    const brand=runtimeBrand();
+    window.EvaraBrand={mark:brand.mark,appIcon:brand.icon,apply:applyBrand,hydrate:async()=>applyBrand()};
     window.EvaraLoader={
       beginNavigationLoad,
       completeNavigationLoad,

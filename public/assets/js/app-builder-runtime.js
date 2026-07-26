@@ -1,5 +1,6 @@
 const CACHE_PREFIX = 'evaraos-app-builder-v1:';
 const DRAFT_KEY = 'evaraos-owner-page-drafts-v4';
+const GLOBAL_SCOPE_ID = 'evaraos-platform';
 const DEFAULT_MARK = '/assets/brand/evaraos-mark.png?v=brand-png-3';
 const DEFAULT_ICON = '/assets/brand/evaraos-app-icon.png?v=brand-png-1';
 
@@ -23,12 +24,33 @@ function companyId() {
   return String(storedProfile().companyId || '').trim();
 }
 
+function scopeIds() {
+  return [...new Set([GLOBAL_SCOPE_ID, companyId()].filter(Boolean))];
+}
+
+function configDocument(db, doc, id) {
+  return id === GLOBAL_SCOPE_ID
+    ? doc(db, 'public_app_config', 'global')
+    : doc(db, 'companies', id);
+}
+
 function pageKey() {
   return location.pathname.replace(/\W+/g, '-').replace(/^-|-$/g, '') || 'home';
 }
 
 function safeJson(value, fallback = null) {
   try { return JSON.parse(value); } catch { return fallback; }
+}
+
+function mergeConfig(base = {}, next = {}) {
+  if (!next || typeof next !== 'object' || Array.isArray(next)) return next ?? base;
+  const output = { ...(base || {}) };
+  Object.entries(next).forEach(([key, value]) => {
+    output[key] = value && typeof value === 'object' && !Array.isArray(value)
+      ? mergeConfig(output[key] || {}, value)
+      : value;
+  });
+  return output;
 }
 
 function safeUrl(value, fallback = '') {
@@ -88,7 +110,7 @@ function cacheKey(id = activeCompanyId || companyId()) {
 }
 
 function readCache(id = companyId()) {
-  return normalizeConfig(safeJson(localStorage.getItem(cacheKey(id)) || 'null', {}) || {});
+  return safeJson(localStorage.getItem(cacheKey(id)) || 'null', {}) || {};
 }
 
 function writeCache(config, id = activeCompanyId || companyId()) {
@@ -117,7 +139,7 @@ function applyBrand(config) {
   const brand = config.brand;
   document.documentElement.style.setProperty('--evaraos-brand-icon', `url("${brand.markUrl}")`);
   document.documentElement.style.setProperty('--evaraos-brand-accent', brand.accent);
-  document.documentElement.dataset.evaraBrandName = brand.name;
+  document.documentElement.dataset.evaraBrandNameCurrent = brand.name;
 
   document.querySelectorAll('[data-evara-brand-name]').forEach((node) => setText(node, brand.name));
   document.querySelectorAll('[data-evaraos-brand-icon],[data-evara-brand-mark]').forEach((node) => {
@@ -281,6 +303,12 @@ function scheduleApply(delay = 40) {
   scheduled = setTimeout(() => apply(), delay);
 }
 
+function announceReady(source = 'cache') {
+  window.dispatchEvent(new CustomEvent('evara:app-builder-ready', {
+    detail: { companyId: activeCompanyId, config: activeConfig, source, at: Date.now() }
+  }));
+}
+
 function startObserver() {
   if (observer || !document.body) return;
   observer = new MutationObserver(() => scheduleApply(70));
@@ -288,21 +316,23 @@ function startObserver() {
 }
 
 async function loadCompanyConfig() {
-  const id = companyId();
-  if (!id) return;
-  activeCompanyId = id;
-  const cached = readCache(id);
-  activeConfig = cached;
-  apply(cached);
+  const ids = scopeIds();
+  activeCompanyId = companyId() || GLOBAL_SCOPE_ID;
+  const cached = ids.reduce((config, id) => mergeConfig(config, readCache(id)), {});
+  activeConfig = normalizeConfig(cached);
+  apply(activeConfig);
+  announceReady('cache');
   try {
     const { db, doc, getDoc } = await import('./firebase.js');
-    const snapshot = await getDoc(doc(db, 'companies', id));
-    const remote = snapshot.exists() ? snapshot.data()?.appBuilder : null;
-    if (remote && typeof remote === 'object') {
-      activeConfig = normalizeConfig(remote);
-      writeCache(activeConfig, id);
-      apply(activeConfig);
-    }
+    const snapshots = await Promise.all(ids.map(async (id) => {
+      const snapshot = await getDoc(configDocument(db, doc, id));
+      const remote = snapshot.exists() ? snapshot.data()?.appBuilder : null;
+      if (remote && typeof remote === 'object') writeCache(remote, id);
+      return remote && typeof remote === 'object' ? remote : {};
+    }));
+    activeConfig = normalizeConfig(snapshots.reduce((config, item) => mergeConfig(config, item), {}));
+    apply(activeConfig);
+    announceReady('remote');
   } catch (error) {
     console.warn('App Builder settings could not be refreshed:', error);
   }
@@ -323,11 +353,11 @@ function handleRuntimeVisibility() {
 }
 
 function applyCachedAtBoot() {
-  const id = companyId();
-  if (!id) return;
-  activeCompanyId = id;
-  activeConfig = readCache(id);
+  const ids = scopeIds();
+  activeCompanyId = companyId() || GLOBAL_SCOPE_ID;
+  activeConfig = normalizeConfig(ids.reduce((config, id) => mergeConfig(config, readCache(id)), {}));
   apply(activeConfig);
+  announceReady('boot-cache');
 }
 
 window.addEventListener('evara:app-builder-updated', (event) => {
