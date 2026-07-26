@@ -66,6 +66,20 @@ body.studio-visual-page .studio-top-actions > * {
   flex: 0 0 auto;
 }
 
+/*
+ * The full authority/status cluster is wider than the available action column
+ * on standard desktop displays. Keep every actionable control available while
+ * collapsing duplicate status copy that is also exposed by the Journal,
+ * Graph, and save controls.
+ */
+@media (max-width: 1680px) {
+  body.studio-visual-page .studio-top-actions .studio-document-status,
+  body.studio-visual-page .studio-top-actions .studio-layout-save-status,
+  body.studio-visual-page .studio-top-actions .studio-production-authority-badge {
+    display: none;
+  }
+}
+
 body.studio-visual-page .studio-workspace {
   min-height: 0 !important;
   overflow: hidden !important;

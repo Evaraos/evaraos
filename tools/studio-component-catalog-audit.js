@@ -213,7 +213,7 @@ if (!errors.length) {
   if (!studioPage.includes('/assets/css/pages/studio-document-model.css?v=1')) {
     errors.push('public/website-builder.html: draft journal stylesheet is missing');
   }
-  if (!studioPage.includes('/assets/css/pages/studio-shell-authority.css?v=1')) {
+  if (!studioPage.includes('/assets/css/pages/studio-shell-authority.css?v=2')) {
     errors.push('public/website-builder.html: Studio shell authority stylesheet is missing');
   }
   if (!studioPage.includes('/assets/js/studio/studio-auto-layout.js?v=1')) {
@@ -252,7 +252,9 @@ if (!errors.length) {
     'body.studio-visual-page > #appRoot',
     'transform: none !important',
     'grid-template-rows: 62px minmax(0, 1fr)',
-    '.studio-top-actions > *'
+    '.studio-top-actions > *',
+    '@media (max-width: 1680px)',
+    '.studio-production-authority-badge'
   ]) {
     if (!shellCss.includes(marker)) errors.push(`studio-shell-authority.css: missing ${marker}`);
   }

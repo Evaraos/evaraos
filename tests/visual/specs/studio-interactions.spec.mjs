@@ -56,6 +56,22 @@ async function openCleanStudio(page) {
   expect(shell.rootTransform).toBe('none');
   expect(shell.studioHeight).toBeGreaterThan(600);
   expect(shell.workspaceHeight).toBeGreaterThan(480);
+
+  const obstructedViewportControls = await page.evaluate(() => (
+    [...document.querySelectorAll('.studio-viewport-switcher button')]
+      .filter((button) => button.getClientRects().length)
+      .filter((button) => {
+        const rect = button.getBoundingClientRect();
+        const hit = document.elementFromPoint(
+          rect.left + (rect.width / 2),
+          rect.top + (rect.height / 2)
+        );
+        return hit !== button && !button.contains(hit);
+      })
+      .map((button) => button.getAttribute('aria-label') || button.textContent?.trim())
+  ));
+  expect(obstructedViewportControls, 'Studio viewport controls must not be covered by topbar actions.').toEqual([]);
+
   await page.addStyleTag({
     content: `
       *, *::before, *::after {
