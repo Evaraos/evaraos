@@ -1,4 +1,4 @@
-name: Customer and Brand Recovery
+name: Customer, Role, and Brand Recovery
 
 on:
   pull_request:
@@ -18,11 +18,16 @@ jobs:
           node-version: '20'
       - name: Validate JavaScript syntax
         run: |
+          node --check public/assets/js/access-control.js
+          node --check public/assets/js/roles.js
+          node --check public/assets/js/app.js
           node --check public/assets/js/loader.js
           node --check public/assets/js/route-guard.js
           node --check public/assets/js/customer-portal-v2.js
           node --check public/assets/js/app-icon-preferences.js
           node --check public/assets/js/app-icon-studio-single-source.js
           node --check public/assets/js/app-icon-studio-final-guard.js
+      - name: Audit canonical role engine
+        run: node tools/role-engine-audit.mjs
       - name: Audit customer and brand recovery
         run: node tools/customer-brand-recovery-audit.js
