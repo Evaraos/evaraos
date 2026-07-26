@@ -27,6 +27,7 @@ service cloud.firestore {
     function own(userId) { return signedIn() && request.auth.uid == userId; }
     function sameCompany(value) { return active() && hasCompany(company()) && hasCompany(value) && company() == value; }
     function scoped(value) { return platform() || sameCompany(value); }
+    function companyAppBuilderAdmin(id) { return active() && role() == 'admin' && sameCompany(id); }
     function targetCompany(userId) { return exists(/databases/$(database)/documents/users/$(userId)) ? get(/databases/$(database)/documents/users/$(userId)).data.companyId : null; }
     function assigned(data) {
       return active() && (
@@ -106,9 +107,17 @@ service cloud.firestore {
       match /pushTokens/{tokenId} { allow read, write: if false; }
     }
 
+    match /public_app_config/{id} {
+      allow read: if id == 'global';
+      allow create, update, delete: if id == 'global' && platform();
+    }
+
     match /companies/{id} {
       allow read: if scoped(id);
-      allow create, update, delete: if platform();
+      allow create, delete: if platform();
+      allow update: if platform()
+        || (companyAppBuilderAdmin(id)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['appBuilder','appBuilderUpdatedAt']));
     }
 
     match /dashboard_stats/{id} { allow read: if platform(); allow write: if false; }
