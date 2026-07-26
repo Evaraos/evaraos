@@ -198,7 +198,7 @@ jobs:
         if: inputs.release_scope == 'functions' || inputs.release_scope == 'backend' || inputs.release_scope == 'all'
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
-        run: firebase functions:list --project evaraos --json >/dev/null
+        run: firebase functions:list --project evaraos-web --json >/dev/null
 
       - name: Verify required Firebase Functions secrets
         if: inputs.release_scope == 'functions' || inputs.release_scope == 'backend' || inputs.release_scope == 'all'
@@ -207,9 +207,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          firebase functions:secrets:access STRIPE_SECRET_KEY --project evaraos >/dev/null
-          firebase functions:secrets:access STRIPE_WEBHOOK_SECRET --project evaraos >/dev/null
-          firebase functions:secrets:access OPENAI_API_KEY --project evaraos >/dev/null
+          firebase functions:secrets:access STRIPE_SECRET_KEY --project evaraos-web >/dev/null
+          firebase functions:secrets:access STRIPE_WEBHOOK_SECRET --project evaraos-web >/dev/null
+          firebase functions:secrets:access OPENAI_API_KEY --project evaraos-web >/dev/null
 
       - name: Verify production wiring
         shell: bash
@@ -270,37 +270,37 @@ jobs:
         if: inputs.release_scope == 'hosting'
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
-        run: firebase deploy --only hosting:production --project evaraos --non-interactive
+        run: firebase deploy --only hosting:production --project evaraos-web --non-interactive
 
       - name: Deploy Firebase Functions
         if: inputs.release_scope == 'functions'
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
-        run: firebase deploy --only functions --project evaraos --non-interactive
+        run: firebase deploy --only functions --project evaraos-web --non-interactive
 
       - name: Deploy Firestore rules and indexes
         if: inputs.release_scope == 'firestore'
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
-        run: firebase deploy --only firestore:rules,firestore:indexes --project evaraos --non-interactive
+        run: firebase deploy --only firestore:rules,firestore:indexes --project evaraos-web --non-interactive
 
       - name: Deploy Storage rules
         if: inputs.release_scope == 'storage'
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
-        run: firebase deploy --only storage --project evaraos --non-interactive
+        run: firebase deploy --only storage --project evaraos-web --non-interactive
 
       - name: Deploy backend
         if: inputs.release_scope == 'backend'
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
-        run: firebase deploy --only functions,firestore:rules,firestore:indexes,storage --project evaraos --non-interactive
+        run: firebase deploy --only functions,firestore:rules,firestore:indexes,storage --project evaraos-web --non-interactive
 
       - name: Deploy complete production release
         if: inputs.release_scope == 'all'
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
-        run: firebase deploy --only functions,firestore:rules,firestore:indexes,storage,hosting:production --project evaraos --non-interactive
+        run: firebase deploy --only functions,firestore:rules,firestore:indexes,storage,hosting:production --project evaraos-web --non-interactive
 
       - name: Verify trusted Studio callable inventory
         if: inputs.release_scope == 'functions' || inputs.release_scope == 'backend' || inputs.release_scope == 'all'
@@ -324,15 +324,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git fetch origin evaraos
-          git checkout -B firebase-release-proof origin/evaraos
+          git fetch origin evaraos-web
+          git checkout -B firebase-release-proof origin/evaraos-web
           mkdir -p docs/deployments
           node <<'NODE'
           const fs = require('fs');
           const proof = {
             schemaVersion: 'evara.firebase-production-release.v1',
             status: 'confirmed',
-            projectId: 'evaraos',
+            projectId: 'evaraos-web',
             scope: process.env.RELEASE_SCOPE,
             validatedCommit: process.env.VALIDATED_SHA,
             sourceProofCommit: process.env.SOURCE_PROOF_SHA,
@@ -353,7 +353,7 @@ jobs:
           git add docs/deployments/firebase-production-release.json
           if ! git diff --cached --quiet; then
             git commit -m "ops: confirm Firebase production release [skip ci]"
-            git push origin HEAD:evaraos
+            git push origin HEAD:evaraos-web
           fi
 
       - name: Update activation tracker
