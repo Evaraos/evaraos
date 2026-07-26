@@ -1,6 +1,6 @@
 import './nav/nav-main-v7.js?v=nav-v61-role-authority';
 import './app-builder-runtime-v2.js?v=2';
-import './studio/studio-published-graph-runtime-v1.js?v=1';
+import "./studio/studio-published-graph-runtime-v1.js?v=1";
 
 const NAV_ENTRY_BUILD = 'nav-v61-role-authority';
 const guardMode = document.body?.dataset?.routeGuard || '';
