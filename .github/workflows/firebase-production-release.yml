@@ -324,8 +324,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git fetch origin evaraos-web
-          git checkout -B firebase-release-proof origin/evaraos-web
+          git fetch origin evaraos
+          git checkout -B firebase-release-proof origin/evaraos
           mkdir -p docs/deployments
           node <<'NODE'
           const fs = require('fs');
