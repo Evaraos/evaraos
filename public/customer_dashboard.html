@@ -95,10 +95,37 @@
     </div>
   </div>
 
-  <script src="/assets/js/loader.js?v=37"></script>
-  <script type="module" src="/assets/js/firebase.js?v=36"></script>
-  <script type="module" src="/assets/js/route-guard.js?v=35"></script>
-  <script type="module" src="/assets/js/customer-portal-v2.js?v=1"></script>
+  <script>
+    (() => {
+      const timeout = window.setTimeout(() => {
+        if (document.body?.classList.contains("app-ready")) return;
+        document.documentElement.classList.remove("auth-pending", "boot-pending");
+        document.body?.classList.remove("auth-pending", "app-loading");
+        document.body?.classList.add("app-ready");
+        const timeline = document.getElementById("customerServiceTimeline");
+        if (!timeline) return;
+        const card = document.createElement("div");
+        card.className = "customer-empty-state glass-card";
+        const title = document.createElement("h3");
+        title.textContent = "Customer portal needs attention";
+        const copy = document.createElement("p");
+        copy.textContent = "The secure portal did not finish loading. Your account and service history are safe. Reload the page or sign in again.";
+        const retry = document.createElement("button");
+        retry.type = "button";
+        retry.className = "btn btn-theme-primary";
+        retry.textContent = "Reload portal";
+        retry.addEventListener("click", () => window.location.reload(), { once: true });
+        card.append(title, copy, retry);
+        timeline.replaceChildren(card);
+      }, 15000);
+      window.addEventListener("evara:customer-portal-ready", () => window.clearTimeout(timeout), { once: true });
+      window.addEventListener("pagehide", () => window.clearTimeout(timeout), { once: true });
+    })();
+  </script>
+  <script src="/assets/js/loader.js?v=customer-portal-repair-2"></script>
+  <script type="module" src="/assets/js/firebase.js?v=37"></script>
+  <script type="module" src="/assets/js/route-guard.js?v=36"></script>
+  <script type="module" src="/assets/js/customer-portal-v2.js?v=2"></script>
   <script type="module" src="/assets/js/customer-marketplace-ordering.js?v=1"></script>
   <script type="module" src="/assets/js/customer-marketplace-guardrails.js?v=1"></script>
   <script type="module" src="/assets/js/customer-portal-profile-sync.js?v=1"></script>

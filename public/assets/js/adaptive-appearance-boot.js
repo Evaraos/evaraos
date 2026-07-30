@@ -2,9 +2,10 @@
   if (window.__evaraAdaptiveBootFast) return;
   window.__evaraAdaptiveBootFast = true;
 
-  const BOOT_BUILD = "adaptive-fast-v21-single-authority";
+  const BOOT_BUILD = "adaptive-fast-v22-nav-authority";
   const APPEARANCE_KEY = "evaraos-appearance";
   const VALID_MODES = ["light", "dark", "system", "image"];
+  const NAV_FALLBACK_SRC = "/assets/js/nav.js?v=nav-v61-role-authority";
 
   const normalizeSettingsUrl = (url) => {
     try {
@@ -75,6 +76,22 @@
 
   root.classList.remove("evara-boot-lock");
   root.classList.add("evara-theme-painted");
+
+  function ensureUniversalNavigation() {
+    if (!document.getElementById("universalNavRoot")) return;
+    if (document.documentElement.dataset.evaraosNavReady === "true" || document.querySelector("#universalNavRoot .eva-nav-layer")) return;
+    import(NAV_FALLBACK_SRC).catch((error) => console.warn("Universal navigation fallback failed:", error));
+  }
+
+  function scheduleUniversalNavigation() {
+    requestAnimationFrame(ensureUniversalNavigation);
+    setTimeout(ensureUniversalNavigation, 1200);
+    setTimeout(ensureUniversalNavigation, 3200);
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", scheduleUniversalNavigation, { once: true });
+  else scheduleUniversalNavigation();
+  addEventListener("pageshow", scheduleUniversalNavigation);
 
   let finished = false;
   const finish = () => {

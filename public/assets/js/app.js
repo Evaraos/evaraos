@@ -16,35 +16,42 @@ import {
   orderBy,
   limit,
   serverTimestamp
-} from "./firebase.js";
+} from './firebase.js';
+import {
+  canAccessPageName,
+  defaultRouteForRole,
+  normalizeAccessRole
+} from './access-control.js';
 
-const BASE_PATH = "/evaraos";
-
-const ROLE_PERMISSIONS = Object.freeze({
-  owner: ["all"],
-  super_admin: ["all"],
-  admin: ["dashboard", "companies", "users", "applications", "sales_reps", "leads", "jobs", "audit", "org", "performance", "customer_dashboard"],
-  manager: ["dashboard", "users", "applications", "sales_reps", "leads", "jobs", "performance"],
-  operations_coordinator: ["dashboard", "users", "applications", "jobs", "performance"],
-  sales_rep: ["dashboard", "leads", "sales_reps"],
-  technician: ["dashboard", "jobs"],
-  tech: ["dashboard", "jobs"],
-  hr: ["dashboard", "users", "applications"],
-  customer: ["customer_dashboard", "self"],
-  guest: []
+const BASE_PATH = '/evaraos';
+const SECTION_PAGE_MAP = Object.freeze({
+  dashboard: 'dashboard.html',
+  companies: 'companies.html',
+  users: 'users.html',
+  applications: 'applications.html',
+  sales_reps: 'sales_reps.html',
+  leads: 'leads.html',
+  jobs: 'jobs.html',
+  audit: 'audit.html',
+  org: 'org.html',
+  performance: 'performance.html',
+  customer_dashboard: 'customer_dashboard.html',
+  settings: 'settings-v2.html',
+  profile: 'profile.html',
+  security: 'security.html',
+  qa: 'qa.html'
 });
 
-export function getAssetPath(path = "") {
-  if (!path) return "#";
+export function getAssetPath(path = '') {
+  if (!path) return '#';
   if (/^https?:\/\//i.test(path)) return path;
   if (path.startsWith(BASE_PATH)) return path;
-  if (path.startsWith("/")) return `${BASE_PATH}${path}`;
+  if (path.startsWith('/')) return `${BASE_PATH}${path}`;
   return `${BASE_PATH}/${path}`;
 }
 
-export function normalizeRole(role = "") {
-  const value = String(role || "").trim().toLowerCase();
-  return value === "tech" ? "technician" : value || "guest";
+export function normalizeRole(role = '') {
+  return normalizeAccessRole(role) || 'guest';
 }
 
 export function hasPermission(user, section) {
@@ -52,35 +59,38 @@ export function hasPermission(user, section) {
 }
 
 export function canAccess(role, section) {
-  const permissions = ROLE_PERMISSIONS[normalizeRole(role)] || [];
-  return permissions.includes("all") || permissions.includes(section);
+  const normalizedRole = normalizeAccessRole(role);
+  if (!normalizedRole) return false;
+  if (section === 'self') return true;
+  const page = SECTION_PAGE_MAP[String(section || '').trim()] || String(section || '').trim();
+  return Boolean(page) && canAccessPageName(page, normalizedRole);
 }
 
-export function renderSidebar(role, active = "") {
-  const normalizedRole = normalizeRole(role);
+export function renderSidebar(role, active = '') {
+  const normalizedRole = normalizeAccessRole(role);
   const links = [
-    { key: "dashboard", href: "/dashboard.html", label: "Dashboard", roles: ["owner", "super_admin", "admin", "manager", "sales_rep", "technician", "operations_coordinator", "hr"] },
-    { key: "companies", href: "/companies.html", label: "Companies", roles: ["owner", "super_admin", "admin"] },
-    { key: "users", href: "/users.html", label: "Users", roles: ["owner", "super_admin", "admin", "manager", "operations_coordinator", "hr"] },
-    { key: "applications", href: "/applications.html", label: "Applications", roles: ["owner", "super_admin", "admin", "manager", "operations_coordinator", "hr"] },
-    { key: "sales_reps", href: "/sales_reps.html", label: "Sales Reps", roles: ["owner", "super_admin", "admin", "manager"] },
-    { key: "leads", href: "/leads.html", label: "Leads", roles: ["owner", "super_admin", "admin", "manager", "sales_rep"] },
-    { key: "jobs", href: "/jobs.html", label: "Jobs", roles: ["owner", "super_admin", "admin", "manager", "technician", "operations_coordinator"] },
-    { key: "audit", href: "/audit.html", label: "Audit", roles: ["owner", "super_admin", "admin"] },
-    { key: "org", href: "/org.html", label: "Organization", roles: ["owner", "super_admin", "admin"] },
-    { key: "performance", href: "/performance.html", label: "Performance", roles: ["owner", "super_admin", "admin", "manager", "operations_coordinator"] },
-    { key: "customer_dashboard", href: "/customer_dashboard.html", label: "Customer Portal", roles: ["customer", "owner", "super_admin", "admin"] }
+    { key: 'dashboard', href: '/dashboard.html', label: 'Dashboard' },
+    { key: 'companies', href: '/companies.html', label: 'Companies' },
+    { key: 'users', href: '/users.html', label: 'Users' },
+    { key: 'applications', href: '/applications.html', label: 'Applications' },
+    { key: 'sales_reps', href: '/sales_reps.html', label: 'Sales Reps' },
+    { key: 'leads', href: '/leads.html', label: 'Leads' },
+    { key: 'jobs', href: '/jobs.html', label: 'Jobs' },
+    { key: 'audit', href: '/audit.html', label: 'Audit' },
+    { key: 'org', href: '/org.html', label: 'Organization' },
+    { key: 'performance', href: '/performance.html', label: 'Performance' },
+    { key: 'customer_dashboard', href: '/customer_dashboard.html', label: 'Customer Portal' }
   ];
 
   return `
     <div class="sidebar-inner">
-      <a class="sidebar-logo-wrap" href="${getAssetPath("index.html")}">
-        <img src="${getAssetPath("assets/img/evaraos_logo.png")}" alt="Evaraos Logo" class="sidebar-logo" />
+      <a class="sidebar-logo-wrap" href="${getAssetPath('index.html')}">
+        <img src="${getAssetPath('assets/img/evaraos_logo.png')}" alt="Evaraos Logo" class="sidebar-logo" />
       </a>
       <nav class="sidebar-nav">
-        ${links.filter((link) => link.roles.includes(normalizedRole)).map((link) => `
-          <a href="${link.href}" class="sidebar-link ${active === link.key ? "active" : ""}">${link.label}</a>
-        `).join("")}
+        ${links.filter((link) => normalizedRole && canAccessPageName(link.href, normalizedRole)).map((link) => `
+          <a href="${link.href}" class="sidebar-link ${active === link.key ? 'active' : ''}">${link.label}</a>
+        `).join('')}
       </nav>
     </div>`;
 }
@@ -88,10 +98,10 @@ export function renderSidebar(role, active = "") {
 export async function loadCompany(companyId) {
   if (!companyId) return null;
   try {
-    const snap = await getDoc(doc(db, "companies", companyId));
+    const snap = await getDoc(doc(db, 'companies', companyId));
     return snap.exists() ? { id: snap.id, ...snap.data() } : { id: companyId, name: companyId };
   } catch (error) {
-    console.error("Failed to load company:", error);
+    console.error('Failed to load company:', error);
     return { id: companyId, name: companyId };
   }
 }
@@ -99,33 +109,36 @@ export async function loadCompany(companyId) {
 export async function hydrateCurrentUser(firebaseUser) {
   if (!firebaseUser) return null;
   try {
-    const snap = await getDoc(doc(db, "users", firebaseUser.uid));
+    const snap = await getDoc(doc(db, 'users', firebaseUser.uid));
     if (!snap.exists()) {
       return {
         id: firebaseUser.uid,
         uid: firebaseUser.uid,
-        email: firebaseUser.email || "",
-        role: "customer",
-        approvalStatus: "pending",
+        email: firebaseUser.email || '',
+        role: 'customer',
+        approvalStatus: 'pending',
         active: true
       };
     }
 
+    const normalizedRole = normalizeAccessRole(snap.data()?.role);
+    if (!normalizedRole) throw new Error(`Unsupported account role: ${String(snap.data()?.role || 'missing')}`);
+
     return {
       id: firebaseUser.uid,
       uid: firebaseUser.uid,
-      email: firebaseUser.email || "",
+      email: firebaseUser.email || '',
       ...snap.data(),
-      role: normalizeRole(snap.data()?.role)
+      role: normalizedRole
     };
   } catch (error) {
-    console.error("Failed to hydrate current user:", error);
+    console.error('Failed to hydrate current user:', error);
     return null;
   }
 }
 
 export function requireAuth(callback, options = {}) {
-  const { allowRoles = null, redirectTo = "/login.html" } = options;
+  const { allowRoles = null, redirectTo = '/login.html' } = options;
 
   return onAuthStateChanged(auth, async (firebaseUser) => {
     if (!firebaseUser) {
@@ -134,12 +147,16 @@ export function requireAuth(callback, options = {}) {
     }
 
     const user = await hydrateCurrentUser(firebaseUser);
-    if (!user) return;
+    if (!user) {
+      window.location.href = redirectTo;
+      return;
+    }
 
+    const userRole = normalizeAccessRole(user.role);
     if (Array.isArray(allowRoles) && allowRoles.length) {
-      const allowed = allowRoles.map(normalizeRole);
-      if (!allowed.includes(normalizeRole(user.role))) {
-        window.location.href = normalizeRole(user.role) === "customer" ? "/customer_dashboard.html" : "/dashboard.html";
+      const allowed = allowRoles.map(normalizeAccessRole).filter(Boolean);
+      if (!allowed.includes(userRole)) {
+        window.location.href = defaultRouteForRole(userRole);
         return;
       }
     }
@@ -150,11 +167,11 @@ export function requireAuth(callback, options = {}) {
 
 export async function logoutUser() {
   await signOut(auth);
-  window.location.href = "/index.html";
+  window.location.href = '/index.html';
 }
 
-export async function bindTopbar(user, title = "Dashboard") {
-  const topbar = document.getElementById("topbar");
+export async function bindTopbar(user, title = 'Dashboard') {
+  const topbar = document.getElementById('topbar');
   if (!topbar) return;
 
   topbar.innerHTML = `
@@ -169,23 +186,23 @@ export async function bindTopbar(user, title = "Dashboard") {
       <div class="topbar-right">
         <button type="button" class="theme-btn" data-theme-toggle data-theme-label="true"><span data-theme-text>Appearance</span></button>
         <div class="user-pill">
-          <span>${user?.name || user?.username || user?.email || "User"}</span>
-          <span class="user-role">${normalizeRole(user?.role || "guest")}</span>
+          <span>${user?.name || user?.username || user?.email || 'User'}</span>
+          <span class="user-role">${normalizeRole(user?.role || 'guest')}</span>
         </div>
         <button id="logoutBtn" class="btn btn-outline" type="button">Logout</button>
       </div>
     </div>`;
 
   window.EvaraTheme?.updateThemeControls?.();
-  document.getElementById("logoutBtn")?.addEventListener("click", logoutUser);
+  document.getElementById('logoutBtn')?.addEventListener('click', logoutUser);
 }
 
 export async function fetchAllCollection(collectionName, options = {}) {
-  const { filters = [], orderByField = "", orderDirection = "asc", max = 500 } = options;
+  const { filters = [], orderByField = '', orderDirection = 'asc', max = 500 } = options;
   try {
     const constraints = [];
     for (const filter of filters) {
-      if (filter?.field) constraints.push(where(filter.field, filter.op || "==", filter.value));
+      if (filter?.field) constraints.push(where(filter.field, filter.op || '==', filter.value));
     }
     if (orderByField) constraints.push(orderBy(orderByField, orderDirection));
     if (max) constraints.push(limit(max));
@@ -201,8 +218,8 @@ export async function fetchAllCollection(collectionName, options = {}) {
 
 export function fetchUsersByCompany(companyId) {
   if (!companyId) return Promise.resolve([]);
-  return fetchAllCollection("users", {
-    filters: [{ field: "companyId", op: "==", value: companyId }],
+  return fetchAllCollection('users', {
+    filters: [{ field: 'companyId', op: '==', value: companyId }],
     max: 500
   });
 }
@@ -224,42 +241,42 @@ export async function deleteDocument(collectionName, id) {
 }
 
 export async function saveUserProfile(uid, payload = {}) {
-  await setDoc(doc(db, "users", uid), { ...payload, updatedAt: serverTimestamp() }, { merge: true });
+  await setDoc(doc(db, 'users', uid), { ...payload, updatedAt: serverTimestamp() }, { merge: true });
   return true;
 }
 
 export async function createSalesRep(payload = {}, currentUser = null) {
-  const cleanUsername = String(payload.username || "").trim().toLowerCase();
-  const cleanName = String(payload.fullName || payload.name || "").trim();
-  if (!cleanName || !cleanUsername) throw new Error("Full name and username are required.");
+  const cleanUsername = String(payload.username || '').trim().toLowerCase();
+  const cleanName = String(payload.fullName || payload.name || '').trim();
+  if (!cleanName || !cleanUsername) throw new Error('Full name and username are required.');
 
-  return createDocument("users", {
+  return createDocument('users', {
     name: cleanName,
     username: cleanUsername,
-    email: String(payload.email || "").trim().toLowerCase(),
-    phone: String(payload.phone || "").trim(),
-    status: payload.status || "active",
-    active: payload.status !== "inactive",
-    notes: String(payload.notes || "").trim(),
-    role: "sales_rep",
-    companyId: currentUser?.companyId || payload.companyId || "",
-    reportsTo: currentUser?.uid || payload.reportsTo || "",
-    approvalStatus: "approved"
+    email: String(payload.email || '').trim().toLowerCase(),
+    phone: String(payload.phone || '').trim(),
+    status: payload.status || 'active',
+    active: payload.status !== 'inactive',
+    notes: String(payload.notes || '').trim(),
+    role: 'sales_rep',
+    companyId: currentUser?.companyId || payload.companyId || '',
+    reportsTo: currentUser?.uid || payload.reportsTo || '',
+    approvalStatus: 'approved'
   });
 }
 
 export async function updateSalesRep(id, payload = {}) {
-  const cleanUsername = String(payload.username || "").trim().toLowerCase();
-  const cleanName = String(payload.fullName || payload.name || "").trim();
-  if (!cleanName || !cleanUsername) throw new Error("Full name and username are required.");
+  const cleanUsername = String(payload.username || '').trim().toLowerCase();
+  const cleanName = String(payload.fullName || payload.name || '').trim();
+  if (!cleanName || !cleanUsername) throw new Error('Full name and username are required.');
 
-  return updateDocument("users", id, {
+  return updateDocument('users', id, {
     name: cleanName,
     username: cleanUsername,
-    email: String(payload.email || "").trim().toLowerCase(),
-    phone: String(payload.phone || "").trim(),
-    status: payload.status || "active",
-    active: payload.status !== "inactive",
-    notes: String(payload.notes || "").trim()
+    email: String(payload.email || '').trim().toLowerCase(),
+    phone: String(payload.phone || '').trim(),
+    status: payload.status || 'active',
+    active: payload.status !== 'inactive',
+    notes: String(payload.notes || '').trim()
   });
 }

@@ -1,0 +1,75 @@
+name: Customer, Navigation, Owner, Role, and Brand Recovery
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  recovery-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Validate JavaScript syntax
+        run: |
+          node --check public/assets/js/access-control.js
+          node --check public/assets/js/access-control-v2.js
+          node --check public/assets/js/roles.js
+          node --check public/assets/js/app.js
+          node --check public/assets/js/adaptive-appearance-boot.js
+          node --check public/assets/js/loader.js
+          node --check public/assets/js/route-guard.js
+          node --check public/assets/js/route-guard-v2.js
+          node --check public/assets/js/customer-portal-v2.js
+          node --check public/assets/js/customer-portal-v4.js
+          node --check public/assets/js/app-builder-runtime-v2.js
+          node --check public/assets/js/owner-publish-runtime-v2.js
+          node --check public/assets/js/nav.js
+          node --check public/assets/js/nav/nav-authority-v1.js
+          node --check public/assets/js/nav/nav-utils.js
+          node --check public/assets/js/nav/nav-utils-v2.js
+          node --check public/assets/js/nav/nav-render-v2.js
+          node --check public/assets/js/nav/nav-session-v2.js
+          node --check public/assets/js/nav/nav-role-lockdown-v2.js
+          node --check public/assets/js/nav/nav-bottom.js
+          node --check public/assets/js/nav/nav-main-v7.js
+          node --check public/assets/js/app-icon-preferences.js
+          node --check public/assets/js/app-icon-studio-single-source.js
+          node --check public/assets/js/app-icon-studio-final-guard.js
+          node --check tools/customer-brand-recovery-audit.js
+          node --check tools/navigation-owner-customer-audit.js
+      - name: Audit canonical role engine
+        run: node tools/role-engine-audit.mjs
+      - name: Audit customer and brand recovery
+        run: node tools/customer-brand-recovery-audit.js
+      - name: Audit navigation customer and owner runtime contracts
+        run: node tools/navigation-owner-customer-audit.js runtime
+      - name: Generate universal navigation page inventory
+        shell: bash
+        run: |
+          set +e
+          node tools/navigation-owner-customer-audit.js pages > universal-nav-page-inventory.log 2>&1
+          code=$?
+          echo "$code" > universal-nav-page-inventory.exit
+          cat universal-nav-page-inventory.log
+          exit 0
+      - name: Upload universal navigation inventory
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: universal-navigation-page-inventory
+          path: |
+            universal-nav-page-inventory.log
+            universal-nav-page-inventory.exit
+          if-no-files-found: error
+          retention-days: 7
+      - name: Enforce universal navigation page inventory
+        shell: bash
+        run: |
+          test "$(cat universal-nav-page-inventory.exit)" = "0"

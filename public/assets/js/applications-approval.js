@@ -1,52 +1,40 @@
 import {
-  auth,
-  db,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  serverTimestamp,
-  getSavedUserProfile
+  functions,
+  httpsCallable
 } from "./firebase.js";
 
 const STAFF_ROLES = [
   ["hr", "HR"],
   ["hr_manager", "HR Manager"],
   ["operations_manager", "Operations Manager"],
+  ["operations_coordinator", "Operations Coordinator"],
   ["dispatcher", "Dispatcher"],
   ["field_manager", "Field Manager"],
   ["sales_manager", "Sales Manager"],
   ["customer_support", "Customer Support"],
   ["quality_control", "Quality Control"],
-  ["sales_rep", "Sales Rep"],
   ["sales", "Sales"],
+  ["sales_rep", "Sales Rep"],
   ["technician", "Technician"],
   ["lead_technician", "Lead Technician"],
   ["cleaner", "Cleaner"],
   ["lead_cleaner", "Lead Cleaner"],
+  ["staff", "General Staff"],
   ["field_staff", "Field Staff"],
-  ["crew_lead", "Crew Lead"],
-  ["staff", "General Staff"]
+  ["crew_lead", "Crew Lead"]
 ];
 
 const COMPANY_OPTIONS = [
-  ["", "No company assignment"],
+  ["", "Select company"],
   ["supreme-true-clean|Supreme True Clean", "Supreme True Clean"],
   ["oneofone-cleaning|OneofOne Cleaning", "OneofOne Cleaning"],
   ["evaraos|Evaraos Inc", "Evaraos Inc"]
 ];
 
+const reviewStaffApplication = httpsCallable(functions, "reviewStaffApplication");
+
 function normalize(value = "") {
   return String(value || "").trim().toLowerCase();
-}
-
-function roleLabel(role = "") {
-  const match = STAFF_ROLES.find(([value]) => value === normalize(role));
-  return match?.[1] || role || "Staff";
-}
-
-function roleAllowed(role = "") {
-  return STAFF_ROLES.some(([value]) => value === normalize(role));
 }
 
 function escapeHtml(value = "") {
@@ -58,27 +46,30 @@ function escapeHtml(value = "") {
     .replace(/'/g, "&#39;");
 }
 
-function actorSnapshot() {
-  const profile = getSavedUserProfile() || {};
-  const user = auth.currentUser || {};
-  return {
-    uid: user.uid || profile.uid || "",
-    email: user.email || profile.email || "",
-    name: profile.displayName || profile.fullName || profile.name || user.displayName || user.email || "Unknown Reviewer"
-  };
+function roleAllowed(role = "") {
+  return STAFF_ROLES.some(([value]) => value === normalize(role));
+}
+
+function roleLabel(role = "") {
+  return STAFF_ROLES.find(([value]) => value === normalize(role))?.[1] || role || "Staff";
 }
 
 function roleOptions(selected = "") {
   const active = normalize(selected || "staff");
-  return STAFF_ROLES.map(([value, label]) => `<option value="${escapeHtml(value)}" ${active === value ? "selected" : ""}>${escapeHtml(label)}</option>`).join("");
+  return STAFF_ROLES.map(([value, label]) => (
+    `<option value="${escapeHtml(value)}" ${active === value ? "selected" : ""}>${escapeHtml(label)}</option>`
+  )).join("");
 }
 
 function companyOptions() {
-  return COMPANY_OPTIONS.map(([value, label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`).join("");
+  return COMPANY_OPTIONS.map(([value, label]) => (
+    `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`
+  )).join("");
 }
 
 function enhanceReviewBox(card) {
   if (!card || card.dataset.hrEnhanced === "true") return;
+
   const id = card.dataset.applicationId;
   const reviewBox = card.querySelector(".review-box");
   if (!id || !reviewBox) return;
@@ -95,8 +86,9 @@ function enhanceReviewBox(card) {
   }
 
   const companySelect = reviewBox.querySelector(`[data-company-choice="${CSS.escape(id)}"]`);
-  if (companySelect && companySelect.options.length < COMPANY_OPTIONS.length) {
+  if (companySelect) {
     companySelect.innerHTML = companyOptions();
+    companySelect.setAttribute("aria-label", "Assigned company");
   }
 
   card.dataset.hrEnhanced = "true";
@@ -110,136 +102,101 @@ function companySelection(id) {
   const raw = document.querySelector(`[data-company-choice="${CSS.escape(id)}"]`)?.value || "";
   if (!raw) return { companyId: "", companyName: "" };
   const [companyId, companyName] = raw.split("|");
-  return { companyId: companyId || "", companyName: companyName || companyId || "" };
+  return {
+    companyId: String(companyId || "").trim(),
+    companyName: String(companyName || companyId || "").trim()
+  };
 }
 
-function finalRoleSelection(id, fallback = "staff") {
-  const role = normalize(document.querySelector(`[data-final-role-choice="${CSS.escape(id)}"]`)?.value || fallback);
-  return roleAllowed(role) ? role : "staff";
+function finalRoleSelection(id) {
+  return normalize(document.querySelector(`[data-final-role-choice="${CSS.escape(id)}"]`)?.value || "staff");
 }
 
 function reviewNotes(id) {
   return String(document.querySelector(`[data-review-notes="${CSS.escape(id)}"]`)?.value || "").trim();
 }
 
-async function loadApplication(id) {
-  const snap = await getDoc(doc(db, "staff_applications", id));
-  if (!snap.exists()) throw new Error("Application not found.");
-  return { id: snap.id, ...snap.data() };
+function readableError(error) {
+  const message = String(error?.message || "Application review failed.");
+  return message.replace(/^Firebase:\s*/i, "").replace(/\s*\(functions\/[a-z-]+\)\.?$/i, "");
 }
 
-function buildStaffProfile(app, company, actor, finalRole) {
-  return {
-    uid: app.applicantUid,
-    userId: app.applicantUid,
-    email: app.applicantEmail || "",
-    fullName: app.fullName || "",
-    phone: app.phone || "",
-    role: finalRole,
-    requestedRole: app.roleRequested || "",
-    companyId: company.companyId || "",
-    companyName: company.companyName || app.desiredCompany || "",
-    market: app.desiredMarket || "",
-    status: "active",
-    approvalStatus: "approved",
-    employmentType: app.employmentType || "",
-    availability: app.availability || app.preferredSchedule || "",
-    earliestStartDate: app.earliestStartDate || "",
-    payExpectation: app.payExpectation || "",
-    hasDriversLicense: app.hasDriversLicense || "",
-    driversLicenseState: app.driversLicenseState || "",
-    hasReliableTransportation: app.hasReliableTransportation || "",
-    equipmentExperience: app.equipmentExperience || "",
-    profilePhotoURL: (app.attachments || []).find((file) => file.kind === "profile_photo")?.downloadURL || "",
-    applicationId: app.id || app.applicantUid,
-    attachments: app.attachments || [],
-    onboardingStage: "approved_pending_setup",
-    onboardingTasks: {
-      reviewPolicies: false,
-      completeTaxDocs: false,
-      completeTraining: false,
-      receiveAssignment: false,
-      activatePayouts: false
-    },
-    approvedAt: serverTimestamp(),
-    approvedBy: actor.uid,
-    approvedByEmail: actor.email,
-    approvedByName: actor.name,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
-  };
-}
-
-async function approveWithFinalRole(id) {
-  const app = await loadApplication(id);
-  const finalRole = finalRoleSelection(id, app.roleRequested);
-  if (!roleAllowed(finalRole)) return alert("Select a valid final role before approving.");
-
+async function submitDecision(id, decision) {
   const company = companySelection(id);
-  const actor = actorSnapshot();
-  const confirmed = window.confirm(`Approve ${app.fullName || app.applicantEmail} as ${roleLabel(finalRole)}?`);
-  if (!confirmed) return;
+  const finalRole = finalRoleSelection(id);
 
-  await updateDoc(doc(db, "staff_applications", id), {
-    status: "approved",
-    verificationStatus: "verified",
+  if (decision === "approved") {
+    if (!roleAllowed(finalRole)) {
+      throw new Error("Select a valid final role before approving.");
+    }
+    if (!company.companyId) {
+      throw new Error("Select a company before approving this applicant.");
+    }
+
+    const approved = window.confirm(`Approve this applicant as ${roleLabel(finalRole)} for ${company.companyName}?`);
+    if (!approved) return false;
+  } else if (decision === "rejected") {
+    if (!window.confirm("Reject this staff application?")) return false;
+  }
+
+  await reviewStaffApplication({
+    applicationId: id,
+    decision,
     reviewNotes: reviewNotes(id),
-    approvedRole: finalRole,
-    finalRole,
-    reviewedAt: serverTimestamp(),
-    reviewedBy: actor.uid,
-    reviewedByEmail: actor.email,
-    reviewedByName: actor.name,
-    approvedAt: serverTimestamp(),
-    approvedBy: actor.uid,
-    approvedByEmail: actor.email,
-    approvedByName: actor.name,
-    updatedAt: serverTimestamp()
+    companyId: decision === "approved" ? company.companyId : "",
+    companyName: decision === "approved" ? company.companyName : "",
+    finalRole: decision === "approved" ? finalRole : ""
   });
 
-  await updateDoc(doc(db, "users", app.applicantUid), {
-    role: finalRole,
-    requestedRole: app.roleRequested || "",
-    status: "active",
-    approvalStatus: "approved",
-    companyId: company.companyId,
-    companyName: company.companyName || app.desiredCompany || "",
-    companySlug: company.companyId,
-    companyCategory: "staff",
-    staffApplicationId: id,
-    approvedAt: serverTimestamp(),
-    approvedBy: actor.uid,
-    approvedByEmail: actor.email,
-    approvedByName: actor.name,
-    updatedAt: serverTimestamp(),
-    updatedBy: actor.uid,
-    updatedByEmail: actor.email,
-    updatedByName: actor.name
-  });
-
-  await setDoc(doc(db, "staff_profiles", app.applicantUid), buildStaffProfile(app, company, actor, finalRole), { merge: true });
-
-  window.location.reload();
+  return true;
 }
 
-function bindApprovalOverride() {
+function decisionFromButton(button) {
+  if (button.matches("[data-approve]")) return "approved";
+  if (button.matches("[data-more-info]")) return "needs_more_info";
+  if (button.matches("[data-reject]")) return "rejected";
+  return "";
+}
+
+function applicationIdFromButton(button) {
+  return button.getAttribute("data-approve")
+    || button.getAttribute("data-more-info")
+    || button.getAttribute("data-reject")
+    || "";
+}
+
+function bindTrustedReviewHandler() {
   document.addEventListener("click", async (event) => {
-    const button = event.target.closest?.("[data-approve]");
+    const button = event.target.closest?.("[data-approve], [data-more-info], [data-reject]");
     if (!button) return;
 
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
 
+    const decision = decisionFromButton(button);
+    const applicationId = applicationIdFromButton(button);
+    if (!decision || !applicationId) return;
+
     button.disabled = true;
     const original = button.textContent;
-    button.textContent = "Approving...";
+    button.textContent = decision === "approved"
+      ? "Approving..."
+      : decision === "rejected"
+        ? "Rejecting..."
+        : "Saving...";
 
     try {
-      await approveWithFinalRole(button.getAttribute("data-approve"));
+      const completed = await submitDecision(applicationId, decision);
+      if (!completed) {
+        button.disabled = false;
+        button.textContent = original;
+        return;
+      }
+      window.location.reload();
     } catch (error) {
-      console.error("Final role approval failed:", error);
-      alert(error.message || "Approval failed.");
+      console.error("Trusted staff application review failed:", error);
+      alert(readableError(error));
       button.disabled = false;
       button.textContent = original;
     }
@@ -248,7 +205,7 @@ function bindApprovalOverride() {
 
 function init() {
   enhanceAllCards();
-  bindApprovalOverride();
+  bindTrustedReviewHandler();
 
   const list = document.getElementById("applicationsList");
   if (list) {

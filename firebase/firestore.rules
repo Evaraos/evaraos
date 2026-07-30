@@ -1,1 +1,282 @@
-rules_version = '2'; service cloud.firestore { match /databases/{database}/documents { function signedIn() { return request.auth != null; } function userExists() { return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)); } function user() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; } function role() { return userExists() ? user().role : null; } function company() { return userExists() ? user().companyId : null; } function hasCompany(value) { return value is string && value != ''; } function active() { return userExists() && user().status in ['active', 'approved'] && user().approvalStatus == 'approved'; } function platform() { return active() && (role() in ['owner', 'super_admin'] || (role() == 'admin' && user().platformAccess == true)); } function operations() { return platform() || (active() && role() in ['admin', 'manager', 'operations_manager', 'operations_coordinator', 'hr', 'hr_manager']); } function manager() { return platform() || (active() && role() in ['admin', 'manager', 'operations_manager', 'operations_coordinator', 'field_manager', 'sales_manager', 'dispatcher', 'hr', 'hr_manager']); } function staff() { return platform() || (active() && role() in ['admin', 'manager', 'operations_manager', 'operations_coordinator', 'field_manager', 'dispatcher', 'quality_control', 'sales', 'sales_rep', 'technician', 'lead_technician', 'cleaner', 'lead_cleaner', 'staff', 'field_staff', 'crew_lead', 'customer_support']); } function customer() { return active() && role() == 'customer'; } function own(userId) { return signedIn() && request.auth.uid == userId; } function sameCompany(value) { return active() && hasCompany(company()) && hasCompany(value) && company() == value; } function scoped(value) { return platform() || sameCompany(value); } function targetCompany(userId) { return exists(/databases/$(database)/documents/users/$(userId)) ? get(/databases/$(database)/documents/users/$(userId)).data.companyId : null; } function assigned(data) { return active() && ( (data.keys().hasAny(['assignedTo']) && data.assignedTo is list && request.auth.uid in data.assignedTo) || (data.keys().hasAny(['assignedTeamIds']) && data.assignedTeamIds is list && request.auth.uid in data.assignedTeamIds) || (data.keys().hasAny(['assignedToUid']) && data.assignedToUid == request.auth.uid) || (data.keys().hasAny(['assignedRep']) && (data.assignedRep == request.auth.uid || (data.assignedRep is list && request.auth.uid in data.assignedRep))) || (data.keys().hasAny(['staffClaimedBy']) && data.staffClaimedBy == request.auth.uid) ); } function customerOwns(data) { return customer() && ( (data.keys().hasAny(['customerUid']) && data.customerUid == request.auth.uid) || (data.keys().hasAny(['customerId']) && data.customerId == request.auth.uid) || (data.keys().hasAny(['userId']) && data.userId == request.auth.uid) ); } function tenantRead(data) { return customerOwns(data) || platform() || (manager() && sameCompany(data.companyId)); } function tenantWrite(data) { return platform() || (operations() && sameCompany(data.companyId)); } function immutableCompany() { return request.resource.data.companyId == resource.data.companyId; } function publicRecord(data) { return (data.keys().hasAny(['isPublic']) && data.isPublic == true) || (data.keys().hasAny(['public']) && data.public == true); } function selfCreate(userId) { return own(userId) && request.resource.data.keys().hasOnly(['uid','id','email','username','usernameLower','displayName','fullName','name','role','phone','bio','status','approvalStatus','companyId','companyName','companySlug','companyCategory','createdAt','updatedAt','createdAtMs','updatedAtMs']) && request.resource.data.uid == request.auth.uid && request.resource.data.id == request.auth.uid && request.resource.data.role == 'customer' && request.resource.data.status == 'pending' && request.resource.data.approvalStatus == 'pending' && request.resource.data.companyId == ''; } function selfUpdate(userId) { return own(userId) && request.resource.data.uid == resource.data.uid && request.resource.data.id == resource.data.id && request.resource.data.email == resource.data.email && request.resource.data.role == resource.data.role && request.resource.data.companyId == resource.data.companyId && request.resource.data.status == resource.data.status && request.resource.data.approvalStatus == resource.data.approvalStatus && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName','fullName','name','username','usernameLower','phone','bio','notes','photoURL','themePreferences','themePreferencesUpdatedAt','notificationPreferences','updatedAt','updatedAtMs']); } function registryExists(id) { return exists(/databases/$(database)/documents/channels/_group_registry/messages/$(id)); } function registry(id) { return get(/databases/$(database)/documents/channels/_group_registry/messages/$(id)).data; } function conversationMember(id) { return active() && registryExists(id) && ( platform() || (registry(id).kind in ['direct_meta','group_meta'] && (request.auth.uid in registry(id).memberUids || request.auth.uid in registry(id).adminUids) && (!hasCompany(registry(id).companyId) || sameCompany(registry(id).companyId))) || (registry(id).kind == 'role_meta' && role() in registry(id).allowedRoles && sameCompany(registry(id).companyId)) ); } function conversationCreate(id) { return manager() && request.resource.data.kind in ['direct_meta','group_meta'] && request.resource.data.groupId == id && request.resource.data.createdBy == request.auth.uid && request.resource.data.companyId == company() && request.resource.data.memberUids is list && request.auth.uid in request.resource.data.memberUids && request.resource.data.adminUids is list && request.auth.uid in request.resource.data.adminUids; } function messageCreate(id) { return conversationMember(id) && request.resource.data.senderUid == request.auth.uid && request.resource.data.senderRole == role() && request.resource.data.companyId == company() && ((request.resource.data.keys().hasAny(['text']) && request.resource.data.text is string && request.resource.data.text.size() <= 10000) || (request.resource.data.keys().hasAny(['imageUrl']) && request.resource.data.imageUrl is string)); } match /users/{userId} { allow create: if selfCreate(userId) || platform(); allow read: if own(userId) || platform() || (operations() && sameCompany(resource.data.companyId)); allow update: if selfUpdate(userId) || platform(); allow delete: if platform() && !own(userId); match /pushTokens/{tokenId} { allow read, write: if false; } } match /companies/{id} { allow read: if scoped(id); allow create, update, delete: if platform(); } match /dashboard_stats/{id} { allow read: if platform(); allow write: if false; } match /company_stats/{id} { allow read: if platform() || (manager() && sameCompany(id)); allow write: if false; } match /staff_applications/{id} { allow create: if signedIn() && id == request.auth.uid && request.resource.data.applicantUid == request.auth.uid && request.resource.data.status == 'submitted' && request.resource.data.verificationStatus == 'pending_review'; allow read: if own(id) || platform() || (operations() && sameCompany(resource.data.companyId)); allow update: if own(id) && resource.data.status in ['submitted','needs_more_info'] && request.resource.data.applicantUid == resource.data.applicantUid && request.resource.data.roleRequested == resource.data.roleRequested && request.resource.data.status in ['submitted','needs_more_info'] && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fullName','phone','address','city','state','zip','dateOfBirth','workAuthorization','hasDriversLicense','driversLicenseState','hasReliableTransportation','availability','experienceSummary','emergencyContactName','emergencyContactPhone','attachments','status','verificationStatus','updatedAt','updatedAtMs']); allow delete: if platform(); } match /staff_profiles/{id} { allow read: if own(id) || platform() || (operations() && sameCompany(resource.data.companyId)); allow write: if false; } match /invites/{id} { allow read: if platform() || (operations() && sameCompany(resource.data.companyId)); allow write: if false; } match /leads/{id} { allow read: if platform() || customerOwns(resource.data) || assigned(resource.data) || (manager() && sameCompany(resource.data.companyId)); allow create: if (customer() && request.resource.data.customerSubmitted == true && request.resource.data.customerUid == request.auth.uid && request.resource.data.createdBy == request.auth.uid && request.resource.data.createdByUid == request.auth.uid && request.resource.data.createdByRole == 'customer' && request.resource.data.source == 'customer_portal' && request.resource.data.leadSource == 'customer_portal' && request.resource.data.status in ['new','dispatch_review']) || (manager() && scoped(request.resource.data.companyId)); allow update: if (staff() && assigned(resource.data) && sameCompany(resource.data.companyId) && immutableCompany() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','notes','description','nextStep','updatedAt','updatedAtMs','updatedBy','updatedByUid','updatedByName','staffClaimed','staffClaimedBy','staffClaimedAt','syncStatus'])) || (manager() && scoped(resource.data.companyId) && immutableCompany()); allow delete: if platform() || (operations() && sameCompany(resource.data.companyId)); match /activities/{activityId} { allow read: if platform() || customerOwns(get(/databases/$(database)/documents/leads/$(id)).data) || assigned(get(/databases/$(database)/documents/leads/$(id)).data) || (manager() && sameCompany(get(/databases/$(database)/documents/leads/$(id)).data.companyId)); allow create: if manager() && scoped(get(/databases/$(database)/documents/leads/$(id)).data.companyId); allow update, delete: if false; } } match /jobs/{id} { allow read: if platform() || customerOwns(resource.data) || assigned(resource.data) || (manager() && sameCompany(resource.data.companyId)); allow create: if manager() && scoped(request.resource.data.companyId); allow update: if (staff() && assigned(resource.data) && sameCompany(resource.data.companyId) && immutableCompany() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','notes','startedAt','completedAt','updatedAt','updatedAtMs','beforePhotos','afterPhotos','proofStatus','lastPhotoUploadAt','staffClaimed','staffClaimedBy','staffClaimedAt','syncStatus'])) || (operations() && scoped(resource.data.companyId) && immutableCompany()); allow delete: if platform() || (operations() && sameCompany(resource.data.companyId)); } match /{collectionId}/{documentId} { allow read: if collectionId in ['customer_services','quotes','subscriptions','invoices','customer_service_history'] && tenantRead(resource.data); allow create: if collectionId in ['customer_services','subscriptions','customer_service_history'] && tenantWrite(request.resource.data); allow create: if collectionId == 'invoices' && (platform() || (manager() && sameCompany(request.resource.data.companyId))); allow create: if collectionId == 'quotes' && ((customer() && request.resource.data.customerId == request.auth.uid) || (manager() && scoped(request.resource.data.companyId))); allow update: if collectionId in ['customer_services','subscriptions','customer_service_history'] && tenantWrite(resource.data) && immutableCompany(); allow update: if collectionId == 'invoices' && (platform() || (manager() && sameCompany(resource.data.companyId))) && immutableCompany(); allow update: if collectionId == 'quotes' && ((customerOwns(resource.data) && request.resource.data.customerId == resource.data.customerId && immutableCompany() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','approvedAtMs','rejectedAtMs','updatedAt','updatedAtMs'])) || ((platform() || (manager() && sameCompany(resource.data.companyId))) && immutableCompany())); allow delete: if collectionId in ['customer_services','quotes','subscriptions','invoices'] && (platform() || (operations() && sameCompany(resource.data.companyId))); } match /{collectionId}/{documentId} { allow read: if collectionId in ['services','service_catalog','service_packages'] && active() && (publicRecord(resource.data) || scoped(resource.data.companyId)); allow create: if collectionId in ['services','service_catalog','service_packages'] && tenantWrite(request.resource.data); allow update: if collectionId in ['services','service_catalog','service_packages'] && tenantWrite(resource.data) && immutableCompany(); allow delete: if collectionId in ['services','service_catalog','service_packages'] && (platform() || (operations() && sameCompany(resource.data.companyId))); } match /{collectionId}/{documentId} { allow read: if collectionId in ['payments','stripe_webhook_events'] && platform(); allow read: if collectionId in ['transactions','marketplace_payouts','revenue_analytics','payroll_runs'] && (platform() || (operations() && sameCompany(resource.data.companyId))); allow read: if collectionId == 'payouts' && (platform() || (active() && resource.data.userId == request.auth.uid) || (operations() && sameCompany(resource.data.companyId))); allow read: if collectionId == 'stripe_sessions' && (platform() || customerOwns(resource.data) || (operations() && sameCompany(resource.data.companyId))); allow write: if false; } match /{collectionId}/{documentId} { allow read: if collectionId in ['audit_logs','history_timeline','operation_events'] && (platform() || (operations() && sameCompany(resource.data.companyId))); allow write: if false; } match /notifications/{id} { allow read: if active() && (resource.data.userId == request.auth.uid || platform() || (operations() && sameCompany(resource.data.companyId))); allow update: if active() && resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','readAt','readAtMs','archivedAtMs','dismissedAtMs','updatedAt','updatedAtMs']); allow create, delete: if false; } match /customer_notifications/{id} { allow read: if active() && (resource.data.customerId == request.auth.uid || resource.data.userId == request.auth.uid || platform() || (operations() && sameCompany(resource.data.companyId))); allow update: if active() && (resource.data.customerId == request.auth.uid || resource.data.userId == request.auth.uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','readAtMs','archivedAtMs','dismissedAtMs','updatedAtMs','updatedAt']); allow create, delete: if false; } match /dispatch_assignments/{id} { allow read: if platform() || assigned(resource.data) || (manager() && sameCompany(resource.data.companyId)); allow create: if manager() && scoped(request.resource.data.companyId) && request.resource.data.createdBy == request.auth.uid; allow update: if operations() && scoped(resource.data.companyId) && immutableCompany(); allow delete: if platform() || (operations() && sameCompany(resource.data.companyId)); } match /presence/{userId} { allow read: if own(userId) || platform() || (active() && sameCompany(targetCompany(userId))); allow create, update: if active() && request.auth.uid == userId && request.resource.data.companyId == company(); allow delete: if own(userId) || platform(); } match /workforce_locations/{userId} { allow read: if own(userId) || platform() || (operations() && sameCompany(targetCompany(userId))); allow create, update: if active() && request.auth.uid == userId && request.resource.data.companyId == company(); allow delete: if own(userId) || platform(); } match /customer_message_threads/{threadId} { allow read: if tenantRead(resource.data); allow create: if tenantWrite(request.resource.data); allow update: if tenantWrite(resource.data) && immutableCompany(); allow delete: if platform() || (operations() && sameCompany(resource.data.companyId)); match /messages/{messageId} { allow read: if tenantRead(get(/databases/$(database)/documents/customer_message_threads/$(threadId)).data); allow create: if active() && request.resource.data.senderUid == request.auth.uid && tenantRead(get(/databases/$(database)/documents/customer_message_threads/$(threadId)).data); allow update, delete: if false; } } match /channels/{channelId}/messages/{messageId} { allow read: if conversationMember(channelId); allow create: if messageCreate(channelId); allow update: if conversationMember(channelId) && resource.data.senderUid == request.auth.uid && request.resource.data.senderUid == resource.data.senderUid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text','updatedAt','updatedAtMs','editedAt','editedAtMs']); allow delete: if platform() || (conversationMember(channelId) && resource.data.senderUid == request.auth.uid); match /reactions/{userId} { allow read: if conversationMember(channelId); allow create, update: if conversationMember(channelId) && request.auth.uid == userId && request.resource.data.userUid == request.auth.uid && request.resource.data.emoji is string; allow delete: if conversationMember(channelId) && (request.auth.uid == userId || platform()); } } match /channels/_group_registry/messages/{id} { allow read: if conversationMember(id); allow create: if platform() || conversationCreate(id); allow update: if platform() || (manager() && sameCompany(resource.data.companyId) && request.auth.uid in resource.data.adminUids && request.resource.data.kind == resource.data.kind && request.resource.data.groupId == resource.data.groupId && immutableCompany() && request.resource.data.createdBy == resource.data.createdBy); allow delete: if platform() || (manager() && sameCompany(resource.data.companyId) && request.auth.uid in resource.data.adminUids); } match /{document=**} { allow read, write: if false; } } }
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function userExists() { return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)); }
+    function user() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function role() { return userExists() ? user().role : null; }
+    function company() { return userExists() ? user().companyId : null; }
+    function hasCompany(value) { return value is string && value != ''; }
+    function active() { return userExists() && user().status in ['active', 'approved'] && user().approvalStatus == 'approved'; }
+    function customer() {
+      return userExists()
+        && role() == 'customer'
+        && (!user().keys().hasAny(['status']) || user().status in ['pending', 'active', 'approved'])
+        && (!user().keys().hasAny(['approvalStatus']) || user().approvalStatus in ['pending', 'approved']);
+    }
+    function enabledSession() { return active() || customer(); }
+    function platform() {
+      return active() && (
+        role() in ['platform_admin', 'owner', 'super_admin']
+        || (role() == 'admin' && user().platformAccess == true)
+      );
+    }
+    function operations() { return platform() || (active() && role() in ['admin', 'manager', 'operations_manager', 'operations_coordinator', 'hr', 'hr_manager']); }
+    function manager() { return platform() || (active() && role() in ['admin', 'manager', 'operations_manager', 'operations_coordinator', 'field_manager', 'sales_manager', 'dispatcher', 'hr', 'hr_manager']); }
+    function staff() { return platform() || (active() && role() in ['admin', 'manager', 'operations_manager', 'operations_coordinator', 'field_manager', 'dispatcher', 'quality_control', 'sales', 'sales_rep', 'technician', 'lead_technician', 'cleaner', 'lead_cleaner', 'staff', 'field_staff', 'crew_lead', 'customer_support']); }
+    function own(userId) { return signedIn() && request.auth.uid == userId; }
+    function sameCompany(value) { return active() && hasCompany(company()) && hasCompany(value) && company() == value; }
+    function scoped(value) { return platform() || sameCompany(value); }
+    function companyAppBuilderAdmin(id) { return active() && role() == 'admin' && sameCompany(id); }
+    function targetCompany(userId) { return exists(/databases/$(database)/documents/users/$(userId)) ? get(/databases/$(database)/documents/users/$(userId)).data.companyId : null; }
+    function assigned(data) {
+      return active() && (
+        (data.keys().hasAny(['assignedTo']) && data.assignedTo is list && request.auth.uid in data.assignedTo)
+        || (data.keys().hasAny(['assignedTeamIds']) && data.assignedTeamIds is list && request.auth.uid in data.assignedTeamIds)
+        || (data.keys().hasAny(['assignedToUid']) && data.assignedToUid == request.auth.uid)
+        || (data.keys().hasAny(['assignedRep']) && (data.assignedRep == request.auth.uid || (data.assignedRep is list && request.auth.uid in data.assignedRep)))
+        || (data.keys().hasAny(['staffClaimedBy']) && data.staffClaimedBy == request.auth.uid)
+      );
+    }
+    function customerOwns(data) {
+      return customer() && (
+        (data.keys().hasAny(['customerUid']) && data.customerUid == request.auth.uid)
+        || (data.keys().hasAny(['customerId']) && data.customerId == request.auth.uid)
+        || (data.keys().hasAny(['userId']) && data.userId == request.auth.uid)
+      );
+    }
+    function tenantRead(data) { return customerOwns(data) || platform() || (manager() && sameCompany(data.companyId)); }
+    function tenantWrite(data) { return platform() || (operations() && sameCompany(data.companyId)); }
+    function immutableCompany() { return request.resource.data.companyId == resource.data.companyId; }
+    function publicRecord(data) { return (data.keys().hasAny(['isPublic']) && data.isPublic == true) || (data.keys().hasAny(['public']) && data.public == true); }
+    function selfCreate(userId) {
+      return own(userId)
+        && request.resource.data.keys().hasOnly(['uid','id','email','username','usernameLower','displayName','fullName','name','role','phone','bio','status','approvalStatus','companyId','companyName','companySlug','companyCategory','createdAt','updatedAt','createdAtMs','updatedAtMs'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.id == request.auth.uid
+        && request.resource.data.role == 'customer'
+        && request.resource.data.status == 'pending'
+        && request.resource.data.approvalStatus == 'pending'
+        && request.resource.data.companyId == '';
+    }
+    function selfUpdate(userId) {
+      return own(userId)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.companyId == resource.data.companyId
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.approvalStatus == resource.data.approvalStatus
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName','fullName','name','username','usernameLower','phone','bio','notes','photoURL','themePreferences','themePreferencesUpdatedAt','notificationPreferences','updatedAt','updatedAtMs']);
+    }
+    function registryExists(id) { return exists(/databases/$(database)/documents/channels/_group_registry/messages/$(id)); }
+    function registry(id) { return get(/databases/$(database)/documents/channels/_group_registry/messages/$(id)).data; }
+    function conversationMember(id) {
+      return active() && registryExists(id) && (
+        platform()
+        || (registry(id).kind in ['direct_meta','group_meta'] && (request.auth.uid in registry(id).memberUids || request.auth.uid in registry(id).adminUids) && (!hasCompany(registry(id).companyId) || sameCompany(registry(id).companyId)))
+        || (registry(id).kind == 'role_meta' && role() in registry(id).allowedRoles && sameCompany(registry(id).companyId))
+      );
+    }
+    function conversationCreate(id) {
+      return manager()
+        && request.resource.data.kind in ['direct_meta','group_meta']
+        && request.resource.data.groupId == id
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.companyId == company()
+        && request.resource.data.memberUids is list
+        && request.auth.uid in request.resource.data.memberUids
+        && request.resource.data.adminUids is list
+        && request.auth.uid in request.resource.data.adminUids;
+    }
+    function messageCreate(id) {
+      return conversationMember(id)
+        && request.resource.data.senderUid == request.auth.uid
+        && request.resource.data.senderRole == role()
+        && request.resource.data.companyId == company()
+        && ((request.resource.data.keys().hasAny(['text']) && request.resource.data.text is string && request.resource.data.text.size() <= 10000)
+          || (request.resource.data.keys().hasAny(['imageUrl']) && request.resource.data.imageUrl is string));
+    }
+
+    match /users/{userId} {
+      allow create: if selfCreate(userId) || platform();
+      allow read: if own(userId) || platform() || (operations() && sameCompany(resource.data.companyId));
+      allow update: if selfUpdate(userId) || platform();
+      allow delete: if platform() && !own(userId);
+      match /pushTokens/{tokenId} { allow read, write: if false; }
+    }
+
+    match /public_app_config/{id} {
+      allow read: if id == 'global';
+      allow create, update, delete: if id == 'global' && platform();
+    }
+
+    match /companies/{id} {
+      allow read: if scoped(id);
+      allow create, delete: if platform();
+      allow update: if platform()
+        || (companyAppBuilderAdmin(id)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['appBuilder','appBuilderUpdatedAt']));
+    }
+
+    match /dashboard_stats/{id} { allow read: if platform(); allow write: if false; }
+    match /company_stats/{id} { allow read: if platform() || (manager() && sameCompany(id)); allow write: if false; }
+
+    match /staff_applications/{id} {
+      allow create: if signedIn() && id == request.auth.uid && request.resource.data.applicantUid == request.auth.uid && request.resource.data.status == 'submitted' && request.resource.data.verificationStatus == 'pending_review';
+      allow read: if own(id) || platform() || (operations() && sameCompany(resource.data.companyId));
+      allow update: if own(id)
+        && resource.data.status in ['submitted','needs_more_info']
+        && request.resource.data.applicantUid == resource.data.applicantUid
+        && request.resource.data.roleRequested == resource.data.roleRequested
+        && request.resource.data.status in ['submitted','needs_more_info']
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fullName','phone','address','city','state','zip','dateOfBirth','workAuthorization','hasDriversLicense','driversLicenseState','hasReliableTransportation','availability','experienceSummary','emergencyContactName','emergencyContactPhone','attachments','status','verificationStatus','updatedAt','updatedAtMs']);
+      allow delete: if platform();
+    }
+
+    match /staff_profiles/{id} {
+      allow read: if own(id) || platform() || (operations() && sameCompany(resource.data.companyId));
+      allow write: if false;
+    }
+
+    match /invites/{id} { allow read: if platform() || (operations() && sameCompany(resource.data.companyId)); allow write: if false; }
+
+    match /leads/{id} {
+      allow read: if platform() || customerOwns(resource.data) || assigned(resource.data) || (manager() && sameCompany(resource.data.companyId));
+      allow create: if (customer()
+          && request.resource.data.customerSubmitted == true
+          && request.resource.data.customerUid == request.auth.uid
+          && request.resource.data.createdBy == request.auth.uid
+          && request.resource.data.createdByUid == request.auth.uid
+          && request.resource.data.createdByRole == 'customer'
+          && request.resource.data.source == 'customer_portal'
+          && request.resource.data.leadSource == 'customer_portal'
+          && request.resource.data.status in ['new','dispatch_review'])
+        || (manager() && scoped(request.resource.data.companyId));
+      allow update: if (staff() && assigned(resource.data) && sameCompany(resource.data.companyId) && immutableCompany()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','notes','description','nextStep','updatedAt','updatedAtMs','updatedBy','updatedByUid','updatedByName','staffClaimed','staffClaimedBy','staffClaimedAt','syncStatus']))
+        || (manager() && scoped(resource.data.companyId) && immutableCompany());
+      allow delete: if platform() || (operations() && sameCompany(resource.data.companyId));
+      match /activities/{activityId} {
+        allow read: if platform() || customerOwns(get(/databases/$(database)/documents/leads/$(id)).data) || assigned(get(/databases/$(database)/documents/leads/$(id)).data) || (manager() && sameCompany(get(/databases/$(database)/documents/leads/$(id)).data.companyId));
+        allow create: if manager() && scoped(get(/databases/$(database)/documents/leads/$(id)).data.companyId);
+        allow update, delete: if false;
+      }
+    }
+
+    match /jobs/{id} {
+      allow read: if platform() || customerOwns(resource.data) || assigned(resource.data) || (manager() && sameCompany(resource.data.companyId));
+      allow create: if manager() && scoped(request.resource.data.companyId);
+      allow update: if (staff() && assigned(resource.data) && sameCompany(resource.data.companyId) && immutableCompany()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','notes','startedAt','completedAt','updatedAt','updatedAtMs','beforePhotos','afterPhotos','proofStatus','lastPhotoUploadAt','staffClaimed','staffClaimedBy','staffClaimedAt','syncStatus']))
+        || (operations() && scoped(resource.data.companyId) && immutableCompany());
+      allow delete: if platform() || (operations() && sameCompany(resource.data.companyId));
+    }
+
+    match /{collectionId}/{documentId} {
+      allow read: if collectionId in ['customer_services','quotes','subscriptions','invoices','customer_service_history'] && tenantRead(resource.data);
+      allow create: if collectionId in ['customer_services','subscriptions','customer_service_history'] && tenantWrite(request.resource.data);
+      allow create: if collectionId == 'invoices' && (platform() || (manager() && sameCompany(request.resource.data.companyId)));
+      allow create: if collectionId == 'quotes' && ((customer() && request.resource.data.customerId == request.auth.uid) || (manager() && scoped(request.resource.data.companyId)));
+      allow update: if collectionId in ['customer_services','subscriptions','customer_service_history'] && tenantWrite(resource.data) && immutableCompany();
+      allow update: if collectionId == 'invoices' && (platform() || (manager() && sameCompany(resource.data.companyId))) && immutableCompany();
+      allow update: if collectionId == 'quotes' && ((customerOwns(resource.data) && request.resource.data.customerId == resource.data.customerId && immutableCompany()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','approvedAtMs','rejectedAtMs','updatedAt','updatedAtMs']))
+        || ((platform() || (manager() && sameCompany(resource.data.companyId))) && immutableCompany()));
+      allow delete: if collectionId in ['customer_services','quotes','subscriptions','invoices'] && (platform() || (operations() && sameCompany(resource.data.companyId)));
+    }
+
+    match /{collectionId}/{documentId} {
+      allow read: if collectionId in ['services','service_catalog','service_packages']
+        && ((customer() && publicRecord(resource.data)) || (active() && (publicRecord(resource.data) || scoped(resource.data.companyId))));
+      allow create: if collectionId in ['services','service_catalog','service_packages'] && tenantWrite(request.resource.data);
+      allow update: if collectionId in ['services','service_catalog','service_packages'] && tenantWrite(resource.data) && immutableCompany();
+      allow delete: if collectionId in ['services','service_catalog','service_packages'] && (platform() || (operations() && sameCompany(resource.data.companyId)));
+    }
+
+    match /{collectionId}/{documentId} {
+      allow read: if collectionId in ['payments','stripe_webhook_events'] && platform();
+      allow read: if collectionId in ['transactions','marketplace_payouts','revenue_analytics','payroll_runs'] && (platform() || (operations() && sameCompany(resource.data.companyId)));
+      allow read: if collectionId == 'payouts' && (platform() || (active() && resource.data.userId == request.auth.uid) || (operations() && sameCompany(resource.data.companyId)));
+      allow read: if collectionId == 'stripe_sessions' && (platform() || customerOwns(resource.data) || (operations() && sameCompany(resource.data.companyId)));
+      allow write: if false;
+    }
+
+    match /{collectionId}/{documentId} {
+      allow read: if collectionId in ['audit_logs','history_timeline','operation_events'] && (platform() || (operations() && sameCompany(resource.data.companyId)));
+      allow write: if false;
+    }
+
+    match /notifications/{id} {
+      allow read: if enabledSession() && (resource.data.userId == request.auth.uid || platform() || (operations() && sameCompany(resource.data.companyId)));
+      allow update: if enabledSession() && resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','readAt','readAtMs','archivedAtMs','dismissedAtMs','updatedAt','updatedAtMs']);
+      allow create, delete: if false;
+    }
+
+    match /customer_notifications/{id} {
+      allow read: if enabledSession() && (resource.data.customerId == request.auth.uid || resource.data.userId == request.auth.uid || platform() || (operations() && sameCompany(resource.data.companyId)));
+      allow update: if customer() && (resource.data.customerId == request.auth.uid || resource.data.userId == request.auth.uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','readAtMs','archivedAtMs','dismissedAtMs','updatedAtMs','updatedAt']);
+      allow create, delete: if false;
+    }
+
+    match /dispatch_assignments/{id} {
+      allow read: if platform() || assigned(resource.data) || (manager() && sameCompany(resource.data.companyId));
+      allow create: if manager() && scoped(request.resource.data.companyId) && request.resource.data.createdBy == request.auth.uid;
+      allow update: if operations() && scoped(resource.data.companyId) && immutableCompany();
+      allow delete: if platform() || (operations() && sameCompany(resource.data.companyId));
+    }
+
+    match /presence/{userId} {
+      allow read: if own(userId) || platform() || (active() && sameCompany(targetCompany(userId)));
+      allow create, update: if active() && request.auth.uid == userId && request.resource.data.companyId == company();
+      allow delete: if own(userId) || platform();
+    }
+
+    match /workforce_locations/{userId} {
+      allow read: if own(userId) || platform() || (operations() && sameCompany(targetCompany(userId)));
+      allow create, update: if active() && request.auth.uid == userId && request.resource.data.companyId == company();
+      allow delete: if own(userId) || platform();
+    }
+
+    match /customer_message_threads/{threadId} {
+      allow read: if tenantRead(resource.data);
+      allow create: if tenantWrite(request.resource.data);
+      allow update: if tenantWrite(resource.data) && immutableCompany();
+      allow delete: if platform() || (operations() && sameCompany(resource.data.companyId));
+      match /messages/{messageId} {
+        allow read: if tenantRead(get(/databases/$(database)/documents/customer_message_threads/$(threadId)).data);
+        allow create: if enabledSession() && request.resource.data.senderUid == request.auth.uid && tenantRead(get(/databases/$(database)/documents/customer_message_threads/$(threadId)).data);
+        allow update, delete: if false;
+      }
+    }
+
+    match /channels/{channelId}/messages/{messageId} {
+      allow read: if conversationMember(channelId);
+      allow create: if messageCreate(channelId);
+      allow update: if conversationMember(channelId) && resource.data.senderUid == request.auth.uid && request.resource.data.senderUid == resource.data.senderUid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text','updatedAt','updatedAtMs','editedAt','editedAtMs']);
+      allow delete: if platform() || (conversationMember(channelId) && resource.data.senderUid == request.auth.uid);
+      match /reactions/{userId} {
+        allow read: if conversationMember(channelId);
+        allow create, update: if conversationMember(channelId) && request.auth.uid == userId && request.resource.data.userUid == request.auth.uid && request.resource.data.emoji is string;
+        allow delete: if conversationMember(channelId) && (request.auth.uid == userId || platform());
+      }
+    }
+
+    match /channels/_group_registry/messages/{id} {
+      allow read: if conversationMember(id);
+      allow create: if platform() || conversationCreate(id);
+      allow update: if platform() || (manager() && sameCompany(resource.data.companyId) && request.auth.uid in resource.data.adminUids
+        && request.resource.data.kind == resource.data.kind
+        && request.resource.data.groupId == resource.data.groupId
+        && immutableCompany()
+        && request.resource.data.createdBy == resource.data.createdBy);
+      allow delete: if platform() || (manager() && sameCompany(resource.data.companyId) && request.auth.uid in resource.data.adminUids);
+    }
+
+    match /{document=**} { allow read, write: if false; }
+  }
+}
