@@ -1,16 +1,20 @@
 import {
   auth,
   db,
+  functions,
   onAuthStateChanged,
   collection,
+  doc,
   getDocs,
   addDoc,
+  setDoc,
   query,
   where,
   orderBy,
   limit,
   onSnapshot,
   serverTimestamp,
+  httpsCallable,
   getSavedUserProfile
 } from "./firebase.js";
 
@@ -25,7 +29,6 @@ const REGISTRY = "_group_registry";
 const GROUP_KEY = "evaraos-message-group-state";
 const MUTE_KEY = "evaraos-muted-conversations";
 const HIDDEN_KEY = "evaraos-hidden-conversations";
-const ADMIN = new Set(["owner","super_admin","admin","manager","operations_manager","hr_manager"]);
 const GROUPS = [
   { key:"direct", title:"Direct Messages", subtitle:"Private conversations" },
   { key:"group", title:"Groups", subtitle:"Shared conversations" },
@@ -74,7 +77,9 @@ el.menuBackdrop = document.querySelector(".messages-sheet-backdrop");
 
 const normalize = value => String(value || "").trim().toLowerCase();
 const currentRole = () => normalize(state.profile.role || "customer");
-const isAdmin = () => ADMIN.has(currentRole());
+const isPlatform = () => currentRole() === "owner"
+  || currentRole() === "super_admin"
+  || (currentRole() === "admin" && state.profile.platformAccess === true);
 const profileName = (profile={}, fallback="User") => profile.displayName || profile.fullName || profile.name || profile.username || profile.email || fallback;
 const initials = value => String(value || "").trim().split(/\s+/).slice(0,2).map(part => part[0]?.toUpperCase()).join("") || "E";
 const toDate = value => {
@@ -119,12 +124,14 @@ const dayKey = value => {
 
 function canSee(conversation) {
   if (state.hidden.has(conversation.id)) return false;
-  if (conversation.builtin) return conversation.roles.includes(currentRole());
+  if (conversation.type === "role") {
+    const allowedRoles = conversation.allowedRoles || conversation.roles || [];
+    return isPlatform() || allowedRoles.includes(currentRole());
+  }
   const uid = state.user?.uid || "";
-  return isAdmin()
+  return isPlatform()
     || conversation.memberUids?.includes(uid)
-    || conversation.adminUids?.includes(uid)
-    || conversation.allowedRoles?.includes(currentRole());
+    || conversation.adminUids?.includes(uid);
 }
 
 function ready() {
@@ -276,10 +283,52 @@ function renderConversations() {
 
 async function registry() {
   try {
-    const snapshot = await getDocs(collection(db, "channels", REGISTRY, "messages"));
-    return snapshot.docs
-      .map(entry => ({ registryDocId: entry.id, ...entry.data() }))
-      .filter(entry => ["group_meta","direct_meta","role_meta"].includes(entry.kind) && entry.groupId);
+    const source = collection(db, "channels", REGISTRY, "messages");
+    const uid = state.user?.uid || "";
+    const companyId = String(state.profile.companyId || "").trim();
+    const requests = [];
+
+    if (isPlatform()) {
+      requests.push(getDocs(query(source, limit(500))));
+    } else {
+      if (uid && companyId) {
+        ["direct_meta", "group_meta"].forEach((kind) => {
+          requests.push(getDocs(query(
+            source,
+            where("kind", "==", kind),
+            where("companyId", "==", companyId),
+            where("memberUids", "array-contains", uid),
+            limit(250)
+          )));
+          requests.push(getDocs(query(
+            source,
+            where("kind", "==", kind),
+            where("companyId", "==", companyId),
+            where("adminUids", "array-contains", uid),
+            limit(250)
+          )));
+        });
+      }
+      if (companyId) {
+        requests.push(getDocs(query(
+          source,
+          where("kind", "==", "role_meta"),
+          where("companyId", "==", companyId),
+          where("allowedRoles", "array-contains", currentRole()),
+          limit(250)
+        )));
+      }
+    }
+
+    const snapshots = await Promise.all(requests);
+    const entries = new Map();
+    snapshots.forEach(snapshot => snapshot.docs.forEach(entry => {
+      const data = entry.data() || {};
+      if (entry.id !== data.groupId) return;
+      if (!["group_meta", "direct_meta", "role_meta"].includes(data.kind)) return;
+      entries.set(entry.id, { registryDocId: entry.id, ...data });
+    }));
+    return [...entries.values()];
   } catch (error) {
     console.warn("Conversation registry unavailable", error);
     return [];
@@ -287,21 +336,23 @@ async function registry() {
 }
 
 function merge(entries) {
-  const overrides = new Map(entries.filter(entry => entry.kind === "role_meta").map(entry => [entry.groupId, entry]));
-  const builtins = BUILTINS.map((base,order) => ({
-    ...base,
-    ...(overrides.get(base.id) || {}),
-    id: base.id,
-    builtin: true,
-    type: "role",
-    order,
-    memberUids: [],
-    adminUids: []
-  }));
-
-  const custom = entries
-    .filter(entry => entry.kind !== "role_meta")
-    .map((entry,index) => {
+  const builtins = new Map(BUILTINS.map((definition, order) => [definition.id, { definition, order }]));
+  return entries
+    .map((entry, index) => {
+      if (entry.kind === "role_meta") {
+        const builtin = builtins.get(entry.channelKey);
+        return {
+          ...(builtin?.definition || {}),
+          ...entry,
+          id: entry.groupId,
+          name: entry.name || builtin?.definition?.name || "Team Channel",
+          builtin: Boolean(builtin),
+          type: "role",
+          order: builtin?.order ?? BUILTINS.length + index,
+          memberUids: entry.memberUids || [],
+          adminUids: entry.adminUids || []
+        };
+      }
       const type = entry.kind === "direct_meta" ? "direct" : "group";
       let name = entry.name || (type === "direct" ? "Direct Message" : "Group");
       if (type === "direct" && entry.participantNames && state.user?.uid) {
@@ -309,9 +360,8 @@ function merge(entries) {
         name = entry.participantNames[otherUid] || name;
       }
       return { ...entry, id: entry.groupId, name, builtin:false, type, order:BUILTINS.length + index };
-    });
-
-  return [...builtins, ...custom].filter(canSee);
+    })
+    .filter(canSee);
 }
 
 async function preview(conversation) {
@@ -462,16 +512,11 @@ function autoSize() {
 }
 
 async function findUserByEmail(email) {
-  const candidates = [...new Set([String(email || "").trim(), normalize(email)].filter(Boolean))];
-  for (const candidate of candidates) {
-    const snapshot = await getDocs(query(collection(db,"users"), where("email","==",candidate), limit(1)));
-    if (!snapshot.empty) {
-      const document = snapshot.docs[0];
-      const data = document.data();
-      return { uid:data.uid || document.id, email:data.email || candidate, ...data };
-    }
-  }
-  return null;
+  const candidate = normalize(email);
+  if (!candidate) return null;
+  const resolveRecipient = httpsCallable(functions, "resolveMessageRecipient");
+  const response = await resolveRecipient({ email: candidate });
+  return response?.data || null;
 }
 
 function conversationId(prefix) {
@@ -481,7 +526,7 @@ function conversationId(prefix) {
 
 async function createConversationMetadata({ kind, name, description, members, participantNames={} }) {
   const groupId = conversationId(kind === "direct_meta" ? "direct" : "group");
-  await addDoc(collection(db,"channels",REGISTRY,"messages"), {
+  await setDoc(doc(db, "channels", REGISTRY, "messages", groupId), {
     kind,
     groupId,
     name,
@@ -802,9 +847,7 @@ function init() {
     }
     state.user = user;
     state.profile = getSavedUserProfile() || {};
-    state.conversations = BUILTINS
-      .map((conversation,order) => ({ ...conversation, order, builtin:true, type:"role" }))
-      .filter(canSee);
+    state.conversations = [];
     renderConversations();
     ready();
     await loadConversations();
