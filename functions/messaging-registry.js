@@ -1,5 +1,9 @@
 const admin = require("firebase-admin");
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const {
+  planMessageRegistryMigration,
+  safeSegment
+} = require("./messaging-registry-core");
 
 const db = admin.firestore();
 const FieldValue = admin.firestore.FieldValue;
@@ -33,10 +37,6 @@ function normalize(value = "") {
 
 function clean(value = "", max = 320) {
   return String(value || "").trim().slice(0, max);
-}
-
-function safeSegment(value = "") {
-  return clean(value, 160).replace(/[^a-zA-Z0-9_-]+/g, "_");
 }
 
 function channelId(companyId, key) {
@@ -106,6 +106,23 @@ async function ensureChannels(companyId, actorUid) {
 
   await batch.commit();
   return ids;
+}
+
+async function readRegistryRecords() {
+  const source = db.collection("channels/_group_registry/messages");
+  const records = [];
+  let cursor = null;
+
+  for (;;) {
+    let query = source.orderBy(admin.firestore.FieldPath.documentId()).limit(500);
+    if (cursor) query = query.startAfter(cursor);
+    const snapshot = await query.get();
+    snapshot.forEach((document) => records.push({ id: document.id, data: document.data() || {} }));
+    if (snapshot.size < 500) break;
+    cursor = snapshot.docs[snapshot.docs.length - 1];
+  }
+
+  return records;
 }
 
 exports.bootstrapMessageChannels = onCall(
@@ -182,32 +199,78 @@ exports.migrateMessageRegistry = onCall(
       throw new HttpsError("permission-denied", "Platform administration is required.");
     }
 
+    const dryRun = request.data?.dryRun !== false;
     const deleteLegacy = request.data?.deleteLegacy === true;
-    const snapshot = await db.collection("channels/_group_registry/messages").limit(1000).get();
-    const writer = db.bulkWriter();
-    let migrated = 0;
-    let skipped = 0;
+    const expectedPlanHash = clean(request.data?.expectedPlanHash, 64).toLowerCase();
+    const confirmation = clean(request.data?.confirmation, 80);
+    const records = await readRegistryRecords();
+    const plan = planMessageRegistryMigration(records);
 
-    snapshot.forEach((document) => {
-      const data = document.data() || {};
-      const targetId = safeSegment(data.groupId);
-      if (!targetId || targetId === document.id) {
-        skipped += 1;
-        return;
-      }
+    if (plan.malformed.length || plan.conflicts.length) {
+      throw new HttpsError("failed-precondition", "Message registry migration requires manual conflict review.", {
+        planHash: plan.planHash,
+        scanned: plan.scanned,
+        malformed: plan.malformed.length,
+        conflicts: plan.conflicts.length
+      });
+    }
 
-      writer.set(db.doc(`channels/_group_registry/messages/${targetId}`), {
-        ...data,
-        groupId: targetId,
-        migratedFrom: document.id,
+    if (dryRun) {
+      return {
+        ok: true,
+        dryRun: true,
+        planHash: plan.planHash,
+        scanned: plan.scanned,
+        canonical: plan.canonical,
+        legacy: plan.legacy,
+        targetsToCreate: plan.operations.filter((operation) => !operation.targetExists).length,
+        existingTargets: plan.operations.filter((operation) => operation.targetExists).length,
+        deleteLegacyRequested: deleteLegacy
+      };
+    }
+
+    if (confirmation !== "MIGRATE CANONICAL MESSAGE REGISTRY") {
+      throw new HttpsError("failed-precondition", "Migration confirmation did not match the required phrase.");
+    }
+    if (!/^[0-9a-f]{64}$/.test(expectedPlanHash) || expectedPlanHash !== plan.planHash) {
+      throw new HttpsError("aborted", "The message registry changed after review. Run a new dry run and review its plan hash.");
+    }
+
+    const createWriter = db.bulkWriter();
+    createWriter.onWriteError(() => false);
+    for (const operation of plan.operations) {
+      if (operation.targetExists) continue;
+      createWriter.create(db.doc(`channels/_group_registry/messages/${operation.targetId}`), {
+        ...operation.sourceData,
+        groupId: operation.targetId,
+        migratedFrom: operation.sourceIds[0],
+        migrationSourceIds: operation.sourceIds,
         migratedAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp()
-      }, { merge: true });
-      if (deleteLegacy) writer.delete(document.ref);
-      migrated += 1;
-    });
+      });
+    }
+    await createWriter.close();
 
-    await writer.close();
-    return { ok: true, migrated, skipped, deleteLegacy };
+    if (deleteLegacy) {
+      const deleteWriter = db.bulkWriter();
+      deleteWriter.onWriteError(() => false);
+      for (const operation of plan.operations) {
+        operation.sourceIds.forEach((sourceId) => {
+          deleteWriter.delete(db.doc(`channels/_group_registry/messages/${sourceId}`));
+        });
+      }
+      await deleteWriter.close();
+    }
+
+    return {
+      ok: true,
+      dryRun: false,
+      planHash: plan.planHash,
+      scanned: plan.scanned,
+      canonical: plan.canonical,
+      migrated: plan.legacy,
+      targetsCreated: plan.operations.filter((operation) => !operation.targetExists).length,
+      deleteLegacy
+    };
   }
 );

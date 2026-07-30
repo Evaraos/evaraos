@@ -36,6 +36,8 @@ Do not deploy the new rules until all gates are complete:
 5. Firebase App Check enforcement is enabled for callable functions and reviewed for Firestore and Storage.
 6. The Backend Security Validation workflow passes.
 
+The dry-run, plan-hash, create-before-delete, and evidence sequence for gate 3 is documented in [MESSAGING_REGISTRY_MIGRATION.md](./MESSAGING_REGISTRY_MIGRATION.md).
+
 ## Expected breaking protections
 
 - Pending, suspended, inactive, disabled, and rejected accounts cannot read business data.
