@@ -1,4 +1,4 @@
-const NAV_BUILD="nav-v58-critical-shell";
+const NAV_BUILD="nav-v59-responsive-core";
 let NAV_STATE,getNavShell,renderNav,applyProgress,bindScrollBehavior,animateNav;
 let accountSystemsPromise=null;
 
@@ -82,22 +82,21 @@ function bindAccountSystems(){
 }
 
 function scheduleAccountSystems(){
-  if(!isPublicHome()){
-    bindAccountSystems().catch(error=>console.warn("Account nav systems failed:",error));
-    return;
-  }
-  const load=()=>bindAccountSystems().catch(error=>console.warn("Deferred account nav systems failed:",error));
-  if("requestIdleCallback" in window)requestIdleCallback(load,{timeout:2400});
-  else setTimeout(load,1200);
+  if(isPublicHome())return;
+  bindAccountSystems().catch(error=>console.warn("Account nav systems failed:",error));
 }
 
-async function bindSystems(){
+async function bindMotionSystems(){
   await loadMotionSystems();
   try{applyProgress?.()}catch(error){console.warn("Nav progress binding failed:",error)}
   try{animateNav?.()}catch(error){console.warn("Nav animation failed:",error)}
   try{bindScrollBehavior?.()}catch(error){console.warn("Nav scroll binding failed:",error)}
+}
+
+async function bindSystems(){
   await bindCoreSystems();
   scheduleAccountSystems();
+  bindMotionSystems().catch(error=>console.warn("Deferred nav motion failed:",error));
 }
 
 export async function initNav(){
