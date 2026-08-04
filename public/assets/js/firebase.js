@@ -1,4 +1,8 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  initializeApp,
+  getApp,
+  getApps
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   initializeAppCheck,
   ReCaptchaEnterpriseProvider
@@ -53,26 +57,41 @@ const firebaseConfig = {
   measurementId: "G-296N94CKPR"
 };
 
-const app = initializeApp(firebaseConfig);
+const RUNTIME_KEY = "__EVARAOS_FIREBASE_RUNTIME_V2__";
+const runtime = window[RUNTIME_KEY] || {
+  appCheck: null,
+  currentUser: null,
+  useSessionStorageForProfile: false,
+  globalAuthSyncStarted: false,
+  profileHydrationPromise: null,
+  profileHydrationUid: ""
+};
+window[RUNTIME_KEY] = runtime;
+
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const appCheckSiteKey = "6LczbtQsAAAAAOHLSS25b38mXh1uTMAWvDjPIiOy";
 
-export let appCheck = null;
+export let appCheck = runtime.appCheck;
 
-try {
-  const host = window.location.hostname;
-  const isLocalDev = host === "localhost" || host === "127.0.0.1";
-  const debugToken = isLocalDev ? window.localStorage.getItem("evaraos-app-check-debug-token") : "";
+if (!appCheck) {
+  try {
+    const host = window.location.hostname;
+    const isLocalDev = host === "localhost" || host === "127.0.0.1";
+    const debugToken = isLocalDev ? window.localStorage.getItem("evaraos-app-check-debug-token") : "";
 
-  if (debugToken) {
-    self.FIREBASE_APPCHECK_DEBUG_TOKEN = debugToken;
+    if (debugToken) {
+      self.FIREBASE_APPCHECK_DEBUG_TOKEN = debugToken;
+    }
+
+    appCheck = initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey),
+      isTokenAutoRefreshEnabled: true
+    });
+    runtime.appCheck = appCheck;
+  } catch (error) {
+    appCheck = runtime.appCheck || null;
+    console.warn("Evaraos App Check initialization skipped:", error);
   }
-
-  appCheck = initializeAppCheck(app, {
-    provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey),
-    isTokenAutoRefreshEnabled: true
-  });
-} catch (error) {
-  console.warn("Evaraos App Check initialization skipped:", error);
 }
 
 export const auth = getAuth(app);
@@ -112,12 +131,6 @@ const STORAGE_KEYS = {
   role: "evaraos-role",
   user: "evaraos-user"
 };
-
-let currentUser = null;
-let useSessionStorageForProfile = false;
-let globalAuthSyncStarted = false;
-let profileHydrationPromise = null;
-let profileHydrationUid = "";
 
 function dispatchSessionReady(detail = {}) {
   window.dispatchEvent(
@@ -206,7 +219,7 @@ function targetNameFromData(data = {}, fallback = "") {
 
 function actorSnapshot() {
   const profile = getSavedUserProfile() || {};
-  const user = auth.currentUser || currentUser || {};
+  const user = auth.currentUser || runtime.currentUser || {};
 
   return {
     uid: user.uid || profile.uid || profile.id || "",
@@ -383,18 +396,18 @@ export function hideGlobalLoader() {
 }
 
 export function getCurrentUser() {
-  return currentUser;
+  return auth.currentUser || runtime.currentUser || null;
 }
 
 export async function setAuthPersistence(rememberDevice = true) {
   const persistence = rememberDevice ? browserLocalPersistence : browserSessionPersistence;
-  useSessionStorageForProfile = !rememberDevice;
+  runtime.useSessionStorageForProfile = !rememberDevice;
   await setPersistence(auth, persistence);
 }
 
 function writeStorage(key, value) {
   try {
-    if (useSessionStorageForProfile) {
+    if (runtime.useSessionStorageForProfile) {
       sessionStorage.setItem(key, value);
       localStorage.removeItem(key);
     } else {
@@ -535,7 +548,7 @@ export function requireRole(allowedRoles = [], fallbackPath = "./login.html") {
       return;
     }
 
-    currentUser = user;
+    runtime.currentUser = user;
     const savedRole = normalizeRole(getSavedUserRole());
 
     if (allowed.length && !allowed.includes(savedRole)) {
@@ -552,9 +565,9 @@ export async function hydrateUserProfile(user = auth.currentUser, options = {}) 
   const requireVerified = options?.requireVerified === true;
   const cached = getSavedUserProfile();
 
-  if (!profileHydrationPromise || profileHydrationUid !== user.uid) {
-    profileHydrationUid = user.uid;
-    profileHydrationPromise = (async () => {
+  if (!runtime.profileHydrationPromise || runtime.profileHydrationUid !== user.uid) {
+    runtime.profileHydrationUid = user.uid;
+    runtime.profileHydrationPromise = (async () => {
       const snap = await getDoc(doc(db, "users", user.uid));
       const data = snap.exists() ? snap.data() : {};
       const role = data.role || cached?.role || getSavedUserRole() || "customer";
@@ -580,14 +593,14 @@ export async function hydrateUserProfile(user = auth.currentUser, options = {}) 
       dispatchSessionReady({ authenticated: true, role });
       return profile;
     })().catch((error) => {
-      profileHydrationPromise = null;
-      profileHydrationUid = "";
+      runtime.profileHydrationPromise = null;
+      runtime.profileHydrationUid = "";
       throw error;
     });
   }
 
   try {
-    return await profileHydrationPromise;
+    return await runtime.profileHydrationPromise;
   } catch (error) {
     console.warn("User profile hydration skipped:", error);
     if (requireVerified) return null;
@@ -598,28 +611,28 @@ export async function hydrateUserProfile(user = auth.currentUser, options = {}) 
 }
 
 export function startGlobalAuthSync() {
-    if (globalAuthSyncStarted) return;
-    globalAuthSyncStarted = true;
+  if (runtime.globalAuthSyncStarted) return;
+  runtime.globalAuthSyncStarted = true;
 
-    document.documentElement.classList.add("auth-pending");
-    document.body?.classList.add("auth-pending", "app-loading");
+  document.documentElement.classList.add("auth-pending");
+  document.body?.classList.add("auth-pending", "app-loading");
 
-    onAuthStateChanged(auth, async (user) => {
-      currentUser = user;
+  onAuthStateChanged(auth, async (user) => {
+    runtime.currentUser = user;
 
-      if (!user) {
-        profileHydrationPromise = null;
-        profileHydrationUid = "";
-        clearSavedUserRole();
-        clearSavedUserProfile();
-        hideGlobalLoader();
-        dispatchSessionReady({ authenticated: false });
-        return;
-      }
-
-      await hydrateUserProfile(user);
+    if (!user) {
+      runtime.profileHydrationPromise = null;
+      runtime.profileHydrationUid = "";
+      clearSavedUserRole();
+      clearSavedUserProfile();
       hideGlobalLoader();
-    });
+      dispatchSessionReady({ authenticated: false });
+      return;
+    }
+
+    await hydrateUserProfile(user);
+    hideGlobalLoader();
+  });
 }
 
 startGlobalAuthSync();
