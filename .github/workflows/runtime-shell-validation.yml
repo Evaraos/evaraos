@@ -7,6 +7,7 @@ on:
     paths:
       - "firebase.json"
       - "public/**/*.html"
+      - "public/assets/js/firebase.js"
       - "public/assets/js/loader.js"
       - "public/assets/js/nav.js"
       - "public/assets/js/nav/**"
@@ -15,6 +16,7 @@ on:
     paths:
       - "firebase.json"
       - "public/**/*.html"
+      - "public/assets/js/firebase.js"
       - "public/assets/js/loader.js"
       - "public/assets/js/nav.js"
       - "public/assets/js/nav/**"
@@ -41,6 +43,7 @@ jobs:
         run: |
           set -euo pipefail
           node -e "JSON.parse(require('fs').readFileSync('firebase.json', 'utf8'));"
+          node --experimental-default-type=module --check public/assets/js/firebase.js
           node --check public/assets/js/loader.js
           node --experimental-default-type=module --check public/assets/js/nav.js
           node --experimental-default-type=module --check public/assets/js/nav/nav-main-v6.js
@@ -76,6 +79,14 @@ jobs:
             if (hasAppLoading && loaderCount !== 1) failures.push(`${file}: app-loading requires exactly one loader.js entry`);
           }
 
+          const firebaseSource = fs.readFileSync('public/assets/js/firebase.js', 'utf8');
+          if (!firebaseSource.includes('getApps().length ? getApp() : initializeApp(firebaseConfig)')) {
+            failures.push('firebase.js: Firebase app initialization must be idempotent');
+          }
+          if (!firebaseSource.includes('__EVARAOS_FIREBASE_RUNTIME_V2__')) {
+            failures.push('firebase.js: shared authentication runtime guard is missing');
+          }
+
           const firebase = JSON.parse(fs.readFileSync('firebase.json', 'utf8'));
           const headers = firebase?.hosting?.headers || [];
           const wildcardNoStore = headers.some((rule) => {
@@ -93,5 +104,5 @@ jobs:
             process.exit(1);
           }
 
-          console.log(`Validated ${htmlFiles.length} HTML entrypoints and the runtime cache policy.`);
+          console.log(`Validated ${htmlFiles.length} HTML entrypoints, Firebase boot, and the runtime cache policy.`);
           NODE
