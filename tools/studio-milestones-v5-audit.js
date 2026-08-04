@@ -167,6 +167,12 @@ if (!errors.length) {
   if (!source.ownerControl.includes("document.getElementById('studioOwnerControlTemplate')") || !source.ownerControl.includes('template.content.cloneNode(true)')) {
     errors.push('studio-owner-control-center.js: Owner App Settings must clone the trusted route template');
   }
+  if (!source.ownerControl.includes('function safeImagePreviewUrl(value)') || !source.ownerControl.includes("url.protocol !== 'https:'")) {
+    errors.push('studio-owner-control-center.js: image previews must enforce the HTTPS/same-origin URL allowlist');
+  }
+  if (!source.ownerControl.includes('preview instanceof HTMLImageElement') || source.ownerControl.includes('preview.src = input.value')) {
+    errors.push('studio-owner-control-center.js: image preview writes must target verified image elements with sanitized URLs');
+  }
 
   if (!source.workbench.includes("window.EvaraStudioWorkbench = Object.freeze")) {
     errors.push('studio-canvas-workbench-v5.js: public integration API is missing');

@@ -90,6 +90,29 @@ function dispatch(config = state) {
   window.dispatchEvent(new CustomEvent('evara:app-builder-updated', { detail: { companyId: companyId(), config } }));
 }
 
+function safeImagePreviewUrl(value) {
+  const candidate = String(value || '').trim();
+  if (!candidate) return '';
+  try {
+    const url = new URL(candidate, window.location.origin);
+    const sameOriginHttp = url.origin === window.location.origin && (url.protocol === 'https:' || url.protocol === 'http:');
+    if (!sameOriginHttp && url.protocol !== 'https:') return '';
+    return url.href;
+  } catch {
+    return '';
+  }
+}
+
+function setImagePreview(preview, value, fallback = '') {
+  if (!(preview instanceof HTMLImageElement)) return;
+  const safeUrl = safeImagePreviewUrl(value) || safeImagePreviewUrl(fallback);
+  if (!safeUrl) {
+    preview.removeAttribute('src');
+    return;
+  }
+  preview.src = safeUrl;
+}
+
 function style() {
   if (document.getElementById('studioOwnerControlStyles')) return;
   const tag = document.createElement('style');
@@ -115,7 +138,9 @@ function formConfig() {
 function fill(config) {
   state = merge(clone(DEFAULTS), config || {});
   document.querySelectorAll('[data-config-path]').forEach((input) => { input.value = String(getPath(state, input.dataset.configPath) ?? ''); });
-  document.querySelectorAll('[data-upload-preview]').forEach((img) => { img.src = String(getPath(state, img.dataset.uploadPreview) || DEFAULTS.brand.markUrl); });
+  document.querySelectorAll('[data-upload-preview]').forEach((img) => {
+    setImagePreview(img, getPath(state, img.dataset.uploadPreview), DEFAULTS.brand.markUrl);
+  });
 }
 
 function toggle(open) {
@@ -189,7 +214,7 @@ async function upload(target, file) {
     const input = document.querySelector(`[data-config-path="${CSS.escape(target)}"]`);
     if (input) input.value = url;
     const preview = document.querySelector(`[data-upload-preview="${CSS.escape(target)}"]`);
-    if (preview) preview.src = url;
+    setImagePreview(preview, url, DEFAULTS.brand.markUrl);
     dispatch(formConfig());
     status('Upload complete. Publish live when the preview looks right.', 'success');
   } catch (error) {
@@ -222,7 +247,7 @@ function mount() {
   panel.querySelector('[data-open-current-page-editor]')?.addEventListener('click', () => { location.assign('/dashboard.html#live-edit'); });
   panel.querySelectorAll('[data-config-path]').forEach((input) => input.addEventListener('input', () => {
     const preview = panel.querySelector(`[data-upload-preview="${CSS.escape(input.dataset.configPath)}"]`);
-    if (preview && input.value) preview.src = input.value;
+    setImagePreview(preview, input.value, DEFAULTS.brand.markUrl);
   }));
   panel.querySelectorAll('[data-upload-target]').forEach((input) => input.addEventListener('change', () => upload(input.dataset.uploadTarget, input.files?.[0])));
   load();
