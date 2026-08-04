@@ -1,13 +1,13 @@
 {
   "schemaVersion": "evara.source-verification.v1",
-  "status": "confirmed",
-  "sourceCommit": "b90dfca53656fd7cae5af7218b88fa68d314e0d3",
-  "workflowRunId": "30572656768",
-  "verifiedAt": "2026-07-30T18:57:22.191Z",
+  "status": "failed",
+  "sourceCommit": "b1826c398db6b34baa5b9c83d9f5fbdf9ccbb166",
+  "workflowRunId": "30945480674",
+  "verifiedAt": "2026-08-04T19:55:57.763Z",
   "gates": {
     "app-check-audit": {
-      "exitCode": 0,
-      "passed": true
+      "exitCode": 1,
+      "passed": false
     },
     "trusted-journal-audit": {
       "exitCode": 0,
