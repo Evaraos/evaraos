@@ -17,9 +17,9 @@ const PAGE_LIBRARY = [
   { id: 'studio', title: 'Evara Studio', route: '/website-builder.html', role: 'owner', status: 'Command center' }
 ];
 const DEFAULT_ASSETS = [
-  { id: 'official-app-icon', name: 'Official App Icon', type: 'Brand', url: '/assets/brand/evaraos-app-icon.png', status: 'Primary app icon' },
-  { id: 'favicon', name: 'Favicon', type: 'Brand', url: '/assets/brand/evaraos-app-icon.png', status: 'Browser tab icon' },
-  { id: 'brand-mark', name: 'Brand Mark', type: 'Logo', url: '/assets/brand/evaraos-app-icon.png', status: 'Reusable brand mark' }
+  { id: 'official-app-icon', name: 'Official App Icon', type: 'Brand', url: '/assets/img/icon-512.png?v=brand-logo-1', status: 'Primary app icon' },
+  { id: 'favicon', name: 'Favicon', type: 'Brand', url: '/assets/img/icon-512.png?v=brand-logo-1', status: 'Browser tab icon' },
+  { id: 'brand-mark', name: 'Brand Mark', type: 'Logo', url: '/assets/img/icon-512.png?v=brand-logo-1', status: 'Reusable brand mark' }
 ];
 const DEFAULT_THEME = { glass: 'Liquid', radius: 30, spacing: 14, typography: 'System luxury', accent: '#f2172d', mode: 'Adaptive' };
 const PERMISSION_ROWS = [

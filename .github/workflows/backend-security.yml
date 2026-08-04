@@ -11,12 +11,15 @@ on:
       - "functions/**"
       - "tests/backend-security/**"
       - "public/assets/js/access-control.js"
+      - "public/assets/js/messages.js"
+      - "public/assets/js/messages-group-photo.js"
       - "public/assets/js/route-guard.js"
       - "public/assets/js/nav/nav-role-lockdown.js"
       - "public/assets/js/studio/blueprint-drafts.js"
       - "public/assets/js/studio/role-preview.js"
       - "public/assets/js/studio/studio-release-activation-v1.js"
       - "public/assets/js/studio/studio-published-graph-runtime-v1.js"
+      - "tools/messaging-registry-contract-audit.js"
       - ".github/workflows/backend-security.yml"
   pull_request:
     paths:
@@ -26,12 +29,15 @@ on:
       - "functions/**"
       - "tests/backend-security/**"
       - "public/assets/js/access-control.js"
+      - "public/assets/js/messages.js"
+      - "public/assets/js/messages-group-photo.js"
       - "public/assets/js/route-guard.js"
       - "public/assets/js/nav/nav-role-lockdown.js"
       - "public/assets/js/studio/blueprint-drafts.js"
       - "public/assets/js/studio/role-preview.js"
       - "public/assets/js/studio/studio-release-activation-v1.js"
       - "public/assets/js/studio/studio-published-graph-runtime-v1.js"
+      - "tools/messaging-registry-contract-audit.js"
       - ".github/workflows/backend-security.yml"
   workflow_dispatch:
 
@@ -67,6 +73,8 @@ jobs:
           node --check functions/index-stats.js
           node --check functions/staff-approval.js
           node --check functions/audit-events.js
+          node --check functions/messaging-registry-core.js
+          node --check functions/messaging-registry-core.test.js
           node --check functions/messaging-registry.js
           node --check functions/message-notifications.js
           node --check functions/push-notifications.js
@@ -80,12 +88,20 @@ jobs:
       - name: Validate authorization client syntax
         run: |
           node --experimental-default-type=module --check public/assets/js/access-control.js
+          node --experimental-default-type=module --check public/assets/js/messages.js
+          node --experimental-default-type=module --check public/assets/js/messages-group-photo.js
           node --experimental-default-type=module --check public/assets/js/route-guard.js
           node --experimental-default-type=module --check public/assets/js/nav/nav-role-lockdown.js
           node --experimental-default-type=module --check public/assets/js/studio/blueprint-drafts.js
           node --experimental-default-type=module --check public/assets/js/studio/role-preview.js
           node --experimental-default-type=module --check public/assets/js/studio/studio-release-activation-v1.js
           node --experimental-default-type=module --check public/assets/js/studio/studio-published-graph-runtime-v1.js
+
+      - name: Validate canonical messaging registry contract
+        run: node tools/messaging-registry-contract-audit.js
+
+      - name: Run messaging registry migration unit tests
+        run: node --test functions/messaging-registry-core.test.js
 
       - name: Run Firebase rules emulator tests
         working-directory: tests/backend-security

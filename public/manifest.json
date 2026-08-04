@@ -6,22 +6,30 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui", "browser"],
+  "display_override": [
+    "standalone",
+    "minimal-ui",
+    "browser"
+  ],
   "orientation": "portrait",
   "background_color": "#050506",
   "theme_color": "#e30613",
-  "categories": ["business", "productivity", "utilities"],
+  "categories": [
+    "business",
+    "productivity",
+    "utilities"
+  ],
   "lang": "en-US",
   "dir": "ltr",
   "icons": [
     {
-      "src": "/assets/brand/evaraos-app-icon.png?v=brand-png-1",
+      "src": "/assets/brand/evaraos-app-icon.png?v=brand-canonical-20260726-1",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/assets/brand/evaraos-app-icon.png?v=brand-png-1",
+      "src": "/assets/brand/evaraos-app-icon.png?v=brand-canonical-20260726-1",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -33,14 +41,26 @@
       "short_name": "Dashboard",
       "description": "Open the Evaraos dashboard.",
       "url": "/dashboard.html",
-      "icons": [{"src":"/assets/brand/evaraos-app-icon.png?v=brand-png-1","sizes":"512x512","type":"image/png"}]
+      "icons": [
+        {
+          "src": "/assets/brand/evaraos-app-icon.png?v=brand-canonical-20260726-1",
+          "sizes": "512x512",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Settings",
       "short_name": "Settings",
       "description": "Open Evaraos settings.",
-      "url": "/settings.html",
-      "icons": [{"src":"/assets/brand/evaraos-app-icon.png?v=brand-png-1","sizes":"512x512","type":"image/png"}]
+      "url": "/settings-v2.html",
+      "icons": [
+        {
+          "src": "/assets/brand/evaraos-app-icon.png?v=brand-canonical-20260726-1",
+          "sizes": "512x512",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

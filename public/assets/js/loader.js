@@ -7,11 +7,11 @@
   const INTERNAL_NAV_KEY="evaraos-internal-navigation-v1";
   const INTERNAL_NAV_TTL=15000;
   const LONG_RESUME_MS=45000;
-  const NAV_DELAY=90;
-  const FORCE_UNLOCK=6000;
-  const WATCHDOG_MS=2600;
-  const EXIT_MS=180;
-  const WELCOME_MIN_MS=1200;
+  const NAV_DELAY=20;
+  const FORCE_UNLOCK=3500;
+  const WATCHDOG_MS=1200;
+  const EXIT_MS=120;
+  const WELCOME_MIN_MS=450;
   const BRAND_MARK_SRC='/assets/brand/evaraos-mark.png?v=brand-png-3';
   const APP_ICON_SRC='/assets/brand/evaraos-app-icon.png?v=brand-png-1';
   let timer=null,forceTimer=null,watchdogTimer=null,isTransitioning=false,welcomeStartedAt=0,hiddenAt=0;
@@ -42,7 +42,12 @@
   function transition(){return document.getElementById(TRANSITION_ID)}
   function authPending(){return document.documentElement.classList.contains('auth-pending')||document.body?.classList.contains('auth-pending')}
   function appPending(){return !bootResolved||authPending()||document.documentElement.classList.contains('boot-pending')||document.body?.classList.contains('app-loading')||isTransitioning}
-  function clearTimers(){if(timer)clearTimeout(timer);if(forceTimer)clearTimeout(forceTimer);timer=forceTimer=null}
+  function clearTimers(){
+    if(timer)clearTimeout(timer);
+    if(forceTimer)clearTimeout(forceTimer);
+    if(watchdogTimer)clearTimeout(watchdogTimer);
+    timer=forceTimer=watchdogTimer=null;
+  }
 
   function ensureCriticalStyles(){
     if(document.getElementById(CRITICAL_STYLE_ID))return;
@@ -303,6 +308,7 @@
   }
 
   function shellWatchdog(){
+    watchdogTimer=null;
     applyBrand();
     domReady=document.readyState!=='loading';
     windowLoaded=document.readyState==='complete';
@@ -311,7 +317,7 @@
     if(appPending()&&!document.querySelector('#evaraFastLoader.active,#evaraWelcomeLoader.active'))showFastLoader();
     const root=document.getElementById('universalNavRoot');
     if(root&&!root.querySelector('.eva-nav-layer')&&!document.documentElement.dataset.evaraosNavReady){
-      import('/assets/js/nav.js?v=nav-v58-critical-shell').catch(error=>console.warn('Nav watchdog import failed:',error));
+      import('/assets/js/nav.js?v=nav-v59-responsive-core').catch(error=>console.warn('Nav watchdog import failed:',error));
     }
     window.dispatchEvent(new CustomEvent('evaraos:shell-watchdog',{detail:{...health()}}));
   }
@@ -323,9 +329,9 @@
     }
     if(!hiddenAt||Date.now()-hiddenAt<LONG_RESUME_MS||isTransitioning)return;
     hiddenAt=0;
-    bootResolved=false;
-    showWelcomeLoader({title:'Welcome back to Evaraos',subtitle:'Refreshing your workspace.'});
-    requestAnimationFrame(()=>maybeCompleteBoot(false));
+    applyBrand();
+    if(appPending())shellWatchdog();
+    window.dispatchEvent(new CustomEvent('evaraos:resume',{detail:{at:Date.now(),...health()}}));
   }
 
   function init(){
@@ -364,7 +370,7 @@
       if(!shouldIntercept(anchor))return;
       event.preventDefault();
       beginNavigationLoad();
-      setTimeout(()=>location.assign(anchor.href),80);
+      setTimeout(()=>location.assign(anchor.href),35);
     });
     addEventListener('evara:nav-ready',markNavReady);
     addEventListener('evara:session-ready',markSessionReady);

@@ -249,6 +249,64 @@ test("conversation membership gates direct and role messages", async () => {
   await assertFails(getDoc(doc(otherCompanyDb, "channels", "company-a__field-crews", "messages", "message-1")));
 });
 
+test("conversation registry queries stay membership, role, and tenant constrained", async () => {
+  const memberDb = env.authenticatedContext("techA").firestore();
+  const managerDb = env.authenticatedContext("managerA").firestore();
+  const otherCompanyDb = env.authenticatedContext("techB").firestore();
+  const registry = collection(memberDb, "channels", "_group_registry", "messages");
+
+  await assertSucceeds(getDocs(query(
+    registry,
+    where("kind", "==", "direct_meta"),
+    where("companyId", "==", "company-a"),
+    where("memberUids", "array-contains", "techA")
+  )));
+  await assertSucceeds(getDocs(query(
+    registry,
+    where("kind", "==", "role_meta"),
+    where("companyId", "==", "company-a"),
+    where("allowedRoles", "array-contains", "technician")
+  )));
+  await assertSucceeds(getDocs(query(
+    collection(managerDb, "channels", "_group_registry", "messages"),
+    where("kind", "==", "direct_meta"),
+    where("companyId", "==", "company-a"),
+    where("adminUids", "array-contains", "managerA")
+  )));
+  await assertFails(getDocs(query(
+    collection(otherCompanyDb, "channels", "_group_registry", "messages"),
+    where("kind", "==", "role_meta"),
+    where("companyId", "==", "company-a"),
+    where("allowedRoles", "array-contains", "technician")
+  )));
+  await assertFails(getDocs(registry));
+});
+
+test("conversation registry creation requires canonical identity and tenant scope", async () => {
+  const managerDb = env.authenticatedContext("managerA").firestore();
+  const canonical = {
+    kind: "direct_meta",
+    groupId: "direct-new",
+    companyId: "company-a",
+    memberUids: ["managerA", "techA"],
+    adminUids: ["managerA"],
+    createdBy: "managerA"
+  };
+
+  await assertSucceeds(setDoc(
+    doc(managerDb, "channels", "_group_registry", "messages", "direct-new"),
+    canonical
+  ));
+  await assertFails(setDoc(
+    doc(managerDb, "channels", "_group_registry", "messages", "random-document-id"),
+    { ...canonical, groupId: "direct-other" }
+  ));
+  await assertFails(setDoc(
+    doc(managerDb, "channels", "_group_registry", "messages", "direct-cross-company"),
+    { ...canonical, groupId: "direct-cross-company", companyId: "company-b" }
+  ));
+});
+
 test("members can create messages but cannot impersonate another role", async () => {
   const memberDb = env.authenticatedContext("techA").firestore();
   await assertSucceeds(setDoc(doc(memberDb, "channels", "direct-a", "messages", "message-2"), {

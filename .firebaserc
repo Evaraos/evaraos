@@ -1,1 +1,1 @@
-{"projects":{"default":"evaraos-web"},"targets":{"evaraos-web":{"hosting":{"production":["evaraos"]}}},"etags":{}}
+{"projects":{"default":"evaraos"},"targets":{"evaraos":{"hosting":{"production":["evaraos"]}}},"etags":{}}

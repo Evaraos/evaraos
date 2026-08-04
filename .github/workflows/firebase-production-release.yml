@@ -370,7 +370,7 @@ jobs:
           git add docs/deployments/firebase-production-release.json
           if ! git diff --cached --quiet; then
             git commit -m "ops: confirm Firebase production release [skip ci]"
-            git push origin HEAD:evaraos
+            git push origin HEAD:evaraos-web
           fi
 
       - name: Update activation tracker
