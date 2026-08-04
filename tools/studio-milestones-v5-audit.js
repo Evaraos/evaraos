@@ -16,18 +16,22 @@ const files = {
   projection: 'public/assets/js/studio/canvas/graph-projection.js',
   dispatcher: 'public/assets/js/studio/canvas/mock-operation-dispatcher.js',
   trusted: 'public/assets/js/studio/studio-trusted-journal.js',
-  authority: 'public/assets/js/studio/studio-production-authority.js'
+  authority: 'public/assets/js/studio/studio-production-authority.js',
+  ownerControl: 'public/assets/js/studio/studio-owner-control-center.js'
 };
 
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 for (const file of Object.values(files)) {
   if (!fs.existsSync(path.join(root, file))) errors.push(`${file}: required Studio milestone asset is missing`);
 }
+if (fs.existsSync(path.join(root, 'public/assets/js/studio/studio-inspector-v3.js'))) {
+  errors.push('Legacy studio-inspector-v3.js must be removed instead of competing with Graph Workbench.');
+}
 
 if (!errors.length) {
   const source = Object.fromEntries(Object.entries(files).map(([key, file]) => [key, read(file)]));
 
-  for (const file of [files.workbench, files.canvas, files.session, files.projection, files.dispatcher, files.trusted, files.authority]) {
+  for (const file of [files.workbench, files.canvas, files.session, files.projection, files.dispatcher, files.trusted, files.authority, files.ownerControl]) {
     try {
       execFileSync(process.execPath, ['--check', path.join(root, file)], { stdio: 'pipe' });
     } catch (error) {
@@ -40,6 +44,7 @@ if (!errors.length) {
     '/assets/css/pages/studio-canvas-workbench-v5.css?v=1',
     '/assets/js/studio/canvas/canvas-session-sandbox.js?v=3',
     '/assets/js/studio/canvas/studio-canvas-workbench-v5.js?v=2',
+    '/assets/js/studio/studio-owner-control-center.js?v=3',
     '/assets/js/studio/studio-trusted-journal-loader.js?v=1',
     '/assets/js/studio/studio-production-authority.js?v=2'
   ];
@@ -154,6 +159,13 @@ if (!errors.length) {
 
   for (const unsafe of ['innerHTML', 'outerHTML', 'eval(', 'new Function', 'document.write']) {
     if (source.workbench.includes(unsafe)) errors.push(`studio-canvas-workbench-v5.js: prohibited unsafe sink ${unsafe}`);
+    if (source.ownerControl.includes(unsafe)) errors.push(`studio-owner-control-center.js: prohibited unsafe sink ${unsafe}`);
+  }
+  if (!source.route.includes('<template id="studioOwnerControlTemplate">')) {
+    errors.push('website-builder.html: safe Owner App Settings template is missing');
+  }
+  if (!source.ownerControl.includes("document.getElementById('studioOwnerControlTemplate')") || !source.ownerControl.includes('template.content.cloneNode(true)')) {
+    errors.push('studio-owner-control-center.js: Owner App Settings must clone the trusted route template');
   }
 
   if (!source.workbench.includes("window.EvaraStudioWorkbench = Object.freeze")) {

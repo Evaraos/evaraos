@@ -103,36 +103,6 @@ function style() {
   document.head.appendChild(tag);
 }
 
-function panelMarkup() {
-  return `
-    <header class="studio-owner-control-head"><div><h2>Owner App Builder</h2><p>Publish brand, loader, logo, and app-wide copy updates without changing code.</p></div><button class="studio-owner-control-close" type="button" data-studio-owner-close aria-label="Close">×</button></header>
-    <div class="studio-owner-control-body">
-      <section class="studio-owner-config-section"><h3>Brand system</h3><p>These values update the loader marks, browser icons, and any element using the Evara brand data attributes.</p><div class="studio-owner-grid">
-        <label class="studio-owner-field">Brand name<input data-config-path="brand.name" maxlength="120"></label>
-        <label class="studio-owner-field">Accent color<input data-config-path="brand.accent" type="color"></label>
-        <label class="studio-owner-field is-wide">Brand mark URL<input data-config-path="brand.markUrl"></label>
-        <label class="studio-owner-field is-wide">App icon URL<input data-config-path="brand.appIconUrl"></label>
-      </div>
-      <div class="studio-owner-upload"><img data-upload-preview="brand.markUrl" alt="Brand mark preview"><div class="studio-owner-upload-actions"><strong>Upload brand mark</strong><input type="file" accept="image/*" data-upload-target="brand.markUrl"><small>PNG or WebP with transparency works best.</small></div></div>
-      <div class="studio-owner-upload"><img data-upload-preview="brand.appIconUrl" alt="App icon preview"><div class="studio-owner-upload-actions"><strong>Upload app icon</strong><input type="file" accept="image/*" data-upload-target="brand.appIconUrl"><small>Use a square image for install and browser icons.</small></div></div></section>
-
-      <section class="studio-owner-config-section"><h3>Launch loader</h3><p>The full welcome loader shown on a real launch or refresh.</p><div class="studio-owner-grid">
-        <label class="studio-owner-field">Eyebrow<input data-config-path="loaders.launch.eyebrow" maxlength="80"></label>
-        <label class="studio-owner-field">Background<input data-config-path="loaders.launch.background"></label>
-        <label class="studio-owner-field is-wide">Title<input data-config-path="loaders.launch.title" maxlength="180"></label>
-        <label class="studio-owner-field is-wide">Subtitle<textarea data-config-path="loaders.launch.subtitle" maxlength="260"></textarea></label>
-        <label class="studio-owner-field is-wide">Loader logo URL<input data-config-path="loaders.launch.logoUrl"></label>
-      </div><div class="studio-owner-upload"><img data-upload-preview="loaders.launch.logoUrl" alt="Launch loader preview"><div class="studio-owner-upload-actions"><strong>Upload launch logo</strong><input type="file" accept="image/*" data-upload-target="loaders.launch.logoUrl"><small>This can be different from the main brand mark.</small></div></div></section>
-
-      <section class="studio-owner-config-section"><h3>Return loader</h3><p>The welcome-back message used after the app has been in the background.</p><div class="studio-owner-grid"><label class="studio-owner-field is-wide">Title<input data-config-path="loaders.resume.title" maxlength="180"></label><label class="studio-owner-field is-wide">Subtitle<textarea data-config-path="loaders.resume.subtitle" maxlength="260"></textarea></label></div></section>
-
-      <section class="studio-owner-config-section"><h3>Compact loader</h3><p>The smaller loader used for internal page changes.</p><div class="studio-owner-grid"><label class="studio-owner-field">Label<input data-config-path="loaders.compact.label" maxlength="120"></label><label class="studio-owner-field">Background<input data-config-path="loaders.compact.background"></label><label class="studio-owner-field is-wide">Logo URL<input data-config-path="loaders.compact.logoUrl"></label></div><div class="studio-owner-upload"><img data-upload-preview="loaders.compact.logoUrl" alt="Compact loader preview"><div class="studio-owner-upload-actions"><strong>Upload compact logo</strong><input type="file" accept="image/*" data-upload-target="loaders.compact.logoUrl"><small>Keep this simple so it stays clear at a small size.</small></div></div></section>
-
-      <section class="studio-owner-config-section"><h3>Page text and existing UI</h3><p>Open any app page and use the owner Live Edit drawer. Select existing text, cards, images, or buttons, save the draft, then choose Publish Page. Published content is shared with the active publishing scope.</p><button class="studio-owner-button" type="button" data-open-current-page-editor>Open current page with Live Edit</button></section>
-    </div>
-    <footer class="studio-owner-control-foot"><span data-studio-owner-status>Loading workspace settings…</span><div><button class="studio-owner-button" type="button" data-studio-owner-preview>Preview</button> <button class="studio-owner-button" type="button" data-studio-owner-reset>Reset form</button> <button class="studio-owner-button is-primary" type="button" data-studio-owner-publish>Publish live</button></div></footer>`;
-}
-
 function formConfig() {
   const next = clone(state);
   document.querySelectorAll('[data-config-path]').forEach((input) => setPath(next, input.dataset.configPath, input.value.trim()));
@@ -230,6 +200,8 @@ async function upload(target, file) {
 
 function mount() {
   if (mounted || !allowed()) return;
+  const template = document.getElementById('studioOwnerControlTemplate');
+  if (!(template instanceof HTMLTemplateElement)) return;
   mounted = true;
   style();
   const button = document.createElement('button');
@@ -240,7 +212,7 @@ function mount() {
   const panel = document.createElement('aside');
   panel.className = 'studio-owner-control-panel';
   panel.setAttribute('aria-label', 'Owner App Builder settings');
-  panel.innerHTML = panelMarkup();
+  panel.append(template.content.cloneNode(true));
   document.body.append(button, panel);
   panel.querySelector('[data-studio-owner-close]')?.addEventListener('click', () => toggle(false));
   panel.querySelector('[data-studio-owner-preview]')?.addEventListener('click', () => { state = formConfig(); dispatch(state); status('Preview applied on this device.', 'success'); });
