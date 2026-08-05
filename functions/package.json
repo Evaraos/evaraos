@@ -6,7 +6,7 @@
   "engines": {
     "node": "20"
   },
-  "main": "index.js",
+  "main": "index-stats.js",
   "scripts": {
     "serve": "firebase emulators:start --only functions,firestore,auth,storage",
     "shell": "firebase functions:shell",
