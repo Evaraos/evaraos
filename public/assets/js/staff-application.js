@@ -13,19 +13,13 @@ const MAX_ATTACHMENT_BYTES = 15 * 1024 * 1024;
 
 const AVAILABLE_STAFF_ROLES = [
   { value:"sales_rep", label:"Sales Representative", summary:"Generate leads, educate customers, and close service opportunities in assigned territories." },
-  { value:"lead_generator", label:"Lead Generator", summary:"Create qualified opportunities through field, digital, referral, or partner outreach." },
-  { value:"sales_manager", label:"Sales Manager", summary:"Coach representatives, oversee pipelines, territories, goals, and sales performance." },
   { value:"technician", label:"Technician", summary:"Complete assigned field services, document work, and maintain quality and safety standards." },
   { value:"lead_technician", label:"Lead Technician", summary:"Lead crews, verify job quality, manage equipment, and support field training." },
   { value:"cleaner", label:"Cleaner", summary:"Perform residential or commercial cleaning services using Evaraos job workflows." },
   { value:"lead_cleaner", label:"Lead Cleaner", summary:"Coordinate cleaning teams, inspect completed work, and maintain customer standards." },
   { value:"crew_lead", label:"Crew Lead", summary:"Coordinate a field crew, assignments, arrival times, materials, and completion reporting." },
-  { value:"dispatcher", label:"Dispatcher", summary:"Assign jobs, coordinate schedules, communicate with staff, and resolve route conflicts." },
-  { value:"operations_coordinator", label:"Operations Coordinator", summary:"Support scheduling, customer communication, documentation, and daily operating flow." },
-  { value:"field_manager", label:"Field Manager", summary:"Oversee field teams, quality, route execution, safety, and service accountability." },
   { value:"quality_control", label:"Quality Control", summary:"Review job evidence, inspect results, document issues, and protect service standards." },
-  { value:"customer_support", label:"Customer Support", summary:"Help customers with bookings, updates, billing questions, and service recovery." },
-  { value:"hr", label:"Human Resources", summary:"Support hiring, onboarding, records, policies, and staff communication." },
+  { value:"field_staff", label:"Field Staff", summary:"Support assigned field services, job documentation, equipment handling, and daily operating standards." },
   { value:"staff", label:"General Staff", summary:"Join the operating team in a flexible role based on experience and business needs." }
 ];
 
@@ -125,7 +119,7 @@ function upgradePage(){
   if(oldName){oldName.className="application-field full name-grid-host";oldName.innerHTML=`<div class="name-grid"><div class="application-field"><label for="appFirstName">First name *</label><input id="appFirstName" autocomplete="given-name" required></div><div class="application-field"><label for="appMiddleName">Middle name <small>Optional</small></label><input id="appMiddleName" autocomplete="additional-name"></div><div class="application-field"><label for="appLastName">Last name *</label><input id="appLastName" autocomplete="family-name" required></div></div>`;}
 
   const roleField=byId("appRole")?.closest(".application-field");
-  if(roleField){byId("appRole").innerHTML=`<option value="">Select role</option>${AVAILABLE_STAFF_ROLES.map(r=>`<option value="${r.value}">${r.label}</option>`).join("")}`;roleField.insertAdjacentHTML("beforebegin",`<div class="application-field full role-explorer"><label>Roles you may apply for</label><p class="form-subnote">Select a role card to view its responsibilities and set it as your preferred role.</p><div class="role-choice-grid">${AVAILABLE_STAFF_ROLES.map(r=>`<button type="button" class="role-choice" data-role="${r.value}" aria-expanded="false"><span><strong>${r.label}</strong><small>View role</small></span><p>${r.summary}</p></button>`).join("")}</div></div>`);}
+  if(roleField){byId("appRole").innerHTML=`<option value="">Select role</option>${AVAILABLE_STAFF_ROLES.map(r=>`<option value="${r.value}">${r.label}</option>`).join("")}`;roleField.insertAdjacentHTML("beforebegin",`<div class="application-field full role-explorer"><label>Roles you may apply for</label><p class="form-subnote">Select a role card to view its responsibilities and set it as your preferred role. Management, HR, administrative, and platform authority roles are assigned only through an authorized internal review.</p><div class="role-choice-grid">${AVAILABLE_STAFF_ROLES.map(r=>`<button type="button" class="role-choice" data-role="${r.value}" aria-expanded="false"><span><strong>${r.label}</strong><small>View role</small></span><p>${r.summary}</p></button>`).join("")}</div></div>`);}
 
   const company=byId("appDesiredCompany");
   if(company){company.outerHTML=`<select id="appDesiredCompany" required><option value="">Select company or pathway</option><optgroup label="Evaraos in-house companies"><option>Supreme True Clean</option><option>OneofOne Cleaning</option><option>Solar Bright</option><option>Evaraos Inc</option></optgroup><optgroup label="Programs and marketplace pathways"><option value="Evaraos Independent Service Program">Evaraos Independent Service Program</option><option value="Evaraos Lead Vendor Program">Evaraos Lead Vendor Program</option><option value="Evaraos Service Vendor Program">Evaraos Service Vendor Program</option><option value="Independent Freelancer / Contractor">Independent Freelancer / Contractor</option></optgroup><optgroup label="Established third-party businesses"><option value="Third-Party Business — Operations Platform Only">Third-Party Business — Operations Platform Only</option><option value="Third-Party Service Vendor">Third-Party Service Vendor</option><option value="Third-Party Lead Vendor">Third-Party Lead Vendor</option></optgroup></select>`;}
