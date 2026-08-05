@@ -29,6 +29,7 @@ const functions = [
   'getExperienceEditorState',
   'saveExperienceDraft',
   'publishExperienceConfig',
+  'rollbackExperienceConfig',
   'uploadExperienceAsset',
   'getPublicExperienceConfig'
 ];
@@ -68,12 +69,25 @@ check(!service.includes('expectedDraftRevision !== undefined'), 'draft saves can
 check(!service.includes('Number(request.data.expectedDraftRevision)'), 'revision validation does not coerce strings or null into accepted numbers');
 check(service.includes('if (expectedDraftRevision !== currentRevision)')
   && service.includes('if (expectedDraftRevision !== draftRevision)'), 'draft save and publication both compare the exact expected revision');
-check(service.includes("throw new HttpsError('aborted'"), 'draft and publication use optimistic revision conflicts');
-check(service.includes("targetCollection: 'experience_configs'"), 'draft, publication, and upload actions create audit evidence');
+check(service.includes("throw new HttpsError('aborted'"), 'draft, publication, and rollback use optimistic revision conflicts');
+check(service.includes('function archivedPublishedState(data = {}, publisher, reason)'), 'published Experience history uses one canonical archive formatter');
+check(service.includes("const archive = archivedPublishedState(current, publisher, 'superseded');")
+  && service.includes('if (archive) transaction.set(historyRef, archive);'), 'publication archives the previously live configuration in the same transaction');
+check(service.includes('exports.rollbackExperienceConfig = onCall(CALLABLE_OPTIONS'), 'rollback remains in the trusted App Check-protected Experience service');
+check(service.includes("if (!Number.isInteger(expectedPublishedVersion) || expectedPublishedVersion < 1)"), 'rollback requires an explicit positive published version');
+check(service.includes("CONFIG_REF.collection('history').orderBy('archivedAt', 'desc').limit(1).get()"), 'rollback selects only the latest archived publication');
+check(service.includes('if (expectedPublishedVersion !== currentVersion)'), 'rollback fails when the live version changed before restoration');
+check(service.includes("const currentArchive = archivedPublishedState(current, publisher, 'rollback_replaced');")
+  && service.includes('if (currentArchive) transaction.set(currentHistoryRef, currentArchive);'), 'rollback archives the replaced live configuration atomically');
+check(service.includes('const publishedVersion = currentVersion + 1;'), 'rollback advances the published version instead of moving backward');
+check(service.includes('transaction.delete(restoreRef);'), 'rollback consumes the selected history record to preserve stack ordering');
+check(service.includes("auditRecord(publisher, 'experience_config_rolled_back'"), 'rollback writes trusted audit evidence inside the transaction');
+check(service.includes("targetCollection: 'experience_configs'"), 'draft, publication, rollback, and upload actions create audit evidence');
 check(service.includes("data.published || DEFAULT_CONFIG"), 'the public endpoint reads only published configuration');
 const publicStart = service.indexOf('exports.getPublicExperienceConfig');
 const publicBody = publicStart >= 0 ? service.slice(publicStart) : '';
 check(publicStart >= 0 && !publicBody.includes('data.draft'), 'the public endpoint cannot expose draft configuration');
+check(publicStart >= 0 && !publicBody.includes("collection('history')"), 'the public endpoint cannot expose publication history');
 check(service.includes("request.method !== 'GET'"), 'the public endpoint is read-only');
 check(service.includes("Cache-Control', 'public,max-age=60,stale-while-revalidate=300"), 'the public endpoint has a bounded efficient cache policy');
 
