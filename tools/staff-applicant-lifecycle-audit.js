@@ -20,10 +20,12 @@ const accessControl = read("public", "assets", "js", "access-control.js");
 const submit = block(submission, "async function handleSubmit", "function upgradePage");
 const selfCreate = block(rules, "function selfCreate", "function selfUpdate");
 const applications = block(rules, "match /staff_applications/{id}", "match /staff_profiles/{id}");
+const publicRoleRule = block(rules, "function publicStaffRole", "function selfCreate");
 const publicRoleBlock = block(submission, "const AVAILABLE_STAFF_ROLES", "const form");
 const trustedRoleBlock = block(approval, "const STAFF_ROLES", "const DECISIONS");
 const aliasBlock = block(accessControl, "const ROLE_ALIASES", "const ALL_AUTHENTICATED");
 const publicRoles = valuesFromRoleObjects(publicRoleBlock);
+const rulesPublicRoles = new Set(valuesFromSet(publicRoleRule));
 const trustedRoles = new Set(valuesFromSet(trustedRoleBlock));
 const managerAliases = new Set(
   [...aliasBlock.matchAll(/^\s*([a-z_]+):\s*["']manager["']/gm)].map((match) => match[1])
@@ -49,6 +51,9 @@ check(publicRoles.every((role) => !managerAliases.has(role)), "Public roles must
 check(!/lead_generator/.test(publicRoleBlock), "Unapprovable lead_generator role remains in the public catalog.");
 check(/field_staff/.test(publicRoleBlock), "Public operational catalog should expose the trusted field_staff pathway.");
 check(/Management, HR, administrative, and platform authority roles are assigned only through an authorized internal review\./.test(submission), "Public form must explain that authority roles require internal assignment.");
+check(publicRoles.every((role) => rulesPublicRoles.has(role)) && rulesPublicRoles.size === publicRoles.length, "Firestore public-role allowlist must exactly match the browser catalog.");
+check(/publicStaffRole\(request\.resource\.data\.roleRequested\)/.test(applications), "Application create must enforce the public role allowlist.");
+check(/request\.resource\.data\.desiredRole == request\.resource\.data\.roleRequested/.test(applications), "Application create must require desiredRole to match roleRequested.");
 
 check(!fs.existsSync(path.join(root, "public", "staff_application_status.html")), "Duplicate staff status page exists.");
 check(!fs.existsSync(path.join(root, "public", "assets", "js", "staff-application-status.js")), "Duplicate staff status runtime exists.");
@@ -68,4 +73,4 @@ if (failures.length) {
   failures.forEach((failure) => console.error(`- ${failure}`));
   process.exit(1);
 }
-console.log(`Staff applicant lifecycle audit passed: ${publicRoles.length} public operational roles are trusted, non-managerial, and lifecycle-safe.`);
+console.log(`Staff applicant lifecycle audit passed: ${publicRoles.length} public operational roles are browser/rules aligned, trusted, non-managerial, and lifecycle-safe.`);
