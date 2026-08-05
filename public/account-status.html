@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="adaptive" data-environment="light" data-theme-mode="image" data-appearance="adaptive-system">
+<head>
+  <meta charset="UTF-8" />
+  <script src="/assets/js/adaptive-appearance-boot.js?v=1"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
+  <meta name="theme-color" content="#eef5fb" />
+  <title>Account Status • Evaraos Inc</title>
+  <script>document.documentElement.classList.add('auth-pending');</script>
+  <style>
+    html.boot-pending body{margin:0;overflow:hidden;touch-action:none}
+    html.auth-pending body,body.auth-pending{opacity:0;pointer-events:none}
+    body.account-status-page{margin:0;min-height:100vh;background:transparent}
+    body.app-loading #appRoot{visibility:hidden}
+    body.app-ready #appRoot{visibility:visible}
+    .status-shell{width:min(920px,calc(100% - 28px));min-height:100vh;margin:0 auto;padding:clamp(36px,8vw,92px) 0;display:grid;align-items:center;position:relative;z-index:2}
+    .status-panel{border-radius:34px!important;padding:clamp(24px,5vw,48px)!important;text-align:center}
+    .status-logo{width:min(210px,58vw);height:auto;display:block;margin:0 auto 28px}
+    .status-eyebrow{margin:0 0 12px;color:var(--accent-red);font-size:12px;font-weight:950;letter-spacing:.18em;text-transform:uppercase}
+    .status-title{margin:0;font-size:clamp(2rem,6vw,4.3rem);line-height:.95;letter-spacing:-.065em}
+    .status-body{max-width:700px;margin:18px auto 0;color:var(--text-secondary);font-size:clamp(1rem,2vw,1.13rem);line-height:1.7;font-weight:700}
+    .status-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:28px;text-align:left}
+    .status-item{border:1px solid var(--liquid-border);border-radius:22px;padding:16px;background:linear-gradient(180deg,var(--liquid-bg-top),var(--liquid-bg-bottom));box-shadow:inset 0 1px 0 rgba(255,255,255,.28)}
+    .status-item span{display:block;margin-bottom:6px;color:var(--text-secondary);font-size:11px;font-weight:950;letter-spacing:.09em;text-transform:uppercase}
+    .status-item strong{display:block;overflow-wrap:anywhere;font-size:15px}
+    .status-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:26px}
+    .status-note{margin:18px 0 0;color:var(--text-secondary);font-size:13px;line-height:1.55}
+    @media(max-width:640px){.status-grid{grid-template-columns:1fr}.status-panel{border-radius:26px!important}.status-shell{width:min(100% - 18px,920px);padding:24px 0}}
+  </style>
+  <link rel="stylesheet" href="/assets/css/base.css?v=53" />
+  <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v1" />
+  <link rel="stylesheet" href="/assets/css/auth.css?v=50" />
+  <link rel="stylesheet" href="/assets/css/app-system.css?v=50" />
+</head>
+<body class="account-status-page auth-pending app-loading" data-route-guard="account-status">
+  <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
+  <div id="appRoot">
+    <div class="page-grid-overlay"></div>
+    <main class="status-shell">
+      <section class="status-panel glass-card aurora-card active-glow beam-target" aria-labelledby="accountStatusTitle">
+        <img src="/assets/img/evaraos_logo.png" alt="Evaraos" class="status-logo" loading="eager" decoding="async" fetchpriority="high" />
+        <p id="accountStatusEyebrow" class="status-eyebrow">VERIFYING ACCOUNT</p>
+        <h1 id="accountStatusTitle" class="status-title">Checking your account status.</h1>
+        <p id="accountStatusBody" class="status-body">Evaraos is verifying your profile, role, and approval state before application access is granted.</p>
+
+        <div class="status-grid" aria-label="Verified account details">
+          <div class="status-item"><span>Lifecycle</span><strong id="accountStatusState">Verifying</strong></div>
+          <div class="status-item"><span>Role</span><strong id="accountStatusRole">Verifying</strong></div>
+          <div class="status-item"><span>Record status</span><strong id="accountStatusRecordStatus">Verifying</strong></div>
+          <div class="status-item"><span>Approval</span><strong id="accountStatusApproval">Verifying</strong></div>
+          <div class="status-item" style="grid-column:1/-1"><span>Account</span><strong id="accountStatusEmail">Authenticated account</strong></div>
+        </div>
+
+        <div class="status-actions">
+          <button id="accountStatusRefresh" type="button" class="btn btn-theme-primary">Check Again</button>
+          <button id="accountStatusSignOut" type="button" class="btn btn-theme-secondary">Sign Out</button>
+        </div>
+        <p class="status-note">Account access is controlled by the verified Firestore profile. Refresh only after an authorized administrator has updated your account.</p>
+      </section>
+    </main>
+  </div>
+
+  <script src="/assets/js/loader.js?v=44"></script>
+  <script type="module" src="/assets/js/route-guard.js?v=38"></script>
+  <script type="module" src="/assets/js/account-status.js?v=1"></script>
+  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v13-public-critical"></script>
+</body>
+</html>

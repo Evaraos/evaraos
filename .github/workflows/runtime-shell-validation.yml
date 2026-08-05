@@ -12,11 +12,16 @@ on:
       - "public/assets/js/nav.js"
       - "public/assets/js/nav/**"
       - "public/assets/js/access-control.js"
+      - "public/assets/js/account-lifecycle.js"
+      - "public/assets/js/account-status.js"
+      - "public/assets/js/verified-profile.js"
+      - "public/assets/js/auth.js"
       - "public/assets/js/route-guard.js"
       - "public/assets/js/direct-access-check.js"
       - "public/assets/js/field-ops-map-layer.js"
       - "public/assets/js/field-ops-realtime.js"
       - "tools/access-authority-audit.mjs"
+      - "tools/account-lifecycle-audit.mjs"
       - ".github/workflows/runtime-shell-validation.yml"
   pull_request:
     paths:
@@ -27,11 +32,16 @@ on:
       - "public/assets/js/nav.js"
       - "public/assets/js/nav/**"
       - "public/assets/js/access-control.js"
+      - "public/assets/js/account-lifecycle.js"
+      - "public/assets/js/account-status.js"
+      - "public/assets/js/verified-profile.js"
+      - "public/assets/js/auth.js"
       - "public/assets/js/route-guard.js"
       - "public/assets/js/direct-access-check.js"
       - "public/assets/js/field-ops-map-layer.js"
       - "public/assets/js/field-ops-realtime.js"
       - "tools/access-authority-audit.mjs"
+      - "tools/account-lifecycle-audit.mjs"
       - ".github/workflows/runtime-shell-validation.yml"
 
 permissions:
@@ -60,16 +70,22 @@ jobs:
           node --experimental-default-type=module --check public/assets/js/nav.js
           node --experimental-default-type=module --check public/assets/js/nav/nav-main-v6.js
           node --experimental-default-type=module --check public/assets/js/access-control.js
+          node --experimental-default-type=module --check public/assets/js/account-lifecycle.js
+          node --experimental-default-type=module --check public/assets/js/account-status.js
+          node --experimental-default-type=module --check public/assets/js/verified-profile.js
+          node --experimental-default-type=module --check public/assets/js/auth.js
           node --experimental-default-type=module --check public/assets/js/route-guard.js
           node --experimental-default-type=module --check public/assets/js/direct-access-check.js
           node --experimental-default-type=module --check public/assets/js/field-ops-map-layer.js
           node --experimental-default-type=module --check public/assets/js/field-ops-realtime.js
           node --check tools/access-authority-audit.mjs
+          node --check tools/account-lifecycle-audit.mjs
 
       - name: Validate route and session authority
         run: |
           set -euo pipefail
           node tools/access-authority-audit.mjs
+          node tools/account-lifecycle-audit.mjs
 
       - name: Audit shell entrypoints and cache policy
         shell: bash
@@ -127,5 +143,5 @@ jobs:
             process.exit(1);
           }
 
-          console.log(`Validated ${htmlFiles.length} HTML entrypoints, Firebase boot, and the runtime cache policy.`);
+          console.log(`Validated ${htmlFiles.length} HTML entrypoints, Firebase boot, lifecycle authority, role-scoped field operations, and the runtime cache policy.`);
           NODE

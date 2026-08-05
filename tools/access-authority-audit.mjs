@@ -7,6 +7,7 @@ import {
   normalizeAccessRole,
   pagesForRole
 } from '../public/assets/js/access-control.js';
+import { resolveAccountLifecycle } from '../public/assets/js/account-lifecycle.js';
 
 const duplicatePagePolicyPath = 'public/assets/js/permissions/page-access.js';
 assert.equal(
@@ -48,7 +49,31 @@ assert.equal(defaultRouteForRole('unknown-role'), '/login.html');
 assert.ok(pagesForRole('customer').includes('settings/account.html'));
 assert.deepEqual(pagesForRole('unknown-role'), []);
 
+const activeLifecycle = resolveAccountLifecycle({
+  uid: 'active-user',
+  role: 'owner',
+  status: 'active',
+  approvalStatus: 'approved'
+});
+const pendingLifecycle = resolveAccountLifecycle({
+  uid: 'pending-user',
+  role: 'customer',
+  status: 'pending',
+  approvalStatus: 'pending'
+});
+const incompleteLifecycle = resolveAccountLifecycle({
+  uid: 'incomplete-user',
+  role: 'owner',
+  status: '',
+  approvalStatus: 'approved'
+});
+
+assert.equal(activeLifecycle.active, true);
+assert.equal(pendingLifecycle.active, false);
+assert.equal(incompleteLifecycle.active, false);
+
 const routeGuardSource = fs.readFileSync('public/assets/js/route-guard.js', 'utf8');
+const lifecycleSource = fs.readFileSync('public/assets/js/account-lifecycle.js', 'utf8');
 const directAccessSource = fs.readFileSync('public/assets/js/direct-access-check.js', 'utf8');
 const blueprintSecuritySource = fs.readFileSync('functions/blueprint-security.js', 'utf8');
 const firestoreRulesSource = fs.readFileSync('firebase/firestore.rules', 'utf8');
@@ -60,13 +85,28 @@ assert.match(routeGuardSource, /source: 'verified-route-guard'/);
 assert.match(routeGuardSource, /window\.EvaraRouteSession = session/);
 assert.match(
   routeGuardSource,
-  /return \['active', 'approved'\]\.includes\(status\) && approval === 'approved';/,
-  'The browser route guard must require an active-or-approved status and approved approvalStatus.'
+  /from '\.\/account-lifecycle\.js'/,
+  'The browser route guard must import the canonical lifecycle authority.'
+);
+assert.match(
+  routeGuardSource,
+  /lifecycle: resolveAccountLifecycle\(profile\)/,
+  'The browser route guard must delegate lifecycle decisions to account-lifecycle.js.'
 );
 assert.doesNotMatch(
   routeGuardSource,
-  /profile\.status \|\| 'active'/,
-  'The browser route guard must not default a missing account status to active.'
+  /function accountIsActive\(/,
+  'The browser route guard must not define a second lifecycle authority.'
+);
+assert.match(
+  lifecycleSource,
+  /ACTIVE_STATUSES\.has\(status\) && approvalStatus === 'approved' && role/,
+  'The canonical lifecycle authority must require active-or-approved status, approved approvalStatus, and a recognized role.'
+);
+assert.doesNotMatch(
+  lifecycleSource,
+  /profile\?\.status \|\| 'active'/,
+  'The canonical lifecycle authority must not default a missing account status to active.'
 );
 
 assert.match(
@@ -120,4 +160,4 @@ assert.match(
   /buildFieldOpsCollectionQueries\('jobs', context\)/
 );
 
-console.log(`Validated ${accessCases.length} route decisions, one page-policy authority, strict lifecycle parity, verified-session direct access, and role-scoped map reads.`);
+console.log(`Validated ${accessCases.length} route decisions, one page-policy authority, delegated lifecycle authority, verified-session direct access, and role-scoped map reads.`);
