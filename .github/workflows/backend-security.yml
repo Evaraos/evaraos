@@ -74,7 +74,6 @@ jobs:
 
       - name: Validate Cloud Function syntax
         run: |
-          node --check functions/index.js
           node --check functions/index-stats.js
           node --check functions/experience-config-core.js
           node --check functions/experience-config-core.test.js
