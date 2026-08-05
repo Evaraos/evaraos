@@ -207,3 +207,10 @@ exports.restoreStudioCheckpoint = studioJournal.restoreStudioCheckpoint;
 exports.createStudioBranch = studioJournal.createStudioBranch;
 exports.closeStudioSession = studioJournal.closeStudioSession;
 exports.prepareStudioRelease = studioJournal.prepareStudioRelease;
+
+const experienceConfig = require("./experience-config-service");
+exports.getExperienceEditorState = experienceConfig.getExperienceEditorState;
+exports.saveExperienceDraft = experienceConfig.saveExperienceDraft;
+exports.publishExperienceConfig = experienceConfig.publishExperienceConfig;
+exports.uploadExperienceAsset = experienceConfig.uploadExperienceAsset;
+exports.getPublicExperienceConfig = experienceConfig.getPublicExperienceConfig;
