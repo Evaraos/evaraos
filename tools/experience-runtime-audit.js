@@ -36,9 +36,12 @@ if (!failures.length) {
   check(runtime.includes("EXPERIENCE_VERSION = 'experience-runtime-v1'"), 'runtime has one canonical version');
   check(runtime.includes("CACHE_KEY = 'evaraos-experience-config-v1'"), 'runtime uses the canonical first-paint cache');
   check(runtime.includes("ENDPOINT = '/__experience/config'"), 'runtime reads the same-origin published endpoint');
+  check(runtime.includes('config: mergeObjects(DEFAULT_CONFIG, raw.config)'), 'runtime deep-merges published configuration with safe defaults');
   check(runtime.includes("document.querySelectorAll('[data-experience-text]')"), 'runtime applies registered text slots only');
   check(runtime.includes("document.querySelectorAll('[data-experience-image]')"), 'runtime applies registered media slots only');
   check(runtime.includes("document.querySelectorAll('[data-experience-style]')"), 'runtime applies registered style slots only');
+  check(runtime.includes('function preserveVisibleBoot(config)'), 'disabled welcome presentation preserves visible canonical boot progress');
+  check(runtime.includes('window.EvaraLoader?.showFastLoader?.()'), 'runtime delegates fallback progress to the canonical loader');
   check(!runtime.includes('MutationObserver'), 'runtime does not observe the full DOM');
   check(!runtime.includes('innerHTML'), 'runtime does not inject arbitrary HTML');
   check(!/eval\(|new Function\(/.test(runtime), 'runtime does not execute dynamic code');
