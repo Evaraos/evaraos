@@ -12,6 +12,8 @@ on:
       - "public/assets/js/nav.js"
       - "public/assets/js/nav/**"
       - "public/assets/js/experience/**"
+      - "public/assets/js/studio/experience-editor.js"
+      - "public/assets/css/pages/studio-experience-editor.css"
       - "public/assets/js/access-control.js"
       - "public/assets/js/account-lifecycle.js"
       - "public/assets/js/account-status.js"
@@ -25,6 +27,7 @@ on:
       - "tools/access-authority-audit.mjs"
       - "tools/account-lifecycle-audit.mjs"
       - "tools/experience-runtime-audit.js"
+      - "tools/experience-editor-audit.js"
       - ".github/workflows/runtime-shell-validation.yml"
   pull_request:
     paths:
@@ -35,6 +38,8 @@ on:
       - "public/assets/js/nav.js"
       - "public/assets/js/nav/**"
       - "public/assets/js/experience/**"
+      - "public/assets/js/studio/experience-editor.js"
+      - "public/assets/css/pages/studio-experience-editor.css"
       - "public/assets/js/access-control.js"
       - "public/assets/js/account-lifecycle.js"
       - "public/assets/js/account-status.js"
@@ -48,6 +53,7 @@ on:
       - "tools/access-authority-audit.mjs"
       - "tools/account-lifecycle-audit.mjs"
       - "tools/experience-runtime-audit.js"
+      - "tools/experience-editor-audit.js"
       - ".github/workflows/runtime-shell-validation.yml"
 
 permissions:
@@ -76,6 +82,7 @@ jobs:
           node --experimental-default-type=module --check public/assets/js/nav.js
           node --experimental-default-type=module --check public/assets/js/nav/nav-main-v6.js
           node --experimental-default-type=module --check public/assets/js/experience/experience-runtime.js
+          node --experimental-default-type=module --check public/assets/js/studio/experience-editor.js
           node --experimental-default-type=module --check public/assets/js/access-control.js
           node --experimental-default-type=module --check public/assets/js/account-lifecycle.js
           node --experimental-default-type=module --check public/assets/js/account-status.js
@@ -89,6 +96,7 @@ jobs:
           node --check tools/access-authority-audit.mjs
           node --check tools/account-lifecycle-audit.mjs
           node --check tools/experience-runtime-audit.js
+          node --check tools/experience-editor-audit.js
 
       - name: Validate route and session authority
         run: |
@@ -100,6 +108,11 @@ jobs:
         run: |
           set -euo pipefail
           node tools/experience-runtime-audit.js
+
+      - name: Validate owner Experience editor
+        run: |
+          set -euo pipefail
+          node tools/experience-editor-audit.js
 
       - name: Audit shell entrypoints and cache policy
         shell: bash
@@ -157,5 +170,5 @@ jobs:
             process.exit(1);
           }
 
-          console.log(`Validated ${htmlFiles.length} HTML entrypoints, Firebase boot, lifecycle authority, role-scoped field operations, compact-to-expanded map flow, registered Experience slots, and the runtime cache policy.`);
+          console.log(`Validated ${htmlFiles.length} HTML entrypoints, Firebase boot, lifecycle authority, role-scoped field operations, compact-to-expanded map flow, registered Experience slots, owner Experience editing, and the runtime cache policy.`);
           NODE
