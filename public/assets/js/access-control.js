@@ -50,7 +50,7 @@ const ALL_AUTHENTICATED = Object.freeze([...CANONICAL_ROLES]);
 const TENANT_LEADERSHIP = Object.freeze(['owner', 'admin', 'manager']);
 const TENANT_EXECUTIVES = Object.freeze(['owner', 'admin']);
 const FIELD_ROLES = Object.freeze(['sales', 'technician', 'cleaner']);
-const OPERATIONS_ROLES = Object.freeze(['owner', 'admin', 'manager', 'vendor', ...FIELD_ROLES]);
+const OPERATIONS_ROLES = Object.freeze(['platform_admin', 'owner', 'admin', 'manager', 'vendor', ...FIELD_ROLES]);
 
 export const PUBLIC_PAGES = Object.freeze(new Set([
   'index.html',
@@ -86,7 +86,7 @@ export const PAGE_POLICY = Object.freeze({
   'jobs.html': OPERATIONS_ROLES,
   'leads.html': ['platform_admin', 'owner', 'admin', 'manager', 'vendor', 'sales'],
   'dispatch.html': ['platform_admin', 'owner', 'admin', 'manager', 'vendor'],
-  'dispatch_map.html': ['platform_admin', 'owner', 'admin', 'manager', 'vendor'],
+  'dispatch_map.html': OPERATIONS_ROLES,
   'dispatch_intelligence.html': ['platform_admin', 'owner', 'admin', 'manager'],
   'proximity_dispatch.html': ['platform_admin', 'owner', 'admin', 'manager'],
   'field.html': OPERATIONS_ROLES,
