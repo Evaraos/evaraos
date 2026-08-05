@@ -86,6 +86,8 @@ const fieldOpsRealtimeSource = fs.readFileSync('public/assets/js/field-ops-realt
 const dashboardMapCardSource = fs.readFileSync('public/assets/js/dashboard-live-map-card.js', 'utf8');
 const compactOperationsMapSource = fs.readFileSync('public/operations_map.html', 'utf8');
 const expandedDispatchMapSource = fs.readFileSync('public/dispatch_map.html', 'utf8');
+const leadMapSource = fs.readFileSync('public/assets/js/leads-map-v2.js', 'utf8');
+const mapViewParametersSource = fs.readFileSync('public/assets/js/map-view-parameters.js', 'utf8');
 
 assert.match(routeGuardSource, /window\.location\.pathname \|\| '\/index\.html'/);
 assert.match(routeGuardSource, /source: 'verified-route-guard'/);
@@ -202,5 +204,35 @@ assert.match(
   /href="\/operations_map\.html"/,
   'The expanded Dispatch Map must provide a return path to the compact Operations Map.'
 );
+assert.match(
+  compactOperationsMapSource,
+  /map-view-parameters\.js/,
+  'The compact Operations Map must apply canonical URL filter parameters.'
+);
+assert.match(
+  expandedDispatchMapSource,
+  /map-view-parameters\.js/,
+  'The expanded Dispatch Map must apply canonical URL filter parameters.'
+);
+assert.match(
+  mapViewParametersSource,
+  /new Set\(\['all', 'lead', 'job', 'staff'\]\)/,
+  'Shared map URL filtering must remain restricted to recognized record types.'
+);
+assert.match(
+  leadMapSource,
+  /\/operations_map\.html\?embed=1&type=lead&radius=all/,
+  'The Leads page must embed the shared compact map filtered to lead records.'
+);
+assert.match(
+  leadMapSource,
+  /\/dispatch_map\.html\?type=lead&radius=all/,
+  'The Leads page must expose the expanded shared map filtered to lead records.'
+);
+assert.doesNotMatch(
+  leadMapSource,
+  /loadGoogleMaps|google\.maps|maps-loader\.js|field-ops-map-layer\.js/,
+  'The Leads page must not restore a second independent map runtime.'
+);
 
-console.log(`Validated ${accessCases.length} route decisions, one page-policy authority, delegated lifecycle authority, verified-session direct access, role-scoped map reads, and compact-to-expanded map workspace flow.`);
+console.log(`Validated ${accessCases.length} route decisions, one page-policy authority, delegated lifecycle authority, verified-session direct access, role-scoped map reads, compact-to-expanded flow, and one shared lead-map runtime.`);
