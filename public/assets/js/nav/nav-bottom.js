@@ -1,4 +1,5 @@
 import { buildHref, isCurrentPage } from "./nav-utils.js";
+import { canAccessPageName, normalizeAccessRole } from "../access-control.js";
 import { iconSvg } from "../ui/icons.js";
 
 const REGISTRY = {
@@ -27,26 +28,36 @@ function storedRole() {
   }
 }
 
+function canonicalRole() {
+  return normalizeAccessRole(storedRole());
+}
+
 function roleGroup() {
-  const role = storedRole();
+  const role = canonicalRole();
   if (role === "customer") return "customer";
-  if (["sales", "sales_rep", "technician", "tech", "cleaner", "staff", "field_staff", "crew_lead"].includes(role)) return "staff";
+  if (["sales", "technician", "cleaner"].includes(role)) return "staff";
   return "ops";
 }
 
 function defaultItems() {
-  const group = roleGroup();
-  if (group === "customer") return ["customerHome", "marketplace", "bookings", "customerMessages", "settings"];
-  if (group === "staff") return ["dashboard", "jobs", "schedule", "messages", "settings"];
+  const role = canonicalRole();
+  if (role === "customer") return ["customerHome", "marketplace", "bookings", "customerMessages", "settings"];
+  if (role === "sales") return ["dashboard", "leads", "map", "messages", "settings"];
+  if (["technician", "cleaner"].includes(role)) return ["dashboard", "jobs", "schedule", "map", "messages"];
   return ["home", "dashboard", "leads", "jobs", "messages"];
 }
 
+function allowedItemIds(ids, role) {
+  return ids.filter((id) => REGISTRY[id] && canAccessPageName(REGISTRY[id].page, role));
+}
+
 function workspaceItems() {
-  const defaults = defaultItems();
-  if (roleGroup() === "customer") return defaults.map((id) => REGISTRY[id]);
+  const role = canonicalRole();
+  const defaults = allowedItemIds(defaultItems(), role);
+  if (role === "customer") return defaults.map((id) => REGISTRY[id]);
   try {
     const saved = JSON.parse(localStorage.getItem("evaraos-workspace") || "{}");
-    const ids = Array.isArray(saved.navItems) ? saved.navItems.filter((id) => REGISTRY[id]) : [];
+    const ids = Array.isArray(saved.navItems) ? allowedItemIds(saved.navItems, role) : [];
     const selected = ids.length === 5 ? ids : defaults;
     return selected.map((id) => REGISTRY[id]);
   } catch {
