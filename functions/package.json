@@ -6,17 +6,18 @@
   "engines": {
     "node": "20"
   },
-  "main": "index-stats.js",
+  "main": "index.js",
   "scripts": {
     "serve": "firebase emulators:start --only functions,firestore,auth,storage",
     "shell": "firebase functions:shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "test": "node --test intelligence/*.test.js messaging-registry-core.test.js studio-journal-core.test.js",
+    "test": "node --test intelligence/*.test.js messaging-registry-core.test.js studio-journal-core.test.js experience-config-core.test.js",
     "test:marketplace": "node --test marketplace-operations-core.test.js studio-journal-core.test.js",
     "test:studio-journal": "node --test studio-journal-core.test.js",
+    "test:experience": "node --test experience-config-core.test.js",
     "test:messaging-registry": "node --test messaging-registry-core.test.js",
-    "test:all": "node --test intelligence/*.test.js marketplace-operations-core.test.js messaging-registry-core.test.js studio-journal-core.test.js"
+    "test:all": "node --test intelligence/*.test.js marketplace-operations-core.test.js messaging-registry-core.test.js studio-journal-core.test.js experience-config-core.test.js"
   },
   "dependencies": {
     "firebase-admin": "^12.7.0",
