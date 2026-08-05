@@ -50,16 +50,17 @@ test('normalization keeps only bounded registered page slots and approved styles
     }
   }, { bucketName });
 
+  const page = config.pageOverrides['dashboard.html'];
   assert.equal(config.loaderTheme.accent, '#abcdef');
   assert.equal(config.loaderTheme.radius, 52);
   assert.equal(config.loaderTheme.markSize, 24);
   assert.equal(config.loaders.welcome.minimumMs, 2000);
   assert.equal(config.loaders.page.delayMs, 0);
   assert.equal(config.loaders.resume.enabled, true);
-  assert.equal(config.pageOverrides.dashboard.html.text['hero.title'], 'Updated title');
-  assert.equal(config.pageOverrides.dashboard.html.text['bad-slot'], 'Normalized key');
-  assert.deepEqual(config.pageOverrides.dashboard.html.media, {});
-  assert.deepEqual(config.pageOverrides.dashboard.html.style['hero.card'], { radius: 64, padding: 0, glass: 'default' });
+  assert.equal(page.text['hero.title'], 'Updated title');
+  assert.equal(page.text['bad-slot'], 'Normalized key');
+  assert.deepEqual(page.media, {});
+  assert.deepEqual(page.style['hero.card'], { radius: 64, padding: 0, glass: 'default' });
 });
 
 test('deep merge preserves unrelated configuration fields', () => {
