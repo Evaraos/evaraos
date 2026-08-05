@@ -170,9 +170,27 @@ for (const role of forbiddenAssignedRoles) {
 }
 
 assert(
-  /\["approved", "rejected"\]\.includes\(normalize\(application\.status\)\)/.test(approvalFunction)
+  /const CLAIM_SYNC_ATTEMPTS = 3;/.test(approvalFunction)
+    && /for \(let attempt = 1; attempt <= CLAIM_SYNC_ATTEMPTS; attempt \+= 1\)/.test(approvalFunction)
+    && /claimsSyncStatus: "pending_retry"/.test(approvalFunction)
+    && /throw new HttpsError\(\s*"unavailable"/.test(approvalFunction),
+  "Staff claim synchronization must retry deterministically and surface an incomplete activation state."
+);
+assert(
+  /if \(applicationStatus === "rejected"\)/.test(approvalFunction)
     && /This application has already been finalized\./.test(approvalFunction),
-  "The backend must reject repeat review of finalized applications."
+  "Rejected applications must remain finalized."
+);
+assert(
+  /if \(applicationStatus === "approved"\)/.test(approvalFunction)
+    && /Claim retries must preserve the approved role and company\./.test(approvalFunction)
+    && /staff_claims_sync_retry_requested/.test(approvalFunction)
+    && /alreadySynced/.test(approvalFunction),
+  "Approved applications must allow only idempotent same-role, same-company claim convergence."
+);
+assert(
+  !/exports\.(?:retry|sync)StaffClaims\s*=\s*onCall/.test(approvalFunction),
+  "Claim convergence must reuse reviewStaffApplication rather than adding a second privileged callable."
 );
 
 assert(
@@ -215,4 +233,5 @@ console.log("- One canonical backend callable is wired through the Functions ent
 console.log("- Browser approval writes are blocked.");
 console.log("- Owner/super_admin remain platform-wide.");
 console.log("- Admin-and-below remain company-scoped.");
-console.log("- Elevated role assignment and repeat finalization are blocked.");
+console.log("- Elevated role assignment is blocked.");
+console.log("- Approved claim synchronization is retryable, idempotent, and assignment-preserving.");
