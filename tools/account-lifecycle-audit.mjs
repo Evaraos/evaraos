@@ -35,9 +35,12 @@ assert.equal(accountLifecycleCopy('not-real').eyebrow, 'VERIFICATION REQUIRED');
 const routeGuard = fs.readFileSync('public/assets/js/route-guard.js', 'utf8');
 const verifiedProfile = fs.readFileSync('public/assets/js/verified-profile.js', 'utf8');
 const auth = fs.readFileSync('public/assets/js/auth.js', 'utf8');
+const loginHtml = fs.readFileSync('public/login.html', 'utf8');
+const signupHtml = fs.readFileSync('public/signup.html', 'utf8');
 const accountStatusHtml = fs.readFileSync('public/account-status.html', 'utf8');
 const accountStatusJs = fs.readFileSync('public/assets/js/account-status.js', 'utf8');
 const rules = fs.readFileSync('firebase/firestore.rules', 'utf8');
+const lifecycleReleaseKey = '20260805-lifecycle-r1';
 
 assert.match(routeGuard, /readVerifiedUserProfile\(user\)/);
 assert.match(routeGuard, /resolveAccountLifecycle\(profile\)/);
@@ -58,8 +61,33 @@ assert.match(auth, /redirectForProfile\(profile\)/);
 assert.match(auth, /routeForAccountLifecycle\(lifecycle\)/);
 assert.doesNotMatch(auth, /navigateWithLoader\(['"]\/customer_dashboard\.html/);
 
+for (const [name, source] of [
+  ['login', loginHtml],
+  ['signup', signupHtml],
+  ['account status', accountStatusHtml]
+]) {
+  assert.match(
+    source,
+    new RegExp(`route-guard\\.js\\?v=${lifecycleReleaseKey}`),
+    `${name} must load the released lifecycle route guard cache key.`
+  );
+}
+assert.match(
+  loginHtml,
+  new RegExp(`auth\\.js\\?v=${lifecycleReleaseKey}`),
+  'Login must load the released lifecycle auth cache key.'
+);
+assert.match(
+  signupHtml,
+  new RegExp(`auth\\.js\\?v=${lifecycleReleaseKey}`),
+  'Signup must load the released lifecycle auth cache key.'
+);
 assert.match(accountStatusHtml, /data-route-guard="account-status"/);
-assert.match(accountStatusHtml, /\/assets\/js\/account-status\.js/);
+assert.match(
+  accountStatusHtml,
+  new RegExp(`account-status\\.js\\?v=${lifecycleReleaseKey}`),
+  'Account Status must load the released lifecycle status cache key.'
+);
 assert.match(accountStatusJs, /source !== 'verified-route-guard'/);
 assert.match(accountStatusJs, /await signOut\(auth\)/);
 
@@ -73,4 +101,4 @@ assert.match(
 );
 
 console.log(`Account lifecycle authority audit passed: ${cases.length} lifecycle cases validated.`);
-console.log('Active access, pending review, blocked states, missing profiles, and unknown roles all fail or route as expected.');
+console.log('Active access, pending review, blocked states, missing profiles, unknown roles, and release cache keys all validate.');
