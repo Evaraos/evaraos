@@ -2,6 +2,7 @@ import {
   auth, db, setAuthPersistence, createUserWithEmailAndPassword, updateProfile,
   syncUserSession, doc, setDoc, serverTimestamp
 } from "./firebase.js";
+import { ACCOUNT_STATUS_ROUTE } from "./account-lifecycle.js";
 import { getApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
@@ -105,16 +106,16 @@ async function handleSubmit(event){
     await setAuthPersistence(true);
     const {user}=await createUserWithEmailAndPassword(auth,email,value("appPassword"));
     await updateProfile(user,{displayName:name});
-    await setDoc(doc(db,"users",user.uid),{uid:user.uid,id:user.uid,email,username,usernameLower:username,displayName:name,fullName:name,name,firstName:value("appFirstName"),middleName:value("appMiddleName"),lastName:value("appLastName"),role:DEFAULT_PUBLIC_ROLE,phone:value("appPhone"),bio:"Staff applicant pending review.",status:DEFAULT_PUBLIC_STATUS,approvalStatus:DEFAULT_PUBLIC_APPROVAL,staffApplicationStatus:"submitted",staffApplicationRoleRequested:sanitizeRole(value("appRole")),companyId:"",companyName:value("appDesiredCompany"),createdAt:serverTimestamp(),updatedAt:serverTimestamp()},{merge:true});
-    syncUserSession(user,DEFAULT_PUBLIC_ROLE,{displayName:name,fullName:name,name,username,companyName:value("appDesiredCompany"),approvalStatus:DEFAULT_PUBLIC_APPROVAL,status:DEFAULT_PUBLIC_STATUS});
+    await setDoc(doc(db,"users",user.uid),{uid:user.uid,id:user.uid,email,username,usernameLower:username,displayName:name,fullName:name,name,role:DEFAULT_PUBLIC_ROLE,phone:value("appPhone"),bio:"Staff applicant pending review.",status:DEFAULT_PUBLIC_STATUS,approvalStatus:DEFAULT_PUBLIC_APPROVAL,companyId:"",companyName:"",createdAt:serverTimestamp(),updatedAt:serverTimestamp()},{merge:true});
+    syncUserSession(user,DEFAULT_PUBLIC_ROLE,{displayName:name,fullName:name,name,username,companyId:"",companyName:"",approvalStatus:DEFAULT_PUBLIC_APPROVAL,status:DEFAULT_PUBLIC_STATUS});
     setBusy(true,"Uploading verification…");setMessage("Uploading verification attachments…","info");
     const uploads=[];
     for(const [id,kind] of [["appProfilePhoto","profile_photo"],["appIdFront","id_front"],["appIdBack","id_back"],["appResume","resume_or_extra_proof"]]){const item=await uploadAttachment(user.uid,fileValue(id),kind);if(item)uploads.push(item);}
     setBusy(true,"Submitting application…");
     await setDoc(doc(db,"staff_applications",user.uid),buildPayload(user,uploads),{merge:false});
-    setMessage("Application submitted. Leadership will review your information and contact you with next steps.","success");
+    setMessage("Application submitted. Opening your secure account status…","success");
     form.reset();document.querySelectorAll(".role-choice").forEach(x=>x.classList.remove("active"));
-    setTimeout(()=>window.location.assign("/customer_dashboard.html"),1000);
+    setTimeout(()=>window.location.assign(`${ACCOUNT_STATUS_ROUTE}?state=pending`),1000);
   }catch(error){console.error("Staff application failed:",error);setMessage(error.message||"Could not submit staff application.","error");}
   finally{setBusy(false);}
 }
