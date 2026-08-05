@@ -84,9 +84,10 @@ const firestoreRulesSource = fs.readFileSync('firebase/firestore.rules', 'utf8')
 const fieldOpsMapSource = fs.readFileSync('public/assets/js/field-ops-map-layer.js', 'utf8');
 const fieldOpsRealtimeSource = fs.readFileSync('public/assets/js/field-ops-realtime.js', 'utf8');
 const dashboardMapCardSource = fs.readFileSync('public/assets/js/dashboard-live-map-card.js', 'utf8');
+const dashboardEntrySource = fs.readFileSync('public/assets/js/dashboard-entry.js', 'utf8');
+const leadsEntrySource = fs.readFileSync('public/assets/js/leads-entry.js', 'utf8');
 const compactOperationsMapSource = fs.readFileSync('public/operations_map.html', 'utf8');
 const expandedDispatchMapSource = fs.readFileSync('public/dispatch_map.html', 'utf8');
-const leadMapSource = fs.readFileSync('public/assets/js/leads-map-v2.js', 'utf8');
 const mapViewParametersSource = fs.readFileSync('public/assets/js/map-view-parameters.js', 'utf8');
 
 assert.match(routeGuardSource, /window\.location\.pathname \|\| '\/index\.html'/);
@@ -170,19 +171,54 @@ assert.match(
 );
 
 assert.match(
+  dashboardEntrySource,
+  /dashboard-live-map-card\.js/,
+  'The dashboard must load the shared compact Operations Map preview.'
+);
+assert.match(
+  leadsEntrySource,
+  /dashboard-live-map-card\.js/,
+  'The Leads page must reuse the shared compact Operations Map preview.'
+);
+assert.doesNotMatch(
+  leadsEntrySource,
+  /leads-map-v2\.js/,
+  'The Leads page must not restore a second map wrapper.'
+);
+assert.equal(
+  fs.existsSync('public/assets/js/leads-map-v2.js'),
+  false,
+  'The obsolete Leads-only map wrapper must remain deleted.'
+);
+assert.match(
   dashboardMapCardSource,
-  /src="\/operations_map\.html\?embed=1"/,
+  /frameSrc: '\/operations_map\.html\?embed=1'/,
   'The dashboard map window must embed the compact Operations Map.'
 );
 assert.match(
   dashboardMapCardSource,
-  /href="\/operations_map\.html"/,
+  /openHref: '\/operations_map\.html'/,
   'The dashboard map action must open the compact Operations Map.'
+);
+assert.match(
+  dashboardMapCardSource,
+  /frameSrc: '\/operations_map\.html\?embed=1&type=lead'/,
+  'The Leads map window must embed the canonical compact map filtered to leads.'
+);
+assert.match(
+  dashboardMapCardSource,
+  /openHref: '\/operations_map\.html\?type=lead'/,
+  'The Leads map action must open the canonical lead-filtered Operations Map.'
+);
+assert.match(
+  dashboardMapCardSource,
+  /sectionId: 'leadsMapWorkspace'/,
+  'The shared preview must retain the Leads mount target.'
 );
 assert.doesNotMatch(
   dashboardMapCardSource,
   /href="\/dispatch_map\.html"/,
-  'The dashboard must not bypass the compact Operations Map when opening the expanded workspace.'
+  'Embedded previews must not bypass the compact Operations Map when opening the expanded workspace.'
 );
 assert.match(
   compactOperationsMapSource,
@@ -218,21 +254,6 @@ assert.match(
   mapViewParametersSource,
   /new Set\(\['all', 'lead', 'job', 'staff'\]\)/,
   'Shared map URL filtering must remain restricted to recognized record types.'
-);
-assert.match(
-  leadMapSource,
-  /\/operations_map\.html\?embed=1&type=lead&radius=all/,
-  'The Leads page must embed the shared compact map filtered to lead records.'
-);
-assert.match(
-  leadMapSource,
-  /\/dispatch_map\.html\?type=lead&radius=all/,
-  'The Leads page must expose the expanded shared map filtered to lead records.'
-);
-assert.doesNotMatch(
-  leadMapSource,
-  /loadGoogleMaps|google\.maps|maps-loader\.js|field-ops-map-layer\.js/,
-  'The Leads page must not restore a second independent map runtime.'
 );
 
 console.log(`Validated ${accessCases.length} route decisions, one page-policy authority, delegated lifecycle authority, verified-session direct access, role-scoped map reads, compact-to-expanded flow, and one shared lead-map runtime.`);
