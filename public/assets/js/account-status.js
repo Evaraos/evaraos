@@ -1,5 +1,8 @@
 import {
   auth,
+  db,
+  doc,
+  getDoc,
   signOut,
   clearSavedUserRole,
   clearSavedUserProfile
@@ -9,6 +12,16 @@ import {
   accountLifecycleCopy,
   normalizeLifecycleValue
 } from './account-lifecycle.js';
+
+const APPLICATION_STATES = Object.freeze({
+  submitted: 'Submitted',
+  assigned: 'Assigned for review',
+  needs_more_info: 'More information needed',
+  approved: 'Approved',
+  rejected: 'Not approved'
+});
+
+let loadedApplicationUserId = '';
 
 function byId(id) {
   return document.getElementById(id);
@@ -54,6 +67,72 @@ function renderStatus(session) {
   if (statusValue) statusValue.textContent = session?.status ? label(session.status) : 'Not verified';
 }
 
+function applicationState(application = {}) {
+  const status = normalizeLifecycleValue(application.status);
+  if (['approved', 'rejected', 'needs_more_info'].includes(status)) return status;
+  if (normalizeLifecycleValue(application.assignmentStatus) === 'assigned' || application.companyId) return 'assigned';
+  return 'submitted';
+}
+
+function timestampDate(value) {
+  if (!value) return null;
+  if (typeof value.toDate === 'function') return value.toDate();
+  if (typeof value.seconds === 'number') return new Date(value.seconds * 1000);
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatDate(value) {
+  const date = timestampDate(value);
+  if (!date) return 'Not available';
+  return new Intl.DateTimeFormat(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+  }).format(date);
+}
+
+function setApplicationText(id, value, fallback = 'Not available') {
+  const element = byId(id);
+  if (element) element.textContent = String(value || '').trim() || fallback;
+}
+
+function renderStaffApplication(application = {}) {
+  const state = applicationState(application);
+  const stateLabel = APPLICATION_STATES[state] || label(state);
+  const panel = byId('staffApplicationStatusPanel');
+
+  if (panel) panel.hidden = false;
+  setApplicationText('staffApplicationStatusBadge', stateLabel);
+  setApplicationText('staffApplicationState', stateLabel);
+  setApplicationText('staffApplicationRole', application.roleRequested || application.desiredRole);
+  setApplicationText('staffApplicationPreference', application.desiredCompany);
+  setApplicationText('staffApplicationCompany', application.companyName, 'Not assigned');
+  setApplicationText('staffApplicationSubmittedAt', formatDate(application.submittedAt || application.createdAt));
+}
+
+async function loadStaffApplication(session) {
+  const userId = String(session?.userId || '').trim();
+  if (!userId || loadedApplicationUserId === userId) return;
+  loadedApplicationUserId = userId;
+
+  try {
+    const snapshot = await getDoc(doc(db, 'staff_applications', userId));
+    if (!snapshot.exists()) return;
+    renderStaffApplication(snapshot.data() || {});
+  } catch (error) {
+    loadedApplicationUserId = '';
+    console.warn('Staff application status could not be loaded:', error);
+  }
+}
+
+function renderVerifiedStatus(session) {
+  renderStatus(session);
+  loadStaffApplication(session);
+}
+
 async function handleSignOut() {
   const button = byId('accountStatusSignOut');
   if (button) {
@@ -76,12 +155,12 @@ function init() {
   byId('accountStatusSignOut')?.addEventListener('click', handleSignOut);
 
   const current = sessionForStatus();
-  if (current) renderStatus(current);
+  if (current) renderVerifiedStatus(current);
 }
 
 window.addEventListener('evara:session-ready', (event) => {
   const session = sessionForStatus(event.detail);
-  if (session) renderStatus(session);
+  if (session) renderVerifiedStatus(session);
 });
 
 if (document.readyState === 'loading') {

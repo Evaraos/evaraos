@@ -4,7 +4,7 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "test": "firebase emulators:exec --config ../../firebase.json --only firestore,storage \"node --test security-rules.test.cjs\""
+    "test": "firebase emulators:exec --config ../../firebase.json --only firestore,storage \"node --test security-rules.test.cjs staff-applicant-lifecycle.test.cjs\""
   },
   "dependencies": {
     "@firebase/rules-unit-testing": "5.0.1",

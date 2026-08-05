@@ -24,6 +24,8 @@ on:
       - "public/assets/js/field-ops-map-layer.js"
       - "public/assets/js/field-ops-realtime.js"
       - "public/assets/js/dashboard-live-map-card.js"
+      - "public/assets/js/leads-entry.js"
+      - "public/assets/js/map-view-parameters.js"
       - "tools/access-authority-audit.mjs"
       - "tools/account-lifecycle-audit.mjs"
       - "tools/experience-runtime-audit.js"
@@ -50,6 +52,8 @@ on:
       - "public/assets/js/field-ops-map-layer.js"
       - "public/assets/js/field-ops-realtime.js"
       - "public/assets/js/dashboard-live-map-card.js"
+      - "public/assets/js/leads-entry.js"
+      - "public/assets/js/map-view-parameters.js"
       - "tools/access-authority-audit.mjs"
       - "tools/account-lifecycle-audit.mjs"
       - "tools/experience-runtime-audit.js"
@@ -93,6 +97,8 @@ jobs:
           node --experimental-default-type=module --check public/assets/js/field-ops-map-layer.js
           node --experimental-default-type=module --check public/assets/js/field-ops-realtime.js
           node --experimental-default-type=module --check public/assets/js/dashboard-live-map-card.js
+          node --experimental-default-type=module --check public/assets/js/leads-entry.js
+          node --experimental-default-type=module --check public/assets/js/map-view-parameters.js
           node --check tools/access-authority-audit.mjs
           node --check tools/account-lifecycle-audit.mjs
           node --check tools/experience-runtime-audit.js
@@ -153,6 +159,40 @@ jobs:
             failures.push('firebase.js: shared authentication runtime guard is missing');
           }
 
+          const dashboardEntrySource = fs.readFileSync('public/assets/js/dashboard-entry.js', 'utf8');
+          const leadsEntrySource = fs.readFileSync('public/assets/js/leads-entry.js', 'utf8');
+          const mapPreviewSource = fs.readFileSync('public/assets/js/dashboard-live-map-card.js', 'utf8');
+          const operationsMapSource = fs.readFileSync('public/operations_map.html', 'utf8');
+          const dispatchMapSource = fs.readFileSync('public/dispatch_map.html', 'utf8');
+
+          if (!dashboardEntrySource.includes('dashboard-live-map-card.js')) {
+            failures.push('dashboard-entry.js: shared compact Operations Map preview is missing');
+          }
+          if (!leadsEntrySource.includes('dashboard-live-map-card.js')) {
+            failures.push('leads-entry.js: Leads must reuse the shared compact Operations Map preview');
+          }
+          if (leadsEntrySource.includes('leads-map-v2.js')) {
+            failures.push('leads-entry.js: obsolete Leads-only map wrapper must not be restored');
+          }
+          if (fs.existsSync('public/assets/js/leads-map-v2.js')) {
+            failures.push('leads-map-v2.js: parallel Leads map wrapper is forbidden');
+          }
+          if (!mapPreviewSource.includes('/operations_map.html?embed=1&type=lead')) {
+            failures.push('dashboard-live-map-card.js: lead preview must embed the canonical compact Operations Map');
+          }
+          if (!mapPreviewSource.includes('/operations_map.html?type=lead')) {
+            failures.push('dashboard-live-map-card.js: lead preview must link to the canonical Operations Map');
+          }
+          if (!mapPreviewSource.includes('leadsMapWorkspace')) {
+            failures.push('dashboard-live-map-card.js: Leads mount target is missing');
+          }
+          if (!operationsMapSource.includes('map-view-parameters.js')) {
+            failures.push('operations_map.html: compact map parameter forwarding is missing');
+          }
+          if (!dispatchMapSource.includes('map-view-parameters.js')) {
+            failures.push('dispatch_map.html: expanded map parameter forwarding is missing');
+          }
+
           const firebase = JSON.parse(fs.readFileSync('firebase.json', 'utf8'));
           const headers = firebase?.hosting?.headers || [];
           const wildcardNoStore = headers.some((rule) => {
@@ -170,5 +210,5 @@ jobs:
             process.exit(1);
           }
 
-          console.log(`Validated ${htmlFiles.length} HTML entrypoints, Firebase boot, lifecycle authority, role-scoped field operations, compact-to-expanded map flow, registered Experience slots, owner Experience editing, and the runtime cache policy.`);
+          console.log(`Validated ${htmlFiles.length} HTML entrypoints, Firebase boot, lifecycle authority, role-scoped field operations, one canonical compact-to-expanded map flow, registered Experience slots, owner Experience editing, and the runtime cache policy.`);
           NODE

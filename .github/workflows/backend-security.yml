@@ -10,11 +10,14 @@ on:
       - "firestore.indexes.json"
       - "functions/**"
       - "tests/backend-security/**"
+      - "public/account-status.html"
       - "public/assets/js/access-control.js"
       - "public/assets/js/applications.js"
       - "public/assets/js/messages.js"
       - "public/assets/js/messages-group-photo.js"
       - "public/assets/js/route-guard.js"
+      - "public/assets/js/staff-application.js"
+      - "public/assets/js/account-status.js"
       - "public/assets/js/nav/nav-role-lockdown.js"
       - "public/assets/js/studio/blueprint-drafts.js"
       - "public/assets/js/studio/role-preview.js"
@@ -23,6 +26,7 @@ on:
       - "tools/experience-backend-audit.js"
       - "tools/messaging-registry-contract-audit.js"
       - "tools/staff-approval-contract-audit.js"
+      - "tools/staff-applicant-lifecycle-audit.js"
       - ".github/workflows/backend-security.yml"
   pull_request:
     paths:
@@ -31,11 +35,14 @@ on:
       - "firestore.indexes.json"
       - "functions/**"
       - "tests/backend-security/**"
+      - "public/account-status.html"
       - "public/assets/js/access-control.js"
       - "public/assets/js/applications.js"
       - "public/assets/js/messages.js"
       - "public/assets/js/messages-group-photo.js"
       - "public/assets/js/route-guard.js"
+      - "public/assets/js/staff-application.js"
+      - "public/assets/js/account-status.js"
       - "public/assets/js/nav/nav-role-lockdown.js"
       - "public/assets/js/studio/blueprint-drafts.js"
       - "public/assets/js/studio/role-preview.js"
@@ -44,6 +51,7 @@ on:
       - "tools/experience-backend-audit.js"
       - "tools/messaging-registry-contract-audit.js"
       - "tools/staff-approval-contract-audit.js"
+      - "tools/staff-applicant-lifecycle-audit.js"
       - ".github/workflows/backend-security.yml"
   workflow_dispatch:
 
@@ -99,6 +107,8 @@ jobs:
           node --experimental-default-type=module --check public/assets/js/messages.js
           node --experimental-default-type=module --check public/assets/js/messages-group-photo.js
           node --experimental-default-type=module --check public/assets/js/route-guard.js
+          node --experimental-default-type=module --check public/assets/js/staff-application.js
+          node --experimental-default-type=module --check public/assets/js/account-status.js
           node --experimental-default-type=module --check public/assets/js/nav/nav-role-lockdown.js
           node --experimental-default-type=module --check public/assets/js/studio/blueprint-drafts.js
           node --experimental-default-type=module --check public/assets/js/studio/role-preview.js
@@ -116,6 +126,9 @@ jobs:
 
       - name: Validate canonical staff approval contract
         run: node tools/staff-approval-contract-audit.js
+
+      - name: Validate staff applicant lifecycle contract
+        run: node tools/staff-applicant-lifecycle-audit.js
 
       - name: Run Experience configuration unit tests
         run: node --test functions/experience-config-core.test.js
