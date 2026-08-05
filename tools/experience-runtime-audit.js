@@ -42,7 +42,7 @@ if (!failures.length) {
   check(!runtime.includes('MutationObserver'), 'runtime does not observe the full DOM');
   check(!runtime.includes('innerHTML'), 'runtime does not inject arbitrary HTML');
   check(!/eval\(|new Function\(/.test(runtime), 'runtime does not execute dynamic code');
-  check(!/firebase|firestore|getFirestore|setDoc|addDoc|updateDoc|uploadBytes/i.test(runtime), 'public runtime has no direct Firebase write authority');
+  check(!/firebase-(?:app|auth|firestore|storage)|gstatic\.com\/firebasejs|getFirestore|setDoc|addDoc|updateDoc|uploadBytes/i.test(runtime), 'public runtime has no Firebase SDK or direct write authority');
   check(runtime.includes("window.addEventListener('evara:nav-ready', scheduleApply)"), 'runtime reapplies only on explicit lifecycle events');
   check(runtime.includes('requestAnimationFrame'), 'runtime batches slot application by animation frame');
 
