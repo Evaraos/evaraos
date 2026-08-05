@@ -1,5 +1,6 @@
 import { getMount, buildHref, getVisibleLinks, isCurrentPage } from "./nav-utils.js";
 import { APP_CATEGORIES, appsByCategory } from "../navigation/app-registry.js";
+import { canAccessPageName } from "../access-control.js";
 import { iconSvg, iconNameForApp, iconNameForCategory } from "../ui/icons.js";
 
 const NAV_RENDER_BUILD = "nav-v34-settings-direct";
@@ -61,7 +62,7 @@ function accountGroup(authed) {
 function appSections(role) {
   const groups = appsByCategory(normalizeRole(role));
   return CATEGORY_ORDER.map(category => {
-    const apps = (groups[category] || []).filter(app => app.id !== "settings");
+    const apps = (groups[category] || []).filter(app => app.id !== "settings" && canAccessPageName(app.route, role));
     if (!apps.length) return "";
     return `<section class="eva-app-section"><div class="eva-app-section-head"><span>${iconSvg(iconNameForCategory(category))}</span><strong>${clean(CATEGORY_TITLES[category] || category)}</strong><small>${apps.length}</small></div><div class="eva-app-list">${apps.map(app => {
       const href = buildHref(app.route);
