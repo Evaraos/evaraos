@@ -212,5 +212,6 @@ const experienceConfig = require("./experience-config-service");
 exports.getExperienceEditorState = experienceConfig.getExperienceEditorState;
 exports.saveExperienceDraft = experienceConfig.saveExperienceDraft;
 exports.publishExperienceConfig = experienceConfig.publishExperienceConfig;
+exports.rollbackExperienceConfig = experienceConfig.rollbackExperienceConfig;
 exports.uploadExperienceAsset = experienceConfig.uploadExperienceAsset;
 exports.getPublicExperienceConfig = experienceConfig.getPublicExperienceConfig;

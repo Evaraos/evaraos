@@ -76,13 +76,33 @@ function auditRecord(publisher, action, { changedFields = [], metadata = {}, not
   };
 }
 
+function archivedPublishedState(data = {}, publisher, reason) {
+  const publishedVersion = integer(data.publishedVersion);
+  if (!data.published || publishedVersion < 1) return null;
+  const published = normalizeConfig(data.published, { bucketName: bucket.name });
+  return {
+    schemaVersion: SCHEMA_VERSION,
+    published,
+    publishedVersion,
+    publishedBytes: integer(data.publishedBytes) || assertConfigSize(published),
+    publishedAt: data.publishedAt || null,
+    publishedByUid: cleanText(data.publishedByUid, 160),
+    restoredFromVersion: integer(data.restoredFromVersion),
+    archivedAt: FieldValue.serverTimestamp(),
+    archivedByUid: publisher.uid,
+    archiveReason: reason
+  };
+}
+
 function normalizedState(data = {}) {
   return {
     draft: normalizeConfig(data.draft || data.published || DEFAULT_CONFIG, { bucketName: bucket.name }),
     published: normalizeConfig(data.published || DEFAULT_CONFIG, { bucketName: bucket.name }),
     draftRevision: integer(data.draftRevision),
     publishedVersion: integer(data.publishedVersion),
-    publishedAtMs: data.publishedAt?.toMillis?.() || null
+    restoredFromVersion: integer(data.restoredFromVersion),
+    publishedAtMs: data.publishedAt?.toMillis?.() || null,
+    rollbackAtMs: data.rollbackAt?.toMillis?.() || null
   };
 }
 
@@ -150,6 +170,7 @@ exports.publishExperienceConfig = onCall(CALLABLE_OPTIONS, async (request) => {
     if (!Number.isInteger(expectedDraftRevision) || expectedDraftRevision < 0) {
       throw new HttpsError('invalid-argument', 'A nonnegative integer expectedDraftRevision is required.');
     }
+    const historyRef = CONFIG_REF.collection('history').doc();
     const result = await db.runTransaction(async (transaction) => {
       const snapshot = await transaction.get(CONFIG_REF);
       const current = snapshot.exists ? snapshot.data() || {} : {};
@@ -164,13 +185,18 @@ exports.publishExperienceConfig = onCall(CALLABLE_OPTIONS, async (request) => {
       const published = normalizeConfig(current.draft || current.published || DEFAULT_CONFIG, { bucketName: bucket.name });
       const bytes = assertConfigSize(published);
       const publishedVersion = integer(current.publishedVersion) + 1;
+      const archive = archivedPublishedState(current, publisher, 'superseded');
+      if (archive) transaction.set(historyRef, archive);
       transaction.set(CONFIG_REF, {
         schemaVersion: SCHEMA_VERSION,
         published,
         publishedVersion,
         publishedBytes: bytes,
         publishedAt: FieldValue.serverTimestamp(),
-        publishedByUid: publisher.uid
+        publishedByUid: publisher.uid,
+        restoredFromVersion: FieldValue.delete(),
+        rollbackAt: FieldValue.delete(),
+        rollbackByUid: FieldValue.delete()
       }, { merge: true });
       transaction.set(db.collection('audit_logs').doc(), auditRecord(publisher, 'experience_config_published', {
         changedFields: ['published', 'publishedVersion'],
@@ -178,6 +204,76 @@ exports.publishExperienceConfig = onCall(CALLABLE_OPTIONS, async (request) => {
       }));
       return { published, draftRevision, publishedVersion, bytes };
     });
+    return { ok: true, ...result };
+  } catch (error) {
+    throw callableError(error);
+  }
+});
+
+exports.rollbackExperienceConfig = onCall(CALLABLE_OPTIONS, async (request) => {
+  try {
+    const publisher = await resolvePublisher(request);
+    const expectedPublishedVersion = request.data?.expectedPublishedVersion;
+    if (!Number.isInteger(expectedPublishedVersion) || expectedPublishedVersion < 1) {
+      throw new HttpsError('invalid-argument', 'A positive integer expectedPublishedVersion is required.');
+    }
+
+    const history = await CONFIG_REF.collection('history').orderBy('archivedAt', 'desc').limit(1).get();
+    if (history.empty) {
+      throw new HttpsError('failed-precondition', 'No published Experience version is available to restore.');
+    }
+
+    const restoreRef = history.docs[0].ref;
+    const currentHistoryRef = CONFIG_REF.collection('history').doc();
+    const result = await db.runTransaction(async (transaction) => {
+      const currentSnapshot = await transaction.get(CONFIG_REF);
+      const restoreSnapshot = await transaction.get(restoreRef);
+      if (!currentSnapshot.exists || !restoreSnapshot.exists) {
+        throw new HttpsError('failed-precondition', 'Experience history changed. Refresh and try again.');
+      }
+
+      const current = currentSnapshot.data() || {};
+      const currentVersion = integer(current.publishedVersion);
+      if (expectedPublishedVersion !== currentVersion) {
+        throw new HttpsError('aborted', 'The published Experience configuration changed before rollback.', {
+          code: 'experience-published-conflict',
+          expectedPublishedVersion,
+          actualPublishedVersion: currentVersion
+        });
+      }
+
+      const restore = restoreSnapshot.data() || {};
+      const restoredFromVersion = integer(restore.publishedVersion);
+      if (!restore.published || restoredFromVersion < 1) {
+        throw new HttpsError('data-loss', 'The selected Experience history record is invalid.');
+      }
+
+      const published = normalizeConfig(restore.published, { bucketName: bucket.name });
+      const bytes = assertConfigSize(published);
+      const publishedVersion = currentVersion + 1;
+      const currentArchive = archivedPublishedState(current, publisher, 'rollback_replaced');
+      if (currentArchive) transaction.set(currentHistoryRef, currentArchive);
+
+      transaction.set(CONFIG_REF, {
+        schemaVersion: SCHEMA_VERSION,
+        published,
+        publishedVersion,
+        publishedBytes: bytes,
+        publishedAt: FieldValue.serverTimestamp(),
+        publishedByUid: publisher.uid,
+        restoredFromVersion,
+        rollbackAt: FieldValue.serverTimestamp(),
+        rollbackByUid: publisher.uid
+      }, { merge: true });
+      transaction.delete(restoreRef);
+      transaction.set(db.collection('audit_logs').doc(), auditRecord(publisher, 'experience_config_rolled_back', {
+        changedFields: ['published', 'publishedVersion', 'restoredFromVersion'],
+        metadata: { publishedVersion, restoredFromVersion, bytes }
+      }));
+
+      return { published, publishedVersion, restoredFromVersion, bytes };
+    });
+
     return { ok: true, ...result };
   } catch (error) {
     throw callableError(error);
