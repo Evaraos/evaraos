@@ -28,7 +28,7 @@ const STAFF_ROLES = new Set([
   "crew_lead"
 ]);
 
-const DECISIONS = new Set(["approved", "rejected", "needs_more_info"]);
+const DECISIONS = new Set(["assigned", "approved", "rejected", "needs_more_info"]);
 const CLAIM_SYNC_ATTEMPTS = 3;
 const CLAIM_SYNC_BASE_DELAY_MS = 250;
 
@@ -90,6 +90,14 @@ function actorSnapshot(request, reviewer = {}) {
     ),
     role: normalize(reviewer.role),
     companyId: cleanText(reviewer.companyId, 120)
+  };
+}
+
+function canonicalCompany(snapshot, companyId) {
+  const companyData = snapshot.data() || {};
+  return {
+    id: companyId,
+    name: cleanText(companyData.name || companyData.companyName || companyId, 180)
   };
 }
 
@@ -204,7 +212,6 @@ exports.reviewStaffApplication = onCall(
     const decision = normalize(request.data?.decision);
     const reviewNotes = cleanText(request.data?.reviewNotes, 4000);
     const requestedCompanyId = cleanText(request.data?.companyId, 120);
-    const requestedCompanyName = cleanText(request.data?.companyName, 180);
     const finalRole = normalize(request.data?.finalRole);
 
     if (!applicationId || !DECISIONS.has(decision)) {
@@ -215,8 +222,8 @@ exports.reviewStaffApplication = onCall(
       throw new HttpsError("invalid-argument", "Select a valid staff role.");
     }
 
-    if (decision === "approved" && !requestedCompanyId) {
-      throw new HttpsError("failed-precondition", "Approved staff must be assigned to a company.");
+    if (["assigned", "approved"].includes(decision) && !requestedCompanyId) {
+      throw new HttpsError("failed-precondition", "Select a company before continuing.");
     }
 
     const reviewerRef = db.doc(`users/${request.auth.uid}`);
@@ -228,9 +235,13 @@ exports.reviewStaffApplication = onCall(
 
     const reviewer = reviewerSnapshot.data() || {};
     assertReviewer(reviewer);
+    if (decision === "assigned" && !platformReviewer(reviewer)) {
+      throw new HttpsError("permission-denied", "Only the owner or super admin can assign applications to a company.");
+    }
     const actor = actorSnapshot(request, reviewer);
 
     let approvedClaims = null;
+    let processedCompanyId = null;
 
     await db.runTransaction(async (transaction) => {
       const applicationSnapshot = await transaction.get(applicationRef);
@@ -244,9 +255,49 @@ exports.reviewStaffApplication = onCall(
         throw new HttpsError("failed-precondition", "The application identity is invalid.");
       }
 
+      const applicationStatus = normalize(application.status);
+
+      if (decision === "assigned") {
+        if (["approved", "rejected"].includes(applicationStatus)) {
+          throw new HttpsError("failed-precondition", "This application has already been finalized.");
+        }
+
+        const companyRef = db.doc(`companies/${requestedCompanyId}`);
+        const companySnapshot = await transaction.get(companyRef);
+        if (!companySnapshot.exists) {
+          throw new HttpsError("failed-precondition", "Selected company not found.");
+        }
+
+        const company = canonicalCompany(companySnapshot, requestedCompanyId);
+        transaction.update(applicationRef, {
+          companyId: company.id,
+          companyName: company.name,
+          assignmentStatus: "assigned",
+          assignedAt: FieldValue.serverTimestamp(),
+          assignedBy: actor.uid,
+          assignedByName: actor.name,
+          updatedAt: FieldValue.serverTimestamp()
+        });
+
+        transaction.set(db.collection("audit_logs").doc(), {
+          action: "staff_application_assigned",
+          actorUserId: actor.uid,
+          actorName: actor.name,
+          actorRole: actor.role,
+          companyId: company.id,
+          targetCollection: "staff_applications",
+          targetDocumentId: applicationId,
+          targetUserId: applicantUid,
+          source: "reviewStaffApplication",
+          createdAt: FieldValue.serverTimestamp()
+        });
+
+        processedCompanyId = company.id;
+        return;
+      }
+
       assertTenantScope(reviewer, application, requestedCompanyId);
 
-      const applicationStatus = normalize(application.status);
       if (applicationStatus === "rejected") {
         throw new HttpsError("failed-precondition", "This application has already been finalized.");
       }
@@ -302,6 +353,7 @@ exports.reviewStaffApplication = onCall(
           companyId: storedCompanyId,
           alreadySynced
         };
+        processedCompanyId = storedCompanyId;
         return;
       }
 
@@ -354,16 +406,19 @@ exports.reviewStaffApplication = onCall(
         throw new HttpsError("failed-precondition", "Selected company not found.");
       }
 
-      const companyData = companySnapshot.data() || {};
-      const company = {
-        id: requestedCompanyId,
-        name: cleanText(requestedCompanyName || companyData.name || companyData.companyName || requestedCompanyId, 180)
-      };
+      const company = canonicalCompany(companySnapshot, requestedCompanyId);
+      const assignmentChanged = cleanText(application.companyId, 120) !== company.id;
 
       transaction.update(applicationRef, {
         ...commonReview,
         companyId: company.id,
         companyName: company.name,
+        assignmentStatus: "assigned",
+        ...(assignmentChanged ? {
+          assignedAt: FieldValue.serverTimestamp(),
+          assignedBy: actor.uid,
+          assignedByName: actor.name
+        } : {}),
         approvedRole: finalRole,
         finalRole,
         approvedAt: FieldValue.serverTimestamp(),
@@ -417,6 +472,7 @@ exports.reviewStaffApplication = onCall(
         companyId: company.id,
         alreadySynced: false
       };
+      processedCompanyId = company.id;
     });
 
     let claimsResult = null;
@@ -431,7 +487,7 @@ exports.reviewStaffApplication = onCall(
       applicationId,
       decision,
       role: approvedClaims?.role || null,
-      companyId: approvedClaims?.companyId || null,
+      companyId: approvedClaims?.companyId || processedCompanyId,
       claimsSyncStatus: claimsResult?.status || null,
       claimsSyncAttempts: claimsResult?.attempts || 0
     };
