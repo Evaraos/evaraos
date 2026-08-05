@@ -16,13 +16,51 @@ const {
 
 const bucketName = 'evaraos-web.firebasestorage.app';
 
-test('global publishing is limited to active owner and platform authority', () => {
-  assert.equal(canPublishGlobalExperience({ role: 'owner', status: 'active', approvalStatus: 'approved' }), true);
-  assert.equal(canPublishGlobalExperience({ role: 'platform_admin', status: 'active' }), true);
-  assert.equal(canPublishGlobalExperience({ role: 'super_admin', status: 'active' }), true);
-  assert.equal(canPublishGlobalExperience({ role: 'admin', studioPublisher: true, status: 'active' }), false);
-  assert.equal(canPublishGlobalExperience({ role: 'owner', status: 'suspended' }), false);
+test('global publishing requires an active approved owner or platform administrator', () => {
+  const allowedProfiles = [
+    { role: 'owner', status: 'active', approvalStatus: 'approved' },
+    { role: 'owner', status: 'approved', approvalStatus: 'approved' },
+    { role: 'platform_admin', status: 'active', approvalStatus: 'approved' },
+    { role: 'super_admin', status: 'approved', approvalStatus: 'approved' }
+  ];
+
+  for (const profile of allowedProfiles) {
+    assert.equal(canPublishGlobalExperience(profile), true, JSON.stringify(profile));
+  }
+});
+
+test('global publishing fails closed for incomplete, pending, disabled, tenant, vendor, and unknown profiles', () => {
+  const deniedProfiles = [
+    {},
+    { role: 'owner' },
+    { role: 'owner', status: 'active' },
+    { role: 'owner', approvalStatus: 'approved' },
+    { role: 'owner', status: 'pending', approvalStatus: 'approved' },
+    { role: 'owner', status: 'active', approvalStatus: 'pending' },
+    { role: 'owner', status: 'active', approvalStatus: 'needs_more_info' },
+    { role: 'owner', status: 'inactive', approvalStatus: 'approved' },
+    { role: 'owner', status: 'suspended', approvalStatus: 'approved' },
+    { role: 'owner', status: 'disabled', approvalStatus: 'approved' },
+    { role: 'owner', status: 'rejected', approvalStatus: 'approved' },
+    { role: 'owner', status: 'active', approvalStatus: 'rejected' },
+    { role: 'admin', status: 'active', approvalStatus: 'approved' },
+    { role: 'organization_owner', status: 'active', approvalStatus: 'approved' },
+    { role: 'office_owner', status: 'active', approvalStatus: 'approved' },
+    { role: 'branch_owner', status: 'active', approvalStatus: 'approved' },
+    { role: 'vendor', status: 'active', approvalStatus: 'approved' },
+    { role: 'unknown_role', status: 'active', approvalStatus: 'approved' }
+  ];
+
+  for (const profile of deniedProfiles) {
+    assert.equal(canPublishGlobalExperience(profile), false, JSON.stringify(profile));
+  }
+});
+
+test('Experience role aliases match the canonical access authority', () => {
   assert.equal(normalizeRole('Super Admin'), 'platform_admin');
+  assert.equal(normalizeRole('Organization Owner'), 'vendor');
+  assert.equal(normalizeRole('Office Owner'), 'vendor');
+  assert.equal(normalizeRole('Branch Owner'), 'vendor');
 });
 
 test('asset URLs are restricted to local assets and the configured Firebase Storage bucket', () => {

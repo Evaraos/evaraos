@@ -18,6 +18,8 @@ on:
       - "public/assets/js/auth.js"
       - "public/assets/js/route-guard.js"
       - "public/assets/js/direct-access-check.js"
+      - "public/assets/js/field-ops-map-layer.js"
+      - "public/assets/js/field-ops-realtime.js"
       - "tools/access-authority-audit.mjs"
       - "tools/account-lifecycle-audit.mjs"
       - ".github/workflows/runtime-shell-validation.yml"
@@ -36,6 +38,8 @@ on:
       - "public/assets/js/auth.js"
       - "public/assets/js/route-guard.js"
       - "public/assets/js/direct-access-check.js"
+      - "public/assets/js/field-ops-map-layer.js"
+      - "public/assets/js/field-ops-realtime.js"
       - "tools/access-authority-audit.mjs"
       - "tools/account-lifecycle-audit.mjs"
       - ".github/workflows/runtime-shell-validation.yml"
@@ -72,6 +76,8 @@ jobs:
           node --experimental-default-type=module --check public/assets/js/auth.js
           node --experimental-default-type=module --check public/assets/js/route-guard.js
           node --experimental-default-type=module --check public/assets/js/direct-access-check.js
+          node --experimental-default-type=module --check public/assets/js/field-ops-map-layer.js
+          node --experimental-default-type=module --check public/assets/js/field-ops-realtime.js
           node --check tools/access-authority-audit.mjs
           node --check tools/account-lifecycle-audit.mjs
 
@@ -137,5 +143,5 @@ jobs:
             process.exit(1);
           }
 
-          console.log(`Validated ${htmlFiles.length} HTML entrypoints, Firebase boot, lifecycle authority, and the runtime cache policy.`);
+          console.log(`Validated ${htmlFiles.length} HTML entrypoints, Firebase boot, lifecycle authority, role-scoped field operations, and the runtime cache policy.`);
           NODE

@@ -1,26 +1,36 @@
 import {
-  db,
-  collection,
   onSnapshot
 } from './firebase.js';
 
 import {
+  resolveFieldOpsMapAccessContext,
+  buildFieldOpsCollectionQueries,
   normalizeLeadForMap,
   normalizeJobForMap,
   groupFieldOpsByTerritory,
   groupFieldOpsByAssignee
 } from './field-ops-map-layer.js';
 
-let unsubscribeLeads = null;
-let unsubscribeJobs = null;
+let activeGeneration = 0;
+let unsubscribeListeners = [];
+let leadBuckets = new Map();
+let jobBuckets = new Map();
 let currentLeads = [];
 let currentJobs = [];
 
 function stopExistingListeners() {
-  if (unsubscribeLeads) unsubscribeLeads();
-  if (unsubscribeJobs) unsubscribeJobs();
-  unsubscribeLeads = null;
-  unsubscribeJobs = null;
+  unsubscribeListeners.forEach((unsubscribe) => unsubscribe?.());
+  unsubscribeListeners = [];
+}
+
+function mergeBuckets(buckets = new Map()) {
+  const records = new Map();
+
+  buckets.forEach((bucket) => {
+    bucket.forEach((record, id) => records.set(id, record));
+  });
+
+  return [...records.values()];
 }
 
 function emitUpdate(callback) {
@@ -35,40 +45,78 @@ function emitUpdate(callback) {
   });
 }
 
+function subscribeScopedCollection(queryRefs, bucketStore, normalizer, onChange, onError) {
+  queryRefs.forEach((queryRef, index) => {
+    const unsubscribe = onSnapshot(queryRef, (snapshot) => {
+      const bucket = new Map();
+
+      snapshot.docs.forEach((docItem) => {
+        bucket.set(docItem.id, normalizer({ id: docItem.id, ...docItem.data() }));
+      });
+
+      bucketStore.set(index, bucket);
+      onChange();
+    }, onError);
+
+    unsubscribeListeners.push(unsubscribe);
+  });
+}
+
 export function startFieldOpsRealtime(callback, options = {}) {
   if (typeof callback !== 'function') {
     throw new Error('startFieldOpsRealtime requires a callback.');
   }
 
-  stopExistingListeners();
+  stopFieldOpsRealtime();
+  const generation = activeGeneration;
 
   const onError = typeof options.onError === 'function'
     ? options.onError
     : (error) => console.error('Field ops realtime failed:', error);
 
-  unsubscribeLeads = onSnapshot(collection(db, 'leads'), (snap) => {
-    currentLeads = snap.docs.map((docItem) => normalizeLeadForMap({
-      id: docItem.id,
-      ...docItem.data()
-    }));
+  Promise.resolve()
+    .then(async () => {
+      const context = options.context || await resolveFieldOpsMapAccessContext(options);
+      if (generation !== activeGeneration) return;
 
-    emitUpdate(callback);
-  }, onError);
+      const refreshLeads = () => {
+        if (generation !== activeGeneration) return;
+        currentLeads = mergeBuckets(leadBuckets);
+        emitUpdate(callback);
+      };
 
-  unsubscribeJobs = onSnapshot(collection(db, 'jobs'), (snap) => {
-    currentJobs = snap.docs.map((docItem) => normalizeJobForMap({
-      id: docItem.id,
-      ...docItem.data()
-    }));
+      const refreshJobs = () => {
+        if (generation !== activeGeneration) return;
+        currentJobs = mergeBuckets(jobBuckets);
+        emitUpdate(callback);
+      };
 
-    emitUpdate(callback);
-  }, onError);
+      subscribeScopedCollection(
+        buildFieldOpsCollectionQueries('leads', context),
+        leadBuckets,
+        normalizeLeadForMap,
+        refreshLeads,
+        onError
+      );
+
+      subscribeScopedCollection(
+        buildFieldOpsCollectionQueries('jobs', context),
+        jobBuckets,
+        normalizeJobForMap,
+        refreshJobs,
+        onError
+      );
+    })
+    .catch(onError);
 
   return stopFieldOpsRealtime;
 }
 
 export function stopFieldOpsRealtime() {
+  activeGeneration += 1;
   stopExistingListeners();
+  leadBuckets = new Map();
+  jobBuckets = new Map();
   currentLeads = [];
   currentJobs = [];
 }
