@@ -18,7 +18,7 @@ function check(condition, message) {
 
 const core = read('functions/experience-config-core.js');
 const service = read('functions/experience-config-service.js');
-const entry = read('functions/index.js');
+const entry = read('functions/index-stats.js');
 const packageJson = JSON.parse(read('functions/package.json'));
 const firebase = JSON.parse(read('firebase.json'));
 const workflow = read('.github/workflows/backend-security.yml');
@@ -52,11 +52,9 @@ check(publicStart >= 0 && !publicBody.includes('data.draft'), 'the public endpoi
 check(service.includes("request.method !== 'GET'"), 'the public endpoint is read-only');
 check(service.includes("Cache-Control', 'public,max-age=60,stale-while-revalidate=300"), 'the public endpoint has a bounded efficient cache policy');
 
-check(entry.includes("require('./index-stats')"), 'the modular entrypoint preserves every existing Function export');
-check(entry.includes("require('./experience-config-service')"), 'the modular entrypoint loads the trusted Experience service');
-check(entry.includes('...existingFunctions') && entry.includes('...experienceFunctions'), 'existing and Experience exports are combined without mutating legacy modules');
+check(entry.includes("const experienceConfig = require(\"./experience-config-service\")"), 'the canonical Functions entrypoint loads the trusted Experience service');
 functions.forEach((name) => {
-  check(service.includes(`exports.${name} =`), `${name} is exported by the trusted Experience service`);
+  check(entry.includes(`exports.${name} = experienceConfig.${name}`), `${name} is exported by the canonical Functions entrypoint`);
 });
 
 const rewrites = firebase.hosting?.rewrites || [];
@@ -65,7 +63,7 @@ const catchAllIndex = rewrites.findIndex((rewrite) => rewrite.source === '**');
 check(endpointIndex >= 0, 'Firebase Hosting exposes the same-origin Experience endpoint');
 check(catchAllIndex < 0 || endpointIndex < catchAllIndex, 'the Experience endpoint precedes the SPA catch-all rewrite');
 
-check(packageJson.main === 'index.js', 'Firebase Functions uses the modular canonical entrypoint');
+check(packageJson.main === 'index-stats.js', 'Firebase Functions preserves the canonical index-stats.js entrypoint');
 check(packageJson.scripts?.['test:experience'] === 'node --test experience-config-core.test.js', 'Functions exposes a focused Experience unit-test script');
 check(String(packageJson.scripts?.test || '').includes('experience-config-core.test.js'), 'the default Functions test suite includes Experience tests');
 check(workflow.includes('node --check functions/experience-config-core.js'), 'Backend Security Validation checks the Experience core syntax');
