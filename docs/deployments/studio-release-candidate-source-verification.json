@@ -4,6 +4,7 @@
   "sourceCommit": "60423d7aadc0f6c5a3713bb36f3576d71a5cfd5c",
   "workflowRunId": "30995734320",
   "verifiedAt": "2026-08-05T10:02:06.551Z",
+  "canonicalPreflightTrigger": "source-proof-recorded",
   "gates": {
     "app-check-audit": {
       "exitCode": 0,
