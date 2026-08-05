@@ -41,6 +41,7 @@ const accountStatusHtml = fs.readFileSync('public/account-status.html', 'utf8');
 const accountStatusJs = fs.readFileSync('public/assets/js/account-status.js', 'utf8');
 const rules = fs.readFileSync('firebase/firestore.rules', 'utf8');
 const lifecycleReleaseKey = '20260805-lifecycle-r1';
+const statusReleaseKey = '20260805-lifecycle-r2';
 
 assert.match(routeGuard, /readVerifiedUserProfile\(user\)/);
 assert.match(routeGuard, /resolveAccountLifecycle\(profile\)/);
@@ -85,7 +86,7 @@ assert.match(
 assert.match(accountStatusHtml, /data-route-guard="account-status"/);
 assert.match(
   accountStatusHtml,
-  new RegExp(`account-status\\.js\\?v=${lifecycleReleaseKey}`),
+  new RegExp(`account-status\\.js\\?v=${statusReleaseKey}`),
   'Account Status must load the released lifecycle status cache key.'
 );
 assert.match(accountStatusJs, /source !== 'verified-route-guard'/);
