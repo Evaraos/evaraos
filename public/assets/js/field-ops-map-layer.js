@@ -1,11 +1,33 @@
 import {
+  auth,
   db,
   collection,
-  getDocs
+  query,
+  where,
+  getDocs,
+  onAuthStateChanged,
+  hydrateUserProfile
 } from './firebase.js';
+
+const PLATFORM_ROLES = new Set(['owner', 'super_admin']);
+const MANAGER_ROLES = new Set([
+  'admin',
+  'manager',
+  'operations_manager',
+  'operations_coordinator',
+  'field_manager',
+  'sales_manager',
+  'dispatcher',
+  'hr',
+  'hr_manager'
+]);
 
 function clean(value = '') {
   return String(value || '').trim();
+}
+
+function normalizeRole(value = '') {
+  return clean(value).toLowerCase();
 }
 
 function numberOrZero(value) {
@@ -26,6 +48,111 @@ function statusIcon(status = '') {
   if (['cancelled', 'lost', 'rejected'].includes(normalized)) return '×';
 
   return '●';
+}
+
+function waitForAuthenticatedUser(timeoutMs = 8000) {
+  if (auth.currentUser) return Promise.resolve(auth.currentUser);
+
+  return new Promise((resolve, reject) => {
+    let unsubscribe = null;
+    const timeout = window.setTimeout(() => {
+      unsubscribe?.();
+      reject(new Error('Map access requires an authenticated session.'));
+    }, timeoutMs);
+
+    unsubscribe = onAuthStateChanged(auth, (user) => {
+      window.clearTimeout(timeout);
+      unsubscribe?.();
+
+      if (!user) {
+        reject(new Error('Map access requires an authenticated session.'));
+        return;
+      }
+
+      resolve(user);
+    }, (error) => {
+      window.clearTimeout(timeout);
+      unsubscribe?.();
+      reject(error);
+    });
+  });
+}
+
+export async function resolveFieldOpsMapAccessContext(options = {}) {
+  const user = options.user || await waitForAuthenticatedUser();
+  const profile = options.profile || await hydrateUserProfile(user, { requireVerified: true });
+
+  if (!profile) {
+    throw new Error('A verified EvaraOS user profile is required for map access.');
+  }
+
+  const role = normalizeRole(profile.role);
+  const companyId = clean(profile.companyId);
+  const uid = clean(user?.uid || profile.uid || profile.id);
+
+  if (!uid) throw new Error('Map access could not resolve the current user.');
+
+  if (PLATFORM_ROLES.has(role)) {
+    return { uid, role, companyId, scope: 'platform' };
+  }
+
+  if (MANAGER_ROLES.has(role)) {
+    if (!companyId) {
+      throw new Error('Map access requires an assigned company.');
+    }
+    return { uid, role, companyId, scope: 'company' };
+  }
+
+  if (role === 'customer') {
+    return { uid, role, companyId, scope: 'customer' };
+  }
+
+  return { uid, role, companyId, scope: 'assigned' };
+}
+
+export function buildFieldOpsCollectionQueries(collectionName, context = {}) {
+  const source = collection(db, collectionName);
+
+  if (context.scope === 'platform') return [source];
+
+  if (context.scope === 'company') {
+    return [query(source, where('companyId', '==', context.companyId))];
+  }
+
+  if (context.scope === 'customer') {
+    return [
+      query(source, where('customerUid', '==', context.uid)),
+      query(source, where('customerId', '==', context.uid)),
+      query(source, where('userId', '==', context.uid))
+    ];
+  }
+
+  return [
+    query(source, where('assignedToUid', '==', context.uid)),
+    query(source, where('assignedTo', 'array-contains', context.uid)),
+    query(source, where('assignedTeamIds', 'array-contains', context.uid)),
+    query(source, where('assignedRep', '==', context.uid)),
+    query(source, where('assignedRep', 'array-contains', context.uid)),
+    query(source, where('staffClaimedBy', '==', context.uid))
+  ];
+}
+
+function mergeSnapshots(snapshots = [], normalizer) {
+  const records = new Map();
+
+  snapshots.forEach((snapshot) => {
+    snapshot.docs.forEach((docItem) => {
+      records.set(docItem.id, normalizer({ id: docItem.id, ...docItem.data() }));
+    });
+  });
+
+  return [...records.values()];
+}
+
+async function loadScopedCollection(collectionName, context, normalizer) {
+  const queryRefs = buildFieldOpsCollectionQueries(collectionName, context);
+  const snapshots = await Promise.all(queryRefs.map((queryRef) => getDocs(queryRef)));
+  return mergeSnapshots(snapshots, normalizer);
 }
 
 export function normalizeLeadForMap(lead = {}) {
@@ -66,16 +193,15 @@ export function normalizeJobForMap(job = {}) {
   };
 }
 
-export async function loadFieldOpsMapData() {
-  const [leadsSnap, jobsSnap] = await Promise.all([
-    getDocs(collection(db, 'leads')),
-    getDocs(collection(db, 'jobs'))
+export async function loadFieldOpsMapData(options = {}) {
+  const context = options.context || await resolveFieldOpsMapAccessContext(options);
+  const [leads, jobs] = await Promise.all([
+    loadScopedCollection('leads', context, normalizeLeadForMap),
+    loadScopedCollection('jobs', context, normalizeJobForMap)
   ]);
 
-  const leads = leadsSnap.docs.map((docItem) => normalizeLeadForMap({ id: docItem.id, ...docItem.data() }));
-  const jobs = jobsSnap.docs.map((docItem) => normalizeJobForMap({ id: docItem.id, ...docItem.data() }));
-
   return {
+    context,
     leads,
     jobs,
     records: [...leads, ...jobs]
@@ -126,6 +252,8 @@ export function groupFieldOpsByAssignee(records = []) {
 }
 
 window.EvaraFieldOpsMapLayer = {
+  resolveFieldOpsMapAccessContext,
+  buildFieldOpsCollectionQueries,
   normalizeLeadForMap,
   normalizeJobForMap,
   loadFieldOpsMapData,

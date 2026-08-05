@@ -14,6 +14,8 @@ on:
       - "public/assets/js/access-control.js"
       - "public/assets/js/route-guard.js"
       - "public/assets/js/direct-access-check.js"
+      - "public/assets/js/field-ops-map-layer.js"
+      - "public/assets/js/field-ops-realtime.js"
       - "tools/access-authority-audit.mjs"
       - ".github/workflows/runtime-shell-validation.yml"
   pull_request:
@@ -27,6 +29,8 @@ on:
       - "public/assets/js/access-control.js"
       - "public/assets/js/route-guard.js"
       - "public/assets/js/direct-access-check.js"
+      - "public/assets/js/field-ops-map-layer.js"
+      - "public/assets/js/field-ops-realtime.js"
       - "tools/access-authority-audit.mjs"
       - ".github/workflows/runtime-shell-validation.yml"
 
@@ -58,6 +62,8 @@ jobs:
           node --experimental-default-type=module --check public/assets/js/access-control.js
           node --experimental-default-type=module --check public/assets/js/route-guard.js
           node --experimental-default-type=module --check public/assets/js/direct-access-check.js
+          node --experimental-default-type=module --check public/assets/js/field-ops-map-layer.js
+          node --experimental-default-type=module --check public/assets/js/field-ops-realtime.js
           node --check tools/access-authority-audit.mjs
 
       - name: Validate route and session authority

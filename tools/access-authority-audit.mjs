@@ -52,6 +52,8 @@ const routeGuardSource = fs.readFileSync('public/assets/js/route-guard.js', 'utf
 const directAccessSource = fs.readFileSync('public/assets/js/direct-access-check.js', 'utf8');
 const blueprintSecuritySource = fs.readFileSync('functions/blueprint-security.js', 'utf8');
 const firestoreRulesSource = fs.readFileSync('firebase/firestore.rules', 'utf8');
+const fieldOpsMapSource = fs.readFileSync('public/assets/js/field-ops-map-layer.js', 'utf8');
+const fieldOpsRealtimeSource = fs.readFileSync('public/assets/js/field-ops-realtime.js', 'utf8');
 
 assert.match(routeGuardSource, /window\.location\.pathname \|\| '\/index\.html'/);
 assert.match(routeGuardSource, /source: 'verified-route-guard'/);
@@ -87,4 +89,35 @@ assert.doesNotMatch(directAccessSource, /localStorage|sessionStorage/);
 assert.match(directAccessSource, /source !== 'verified-route-guard'/);
 assert.match(directAccessSource, /location\.pathname \|\| '\/index\.html'/);
 
-console.log(`Validated ${accessCases.length} route decisions, one page-policy authority, strict lifecycle parity, and the verified-session direct-access contract.`);
+assert.doesNotMatch(
+  fieldOpsMapSource,
+  /getDocs\(collection\(db,\s*['"](?:leads|jobs)['"]\)\)/,
+  'Field operations maps must not issue unrestricted collection reads.'
+);
+assert.doesNotMatch(
+  fieldOpsRealtimeSource,
+  /onSnapshot\(collection\(db,\s*['"](?:leads|jobs)['"]\)/,
+  'Field operations realtime listeners must not subscribe to unrestricted collections.'
+);
+assert.match(
+  fieldOpsMapSource,
+  /where\('companyId', '==', context\.companyId\)/,
+  'Manager map reads must remain company-scoped.'
+);
+for (const assignmentField of ['assignedToUid', 'assignedTo', 'assignedTeamIds', 'assignedRep', 'staffClaimedBy']) {
+  assert.match(
+    fieldOpsMapSource,
+    new RegExp(`where\\('${assignmentField}'`),
+    `Staff map reads must retain the ${assignmentField} assignment scope.`
+  );
+}
+assert.match(
+  fieldOpsRealtimeSource,
+  /buildFieldOpsCollectionQueries\('leads', context\)/
+);
+assert.match(
+  fieldOpsRealtimeSource,
+  /buildFieldOpsCollectionQueries\('jobs', context\)/
+);
+
+console.log(`Validated ${accessCases.length} route decisions, one page-policy authority, strict lifecycle parity, verified-session direct access, and role-scoped map reads.`);
