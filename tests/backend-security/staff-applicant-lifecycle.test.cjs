@@ -111,3 +111,23 @@ test("staff applicant submission remains unassigned and readable only by its own
     submittedApplication("otherApplicant", { companyId: "company-a" })
   ));
 });
+
+test("public application creation enforces the requestable role catalog", async () => {
+  const allowedDb = env.authenticatedContext("allowedRole").firestore();
+  await assertSucceeds(setDoc(
+    doc(allowedDb, "staff_applications", "allowedRole"),
+    submittedApplication("allowedRole", { roleRequested: "field_staff", desiredRole: "field_staff" })
+  ));
+
+  const forgedManagerDb = env.authenticatedContext("forgedManager").firestore();
+  await assertFails(setDoc(
+    doc(forgedManagerDb, "staff_applications", "forgedManager"),
+    submittedApplication("forgedManager", { roleRequested: "sales_manager", desiredRole: "sales_manager" })
+  ));
+
+  const mismatchedRoleDb = env.authenticatedContext("mismatchedRole").firestore();
+  await assertFails(setDoc(
+    doc(mismatchedRoleDb, "staff_applications", "mismatchedRole"),
+    submittedApplication("mismatchedRole", { roleRequested: "technician", desiredRole: "manager" })
+  ));
+});
