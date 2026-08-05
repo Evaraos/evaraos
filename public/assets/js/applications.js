@@ -7,6 +7,8 @@ import {
   getDocs,
   getDoc,
   doc,
+  query,
+  where,
   httpsCallable
 } from "./firebase.js";
 
@@ -32,14 +34,6 @@ const REVIEWER_ROLES = new Set([
 const PLATFORM_ROLES = new Set(["owner", "super_admin"]);
 
 const STAFF_ROLES = [
-  ["hr", "HR"],
-  ["hr_manager", "HR Manager"],
-  ["operations_manager", "Operations Manager"],
-  ["operations_coordinator", "Operations Coordinator"],
-  ["dispatcher", "Dispatcher"],
-  ["field_manager", "Field Manager"],
-  ["sales_manager", "Sales Manager"],
-  ["customer_support", "Customer Support"],
   ["quality_control", "Quality Control"],
   ["sales", "Sales"],
   ["sales_rep", "Sales Representative"],
@@ -74,8 +68,7 @@ function normalize(value = "") {
 }
 
 function isPlatformReviewer(profile = {}) {
-  const role = normalize(profile.role);
-  return PLATFORM_ROLES.has(role) || (role === "admin" && profile.platformAccess === true);
+  return PLATFORM_ROLES.has(normalize(profile.role));
 }
 
 function canReview(profile = {}) {
@@ -245,7 +238,17 @@ async function loadApplications() {
     refreshBtn.textContent = "Refreshing...";
   }
   try {
-    const snapshot = await getDocs(collection(db, "staff_applications"));
+    const applicationsRef = collection(db, "staff_applications");
+    const platformScope = isPlatformReviewer(currentProfile);
+    const companyId = String(currentProfile?.companyId || "").trim();
+    if (!platformScope && !companyId) {
+      throw new Error("A company assignment is required to review staff applications.");
+    }
+
+    const applicationsQuery = platformScope
+      ? applicationsRef
+      : query(applicationsRef, where("companyId", "==", companyId));
+    const snapshot = await getDocs(applicationsQuery);
     applications = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
     applications.sort((a, b) => Number(b.submittedAt?.seconds || b.createdAt?.seconds || 0) - Number(a.submittedAt?.seconds || a.createdAt?.seconds || 0));
     renderApplications();

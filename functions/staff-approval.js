@@ -16,14 +16,6 @@ const REVIEWER_ROLES = new Set([
 ]);
 
 const STAFF_ROLES = new Set([
-  "hr",
-  "hr_manager",
-  "operations_manager",
-  "operations_coordinator",
-  "dispatcher",
-  "field_manager",
-  "sales_manager",
-  "customer_support",
   "quality_control",
   "sales",
   "sales_rep",
@@ -53,9 +45,7 @@ function activeApproved(user = {}) {
 
 function platformReviewer(user = {}) {
   const role = normalize(user.role);
-  return role === "owner"
-    || role === "super_admin"
-    || (role === "admin" && user.platformAccess === true);
+  return role === "owner" || role === "super_admin";
 }
 
 function assertReviewer(user = {}) {
@@ -77,8 +67,8 @@ function assertTenantScope(reviewer, application, companyId) {
     throw new HttpsError("permission-denied", "You can only assign applicants to your company.");
   }
 
-  if (applicationCompanyId && applicationCompanyId !== reviewerCompanyId) {
-    throw new HttpsError("permission-denied", "This application belongs to another company.");
+  if (!applicationCompanyId || applicationCompanyId !== reviewerCompanyId) {
+    throw new HttpsError("permission-denied", "This application is not assigned to your company.");
   }
 }
 
