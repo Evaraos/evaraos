@@ -57,6 +57,15 @@ function isObject(value) {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
+function mergeObjects(base, patch) {
+  if (!isObject(patch)) return clone(base);
+  const output = { ...(isObject(base) ? base : {}) };
+  Object.entries(patch).forEach(([key, value]) => {
+    output[key] = isObject(value) ? mergeObjects(output[key], value) : clone(value);
+  });
+  return output;
+}
+
 function safeAssetUrl(value) {
   const candidate = String(value || '').trim();
   if (!candidate) return '';
@@ -91,7 +100,7 @@ function normalizePayload(raw) {
     publishedVersion: Number.isInteger(raw.publishedVersion) ? raw.publishedVersion : 0,
     publishedAtMs: Number.isFinite(raw.publishedAtMs) ? raw.publishedAtMs : null,
     fetchedAtMs: Number.isFinite(raw.fetchedAtMs) ? raw.fetchedAtMs : Date.now(),
-    config: { ...clone(DEFAULT_CONFIG), ...clone(raw.config) }
+    config: mergeObjects(DEFAULT_CONFIG, raw.config)
   };
 }
 
@@ -160,10 +169,19 @@ function applyBrand(config) {
   return { mark, icon };
 }
 
+function preserveVisibleBoot(config) {
+  if (!document.body?.classList.contains('app-loading')) return;
+  if (document.querySelector('#evaraFastLoader.active,#evaraWelcomeLoader.active')) return;
+  const welcomeDisabled = config.loaders?.welcome?.enabled === false;
+  const pageEnabled = config.loaders?.page?.enabled !== false;
+  if (welcomeDisabled && pageEnabled) window.EvaraLoader?.showFastLoader?.();
+}
+
 function applyPayload(payload = activePayload) {
   if (!payload?.config) return false;
   const config = payload.config;
   window.EvaraLoader?.configureExperience?.(config);
+  preserveVisibleBoot(config);
   applyBrand(config);
   applyTextSlots(config);
   applyMediaSlots(config);
