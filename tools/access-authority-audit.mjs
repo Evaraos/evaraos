@@ -8,6 +8,13 @@ import {
   pagesForRole
 } from '../public/assets/js/access-control.js';
 
+const duplicatePagePolicyPath = 'public/assets/js/permissions/page-access.js';
+assert.equal(
+  fs.existsSync(duplicatePagePolicyPath),
+  false,
+  `${duplicatePagePolicyPath} must remain deleted; access-control.js is the sole page-policy authority.`
+);
+
 const accessCases = [
   ['/dashboard.html', 'owner', true],
   ['/dashboard.html', 'customer', false],
@@ -80,4 +87,4 @@ assert.doesNotMatch(directAccessSource, /localStorage|sessionStorage/);
 assert.match(directAccessSource, /source !== 'verified-route-guard'/);
 assert.match(directAccessSource, /location\.pathname \|\| '\/index\.html'/);
 
-console.log(`Validated ${accessCases.length} route decisions, strict lifecycle parity, and the verified-session direct-access contract.`);
+console.log(`Validated ${accessCases.length} route decisions, one page-policy authority, strict lifecycle parity, and the verified-session direct-access contract.`);
