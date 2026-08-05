@@ -46,8 +46,7 @@ function mountDashboardMap() {
         <span id="dashboardMapStatus" class="dashboard-map-status">Connecting compact live workspace</span>
       </div>
       <div class="dashboard-map-actions" aria-label="Live map actions">
-        <a href="/operations_map.html" class="btn btn-theme-secondary beam-target">Open compact map</a>
-        <a href="/dispatch_map.html" class="btn btn-theme-primary beam-target">Expand full map</a>
+        <a href="/operations_map.html" class="btn btn-theme-primary beam-target">Open Operations Map</a>
       </div>
     </div>
     <div class="dashboard-map-frame-shell">
