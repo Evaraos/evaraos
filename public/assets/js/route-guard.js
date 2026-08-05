@@ -18,14 +18,27 @@ const ROUTES = Object.freeze({
 const AUTH_WAIT_TIMEOUT_MS = 4500;
 let hasFinishedRouteGuard = false;
 
+function publishRouteSession(detail = {}) {
+  const session = Object.freeze({
+    authenticated: Boolean(detail.authenticated),
+    role: normalizeAccessRole(detail.role || ''),
+    userId: String(detail.userId || ''),
+    source: String(detail.source || ''),
+    mode: String(detail.mode || ''),
+    at: Date.now()
+  });
+  window.EvaraRouteSession = session;
+  return session;
+}
+
 function emit(name, detail = {}) {
   window.dispatchEvent(new CustomEvent(name, {
     detail: { at: Date.now(), ...detail }
   }));
 }
 
-function pageName() {
-  return window.location.pathname.split('/').pop() || 'index.html';
+function currentPath() {
+  return window.location.pathname || '/index.html';
 }
 
 function normalizePath(path = '') {
@@ -58,7 +71,7 @@ function safeMarkReady(detail = {}) {
   } else {
     revealWithoutLoader();
   }
-  emit('evara:session-ready', detail);
+  emit('evara:session-ready', publishRouteSession(detail));
 }
 
 function clearUserSession() {
@@ -137,8 +150,9 @@ async function readVerifiedProfile(user) {
   if (!user?.uid) return null;
 
   const profile = await hydrateUserProfile(user, { requireVerified: true });
-  if (!profile || profile.uid !== user.uid || !profile.role || !accountIsActive(profile)) return null;
-  return profile;
+  const role = normalizeAccessRole(profile?.role || '');
+  if (!profile || profile.uid !== user.uid || !role || !accountIsActive(profile)) return null;
+  return { ...profile, role };
 }
 
 async function resolveVerifiedSession() {
@@ -151,7 +165,7 @@ async function resolveVerifiedSession() {
   return {
     user,
     profile,
-    role: normalizeAccessRole(profile.role)
+    role: profile.role
   };
 }
 
@@ -168,7 +182,7 @@ async function handlePrivateRoute() {
     return;
   }
 
-  if (!canAccessPageName(pageName(), session.role)) {
+  if (!canAccessPageName(currentPath(), session.role)) {
     beginGuardRedirect(defaultRouteForRole(session.role), {
       title: 'Opening your dashboard',
       subtitle: 'That screen is not authorized for this account.'

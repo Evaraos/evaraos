@@ -53,7 +53,6 @@ const FIELD_ROLES = Object.freeze(['sales', 'technician', 'cleaner']);
 const OPERATIONS_ROLES = Object.freeze(['owner', 'admin', 'manager', 'vendor', ...FIELD_ROLES]);
 
 export const PUBLIC_PAGES = Object.freeze(new Set([
-  '',
   'index.html',
   'login.html',
   'signup.html',
@@ -66,6 +65,12 @@ export const PAGE_POLICY = Object.freeze({
   'customer_dashboard.html': ['customer'],
   'settings.html': ALL_AUTHENTICATED,
   'settings-v2.html': ALL_AUTHENTICATED,
+  'settings/account.html': ALL_AUTHENTICATED,
+  'settings/appearance.html': ALL_AUTHENTICATED,
+  'settings/icons.html': ALL_AUTHENTICATED,
+  'settings/notifications.html': ALL_AUTHENTICATED,
+  'settings/workspace.html': ALL_AUTHENTICATED,
+  'settings/workspace-v2.html': ALL_AUTHENTICATED,
   'messages.html': ALL_AUTHENTICATED,
   'customer-messaging.html': ALL_AUTHENTICATED,
 
@@ -166,7 +171,22 @@ export const FEATURE_POLICY = Object.freeze({
 
 export function normalizeAccessRole(role = '') {
   const value = String(role || '').trim().toLowerCase().replace(/\s+/g, '_');
-  return ROLE_ALIASES[value] || 'customer';
+  return ROLE_ALIASES[value] || '';
+}
+
+export function normalizeAccessPath(path = '') {
+  let resource = String(path || '').trim();
+  if (!resource) return 'index.html';
+  if (/^[a-z][a-z0-9+.-]*:/i.test(resource) || resource.startsWith('//')) return '';
+
+  resource = resource.split('#')[0].split('?')[0].replace(/\\/g, '/');
+  while (resource.startsWith('./')) resource = resource.slice(2);
+  resource = resource.replace(/^\/+/, '');
+  if (resource.startsWith('public/')) resource = resource.slice('public/'.length);
+
+  const segments = resource.split('/').filter(Boolean);
+  if (segments.some((segment) => segment === '.' || segment === '..')) return '';
+  return segments.join('/') || 'index.html';
 }
 
 export function isPlatformAdmin(role = '') {
@@ -185,39 +205,46 @@ export function isFieldRole(role = '') {
   return FIELD_ROLES.includes(normalizeAccessRole(role));
 }
 
-export function canUseFeature(feature = '', role = 'customer') {
+export function canUseFeature(feature = '', role = '') {
   const allowed = FEATURE_POLICY[feature];
-  if (!Array.isArray(allowed)) return false;
-  return allowed.includes(normalizeAccessRole(role));
+  const normalizedRole = normalizeAccessRole(role);
+  if (!normalizedRole || !Array.isArray(allowed)) return false;
+  return allowed.includes(normalizedRole);
 }
 
-export function canAccessPageName(pageName = '', role = 'customer') {
-  const page = String(pageName || '').split('?')[0].split('#')[0].split('/').pop() || 'index.html';
+export function canAccessPageName(pageName = '', role = '') {
+  const page = normalizeAccessPath(pageName);
+  if (!page) return false;
   if (PUBLIC_PAGES.has(page)) return true;
+
+  const normalizedRole = normalizeAccessRole(role);
   const allowed = PAGE_POLICY[page];
-  if (!Array.isArray(allowed)) return false;
-  return allowed.includes(normalizeAccessRole(role));
+  if (!normalizedRole || !Array.isArray(allowed)) return false;
+  return allowed.includes(normalizedRole);
 }
 
-export function defaultRouteForRole(role = 'customer') {
-  return normalizeAccessRole(role) === 'customer'
-    ? '/customer_dashboard.html'
-    : '/dashboard.html';
+export function defaultRouteForRole(role = '') {
+  const normalizedRole = normalizeAccessRole(role);
+  if (normalizedRole === 'customer') return '/customer_dashboard.html';
+  if (CANONICAL_ROLES.includes(normalizedRole)) return '/dashboard.html';
+  return '/login.html';
 }
 
-export function permissionsForRole(role = 'customer') {
+export function permissionsForRole(role = '') {
   const normalized = normalizeAccessRole(role);
+  if (!normalized) return [];
   return Object.keys(FEATURE_POLICY).filter((feature) => FEATURE_POLICY[feature].includes(normalized));
 }
 
-export function pagesForRole(role = 'customer') {
+export function pagesForRole(role = '') {
   const normalized = normalizeAccessRole(role);
+  if (!normalized) return [];
   return Object.entries(PAGE_POLICY)
     .filter(([, allowed]) => allowed.includes(normalized))
     .map(([page]) => page);
 }
 
-export function accessDecision({ page = '', feature = '', role = 'customer' } = {}) {
+export function accessDecision({ page = '', feature = '', role = '' } = {}) {
   const normalizedRole = normalizeAccessRole(role);
   if (feature) {
     return Object.freeze({
@@ -230,7 +257,7 @@ export function accessDecision({ page = '', feature = '', role = 'customer' } = 
   return Object.freeze({
     allowed: canAccessPageName(page, normalizedRole),
     role: normalizedRole,
-    resource: page,
+    resource: normalizeAccessPath(page),
     type: 'page'
   });
 }

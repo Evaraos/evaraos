@@ -11,6 +11,10 @@ on:
       - "public/assets/js/loader.js"
       - "public/assets/js/nav.js"
       - "public/assets/js/nav/**"
+      - "public/assets/js/access-control.js"
+      - "public/assets/js/route-guard.js"
+      - "public/assets/js/direct-access-check.js"
+      - "tools/access-authority-audit.mjs"
       - ".github/workflows/runtime-shell-validation.yml"
   pull_request:
     paths:
@@ -20,6 +24,10 @@ on:
       - "public/assets/js/loader.js"
       - "public/assets/js/nav.js"
       - "public/assets/js/nav/**"
+      - "public/assets/js/access-control.js"
+      - "public/assets/js/route-guard.js"
+      - "public/assets/js/direct-access-check.js"
+      - "tools/access-authority-audit.mjs"
       - ".github/workflows/runtime-shell-validation.yml"
 
 permissions:
@@ -47,6 +55,15 @@ jobs:
           node --check public/assets/js/loader.js
           node --experimental-default-type=module --check public/assets/js/nav.js
           node --experimental-default-type=module --check public/assets/js/nav/nav-main-v6.js
+          node --experimental-default-type=module --check public/assets/js/access-control.js
+          node --experimental-default-type=module --check public/assets/js/route-guard.js
+          node --experimental-default-type=module --check public/assets/js/direct-access-check.js
+          node --check tools/access-authority-audit.mjs
+
+      - name: Validate route and session authority
+        run: |
+          set -euo pipefail
+          node tools/access-authority-audit.mjs
 
       - name: Audit shell entrypoints and cache policy
         shell: bash

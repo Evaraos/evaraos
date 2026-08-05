@@ -1,33 +1,53 @@
-import { canAccessPageName, defaultRouteForRole, normalizeAccessRole } from './access-control.js';
+import {
+  canAccessPageName,
+  defaultRouteForRole,
+  normalizeAccessRole
+} from './access-control.js';
 
-function currentRole() {
-  try {
-    const raw = localStorage.getItem('evaraos-user') || sessionStorage.getItem('evaraos-user') || '{}';
-    const user = JSON.parse(raw);
-    return normalizeAccessRole(user.role || localStorage.getItem('evaraos-role') || sessionStorage.getItem('evaraos-role') || 'customer');
-  } catch {
-    return 'customer';
-  }
+function currentPath() {
+  return location.pathname || '/index.html';
 }
 
-function currentPage() {
-  return (location.pathname.split('/').pop() || 'index.html');
+function verifiedRouteSession(value = window.EvaraRouteSession) {
+  const source = String(value?.source || '');
+  const role = normalizeAccessRole(value?.role || '');
+  if (source !== 'verified-route-guard' || !value?.authenticated || !role) return null;
+  return Object.freeze({
+    authenticated: true,
+    role,
+    userId: String(value?.userId || ''),
+    source
+  });
 }
 
-export function checkDirectPageAccess() {
-  const role = currentRole();
-  const page = currentPage();
-  document.documentElement.dataset.evaraosAccessRole = role;
-  if (!canAccessPageName(page, role)) {
-    const destination = defaultRouteForRole(role);
-    window.EvaraLoader?.beginNavigationLoad?.({ title: 'Opening your dashboard', subtitle: 'That page is not available for this account.' });
+export function checkDirectPageAccess(sessionValue = window.EvaraRouteSession) {
+  const session = verifiedRouteSession(sessionValue);
+  if (!session) return true;
+
+  const page = currentPath();
+  document.documentElement.dataset.evaraosAccessRole = session.role;
+
+  if (!canAccessPageName(page, session.role)) {
+    const destination = defaultRouteForRole(session.role);
+    window.EvaraLoader?.beginNavigationLoad?.({
+      title: 'Opening your dashboard',
+      subtitle: 'That page is not available for this account.'
+    });
     setTimeout(() => location.replace(destination), 60);
     return false;
   }
+
   return true;
 }
 
-window.addEventListener('evara:session-ready', checkDirectPageAccess);
-window.addEventListener('pageshow', checkDirectPageAccess);
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', checkDirectPageAccess, { once: true });
-else checkDirectPageAccess();
+window.addEventListener('evara:session-ready', (event) => {
+  checkDirectPageAccess(event.detail);
+});
+
+window.addEventListener('pageshow', () => {
+  checkDirectPageAccess(window.EvaraRouteSession);
+});
+
+if (window.EvaraRouteSession) {
+  checkDirectPageAccess(window.EvaraRouteSession);
+}
