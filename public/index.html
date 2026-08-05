@@ -29,12 +29,12 @@
     body.app-ready #appRoot{visibility:visible}
     .install-cta-wrap{display:flex;justify-content:center;margin-top:12px}
     #installBtn{display:none}
-    #evaraWelcomeLoader{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;z-index:2147483647!important;display:none;align-items:center!important;justify-content:center!important;padding:max(20px,env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) max(20px,env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));background:#eef5fb;opacity:0;visibility:hidden}
+    #evaraWelcomeLoader{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;z-index:2147483647!important;display:none;align-items:center!important;justify-content:center!important;padding:max(20px,env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) max(20px,env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));background:var(--evara-loader-background,#eef5fb);opacity:0;visibility:hidden}
     #evaraWelcomeLoader.active{display:flex!important;opacity:1!important;visibility:visible!important}
-    #evaraWelcomeLoader .evara-welcome-card{width:min(430px,calc(100vw - 40px));min-height:330px;padding:32px 24px;border-radius:34px;display:grid;place-items:center;align-content:center;gap:14px;text-align:center;background:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.88);box-shadow:0 32px 110px rgba(27,32,48,.22);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%)}
+    #evaraWelcomeLoader .evara-welcome-card{width:min(430px,calc(100vw - 40px));min-height:330px;padding:32px 24px;border-radius:var(--evara-loader-radius,34px);display:grid;place-items:center;align-content:center;gap:14px;text-align:center;background:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.88);box-shadow:0 32px 110px rgba(27,32,48,.22);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%)}
     #evaraWelcomeLoader .evara-welcome-brand{position:relative;width:104px;height:104px;display:grid;place-items:center}
     #evaraWelcomeLoader .evara-loader-core{display:grid;place-items:center}
-    #evaraWelcomeLoader .evara-loader-mark{width:42px;height:42px;object-fit:contain}
+    #evaraWelcomeLoader .evara-loader-mark{width:var(--evara-loader-mark-size,42px);height:var(--evara-loader-mark-size,42px);object-fit:contain}
   </style>
   <link rel="stylesheet" href="/assets/css/base.css?v=54" />
   <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v10" />
@@ -55,7 +55,56 @@
     </section>
   </div>
   <script>
-    (()=>{const node=document.getElementById('evaraWelcomeLoader');const key='evaraos-internal-navigation-v1';let internal=false;try{const started=Number(sessionStorage.getItem(key)||0);sessionStorage.removeItem(key);internal=started>0&&Date.now()-started<15000}catch{}const mode=internal?'internal':'launch';document.documentElement.dataset.evaraLaunchMode=mode;if(internal){node.remove();return}node.style.display='flex';node.classList.add('active');node.setAttribute('aria-hidden','false')})();
+    (()=>{
+      const node=document.getElementById('evaraWelcomeLoader');
+      const navigationKey='evaraos-internal-navigation-v1';
+      const cacheKey='evaraos-experience-config-v1';
+      let internal=false;
+      let config=null;
+      const safeAsset=(value,fallback)=>{
+        const candidate=String(value||'').trim().slice(0,2200);
+        if(candidate.startsWith('/assets/')&&!candidate.includes('..')&&!candidate.includes('\\'))return candidate;
+        try{
+          const url=new URL(candidate,location.origin);
+          const prefix='/v0/b/evaraos-web.firebasestorage.app/o/';
+          return url.protocol==='https:'&&url.hostname==='firebasestorage.googleapis.com'&&url.pathname.startsWith(prefix)&&url.searchParams.get('alt')==='media'?url.href:fallback;
+        }catch{return fallback}
+      };
+      try{
+        const started=Number(sessionStorage.getItem(navigationKey)||0);
+        sessionStorage.removeItem(navigationKey);
+        internal=started>0&&Date.now()-started<15000;
+        const cached=JSON.parse(localStorage.getItem(cacheKey)||'null');
+        config=cached?.config||cached||null;
+      }catch{}
+      const mode=internal?'internal':'launch';
+      document.documentElement.dataset.evaraLaunchMode=mode;
+      if(config){
+        const theme=config.loaderTheme||{};
+        const welcome=config.loaders?.welcome||{};
+        const background=/^#[0-9a-f]{6}$/i.test(String(theme.background||''))?theme.background:'#eef5fb';
+        const radius=Math.min(52,Math.max(16,Number(theme.radius)||34));
+        const markSize=Math.min(96,Math.max(24,Number(theme.markSize)||42));
+        document.documentElement.style.setProperty('--evara-loader-background',background);
+        document.documentElement.style.setProperty('--evara-loader-radius',`${radius}px`);
+        document.documentElement.style.setProperty('--evara-loader-mark-size',`${markSize}px`);
+        const image=node.querySelector('.evara-loader-mark');
+        if(image)image.src=safeAsset(config.brand?.markUrl,image.getAttribute('src')||'/assets/brand/evaraos-mark.png');
+        const eyebrow=node.querySelector('.evara-welcome-eyebrow');
+        const title=node.querySelector('[data-evara-welcome-title]');
+        const subtitle=node.querySelector('[data-evara-welcome-subtitle]');
+        if(eyebrow&&welcome.eyebrow)eyebrow.textContent=welcome.eyebrow;
+        if(title&&welcome.title)title.textContent=welcome.title;
+        if(subtitle&&welcome.subtitle)subtitle.textContent=welcome.subtitle;
+        const progress=node.querySelector('.evara-welcome-progress');
+        if(progress&&theme.showProgress===false)progress.hidden=true;
+        if(welcome.enabled===false)internal=true;
+      }
+      if(internal){node.remove();return}
+      node.style.display='flex';
+      node.classList.add('active');
+      node.setAttribute('aria-hidden','false');
+    })();
   </script>
   <div id="universalNavRoot"></div>
   <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
@@ -65,10 +114,10 @@
       <section class="hero-home">
         <div class="hero-grid">
           <div class="hero-content">
-            <p class="hero-kicker">Subsidiaries Allocation SaaS</p>
-            <h1 class="hero-title">Run companies like a world-class operating system.</h1>
-            <p class="hero-subtitle">Evaraos Inc is built to power multiple subsidiaries, teams, customer portals, leads, jobs, reporting, approvals, and operations from one premium control center. One platform. Multiple categories. Scalable infrastructure.</p>
-            <div class="hero-actions"><a href="/login.html" class="btn btn-apple active-glow beam-target">Enter Platform</a><a href="/signup.html" class="btn btn-apple active-glow beam-target">Create Account</a></div>
+            <p class="hero-kicker" data-experience-text="home.kicker">Subsidiaries Allocation SaaS</p>
+            <h1 class="hero-title" data-experience-text="home.title">Run companies like a world-class operating system.</h1>
+            <p class="hero-subtitle" data-experience-text="home.subtitle">Evaraos Inc is built to power multiple subsidiaries, teams, customer portals, leads, jobs, reporting, approvals, and operations from one premium control center. One platform. Multiple categories. Scalable infrastructure.</p>
+            <div class="hero-actions"><a href="/login.html" class="btn btn-apple active-glow beam-target" data-experience-text="home.primaryAction">Enter Platform</a><a href="/signup.html" class="btn btn-apple active-glow beam-target" data-experience-text="home.secondaryAction">Create Account</a></div>
             <div class="install-cta-wrap"><button id="installBtn" class="btn btn-apple active-glow beam-target" type="button">Download App</button></div>
           </div>
           <div class="hero-side"><div class="stats-stack">
@@ -103,8 +152,8 @@
       </div>
     </footer>
   </div>
-  <script src="/assets/js/loader.js?v=43"></script>
+  <script src="/assets/js/loader.js?v=44-experience-runtime"></script>
   <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v13-public-critical"></script>
-  <script type="module" src="/assets/js/nav.js?v=nav-v58-critical-shell"></script>
+  <script type="module" src="/assets/js/nav.js?v=nav-v59-responsive-core-experience-1"></script>
 </body>
 </html>
