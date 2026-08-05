@@ -67,12 +67,20 @@ assert(
   `Expected exactly one canonical browser review runtime at public/assets/js/applications.js; found: ${browserCallableRuntimes.map(({ file }) => relative(file)).join(", ") || "none"}`
 );
 
-const backendExports = functionSources.filter(({ source }) => (
-  /\bexports\.reviewStaffApplication\s*=/.test(source)
+const backendDefinitions = functionSources.filter(({ source }) => (
+  /\bexports\.reviewStaffApplication\s*=\s*onCall\s*\(/.test(source)
 ));
 assert(
-  backendExports.length === 1 && relative(backendExports[0]?.file || "") === "functions/staff-approval.js",
-  `Expected exactly one reviewStaffApplication backend export at functions/staff-approval.js; found: ${backendExports.map(({ file }) => relative(file)).join(", ") || "none"}`
+  backendDefinitions.length === 1 && relative(backendDefinitions[0]?.file || "") === "functions/staff-approval.js",
+  `Expected exactly one reviewStaffApplication callable definition at functions/staff-approval.js; found: ${backendDefinitions.map(({ file }) => relative(file)).join(", ") || "none"}`
+);
+
+const backendEntrypointWiring = functionSources.filter(({ source }) => (
+  /\bexports\.reviewStaffApplication\s*=\s*require\(["']\.\/staff-approval["']\)\.reviewStaffApplication\s*;/.test(source)
+));
+assert(
+  backendEntrypointWiring.length === 1 && relative(backendEntrypointWiring[0]?.file || "") === "functions/index-stats.js",
+  `Expected exactly one reviewStaffApplication entrypoint wiring at functions/index-stats.js; found: ${backendEntrypointWiring.map(({ file }) => relative(file)).join(", ") || "none"}`
 );
 
 assert(
@@ -203,6 +211,7 @@ if (failures.length) {
 
 console.log("Staff approval contract audit passed.");
 console.log("- One canonical browser runtime calls reviewStaffApplication.");
+console.log("- One canonical backend callable is wired through the Functions entrypoint.");
 console.log("- Browser approval writes are blocked.");
 console.log("- Owner/super_admin remain platform-wide.");
 console.log("- Admin-and-below remain company-scoped.");
