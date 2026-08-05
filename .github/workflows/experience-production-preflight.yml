@@ -146,7 +146,7 @@ jobs:
           done
           grep -q 'source": "/__experience/config"' firebase.json
           grep -q 'function": "getPublicExperienceConfig"' firebase.json
-          grep -q '/assets/js/experience/experience-runtime.js' public/assets/js/nav.js
+          grep -q './experience/experience-runtime.js?v=experience-runtime-v1' public/assets/js/nav.js
           grep -q '/assets/js/studio/experience-editor.js?v=1' public/website-builder.html
           grep -q '/assets/css/pages/studio-experience-editor.css?v=1' public/website-builder.html
 
