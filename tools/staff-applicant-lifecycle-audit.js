@@ -8,14 +8,31 @@ const read = (...parts) => fs.readFileSync(path.join(root, ...parts), "utf8");
 const failures = [];
 const check = (condition, message) => { if (!condition) failures.push(message); };
 const block = (source, start, end) => source.slice(source.indexOf(start), source.indexOf(end, source.indexOf(start)));
+const valuesFromRoleObjects = (source) => [...source.matchAll(/\{\s*value:\s*["']([^"']+)["']/g)].map((match) => match[1]);
+const valuesFromSet = (source) => [...source.matchAll(/["']([a-z_]+)["']/g)].map((match) => match[1]);
 
 const submission = read("public", "assets", "js", "staff-application.js");
 const statusJs = read("public", "assets", "js", "account-status.js");
 const statusHtml = read("public", "account-status.html");
 const rules = read("firebase", "firestore.rules");
+const approval = read("functions", "staff-approval.js");
+const accessControl = read("public", "assets", "js", "access-control.js");
 const submit = block(submission, "async function handleSubmit", "function upgradePage");
 const selfCreate = block(rules, "function selfCreate", "function selfUpdate");
 const applications = block(rules, "match /staff_applications/{id}", "match /staff_profiles/{id}");
+const publicRoleBlock = block(submission, "const AVAILABLE_STAFF_ROLES", "const form");
+const trustedRoleBlock = block(approval, "const STAFF_ROLES", "const DECISIONS");
+const aliasBlock = block(accessControl, "const ROLE_ALIASES", "const ALL_AUTHENTICATED");
+const publicRoles = valuesFromRoleObjects(publicRoleBlock);
+const trustedRoles = new Set(valuesFromSet(trustedRoleBlock));
+const managerAliases = new Set(
+  [...aliasBlock.matchAll(/^\s*([a-z_]+):\s*["']manager["']/gm)].map((match) => match[1])
+);
+const forbiddenPublicRoles = new Set([
+  "platform_admin", "super_admin", "owner", "admin", "manager",
+  "operations_manager", "operations_coordinator", "field_manager", "sales_manager",
+  "dispatcher", "hr", "hr_manager", "customer_support", "customer_support_manager"
+]);
 
 check(/ACCOUNT_STATUS_ROUTE/.test(submission) && /account-lifecycle\.js/.test(submission), "Submission must reuse the canonical account lifecycle route.");
 check(/ACCOUNT_STATUS_ROUTE\}\?state=pending/.test(submit), "Submission must open shared pending account status.");
@@ -23,6 +40,15 @@ check(!/customer_dashboard|staff_application_status/.test(submit), "Pending appl
 check(/companyId:"",companyName:""/.test(submit), "Pending applicant profiles must remain unassigned.");
 check(!/companyName:value\("appDesiredCompany"\)/.test(submit), "Preferred company must not populate trusted profile assignment.");
 check(!/firstName:value|middleName:value|lastName:value|staffApplicationStatus|staffApplicationRoleRequested/.test(submit), "User profile create contains unsupported applicant-only fields.");
+
+check(publicRoles.length > 0, "Public staff role catalog is empty.");
+check(new Set(publicRoles).size === publicRoles.length, "Public staff role catalog contains duplicate roles.");
+check(publicRoles.every((role) => trustedRoles.has(role)), "Every public role must be approvable by the trusted staff approval backend.");
+check(publicRoles.every((role) => !forbiddenPublicRoles.has(role)), "Authority-bearing management, HR, admin, owner, or platform roles must not be publicly requestable.");
+check(publicRoles.every((role) => !managerAliases.has(role)), "Public roles must not normalize to manager-level application access.");
+check(!/lead_generator/.test(publicRoleBlock), "Unapprovable lead_generator role remains in the public catalog.");
+check(/field_staff/.test(publicRoleBlock), "Public operational catalog should expose the trusted field_staff pathway.");
+check(/Management, HR, administrative, and platform authority roles are assigned only through an authorized internal review\./.test(submission), "Public form must explain that authority roles require internal assignment.");
 
 check(!fs.existsSync(path.join(root, "public", "staff_application_status.html")), "Duplicate staff status page exists.");
 check(!fs.existsSync(path.join(root, "public", "assets", "js", "staff-application-status.js")), "Duplicate staff status runtime exists.");
@@ -42,4 +68,4 @@ if (failures.length) {
   failures.forEach((failure) => console.error(`- ${failure}`));
   process.exit(1);
 }
-console.log("Staff applicant lifecycle audit passed: shared status, own read, unassigned profile, and preference boundary verified.");
+console.log(`Staff applicant lifecycle audit passed: ${publicRoles.length} public operational roles are trusted, non-managerial, and lifecycle-safe.`);
