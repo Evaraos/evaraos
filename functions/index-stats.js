@@ -208,6 +208,10 @@ exports.createStudioBranch = studioJournal.createStudioBranch;
 exports.closeStudioSession = studioJournal.closeStudioSession;
 exports.prepareStudioRelease = studioJournal.prepareStudioRelease;
 
+const studioReleaseRuntime = require("./studio-release-runtime-service");
+exports.activateStudioRelease = studioReleaseRuntime.activateStudioRelease;
+exports.getPublishedStudioRelease = studioReleaseRuntime.getPublishedStudioRelease;
+
 const experienceConfig = require("./experience-config-service");
 exports.getExperienceEditorState = experienceConfig.getExperienceEditorState;
 exports.saveExperienceDraft = experienceConfig.saveExperienceDraft;
