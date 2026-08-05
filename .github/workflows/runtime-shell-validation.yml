@@ -21,6 +21,7 @@ on:
       - "public/assets/js/direct-access-check.js"
       - "public/assets/js/field-ops-map-layer.js"
       - "public/assets/js/field-ops-realtime.js"
+      - "public/assets/js/dashboard-live-map-card.js"
       - "tools/access-authority-audit.mjs"
       - "tools/account-lifecycle-audit.mjs"
       - "tools/experience-runtime-audit.js"
@@ -43,6 +44,7 @@ on:
       - "public/assets/js/direct-access-check.js"
       - "public/assets/js/field-ops-map-layer.js"
       - "public/assets/js/field-ops-realtime.js"
+      - "public/assets/js/dashboard-live-map-card.js"
       - "tools/access-authority-audit.mjs"
       - "tools/account-lifecycle-audit.mjs"
       - "tools/experience-runtime-audit.js"
@@ -83,6 +85,7 @@ jobs:
           node --experimental-default-type=module --check public/assets/js/direct-access-check.js
           node --experimental-default-type=module --check public/assets/js/field-ops-map-layer.js
           node --experimental-default-type=module --check public/assets/js/field-ops-realtime.js
+          node --experimental-default-type=module --check public/assets/js/dashboard-live-map-card.js
           node --check tools/access-authority-audit.mjs
           node --check tools/account-lifecycle-audit.mjs
           node --check tools/experience-runtime-audit.js
@@ -154,5 +157,5 @@ jobs:
             process.exit(1);
           }
 
-          console.log(`Validated ${htmlFiles.length} HTML entrypoints, Firebase boot, lifecycle authority, role-scoped field operations, registered Experience slots, and the runtime cache policy.`);
+          console.log(`Validated ${htmlFiles.length} HTML entrypoints, Firebase boot, lifecycle authority, role-scoped field operations, compact-to-expanded map flow, registered Experience slots, and the runtime cache policy.`);
           NODE
