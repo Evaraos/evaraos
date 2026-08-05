@@ -25,6 +25,8 @@ const accessCases = [
   ['/settings/workspace-v2.html?tab=team#members', 'manager', true],
   ['/operations_map.html', 'technician', true],
   ['/dispatch_map.html', 'technician', true],
+  ['/leads.html', 'sales', true],
+  ['/leads.html', 'technician', false],
   ['/operations_map.html', 'customer', false],
   ['/dispatch_map.html', 'customer', false],
   ['/untrusted/account.html', 'customer', false],
@@ -89,6 +91,9 @@ const leadsEntrySource = fs.readFileSync('public/assets/js/leads-entry.js', 'utf
 const compactOperationsMapSource = fs.readFileSync('public/operations_map.html', 'utf8');
 const expandedDispatchMapSource = fs.readFileSync('public/dispatch_map.html', 'utf8');
 const mapViewParametersSource = fs.readFileSync('public/assets/js/map-view-parameters.js', 'utf8');
+const bottomNavSource = fs.readFileSync('public/assets/js/nav/nav-bottom.js', 'utf8');
+const navRenderSource = fs.readFileSync('public/assets/js/nav/nav-render.js', 'utf8');
+const appRegistrySource = fs.readFileSync('public/assets/js/navigation/app-registry.js', 'utf8');
 
 assert.match(routeGuardSource, /window\.location\.pathname \|\| '\/index\.html'/);
 assert.match(routeGuardSource, /source: 'verified-route-guard'/);
@@ -256,4 +261,30 @@ assert.match(
   'Shared map URL filtering must remain restricted to recognized record types.'
 );
 
-console.log(`Validated ${accessCases.length} route decisions, one page-policy authority, delegated lifecycle authority, verified-session direct access, role-scoped map reads, compact-to-expanded flow, and one shared lead-map runtime.`);
+assert.match(
+  appRegistrySource,
+  /id: "operations-map"[\s\S]*?roles: \[[^\]]*"staff"[^\]]*\]/,
+  'The app registry must expose Operations Map to the staff navigation group.'
+);
+assert.match(
+  navRenderSource,
+  /canAccessPageName\(app\.route, role\)/,
+  'The drawer must filter registry entries through canonical page access.'
+);
+assert.match(
+  bottomNavSource,
+  /if \(role === "sales"\) return \["dashboard", "leads", "map", "messages", "settings"\]/,
+  'Sales bottom navigation must expose Leads and Map.'
+);
+assert.match(
+  bottomNavSource,
+  /if \(\["technician", "cleaner"\]\.includes\(role\)\) return \["dashboard", "jobs", "schedule", "map", "messages"\]/,
+  'Technician and cleaner bottom navigation must expose Jobs, Schedule, and Map.'
+);
+assert.match(
+  bottomNavSource,
+  /canAccessPageName\(REGISTRY\[id\]\.page, role\)/,
+  'Saved bottom-navigation items must remain filtered through canonical page access.'
+);
+
+console.log(`Validated ${accessCases.length} route decisions, one page-policy authority, delegated lifecycle authority, verified-session direct access, role-scoped map reads, compact-to-expanded flow, one shared lead-map runtime, and role-specific Map navigation.`);
