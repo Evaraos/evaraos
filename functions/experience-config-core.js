@@ -70,15 +70,14 @@ function cleanId(value, maxLength = 180) {
 function normalizeRole(value = '') {
   const role = cleanText(value, 100).toLowerCase().replace(/\s+/g, '_');
   if (role === 'super_admin') return 'platform_admin';
-  if (['organization_owner', 'office_owner', 'branch_owner'].includes(role)) return 'owner';
+  if (['organization_owner', 'office_owner', 'branch_owner'].includes(role)) return 'vendor';
   return role;
 }
 
 function isActiveProfile(profile = {}) {
-  const status = cleanText(profile.status || 'active', 40).toLowerCase();
-  const approval = cleanText(profile.approvalStatus || 'approved', 40).toLowerCase();
-  return !['inactive', 'suspended', 'disabled', 'rejected'].includes(status)
-    && !['rejected', 'denied', 'suspended'].includes(approval);
+  const status = cleanText(profile.status, 40).toLowerCase();
+  const approval = cleanText(profile.approvalStatus, 40).toLowerCase();
+  return ['active', 'approved'].includes(status) && approval === 'approved';
 }
 
 function canPublishGlobalExperience(profile = {}) {

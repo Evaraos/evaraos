@@ -17,7 +17,9 @@ function check(condition, message) {
 }
 
 const core = read('functions/experience-config-core.js');
+const tests = read('functions/experience-config-core.test.js');
 const service = read('functions/experience-config-service.js');
+const accessControl = read('public/assets/js/access-control.js');
 const entry = read('functions/index-stats.js');
 const packageJson = JSON.parse(read('functions/package.json'));
 const firebase = JSON.parse(read('firebase.json'));
@@ -34,6 +36,23 @@ const functions = [
 check(core.includes("GLOBAL_PUBLISHER_ROLES = new Set(['owner', 'platform_admin'])"), 'global authority is limited to owner and platform administrator');
 check(core.includes('canPublishGlobalExperience'), 'global publisher authority is centralized in the pure core');
 check(!core.includes("permissions.has('studio.publish')"), 'tenant Studio permissions do not grant global Experience authority');
+check(core.includes("const status = cleanText(profile.status, 40).toLowerCase();"), 'Experience lifecycle does not default a missing status to active');
+check(core.includes("const approval = cleanText(profile.approvalStatus, 40).toLowerCase();"), 'Experience lifecycle does not default a missing approval to approved');
+check(core.includes("return ['active', 'approved'].includes(status) && approval === 'approved';"), 'Experience lifecycle requires active-or-approved status and approved approvalStatus');
+check(!core.includes("profile.status || 'active'"), 'missing status cannot fail open');
+check(!core.includes("profile.approvalStatus || 'approved'"), 'missing approvalStatus cannot fail open');
+check(accessControl.includes("organization_owner: 'vendor'")
+  && accessControl.includes("office_owner: 'vendor'")
+  && accessControl.includes("branch_owner: 'vendor'"), 'canonical access authority classifies organization, office, and branch owners as vendor aliases');
+check(core.includes("if (['organization_owner', 'office_owner', 'branch_owner'].includes(role)) return 'vendor';"), 'Experience role normalization preserves canonical vendor aliases');
+check(!core.includes("if (['organization_owner', 'office_owner', 'branch_owner'].includes(role)) return 'owner';"), 'vendor aliases cannot escalate to global owner authority');
+check(tests.includes("{ role: 'owner', status: 'active' }")
+  && tests.includes("{ role: 'owner', approvalStatus: 'approved' }"), 'unit tests deny profiles with either lifecycle field missing');
+check(tests.includes("{ role: 'owner', status: 'pending', approvalStatus: 'approved' }")
+  && tests.includes("{ role: 'owner', status: 'active', approvalStatus: 'pending' }"), 'unit tests deny pending lifecycle states');
+check(tests.includes("{ role: 'organization_owner', status: 'active', approvalStatus: 'approved' }")
+  && tests.includes("{ role: 'office_owner', status: 'active', approvalStatus: 'approved' }")
+  && tests.includes("{ role: 'branch_owner', status: 'active', approvalStatus: 'approved' }"), 'unit tests deny vendor aliases global publishing authority');
 check(core.includes('MAX_CONFIG_BYTES = 700 * 1024'), 'configuration size is bounded below the Firestore document limit');
 check(core.includes('detectImageType'), 'uploaded images require signature validation');
 check(core.includes("minimumMs: 450"), 'welcome loader defaults preserve the current performance target');
