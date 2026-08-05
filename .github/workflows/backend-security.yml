@@ -19,6 +19,7 @@ on:
       - "public/assets/js/studio/blueprint-drafts.js"
       - "public/assets/js/studio/role-preview.js"
       - "tools/access-authority-audit.mjs"
+      - "tools/account-lifecycle-audit.mjs"
       - "tools/experience-backend-audit.js"
       - "tools/messaging-registry-contract-audit.js"
       - "tools/staff-approval-contract-audit.js"
@@ -39,6 +40,7 @@ on:
       - "public/assets/js/studio/blueprint-drafts.js"
       - "public/assets/js/studio/role-preview.js"
       - "tools/access-authority-audit.mjs"
+      - "tools/account-lifecycle-audit.mjs"
       - "tools/experience-backend-audit.js"
       - "tools/messaging-registry-contract-audit.js"
       - "tools/staff-approval-contract-audit.js"
@@ -102,7 +104,9 @@ jobs:
           node --experimental-default-type=module --check public/assets/js/studio/role-preview.js
 
       - name: Validate canonical access and lifecycle authority
-        run: node tools/access-authority-audit.mjs
+        run: |
+          node tools/access-authority-audit.mjs
+          node tools/account-lifecycle-audit.mjs
 
       - name: Validate trusted Experience backend contract
         run: node tools/experience-backend-audit.js
