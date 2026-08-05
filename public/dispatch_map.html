@@ -30,7 +30,7 @@
             </button>
             <button id="centerOnMe" class="map-secondary-button beam-target" type="button">Center on me</button>
             <button id="fitVisiblePins" class="map-secondary-button beam-target" type="button">Fit nearby pins</button>
-            <a class="map-secondary-button map-link-button beam-target" href="/operations_map.html">Compact operations view</a>
+            <a class="map-secondary-button map-link-button beam-target" href="/operations_map.html" data-map-compact>Compact operations view</a>
           </div>
         </article>
 
@@ -101,7 +101,7 @@
           <div id="dispatchMap" role="application" aria-label="Expanded live map showing your location and nearby pins"></div>
           <div class="map-floating-actions">
             <button id="refreshMapData" class="map-float-button" type="button">Refresh live data</button>
-            <a class="map-float-button map-float-link" href="/operations_map.html">Compact view</a>
+            <a class="map-float-button map-float-link" href="/operations_map.html" data-map-compact>Compact view</a>
           </div>
           <div id="selectedMapCard" class="map-selected-card" data-visible="false" aria-live="polite">
             <div>
@@ -122,6 +122,7 @@
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <script type="module" src="/assets/js/firebase.js"></script>
   <script type="module" src="/assets/js/route-guard.js"></script>
+  <script type="module" src="/assets/js/map-view-parameters.js?v=1"></script>
   <script type="module" src="/assets/js/dispatch-map.js?v=live-map-v3"></script>
   <script type="module" src="/assets/js/map-record-actions.js?v=1"></script>
   <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v1"></script>
