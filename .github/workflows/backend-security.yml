@@ -19,6 +19,7 @@ on:
       - "public/assets/js/studio/blueprint-drafts.js"
       - "public/assets/js/studio/role-preview.js"
       - "tools/access-authority-audit.mjs"
+      - "tools/experience-backend-audit.js"
       - "tools/messaging-registry-contract-audit.js"
       - "tools/staff-approval-contract-audit.js"
       - ".github/workflows/backend-security.yml"
@@ -38,6 +39,7 @@ on:
       - "public/assets/js/studio/blueprint-drafts.js"
       - "public/assets/js/studio/role-preview.js"
       - "tools/access-authority-audit.mjs"
+      - "tools/experience-backend-audit.js"
       - "tools/messaging-registry-contract-audit.js"
       - "tools/staff-approval-contract-audit.js"
       - ".github/workflows/backend-security.yml"
@@ -72,7 +74,11 @@ jobs:
 
       - name: Validate Cloud Function syntax
         run: |
+          node --check functions/index.js
           node --check functions/index-stats.js
+          node --check functions/experience-config-core.js
+          node --check functions/experience-config-core.test.js
+          node --check functions/experience-config-service.js
           node --check functions/staff-approval.js
           node --check functions/audit-events.js
           node --check functions/messaging-registry-core.js
@@ -99,11 +105,17 @@ jobs:
       - name: Validate canonical access and lifecycle authority
         run: node tools/access-authority-audit.mjs
 
+      - name: Validate trusted Experience backend contract
+        run: node tools/experience-backend-audit.js
+
       - name: Validate canonical messaging registry contract
         run: node tools/messaging-registry-contract-audit.js
 
       - name: Validate canonical staff approval contract
         run: node tools/staff-approval-contract-audit.js
+
+      - name: Run Experience configuration unit tests
+        run: node --test functions/experience-config-core.test.js
 
       - name: Run messaging registry migration unit tests
         run: node --test functions/messaging-registry-core.test.js
