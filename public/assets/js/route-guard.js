@@ -1,30 +1,46 @@
 import {
   auth,
-  onAuthStateChanged,
-  hydrateUserProfile,
-  clearSavedUserRole,
-  clearSavedUserProfile
+  onAuthStateChanged
 } from './firebase.js';
 import {
   canAccessPageName,
-  defaultRouteForRole,
-  normalizeAccessRole
+  defaultRouteForRole
 } from './access-control.js';
+import {
+  ACCOUNT_LIFECYCLE_STATES,
+  resolveAccountLifecycle,
+  routeForAccountLifecycle
+} from './account-lifecycle.js';
+import {
+  clearVerifiedProfileCache,
+  readVerifiedUserProfile
+} from './verified-profile.js';
 
 const ROUTES = Object.freeze({
-  login: './login.html'
+  login: '/login.html',
+  accountStatus: '/account-status.html'
 });
 
 const AUTH_WAIT_TIMEOUT_MS = 4500;
 let hasFinishedRouteGuard = false;
 
+function clean(value = '') {
+  return String(value || '').trim();
+}
+
 function publishRouteSession(detail = {}) {
   const session = Object.freeze({
     authenticated: Boolean(detail.authenticated),
-    role: normalizeAccessRole(detail.role || ''),
-    userId: String(detail.userId || ''),
-    source: String(detail.source || ''),
-    mode: String(detail.mode || ''),
+    role: clean(detail.role),
+    userId: clean(detail.userId),
+    lifecycle: clean(detail.lifecycle),
+    status: clean(detail.status),
+    approvalStatus: clean(detail.approvalStatus),
+    displayName: clean(detail.displayName),
+    email: clean(detail.email),
+    source: clean(detail.source),
+    mode: clean(detail.mode),
+    error: Boolean(detail.error),
     at: Date.now()
   });
   window.EvaraRouteSession = session;
@@ -74,11 +90,6 @@ function safeMarkReady(detail = {}) {
   emit('evara:session-ready', publishRouteSession(detail));
 }
 
-function clearUserSession() {
-  clearSavedUserRole?.();
-  clearSavedUserProfile?.();
-}
-
 function beginGuardRedirect(url, options = {}) {
   if (hasFinishedRouteGuard) return;
   hasFinishedRouteGuard = true;
@@ -94,7 +105,7 @@ function beginGuardRedirect(url, options = {}) {
 function saveIntendedRoute() {
   try {
     const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-    if (!/(login|signup|reset)\.html/.test(current)) {
+    if (!/(login|signup|reset|account-status)\.html/.test(current)) {
       sessionStorage.setItem('evaraos-intended-route', current);
     }
   } catch {}
@@ -110,17 +121,18 @@ function consumeIntendedRoute() {
   }
 }
 
-function accountIsActive(profile = {}) {
-  const status = String(profile.status || 'active').trim().toLowerCase();
-  const approval = String(profile.approvalStatus || '').trim().toLowerCase();
-  return !['inactive', 'suspended', 'disabled', 'rejected'].includes(status)
-    && approval !== 'rejected';
-}
-
 function safeDestinationForRole(path, role) {
   const fallback = defaultRouteForRole(role);
   if (!path) return fallback;
   return canAccessPageName(path, role) ? path : fallback;
+}
+
+function accountStatusDestination(lifecycle) {
+  return routeForAccountLifecycle(lifecycle || {
+    state: ACCOUNT_LIFECYCLE_STATES.VERIFICATION_REQUIRED,
+    active: false,
+    role: ''
+  });
 }
 
 function waitForVerifiedFirebaseUser() {
@@ -146,73 +158,118 @@ function waitForVerifiedFirebaseUser() {
   });
 }
 
-async function readVerifiedProfile(user) {
-  if (!user?.uid) return null;
-
-  const profile = await hydrateUserProfile(user, { requireVerified: true });
-  const role = normalizeAccessRole(profile?.role || '');
-  if (!profile || profile.uid !== user.uid || !role || !accountIsActive(profile)) return null;
-  return { ...profile, role };
-}
-
 async function resolveVerifiedSession() {
   const user = await waitForVerifiedFirebaseUser();
-  if (!user) return { user: null, profile: null, role: '' };
+  if (!user) {
+    return {
+      user: null,
+      profile: null,
+      lifecycle: resolveAccountLifecycle(null)
+    };
+  }
 
-  const profile = await readVerifiedProfile(user);
-  if (!profile) return { user, profile: null, role: '' };
-
+  const profile = await readVerifiedUserProfile(user);
   return {
     user,
     profile,
-    role: profile.role
+    lifecycle: resolveAccountLifecycle(profile)
+  };
+}
+
+function verifiedSessionDetail(mode, session, source = 'verified-route-guard') {
+  return {
+    mode,
+    authenticated: Boolean(session.user),
+    role: session.lifecycle.role,
+    userId: session.user?.uid || '',
+    lifecycle: session.lifecycle.state,
+    status: session.lifecycle.status,
+    approvalStatus: session.lifecycle.approvalStatus,
+    displayName: session.profile?.displayName || session.user?.displayName || '',
+    email: session.profile?.email || session.user?.email || '',
+    source
   };
 }
 
 async function handlePrivateRoute() {
   const session = await resolveVerifiedSession();
 
-  if (!session.user || !session.profile || !session.role) {
+  if (!session.user) {
     saveIntendedRoute();
-    clearUserSession();
+    clearVerifiedProfileCache();
     beginGuardRedirect(ROUTES.login, {
       title: 'Secure Area',
-      subtitle: 'Your account could not be securely verified.'
+      subtitle: 'Please sign in to continue.'
     });
     return;
   }
 
-  if (!canAccessPageName(currentPath(), session.role)) {
-    beginGuardRedirect(defaultRouteForRole(session.role), {
+  if (!session.lifecycle.active) {
+    saveIntendedRoute();
+    beginGuardRedirect(accountStatusDestination(session.lifecycle), {
+      title: 'Checking account status',
+      subtitle: 'This account is not approved for application access.'
+    });
+    return;
+  }
+
+  if (!canAccessPageName(currentPath(), session.lifecycle.role)) {
+    beginGuardRedirect(defaultRouteForRole(session.lifecycle.role), {
       title: 'Opening your dashboard',
       subtitle: 'That screen is not authorized for this account.'
     });
     return;
   }
 
-  safeMarkReady({
-    mode: 'private',
-    authenticated: true,
-    role: session.role,
-    userId: session.user.uid,
-    source: 'verified-route-guard'
-  });
+  safeMarkReady(verifiedSessionDetail('private', session));
 }
 
 async function handleAuthRoute() {
   const session = await resolveVerifiedSession();
 
-  if (session.user && session.profile && session.role) {
-    const intended = consumeIntendedRoute();
-    beginGuardRedirect(safeDestinationForRole(intended, session.role), {
-      title: 'Opening EvaraOS',
-      subtitle: 'Your secure session is already active.'
+  if (!session.user) {
+    clearVerifiedProfileCache();
+    safeMarkReady({ mode: 'auth', authenticated: false, source: 'verified-guest' });
+    return;
+  }
+
+  if (!session.lifecycle.active) {
+    beginGuardRedirect(accountStatusDestination(session.lifecycle), {
+      title: 'Opening account status',
+      subtitle: 'Reviewing your current access state.'
     });
     return;
   }
 
-  clearUserSession();
-  safeMarkReady({ mode: 'auth', authenticated: false, source: 'verified-guest' });
+  const intended = consumeIntendedRoute();
+  beginGuardRedirect(safeDestinationForRole(intended, session.lifecycle.role), {
+    title: 'Opening EvaraOS',
+    subtitle: 'Your secure session is already active.'
+  });
+}
+
+async function handleAccountStatusRoute() {
+  const session = await resolveVerifiedSession();
+
+  if (!session.user) {
+    clearVerifiedProfileCache();
+    beginGuardRedirect(ROUTES.login, {
+      title: 'Sign in required',
+      subtitle: 'Sign in to review your account status.'
+    });
+    return;
+  }
+
+  if (session.lifecycle.active) {
+    const intended = consumeIntendedRoute();
+    beginGuardRedirect(safeDestinationForRole(intended, session.lifecycle.role), {
+      title: 'Opening EvaraOS',
+      subtitle: 'Your account is approved and active.'
+    });
+    return;
+  }
+
+  safeMarkReady(verifiedSessionDetail('account-status', session));
 }
 
 function handlePublicRoute(mode) {
@@ -237,16 +294,47 @@ async function initRouteGuard() {
       return;
     }
 
+    if (mode === 'account-status') {
+      await handleAccountStatusRoute();
+      return;
+    }
+
     handlePublicRoute(mode);
   } catch (error) {
     console.error('Route authorization failed:', error);
 
     if (mode === 'private') {
       saveIntendedRoute();
-      clearUserSession();
-      beginGuardRedirect(ROUTES.login, {
-        title: 'Returning to login',
-        subtitle: 'Unable to verify your secure session.'
+      if (auth.currentUser) {
+        beginGuardRedirect(`${ROUTES.accountStatus}?state=${ACCOUNT_LIFECYCLE_STATES.VERIFICATION_REQUIRED}`, {
+          title: 'Verification required',
+          subtitle: 'Unable to verify the account profile securely.'
+        });
+      } else {
+        clearVerifiedProfileCache();
+        beginGuardRedirect(ROUTES.login, {
+          title: 'Returning to login',
+          subtitle: 'Unable to verify your secure session.'
+        });
+      }
+      return;
+    }
+
+    if (mode === 'auth' && auth.currentUser) {
+      beginGuardRedirect(`${ROUTES.accountStatus}?state=${ACCOUNT_LIFECYCLE_STATES.VERIFICATION_REQUIRED}`, {
+        title: 'Verification required',
+        subtitle: 'Unable to verify the account profile securely.'
+      });
+      return;
+    }
+
+    if (mode === 'account-status') {
+      safeMarkReady({
+        mode,
+        authenticated: Boolean(auth.currentUser),
+        lifecycle: ACCOUNT_LIFECYCLE_STATES.VERIFICATION_REQUIRED,
+        source: 'verified-route-guard',
+        error: true
       });
       return;
     }
