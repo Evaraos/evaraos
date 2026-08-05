@@ -29,6 +29,8 @@ const STAFF_ROLES = new Set([
 ]);
 
 const DECISIONS = new Set(["approved", "rejected", "needs_more_info"]);
+const CLAIM_SYNC_ATTEMPTS = 3;
+const CLAIM_SYNC_BASE_DELAY_MS = 250;
 
 function normalize(value = "") {
   return String(value || "").trim().toLowerCase();
@@ -134,30 +136,55 @@ function staffProfile(application, company, actor, finalRole) {
   };
 }
 
-async function syncClaims(uid, claims) {
-  try {
-    const authUser = await admin.auth().getUser(uid);
-    await admin.auth().setCustomUserClaims(uid, {
-      ...(authUser.customClaims || {}),
-      role: claims.role,
-      companyId: claims.companyId,
-      platformAccess: false,
-      accountStatus: "active",
-      approvalStatus: "approved"
-    });
+function sleep(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
 
-    await db.doc(`users/${uid}`).set({
-      claimsSyncStatus: "synced",
-      claimsSyncedAt: FieldValue.serverTimestamp()
-    }, { merge: true });
-  } catch (error) {
-    console.error("Staff claim synchronization failed", { uid, error });
-    await db.doc(`users/${uid}`).set({
-      claimsSyncStatus: "pending_retry",
-      claimsSyncError: String(error?.code || error?.message || "unknown").slice(0, 300),
-      claimsSyncUpdatedAt: FieldValue.serverTimestamp()
-    }, { merge: true });
+async function syncClaims(uid, claims) {
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= CLAIM_SYNC_ATTEMPTS; attempt += 1) {
+    try {
+      const authUser = await admin.auth().getUser(uid);
+      await admin.auth().setCustomUserClaims(uid, {
+        ...(authUser.customClaims || {}),
+        role: claims.role,
+        companyId: claims.companyId,
+        platformAccess: false,
+        accountStatus: "active",
+        approvalStatus: "approved"
+      });
+
+      await db.doc(`users/${uid}`).set({
+        claimsSyncStatus: "synced",
+        claimsSyncAttempts: attempt,
+        claimsSyncError: FieldValue.delete(),
+        claimsSyncedAt: FieldValue.serverTimestamp(),
+        claimsSyncUpdatedAt: FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      return { status: "synced", attempts: attempt };
+    } catch (error) {
+      lastError = error;
+      console.error("Staff claim synchronization attempt failed", { uid, attempt, error });
+      if (attempt < CLAIM_SYNC_ATTEMPTS) {
+        await sleep(CLAIM_SYNC_BASE_DELAY_MS * attempt);
+      }
+    }
   }
+
+  await db.doc(`users/${uid}`).set({
+    claimsSyncStatus: "pending_retry",
+    claimsSyncAttempts: CLAIM_SYNC_ATTEMPTS,
+    claimsSyncError: String(lastError?.code || lastError?.message || "unknown").slice(0, 300),
+    claimsSyncUpdatedAt: FieldValue.serverTimestamp()
+  }, { merge: true });
+
+  throw new HttpsError(
+    "unavailable",
+    "The application is approved, but account claims are pending retry. Retry the same approval action.",
+    { uid, claimsSyncStatus: "pending_retry" }
+  );
 }
 
 exports.reviewStaffApplication = onCall(
@@ -217,11 +244,66 @@ exports.reviewStaffApplication = onCall(
         throw new HttpsError("failed-precondition", "The application identity is invalid.");
       }
 
-      if (["approved", "rejected"].includes(normalize(application.status))) {
+      assertTenantScope(reviewer, application, requestedCompanyId);
+
+      const applicationStatus = normalize(application.status);
+      if (applicationStatus === "rejected") {
         throw new HttpsError("failed-precondition", "This application has already been finalized.");
       }
 
-      assertTenantScope(reviewer, application, requestedCompanyId);
+      if (applicationStatus === "approved") {
+        if (decision !== "approved") {
+          throw new HttpsError("failed-precondition", "This application has already been finalized.");
+        }
+
+        const storedRole = normalize(application.finalRole || application.approvedRole);
+        const storedCompanyId = cleanText(application.companyId, 120);
+        if (!STAFF_ROLES.has(storedRole) || !storedCompanyId) {
+          throw new HttpsError("data-loss", "The approved application is missing its canonical assignment.");
+        }
+        if (finalRole !== storedRole || requestedCompanyId !== storedCompanyId) {
+          throw new HttpsError("permission-denied", "Claim retries must preserve the approved role and company.");
+        }
+
+        const applicantRef = db.doc(`users/${applicantUid}`);
+        const applicantSnapshot = await transaction.get(applicantRef);
+        if (!applicantSnapshot.exists) {
+          throw new HttpsError("failed-precondition", "Applicant user profile not found.");
+        }
+
+        const applicant = applicantSnapshot.data() || {};
+        const alreadySynced = normalize(applicant.claimsSyncStatus) === "synced";
+        if (!alreadySynced) {
+          transaction.update(applicantRef, {
+            claimsSyncStatus: "pending_retry",
+            claimsSyncRequestedAt: FieldValue.serverTimestamp(),
+            claimsSyncRequestedBy: actor.uid,
+            claimsSyncUpdatedAt: FieldValue.serverTimestamp()
+          });
+
+          transaction.set(db.collection("audit_logs").doc(), {
+            action: "staff_claims_sync_retry_requested",
+            actorUserId: actor.uid,
+            actorName: actor.name,
+            actorRole: actor.role,
+            companyId: storedCompanyId,
+            targetCollection: "users",
+            targetDocumentId: applicantUid,
+            targetUserId: applicantUid,
+            assignedRole: storedRole,
+            source: "reviewStaffApplication",
+            createdAt: FieldValue.serverTimestamp()
+          });
+        }
+
+        approvedClaims = {
+          uid: applicantUid,
+          role: storedRole,
+          companyId: storedCompanyId,
+          alreadySynced
+        };
+        return;
+      }
 
       const commonReview = {
         status: decision,
@@ -329,11 +411,19 @@ exports.reviewStaffApplication = onCall(
         createdAt: FieldValue.serverTimestamp()
       });
 
-      approvedClaims = { uid: applicantUid, role: finalRole, companyId: company.id };
+      approvedClaims = {
+        uid: applicantUid,
+        role: finalRole,
+        companyId: company.id,
+        alreadySynced: false
+      };
     });
 
+    let claimsResult = null;
     if (approvedClaims) {
-      await syncClaims(approvedClaims.uid, approvedClaims);
+      claimsResult = approvedClaims.alreadySynced
+        ? { status: "synced", attempts: 0 }
+        : await syncClaims(approvedClaims.uid, approvedClaims);
     }
 
     return {
@@ -341,7 +431,9 @@ exports.reviewStaffApplication = onCall(
       applicationId,
       decision,
       role: approvedClaims?.role || null,
-      companyId: approvedClaims?.companyId || null
+      companyId: approvedClaims?.companyId || null,
+      claimsSyncStatus: claimsResult?.status || null,
+      claimsSyncAttempts: claimsResult?.attempts || 0
     };
   }
 );
