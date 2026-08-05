@@ -1,4 +1,5 @@
 import "./nav/nav-main-v6.js?v=nav-v59-responsive-core";
+import "./experience/experience-runtime.js?v=experience-runtime-v1";
 
 const NAV_ENTRY_BUILD = "nav-v59-responsive-core";
 const NAV_ENTRY_GUARD = "__evaraosNavEntryV59";
