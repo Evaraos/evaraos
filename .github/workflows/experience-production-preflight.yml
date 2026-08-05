@@ -1,0 +1,165 @@
+name: Experience Production Preflight
+
+on:
+  push:
+    branches:
+      - evaraos
+    paths:
+      - "firebase.json"
+      - "functions/experience-config-core.js"
+      - "functions/experience-config-core.test.js"
+      - "functions/experience-config-service.js"
+      - "functions/index-stats.js"
+      - "public/index.html"
+      - "public/website-builder.html"
+      - "public/assets/js/loader.js"
+      - "public/assets/js/nav.js"
+      - "public/assets/js/experience/**"
+      - "public/assets/js/studio/experience-editor.js"
+      - "public/assets/css/pages/studio-experience-editor.css"
+      - "tools/experience-backend-audit.js"
+      - "tools/experience-runtime-audit.js"
+      - "tools/experience-editor-audit.js"
+      - "docs/deployments/studio-release-candidate-source-verification.json"
+      - ".github/workflows/experience-production-preflight.yml"
+  pull_request:
+    paths:
+      - "firebase.json"
+      - "functions/experience-config-core.js"
+      - "functions/experience-config-core.test.js"
+      - "functions/experience-config-service.js"
+      - "functions/index-stats.js"
+      - "public/index.html"
+      - "public/website-builder.html"
+      - "public/assets/js/loader.js"
+      - "public/assets/js/nav.js"
+      - "public/assets/js/experience/**"
+      - "public/assets/js/studio/experience-editor.js"
+      - "public/assets/css/pages/studio-experience-editor.css"
+      - "tools/experience-backend-audit.js"
+      - "tools/experience-runtime-audit.js"
+      - "tools/experience-editor-audit.js"
+      - "docs/deployments/studio-release-candidate-source-verification.json"
+      - ".github/workflows/experience-production-preflight.yml"
+  workflow_dispatch:
+    inputs:
+      release_ref:
+        description: Exact 40-character commit SHA to validate
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: experience-production-preflight-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-experience-release:
+    name: Validate exact Experience release candidate
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      RELEASE_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.release_ref || github.sha }}
+
+    steps:
+      - name: Validate requested commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! [[ "$RELEASE_REF" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "release_ref must be an exact 40-character commit SHA."
+            exit 1
+          fi
+
+      - name: Checkout exact candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_REF }}
+          fetch-depth: 0
+
+      - name: Lock candidate SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$RELEASE_REF"
+          echo "Validating Experience release candidate $RELEASE_REF"
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Verify source-proof ancestry
+        shell: bash
+        run: |
+          set -euo pipefail
+          PROOF="docs/deployments/studio-release-candidate-source-verification.json"
+          test -f "$PROOF"
+          STATUS=$(node -e "const p=require('./$PROOF'); process.stdout.write(String(p.status || ''))")
+          SOURCE_SHA=$(node -e "const p=require('./$PROOF'); process.stdout.write(String(p.sourceCommit || ''))")
+          test "$STATUS" = "confirmed"
+          test -n "$SOURCE_SHA"
+          git merge-base --is-ancestor "$SOURCE_SHA" HEAD
+          git diff --quiet "$SOURCE_SHA..HEAD" -- \
+            functions/experience-config-core.js \
+            functions/experience-config-core.test.js \
+            functions/experience-config-service.js \
+            functions/index-stats.js \
+            public/index.html \
+            public/website-builder.html \
+            public/assets/js/loader.js \
+            public/assets/js/nav.js \
+            public/assets/js/experience \
+            public/assets/js/studio/experience-editor.js \
+            public/assets/css/pages/studio-experience-editor.css \
+            tools/experience-backend-audit.js \
+            tools/experience-runtime-audit.js \
+            tools/experience-editor-audit.js
+
+      - name: Validate trusted Experience backend
+        run: |
+          set -euo pipefail
+          node --check functions/index-stats.js
+          node --check functions/experience-config-core.js
+          node --check functions/experience-config-service.js
+          node --test functions/experience-config-core.test.js
+          node tools/experience-backend-audit.js
+
+      - name: Validate public runtime and owner editor
+        run: |
+          set -euo pipefail
+          node --check public/assets/js/loader.js
+          node --experimental-default-type=module --check public/assets/js/nav.js
+          node --experimental-default-type=module --check public/assets/js/experience/experience-runtime.js
+          node --experimental-default-type=module --check public/assets/js/studio/experience-editor.js
+          node tools/experience-runtime-audit.js
+          node tools/experience-editor-audit.js
+
+      - name: Verify canonical release wiring
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in getExperienceEditorState saveExperienceDraft publishExperienceConfig rollbackExperienceConfig uploadExperienceAsset getPublicExperienceConfig; do
+            grep -q "exports.$name = experienceConfig.$name" functions/index-stats.js
+          done
+          grep -q 'source": "/__experience/config"' firebase.json
+          grep -q 'function": "getPublicExperienceConfig"' firebase.json
+          grep -q '/assets/js/experience/experience-runtime.js' public/assets/js/nav.js
+          grep -q '/assets/js/studio/experience-editor.js?v=1' public/website-builder.html
+          grep -q '/assets/css/pages/studio-experience-editor.css?v=1' public/website-builder.html
+
+      - name: Record preflight summary
+        shell: bash
+        run: |
+          {
+            echo "## Experience Production Preflight"
+            echo ""
+            echo "- Candidate: \`$RELEASE_REF\`"
+            echo "- Trusted backend: passed"
+            echo "- Public runtime: passed"
+            echo "- Owner editor: passed"
+            echo "- Source-proof ancestry: passed"
+            echo "- Deployment performed: no"
+          } >> "$GITHUB_STEP_SUMMARY"
