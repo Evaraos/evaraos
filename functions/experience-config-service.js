@@ -104,14 +104,17 @@ exports.saveExperienceDraft = onCall(CALLABLE_OPTIONS, async (request) => {
       throw new HttpsError('invalid-argument', 'A configuration patch is required.');
     }
     const expectedDraftRevision = request.data?.expectedDraftRevision;
+    if (!Number.isInteger(expectedDraftRevision) || expectedDraftRevision < 0) {
+      throw new HttpsError('invalid-argument', 'A nonnegative integer expectedDraftRevision is required.');
+    }
     const result = await db.runTransaction(async (transaction) => {
       const snapshot = await transaction.get(CONFIG_REF);
       const current = snapshot.exists ? snapshot.data() || {} : {};
       const currentRevision = integer(current.draftRevision);
-      if (expectedDraftRevision !== undefined && integer(expectedDraftRevision, -1) !== currentRevision) {
+      if (expectedDraftRevision !== currentRevision) {
         throw new HttpsError('aborted', 'The Experience draft changed before this save.', {
           code: 'experience-draft-conflict',
-          expectedDraftRevision: Number(expectedDraftRevision),
+          expectedDraftRevision,
           actualDraftRevision: currentRevision
         });
       }
@@ -143,10 +146,10 @@ exports.saveExperienceDraft = onCall(CALLABLE_OPTIONS, async (request) => {
 exports.publishExperienceConfig = onCall(CALLABLE_OPTIONS, async (request) => {
   try {
     const publisher = await resolvePublisher(request);
-    if (!Number.isInteger(Number(request.data?.expectedDraftRevision))) {
-      throw new HttpsError('invalid-argument', 'expectedDraftRevision is required.');
+    const expectedDraftRevision = request.data?.expectedDraftRevision;
+    if (!Number.isInteger(expectedDraftRevision) || expectedDraftRevision < 0) {
+      throw new HttpsError('invalid-argument', 'A nonnegative integer expectedDraftRevision is required.');
     }
-    const expectedDraftRevision = Number(request.data.expectedDraftRevision);
     const result = await db.runTransaction(async (transaction) => {
       const snapshot = await transaction.get(CONFIG_REF);
       const current = snapshot.exists ? snapshot.data() || {} : {};

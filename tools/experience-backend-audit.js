@@ -62,6 +62,12 @@ check(core.includes("enabled: false") && core.includes('minimumAwayMs: 45000'), 
 check(service.includes("enforceAppCheck: true"), 'all editor callables use the App Check callable policy');
 check(service.includes('canPublishGlobalExperience(profile)'), 'the backend revalidates global publisher authority');
 check(service.includes("db.doc(`users/${uid}`).get()"), 'the backend re-reads the canonical user profile');
+const revisionGuards = service.match(/if \(!Number\.isInteger\(expectedDraftRevision\) \|\| expectedDraftRevision < 0\)/g) || [];
+check(revisionGuards.length === 2, 'draft save and publication both require an explicit nonnegative integer revision');
+check(!service.includes('expectedDraftRevision !== undefined'), 'draft saves cannot bypass concurrency checks by omitting the expected revision');
+check(!service.includes('Number(request.data.expectedDraftRevision)'), 'revision validation does not coerce strings or null into accepted numbers');
+check(service.includes('if (expectedDraftRevision !== currentRevision)')
+  && service.includes('if (expectedDraftRevision !== draftRevision)'), 'draft save and publication both compare the exact expected revision');
 check(service.includes("throw new HttpsError('aborted'"), 'draft and publication use optimistic revision conflicts');
 check(service.includes("targetCollection: 'experience_configs'"), 'draft, publication, and upload actions create audit evidence');
 check(service.includes("data.published || DEFAULT_CONFIG"), 'the public endpoint reads only published configuration');
