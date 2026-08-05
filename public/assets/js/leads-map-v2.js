@@ -1,11 +1,110 @@
-import "./maps-config.js";
-import { loadGoogleMaps } from "./maps-loader.js";
-import { loadFieldOpsMapData, renderFieldOpsMarkers } from "./field-ops-map-layer.js";
+const LEAD_MAP_SECTION_ID = 'leadsMapWorkspace';
+const LEAD_MAP_STYLE_ID = 'leadsMapStyles';
+const LEAD_MAP_EMBED_URL = '/operations_map.html?embed=1&type=lead&radius=all';
+const LEAD_MAP_COMPACT_URL = '/operations_map.html?type=lead&radius=all';
+const LEAD_MAP_EXPANDED_URL = '/dispatch_map.html?type=lead&radius=all';
 
-let map=null,markers=[];
-function mount(){if(document.getElementById("leadsMapWorkspace"))return true;const anchor=document.getElementById("leadsListSection")?.closest(".dashboard-grid-2");if(!anchor)return false;const section=document.createElement("section");section.id="leadsMapWorkspace";section.className="dashboard-panel glass-card";section.innerHTML='<div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Territory</p><h2>Lead Map</h2><p>Interactive pins for geocoded leads and assigned sales activity.</p></div><button id="refreshLeadsMap" type="button" class="btn btn-theme-secondary">Refresh map</button></div><div class="leads-map-grid"><div id="leadsMapCanvas" class="leads-map-canvas"><div class="leads-map-state">Loading Google Maps…</div></div><aside id="leadsMapList" class="leads-map-list"></aside></div>';anchor.insertAdjacentElement("beforebegin",section);document.getElementById("refreshLeadsMap")?.addEventListener("click",load);return true}
-function renderList(leads=[]){const root=document.getElementById("leadsMapList");if(!root)return;root.innerHTML=leads.length?leads.map(lead=>`<button type="button" class="leads-map-row" data-lead-map-id="${lead.id}"><strong>${lead.title}</strong><span>${lead.subtitle||"No address"}</span><small>${lead.status} · ${lead.assignedToName||"Unassigned"}</small></button>`).join(""):'<div class="leads-map-state">No lead records available.</div>'}
-async function load(){const canvas=document.getElementById("leadsMapCanvas");if(!canvas)return;canvas.innerHTML='<div class="leads-map-state">Loading map…</div>';try{const data=await loadFieldOpsMapData();const geocoded=data.leads.filter(lead=>lead.lat&&lead.lng);renderList(data.leads);if(!geocoded.length){canvas.innerHTML='<div class="leads-map-state"><strong>No mapped leads yet.</strong><span>Add latitude and longitude to lead records to display pins.</span></div>';return}await loadGoogleMaps();canvas.innerHTML="";const center={lat:geocoded.reduce((sum,item)=>sum+item.lat,0)/geocoded.length,lng:geocoded.reduce((sum,item)=>sum+item.lng,0)/geocoded.length};map=new google.maps.Map(canvas,{center,zoom:11,mapTypeControl:false,streetViewControl:false,fullscreenControl:true});markers.forEach(marker=>marker.setMap(null));markers=renderFieldOpsMarkers(map,geocoded);const byId=new Map(geocoded.map((lead,index)=>[lead.id,markers[index]]));document.getElementById("leadsMapList")?.addEventListener("click",event=>{const row=event.target.closest("[data-lead-map-id]");if(!row)return;const lead=geocoded.find(item=>item.id===row.dataset.leadMapId),marker=byId.get(row.dataset.leadMapId);if(lead){map.panTo({lat:lead.lat,lng:lead.lng});map.setZoom(15);google.maps.event.trigger(marker,"click")}})}catch(error){console.error("Lead map failed",error);canvas.innerHTML=`<div class="leads-map-state"><strong>Map unavailable</strong><span>${error.message||"Google Maps could not load."}</span></div>`}}
-function styles(){if(document.getElementById("leadsMapStyles"))return;const style=document.createElement("style");style.id="leadsMapStyles";style.textContent='.leads-map-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(260px,.6fr);gap:14px;margin-top:14px}.leads-map-canvas{min-height:440px;border-radius:24px;overflow:hidden;border:1px solid var(--liquid-border-outer);background:var(--liquid-bg-bottom)}.leads-map-list{max-height:440px;overflow:auto;display:grid;align-content:start;gap:8px}.leads-map-row{min-height:82px;padding:12px;border-radius:18px;text-align:left;color:var(--text-primary);background:linear-gradient(145deg,var(--liquid-bg-top),var(--liquid-bg-bottom));border:1px solid var(--liquid-border-soft);cursor:pointer}.leads-map-row strong,.leads-map-row span,.leads-map-row small{display:block}.leads-map-row span{margin-top:4px;color:var(--text-secondary)}.leads-map-row small{margin-top:6px;color:var(--text-secondary)}.leads-map-state{min-height:100%;display:grid;place-items:center;align-content:center;gap:7px;text-align:center;padding:26px;color:var(--text-secondary)}@media(max-width:850px){.leads-map-grid{grid-template-columns:1fr}.leads-map-canvas{min-height:360px}.leads-map-list{max-height:280px}}';document.head.appendChild(style)}
-function init(){styles();if(mount())load();else{const observer=new MutationObserver(()=>{if(mount()){observer.disconnect();load()}});observer.observe(document.body,{childList:true,subtree:true});setTimeout(()=>observer.disconnect(),12000)}}
-if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
+function injectStyles() {
+  if (document.getElementById(LEAD_MAP_STYLE_ID)) return;
+  const style = document.createElement('style');
+  style.id = LEAD_MAP_STYLE_ID;
+  style.textContent = `
+    .leads-map-shared-shell {
+      margin-top: 14px;
+      min-height: 520px;
+      overflow: hidden;
+      border-radius: 26px;
+      border: 1px solid var(--liquid-border-outer);
+      background: var(--liquid-bg-bottom);
+    }
+    .leads-map-shared-frame {
+      display: block;
+      width: 100%;
+      min-height: 520px;
+      border: 0;
+      background: transparent;
+    }
+    .leads-map-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+    .leads-map-status {
+      display: block;
+      margin-top: 6px;
+      color: var(--text-secondary);
+    }
+    @media (max-width: 760px) {
+      .leads-map-actions { width: 100%; justify-content: stretch; }
+      .leads-map-actions .btn { flex: 1 1 180px; }
+      .leads-map-shared-shell,
+      .leads-map-shared-frame { min-height: 450px; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function mountSharedLeadMap() {
+  if (document.getElementById(LEAD_MAP_SECTION_ID)) return true;
+
+  const listSection = document.getElementById('leadsListSection');
+  const anchor = listSection?.closest('.dashboard-grid-2');
+  if (!anchor) return false;
+
+  injectStyles();
+
+  const section = document.createElement('section');
+  section.id = LEAD_MAP_SECTION_ID;
+  section.className = 'dashboard-panel glass-card';
+  section.setAttribute('aria-labelledby', 'leadsMapTitle');
+  section.innerHTML = `
+    <div class="dashboard-section-head">
+      <div>
+        <p class="dashboard-section-kicker">Territory</p>
+        <h2 id="leadsMapTitle">Live Lead Map</h2>
+        <p>Use the shared EvaraOS live map filtered to leads. Select a pin to open directions or manage the exact lead record.</p>
+        <span id="leadsMapStatus" class="leads-map-status">Connecting lead-only live workspace…</span>
+      </div>
+      <div class="leads-map-actions" aria-label="Lead map actions">
+        <a class="btn btn-theme-secondary" href="${LEAD_MAP_COMPACT_URL}">Open compact lead map</a>
+        <a class="btn btn-theme-primary" href="${LEAD_MAP_EXPANDED_URL}">Expand full lead map</a>
+      </div>
+    </div>
+    <div class="leads-map-shared-shell">
+      <iframe
+        id="leadsMapFrame"
+        class="leads-map-shared-frame"
+        src="${LEAD_MAP_EMBED_URL}"
+        title="Interactive EvaraOS live map filtered to leads"
+        loading="lazy"
+        allow="geolocation 'self'"
+      ></iframe>
+    </div>`;
+
+  anchor.insertAdjacentElement('beforebegin', section);
+
+  const frame = section.querySelector('#leadsMapFrame');
+  const status = section.querySelector('#leadsMapStatus');
+  frame?.addEventListener('load', () => {
+    if (status) status.textContent = 'Lead-only live workspace ready';
+  }, { once: true });
+
+  return true;
+}
+
+function init() {
+  if (mountSharedLeadMap()) return;
+  const observer = new MutationObserver(() => {
+    if (mountSharedLeadMap()) observer.disconnect();
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+  window.setTimeout(() => observer.disconnect(), 12000);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init, { once: true });
+} else {
+  init();
+}
