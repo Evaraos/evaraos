@@ -138,17 +138,58 @@ jobs:
           node tools/experience-editor-audit.js
 
       - name: Verify canonical release wiring
-        shell: bash
         run: |
           set -euo pipefail
-          for name in getExperienceEditorState saveExperienceDraft publishExperienceConfig rollbackExperienceConfig uploadExperienceAsset getPublicExperienceConfig; do
-            grep -q "exports.$name = experienceConfig.$name" functions/index-stats.js
-          done
-          grep -q 'source": "/__experience/config"' firebase.json
-          grep -q 'function": "getPublicExperienceConfig"' firebase.json
-          grep -q './experience/experience-runtime.js?v=experience-runtime-v1' public/assets/js/nav.js
-          grep -q '/assets/js/studio/experience-editor.js?v=1' public/website-builder.html
-          grep -q '/assets/css/pages/studio-experience-editor.css?v=1' public/website-builder.html
+          node <<'NODE'
+          const fs = require('fs');
+
+          const read = (file) => fs.readFileSync(file, 'utf8');
+          const entry = read('functions/index-stats.js');
+          const nav = read('public/assets/js/nav.js');
+          const builder = read('public/website-builder.html');
+          const firebase = JSON.parse(read('firebase.json'));
+          const callableNames = [
+            'getExperienceEditorState',
+            'saveExperienceDraft',
+            'publishExperienceConfig',
+            'rollbackExperienceConfig',
+            'uploadExperienceAsset',
+            'getPublicExperienceConfig'
+          ];
+
+          const failures = [];
+          callableNames.forEach((name) => {
+            if (!entry.includes(`exports.${name} = experienceConfig.${name}`)) {
+              failures.push(`Canonical Functions entrypoint is missing ${name}.`);
+            }
+          });
+
+          const rewrites = firebase.hosting?.rewrites || [];
+          const endpointIndex = rewrites.findIndex((rewrite) => rewrite.source === '/__experience/config');
+          const catchAllIndex = rewrites.findIndex((rewrite) => rewrite.source === '**');
+          const endpoint = endpointIndex >= 0 ? rewrites[endpointIndex] : null;
+          if (!endpoint || endpoint.function?.functionId !== 'getPublicExperienceConfig') {
+            failures.push('Firebase Hosting does not route /__experience/config to getPublicExperienceConfig.');
+          }
+          if (catchAllIndex >= 0 && endpointIndex >= catchAllIndex) {
+            failures.push('The Experience endpoint must precede the Hosting catch-all rewrite.');
+          }
+          if (!nav.includes('import "./experience/experience-runtime.js?v=experience-runtime-v1";')) {
+            failures.push('The canonical navigation entrypoint does not load the Experience runtime.');
+          }
+          if (!builder.includes('/assets/js/studio/experience-editor.js?v=1')) {
+            failures.push('The canonical Studio page does not load the Experience editor.');
+          }
+          if (!builder.includes('/assets/css/pages/studio-experience-editor.css?v=1')) {
+            failures.push('The canonical Studio page does not load the Experience editor stylesheet.');
+          }
+
+          if (failures.length) {
+            console.error(failures.join('\n'));
+            process.exit(1);
+          }
+          console.log('Canonical Experience release wiring passed.');
+          NODE
 
       - name: Record preflight summary
         shell: bash
@@ -161,5 +202,6 @@ jobs:
             echo "- Public runtime: passed"
             echo "- Owner editor: passed"
             echo "- Source-proof ancestry: passed"
+            echo "- Canonical release wiring: passed"
             echo "- Deployment performed: no"
           } >> "$GITHUB_STEP_SUMMARY"
