@@ -1,9 +1,9 @@
 {
   "schemaVersion": "evara.source-verification.v1",
   "status": "confirmed",
-  "sourceCommit": "33b2daf34afb7e88b6213c2161b661472a3c137b",
-  "workflowRunId": "30982375883",
-  "verifiedAt": "2026-08-05T06:44:31.726Z",
+  "sourceCommit": "0a853c2c0c67e5eca97f153f7f0e7a88f0556dd3",
+  "workflowRunId": "30987230013",
+  "verifiedAt": "2026-08-05T08:00:41.953Z",
   "gates": {
     "app-check-audit": {
       "exitCode": 0,

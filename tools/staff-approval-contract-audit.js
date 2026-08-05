@@ -127,6 +127,19 @@ assert(
 );
 
 assert(
+  /data-decision="assigned"/.test(applications),
+  "The canonical Applications UI must expose owner-controlled company assignment."
+);
+assert(
+  /decision === "assigned" && !isPlatformReviewer\(currentProfile\)/.test(applications),
+  "The browser assignment control must be limited to owner/super_admin."
+);
+assert(
+  /const companyDecision = \["approved", "assigned"\]\.includes\(decision\);/.test(applications),
+  "Company assignment and approval must use the same trusted callable payload path."
+);
+
+assert(
   /function platformReviewer\(user = \{\}\) \{\s*const role = normalize\(user\.role\);\s*return role === "owner" \|\| role === "super_admin";\s*\}/.test(approvalFunction),
   "Backend platform authority must be limited to owner and super_admin."
 );
@@ -145,6 +158,29 @@ assert(
 assert(
   /if \(!applicationCompanyId \|\| applicationCompanyId !== reviewerCompanyId\)/.test(approvalFunction),
   "Admin-and-below must only review applications already assigned to their company."
+);
+
+assert(
+  /const DECISIONS = new Set\(\["assigned", "approved", "rejected", "needs_more_info"\]\);/.test(approvalFunction),
+  "The canonical callable must own the assignment transition."
+);
+assert(
+  /if \(decision === "assigned" && !platformReviewer\(reviewer\)\)/.test(approvalFunction),
+  "Only owner/super_admin may assign or reassign an application."
+);
+assert(
+  /action: "staff_application_assigned"/.test(approvalFunction)
+    && /assignmentStatus: "assigned"/.test(approvalFunction),
+  "Trusted assignment must persist assignment state and an audit event."
+);
+assert(
+  /function canonicalCompany\(snapshot, companyId\)/.test(approvalFunction)
+    && /companyData\.name \|\| companyData\.companyName \|\| companyId/.test(approvalFunction),
+  "Company names must come from the canonical company document."
+);
+assert(
+  !/requestedCompanyName/.test(approvalFunction),
+  "The backend must not trust a browser-supplied company name."
 );
 
 const forbiddenAssignedRoles = [
@@ -189,6 +225,10 @@ assert(
   "Approved applications must allow only idempotent same-role, same-company claim convergence."
 );
 assert(
+  /if \(\["approved", "rejected"\]\.includes\(applicationStatus\)\)/.test(approvalFunction),
+  "Company reassignment must be blocked after finalization."
+);
+assert(
   !/exports\.(?:retry|sync)StaffClaims\s*=\s*onCall/.test(approvalFunction),
   "Claim convergence must reuse reviewStaffApplication rather than adding a second privileged callable."
 );
@@ -212,9 +252,13 @@ assert(
   "Firestore staff application reads must keep admin-and-below company-scoped."
 );
 assert(
+  /!request\.resource\.data\.keys\(\)\.hasAny\(\['companyId','companyName','assignmentStatus','assignedAt','assignedBy','assignedByName'\]\)/.test(staffApplicationsRules),
+  "Applicant-created staff applications must be explicitly unassigned."
+);
+assert(
   /allow update: if own\(id\)/.test(staffApplicationsRules)
     && !/allow update: if (?:platform|operations|manager)\(/.test(staffApplicationsRules),
-  "Firestore must not allow leadership browser approval writes."
+  "Firestore must not allow leadership browser approval or assignment writes."
 );
 assert(
   /match \/staff_profiles\/\{id\} \{[\s\S]*?allow write: if false;/.test(rules),
@@ -230,8 +274,8 @@ if (failures.length) {
 console.log("Staff approval contract audit passed.");
 console.log("- One canonical browser runtime calls reviewStaffApplication.");
 console.log("- One canonical backend callable is wired through the Functions entrypoint.");
-console.log("- Browser approval writes are blocked.");
-console.log("- Owner/super_admin remain platform-wide.");
-console.log("- Admin-and-below remain company-scoped.");
-console.log("- Elevated role assignment is blocked.");
-console.log("- Approved claim synchronization is retryable, idempotent, and assignment-preserving.");
+console.log("- Applicant submissions remain unassigned and browser assignment writes are blocked.");
+console.log("- Owner/super_admin own trusted company assignment and remain platform-wide.");
+console.log("- Admin-and-below read and review only their assigned company.");
+console.log("- Elevated role assignment and repeat finalization are blocked.");
+console.log("- Approved claim synchronization remains retryable, idempotent, and assignment-preserving.");

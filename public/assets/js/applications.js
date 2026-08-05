@@ -118,6 +118,7 @@ function filteredApplications() {
       app.applicantEmail,
       app.roleRequested,
       app.desiredCompany,
+      app.companyName,
       app.desiredMarket,
       app.phone,
       app.city,
@@ -157,8 +158,11 @@ function renderApplicationCard(app = {}) {
   const status = normalize(app.status || "submitted");
   const verification = normalize(app.verificationStatus || "pending_review");
   const finalized = ["approved", "rejected"].includes(status);
+  const platformScope = isPlatformReviewer(currentProfile);
   const selectedRole = normalize(app.finalRole || app.approvedRole || app.roleRequested || "staff");
   const selectedCompany = String(app.companyId || "");
+  const assignedCompany = String(app.companyName || selectedCompany || "Unassigned");
+  const companySelectDisabled = finalized || !platformScope;
 
   return `
     <article class="application-card glass-card aurora-card active-glow beam-target" data-application-id="${id}">
@@ -171,11 +175,13 @@ function renderApplicationCard(app = {}) {
           <span class="pill ${statusClass(status)}">${escapeHtml(status.replaceAll("_", " "))}</span>
           <span class="pill ${statusClass(verification)}">Verification: ${escapeHtml(verification.replaceAll("_", " "))}</span>
           <span class="pill">${escapeHtml(roleLabel(selectedRole))}</span>
+          <span class="pill ${selectedCompany ? "success" : "warning"}">Tenant: ${escapeHtml(assignedCompany)}</span>
         </div>
       </div>
 
       <div class="application-details">
         <div class="detail-box"><strong>Desired Company</strong><span>${escapeHtml(app.desiredCompany || "Not set")}</span></div>
+        <div class="detail-box"><strong>Assigned Company</strong><span>${escapeHtml(assignedCompany)}</span></div>
         <div class="detail-box"><strong>Market</strong><span>${escapeHtml(app.desiredMarket || `${app.city || ""} ${app.state || ""}`.trim() || "Not set")}</span></div>
         <div class="detail-box"><strong>Address</strong><span>${escapeHtml([app.address, app.city, app.state, app.zip].filter(Boolean).join(", ") || "Not set")}</span></div>
         <div class="detail-box"><strong>Work Auth</strong><span>${escapeHtml(app.workAuthorization || "Not set")}</span></div>
@@ -192,8 +198,9 @@ function renderApplicationCard(app = {}) {
 
       <div class="review-box">
         <select data-final-role-choice="${id}" aria-label="Final approved role" ${finalized ? "disabled" : ""}>${roleOptions(selectedRole)}</select>
-        <select data-company-choice="${id}" aria-label="Assigned company" ${finalized ? "disabled" : ""}>${companyOptions(selectedCompany)}</select>
+        <select data-company-choice="${id}" aria-label="Assigned company" ${companySelectDisabled ? "disabled" : ""}>${companyOptions(selectedCompany)}</select>
         <textarea data-review-notes="${id}" placeholder="Review notes, verification result, missing info..." ${finalized ? "disabled" : ""}>${escapeHtml(app.reviewNotes || "")}</textarea>
+        ${platformScope && !finalized ? `<button type="button" class="btn btn-theme-secondary beam-target" data-decision="assigned" data-application-id="${id}">Assign Company</button>` : ""}
         <button type="button" class="btn btn-theme-primary beam-target" data-decision="approved" data-application-id="${id}" ${finalized ? "disabled" : ""}>Approve</button>
         <button type="button" class="btn btn-theme-secondary beam-target" data-decision="needs_more_info" data-application-id="${id}" ${finalized ? "disabled" : ""}>More Info</button>
         <button type="button" class="btn btn-theme-secondary beam-target" data-decision="rejected" data-application-id="${id}" ${finalized ? "disabled" : ""}>Reject</button>
@@ -287,11 +294,17 @@ async function submitDecision(button) {
   const companyId = formValue(`[data-company-choice="${CSS.escape(applicationId)}"]`);
   const company = companies.find((item) => String(item.id) === companyId);
   const reviewNotes = formValue(`[data-review-notes="${CSS.escape(applicationId)}"]`);
+  const companyDecision = ["approved", "assigned"].includes(decision);
 
-  if (decision === "approved" && !companyId) return alert("Select a company before approving this applicant.");
+  if (decision === "assigned" && !isPlatformReviewer(currentProfile)) {
+    return alert("Only the owner or super admin can assign an application to a company.");
+  }
+  if (companyDecision && !companyId) return alert("Select a company before continuing.");
   if (decision === "approved" && !STAFF_ROLES.some(([role]) => role === normalize(finalRole))) return alert("Select a valid final role.");
 
-  const actionText = decision === "approved" ? `approve ${app.fullName || app.applicantEmail} as ${roleLabel(finalRole)}` : `${decision.replaceAll("_", " ")} for ${app.fullName || app.applicantEmail}`;
+  let actionText = `${decision.replaceAll("_", " ")} for ${app.fullName || app.applicantEmail}`;
+  if (decision === "approved") actionText = `approve ${app.fullName || app.applicantEmail} as ${roleLabel(finalRole)}`;
+  if (decision === "assigned") actionText = `assign ${app.fullName || app.applicantEmail} to ${company?.name || company?.companyName || companyId}`;
   if (!window.confirm(`Confirm: ${actionText}?`)) return;
 
   reviewInFlight = true;
@@ -305,8 +318,7 @@ async function submitDecision(button) {
       applicationId,
       decision,
       reviewNotes,
-      companyId: decision === "approved" ? companyId : "",
-      companyName: decision === "approved" ? String(company?.name || company?.companyName || companyId) : "",
+      companyId: companyDecision ? companyId : "",
       finalRole: decision === "approved" ? normalize(finalRole) : ""
     });
     await currentUser.getIdToken(true);
