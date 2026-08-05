@@ -35,7 +35,7 @@ export const APP_REGISTRY = Object.freeze([
   { id: "dispatch", title: "Dispatch", category: APP_CATEGORIES.operations, route: "/dispatch.html", icon: "◉", searchable: true, roles: ["owner", "organization", "admin"] },
   { id: "field", title: "Field Ops", category: APP_CATEGORIES.operations, route: "/field.html", icon: "⬡", searchable: true, roles: ["owner", "organization", "vendor", "admin", "staff"] },
   { id: "schedule", title: "Schedule", category: APP_CATEGORIES.operations, route: "/schedule.html", icon: "◷", searchable: true, roles: ["owner", "organization", "vendor", "admin", "staff"] },
-  { id: "operations-map", title: "Operations Map", category: APP_CATEGORIES.operations, route: "/operations_map.html", icon: "⬢", searchable: true, roles: ["owner", "organization", "vendor", "admin"] },
+  { id: "operations-map", title: "Operations Map", category: APP_CATEGORIES.operations, route: "/operations_map.html", icon: "⬢", searchable: true, roles: ["owner", "organization", "vendor", "admin", "staff"] },
   { id: "territory-intelligence", title: "Territory Intelligence", category: APP_CATEGORIES.intelligence, route: "/territory_intelligence.html", icon: "⬠", searchable: true, roles: ["owner", "organization", "admin"] },
   { id: "predictive-ops", title: "Predictive Ops", category: APP_CATEGORIES.intelligence, route: "/predictive_ops.html", icon: "✦", searchable: true, roles: ["owner", "organization", "admin"] },
   { id: "ai-command", title: "AI Command", category: APP_CATEGORIES.intelligence, route: "/ai_command.html", icon: "✧", searchable: true, roles: ["owner", "organization", "admin"] },
