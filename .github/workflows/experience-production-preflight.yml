@@ -22,6 +22,7 @@ on:
       - "tools/experience-editor-audit.js"
       - "docs/deployments/studio-release-candidate-source-verification.json"
       - ".github/workflows/experience-production-preflight.yml"
+      - ".github/workflows/firebase-production-release.yml"
   pull_request:
     paths:
       - "firebase.json"
@@ -41,6 +42,7 @@ on:
       - "tools/experience-editor-audit.js"
       - "docs/deployments/studio-release-candidate-source-verification.json"
       - ".github/workflows/experience-production-preflight.yml"
+      - ".github/workflows/firebase-production-release.yml"
   workflow_dispatch:
     inputs:
       release_ref:
@@ -103,6 +105,7 @@ jobs:
           test -n "$SOURCE_SHA"
           git merge-base --is-ancestor "$SOURCE_SHA" HEAD
           git diff --quiet "$SOURCE_SHA..HEAD" -- \
+            firebase.json \
             functions/experience-config-core.js \
             functions/experience-config-core.test.js \
             functions/experience-config-service.js \
@@ -148,6 +151,7 @@ jobs:
           const nav = read('public/assets/js/nav.js');
           const builder = read('public/website-builder.html');
           const firebase = JSON.parse(read('firebase.json'));
+          const productionRelease = read('.github/workflows/firebase-production-release.yml');
           const callableNames = [
             'getExperienceEditorState',
             'saveExperienceDraft',
@@ -184,6 +188,27 @@ jobs:
             failures.push('The canonical Studio page does not load the Experience editor stylesheet.');
           }
 
+          if (!productionRelease.includes('          - experience')) {
+            failures.push('The canonical Firebase release workflow does not expose the targeted Experience scope.');
+          }
+          if (!productionRelease.includes("if: inputs.release_scope == 'experience'")) {
+            failures.push('The canonical Firebase release workflow has no Experience deployment gate.');
+          }
+          callableNames.forEach((name) => {
+            if (!productionRelease.includes(`functions:${name}`)) {
+              failures.push(`The Experience release selector is missing functions:${name}.`);
+            }
+          });
+          if (!productionRelease.includes('hosting:production')) {
+            failures.push('The Experience release scope does not include canonical production Hosting.');
+          }
+          if (!productionRelease.includes("hosting: ['hosting', 'experience', 'all']")) {
+            failures.push('Firebase release evidence does not record Experience Hosting deployment.');
+          }
+          if (!productionRelease.includes("functions: ['functions', 'backend', 'experience', 'all']")) {
+            failures.push('Firebase release evidence does not record Experience Functions deployment.');
+          }
+
           if (failures.length) {
             console.error(failures.join('\n'));
             process.exit(1);
@@ -202,6 +227,6 @@ jobs:
             echo "- Public runtime: passed"
             echo "- Owner editor: passed"
             echo "- Source-proof ancestry: passed"
-            echo "- Canonical release wiring: passed"
+            echo "- Canonical targeted release scope: passed"
             echo "- Deployment performed: no"
           } >> "$GITHUB_STEP_SUMMARY"
