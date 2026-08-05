@@ -23,6 +23,10 @@ const accessCases = [
   ['/customer_dashboard.html', 'owner', false],
   ['/settings/account.html', 'customer', true],
   ['/settings/workspace-v2.html?tab=team#members', 'manager', true],
+  ['/operations_map.html', 'technician', true],
+  ['/dispatch_map.html', 'technician', true],
+  ['/operations_map.html', 'customer', false],
+  ['/dispatch_map.html', 'customer', false],
   ['/untrusted/account.html', 'customer', false],
   ['/settings/unknown.html', 'owner', false],
   ['/dashboard.html', 'unknown-role', false],
@@ -79,6 +83,9 @@ const blueprintSecuritySource = fs.readFileSync('functions/blueprint-security.js
 const firestoreRulesSource = fs.readFileSync('firebase/firestore.rules', 'utf8');
 const fieldOpsMapSource = fs.readFileSync('public/assets/js/field-ops-map-layer.js', 'utf8');
 const fieldOpsRealtimeSource = fs.readFileSync('public/assets/js/field-ops-realtime.js', 'utf8');
+const dashboardMapCardSource = fs.readFileSync('public/assets/js/dashboard-live-map-card.js', 'utf8');
+const compactOperationsMapSource = fs.readFileSync('public/operations_map.html', 'utf8');
+const expandedDispatchMapSource = fs.readFileSync('public/dispatch_map.html', 'utf8');
 
 assert.match(routeGuardSource, /window\.location\.pathname \|\| '\/index\.html'/);
 assert.match(routeGuardSource, /source: 'verified-route-guard'/);
@@ -160,4 +167,40 @@ assert.match(
   /buildFieldOpsCollectionQueries\('jobs', context\)/
 );
 
-console.log(`Validated ${accessCases.length} route decisions, one page-policy authority, delegated lifecycle authority, verified-session direct access, and role-scoped map reads.`);
+assert.match(
+  dashboardMapCardSource,
+  /src="\/operations_map\.html\?embed=1"/,
+  'The dashboard map window must embed the compact Operations Map.'
+);
+assert.match(
+  dashboardMapCardSource,
+  /href="\/operations_map\.html"/,
+  'The dashboard map action must open the compact Operations Map.'
+);
+assert.doesNotMatch(
+  dashboardMapCardSource,
+  /href="\/dispatch_map\.html"/,
+  'The dashboard must not bypass the compact Operations Map when opening the expanded workspace.'
+);
+assert.match(
+  compactOperationsMapSource,
+  /data-map-view="compact"/,
+  'operations_map.html must remain the compact map workspace.'
+);
+assert.match(
+  compactOperationsMapSource,
+  /href="\/dispatch_map\.html"[^>]*data-map-expand|data-map-expand[^>]*href="\/dispatch_map\.html"/,
+  'The compact Operations Map must expose the expanded Dispatch Map through its Expand control.'
+);
+assert.match(
+  expandedDispatchMapSource,
+  /data-map-view="expanded"/,
+  'dispatch_map.html must remain the expanded map workspace.'
+);
+assert.match(
+  expandedDispatchMapSource,
+  /href="\/operations_map\.html"/,
+  'The expanded Dispatch Map must provide a return path to the compact Operations Map.'
+);
+
+console.log(`Validated ${accessCases.length} route decisions, one page-policy authority, delegated lifecycle authority, verified-session direct access, role-scoped map reads, and compact-to-expanded map workspace flow.`);
