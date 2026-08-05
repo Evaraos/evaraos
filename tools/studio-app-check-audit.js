@@ -40,8 +40,10 @@ if (!errors.length) {
     'const appCheckSiteKey =',
     'new ReCaptchaEnterpriseProvider(appCheckSiteKey)',
     'isTokenAutoRefreshEnabled: true',
-    'export let appCheck = null',
-    'appCheck = initializeAppCheck(app'
+    'const RUNTIME_KEY = "__EVARAOS_FIREBASE_RUNTIME_V2__"',
+    'export let appCheck = runtime.appCheck',
+    'appCheck = initializeAppCheck(app',
+    'runtime.appCheck = appCheck'
   ]) {
     if (!source.firebase.includes(marker)) errors.push(`firebase.js: missing ${marker}`);
   }
@@ -160,4 +162,4 @@ if (errors.length) {
   errors.forEach((error) => console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('reCAPTCHA Enterprise initialization, token auto-refresh, attestation-before-import, encrypted CI debug-token bootstrap, no token exposure, and fail-closed trusted transport passed.');
+console.log('reCAPTCHA Enterprise initialization, singleton App Check reuse, token auto-refresh, attestation-before-import, encrypted CI debug-token bootstrap, no token exposure, and fail-closed trusted transport passed.');
