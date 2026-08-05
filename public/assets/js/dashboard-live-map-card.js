@@ -1,5 +1,4 @@
-const MAP_PREVIEW_STYLE_ID = 'dashboardLiveMapStyles';
-const MAP_PREVIEW_SECTION_ID = 'liveMapSection';
+const MAP_PREVIEW_STYLE_ID = 'operationsMapPreviewStyles';
 
 function ensureStyles() {
   if (document.getElementById(MAP_PREVIEW_STYLE_ID)) return;
@@ -10,68 +9,119 @@ function ensureStyles() {
   document.head.appendChild(link);
 }
 
-function addSidebarLink() {
+function resolvePreviewConfig() {
+  const dashboardMain = document.getElementById('dashboardMain');
+  if (dashboardMain) {
+    return {
+      sectionId: 'liveMapSection',
+      titleId: 'liveMapSectionTitle',
+      heading: 'Live Operations Map',
+      kicker: 'Field Intelligence',
+      status: 'Connecting compact live workspace',
+      readyStatus: 'Compact live workspace ready',
+      frameTitle: 'Interactive compact EvaraOS operations map',
+      frameSrc: '/operations_map.html?embed=1',
+      openHref: '/operations_map.html',
+      openLabel: 'Open Operations Map',
+      parent: dashboardMain,
+      before: document.getElementById('activitySection'),
+      sidebarLabel: 'Live Map',
+      sidebarBeforeSelector: 'a[href="#activitySection"]'
+    };
+  }
+
+  const leadsList = document.getElementById('leadsListSection');
+  const leadsGrid = leadsList?.closest('.dashboard-grid-2');
+  if (leadsGrid?.parentNode) {
+    return {
+      sectionId: 'leadsMapWorkspace',
+      titleId: 'leadsMapWorkspaceTitle',
+      heading: 'Lead Operations Map',
+      kicker: 'Territory Intelligence',
+      status: 'Connecting authorized lead map',
+      readyStatus: 'Authorized lead map ready',
+      frameTitle: 'Interactive compact EvaraOS lead operations map',
+      frameSrc: '/operations_map.html?embed=1&type=lead',
+      openHref: '/operations_map.html?type=lead',
+      openLabel: 'Open Lead Operations Map',
+      parent: leadsGrid.parentNode,
+      before: leadsGrid,
+      sidebarLabel: 'Lead Map',
+      sidebarBeforeSelector: 'a[href="#leadsListSection"]'
+    };
+  }
+
+  return null;
+}
+
+function addSidebarLink(config) {
   const nav = document.querySelector('.dashboard-sidebar-nav');
-  if (!nav || nav.querySelector('a[href="#liveMapSection"]')) return;
+  if (!nav || nav.querySelector(`a[href="#${config.sectionId}"]`)) return;
 
   const link = document.createElement('a');
-  link.href = '#liveMapSection';
+  link.href = `#${config.sectionId}`;
   link.className = 'dashboard-nav-link aurora-card beam-target';
-  link.innerHTML = '<span class="dashboard-nav-icon" data-evara-icon="map" aria-hidden="true"></span><span>Live Map</span>';
+  link.innerHTML = `<span class="dashboard-nav-icon" data-evara-icon="map" aria-hidden="true"></span><span>${config.sidebarLabel}</span>`;
 
-  const activityLink = nav.querySelector('a[href="#activitySection"]');
-  if (activityLink) nav.insertBefore(link, activityLink);
+  const before = nav.querySelector(config.sidebarBeforeSelector);
+  if (before) nav.insertBefore(link, before);
   else nav.appendChild(link);
 }
 
-function mountDashboardMap() {
-  if (document.getElementById(MAP_PREVIEW_SECTION_ID)) return;
-
-  const main = document.getElementById('dashboardMain');
-  const activity = document.getElementById('activitySection');
-  if (!main) return;
+function mountOperationsMapPreview() {
+  const config = resolvePreviewConfig();
+  if (!config || document.getElementById(config.sectionId)) return false;
 
   ensureStyles();
-  addSidebarLink();
+  addSidebarLink(config);
 
   const section = document.createElement('section');
-  section.id = MAP_PREVIEW_SECTION_ID;
+  section.id = config.sectionId;
   section.className = 'dashboard-panel dashboard-live-map-panel glass-card aurora-card active-glow beam-target';
-  section.setAttribute('aria-labelledby', 'liveMapSectionTitle');
+  section.setAttribute('aria-labelledby', config.titleId);
   section.innerHTML = `
     <div class="dashboard-section-head">
       <div>
-        <p class="dashboard-section-kicker">Field Intelligence</p>
-        <h2 id="liveMapSectionTitle">Live Operations Map</h2>
-        <span id="dashboardMapStatus" class="dashboard-map-status">Connecting compact live workspace</span>
+        <p class="dashboard-section-kicker">${config.kicker}</p>
+        <h2 id="${config.titleId}">${config.heading}</h2>
+        <span class="dashboard-map-status" data-map-preview-status>${config.status}</span>
       </div>
-      <div class="dashboard-map-actions" aria-label="Live map actions">
-        <a href="/operations_map.html" class="btn btn-theme-primary beam-target">Open Operations Map</a>
+      <div class="dashboard-map-actions" aria-label="Map actions">
+        <a href="${config.openHref}" class="btn btn-theme-primary beam-target">${config.openLabel}</a>
       </div>
     </div>
     <div class="dashboard-map-frame-shell">
       <iframe
-        id="dashboardLiveMapFrame"
         class="dashboard-map-frame"
-        src="/operations_map.html?embed=1"
-        title="Interactive compact EvaraOS operations map"
+        src="${config.frameSrc}"
+        title="${config.frameTitle}"
         loading="lazy"
         allow="geolocation 'self'"
       ></iframe>
     </div>`;
 
-  if (activity?.parentNode === main) main.insertBefore(section, activity);
-  else main.appendChild(section);
+  config.parent.insertBefore(section, config.before || null);
 
-  const frame = section.querySelector('#dashboardLiveMapFrame');
-  const status = section.querySelector('#dashboardMapStatus');
+  const frame = section.querySelector('.dashboard-map-frame');
+  const status = section.querySelector('[data-map-preview-status]');
   frame?.addEventListener('load', () => {
-    if (status) status.textContent = 'Compact live workspace ready';
+    if (status) status.textContent = config.readyStatus;
   }, { once: true });
+
+  return true;
+}
+
+function start() {
+  if (mountOperationsMapPreview()) return;
+  const observer = new MutationObserver(() => {
+    if (mountOperationsMapPreview()) observer.disconnect();
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+  window.setTimeout(() => observer.disconnect(), 12000);
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', mountDashboardMap, { once: true });
+  document.addEventListener('DOMContentLoaded', start, { once: true });
 } else {
-  mountDashboardMap();
+  start();
 }
