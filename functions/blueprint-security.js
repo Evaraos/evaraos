@@ -96,9 +96,9 @@ function assertAuthenticated(request) {
 }
 
 function assertActiveProfile(profile = {}) {
-  const status = String(profile.status || 'active').trim().toLowerCase();
+  const status = String(profile.status || '').trim().toLowerCase();
   const approval = String(profile.approvalStatus || '').trim().toLowerCase();
-  if (['inactive', 'suspended', 'disabled', 'rejected'].includes(status) || approval === 'rejected') {
+  if (!['active', 'approved'].includes(status) || approval !== 'approved') {
     throw new HttpsError('permission-denied', 'This account is not active.');
   }
 }

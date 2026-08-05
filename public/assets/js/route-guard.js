@@ -111,10 +111,9 @@ function consumeIntendedRoute() {
 }
 
 function accountIsActive(profile = {}) {
-  const status = String(profile.status || 'active').trim().toLowerCase();
+  const status = String(profile.status || '').trim().toLowerCase();
   const approval = String(profile.approvalStatus || '').trim().toLowerCase();
-  return !['inactive', 'suspended', 'disabled', 'rejected'].includes(status)
-    && approval !== 'rejected';
+  return ['active', 'approved'].includes(status) && approval === 'approved';
 }
 
 function safeDestinationForRole(path, role) {

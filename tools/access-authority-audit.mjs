@@ -43,12 +43,41 @@ assert.deepEqual(pagesForRole('unknown-role'), []);
 
 const routeGuardSource = fs.readFileSync('public/assets/js/route-guard.js', 'utf8');
 const directAccessSource = fs.readFileSync('public/assets/js/direct-access-check.js', 'utf8');
+const blueprintSecuritySource = fs.readFileSync('functions/blueprint-security.js', 'utf8');
+const firestoreRulesSource = fs.readFileSync('firebase/firestore.rules', 'utf8');
 
 assert.match(routeGuardSource, /window\.location\.pathname \|\| '\/index\.html'/);
 assert.match(routeGuardSource, /source: 'verified-route-guard'/);
 assert.match(routeGuardSource, /window\.EvaraRouteSession = session/);
+assert.match(
+  routeGuardSource,
+  /return \['active', 'approved'\]\.includes\(status\) && approval === 'approved';/,
+  'The browser route guard must require an active-or-approved status and approved approvalStatus.'
+);
+assert.doesNotMatch(
+  routeGuardSource,
+  /profile\.status \|\| 'active'/,
+  'The browser route guard must not default a missing account status to active.'
+);
+
+assert.match(
+  blueprintSecuritySource,
+  /if \(!\['active', 'approved'\]\.includes\(status\) \|\| approval !== 'approved'\)/,
+  'Trusted Blueprint Functions must enforce the same strict account lifecycle as Firestore.'
+);
+assert.doesNotMatch(
+  blueprintSecuritySource,
+  /profile\.status \|\| 'active'/,
+  'Trusted Blueprint Functions must not default a missing account status to active.'
+);
+assert.match(
+  firestoreRulesSource,
+  /function active\(\) \{ return userExists\(\) && user\(\)\.status in \['active', 'approved'\] && user\(\)\.approvalStatus == 'approved'; \}/,
+  'Firestore must retain the canonical strict active-account contract.'
+);
+
 assert.doesNotMatch(directAccessSource, /localStorage|sessionStorage/);
 assert.match(directAccessSource, /source !== 'verified-route-guard'/);
 assert.match(directAccessSource, /location\.pathname \|\| '\/index\.html'/);
 
-console.log(`Validated ${accessCases.length} route decisions and the verified-session direct-access contract.`);
+console.log(`Validated ${accessCases.length} route decisions, strict lifecycle parity, and the verified-session direct-access contract.`);
