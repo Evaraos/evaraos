@@ -4,10 +4,14 @@ import { applyProgress, atTopOfPage } from "./nav-scroll.js";
 import { renderNav } from "./nav-render.js";
 import { bindMenu, openMenu, closeMenu } from "./nav-menu.js";
 import { bindAllNavEvents } from "./nav-events.js";
+import { bindNavInteractions } from "./nav-interactions.js";
+import { bindLogout } from "./nav-logout.js";
 
 export function rebindNavAfterRender() {
   bindAllNavEvents();
   bindMenu();
+  bindNavInteractions();
+  bindLogout();
   syncThemeLabel();
 }
 

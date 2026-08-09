@@ -85,6 +85,7 @@ jobs:
           node --check public/assets/js/loader.js
           node --experimental-default-type=module --check public/assets/js/nav.js
           node --experimental-default-type=module --check public/assets/js/nav/nav-main-v6.js
+          node --experimental-default-type=module --check public/assets/js/nav/nav-session.js
           node --experimental-default-type=module --check public/assets/js/experience/experience-runtime.js
           node --experimental-default-type=module --check public/assets/js/studio/experience-editor.js
           node --experimental-default-type=module --check public/assets/js/access-control.js
@@ -152,6 +153,7 @@ jobs:
           }
 
           const firebaseSource = fs.readFileSync('public/assets/js/firebase.js', 'utf8');
+          const navSessionSource = fs.readFileSync('public/assets/js/nav/nav-session.js', 'utf8');
           if (!firebaseSource.includes('getApps().length ? getApp() : initializeApp(firebaseConfig)')) {
             failures.push('firebase.js: Firebase app initialization must be idempotent');
           }
@@ -181,6 +183,16 @@ jobs:
                 }
               }
             }
+          }
+
+          const navRebindBody = navSessionSource.match(/export function rebindNavAfterRender\(\)\s*\{([\s\S]*?)\n\}/)?.[1] || '';
+          if (!navSessionSource.includes('import { bindNavInteractions } from "./nav-interactions.js";')
+            || !navRebindBody.includes('bindNavInteractions();')) {
+            failures.push('nav-session.js: post-render refresh must restore canonical navigation interactions');
+          }
+          if (!navSessionSource.includes('import { bindLogout } from "./nav-logout.js";')
+            || !navRebindBody.includes('bindLogout();')) {
+            failures.push('nav-session.js: post-render refresh must restore canonical logout binding');
           }
 
           const dashboardEntrySource = fs.readFileSync('public/assets/js/dashboard-entry.js', 'utf8');
