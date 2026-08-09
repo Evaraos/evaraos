@@ -277,7 +277,7 @@ jobs:
           if (catchAllIndex >= 0 && endpointIndex >= catchAllIndex) {
             throw new Error('Experience Hosting rewrite must precede the catch-all.');
           }
-          if (!builder.includes('/assets/js/studio/experience-editor.js?v=1')) {
+          if (!builder.includes('/assets/js/studio/experience-editor.js?v=2')) {
             throw new Error('Experience editor is not wired into Studio.');
           }
           NODE
