@@ -6,7 +6,7 @@ import {
 
 import { closeMenu } from "./nav-menu.js";
 import { navigateWithLoader } from "./nav-navigation.js";
-import { logoutAndRedirect, functions, httpsCallable } from "../firebase.js";
+import { functions, httpsCallable } from "../firebase.js";
 import { searchApps } from "../navigation/app-registry.js";
 
 const BOUND_ATTR = "data-evara-nav-bound";
@@ -147,12 +147,6 @@ export function bindLinks() {
     });
   });
 
-  const logoutBtn = document.getElementById("evaLogoutBtn");
-  bindOnce(logoutBtn, "click", async (event) => {
-    stopEvent(event);
-    closeMenu(false);
-    await logoutAndRedirect(buildHref("login.html"));
-  });
 }
 
 export function bindThemeToggle() {

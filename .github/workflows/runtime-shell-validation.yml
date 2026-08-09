@@ -159,6 +159,30 @@ jobs:
             failures.push('firebase.js: shared authentication runtime guard is missing');
           }
 
+          const firebaseExports = new Set();
+          for (const match of firebaseSource.matchAll(/\bexport\s+(?:async\s+)?(?:const|let|var|function|class)\s+([A-Za-z_$][\w$]*)/g)) {
+            firebaseExports.add(match[1]);
+          }
+          for (const match of firebaseSource.matchAll(/\bexport\s*\{([^}]+)\}/gs)) {
+            for (const specifier of match[1].split(',')) {
+              const exportedName = specifier.trim().split(/\s+as\s+/).at(-1);
+              if (exportedName) firebaseExports.add(exportedName);
+            }
+          }
+
+          const navRuntimeFiles = walk('public/assets/js/nav').filter((file) => file.endsWith('.js'));
+          for (const file of navRuntimeFiles) {
+            const source = fs.readFileSync(file, 'utf8');
+            for (const match of source.matchAll(/import\s*\{([^}]+)\}\s*from\s*["']\.\.\/firebase\.js["']/gs)) {
+              for (const specifier of match[1].split(',')) {
+                const importedName = specifier.trim().split(/\s+as\s+/)[0];
+                if (importedName && !firebaseExports.has(importedName)) {
+                  failures.push(`${file}: imports missing Firebase export ${importedName}`);
+                }
+              }
+            }
+          }
+
           const dashboardEntrySource = fs.readFileSync('public/assets/js/dashboard-entry.js', 'utf8');
           const leadsEntrySource = fs.readFileSync('public/assets/js/leads-entry.js', 'utf8');
           const mapPreviewSource = fs.readFileSync('public/assets/js/dashboard-live-map-card.js', 'utf8');
