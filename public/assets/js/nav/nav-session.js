@@ -7,12 +7,20 @@ import { bindAllNavEvents } from "./nav-events.js";
 import { bindNavInteractions } from "./nav-interactions.js";
 import { bindLogout } from "./nav-logout.js";
 
+function restoreBottomNavAfterRender() {
+  if (document.body?.dataset?.routeGuard === "auth") return;
+  import("./nav-bottom.js?v=nav-v59-responsive-core")
+    .then(({ mountBottomNav }) => mountBottomNav())
+    .catch((error) => console.warn("Bottom nav restore failed:", error));
+}
+
 export function rebindNavAfterRender() {
   bindAllNavEvents();
   bindMenu();
   bindNavInteractions();
   bindLogout();
   syncThemeLabel();
+  restoreBottomNavAfterRender();
 }
 
 export function refreshNav() {

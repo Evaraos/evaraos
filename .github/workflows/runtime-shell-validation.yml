@@ -153,6 +153,7 @@ jobs:
           }
 
           const firebaseSource = fs.readFileSync('public/assets/js/firebase.js', 'utf8');
+          const navEntrySource = fs.readFileSync('public/assets/js/nav.js', 'utf8');
           const navSessionSource = fs.readFileSync('public/assets/js/nav/nav-session.js', 'utf8');
           if (!firebaseSource.includes('getApps().length ? getApp() : initializeApp(firebaseConfig)')) {
             failures.push('firebase.js: Firebase app initialization must be idempotent');
@@ -193,6 +194,17 @@ jobs:
           if (!navSessionSource.includes('import { bindLogout } from "./nav-logout.js";')
             || !navRebindBody.includes('bindLogout();')) {
             failures.push('nav-session.js: post-render refresh must restore canonical logout binding');
+          }
+          if (!/if\s*\(guardMode\s*!==\s*["']auth["']\)\s*\{[\s\S]*?safeImport\(["']\.\/nav\/nav-bottom\.js\?v=nav-v59-responsive-core["']\)/.test(navEntrySource)) {
+            failures.push('nav.js: auth routes must remain excluded from bottom navigation loading');
+          }
+          if (!navSessionSource.includes('if (document.body?.dataset?.routeGuard === "auth") return;')
+            || !navSessionSource.includes('import("./nav-bottom.js?v=nav-v59-responsive-core")')
+            || !navSessionSource.includes('({ mountBottomNav }) => mountBottomNav()')) {
+            failures.push('nav-session.js: eligible post-render refresh must reuse canonical bottom navigation mounting');
+          }
+          if (!navRebindBody.includes('restoreBottomNavAfterRender();')) {
+            failures.push('nav-session.js: post-render refresh must restore eligible bottom navigation');
           }
 
           const dashboardEntrySource = fs.readFileSync('public/assets/js/dashboard-entry.js', 'utf8');

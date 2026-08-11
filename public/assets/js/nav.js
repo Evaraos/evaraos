@@ -51,10 +51,15 @@ if (!window[NAV_ENTRY_GUARD]) {
     if (navEnhancementsRequested) return;
     navEnhancementsRequested = true;
 
-    Promise.all([
-      safeImport("./nav/nav-bottom.js?v=nav-v59-responsive-core"),
+    const immediateEnhancements = [
       safeImport("./nav/nav-drawer-close.js?v=nav-v59-responsive-core")
-    ]).catch(() => {});
+    ];
+
+    if (guardMode !== "auth") {
+      immediateEnhancements.unshift(safeImport("./nav/nav-bottom.js?v=nav-v59-responsive-core"));
+    }
+
+    Promise.all(immediateEnhancements).catch(() => {});
 
     runWhenIdle(() => Promise.all([
       safeImport("./nav/pull-to-refresh.js?v=nav-v59-responsive-core"),
