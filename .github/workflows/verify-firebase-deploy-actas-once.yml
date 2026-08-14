@@ -1,0 +1,142 @@
+name: Verify Firebase Deploy actAs Permission
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  verify:
+    name: Test deploy principal actAs only
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Test iam.serviceAccounts.actAs only
+        shell: bash
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EVARAOS_WEB }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${FIREBASE_SERVICE_ACCOUNT:-}" ]; then
+            echo "::error::FIREBASE_SERVICE_ACCOUNT_EVARAOS_WEB is not configured"
+            exit 1
+          fi
+
+          node <<'NODE'
+          const { sign } = require("node:crypto");
+
+          async function main() {
+            const credential = JSON.parse(
+              process.env.FIREBASE_SERVICE_ACCOUNT || ""
+            );
+
+            const expectedProject = "evaraos-web";
+            const expectedPrincipal =
+              "firebase-adminsdk-fbsvc@evaraos-web.iam.gserviceaccount.com";
+            const permission = "iam.serviceAccounts.actAs";
+            const tokenUri = "https://oauth2.googleapis.com/token";
+            const target =
+              "https://iam.googleapis.com/v1/projects/evaraos-web/serviceAccounts/evaraos-web%40appspot.gserviceaccount.com:testIamPermissions";
+
+            if (
+              credential.type !== "service_account" ||
+              credential.project_id !== expectedProject ||
+              credential.client_email !== expectedPrincipal ||
+              typeof credential.private_key !== "string" ||
+              credential.private_key.length === 0
+            ) {
+              throw new Error("Unexpected deployment credential");
+            }
+
+            const encode = (value) =>
+              Buffer.from(JSON.stringify(value)).toString("base64url");
+
+            const issuedAt = Math.floor(Date.now() / 1000);
+            const unsignedAssertion = [
+              encode({ alg: "RS256", typ: "JWT" }),
+              encode({
+                iss: expectedPrincipal,
+                scope: "https://www.googleapis.com/auth/iam",
+                aud: tokenUri,
+                iat: issuedAt,
+                exp: issuedAt + 300
+              })
+            ].join(".");
+
+            const signature = sign(
+              "RSA-SHA256",
+              Buffer.from(unsignedAssertion),
+              credential.private_key
+            ).toString("base64url");
+
+            const tokenResponse = await fetch(tokenUri, {
+              method: "POST",
+              headers: {
+                "content-type": "application/x-www-form-urlencoded"
+              },
+              body: new URLSearchParams({
+                grant_type:
+                  "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                assertion: `${unsignedAssertion}.${signature}`
+              })
+            });
+
+            const tokenBody = await tokenResponse.json();
+
+            if (
+              !tokenResponse.ok ||
+              typeof tokenBody.access_token !== "string" ||
+              tokenBody.access_token.length === 0
+            ) {
+              throw new Error("Authentication failed");
+            }
+
+            const permissionResponse = await fetch(target, {
+              method: "POST",
+              headers: {
+                authorization: `Bearer ${tokenBody.access_token}`,
+                "content-type": "application/json"
+              },
+              body: JSON.stringify({
+                permissions: [permission]
+              })
+            });
+
+            const permissionBody = await permissionResponse.json();
+
+            if (
+              !permissionResponse.ok ||
+              !permissionBody ||
+              typeof permissionBody !== "object"
+            ) {
+              throw new Error("Permission test failed");
+            }
+
+            const returnedPermissions = Array.isArray(
+              permissionBody.permissions
+            )
+              ? permissionBody.permissions
+              : [];
+
+            if (
+              returnedPermissions.some(
+                (returnedPermission) => returnedPermission !== permission
+              )
+            ) {
+              throw new Error("Unexpected permission response");
+            }
+
+            process.stdout.write(
+              `ACTAS_AVAILABLE=${
+                returnedPermissions.includes(permission) ? "YES" : "NO"
+              }\n`
+            );
+          }
+
+          main().catch(() => {
+            console.error("::error::Permission probe failed");
+            process.exit(1);
+          });
+          NODE
