@@ -5,6 +5,7 @@
   const KEY = 'evaraos-app-icon-selection-v2';
   const PERSONAL_KEY = 'evaraos-custom-app-icon-v5';
   const APP_ICON_SRC = `/assets/brand/evaraos-app-icon.png?v=${VERSION}`;
+  const FAVICON_SRC = '/favicon.ico';
   const OPTIONS = [["none","Official Icon","Official Evaraos app icon"],["pearlWhite","Pearl White","Clean premium light surface"],["pianoBlack","Piano Black","Deep reflective black glass"],["crimsonGlass","Crimson Glass","Signature red Liquid Glass"],["graphite","Graphite","Executive graphite"],["titanium","Titanium","Brushed silver depth"],["midnightBlue","Midnight Blue","Dark navy finish"],["carbonFiber","Carbon Fiber","Technical woven carbon"],["rubyGlass","Ruby Glass","Polished ruby translucency"],["frostedClear","Frosted Clear","Soft translucent glass"],["satinSilver","Satin Silver","Muted premium metal"],["deepNavy","Deep Navy","Near-black blue depth"],["matteBlack","Matte Black","Minimal matte black"],["softIvory","Soft Ivory","Warm clean neutral"],["burgundy","Burgundy","Deep red luxury finish"],["liquidGlassWaves","Liquid Glass Waves","Slow refractive wave motion"],["auroraFlow","Aurora Flow","Adaptive color flow"],["orbitRings","Orbit Rings","Precision rings"],["neuralGrid","Neural Grid","Connected system grid"],["energyPulse","Energy Pulse","Focused energy pulse"],["redPlasma","Red Plasma","Fluid plasma field"],["lightSweepBg","Light Sweep","Clean highlight sweep"],["crystalRefraction","Crystal Refraction","Faceted light shifts"],["adaptiveGradient","Adaptive Gradient","Brand gradient"],["particleDrift","Particle Drift","Subtle particle depth"],["shineSweep","Shine Sweep","Specular highlight"],["hoverFloat","Hover Float","Gentle lift"],["magneticTilt","Magnetic Tilt","Dimensional tilt"],["breathingGlow","Breathing Glow","Soft red halo"],["orbitReflection","Orbit Reflection","Rotating reflections"]];
   const byId = new Map(OPTIONS.map(([id, label, description]) => [id, { id, label, description }]));
   let active = byId.has(localStorage.getItem(KEY)) ? localStorage.getItem(KEY) : 'none';
@@ -119,12 +120,20 @@
       link.rel = rel;
       document.head.appendChild(link);
     }
-    link.type = 'image/png';
+    if (rel === 'apple-touch-icon') {
+      link.type = 'image/png';
+      link.sizes = '512x512';
+    } else {
+      link.type = 'image/x-icon';
+      link.removeAttribute('sizes');
+    }
     link.href = href;
   }
 
   function setIcons(href) {
-    ['icon', 'shortcut icon', 'apple-touch-icon'].forEach((rel) => ensureLink(rel, href));
+    ensureLink('icon', FAVICON_SRC);
+    ensureLink('shortcut icon', FAVICON_SRC);
+    ensureLink('apple-touch-icon', href);
   }
 
   function toast(message) {

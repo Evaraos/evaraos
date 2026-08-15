@@ -289,7 +289,7 @@ async function setAppearanceMode(mode) {
   if (!APPEARANCES.some((appearance) => appearance.id === mode) || !window.EvaraTheme?.setAppearance) return;
   const value = { mode };
   if (mode === 'image') {
-    value.imageUrl = new URL('/assets/img/icon-512.png?v=brand-logo-1', location.origin).href;
+    value.imageUrl = new URL('/assets/brand/evaraos-mark.png', location.origin).href;
     value.imagePosition = 'center center';
     value.wallpaperDim = 0.08;
     value.glassTint = 0.46;

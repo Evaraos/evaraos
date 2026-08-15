@@ -10,6 +10,7 @@
   const FORCE_UNLOCK=3500;
   const WATCHDOG_MS=1200;
   const EXIT_MS=120;
+  const FAVICON_SRC='/favicon.ico';
   const DEFAULT_EXPERIENCE=Object.freeze({
     brand:{markUrl:'/assets/brand/evaraos-mark.png?v=brand-png-3',appIconUrl:'/assets/brand/evaraos-app-icon.png?v=brand-png-1',alt:'EvaraOS'},
     loaderTheme:{accent:'#f2172d',background:'#eef5fb',radius:34,markSize:42,showProgress:true},
@@ -133,7 +134,13 @@
   function ensureIconLink(rel,href){
     let link=document.querySelector('link[rel="'+rel+'"]');
     if(!link){link=document.createElement('link');link.rel=rel;document.head.appendChild(link)}
-    link.type='image/png';
+    if(rel==='apple-touch-icon'){
+      link.type='image/png';
+      link.sizes='512x512';
+    }else{
+      link.type='image/x-icon';
+      link.removeAttribute('sizes');
+    }
     link.href=href;
   }
 
@@ -149,8 +156,8 @@
       node.style.backgroundRepeat='no-repeat';
     });
     document.querySelectorAll('.evara-loader-mark').forEach(img=>img.src=mark);
-    ensureIconLink('icon',appIconSrc());
-    ensureIconLink('shortcut icon',appIconSrc());
+    ensureIconLink('icon',FAVICON_SRC);
+    ensureIconLink('shortcut icon',FAVICON_SRC);
     ensureIconLink('apple-touch-icon',appIconSrc());
   }
 

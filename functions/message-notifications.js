@@ -174,8 +174,8 @@ async function sendPushNotifications({ users, title, body, route, channelId, mes
         headers: { Urgency: "high" },
         fcmOptions: { link: route },
         notification: {
-          icon: "/assets/img/icon-192.png",
-          badge: "/assets/img/favicon-32.png",
+          icon: "/assets/brand/evaraos-app-icon.png",
+          badge: "/assets/brand/evaraos-app-icon.png",
           tag: `evara-message-${channelId}`,
           renotify: true
         }

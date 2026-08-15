@@ -1,4 +1,4 @@
-const EVARAOS_MARK_PATH = '<path d="M4.2 20.5c2.1-2.3 4-4.3 5.8-6.1 2.4-2.4 4.9-4.7 7.5-6.9h3.4c.3 0 .5.4.3.6l-2 2.6c-.2.3-.5.4-.8.4h-4.2c-.8.7-1.6 1.4-2.3 2.1h6.7c.3 0 .5.4.3.6l-1.9 2.5c-.2.3-.5.4-.8.4H9.1c-1.3 1.4-2.7 2.9-4.2 4.6-.3.4-.8.1-.8-.3 0-.2 0-.4.1-.5Z"/><path d="M4.6 8.6c1.4-1.5 3-2.7 4.7-3.6h10.6c.3 0 .5.4.3.6l-1.9 2.5c-.2.3-.5.4-.8.4H4.6Z"/><path d="M4.8 12.6h11.5c.3 0 .5.4.3.6l-1.8 2.4c-.2.3-.5.4-.8.4H4.8Z"/>';
+const EVARAOS_MARK_PATH = '<image href="/assets/brand/evaraos-mark.png" x="0" y="0" width="24" height="24" preserveAspectRatio="xMidYMid meet"/>';
 
 const ICONS = Object.freeze({
   home:'<path d="M3.5 10.5 12 3l8.5 7.5V21h-5.2v-6.1H8.7V21H3.5V10.5Z"/>',

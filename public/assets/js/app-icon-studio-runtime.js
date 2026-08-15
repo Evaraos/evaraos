@@ -1,6 +1,7 @@
 import { getSavedUserProfile, getSavedUserRole, normalizeRole } from './firebase.js';
 
 const FALLBACK_ICON = '/assets/brand/evaraos-app-icon.png?v=brand-canonical-20260726-1';
+const FAVICON_SRC = '/favicon.ico';
 const PERSONAL_ICON_KEY = 'evaraos-custom-app-icon-v5';
 const OWNER_ROLES = new Set(['owner', 'super_admin', 'admin']);
 
@@ -28,7 +29,13 @@ function ensureLink(rel, href) {
     link.rel = rel;
     document.head.appendChild(link);
   }
-  link.type = 'image/png';
+  if (rel === 'apple-touch-icon') {
+    link.type = 'image/png';
+    link.sizes = '512x512';
+  } else {
+    link.type = 'image/x-icon';
+    link.removeAttribute('sizes');
+  }
   link.href = href;
 }
 
@@ -48,7 +55,9 @@ function applyIcon() {
   document.querySelectorAll('[data-current-icon-name]').forEach((node) => {
     node.textContent = personalIcon() ? 'Personal Icon' : 'Published EvaraOS Icon';
   });
-  ['icon', 'shortcut icon', 'apple-touch-icon'].forEach((rel) => ensureLink(rel, src));
+  ensureLink('icon', FAVICON_SRC);
+  ensureLink('shortcut icon', FAVICON_SRC);
+  ensureLink('apple-touch-icon', src);
 }
 
 function ownerRole() {

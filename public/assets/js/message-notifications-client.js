@@ -79,8 +79,8 @@ function showBrowserNotification(notification = {}) {
 
   const browserNotification = new Notification(notification.title || "New message", {
     body: notification.message || notification.detail || "You received a new message.",
-    icon: "/assets/img/icon-192.png",
-    badge: "/assets/img/favicon-32.png",
+    icon: "/assets/brand/evaraos-app-icon.png",
+    badge: "/assets/brand/evaraos-app-icon.png",
     tag: `evara-message-${notification.channelId || notification.id}`,
     renotify: true,
     data: { route: routeFor(notification), notificationId: notification.id }

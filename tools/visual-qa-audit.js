@@ -268,7 +268,7 @@ if (!errors.length) {
   if (!qaPage.includes('data-route-guard="private"')) errors.push('public/qa-v2.html: protected route guard is missing');
   if (!qaRuntime.includes('EVARA_DESIGN_SYSTEM_REGISTRY')) errors.push('public/assets/js/qa-v2.js: design-system registry diagnostics are missing');
   if (!qaRuntime.includes('pagesForRole')) errors.push('public/assets/js/qa-v2.js: canonical role route diagnostics are missing');
-  if (!qaRuntime.includes("'/assets/img/icon-512.png?v=brand-logo-1'")) errors.push('public/assets/js/qa-v2.js: deterministic image appearance asset is missing');
+  if (!qaRuntime.includes("'/assets/brand/evaraos-mark.png'")) errors.push('public/assets/js/qa-v2.js: deterministic image appearance asset is missing');
 }
 
 console.log(`EvaraOS visual QA audit: ${requiredFiles.length} required assets checked.`);

@@ -698,7 +698,7 @@ function closeMenu() { el.messagesMenu.hidden = true; }
 function viewPhoto() {
   if (!state.active) return;
   el.conversationPhotoCaption.textContent = state.active.name || "Conversation";
-  el.conversationPhotoImage.src = state.active.imageUrl || "/assets/img/apple-touch-icon.png";
+  el.conversationPhotoImage.src = state.active.imageUrl || "/assets/brand/evaraos-app-icon.png";
   closeMenu();
   el.conversationPhotoViewer.hidden = false;
 }

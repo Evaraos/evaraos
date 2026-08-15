@@ -6,6 +6,7 @@
   const PERSONAL_KEY = 'evaraos-custom-app-icon-v5';
   const MARK_SRC = `/assets/brand/evaraos-mark.png?v=${VERSION}`;
   const APP_ICON_SRC = `/assets/brand/evaraos-app-icon.png?v=${VERSION}`;
+  const FAVICON_SRC = '/favicon.ico';
   const LEGACY_KEYS = [
     'evaraos-app-icon-snapshot-v2',
     'evaraos-official-app-icon-v1',
@@ -63,7 +64,13 @@
       link.rel = rel;
       document.head.appendChild(link);
     }
-    link.type = 'image/png';
+    if (rel === 'apple-touch-icon') {
+      link.type = 'image/png';
+      link.sizes = '512x512';
+    } else {
+      link.type = 'image/x-icon';
+      link.removeAttribute('sizes');
+    }
     link.href = href;
   }
 
@@ -87,7 +94,9 @@
       node.style.backgroundPosition = 'center';
       node.style.backgroundRepeat = 'no-repeat';
     });
-    ['icon', 'shortcut icon', 'apple-touch-icon'].forEach((rel) => ensureLink(rel, icon));
+    ensureLink('icon', FAVICON_SRC);
+    ensureLink('shortcut icon', FAVICON_SRC);
+    ensureLink('apple-touch-icon', icon);
     window.EvaraBrand = {
       ...(window.EvaraBrand || {}),
       version: VERSION,

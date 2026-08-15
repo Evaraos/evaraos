@@ -65,7 +65,7 @@ export const APPEARANCES = Object.freeze([
   { id: 'light', mode: 'light', colorScheme: 'light' },
   { id: 'dark', mode: 'dark', colorScheme: 'dark' },
   { id: 'system', mode: 'system', colorScheme: 'light' },
-  { id: 'image', mode: 'image', colorScheme: 'dark', imagePath: '/assets/img/icon-512.png?v=brand-logo-1' }
+  { id: 'image', mode: 'image', colorScheme: 'dark', imagePath: '/assets/brand/evaraos-mark.png' }
 ]);
 
 export const CRITICAL_VISUAL_CASES = Object.freeze([

@@ -2,9 +2,10 @@ const ASSET_KEY = 'evaraos-studio-assets-v1';
 const VERSION = 'brand-canonical-20260726-1';
 const APP_ICON_URL = `/assets/brand/evaraos-app-icon.png?v=${VERSION}`;
 const BRAND_MARK_URL = `/assets/brand/evaraos-mark.png?v=${VERSION}`;
+const FAVICON_URL = '/favicon.ico';
 const DEFAULT_ASSETS = [
   { id: 'official-app-icon', name: 'Official App Icon', type: 'brand', url: APP_ICON_URL },
-  { id: 'favicon', name: 'Favicon', type: 'brand', url: APP_ICON_URL },
+  { id: 'favicon', name: 'Favicon', type: 'brand', url: FAVICON_URL },
   { id: 'brand-mark', name: 'Brand Mark', type: 'brand', url: BRAND_MARK_URL }
 ];
 
@@ -12,7 +13,8 @@ function isModeOn() { return localStorage.getItem('evaraos-studio-mode-enabled')
 function selected() { return document.querySelector('.studio-mode-selected'); }
 
 function normalizeAsset(asset = {}) {
-  if (asset.id === 'official-app-icon' || asset.id === 'favicon') return { ...asset, url: APP_ICON_URL };
+  if (asset.id === 'official-app-icon') return { ...asset, url: APP_ICON_URL };
+  if (asset.id === 'favicon') return { ...asset, url: FAVICON_URL };
   if (asset.id === 'brand-mark') return { ...asset, url: BRAND_MARK_URL };
   return asset;
 }

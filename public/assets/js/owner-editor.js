@@ -119,7 +119,7 @@ function prepareTargets() {
   });
 }
 function blockMarkup(type, index) {
-  if (type === 'image') return `<img alt="New image" src="/assets/img/icon-512.png?v=brand-logo-1" style="width:100%;max-height:240px;object-fit:contain;border-radius:22px;background:rgba(255,255,255,.08);padding:18px">`;
+  if (type === 'image') return `<img alt="New image" src="/assets/brand/evaraos-mark.png" style="width:100%;max-height:240px;object-fit:contain;border-radius:22px;background:rgba(255,255,255,.08);padding:18px">`;
   if (type === 'map') return `<strong>Map block</strong><small>Connect this to routes, jobs, leads, or customer locations.</small><div style="min-height:160px;border-radius:20px;display:grid;place-items:center;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18)">Map</div>`;
   if (type === 'button') return `<button class="btn btn-theme-primary" type="button">New action</button><small>Connect this button to a workflow later.</small>`;
   if (type === 'section') return `<strong>New section</strong><small>Add copy, image, CTA, map, pricing, or form content.</small>`;

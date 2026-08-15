@@ -19,7 +19,7 @@ messaging.onBackgroundMessage((payload) => {
   return self.registration.showNotification(notification.title || "New message", {
     body: notification.body || "You received a new message.",
     icon: "/assets/brand/evaraos-app-icon.png?v=brand-canonical-20260726-1",
-    badge: "/assets/img/favicon-32.png",
+    badge: "/assets/brand/evaraos-app-icon.png",
     tag: `evara-message-${data.channelId || "chat"}`,
     renotify: true,
     data: {
