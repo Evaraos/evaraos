@@ -56,6 +56,12 @@ function keepVisible(){
 }
 
 async function bindCoreSystems(){
+  if(isPublicHome()){
+    const session=await optional("./nav-session.js");
+    try{session?.bindRuntimeRefresh?.()}catch(error){console.warn("Nav session refresh failed:",error)}
+    try{window.EvaraBrand?.apply?.();window.EvaraTheme?.updateThemeControls?.();window.EvaraTheme?.refreshAdaptiveGlass?.()}catch(error){console.warn("Nav theme refresh failed:",error)}
+    return;
+  }
   const [menu,events,session,interactions]=await Promise.all([
     optional("./nav-menu.js"),
     optional("./nav-events.js"),

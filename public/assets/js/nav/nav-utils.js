@@ -66,12 +66,14 @@ export function isPrivateRoutePending() {
 }
 
 export function isAuthenticated() {
+  if (window.EvaraRouteSession?.authenticated) return true;
   const user = getStoredUser();
   if (user && (user.uid || user.email)) return true;
   return isPrivateRoutePending();
 }
 
 export function getRole() {
+  if (window.EvaraRouteSession?.role) return String(window.EvaraRouteSession.role).toLowerCase();
   try {
     const previewRole = localStorage.getItem("evaraos-preview-role");
     if (previewRole) return String(previewRole).toLowerCase();
@@ -86,6 +88,10 @@ export function getRole() {
 }
 
 export function getDisplayName() {
+  const routeSession = window.EvaraRouteSession;
+  if (routeSession?.authenticated) {
+    return routeSession.displayName || routeSession.email || "Profile";
+  }
   const user = getStoredUser();
   if (!user) return "Profile";
   const previewRole = (() => { try { return localStorage.getItem("evaraos-preview-role"); } catch { return ""; } })();

@@ -21,7 +21,7 @@ body.studio-visual-page {
 
 .visual-studio {
   position: fixed;
-  inset: 78px 0 0;
+  inset: var(--eva-page-nav-clearance) 0 0;
   display: grid;
   grid-template-rows: 62px minmax(0, 1fr);
   min-height: 0;
@@ -514,7 +514,7 @@ body.studio-visual-page {
 }
 
 @media (max-width: 720px) {
-  .visual-studio { inset-top: 72px; grid-template-rows: 58px minmax(0, 1fr); }
+  .visual-studio { inset: var(--eva-page-nav-clearance) 0 0; grid-template-rows: 58px minmax(0, 1fr); }
   .studio-topbar { padding: 8px 10px; gap: 8px; }
   .studio-brand-copy span,
   .studio-page-picker,

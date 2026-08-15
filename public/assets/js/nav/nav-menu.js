@@ -4,7 +4,7 @@ import {
   getMenuBtn,
   getMenuPanel
 } from "./nav-utils.js";
-import { expandNav } from "./nav-scroll.js";
+import { applyProgress, expandNav } from "./nav-scroll.js";
 
 export function updateMenuViewportFit() {
   const panel = getMenuPanel();
@@ -38,10 +38,12 @@ export function openMenu() {
 
   updateMenuViewportFit();
   lockBodyScroll();
+  NAV_STATE.navPinnedOpen = true;
   document.body.classList.add("nav-menu-open");
   zone.classList.add("open");
   btn.setAttribute("aria-expanded", "true");
-  expandNav(true, "tap");
+  expandNav();
+  window.dispatchEvent(new CustomEvent("evara:menu-open"));
 
   requestAnimationFrame(() => {
     window.EvaraTheme?.refreshAdaptiveGlass?.();
@@ -49,7 +51,7 @@ export function openMenu() {
   });
 }
 
-export function closeMenu(keepExpanded = true) {
+export function closeMenu() {
   const zone = getMenuZone();
   const btn = getMenuBtn();
   if (!zone || !btn) return;
@@ -58,11 +60,9 @@ export function closeMenu(keepExpanded = true) {
   zone.classList.remove("open");
   btn.setAttribute("aria-expanded", "false");
   unlockBodyScroll();
-
-  if (keepExpanded) {
-    NAV_STATE.navPinnedOpen = true;
-    expandNav(true, "tap");
-  }
+  NAV_STATE.navPinnedOpen = false;
+  applyProgress();
+  window.dispatchEvent(new CustomEvent("evara:menu-close"));
 }
 
 export function bindMenu() {

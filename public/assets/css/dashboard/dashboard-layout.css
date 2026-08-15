@@ -31,7 +31,7 @@
 
 .dashboard-sidebar {
   position: sticky;
-  top: calc(var(--dashboard-top-offset) - 2px);
+  top: var(--eva-page-sticky-top);
   align-self: start;
   min-width: 0;
 }

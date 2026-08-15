@@ -20,7 +20,7 @@ body[data-canvas-writer-state="refresh-required"] .studio-canvas-sandbox::before
   content: "Checking Canvas writer access…";
   position: fixed;
   z-index: 12150;
-  top: max(82px, calc(env(safe-area-inset-top) + 74px));
+  top: var(--eva-page-sticky-top);
   left: 50%;
   max-width: min(560px, calc(100vw - 28px));
   padding: 9px 14px;

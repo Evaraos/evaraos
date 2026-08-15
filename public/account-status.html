@@ -19,7 +19,7 @@
     body.account-status-page{margin:0;min-height:100vh;background:transparent}
     body.app-loading #appRoot{visibility:hidden}
     body.app-ready #appRoot{visibility:visible}
-    .status-shell{width:min(920px,calc(100% - 28px));min-height:100vh;margin:0 auto;padding:clamp(36px,8vw,92px) 0;display:grid;align-items:center;position:relative;z-index:2}
+    .status-shell{width:min(920px,calc(100% - 28px));min-height:100vh;margin:0 auto;padding:var(--eva-page-top-space) 0 48px;display:grid;align-items:center;position:relative;z-index:2}
     .status-panel{border-radius:34px!important;padding:clamp(24px,5vw,48px)!important;text-align:center}
     .status-logo{width:min(210px,58vw);height:auto;display:block;margin:0 auto 28px}
     .status-eyebrow{margin:0 0 12px;color:var(--accent-red);font-size:12px;font-weight:950;letter-spacing:.18em;text-transform:uppercase}
@@ -36,15 +36,17 @@
     .application-status-badge{display:inline-flex;align-items:center;border:1px solid var(--liquid-border);border-radius:999px;padding:9px 12px;font-size:11px;font-weight:950;letter-spacing:.08em;text-transform:uppercase}
     .status-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:26px}
     .status-note{margin:18px 0 0;color:var(--text-secondary);font-size:13px;line-height:1.55}
-    @media(max-width:640px){.status-grid{grid-template-columns:1fr}.status-panel{border-radius:26px!important}.status-shell{width:min(100% - 18px,920px);padding:24px 0}}
+    @media(max-width:640px){.status-grid{grid-template-columns:1fr}.status-panel{border-radius:26px!important}.status-shell{width:min(100% - 18px,920px);padding:var(--eva-page-top-space) 0 24px}}
   </style>
   <link rel="stylesheet" href="/assets/css/base.css?v=53" />
   <link rel="stylesheet" href="/assets/css/theme.css?v=adaptive-liquid-v1" />
+  <link rel="stylesheet" href="/assets/css/nav.css?v=nav-v59-responsive-core" />
   <link rel="stylesheet" href="/assets/css/auth.css?v=50" />
   <link rel="stylesheet" href="/assets/css/app-system.css?v=50" />
 </head>
 <body class="account-status-page auth-pending app-loading" data-route-guard="account-status">
   <div id="evaPageTransition" class="eva-page-transition" aria-hidden="true"></div>
+  <div id="universalNavRoot"></div>
   <div id="appRoot">
     <div class="page-grid-overlay"></div>
     <main class="status-shell">
@@ -92,5 +94,6 @@
   <script type="module" src="/assets/js/route-guard.js?v=20260805-lifecycle-r1"></script>
   <script type="module" src="/assets/js/account-status.js?v=20260805-lifecycle-r2"></script>
   <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v13-public-critical"></script>
+  <script type="module" src="/assets/js/nav.js?v=nav-v59-responsive-core"></script>
 </body>
 </html>

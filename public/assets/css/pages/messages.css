@@ -64,7 +64,7 @@ body.messages-page:not(.messages-chat-active):not(.keyboard-open):not(.nav-menu-
 
 body.messages-page .messages-app {
   position: fixed;
-  top: calc(var(--eva-page-nav-clearance, 5.375rem) + var(--space-8));
+  top: var(--eva-page-nav-clearance);
   right: 0;
   bottom: calc(4.125rem + env(safe-area-inset-bottom));
   left: 0;
@@ -211,7 +211,7 @@ body.messages-page.messages-chat-active.keyboard-open .messages-composer {
 
 @media (max-width: 50rem) {
   body.messages-page .messages-app {
-    top: calc(var(--eva-page-nav-clearance, 5.375rem) + var(--space-8));
+    top: var(--eva-page-nav-clearance);
     bottom: calc(4.125rem + env(safe-area-inset-bottom));
     grid-template-columns: 1fr;
   }

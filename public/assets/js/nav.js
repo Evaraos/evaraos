@@ -55,17 +55,20 @@ if (!window[NAV_ENTRY_GUARD]) {
       safeImport("./nav/nav-drawer-close.js?v=nav-v59-responsive-core")
     ];
 
-    if (guardMode !== "auth") {
+    if (guardMode !== "auth" && !isPublicHome) {
       immediateEnhancements.unshift(safeImport("./nav/nav-bottom.js?v=nav-v59-responsive-core"));
     }
 
     Promise.all(immediateEnhancements).catch(() => {});
 
-    runWhenIdle(() => Promise.all([
-      safeImport("./nav/pull-to-refresh.js?v=nav-v59-responsive-core"),
-      safeImport("./nav/avatar-sync.js?v=nav-v59-responsive-core"),
-      safeImport("./ui/icon-hydrator.js?v=13")
-    ]).catch(() => {}), 1800);
+    runWhenIdle(() => {
+      const idleEnhancements = [
+        safeImport("./nav/pull-to-refresh.js?v=nav-v59-responsive-core"),
+        safeImport("./ui/icon-hydrator.js?v=13")
+      ];
+      if (!isPublicHome) idleEnhancements.push(safeImport("./nav/avatar-sync.js?v=nav-v59-responsive-core"));
+      Promise.all(idleEnhancements).catch(() => {});
+    }, 1800);
   }
 
   function loadPrivateRuntime() {
@@ -104,11 +107,11 @@ if (!window[NAV_ENTRY_GUARD]) {
   if (document.documentElement.dataset.evaraosNavReady === "true") onNavReady();
 
   window.addEventListener("evara:session-ready", (event) => {
-    maybeLoadOwnerEditor(event.detail?.role || storedRole());
+    if (!isPublicHome) maybeLoadOwnerEditor(event.detail?.role || storedRole());
     loadPrivateRuntime();
   });
 
-  maybeLoadOwnerEditor(storedRole());
+  if (!isPublicHome) maybeLoadOwnerEditor(storedRole());
 }
 
 window.EVARAOS_NAV_ENTRY_VERSION = NAV_ENTRY_BUILD;

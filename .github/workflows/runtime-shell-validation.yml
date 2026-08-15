@@ -85,7 +85,10 @@ jobs:
           node --check public/assets/js/loader.js
           node --experimental-default-type=module --check public/assets/js/nav.js
           node --experimental-default-type=module --check public/assets/js/nav/nav-main-v6.js
+          node --experimental-default-type=module --check public/assets/js/nav/nav-render.js
+          node --experimental-default-type=module --check public/assets/js/nav/nav-scroll.js
           node --experimental-default-type=module --check public/assets/js/nav/nav-session.js
+          node --experimental-default-type=module --check public/assets/js/nav/nav-utils.js
           node --experimental-default-type=module --check public/assets/js/experience/experience-runtime.js
           node --experimental-default-type=module --check public/assets/js/studio/experience-editor.js
           node --experimental-default-type=module --check public/assets/js/access-control.js
@@ -154,7 +157,13 @@ jobs:
 
           const firebaseSource = fs.readFileSync('public/assets/js/firebase.js', 'utf8');
           const navEntrySource = fs.readFileSync('public/assets/js/nav.js', 'utf8');
+          const navMainSource = fs.readFileSync('public/assets/js/nav/nav-main-v6.js', 'utf8');
+          const navRenderSource = fs.readFileSync('public/assets/js/nav/nav-render.js', 'utf8');
+          const navScrollSource = fs.readFileSync('public/assets/js/nav/nav-scroll.js', 'utf8');
           const navSessionSource = fs.readFileSync('public/assets/js/nav/nav-session.js', 'utf8');
+          const navMotionSource = fs.readFileSync('public/assets/css/nav/nav-motion.css', 'utf8');
+          const baseSource = fs.readFileSync('public/assets/css/base.css', 'utf8');
+          const accountStatusSource = fs.readFileSync('public/account-status.html', 'utf8');
           if (!firebaseSource.includes('getApps().length ? getApp() : initializeApp(firebaseConfig)')) {
             failures.push('firebase.js: Firebase app initialization must be idempotent');
           }
@@ -186,25 +195,71 @@ jobs:
             }
           }
 
-          const navRebindBody = navSessionSource.match(/export function rebindNavAfterRender\(\)\s*\{([\s\S]*?)\n\}/)?.[1] || '';
-          if (!navSessionSource.includes('import { bindNavInteractions } from "./nav-interactions.js";')
-            || !navRebindBody.includes('bindNavInteractions();')) {
+          const navRebindBody = navSessionSource.match(/export async function rebindNavAfterRender\(\)\s*\{([\s\S]*?)\n\}/)?.[1] || '';
+          if (!navSessionSource.includes('import(`./nav-interactions.js?v=${NAV_BUILD}`)')
+            || !navRebindBody.includes('binders.interactions.bindNavInteractions();')) {
             failures.push('nav-session.js: post-render refresh must restore canonical navigation interactions');
           }
-          if (!navSessionSource.includes('import { bindLogout } from "./nav-logout.js";')
+          if (!navSessionSource.includes('import(`./nav-logout.js?v=${NAV_BUILD}`)')
             || !navRebindBody.includes('bindLogout();')) {
             failures.push('nav-session.js: post-render refresh must restore canonical logout binding');
           }
-          if (!/if\s*\(guardMode\s*!==\s*["']auth["']\)\s*\{[\s\S]*?safeImport\(["']\.\/nav\/nav-bottom\.js\?v=nav-v59-responsive-core["']\)/.test(navEntrySource)) {
-            failures.push('nav.js: auth routes must remain excluded from bottom navigation loading');
+          if (!navSessionSource.includes('import(`./nav-menu.js?v=${NAV_BUILD}`)')
+            || !navRebindBody.includes('binders.menu.bindMenu();')) {
+            failures.push('nav-session.js: post-render refresh must restore canonical menu binding');
           }
-          if (!navSessionSource.includes('if (document.body?.dataset?.routeGuard === "auth") return;')
+          if (!/if\s*\(guardMode\s*!==\s*["']auth["']\s*&&\s*!isPublicHome\)\s*\{[\s\S]*?safeImport\(["']\.\/nav\/nav-bottom\.js\?v=nav-v59-responsive-core["']\)/.test(navEntrySource)) {
+            failures.push('nav.js: auth routes and public Home must remain excluded from bottom navigation loading');
+          }
+          if (!navSessionSource.includes('document.body?.dataset?.routeGuard === "auth" || isPublicHomeRoute()')
             || !navSessionSource.includes('import("./nav-bottom.js?v=nav-v59-responsive-core")')
             || !navSessionSource.includes('({ mountBottomNav }) => mountBottomNav()')) {
             failures.push('nav-session.js: eligible post-render refresh must reuse canonical bottom navigation mounting');
           }
           if (!navRebindBody.includes('restoreBottomNavAfterRender();')) {
             failures.push('nav-session.js: post-render refresh must restore eligible bottom navigation');
+          }
+
+          const publicHomeMarkup = navRenderSource.match(/function publicHomeMarkup\(\)\s*\{([\s\S]*?)\n\}/)?.[1] || '';
+          if (!publicHomeMarkup.includes('href="/"') || !publicHomeMarkup.includes('<strong>Home</strong>')) {
+            failures.push('nav-render.js: public Home must render one canonical Home link');
+          }
+          if (/(evaMenuBtn|globalNotificationsBell|evaMenuPanel|evaLogoutBtn)/.test(publicHomeMarkup)) {
+            failures.push('nav-render.js: public Home markup must not contain account, menu, notification, drawer, or logout controls');
+          }
+          const publicCoreStart = navMainSource.indexOf('if(isPublicHome()){');
+          const accountCoreStart = navMainSource.indexOf('const [menu,events,session,interactions]');
+          const publicCore = publicCoreStart >= 0 && accountCoreStart > publicCoreStart
+            ? navMainSource.slice(publicCoreStart, accountCoreStart)
+            : '';
+          if (!publicCore.includes('optional("./nav-session.js")') || /(nav-events|nav-menu|nav-interactions|notifications-dropdown|nav-logout)/.test(publicCore)) {
+            failures.push('nav-main-v6.js: public Home must use only the lean session refresh path');
+          }
+          if (!navEntrySource.includes('if (!isPublicHome) maybeLoadOwnerEditor(storedRole());')
+            || !navEntrySource.includes('if (!isPublicHome) maybeLoadOwnerEditor(event.detail?.role || storedRole());')
+            || !navEntrySource.includes('if (!isPublicHome) idleEnhancements.push(safeImport("./nav/avatar-sync.js?v=nav-v59-responsive-core"));')) {
+            failures.push('nav.js: public Home must not request the owner/account editor runtime');
+          }
+          if (!/export function isCompact\(\)\s*\{[\s\S]*?!atTopOfPage\(\)[\s\S]*?nav-menu-open/.test(navScrollSource)
+            || !navScrollSource.includes('shell.classList.toggle("compact", nextCompact);')
+            || !navScrollSource.includes('shell.classList.toggle("expanded", !nextCompact);')) {
+            failures.push('nav-scroll.js: expanded-at-top and compact-on-scroll state contract is missing');
+          }
+          if (navScrollSource.includes('classList.toggle("is-hidden"')) {
+            failures.push('nav-scroll.js: current top navigation must remain visible instead of hiding on scroll');
+          }
+          if (!accountStatusSource.includes('data-route-guard="account-status"')
+            || !accountStatusSource.includes('id="universalNavRoot"')
+            || !accountStatusSource.includes('/assets/css/nav.css')
+            || !accountStatusSource.includes('/assets/js/nav.js')
+            || (accountStatusSource.match(/padding:var\(--eva-page-top-space\)/g) || []).length < 2) {
+            failures.push('account-status.html: canonical guard, universal navigation bootstrap, and responsive top clearance are required');
+          }
+          if (/body\s+#appRoot\s*\{[^}]*padding-top/i.test(navMotionSource)) {
+            failures.push('nav-motion.css: generic #appRoot top clearance is forbidden');
+          }
+          for (const token of ['--eva-nav-clearance-expanded', '--eva-nav-clearance-compact', '--eva-nav-clearance-current', '--eva-page-sticky-top']) {
+            if (!baseSource.includes(token)) failures.push(`base.css: missing canonical navigation clearance token ${token}`);
           }
 
           const dashboardEntrySource = fs.readFileSync('public/assets/js/dashboard-entry.js', 'utf8');
