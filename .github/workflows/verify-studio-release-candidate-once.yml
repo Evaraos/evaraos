@@ -134,7 +134,7 @@ jobs:
           retention-days: 30
 
       - name: Commit proof to authoritative branch
-        if: always() && hashFiles('studio-release-candidate-source-verification.json') != ''
+        if: github.event_name == 'workflow_dispatch' && always() && hashFiles('studio-release-candidate-source-verification.json') != ''
         shell: bash
         run: |
           set -euo pipefail
@@ -151,7 +151,7 @@ jobs:
           fi
 
       - name: Update activation tracker
-        if: always()
+        if: github.event_name == 'workflow_dispatch' && always()
         uses: actions/github-script@v7
         env:
           VERIFICATION_STATUS: ${{ steps.gates.outputs.status || 'unverified' }}
