@@ -23,14 +23,14 @@
         <p class="notifications-subtitle"><span id="noticeCount" class="notifications-count">0</span> unread notifications.</p>
         <p id="noticeStatus" class="notifications-subtitle" aria-live="polite"></p>
       </section>
-      <nav class="notifications-toolbar" aria-label="Notification filters">
-        <button class="notifications-filter is-active" type="button" data-notification-filter="all">All</button>
-        <button class="notifications-filter" type="button" data-notification-filter="unread">Unread</button>
-        <button class="notifications-filter" type="button" data-notification-filter="people">Messages</button>
-        <button class="notifications-filter" type="button" data-notification-filter="operations">Operations</button>
-        <button class="notifications-filter" type="button" data-notification-filter="system">System</button>
+      <div class="notifications-toolbar eva-segmented" data-eva-sticky="true" role="group" aria-label="Notification filters">
+        <button class="notifications-filter eva-segmented__control is-active" type="button" data-notification-filter="all" aria-pressed="true">All</button>
+        <button class="notifications-filter eva-segmented__control" type="button" data-notification-filter="unread" aria-pressed="false">Unread</button>
+        <button class="notifications-filter eva-segmented__control" type="button" data-notification-filter="people" aria-pressed="false">Messages</button>
+        <button class="notifications-filter eva-segmented__control" type="button" data-notification-filter="operations" aria-pressed="false">Operations</button>
+        <button class="notifications-filter eva-segmented__control" type="button" data-notification-filter="system" aria-pressed="false">System</button>
         <button id="notificationsMarkAllRead" class="notifications-mark-all" type="button">Mark All Read</button>
-      </nav>
+      </div>
       <section id="noticeList" class="notifications-feed" aria-live="polite"><div class="notification-empty">Loading notifications…</div></section>
     </main>
   </div>

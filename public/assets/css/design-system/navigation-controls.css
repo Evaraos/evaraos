@@ -1,0 +1,81 @@
+/*
+ * Shared, opt-in navigation controls.
+ *
+ * Use .eva-subnav for destination links and .eva-segmented for mutually
+ * exclusive in-page actions. These rules intentionally own no glass paint or
+ * page clearance; Liquid Optics remains the material authority.
+ */
+
+.eva-subnav,
+.eva-segmented {
+  --eva-navigation-control-height: max(var(--tap-target-min, 44px), 44px);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  min-width: 0;
+  padding-block: var(--space-2, 8px);
+  padding-inline-start: max(var(--space-2, 8px), env(safe-area-inset-left, 0px));
+  padding-inline-end: max(var(--space-2, 8px), env(safe-area-inset-right, 0px));
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-inline: contain;
+  scroll-padding-inline-start: max(var(--space-2, 8px), env(safe-area-inset-left, 0px));
+  scroll-padding-inline-end: max(var(--space-2, 8px), env(safe-area-inset-right, 0px));
+  scrollbar-width: none;
+}
+
+.eva-subnav::-webkit-scrollbar,
+.eva-segmented::-webkit-scrollbar {
+  display: none;
+}
+
+.eva-subnav[data-eva-sticky="true"],
+.eva-segmented[data-eva-sticky="true"] {
+  position: sticky;
+  top: var(--eva-page-sticky-top);
+  z-index: var(--eva-navigation-controls-z-index, 8);
+}
+
+.eva-subnav > .eva-subnav__link,
+.eva-segmented > .eva-segmented__control {
+  flex: 0 0 auto;
+  min-height: var(--eva-navigation-control-height);
+  padding-inline: var(--space-4, 16px);
+  border-radius: var(--control-radius, var(--radius-pill, 999px));
+  line-height: 1;
+  white-space: nowrap;
+  scroll-snap-align: start;
+  touch-action: manipulation;
+}
+
+.eva-subnav > .eva-subnav__link:not([aria-current]),
+.eva-subnav > .eva-subnav__link[aria-current="false"],
+.eva-segmented > .eva-segmented__control[aria-pressed="false"] {
+  opacity: .78;
+}
+
+.eva-subnav > .eva-subnav__link[aria-current]:not([aria-current="false"]),
+.eva-segmented > .eva-segmented__control[aria-pressed="true"] {
+  --lg-control-fill: rgba(var(--accent-rgb), .52);
+  --lg-control-edge: rgba(255, 255, 255, .44);
+  --lg-control-top-alpha: .22;
+  --lg-control-blur: 10px;
+  --lg-control-saturation: 205%;
+  --lg-control-contrast: 108%;
+  color: #fff !important;
+  outline: 1px solid color-mix(in srgb, var(--accent-blue, #0a84ff) 52%, var(--lg-edge));
+  outline-offset: -1px;
+}
+
+.eva-subnav > .eva-subnav__link:focus-visible,
+.eva-segmented > .eva-segmented__control:focus-visible {
+  outline: 2px solid var(--accent-blue, #0a84ff);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eva-subnav > .eva-subnav__link,
+  .eva-segmented > .eva-segmented__control {
+    scroll-behavior: auto;
+  }
+}
