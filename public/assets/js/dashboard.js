@@ -25,6 +25,8 @@ const STAFF_ROLES = new Set(["technician", "cleaner", "staff", "field_staff", "c
 
 let sidebarSectionObserver = null;
 let dashboardBindFrame = 0;
+let dashboardLocationStateReady = false;
+let sidebarHashLock = "";
 
 function roleBucket() {
   const profile = getSavedUserProfile() || {};
@@ -123,13 +125,20 @@ function updateSidebar(bucket) {
   if (!nav) return;
 
   if (bucket === "staff") {
+    const dynamicLinks = [...nav.querySelectorAll(".dashboard-nav-link[data-dashboard-dynamic-nav='true']")];
     nav.innerHTML = `
-      <a href="#overviewSection" class="dashboard-nav-link active aurora-card beam-target" aria-current="location">${navIcon("dashboard")}<span>Overview</span></a>
-      <a href="#kpiSection" class="dashboard-nav-link aurora-card beam-target">${navIcon("schedule")}<span>Today</span></a>
-      <a href="#pipelineSection" class="dashboard-nav-link aurora-card beam-target">${navIcon("leads")}<span>Leads</span></a>
-      <a href="#operationsSection" class="dashboard-nav-link aurora-card beam-target">${navIcon("jobs")}<span>Jobs</span></a>
-      <a href="#activitySection" class="dashboard-nav-link aurora-card beam-target">${navIcon("history")}<span>Activity</span></a>
+      <a href="#overviewSection" class="dashboard-nav-link eva-subnav__link active aurora-card beam-target" aria-current="location">${navIcon("dashboard")}<span>Overview</span></a>
+      <a href="#kpiSection" class="dashboard-nav-link eva-subnav__link aurora-card beam-target">${navIcon("schedule")}<span>Today</span></a>
+      <a href="#pipelineSection" class="dashboard-nav-link eva-subnav__link aurora-card beam-target">${navIcon("leads")}<span>Leads</span></a>
+      <a href="#operationsSection" class="dashboard-nav-link eva-subnav__link aurora-card beam-target">${navIcon("jobs")}<span>Jobs</span></a>
+      <a href="#activitySection" class="dashboard-nav-link eva-subnav__link aurora-card beam-target">${navIcon("history")}<span>Activity</span></a>
     `;
+    const activityLink = nav.querySelector("a[href='#activitySection']");
+    dynamicLinks.forEach((link) => {
+      link.classList.add("eva-subnav__link");
+      if (activityLink) nav.insertBefore(link, activityLink);
+      else nav.appendChild(link);
+    });
     if (footLink) {
       footLink.href = ROUTES.jobs;
       footLink.textContent = "Open Jobs";
@@ -160,11 +169,26 @@ function keepActiveLinkVisible(nav, link) {
   nav.scrollTo({ left: Math.max(0, left), behavior: reducedMotion ? "auto" : "smooth" });
 }
 
+function getSidebarDestinationLinks(nav) {
+  if (!nav) return [];
+  return [...nav.querySelectorAll(".dashboard-nav-link.eva-subnav__link[href^='#']")];
+}
+
+function getHashDestinationLink(links) {
+  const hash = window.location.hash;
+  return hash ? links.find((link) => link.getAttribute("href") === hash) || null : null;
+}
+
+function lockSidebarHashDestination(link) {
+  sidebarHashLock = link?.getAttribute("href") || "";
+}
+
 function setActiveSidebarLink(link) {
   const nav = document.querySelector(".dashboard-sidebar-nav");
-  if (!nav || !link) return;
+  const links = getSidebarDestinationLinks(nav);
+  if (!nav || !links.includes(link)) return;
 
-  nav.querySelectorAll(".dashboard-nav-link").forEach((item) => {
+  links.forEach((item) => {
     const active = item === link;
     item.classList.toggle("active", active);
     if (active) item.setAttribute("aria-current", "location");
@@ -174,30 +198,64 @@ function setActiveSidebarLink(link) {
   keepActiveLinkVisible(nav, link);
 }
 
+function syncSidebarLocationState() {
+  const nav = document.querySelector(".dashboard-sidebar-nav");
+  const link = getHashDestinationLink(getSidebarDestinationLinks(nav));
+  if (link) {
+    lockSidebarHashDestination(link);
+    setActiveSidebarLink(link);
+  }
+}
+
+function bindSidebarLocationState() {
+  if (dashboardLocationStateReady) return;
+  dashboardLocationStateReady = true;
+  window.addEventListener("hashchange", syncSidebarLocationState);
+  window.addEventListener("popstate", syncSidebarLocationState);
+  window.addEventListener("scrollend", () => {
+    sidebarHashLock = "";
+  }, { passive: true });
+}
+
 function bindSidebarNavigation() {
   const nav = document.querySelector(".dashboard-sidebar-nav");
   if (!nav) return;
+
+  bindSidebarLocationState();
 
   if (nav.dataset.dashboardNavReady !== "true") {
     nav.dataset.dashboardNavReady = "true";
     nav.addEventListener("click", (event) => {
       const link = event.target.closest(".dashboard-nav-link[href^='#']");
-      if (link) setActiveSidebarLink(link);
+      if (link) {
+        lockSidebarHashDestination(link);
+        setActiveSidebarLink(link);
+      }
     });
   }
 
-  const links = [...nav.querySelectorAll(".dashboard-nav-link[href^='#']")];
+  const links = getSidebarDestinationLinks(nav);
   const pairs = links
     .map((link) => ({ link, section: document.querySelector(link.getAttribute("href")) }))
     .filter(({ section }) => section && !section.hidden);
 
-  const selected = links.find((link) => link.getAttribute("aria-current") === "location") || links[0];
+  const hashDestination = getHashDestinationLink(links);
+  const selected = hashDestination || links.find((link) => link.getAttribute("aria-current") === "location") || links[0];
+  if (hashDestination) lockSidebarHashDestination(hashDestination);
   if (selected) setActiveSidebarLink(selected);
 
   sidebarSectionObserver?.disconnect();
   if (!("IntersectionObserver" in window) || !pairs.length) return;
 
   sidebarSectionObserver = new IntersectionObserver((entries) => {
+    const lockedLink = sidebarHashLock && links.find((link) => link.getAttribute("href") === sidebarHashLock);
+    if (lockedLink) {
+      const lockedSection = pairs.find(({ link }) => link === lockedLink)?.section;
+      if (!entries.some((entry) => entry.target === lockedSection && entry.isIntersecting)) return;
+      setActiveSidebarLink(lockedLink);
+      return;
+    }
+
     const visible = entries
       .filter((entry) => entry.isIntersecting)
       .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
@@ -323,6 +381,7 @@ window.EvaraDashboard = {
   source: "dashboard_stats/global",
   routes: ROUTES,
   bindDashboardCards,
+  refreshSidebarNavigation: bindSidebarNavigation,
   applyRoleDashboard,
   mountExecutiveWidgets
 };

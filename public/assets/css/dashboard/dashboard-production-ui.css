@@ -119,6 +119,16 @@
   display: none;
 }
 
+.dashboard-sidebar-nav.eva-subnav {
+  --eva-navigation-control-height: var(--control-height-lg);
+  display: grid;
+  align-items: stretch;
+  gap: var(--space-3);
+  padding: 0;
+  overflow: visible;
+  scroll-padding-inline: 0;
+}
+
 .dashboard-status-pill,
 .dashboard-mini-badge {
   min-height: 34px;
@@ -149,6 +159,20 @@
     overflow-x: auto;
     gap: 8px;
     padding: 2px;
+    scroll-snap-type: inline proximity;
+  }
+
+  .dashboard-sidebar-nav.eva-subnav {
+    --eva-navigation-control-height: var(--tap-target-min, 44px);
+    display: grid;
+    align-items: center;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 8px;
+    padding: 2px;
+    scroll-padding-inline: 2px;
     scroll-snap-type: inline proximity;
   }
 

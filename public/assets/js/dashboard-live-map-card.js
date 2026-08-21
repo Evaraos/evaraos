@@ -61,6 +61,8 @@ function addSidebarLink(config) {
   const link = document.createElement('a');
   link.href = `#${config.sectionId}`;
   link.className = 'dashboard-nav-link aurora-card beam-target';
+  link.dataset.dashboardDynamicNav = 'true';
+  if (nav.classList.contains('eva-subnav')) link.classList.add('eva-subnav__link');
   link.innerHTML = `<span class="dashboard-nav-icon" data-evara-icon="map" aria-hidden="true"></span><span>${config.sidebarLabel}</span>`;
 
   const before = nav.querySelector(config.sidebarBeforeSelector);
@@ -101,6 +103,7 @@ function mountOperationsMapPreview() {
     </div>`;
 
   config.parent.insertBefore(section, config.before || null);
+  window.EvaraDashboard?.refreshSidebarNavigation?.();
 
   const frame = section.querySelector('.dashboard-map-frame');
   const status = section.querySelector('[data-map-preview-status]');
