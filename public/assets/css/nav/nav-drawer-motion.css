@@ -1,7 +1,9 @@
 /* The open drawer sits above the application. The page and its top controls
    travel together behind it, so the profile trigger never remains inside the
-   drawer's visible area. Bottom navigation is intentionally untouched. */
-:root{--eva-drawer-width:min(88vw,430px)}
+   drawer's visible area. Bottom navigation consumes the shared shift token. */
+:root{--eva-drawer-width:min(88vw,430px);--eva-drawer-shift-x:0px}
+
+body.nav-menu-open{--eva-drawer-shift-x:var(--eva-drawer-width)}
 
 #appRoot,
 .eva-nav-shell{
