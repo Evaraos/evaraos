@@ -1,4 +1,4 @@
-import { getMount, buildHref, getVisibleLinks, isCurrentPage } from "./nav-utils.js";
+import { getMount, buildHref, getVisibleLinks, isCurrentPage, isReducedPublicHome } from "./nav-utils.js";
 import { APP_CATEGORIES, appsByCategory } from "../navigation/app-registry.js";
 import { canAccessPageName } from "../access-control.js";
 import { iconSvg, iconNameForApp, iconNameForCategory } from "../ui/icons.js";
@@ -76,12 +76,6 @@ function aiGroup(authed) {
   return `<section class="eva-menu-search-bottom eva-menu-glass-group" data-glass="card"><div class="eva-ai-prompt-head"><span class="eva-ai-orb">${iconSvg("ai")}</span><div><strong>Evaraos AI</strong><small>Search or open the assistant.</small></div><a class="eva-ai-launch-arrow" href="${href}" data-menu-link="${href}" aria-label="Open Evaraos AI">${iconSvg("arrowRight")}</a></div><form class="eva-search-shell" id="evaAiPromptForm"><span class="eva-search-icon">${iconSvg("search")}</span><input id="evaSearchInput" type="search" autocomplete="off" placeholder="${authed ? "Search apps, pages, and tools" : "Search access and onboarding"}"/><button class="eva-ai-send-btn" id="evaAiSendBtn" type="submit" aria-label="Search Evaraos">${iconSvg("arrowUp")}</button></form><div id="evaSearchResults" class="eva-search-results" aria-live="polite"></div></section>`;
 }
 
-function isPublicHomeRoute() {
-  const mode = document.body?.dataset?.routeGuard || "";
-  const path = window.location.pathname.toLowerCase();
-  return mode === "public" && (path === "/" || path.endsWith("/index.html"));
-}
-
 function publicHomeMarkup() {
   return `<div class="eva-nav-layer" data-render-build="${NAV_RENDER_BUILD}" data-public-home-nav="true"><header class="eva-nav-shell eva-public-home-shell is-visible expanded" id="evaNavShell" data-nav-mode="expanded"><a class="eva-nav-pill eva-public-home-pill" id="evaNavPill" href="/" data-home-link="/" aria-label="Home" aria-current="page"><span class="eva-public-home-icon">${iconSvg("home")}</span><strong>Home</strong></a></header></div>`;
 }
@@ -89,7 +83,7 @@ function publicHomeMarkup() {
 export function renderNav() {
   const mount = getMount();
   if (!mount) return false;
-  if (isPublicHomeRoute()) {
+  if (isReducedPublicHome()) {
     mount.innerHTML = publicHomeMarkup();
     requestAnimationFrame(() => window.EvaraTheme?.refreshAdaptiveGlass?.());
     return true;

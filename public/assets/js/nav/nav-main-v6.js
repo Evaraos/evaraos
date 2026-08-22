@@ -1,5 +1,5 @@
 const NAV_BUILD="nav-v59-responsive-core";
-let NAV_STATE,getNavShell,renderNav,applyProgress,bindScrollBehavior,animateNav;
+let NAV_STATE,getNavShell,renderNav,isReducedPublicHome,applyProgress,bindScrollBehavior,animateNav;
 let accountSystemsPromise=null;
 
 async function loadCore(){
@@ -10,6 +10,7 @@ async function loadCore(){
   ]);
   NAV_STATE=config.NAV_STATE;
   getNavShell=utils.getNavShell;
+  isReducedPublicHome=utils.isReducedPublicHome;
   renderNav=renderer.renderNav;
 }
 
@@ -26,10 +27,9 @@ async function loadMotionSystems(){
   animateNav=scroll.animateNav;
 }
 
+// Public Home remains lean only while the canonical session is unauthenticated.
 function isPublicHome(){
-  const mode=document.body?.dataset?.routeGuard||"";
-  const path=location.pathname.toLowerCase();
-  return mode==="public"&&(path==="/"||path.endsWith("/index.html"));
+  return isReducedPublicHome();
 }
 
 function ready(){

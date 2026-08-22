@@ -1,14 +1,13 @@
 import { NAV_STATE } from "./nav-config.js";
-import { syncThemeLabel } from "./nav-utils.js";
+import { isPublicHomeRoute, isReducedPublicHome, syncThemeLabel } from "./nav-utils.js";
 import { applyProgress } from "./nav-scroll.js";
 import { renderNav } from "./nav-render.js";
 
 const NAV_BUILD = "nav-v59-responsive-core";
+let publicHomeBottomSyncBound = false;
 
-function isPublicHomeRoute() {
-  const mode = document.body?.dataset?.routeGuard || "";
-  const path = window.location.pathname.toLowerCase();
-  return mode === "public" && (path === "/" || path.endsWith("/index.html"));
+function removeBottomNav() {
+  document.querySelector(".eva-nav-layer .eva-bottom-nav")?.remove();
 }
 
 async function loadCanonicalBinders() {
@@ -20,15 +19,54 @@ async function loadCanonicalBinders() {
   return { events, menu, interactions };
 }
 
+function syncPublicHomeBottomNavAfterSession() {
+  if (!isPublicHomeRoute()) return;
+  if (isReducedPublicHome()) {
+    removeBottomNav();
+    return;
+  }
+  restoreBottomNavAfterRender().catch((error) => console.warn("Public Home bottom nav sync failed:", error));
+}
+
+function bindPublicHomeBottomNavSync() {
+  if (publicHomeBottomSyncBound) return;
+  publicHomeBottomSyncBound = true;
+  window.addEventListener("evara:session-ready", syncPublicHomeBottomNavAfterSession);
+  window.addEventListener("storage", (event) => {
+    if (["evaraos-user", "evaraos-role"].includes(event.key)) syncPublicHomeBottomNavAfterSession();
+  });
+}
+
 function restoreBottomNavAfterRender() {
-  if (document.body?.dataset?.routeGuard === "auth" || isPublicHomeRoute()) return;
-  import("./nav-bottom.js?v=nav-v59-responsive-core")
+  if (document.body?.dataset?.routeGuard === "auth" || isPublicHomeRoute() && isReducedPublicHome()) {
+    removeBottomNav();
+    return Promise.resolve();
+  }
+  return import("./nav-bottom.js?v=nav-v59-responsive-core")
     .then(({ mountBottomNav }) => mountBottomNav())
+    .then(() => {
+      if (isPublicHomeRoute()) bindPublicHomeBottomNavSync();
+    })
     .catch((error) => console.warn("Bottom nav restore failed:", error));
 }
 
+async function syncPublicHomeNotificationLifecycle() {
+  if (!isPublicHomeRoute()) return;
+  try {
+    const notifications = await import("../notifications-dropdown.js");
+    if (isReducedPublicHome()) {
+      notifications.stopNotificationsDropdown?.();
+      document.getElementById("globalNotificationsPanel")?.remove();
+      return;
+    }
+    notifications.startNotificationsDropdown?.();
+  } catch (error) {
+    console.warn("Public Home notifications sync failed:", error);
+  }
+}
+
 export async function rebindNavAfterRender() {
-  if (!isPublicHomeRoute()) {
+  if (!isReducedPublicHome()) {
     const binders = await loadCanonicalBinders();
     binders.events.bindAllNavEvents();
     binders.menu.bindMenu();
@@ -40,7 +78,8 @@ export async function rebindNavAfterRender() {
     }
   }
   syncThemeLabel();
-  restoreBottomNavAfterRender();
+  await syncPublicHomeNotificationLifecycle();
+  await restoreBottomNavAfterRender();
 }
 
 export async function refreshNav() {
@@ -79,6 +118,10 @@ export function bindRuntimeRefresh() {
 
   window.addEventListener("evara:theme-applied", syncThemeLabel);
   window.addEventListener("evara:appearance-updated", syncThemeLabel);
+
+  if (isPublicHomeRoute() && !isReducedPublicHome()) {
+    restoreBottomNavAfterRender().catch((error) => console.warn("Public Home bottom nav boot failed:", error));
+  }
 
   window.addEventListener("pageshow", () => {
     NAV_STATE.isNavigating = false;

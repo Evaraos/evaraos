@@ -2,6 +2,12 @@ export function getMount() {
   return document.getElementById("universalNavRoot") || document.getElementById("universalNav");
 }
 
+export function isPublicHomeRoute() {
+  const mode = document.body?.dataset?.routeGuard || "";
+  const path = window.location.pathname.toLowerCase();
+  return mode === "public" && (path === "/" || path.endsWith("/index.html"));
+}
+
 export function getBasePath() {
   const path = window.location.pathname || "/";
   const segments = path.split("/").filter(Boolean);
@@ -70,6 +76,10 @@ export function isAuthenticated() {
   const user = getStoredUser();
   if (user && (user.uid || user.email)) return true;
   return isPrivateRoutePending();
+}
+
+export function isReducedPublicHome() {
+  return isPublicHomeRoute() && !isAuthenticated();
 }
 
 export function getRole() {
