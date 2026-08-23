@@ -1,4 +1,4 @@
-import { getMount, buildHref, getVisibleLinks, isCurrentPage } from "./nav-utils.js";
+import { getMount, buildHref, getVisibleLinks, isCurrentPage, isPublicHomeRoute, isVerifiedPublicHomeSession } from "./nav-utils.js";
 import { APP_CATEGORIES, appsByCategory } from "../navigation/app-registry.js";
 import { canAccessPageName } from "../access-control.js";
 import { iconSvg, iconNameForApp, iconNameForCategory } from "../ui/icons.js";
@@ -40,6 +40,16 @@ function storedUser() {
 }
 
 function profileData() {
+  if (isPublicHomeRoute()) {
+    const session = window.EvaraRouteSession;
+    if (!isVerifiedPublicHomeSession(session)) {
+      return { name: "Evaraos", image: "" };
+    }
+    return {
+      name: String(session.displayName || session.email || "Profile"),
+      image: ""
+    };
+  }
   const user = storedUser();
   const name = String(user.displayName || user.name || user.username || user.email || "Evaraos User");
   const image = String(user.photoURL || user.photoUrl || user.avatarUrl || user.avatar || user.profilePhoto || user.profilePhotoUrl || "").trim();
@@ -76,34 +86,46 @@ function aiGroup(authed) {
   return `<section class="eva-menu-search-bottom eva-menu-glass-group" data-glass="card"><div class="eva-ai-prompt-head"><span class="eva-ai-orb">${iconSvg("ai")}</span><div><strong>Evaraos AI</strong><small>Search or open the assistant.</small></div><a class="eva-ai-launch-arrow" href="${href}" data-menu-link="${href}" aria-label="Open Evaraos AI">${iconSvg("arrowRight")}</a></div><form class="eva-search-shell" id="evaAiPromptForm"><span class="eva-search-icon">${iconSvg("search")}</span><input id="evaSearchInput" type="search" autocomplete="off" placeholder="${authed ? "Search apps, pages, and tools" : "Search access and onboarding"}"/><button class="eva-ai-send-btn" id="evaAiSendBtn" type="submit" aria-label="Search Evaraos">${iconSvg("arrowUp")}</button></form><div id="evaSearchResults" class="eva-search-results" aria-live="polite"></div></section>`;
 }
 
-function isPublicHomeRoute() {
-  const mode = document.body?.dataset?.routeGuard || "";
-  const path = window.location.pathname.toLowerCase();
-  return mode === "public" && (path === "/" || path.endsWith("/index.html"));
+function guestHomeDrawer() {
+  return `<div class="eva-drawer-profile eva-public-home-drawer"><div class="eva-drawer-avatar">${iconSvg("home", "eva-drawer-avatar-icon")}</div><div class="eva-drawer-identity"><strong>Evaraos</strong><span>Public access</span></div><div class="eva-drawer-actions"><button type="button" data-public-home-menu-close aria-label="Close menu">${iconSvg("close")}</button></div></div>`;
 }
 
-function publicHomeMarkup() {
-  return `<div class="eva-nav-layer" data-render-build="${NAV_RENDER_BUILD}" data-public-home-nav="true"><header class="eva-nav-shell eva-public-home-shell is-visible expanded" id="evaNavShell" data-nav-mode="expanded"><a class="eva-nav-pill eva-public-home-pill" id="evaNavPill" href="/" data-home-link="/" aria-label="Home" aria-current="page"><span class="eva-public-home-icon">${iconSvg("home")}</span><strong>Home</strong></a></header></div>`;
+function guestHomeTopControl() {
+  const href = buildHref("login.html");
+  return `<a class="eva-public-access-control" id="evaPublicAccessControl" href="${href}" aria-label="Log in to Evaraos"><span>${iconSvg("login", "eva-public-access-icon")}</span><strong>Login</strong></a>`;
+}
+
+function guestHomeMenuIcon() {
+  return '<svg class="eva-top-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 7h14M5 12h14M5 17h14"/></svg>';
 }
 
 export function renderNav() {
   const mount = getMount();
   if (!mount) return false;
-  if (isPublicHomeRoute()) {
-    mount.innerHTML = publicHomeMarkup();
-    requestAnimationFrame(() => window.EvaraTheme?.refreshAdaptiveGlass?.());
-    return true;
-  }
   const groups = getVisibleLinks();
+  const publicHome = isPublicHomeRoute();
+  const guestHome = publicHome && !groups.authed;
   const profile = profileData();
   const role = normalizeRole(groups.role);
   const fallbackAvatar = iconSvg("account", "eva-drawer-avatar-icon");
   const avatar = profile.image ? `<img src="${clean(profile.image)}" alt="${clean(profile.name)}" />` : fallbackAvatar;
-  const menuContent = groups.authed && profile.image
+  const menuContent = guestHome
+    ? guestHomeMenuIcon()
+    : groups.authed && profile.image
     ? `<img class="eva-top-avatar" src="${clean(profile.image)}" alt="${clean(profile.name)}" />`
     : iconSvg("account", "eva-top-action-icon");
+  const drawerProfile = guestHome
+    ? guestHomeDrawer()
+    : `<div class="eva-drawer-profile"><div class="eva-drawer-avatar">${avatar}</div><div class="eva-drawer-identity"><strong>${clean(profile.name)}</strong><span>${clean(role)} · Adaptive Glass</span></div><div class="eva-drawer-actions"><button type="button" id="evaMenuThemeBtn" data-theme-toggle="true" aria-label="Change appearance" title="Change appearance">${iconSvg("appearance")}</button><button type="button" id="evaMenuCloseBtn" aria-label="Close menu">${iconSvg("close")}</button></div></div>`;
+  const drawerLinks = guestHome
+    ? accountGroup(false)
+    : `${accountGroup(groups.authed)}${groups.authed ? appSections(groups.role) : ""}`;
+  const drawerAi = guestHome ? "" : aiGroup(groups.authed);
+  const topRight = guestHome
+    ? guestHomeTopControl()
+    : `<button class="eva-top-alert eva-top-action" id="globalNotificationsBell" type="button" aria-expanded="false" aria-label="Open notifications">${iconSvg("bell", "eva-top-action-icon")}<span id="globalNotificationsCount" class="eva-alert-count" hidden>0</span></button>`;
 
-  mount.innerHTML = `<div class="eva-nav-layer" data-render-build="${NAV_RENDER_BUILD}"><header class="eva-nav-shell is-visible expanded" id="evaNavShell" data-nav-mode="expanded"><div class="eva-nav-pill" id="evaNavPill"><div class="eva-menu-zone" id="evaMenuZone"><button class="eva-profile-trigger eva-top-action${groups.authed && profile.image ? " has-avatar" : ""}" type="button" id="evaMenuBtn" aria-expanded="false" aria-label="Open Evaraos menu">${menuContent}</button></div><button class="eva-top-alert eva-top-action" id="globalNotificationsBell" type="button" aria-expanded="false" aria-label="Open notifications">${iconSvg("bell", "eva-top-action-icon")}<span id="globalNotificationsCount" class="eva-alert-count" hidden>0</span></button></div></header><div class="eva-backdrop" id="evaBackdrop"></div><aside class="eva-menu-panel" id="evaMenuPanel" aria-label="Evaraos menu"><div class="eva-drawer-profile"><div class="eva-drawer-avatar">${avatar}</div><div class="eva-drawer-identity"><strong>${clean(profile.name)}</strong><span>${clean(role)} · Adaptive Glass</span></div><div class="eva-drawer-actions"><button type="button" id="evaMenuThemeBtn" data-theme-toggle="true" aria-label="Change appearance" title="Change appearance">${iconSvg("appearance")}</button><button type="button" id="evaMenuCloseBtn" aria-label="Close menu">${iconSvg("close")}</button></div></div><nav class="eva-menu-apps" id="evaLinks" data-nav-role="${clean(role)}">${accountGroup(groups.authed)}${groups.authed ? appSections(groups.role) : ""}</nav>${aiGroup(groups.authed)}</aside></div>`;
+  mount.innerHTML = `<div class="eva-nav-layer" data-render-build="${NAV_RENDER_BUILD}"${publicHome ? " data-public-home-nav=\"true\"" : ""}><header class="eva-nav-shell is-visible expanded${guestHome ? " eva-public-home-universal-shell" : ""}" id="evaNavShell" data-nav-mode="expanded"><div class="eva-nav-pill" id="evaNavPill"><div class="eva-menu-zone" id="evaMenuZone"><button class="eva-profile-trigger eva-top-action${groups.authed && profile.image ? " has-avatar" : ""}" type="button" id="evaMenuBtn" aria-expanded="false" aria-label="Open Evaraos menu">${menuContent}</button></div>${topRight}</div></header><div class="eva-backdrop" id="evaBackdrop"></div><aside class="eva-menu-panel" id="evaMenuPanel" aria-label="Evaraos menu">${drawerProfile}<nav class="eva-menu-apps" id="evaLinks" data-nav-role="${clean(role)}">${drawerLinks}</nav>${drawerAi}</aside></div>`;
 
   requestAnimationFrame(() => window.EvaraTheme?.refreshAdaptiveGlass?.());
   return true;

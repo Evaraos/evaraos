@@ -220,20 +220,50 @@ jobs:
             failures.push('nav-session.js: post-render refresh must restore eligible bottom navigation');
           }
 
-          const publicHomeMarkup = navRenderSource.match(/function publicHomeMarkup\(\)\s*\{([\s\S]*?)\n\}/)?.[1] || '';
-          if (!publicHomeMarkup.includes('href="/"') || !publicHomeMarkup.includes('<strong>Home</strong>')) {
-            failures.push('nav-render.js: public Home must render one canonical Home link');
+          const navUtilsSource = fs.readFileSync('public/assets/js/nav/nav-utils.js', 'utf8');
+          const accessControlSource = fs.readFileSync('public/assets/js/access-control.js', 'utf8');
+          const navShellSource = fs.readFileSync('public/assets/css/nav/nav-shell.css', 'utf8');
+          const publicPagesDeclaration = accessControlSource.match(/export const PUBLIC_PAGES\s*=\s*Object\.freeze\(new Set\(\[([\s\S]*?)\]\)\)/)?.[1] || '';
+          const canonicalPublicPages = new Set(Array.from(publicPagesDeclaration.matchAll(/["']([^"']+)["']/g), (match) => match[1]));
+          const guestAccountBlock = navRenderSource.match(/function accountGroup\(authed\)\s*\{[\s\S]*?if\s*\(!authed\)\s*\{([\s\S]*?)\n\s*\}\n\s*const actions/)?.[1] || '';
+          const guestRoutes = Array.from(guestAccountBlock.matchAll(/\[\s*["'][^"']+["']\s*,\s*["']([^"']+)["']/g), (match) => match[1]);
+
+          if (/function publicHomeMarkup\s*\(/.test(navRenderSource) || /eva-public-home-pill/.test(`${navRenderSource}\n${navShellSource}`)) {
+            failures.push('nav-render.js: legacy reduced public-Home pill contract must remain removed');
           }
-          if (/(evaMenuBtn|globalNotificationsBell|evaMenuPanel|evaLogoutBtn)/.test(publicHomeMarkup)) {
-            failures.push('nav-render.js: public Home markup must not contain account, menu, notification, drawer, or logout controls');
+          if (!/const\s+guestHome\s*=\s*publicHome\s*&&\s*!groups\.authed/.test(navRenderSource)
+            || !navRenderSource.includes('evaMenuBtn')
+            || !navRenderSource.includes('evaMenuPanel')
+            || !navRenderSource.includes('evaPublicAccessControl')
+            || !navRenderSource.includes('buildHref("login.html")')
+            || !navShellSource.includes('content:"Evaraos"')) {
+            failures.push('nav-render.js: guest Home must render the universal menu, centered Evaraos title, and Login control');
           }
-          const publicCoreStart = navMainSource.indexOf('if(isPublicHome()){');
-          const accountCoreStart = navMainSource.indexOf('const [menu,events,session,interactions]');
-          const publicCore = publicCoreStart >= 0 && accountCoreStart > publicCoreStart
-            ? navMainSource.slice(publicCoreStart, accountCoreStart)
-            : '';
-          if (!publicCore.includes('optional("./nav-session.js")') || /(nav-events|nav-menu|nav-interactions|notifications-dropdown|nav-logout)/.test(publicCore)) {
-            failures.push('nav-main-v6.js: public Home must use only the lean session refresh path');
+          if (!guestRoutes.length || guestRoutes.some((route) => !canonicalPublicPages.has(route))
+            || !/guestHome\s*\?\s*accountGroup\(false\)/.test(navRenderSource)
+            || !/guestHome\s*\?\s*""\s*:\s*aiGroup\(groups\.authed\)/.test(navRenderSource)) {
+            failures.push('nav-render.js: guest Home drawer must expose only canonical public routes and no private application group');
+          }
+
+          if (!/export function isVerifiedPublicHomeSession\([\s\S]*?session\?\.authenticated === true[\s\S]*?session\?\.lifecycle === "active"[\s\S]*?session\?\.role/.test(navUtilsSource)
+            || !/export function isAuthenticated\(\)\s*\{\s*if \(isPublicHomeRoute\(\)\) return isVerifiedPublicHomeSession\(\);/.test(navUtilsSource)
+            || !navSessionSource.includes('firebase.onAuthStateChanged(firebase.auth, (user) => {')
+            || !navSessionSource.includes('profile.readVerifiedUserProfile')
+            || !navSessionSource.includes('lifecycle.resolveAccountLifecycle')
+            || !navSessionSource.includes('if (!lifecycle.active)')) {
+            failures.push('public Home: authenticated shell authority must require an active verified session, never stored role data alone');
+          }
+          if (/(setDoc|addDoc|updateDoc|deleteDoc|writeBatch|httpsCallable|fetch\()/.test(`${navMainSource}\n${navRenderSource}\n${navSessionSource}\n${navUtilsSource}`)) {
+            failures.push('public Home: navigation shell must not introduce Firebase or network writes');
+          }
+          if (!/function scheduleAccountSystems\(\)\s*\{\s*if\(isPublicHome\(\)&&!isVerifiedPublicHomeSession\?\.\(\)\)return;[\s\S]*?bindAccountSystems\(\)/.test(navMainSource)
+            || !navMainSource.includes('if(isVerifiedPublicHomeSession?.())scheduleAccountSystems();')
+            || !navMainSource.includes('optional("../notifications-dropdown.js")')) {
+            failures.push('nav-main-v6.js: guest Home must not start authenticated notifications before verified session authority');
+          }
+          if (!/if \(!isPublicHomeRoute\(\) \|\| isVerifiedPublicHomeSession\(\)\)\s*\{[\s\S]*?binders\.events\.bindAllNavEvents\(\);[\s\S]*?binders\.interactions\.bindNavInteractions\(\);/.test(navSessionSource)
+            || !/async function bindSystems\(\)\s*\{[\s\S]*?await bindCoreSystems\(\);[\s\S]*?bindMotionSystems\(\)/.test(navMainSource)) {
+            failures.push('public Home: verified sessions must restore canonical events, interactions, and motion instead of a lean bypass');
           }
           if (!navEntrySource.includes('if (!isPublicHome) maybeLoadOwnerEditor(storedRole());')
             || !navEntrySource.includes('if (!isPublicHome) maybeLoadOwnerEditor(event.detail?.role || storedRole());')

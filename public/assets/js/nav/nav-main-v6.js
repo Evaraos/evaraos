@@ -1,6 +1,9 @@
 const NAV_BUILD="nav-v59-responsive-core";
-let NAV_STATE,getNavShell,renderNav,applyProgress,bindScrollBehavior,animateNav;
+const PUBLIC_HOME_SHELL_STYLESHEET="/assets/css/nav/nav-shell.css?v=home-1";
+let NAV_STATE,getNavShell,renderNav,applyProgress,bindScrollBehavior,animateNav,isVerifiedPublicHomeSession;
 let accountSystemsPromise=null;
+let publicHomeSessionLifecycleBound=false;
+let publicHomeMenu=null;
 
 async function loadCore(){
   const [config,utils,renderer]=await Promise.all([
@@ -10,6 +13,7 @@ async function loadCore(){
   ]);
   NAV_STATE=config.NAV_STATE;
   getNavShell=utils.getNavShell;
+  isVerifiedPublicHomeSession=utils.isVerifiedPublicHomeSession;
   renderNav=renderer.renderNav;
 }
 
@@ -30,6 +34,20 @@ function isPublicHome(){
   const mode=document.body?.dataset?.routeGuard||"";
   const path=location.pathname.toLowerCase();
   return mode==="public"&&(path==="/"||path.endsWith("/index.html"));
+}
+
+function ensurePublicHomeShellStyles(){
+  const existing=document.getElementById("evaPublicHomeShellStyles");
+  if(existing)return Promise.resolve(existing);
+  return new Promise(resolve=>{
+    const link=document.createElement("link");
+    link.id="evaPublicHomeShellStyles";
+    link.rel="stylesheet";
+    link.href=PUBLIC_HOME_SHELL_STYLESHEET;
+    link.addEventListener("load",()=>resolve(link),{once:true});
+    link.addEventListener("error",()=>resolve(link),{once:true});
+    document.head.appendChild(link);
+  });
 }
 
 function ready(){
@@ -55,10 +73,36 @@ function keepVisible(){
   });
 }
 
+function bindPublicHomeGuestControls(menu){
+  const close=document.querySelector("[data-public-home-menu-close]");
+  if(!close||close.dataset.publicHomeCloseBound==="true")return;
+  close.dataset.publicHomeCloseBound="true";
+  close.addEventListener("click",event=>{
+    event.preventDefault();
+    menu?.closeMenu?.();
+  });
+}
+
+function bindPublicHomeSessionLifecycle(){
+  if(publicHomeSessionLifecycleBound||!isPublicHome())return;
+  publicHomeSessionLifecycleBound=true;
+  window.addEventListener("evara:session-ready",()=>{
+    requestAnimationFrame(()=>bindPublicHomeGuestControls(publicHomeMenu));
+    if(isVerifiedPublicHomeSession?.())scheduleAccountSystems();
+  });
+}
+
 async function bindCoreSystems(){
   if(isPublicHome()){
-    const session=await optional("./nav-session.js");
+    const [menu,session]=await Promise.all([
+      optional("./nav-menu.js"),
+      optional("./nav-session.js")
+    ]);
+    publicHomeMenu=menu;
+    try{menu?.bindMenu?.();bindPublicHomeGuestControls(menu)}catch(error){console.warn("Public Home menu binding failed:",error)}
     try{session?.bindRuntimeRefresh?.()}catch(error){console.warn("Nav session refresh failed:",error)}
+    bindPublicHomeSessionLifecycle();
+    try{session?.startVerifiedPublicHomeSession?.()}catch(error){console.warn("Verified public Home session failed:",error)}
     try{window.EvaraBrand?.apply?.();window.EvaraTheme?.updateThemeControls?.();window.EvaraTheme?.refreshAdaptiveGlass?.()}catch(error){console.warn("Nav theme refresh failed:",error)}
     return;
   }
@@ -88,7 +132,7 @@ function bindAccountSystems(){
 }
 
 function scheduleAccountSystems(){
-  if(isPublicHome())return;
+  if(isPublicHome()&&!isVerifiedPublicHomeSession?.())return;
   bindAccountSystems().catch(error=>console.warn("Account nav systems failed:",error));
 }
 
@@ -107,6 +151,7 @@ async function bindSystems(){
 
 export async function initNav(){
   try{
+    if(isPublicHome())await ensurePublicHomeShellStyles();
     await loadCore();
     window.EVARAOS_NAV_BUILD=NAV_BUILD;
     document.documentElement.dataset.evaraosNavBuild=NAV_BUILD;

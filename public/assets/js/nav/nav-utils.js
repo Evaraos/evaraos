@@ -31,6 +31,23 @@ export function isCurrentPage(path) {
   return current === target || (current === "" && target === "index.html");
 }
 
+export function isPublicHomeRoute() {
+  const mode = document.body?.dataset?.routeGuard || "";
+  const path = window.location.pathname.toLowerCase();
+  return mode === "public" && (path === "/" || path.endsWith("/index.html"));
+}
+
+export function isVerifiedPublicHomeSession(session = window.EvaraRouteSession) {
+  const verifiedSource = ["verified-public-home", "verified-route-guard"].includes(session?.source);
+  return Boolean(
+    isPublicHomeRoute()
+    && session?.authenticated === true
+    && verifiedSource
+    && session?.lifecycle === "active"
+    && session?.role
+  );
+}
+
 export function getStoredUser() {
   try {
     const raw = localStorage.getItem("evaraos-user") || sessionStorage.getItem("evaraos-user");
@@ -66,6 +83,7 @@ export function isPrivateRoutePending() {
 }
 
 export function isAuthenticated() {
+  if (isPublicHomeRoute()) return isVerifiedPublicHomeSession();
   if (window.EvaraRouteSession?.authenticated) return true;
   const user = getStoredUser();
   if (user && (user.uid || user.email)) return true;
@@ -73,6 +91,11 @@ export function isAuthenticated() {
 }
 
 export function getRole() {
+  if (isPublicHomeRoute()) {
+    return isVerifiedPublicHomeSession()
+      ? String(window.EvaraRouteSession.role).toLowerCase()
+      : "guest";
+  }
   if (window.EvaraRouteSession?.role) return String(window.EvaraRouteSession.role).toLowerCase();
   try {
     const previewRole = localStorage.getItem("evaraos-preview-role");
@@ -89,6 +112,11 @@ export function getRole() {
 
 export function getDisplayName() {
   const routeSession = window.EvaraRouteSession;
+  if (isPublicHomeRoute()) {
+    return isVerifiedPublicHomeSession(routeSession)
+      ? routeSession.displayName || routeSession.email || "Profile"
+      : "Evaraos Guest";
+  }
   if (routeSession?.authenticated) {
     return routeSession.displayName || routeSession.email || "Profile";
   }
