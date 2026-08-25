@@ -1,15 +1,14 @@
 const PROTOCOL = 'evara:studio-preview:';
 const PROTOCOL_VERSION = 1;
 const ORIGIN = window.location.origin;
-const SELECTABLE_IDS = new Set([
-  'home.hero.kicker',
-  'home.hero.title',
-  'home.hero.subtitle',
-  'home.platform.heading',
-  'home.platform.copy'
-]);
-const INLINE_EDIT_IDS = new Set(['home.hero.kicker']);
-const KICKER_MAX_LENGTH = 180;
+const EDIT_SLOT_CONFIG = Object.freeze({
+  'home.hero.kicker': Object.freeze({ maxLength: 180, experienceControlled: true, linePolicy: 'single' }),
+  'home.hero.title': Object.freeze({ maxLength: 260, experienceControlled: true, linePolicy: 'single' }),
+  'home.hero.subtitle': Object.freeze({ maxLength: 1200, experienceControlled: true, linePolicy: 'single' }),
+  'home.platform.heading': Object.freeze({ maxLength: 180, experienceControlled: false, linePolicy: 'single' }),
+  'home.platform.copy': Object.freeze({ maxLength: 1200, experienceControlled: false, linePolicy: 'single' })
+});
+const EDIT_SLOT_IDS = new Set(Object.keys(EDIT_SLOT_CONFIG));
 
 const params = new URLSearchParams(window.location.search);
 const nonce = params.get('studioNonce') || '';
@@ -33,8 +32,12 @@ function message(type, extra = {}) {
 function editableTarget(target) {
   if (!(target instanceof Element)) return null;
   const element = target.closest('[data-evara-page="home"][data-evara-editable="text"][data-evara-region="content"][data-evara-edit-id]');
-  if (!element || !SELECTABLE_IDS.has(element.dataset.evaraEditId || '')) return null;
+  if (!element || !EDIT_SLOT_IDS.has(element.dataset.evaraEditId || '')) return null;
   return element;
+}
+
+function slotForElement(element) {
+  return EDIT_SLOT_CONFIG[element?.dataset.evaraEditId || ''] || null;
 }
 
 function isProtectedAction(target) {
@@ -55,13 +58,17 @@ function createSelectionOverlay() {
   return { outline, label };
 }
 
-function normalizeKickerText(value) {
-  return Array.from(String(value ?? '')
+function normalizeSlotText(value, slot) {
+  const source = String(value ?? '');
+  const normalized = slot.linePolicy === 'single'
+    ? source
     .replace(/[\r\n\u2028\u2029]+/g, ' ')
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
     .replace(/\s+/g, ' ')
-    .trim())
-    .slice(0, KICKER_MAX_LENGTH)
+    .trim()
+    : source;
+  return Array.from(normalized)
+    .slice(0, slot.maxLength)
     .join('');
 }
 
@@ -107,12 +114,12 @@ function rawTextAfterInsertion(element, text) {
   return [...current.slice(0, start), ...Array.from(text), ...current.slice(end)].join('');
 }
 
-function textAfterInsertion(element, text) {
-  return normalizeKickerText(rawTextAfterInsertion(element, text));
+function textAfterInsertion(element, text, slot) {
+  return normalizeSlotText(rawTextAfterInsertion(element, text), slot);
 }
 
-function setPlainText(element, value, placeCaret = false) {
-  const normalized = normalizeKickerText(value);
+function setPlainText(element, value, slot, placeCaret = false) {
+  const normalized = normalizeSlotText(value, slot);
   const hasSingleTextNode = element.childNodes.length === 1 && element.firstChild?.nodeType === Node.TEXT_NODE;
   if (element.textContent !== normalized || !hasSingleTextNode) element.textContent = normalized;
   if (placeCaret) setCaretToEnd(element);
@@ -124,12 +131,13 @@ function activatePreview(initialDrafts = {}) {
   let activeEdit = null;
   let composing = false;
   let pendingRebind = false;
-  let kickerDraft = null;
+  let pendingExperienceRebind = false;
+  const drafts = new Map();
   const overlay = createSelectionOverlay();
 
-  const initialKicker = initialDrafts?.['home.hero.kicker'];
-  if (initialKicker && typeof initialKicker.value === 'string') {
-    kickerDraft = normalizeKickerText(initialKicker.value);
+  for (const [editId, slot] of Object.entries(EDIT_SLOT_CONFIG)) {
+    const draft = initialDrafts?.[editId];
+    if (draft && typeof draft.value === 'string') drafts.set(editId, normalizeSlotText(draft.value, slot));
   }
 
   const positionOverlay = () => {
@@ -150,45 +158,21 @@ function activatePreview(initialDrafts = {}) {
     overlay.outline.hidden = false;
     overlay.label.hidden = false;
     positionOverlay();
-    if (INLINE_EDIT_IDS.has(element.dataset.evaraEditId || '')) {
+    if (slotForElement(element)) {
       element.tabIndex = 0;
       focusWithoutScroll(element);
     }
     window.parent.postMessage(message('selection', { editId: element.dataset.evaraEditId, editable: 'text' }), ORIGIN);
   };
 
-  const reapplyKickerDraft = () => {
-    const element = editableTarget(document.querySelector('[data-evara-edit-id="home.hero.kicker"]'));
-    if (activeEdit && activeEdit.element !== element) {
-      const session = activeEdit;
-      activeEdit = null;
-      composing = false;
-      delete session.element.dataset.evaraStudioEditing;
-      session.element.removeAttribute('contenteditable');
-      if (session.ariaLabel === null) session.element.removeAttribute('aria-label');
-      else session.element.setAttribute('aria-label', session.ariaLabel);
-    }
-    if (selected?.dataset.evaraEditId === 'home.hero.kicker' && selected !== element) {
-      selected = element;
-      if (!element) {
-        overlay.outline.hidden = true;
-        overlay.label.hidden = true;
-      }
-    }
-    if (!element || kickerDraft === null) return;
-    if (activeEdit?.element === element && composing) return;
-    if (element.textContent !== kickerDraft) setPlainText(element, kickerDraft, activeEdit?.element === element);
-    if (selected === null || selected === element) {
-      selected = element;
-      positionOverlay();
-    }
-  };
-
   const sendDraft = (element) => {
-    const value = setPlainText(element, element.textContent || '');
-    kickerDraft = value;
+    const editId = element.dataset.evaraEditId || '';
+    const slot = slotForElement(element);
+    if (!slot) return '';
+    const value = setPlainText(element, element.textContent || '', slot);
+    drafts.set(editId, value);
     window.parent.postMessage(message('edit-draft', {
-      elementId: element.dataset.evaraEditId,
+      elementId: editId,
       value
     }), ORIGIN);
     return value;
@@ -207,41 +191,72 @@ function activatePreview(initialDrafts = {}) {
     positionOverlay();
 
     if (outcome === 'cancel') {
-      kickerDraft = session.originalText;
-      setPlainText(session.element, session.originalText);
+      drafts.set(session.editId, session.originalText);
+      setPlainText(session.element, session.originalText, session.slot);
       window.parent.postMessage(message('edit-cancel', {
-        elementId: session.element.dataset.evaraEditId,
+        elementId: session.editId,
         value: session.originalText
       }), ORIGIN);
       return;
     }
 
-    const value = setPlainText(session.element, session.element.textContent || '');
-    kickerDraft = value;
+    const value = setPlainText(session.element, session.element.textContent || '', session.slot);
+    drafts.set(session.editId, value);
     window.parent.postMessage(message('edit-commit', {
-      elementId: session.element.dataset.evaraEditId,
+      elementId: session.editId,
       value
     }), ORIGIN);
   };
 
   const startEditing = (element) => {
     const editId = element?.dataset.evaraEditId || '';
-    if (activeEdit || !INLINE_EDIT_IDS.has(editId) || selected !== element) return;
-    const originalText = setPlainText(element, element.textContent || '');
-    kickerDraft = originalText;
+    const slot = slotForElement(element);
+    if (activeEdit || !slot || selected !== element) return;
+    const originalText = setPlainText(element, element.textContent || '', slot);
+    drafts.set(editId, originalText);
     activeEdit = {
       element,
+      editId,
+      slot,
       originalText,
       ariaLabel: element.getAttribute('aria-label')
     };
     element.dataset.evaraStudioEditing = 'true';
     element.setAttribute('contenteditable', 'plaintext-only');
-    element.setAttribute('aria-label', 'Editing Home hero kicker. Press Enter to save or Escape to cancel.');
+    element.setAttribute('aria-label', `Editing ${editId}. Press Enter to save or Escape to cancel.`);
     overlay.label.textContent = `Editing · ${editId}`;
     positionOverlay();
     focusWithoutScroll(element);
     setCaretToEnd(element);
     window.parent.postMessage(message('edit-started', { elementId: editId, value: originalText }), ORIGIN);
+  };
+
+  const resolveSlotElement = (editId) => editableTarget(document.querySelector(`[data-evara-edit-id="${editId}"]`));
+
+  const reapplyDrafts = (experienceControlledOnly = false) => {
+    if (activeEdit && resolveSlotElement(activeEdit.editId) !== activeEdit.element) finishEditing('commit');
+
+    const selectedId = selected?.dataset.evaraEditId || '';
+    if (selectedId && EDIT_SLOT_IDS.has(selectedId)) {
+      selected = resolveSlotElement(selectedId);
+      if (!selected) {
+        overlay.outline.hidden = true;
+        overlay.label.hidden = true;
+      }
+    }
+
+    for (const [editId, slot] of Object.entries(EDIT_SLOT_CONFIG)) {
+      if (experienceControlledOnly && !slot.experienceControlled) continue;
+      const draft = drafts.get(editId);
+      if (draft === undefined) continue;
+      const element = resolveSlotElement(editId);
+      if (!element || (activeEdit?.element === element && composing)) continue;
+      if (element.textContent !== draft) setPlainText(element, draft, slot, activeEdit?.element === element);
+      if (selected === null || selected === element) {
+        selected = element;
+        positionOverlay();
+      }
+    }
   };
 
   window.addEventListener('click', (event) => {
@@ -250,6 +265,7 @@ function activatePreview(initialDrafts = {}) {
       if (activeEdit?.element === element) return;
       event.preventDefault();
       event.stopImmediatePropagation();
+      if (activeEdit) finishEditing('commit');
       select(element);
       return;
     }
@@ -264,6 +280,7 @@ function activatePreview(initialDrafts = {}) {
     if (!element) return;
     event.preventDefault();
     event.stopImmediatePropagation();
+    if (activeEdit && activeEdit.element !== element) finishEditing('commit');
     if (selected !== element) select(element);
     startEditing(element);
   }, true);
@@ -289,7 +306,7 @@ function activatePreview(initialDrafts = {}) {
       }
       return;
     }
-    if (event.key === 'Enter' && selected === event.target && INLINE_EDIT_IDS.has(selected.dataset.evaraEditId || '')) {
+    if (event.key === 'Enter' && selected === event.target && slotForElement(selected)) {
       event.preventDefault();
       event.stopImmediatePropagation();
       startEditing(selected);
@@ -309,11 +326,12 @@ function activatePreview(initialDrafts = {}) {
       return;
     }
     if (event.inputType === 'insertText' && typeof event.data === 'string' && !composing) {
+      const slot = activeEdit.slot;
       const rawNext = rawTextAfterInsertion(activeEdit.element, event.data);
-      const next = textAfterInsertion(activeEdit.element, event.data);
-      if (Array.from(rawNext).length > KICKER_MAX_LENGTH) {
+      const next = textAfterInsertion(activeEdit.element, event.data, slot);
+      if (Array.from(rawNext).length > slot.maxLength) {
         event.preventDefault();
-        setPlainText(activeEdit.element, next, true);
+        setPlainText(activeEdit.element, next, slot, true);
         sendDraft(activeEdit.element);
       }
     }
@@ -323,8 +341,8 @@ function activatePreview(initialDrafts = {}) {
     if (!activeEdit || event.target !== activeEdit.element) return;
     event.preventDefault();
     const plainText = event.clipboardData?.getData('text/plain') || '';
-    const next = textAfterInsertion(activeEdit.element, plainText);
-    setPlainText(activeEdit.element, next, true);
+    const next = textAfterInsertion(activeEdit.element, plainText, activeEdit.slot);
+    setPlainText(activeEdit.element, next, activeEdit.slot, true);
     sendDraft(activeEdit.element);
   }, true);
 
@@ -338,7 +356,9 @@ function activatePreview(initialDrafts = {}) {
     sendDraft(activeEdit.element);
     if (pendingRebind) {
       pendingRebind = false;
-      reapplyKickerDraft();
+      const experienceOnly = pendingExperienceRebind;
+      pendingExperienceRebind = false;
+      reapplyDrafts(experienceOnly);
     }
   }, true);
 
@@ -351,7 +371,8 @@ function activatePreview(initialDrafts = {}) {
     if (activeEdit?.element === event.target) finishEditing('commit');
   }, true);
 
-  const scheduleRebind = () => {
+  const scheduleRebind = (experienceControlledOnly = false) => {
+    pendingExperienceRebind ||= experienceControlledOnly;
     if (pendingRebind) return;
     pendingRebind = true;
     requestAnimationFrame(() => {
@@ -360,16 +381,18 @@ function activatePreview(initialDrafts = {}) {
         pendingRebind = true;
         return;
       }
-      reapplyKickerDraft();
+      const experienceOnly = pendingExperienceRebind;
+      pendingExperienceRebind = false;
+      reapplyDrafts(experienceOnly);
     });
   };
 
-  window.addEventListener('evara:experience-applied', scheduleRebind);
-  new MutationObserver(scheduleRebind).observe(document.body, { childList: true, subtree: true });
+  window.addEventListener('evara:experience-applied', () => scheduleRebind(true));
+  new MutationObserver(() => scheduleRebind()).observe(document.body, { childList: true, subtree: true });
 
   window.addEventListener('resize', positionOverlay);
   window.addEventListener('scroll', positionOverlay, true);
-  reapplyKickerDraft();
+  reapplyDrafts();
 }
 
 if (hasAuthorizedParent()) {

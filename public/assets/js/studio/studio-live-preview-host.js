@@ -2,15 +2,14 @@ const PROTOCOL = 'evara:studio-preview:';
 const PROTOCOL_VERSION = 1;
 const ORIGIN = window.location.origin;
 const HOME_ROUTE = '/index.html';
-const EDITABLE_IDS = new Set([
-  'home.hero.kicker',
-  'home.hero.title',
-  'home.hero.subtitle',
-  'home.platform.heading',
-  'home.platform.copy'
-]);
-const INLINE_EDIT_IDS = new Set(['home.hero.kicker']);
-const KICKER_MAX_LENGTH = 180;
+const EDIT_SLOT_CONFIG = Object.freeze({
+  'home.hero.kicker': Object.freeze({ maxLength: 180, experienceControlled: true, linePolicy: 'single' }),
+  'home.hero.title': Object.freeze({ maxLength: 260, experienceControlled: true, linePolicy: 'single' }),
+  'home.hero.subtitle': Object.freeze({ maxLength: 1200, experienceControlled: true, linePolicy: 'single' }),
+  'home.platform.heading': Object.freeze({ maxLength: 180, experienceControlled: false, linePolicy: 'single' }),
+  'home.platform.copy': Object.freeze({ maxLength: 1200, experienceControlled: false, linePolicy: 'single' })
+});
+const EDIT_SLOT_IDS = new Set(Object.keys(EDIT_SLOT_CONFIG));
 
 let scheduled = false;
 
@@ -24,19 +23,31 @@ function previewMessage(type, nonce, extra = {}) {
   return { type: `${PROTOCOL}${type}`, protocolVersion: PROTOCOL_VERSION, nonce, ...extra };
 }
 
-function normalizeKickerText(value) {
-  return Array.from(String(value ?? '')
+function normalizeSlotText(value, slot) {
+  const source = String(value ?? '');
+  const normalized = slot.linePolicy === 'single'
+    ? source
     .replace(/[\r\n\u2028\u2029]+/g, ' ')
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
     .replace(/\s+/g, ' ')
-    .trim())
-    .slice(0, KICKER_MAX_LENGTH)
+    .trim()
+    : source;
+  return Array.from(normalized)
+    .slice(0, slot.maxLength)
     .join('');
 }
 
 function draftPayload(drafts) {
-  const draft = drafts.get('home.hero.kicker');
-  return draft ? { 'home.hero.kicker': { ...draft } } : {};
+  const payload = {};
+  for (const [editId, slot] of Object.entries(EDIT_SLOT_CONFIG)) {
+    const draft = drafts.get(editId);
+    if (!draft) continue;
+    payload[editId] = {
+      ...draft,
+      value: normalizeSlotText(draft.value, slot)
+    };
+  }
+  return payload;
 }
 
 function isExpectedMessage(event, iframe, nonce, type) {
@@ -75,6 +86,7 @@ function mountLiveHome(stage) {
   host.dataset.selectionState = 'waiting';
   const drafts = new Map();
   const editSessions = new Map();
+  let activeEditId = null;
 
   const status = document.createElement('p');
   status.className = 'studio-live-preview-status';
@@ -98,6 +110,7 @@ function mountLiveHome(stage) {
   window.addEventListener('message', (event) => {
     if (isExpectedMessage(event, iframe, nonce, 'ready')) {
       editSessions.clear();
+      activeEditId = null;
       iframe.contentWindow?.postMessage(previewMessage('activate', nonce, {
         drafts: draftPayload(drafts)
       }), ORIGIN);
@@ -108,7 +121,7 @@ function mountLiveHome(stage) {
 
     if (isExpectedMessage(event, iframe, nonce, 'selection')) {
       const id = String(event.data.editId || '');
-      if (!EDITABLE_IDS.has(id)) return;
+      if (!EDIT_SLOT_IDS.has(id)) return;
       host.dataset.selectionState = 'selected';
       host.dataset.selectedEditId = id;
       status.textContent = `Live Home · selected ${id}`;
@@ -119,28 +132,32 @@ function mountLiveHome(stage) {
     for (const type of editMessageTypes) {
       if (!isExpectedMessage(event, iframe, nonce, type)) continue;
       const editId = String(event.data.elementId || '');
-      if (!INLINE_EDIT_IDS.has(editId)) return;
+      const slot = EDIT_SLOT_CONFIG[editId];
+      if (!slot) return;
 
       if (type === 'edit-started') {
+        if (activeEditId && activeEditId !== editId) return;
+        if (editSessions.has(editId)) return;
         const priorDraft = drafts.get(editId);
         editSessions.set(editId, priorDraft ? { ...priorDraft } : null);
         if (!priorDraft) {
           drafts.set(editId, {
-            value: normalizeKickerText(event.data.value),
+            value: normalizeSlotText(event.data.value, slot),
             dirty: false,
             committedInSession: false
           });
         }
+        activeEditId = editId;
         host.dataset.selectionState = 'editing';
         status.textContent = `Live Home · editing ${editId}`;
         return;
       }
 
-      if (!editSessions.has(editId)) return;
+      if (activeEditId !== editId || !editSessions.has(editId)) return;
 
       if (type === 'edit-draft') {
         drafts.set(editId, {
-          value: normalizeKickerText(event.data.value),
+          value: normalizeSlotText(event.data.value, slot),
           dirty: true,
           committedInSession: false
         });
@@ -149,11 +166,12 @@ function mountLiveHome(stage) {
 
       if (type === 'edit-commit') {
         drafts.set(editId, {
-          value: normalizeKickerText(event.data.value),
+          value: normalizeSlotText(event.data.value, slot),
           dirty: true,
           committedInSession: true
         });
         editSessions.delete(editId);
+        activeEditId = null;
         host.dataset.selectionState = 'selected';
         status.textContent = `Live Home · session draft kept for ${editId}`;
         return;
@@ -163,6 +181,7 @@ function mountLiveHome(stage) {
       if (priorDraft) drafts.set(editId, priorDraft);
       else drafts.delete(editId);
       editSessions.delete(editId);
+      activeEditId = null;
       host.dataset.selectionState = 'selected';
       status.textContent = `Live Home · edit cancelled for ${editId}`;
       return;
