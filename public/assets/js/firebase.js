@@ -614,8 +614,14 @@ export function startGlobalAuthSync() {
   if (runtime.globalAuthSyncStarted) return;
   runtime.globalAuthSyncStarted = true;
 
-  document.documentElement.classList.add("auth-pending");
-  document.body?.classList.add("auth-pending", "app-loading");
+  // Public routes still observe and verify Firebase sessions, but their safe
+  // presentation must not be re-locked while that enrichment is pending.
+  // Private and auth-required routes retain the existing fail-closed lock.
+  const requiresAuthPresentationLock = document.body?.dataset?.routeGuard !== "public";
+  if (requiresAuthPresentationLock) {
+    document.documentElement.classList.add("auth-pending");
+    document.body?.classList.add("auth-pending", "app-loading");
+  }
 
   onAuthStateChanged(auth, async (user) => {
     runtime.currentUser = user;

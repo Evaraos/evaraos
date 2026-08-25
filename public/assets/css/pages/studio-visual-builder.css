@@ -533,3 +533,121 @@ body.studio-visual-page {
   .studio-node-grid { grid-template-columns: 1fr; }
   .studio-node { grid-column: 1 / -1 !important; }
 }
+
+/*
+ * The builder toolbar is a fixed dark Studio material. Keep its typography
+ * independent from the surrounding adaptive page environment, and allow the
+ * authority and journal controls injected at runtime to retain their labels.
+ */
+html[data-theme="adaptive"][data-environment] .visual-studio {
+  --studio-text: var(--surface-on-dark-primary);
+  --studio-muted: var(--surface-on-dark-secondary);
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+body.studio-visual-page #appRoot {
+  min-height: 100dvh;
+  height: 100dvh;
+}
+
+html[data-theme="adaptive"][data-environment] .studio-topbar {
+  grid-template-columns: minmax(300px, 1fr) auto minmax(0, 1.55fr);
+  grid-template-rows: auto;
+  min-height: 62px;
+  height: auto;
+  color: var(--surface-on-dark-primary) !important;
+}
+
+html[data-theme="adaptive"][data-environment] .studio-topbar :is(
+  .studio-brand-copy strong,
+  .studio-mark,
+  .studio-page-picker,
+  .studio-role-preview select,
+  .studio-viewport-switcher button,
+  .studio-top-actions button,
+  .studio-top-actions [role="button"]
+) {
+  color: var(--surface-on-dark-primary) !important;
+  -webkit-text-fill-color: var(--surface-on-dark-primary) !important;
+}
+
+html[data-theme="adaptive"][data-environment] .studio-topbar :is(
+  .studio-brand-copy span,
+  .studio-document-status:not([data-state="blocked"]):not([data-state="release-blocked"]):not([data-state="recovery-required"]),
+  .studio-layout-save-status
+) {
+  color: var(--surface-on-dark-secondary) !important;
+  -webkit-text-fill-color: var(--surface-on-dark-secondary) !important;
+}
+
+html[data-theme="adaptive"][data-environment] .studio-topbar .studio-production-authority-badge {
+  color: var(--surface-on-dark-secondary) !important;
+}
+
+html[data-theme="adaptive"][data-environment] .studio-topbar .studio-production-authority-badge > span {
+  display: inline;
+  color: var(--surface-on-dark-secondary) !important;
+  -webkit-text-fill-color: var(--surface-on-dark-secondary) !important;
+}
+
+html[data-theme="adaptive"][data-environment] .studio-topbar .studio-production-authority-badge :is(strong, button) {
+  color: var(--surface-on-dark-primary) !important;
+  -webkit-text-fill-color: var(--surface-on-dark-primary) !important;
+}
+
+html[data-theme="adaptive"][data-environment] .studio-topbar :is(.studio-page-picker, .studio-role-preview select) {
+  background: rgba(255, 255, 255, 0.09) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+html[data-theme="adaptive"][data-environment] .studio-topbar .studio-top-actions {
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: flex-end;
+  row-gap: 7px;
+}
+
+html[data-theme="adaptive"][data-environment] .studio-topbar .studio-top-actions > * {
+  flex: 0 0 auto;
+}
+
+html[data-theme="adaptive"][data-environment] .studio-topbar :is(
+  .studio-icon-button,
+  .studio-text-button,
+  .studio-primary-button,
+  .studio-canvas-sandbox-toggle
+) {
+  white-space: nowrap;
+}
+
+@media (max-width: 980px) {
+  html[data-theme="adaptive"][data-environment] .studio-topbar {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  }
+}
+
+@media (max-width: 720px) {
+  html[data-theme="adaptive"][data-environment] .visual-studio {
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  html[data-theme="adaptive"][data-environment] .studio-topbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    overflow: visible;
+  }
+
+  html[data-theme="adaptive"][data-environment] .studio-top-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  html[data-theme="adaptive"][data-environment] .studio-top-actions .studio-role-preview {
+    display: flex;
+  }
+
+  html[data-theme="adaptive"][data-environment] .studio-production-authority-badge > span {
+    display: inline;
+  }
+}

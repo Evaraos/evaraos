@@ -1,9 +1,16 @@
-import * as Core from "./theme-core-adaptive.js?v=adaptive-liquid-v11";
+import * as Core from "./theme-core-adaptive.js?v=adaptive-liquid-v18-surface-text";
 
 export const EVARAOS_THEME_BUILD = "adaptive-liquid-v13-public-critical";
 export const applyAppearance = Core.applyAppearance;
 export const setAppearance = Core.setAppearance;
 export const getAppearance = Core.getAppearance;
+export const VALID_MODES = Core.VALID_MODES;
+export const saveAppearance = (value = {}) => {
+  const appearance = Core.normalizeAppearance({ ...Core.getAppearance(), ...value, updatedAt: value.updatedAt || new Date().toISOString() });
+  void Core.setAppearance(appearance);
+  return appearance;
+};
+export const resetAppearance = () => saveAppearance({ ...Core.DEFAULT_APPEARANCE });
 export const getTheme = Core.getTheme;
 export const getThemeMode = Core.getThemeMode;
 export const setTheme = Core.setTheme;

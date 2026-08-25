@@ -40,8 +40,10 @@
 
   const imageUrl = typeof saved.imageUrl === "string" && saved.imageUrl.startsWith("data:image/svg") === false ? saved.imageUrl.trim() : "";
   const requestedMode = VALID_MODES.includes(saved.mode) ? saved.mode : "system";
-  const mode = requestedMode === "image" && !imageUrl ? "system" : requestedMode;
-  const environment = mode === "system" ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : mode;
+  const mode = requestedMode;
+  const environment = mode === "dark" ? "dark" : mode === "light" ? "light" : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const imageFit = saved.imageFit === "contain" ? "contain" : "cover";
+  const imageBlur = Math.min(24, Math.max(0, Number(saved.imageBlur) || 0));
   const fallback = environment === "dark"
     ? "radial-gradient(circle at 18% 12%,#10243f 0,transparent 38%),radial-gradient(circle at 83% 22%,#211b55 0,transparent 42%),radial-gradient(circle at 58% 88%,#4a1c31 0,transparent 43%),linear-gradient(145deg,#080b12,#151b28 48%,#232b3d 72%,#080b12)"
     : "radial-gradient(circle at 18% 12%,#d8f0ff 0,transparent 38%),radial-gradient(circle at 83% 22%,#d5d0ff 0,transparent 42%),radial-gradient(circle at 58% 88%,#ffd6df 0,transparent 43%),linear-gradient(145deg,#f7fbff,#dbe9f7 48%,#f6e9ec 72%,#eef5fb)";
@@ -59,6 +61,8 @@
   root.style.colorScheme = environment === "dark" ? "dark" : "light";
   root.style.setProperty("--evara-wallpaper-image", wallpaper);
   root.style.setProperty("--evara-wallpaper-position", saved.imagePosition || "center center");
+  root.style.setProperty("--evara-wallpaper-fit", imageFit);
+  root.style.setProperty("--evara-wallpaper-blur", `${mode === "image" ? imageBlur : 0}px`);
   root.style.setProperty("--evara-wallpaper-dim", String(mode === "image" ? (Number(saved.wallpaperDim) || 0.08) : 0));
   root.style.setProperty("--evara-glass-tint", String(Number(saved.glassTint) || 0.46));
   root.style.setProperty("--evara-glass-tint-pct", `${Math.round((Number(saved.glassTint) || 0.46) * 100)}%`);
@@ -71,7 +75,7 @@
     prepaint.id = "evaraPrepaintAuthority";
     document.head.appendChild(prepaint);
   }
-  prepaint.textContent = `html{min-height:100%;min-height:100dvh;background:${canvas} center/cover fixed no-repeat!important;color-scheme:${environment === "dark" ? "dark" : "light"}!important}body{min-height:100dvh;background:transparent!important}`;
+  prepaint.textContent = `html{min-height:100%;min-height:100dvh;background:${canvas} ${saved.imagePosition || "center center"}/${imageFit} fixed no-repeat!important;color-scheme:${environment === "dark" ? "dark" : "light"}!important}body{min-height:100dvh;background:transparent!important}`;
 
   root.classList.remove("evara-boot-lock");
   root.classList.add("evara-theme-painted");

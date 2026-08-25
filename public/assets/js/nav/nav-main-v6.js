@@ -1,9 +1,9 @@
-const NAV_BUILD="nav-v59-responsive-core";
+const NAV_BUILD="nav-v60-shell-recovery";
 const PUBLIC_HOME_SHELL_STYLESHEET="/assets/css/nav/nav-shell.css?v=home-1";
-let NAV_STATE,getNavShell,renderNav,applyProgress,bindScrollBehavior,animateNav,isVerifiedPublicHomeSession;
+let NAV_STATE,getNavShell,renderNav,applyProgress,bindScrollBehavior,animateNav,isCanonicalPublicRoute,isVerifiedSession;
 let accountSystemsPromise=null;
-let publicHomeSessionLifecycleBound=false;
-let publicHomeMenu=null;
+let sessionLifecycleBound=false;
+let publicMenu=null;
 
 async function loadCore(){
   const [config,utils,renderer]=await Promise.all([
@@ -13,7 +13,8 @@ async function loadCore(){
   ]);
   NAV_STATE=config.NAV_STATE;
   getNavShell=utils.getNavShell;
-  isVerifiedPublicHomeSession=utils.isVerifiedPublicHomeSession;
+  isCanonicalPublicRoute=utils.isCanonicalPublicRoute;
+  isVerifiedSession=utils.isVerifiedSession;
   renderNav=renderer.renderNav;
 }
 
@@ -54,6 +55,7 @@ function ready(){
   requestAnimationFrame(()=>{
     document.documentElement.dataset.evaraosNavReady="true";
     window.EvaraLoader?.markNavReady?.();
+    revealPublicHomeShell();
     window.dispatchEvent(new CustomEvent("evara:nav-ready",{detail:{build:NAV_BUILD,at:Date.now()}}));
     if(!window.EvaraLoader){
       const mode=document.body?.dataset?.routeGuard||"";
@@ -73,35 +75,50 @@ function keepVisible(){
   });
 }
 
-function bindPublicHomeGuestControls(menu){
+function isCanonicalPublicPage(){
+  return isCanonicalPublicRoute?.()===true;
+}
+
+function revealPublicHomeShell(){
+  if(!isPublicHome())return;
+  // Home may render its universal shell before Firebase finishes enriching an
+  // optional session. Its presentation is public, so it must not inherit a
+  // lingering auth/loading lock from that asynchronous work.
+  document.documentElement.classList.remove("auth-pending");
+  document.body?.classList.remove("auth-pending","app-loading");
+  document.body?.classList.add("app-ready");
+  window.EvaraLoader?.completeNavigationLoad?.();
+}
+
+function bindPublicGuestControls(menu){
   const close=document.querySelector("[data-public-home-menu-close]");
-  if(!close||close.dataset.publicHomeCloseBound==="true")return;
-  close.dataset.publicHomeCloseBound="true";
+  if(!close||close.dataset.publicGuestCloseBound==="true")return;
+  close.dataset.publicGuestCloseBound="true";
   close.addEventListener("click",event=>{
     event.preventDefault();
     menu?.closeMenu?.();
   });
 }
 
-function bindPublicHomeSessionLifecycle(){
-  if(publicHomeSessionLifecycleBound||!isPublicHome())return;
-  publicHomeSessionLifecycleBound=true;
+function bindSessionLifecycle(){
+  if(sessionLifecycleBound)return;
+  sessionLifecycleBound=true;
   window.addEventListener("evara:session-ready",()=>{
-    requestAnimationFrame(()=>bindPublicHomeGuestControls(publicHomeMenu));
-    if(isVerifiedPublicHomeSession?.())scheduleAccountSystems();
+    if(isCanonicalPublicPage())requestAnimationFrame(()=>bindPublicGuestControls(publicMenu));
+    if(isVerifiedSession?.())scheduleAccountSystems();
   });
 }
 
 async function bindCoreSystems(){
-  if(isPublicHome()){
+  if(isCanonicalPublicPage()){
     const [menu,session]=await Promise.all([
       optional("./nav-menu.js"),
       optional("./nav-session.js")
     ]);
-    publicHomeMenu=menu;
-    try{menu?.bindMenu?.();bindPublicHomeGuestControls(menu)}catch(error){console.warn("Public Home menu binding failed:",error)}
+    publicMenu=menu;
+    try{menu?.bindMenu?.();bindPublicGuestControls(menu)}catch(error){console.warn("Public guest menu binding failed:",error)}
     try{session?.bindRuntimeRefresh?.()}catch(error){console.warn("Nav session refresh failed:",error)}
-    bindPublicHomeSessionLifecycle();
+    bindSessionLifecycle();
     try{session?.startVerifiedPublicHomeSession?.()}catch(error){console.warn("Verified public Home session failed:",error)}
     try{window.EvaraBrand?.apply?.();window.EvaraTheme?.updateThemeControls?.();window.EvaraTheme?.refreshAdaptiveGlass?.()}catch(error){console.warn("Nav theme refresh failed:",error)}
     return;
@@ -116,6 +133,7 @@ async function bindCoreSystems(){
   try{menu?.bindMenu?.()}catch(error){console.warn("Menu binding failed:",error)}
   try{interactions?.bindNavInteractions?.()}catch(error){console.warn("Nav interactions failed:",error)}
   try{session?.bindRuntimeRefresh?.()}catch(error){console.warn("Nav session refresh failed:",error)}
+  bindSessionLifecycle();
   try{window.EvaraBrand?.apply?.();window.EvaraTheme?.updateThemeControls?.();window.EvaraTheme?.refreshAdaptiveGlass?.()}catch(error){console.warn("Nav theme refresh failed:",error)}
 }
 
@@ -132,7 +150,7 @@ function bindAccountSystems(){
 }
 
 function scheduleAccountSystems(){
-  if(isPublicHome()&&!isVerifiedPublicHomeSession?.())return;
+  if(!isVerifiedSession?.())return;
   bindAccountSystems().catch(error=>console.warn("Account nav systems failed:",error));
 }
 

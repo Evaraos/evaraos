@@ -1,9 +1,10 @@
 import { NAV_STATE } from "./nav-config.js";
-import { isVerifiedPublicHomeSession, syncThemeLabel } from "./nav-utils.js";
+import { isCanonicalPublicRoute, isVerifiedSession, syncThemeLabel } from "./nav-utils.js";
+import { canAccessPageName } from "../access-control.js";
 import { applyProgress } from "./nav-scroll.js";
 import { renderNav } from "./nav-render.js";
 
-const NAV_BUILD = "nav-v59-responsive-core";
+const NAV_BUILD = "nav-v60-shell-recovery";
 const VERIFIED_PUBLIC_HOME_SOURCE = "verified-public-home";
 let publicHomeSessionStarted = false;
 let publicHomeSessionSequence = 0;
@@ -12,6 +13,10 @@ function isPublicHomeRoute() {
   const mode = document.body?.dataset?.routeGuard || "";
   const path = window.location.pathname.toLowerCase();
   return mode === "public" && (path === "/" || path.endsWith("/index.html"));
+}
+
+function isPublicBottomNavRoute() {
+  return canAccessPageName(window.location.pathname, "guest");
 }
 
 function publishPublicHomeSession(detail = {}) {
@@ -106,8 +111,8 @@ async function loadCanonicalBinders() {
 }
 
 function restoreBottomNavAfterRender() {
-  if (document.body?.dataset?.routeGuard === "auth" || isPublicHomeRoute()) return;
-  import("./nav-bottom.js?v=nav-v59-responsive-core")
+  if (document.body?.dataset?.routeGuard === "auth" && !isPublicBottomNavRoute()) return;
+  import("./nav-bottom.js?v=nav-v60-shell-recovery")
     .then(({ mountBottomNav }) => mountBottomNav())
     .catch((error) => console.warn("Bottom nav restore failed:", error));
 }
@@ -116,7 +121,7 @@ export async function rebindNavAfterRender() {
   const binders = await loadCanonicalBinders();
   binders.menu.bindMenu();
 
-  if (!isPublicHomeRoute() || isVerifiedPublicHomeSession()) {
+  if (!isCanonicalPublicRoute() || isVerifiedSession()) {
     binders.events.bindAllNavEvents();
     binders.interactions.bindNavInteractions();
 

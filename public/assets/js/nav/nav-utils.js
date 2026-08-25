@@ -1,3 +1,5 @@
+import { canAccessPageName } from "../access-control.js";
+
 export function getMount() {
   return document.getElementById("universalNavRoot") || document.getElementById("universalNav");
 }
@@ -37,15 +39,22 @@ export function isPublicHomeRoute() {
   return mode === "public" && (path === "/" || path.endsWith("/index.html"));
 }
 
-export function isVerifiedPublicHomeSession(session = window.EvaraRouteSession) {
+export function isCanonicalPublicRoute() {
+  return canAccessPageName(window.location.pathname, "guest");
+}
+
+export function isVerifiedSession(session = window.EvaraRouteSession) {
   const verifiedSource = ["verified-public-home", "verified-route-guard"].includes(session?.source);
   return Boolean(
-    isPublicHomeRoute()
-    && session?.authenticated === true
+    session?.authenticated === true
     && verifiedSource
     && session?.lifecycle === "active"
     && session?.role
   );
+}
+
+export function isVerifiedPublicHomeSession(session = window.EvaraRouteSession) {
+  return isPublicHomeRoute() && isVerifiedSession(session);
 }
 
 export function getStoredUser() {
@@ -83,7 +92,8 @@ export function isPrivateRoutePending() {
 }
 
 export function isAuthenticated() {
-  if (isPublicHomeRoute()) return isVerifiedPublicHomeSession();
+  if (isCanonicalPublicRoute()) return isVerifiedSession();
+  if (isVerifiedSession()) return true;
   if (window.EvaraRouteSession?.authenticated) return true;
   const user = getStoredUser();
   if (user && (user.uid || user.email)) return true;
@@ -91,8 +101,8 @@ export function isAuthenticated() {
 }
 
 export function getRole() {
-  if (isPublicHomeRoute()) {
-    return isVerifiedPublicHomeSession()
+  if (isCanonicalPublicRoute()) {
+    return isVerifiedSession()
       ? String(window.EvaraRouteSession.role).toLowerCase()
       : "guest";
   }
@@ -112,8 +122,8 @@ export function getRole() {
 
 export function getDisplayName() {
   const routeSession = window.EvaraRouteSession;
-  if (isPublicHomeRoute()) {
-    return isVerifiedPublicHomeSession(routeSession)
+  if (isCanonicalPublicRoute()) {
+    return isVerifiedSession(routeSession)
       ? routeSession.displayName || routeSession.email || "Profile"
       : "Evaraos Guest";
   }

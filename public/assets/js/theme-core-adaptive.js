@@ -1,20 +1,22 @@
-import { initAdaptiveGlass, refreshAdaptiveGlass, getEffectiveWallpaper } from "./theme-adaptive.js?v=adaptive-liquid-v8";
-import { installUniversalTextInversion } from "./theme-text-inversion.js?v=adaptive-liquid-v8";
+import { initAdaptiveGlass, refreshAdaptiveGlass, getEffectiveWallpaper } from "./theme-adaptive.js?v=adaptive-liquid-v12";
 
 export const APPEARANCE_KEY = "evaraos-appearance";
 export const VALID_MODES = Object.freeze(["light", "dark", "system", "image"]);
 export const IMAGE_POSITIONS = Object.freeze(["center center", "center top", "center bottom", "left center", "right center"]);
+export const IMAGE_FITS = Object.freeze(["cover", "contain"]);
 export const DEFAULT_APPEARANCE = Object.freeze({
   mode: "system",
   imageUrl: "",
   imagePosition: "center center",
+  imageFit: "cover",
+  imageBlur: 0,
   wallpaperDim: 0.08,
   glassTint: 0.46,
   adaptiveContrast: true,
   updatedAt: null
 });
 
-const THEME_STYLESHEET = "/assets/css/theme.css?v=adaptive-liquid-v10";
+const THEME_STYLESHEET = "/assets/css/theme.css?v=adaptive-liquid-v14-surface-text";
 const clamp = (value, min, max, fallback) => {
   const number = Number(value);
   return Number.isFinite(number) ? Math.min(max, Math.max(min, number)) : fallback;
@@ -51,6 +53,8 @@ export function normalizeAppearance(value = {}) {
     mode,
     imageUrl: normalizeImageUrl(value.imageUrl),
     imagePosition: IMAGE_POSITIONS.includes(value.imagePosition) ? value.imagePosition : DEFAULT_APPEARANCE.imagePosition,
+    imageFit: IMAGE_FITS.includes(value.imageFit) ? value.imageFit : DEFAULT_APPEARANCE.imageFit,
+    imageBlur: clamp(value.imageBlur, 0, 24, DEFAULT_APPEARANCE.imageBlur),
     wallpaperDim: clamp(value.wallpaperDim, 0, 0.34, migratedDim),
     glassTint: clamp(value.glassTint, 0.18, 0.76, migratedTint),
     adaptiveContrast: value.adaptiveContrast !== false,
@@ -71,7 +75,7 @@ export function systemTheme() {
 }
 
 export function resolvedTheme(value = getAppearance()) {
-  return value.mode === "system" ? systemTheme() : value.mode;
+  return value.mode === "light" || value.mode === "dark" ? value.mode : systemTheme();
 }
 
 export const getTheme = () => "adaptive";
@@ -90,7 +94,7 @@ function ensureStylesheet() {
   const existing = [...document.querySelectorAll('link[rel="stylesheet"]')]
     .find((link) => link.href.includes("/assets/css/theme.css"));
   if (existing) {
-    if (!existing.href.includes("adaptive-liquid-v10")) existing.href = THEME_STYLESHEET;
+    if (!existing.href.includes("adaptive-liquid-v14-surface-text")) existing.href = THEME_STYLESHEET;
     return existing;
   }
   const link = document.createElement("link");
@@ -107,6 +111,8 @@ function setWallpaperVariables(appearance, environment) {
     : presetWallpaper(environment);
   root.style.setProperty("--evara-wallpaper-image", image);
   root.style.setProperty("--evara-wallpaper-position", appearance.imagePosition);
+  root.style.setProperty("--evara-wallpaper-fit", appearance.imageFit);
+  root.style.setProperty("--evara-wallpaper-blur", `${appearance.mode === "image" ? appearance.imageBlur : 0}px`);
   root.style.setProperty("--evara-wallpaper-dim", String(appearance.mode === "image" ? appearance.wallpaperDim : 0));
   root.style.setProperty("--evara-glass-tint", String(appearance.glassTint));
   root.style.setProperty("--evara-glass-tint-pct", `${Math.round(appearance.glassTint * 100)}%`);
@@ -115,7 +121,7 @@ function setWallpaperVariables(appearance, environment) {
 export async function applyAppearance(value = getAppearance(), options = {}) {
   const appearance = normalizeAppearance(value);
   const environment = resolvedTheme(appearance);
-  const signature = JSON.stringify([appearance.mode, environment, appearance.imageUrl, appearance.imagePosition, appearance.wallpaperDim, appearance.glassTint, appearance.adaptiveContrast]);
+  const signature = JSON.stringify([appearance.mode, environment, appearance.imageUrl, appearance.imagePosition, appearance.imageFit, appearance.imageBlur, appearance.wallpaperDim, appearance.glassTint, appearance.adaptiveContrast]);
   if (!options.force && signature === appliedSignature) return appearance;
 
   applyQueue = applyQueue.then(async () => {
@@ -129,6 +135,7 @@ export async function applyAppearance(value = getAppearance(), options = {}) {
     root.toggleAttribute("data-has-wallpaper", appearance.mode === "image" && Boolean(appearance.imageUrl));
     setWallpaperVariables(appearance, environment);
     appliedSignature = signature;
+    await initAdaptiveGlass?.(appearance, getEffectiveWallpaper(appearance.mode === "image" ? appearance.imageUrl : ""));
     refreshAdaptiveGlass?.();
     dispatchEvent(new CustomEvent("evara:theme-applied", { detail: { ...appearance, resolved: environment } }));
   }).catch((error) => console.warn("Appearance apply failed:", error));
@@ -148,6 +155,8 @@ export const setTheme = () => applyAppearance(getAppearance(), { force: true });
 export const setAppearanceImage = (imageUrl, imagePosition = "center center") => setAppearance({ mode: "image", imageUrl, imagePosition });
 export const setWallpaperImage = setAppearanceImage;
 export const setWallpaperPosition = (imagePosition) => setAppearance({ imagePosition });
+export const setWallpaperFit = (imageFit) => setAppearance({ imageFit });
+export const setWallpaperBlur = (imageBlur) => setAppearance({ imageBlur });
 export const setWallpaperDim = (wallpaperDim) => setAppearance({ wallpaperDim });
 export const setGlassTint = (glassTint) => setAppearance({ glassTint });
 export const setAdaptiveContrast = (adaptiveContrast) => setAppearance({ adaptiveContrast });
@@ -158,11 +167,9 @@ export function initTheme() {
   if (initialized) return;
   initialized = true;
   ensureStylesheet();
-  installUniversalTextInversion?.();
-  initAdaptiveGlass?.();
   applyAppearance(getAppearance(), { force: true });
   matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => {
-    if (getAppearance().mode === "system") applyAppearance(getAppearance(), { force: true });
+    if (["system", "image"].includes(getAppearance().mode)) applyAppearance(getAppearance(), { force: true });
   });
 }
 
@@ -179,6 +186,8 @@ window.EvaraTheme = {
   setAppearanceImage,
   setWallpaperImage,
   setWallpaperPosition,
+  setWallpaperFit,
+  setWallpaperBlur,
   setWallpaperDim,
   setGlassTint,
   setAdaptiveContrast,

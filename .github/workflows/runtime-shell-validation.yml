@@ -161,6 +161,11 @@ jobs:
           const navRenderSource = fs.readFileSync('public/assets/js/nav/nav-render.js', 'utf8');
           const navScrollSource = fs.readFileSync('public/assets/js/nav/nav-scroll.js', 'utf8');
           const navSessionSource = fs.readFileSync('public/assets/js/nav/nav-session.js', 'utf8');
+          const navUtilsSource = fs.readFileSync('public/assets/js/nav/nav-utils.js', 'utf8');
+          const navBottomSource = fs.readFileSync('public/assets/js/nav/nav-bottom.js', 'utf8');
+          const navBottomCssSource = fs.readFileSync('public/assets/css/nav/nav-bottom.css', 'utf8');
+          const navLogoutSource = fs.readFileSync('public/assets/js/nav/nav-logout.js', 'utf8');
+          const accountStatusRuntimeSource = fs.readFileSync('public/assets/js/account-status.js', 'utf8');
           const navMotionSource = fs.readFileSync('public/assets/css/nav/nav-motion.css', 'utf8');
           const baseSource = fs.readFileSync('public/assets/css/base.css', 'utf8');
           const accountStatusSource = fs.readFileSync('public/account-status.html', 'utf8');
@@ -169,6 +174,14 @@ jobs:
           }
           if (!firebaseSource.includes('__EVARAOS_FIREBASE_RUNTIME_V2__')) {
             failures.push('firebase.js: shared authentication runtime guard is missing');
+          }
+          const globalAuthSyncBody = firebaseSource.match(/export function startGlobalAuthSync\(\)\s*\{([\s\S]*?)\n\}/)?.[1] || '';
+          if (!globalAuthSyncBody.includes('const requiresAuthPresentationLock = document.body?.dataset?.routeGuard !== "public";')
+            || !globalAuthSyncBody.includes('if (requiresAuthPresentationLock) {')
+            || !globalAuthSyncBody.includes('document.documentElement.classList.add("auth-pending");')
+            || !globalAuthSyncBody.includes('document.body?.classList.add("auth-pending", "app-loading");')
+            || !globalAuthSyncBody.includes('onAuthStateChanged(auth, async (user) => {')) {
+            failures.push('firebase.js: public routes must continue auth sync without a global presentation lock; protected routes must retain that lock');
           }
 
           const firebaseExports = new Set();
@@ -208,67 +221,144 @@ jobs:
             || !navRebindBody.includes('binders.menu.bindMenu();')) {
             failures.push('nav-session.js: post-render refresh must restore canonical menu binding');
           }
-          if (!/if\s*\(guardMode\s*!==\s*["']auth["']\s*&&\s*!isPublicHome\)\s*\{[\s\S]*?safeImport\(["']\.\/nav\/nav-bottom\.js\?v=nav-v59-responsive-core["']\)/.test(navEntrySource)) {
-            failures.push('nav.js: auth routes and public Home must remain excluded from bottom navigation loading');
+          const accessControlSource = fs.readFileSync('public/assets/js/access-control.js', 'utf8');
+          const publicPagesDeclaration = accessControlSource.match(/export const PUBLIC_PAGES\s*=\s*Object\.freeze\(new Set\(\[([\s\S]*?)\]\)\)/)?.[1] || '';
+          const canonicalPublicPages = new Set(Array.from(publicPagesDeclaration.matchAll(/["']([^"']+)["']/g), (match) => match[1]));
+          const home2GuestPublicRoutes = ['index.html', 'login.html', 'signup.html', 'reset.html', 'staff_application.html'];
+          const entryUsesCanonicalPublicRouteAuthority = /canAccessPageName\(\s*pathname\s*,\s*["']guest["']\s*\)/.test(navEntrySource);
+          const sessionUsesCanonicalPublicRouteAuthority = /canAccessPageName\(\s*window\.location\.pathname\s*,\s*["']guest["']\s*\)/.test(navSessionSource);
+          const entryMountsPublicBottomNavImmediately = /if\s*\(isPublicBottomNavRoute\)\s*loadBottomNav\(\);/.test(navEntrySource);
+          if (!home2GuestPublicRoutes.every((route) => canonicalPublicPages.has(route))
+            || !entryUsesCanonicalPublicRouteAuthority
+            || !sessionUsesCanonicalPublicRouteAuthority
+            || !entryMountsPublicBottomNavImmediately
+            || /GUEST_BOTTOM_NAV_PAGE_NAMES|GUEST_BOTTOM_NAV_PAGE/.test(`${navEntrySource}\n${navSessionSource}`)
+            || !/public.*bottom|bottom.*public/i.test(navEntrySource)
+            || !/public.*bottom|bottom.*public/i.test(navSessionSource)
+            || !navEntrySource.includes('safeImport("./nav/nav-bottom.js?v=nav-v60-shell-recovery")')) {
+            failures.push('HOME-2: canonical public routes must request the bottom navigation immediately from route authority, independently of transient session timing, without a duplicate route registry');
           }
-          if (!navSessionSource.includes('document.body?.dataset?.routeGuard === "auth" || isPublicHomeRoute()')
-            || !navSessionSource.includes('import("./nav-bottom.js?v=nav-v59-responsive-core")')
-            || !navSessionSource.includes('({ mountBottomNav }) => mountBottomNav()')) {
-            failures.push('nav-session.js: eligible post-render refresh must reuse canonical bottom navigation mounting');
+          if (!navSessionSource.includes('import("./nav-bottom.js?v=nav-v60-shell-recovery")')
+            || !navSessionSource.includes('({ mountBottomNav }) => mountBottomNav()')
+            || !navRebindBody.includes('restoreBottomNavAfterRender();')
+            || !navBottomSource.includes('if (force) layer.querySelector(".eva-bottom-nav")?.remove();')
+            || !navBottomSource.includes('if (layer.querySelector(".eva-bottom-nav")) return false;')) {
+            failures.push('HOME-2: eligible guest and verified authenticated routes must restore one canonical bottom navigation after render');
+          }
+          const guestDefaultItems = navBottomSource.match(/GUEST_DEFAULT_ITEMS\s*=\s*\[([^\]]*)\]/)?.[1]?.match(/["']([^"']+)["']/g)?.map((item) => item.slice(1, -1)) || [];
+          const expectedGuestDefaultItems = ['home', 'signup', 'apply'];
+          if (guestDefaultItems.length !== expectedGuestDefaultItems.length
+            || guestDefaultItems.some((item, index) => item !== expectedGuestDefaultItems[index])
+            || !/home:\s*\{[^}]*label:\s*["']Home["'][^}]*page:\s*["']index\.html["']/.test(navBottomSource)
+            || !/home:\s*\{[^}]*href:\s*["']\/["']/.test(navBottomSource)
+            || !/signup:\s*\{[^}]*label:\s*["']Sign Up["'][^}]*page:\s*["']signup\.html["']/.test(navBottomSource)
+            || !/apply:\s*\{[^}]*label:\s*["']Apply["'][^}]*page:\s*["']staff_application\.html["']/.test(navBottomSource)
+            || !navBottomSource.includes('canAccessPageName(REGISTRY[id].page, role)')
+            || !/isGuestPublicNavigation\(\)[\s\S]*?canAccessPageName\(window\.location\.pathname, "guest"\)[\s\S]*?!isAuthenticated\(\)/.test(navBottomSource)
+            || !navBottomSource.includes('const selected = ids.length === 5 ? ids : defaults;')) {
+            failures.push('HOME-2: guest bottom navigation must be an authority-filtered, non-authenticated Home / Sign Up / Apply default');
+          }
+          if (!navBottomSource.includes('nav.dataset.evaItemCount = String(items.length)')
+            || !/\.eva-bottom-nav\[data-eva-item-count=["']3["']\]\s*\{[^}]*grid-template-columns\s*:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/.test(navBottomCssSource)
+            || !/\.eva-bottom-nav\s*\{[^}]*grid-template-columns\s*:\s*repeat\(5,\s*minmax\(0,\s*1fr\)\)/.test(navBottomCssSource)) {
+            failures.push('HOME-2: the runtime item-count hook must permit a scoped three-column guest bar while preserving the five-column default');
+          }
+          if (!navBottomSource.includes('let bottomScrollBound = false;')
+            || (navBottomSource.match(/window\.addEventListener\("scroll", scheduleBottomNavScrollUpdate/g) || []).length !== 1) {
+            failures.push('HOME-2: bottom navigation remounts must retain exactly one directional-scroll binding');
+          }
+          if (!/const destination = buildHref\(["']login\.html["']\);/.test(navLogoutSource)
+            || !/window\.location\.replace\(['"]\/login\.html['"]\)/.test(accountStatusRuntimeSource)) {
+            failures.push('HOME-2: both active explicit logout owners must redirect successful logout to Login, where the guest Home escape remains available');
           }
           if (!navRebindBody.includes('restoreBottomNavAfterRender();')) {
             failures.push('nav-session.js: post-render refresh must restore eligible bottom navigation');
           }
 
-          const navUtilsSource = fs.readFileSync('public/assets/js/nav/nav-utils.js', 'utf8');
-          const accessControlSource = fs.readFileSync('public/assets/js/access-control.js', 'utf8');
           const navShellSource = fs.readFileSync('public/assets/css/nav/nav-shell.css', 'utf8');
-          const publicPagesDeclaration = accessControlSource.match(/export const PUBLIC_PAGES\s*=\s*Object\.freeze\(new Set\(\[([\s\S]*?)\]\)\)/)?.[1] || '';
-          const canonicalPublicPages = new Set(Array.from(publicPagesDeclaration.matchAll(/["']([^"']+)["']/g), (match) => match[1]));
           const guestAccountBlock = navRenderSource.match(/function accountGroup\(authed\)\s*\{[\s\S]*?if\s*\(!authed\)\s*\{([\s\S]*?)\n\s*\}\n\s*const actions/)?.[1] || '';
-          const guestRoutes = Array.from(guestAccountBlock.matchAll(/\[\s*["'][^"']+["']\s*,\s*["']([^"']+)["']/g), (match) => match[1]);
+          const guestDrawerItems = Array.from(guestAccountBlock.matchAll(/\[\s*["']([^"']+)["']\s*,\s*["']([^"']+)["']/g), (match) => ({ label: match[1], route: match[2] }));
 
           if (/function publicHomeMarkup\s*\(/.test(navRenderSource) || /eva-public-home-pill/.test(`${navRenderSource}\n${navShellSource}`)) {
             failures.push('nav-render.js: legacy reduced public-Home pill contract must remain removed');
           }
-          if (!/const\s+guestHome\s*=\s*publicHome\s*&&\s*!groups\.authed/.test(navRenderSource)
+          if (!/const\s+publicRoute\s*=\s*isCanonicalPublicRoute\(\);[\s\S]*?const\s+guestPublic\s*=\s*publicRoute\s*&&\s*!groups\.authed/.test(navRenderSource)
             || !navRenderSource.includes('evaMenuBtn')
             || !navRenderSource.includes('evaMenuPanel')
             || !navRenderSource.includes('evaPublicAccessControl')
-            || !navRenderSource.includes('buildHref("login.html")')
+            || !navRenderSource.includes('function guestPublicTopControl()')
             || !navShellSource.includes('content:"Evaraos"')) {
-            failures.push('nav-render.js: guest Home must render the universal menu, centered Evaraos title, and Login control');
+            failures.push('nav-render.js: every canonical public guest route must render the universal menu, centered Evaraos title, and public right action');
           }
-          if (!guestRoutes.length || guestRoutes.some((route) => !canonicalPublicPages.has(route))
-            || !/guestHome\s*\?\s*accountGroup\(false\)/.test(navRenderSource)
-            || !/guestHome\s*\?\s*""\s*:\s*aiGroup\(groups\.authed\)/.test(navRenderSource)) {
-            failures.push('nav-render.js: guest Home drawer must expose only canonical public routes and no private application group');
+          const expectedGuestDrawerItems = [
+            { label: 'Login', route: 'login.html' },
+            { label: 'Sign Up', route: 'signup.html' },
+            { label: 'Apply', route: 'staff_application.html' }
+          ];
+          if (guestDrawerItems.length !== expectedGuestDrawerItems.length
+            || guestDrawerItems.some((item, index) => item.label !== expectedGuestDrawerItems[index].label || item.route !== expectedGuestDrawerItems[index].route)
+            || guestDrawerItems.some(({ route }) => !canonicalPublicPages.has(route))
+            || !/guestPublic\s*\?\s*accountGroup\(false\)/.test(navRenderSource)
+            || !/guestPublic\s*\?\s*""\s*:\s*aiGroup\(groups\.authed\)/.test(navRenderSource)) {
+            failures.push('nav-render.js: guest public drawer must expose only Login, Sign Up, and Apply with no private application group');
           }
 
-          if (!/export function isVerifiedPublicHomeSession\([\s\S]*?session\?\.authenticated === true[\s\S]*?session\?\.lifecycle === "active"[\s\S]*?session\?\.role/.test(navUtilsSource)
-            || !/export function isAuthenticated\(\)\s*\{\s*if \(isPublicHomeRoute\(\)\) return isVerifiedPublicHomeSession\(\);/.test(navUtilsSource)
+          const guestActionBody = navRenderSource.match(/function guestPublicTopControl\(\)\s*\{([\s\S]*?)\n\}/)?.[1] || '';
+          if (!guestActionBody.includes('isCurrentPage("login.html")')
+            || !guestActionBody.includes('{ label: "Sign Up", page: "signup.html"')
+            || !guestActionBody.includes('{ label: "Login", page: "login.html"')
+            || !/const\s+topRight\s*=\s*guestPublic\s*\?\s*guestPublicTopControl\(\)\s*:\s*`<button[^`]*globalNotificationsBell/.test(navRenderSource)) {
+            failures.push('PUBLIC-SHELL-1: Login must expose Sign Up; every other canonical guest route must expose Login; guest routes must not render a notification bell');
+          }
+          if (!/export function isCanonicalPublicRoute\(\)\s*\{\s*return canAccessPageName\(window\.location\.pathname, "guest"\);/.test(navUtilsSource)
+            || !/export function isVerifiedSession\([\s\S]*?session\?\.authenticated === true[\s\S]*?verifiedSource[\s\S]*?session\?\.lifecycle === "active"[\s\S]*?session\?\.role/.test(navUtilsSource)
+            || !/export function isAuthenticated\(\)\s*\{\s*if \(isCanonicalPublicRoute\(\)\) return isVerifiedSession\(\);/.test(navUtilsSource)
             || !navSessionSource.includes('firebase.onAuthStateChanged(firebase.auth, (user) => {')
             || !navSessionSource.includes('profile.readVerifiedUserProfile')
             || !navSessionSource.includes('lifecycle.resolveAccountLifecycle')
             || !navSessionSource.includes('if (!lifecycle.active)')) {
-            failures.push('public Home: authenticated shell authority must require an active verified session, never stored role data alone');
+            failures.push('PUBLIC-SHELL-1: public shell authority must require an active verified session, never stored role data alone');
           }
           if (/(setDoc|addDoc|updateDoc|deleteDoc|writeBatch|httpsCallable|fetch\()/.test(`${navMainSource}\n${navRenderSource}\n${navSessionSource}\n${navUtilsSource}`)) {
-            failures.push('public Home: navigation shell must not introduce Firebase or network writes');
+            failures.push('PUBLIC-SHELL-1: navigation shell must not introduce Firebase or network writes');
           }
-          if (!/function scheduleAccountSystems\(\)\s*\{\s*if\(isPublicHome\(\)&&!isVerifiedPublicHomeSession\?\.\(\)\)return;[\s\S]*?bindAccountSystems\(\)/.test(navMainSource)
-            || !navMainSource.includes('if(isVerifiedPublicHomeSession?.())scheduleAccountSystems();')
+          if (!/function scheduleAccountSystems\(\)\s*\{\s*if\(!isVerifiedSession\?\.\(\)\)return;[\s\S]*?bindAccountSystems\(\)/.test(navMainSource)
+            || !/function bindSessionLifecycle\(\)[\s\S]*?window\.addEventListener\("evara:session-ready",\(\)=>\{[\s\S]*?if\(isVerifiedSession\?\.\(\)\)scheduleAccountSystems\(\);/.test(navMainSource)
             || !navMainSource.includes('optional("../notifications-dropdown.js")')) {
-            failures.push('nav-main-v6.js: guest Home must not start authenticated notifications before verified session authority');
+            failures.push('PUBLIC-SHELL-1: notification initialization must require verified session authority on every route');
           }
-          if (!/if \(!isPublicHomeRoute\(\) \|\| isVerifiedPublicHomeSession\(\)\)\s*\{[\s\S]*?binders\.events\.bindAllNavEvents\(\);[\s\S]*?binders\.interactions\.bindNavInteractions\(\);/.test(navSessionSource)
+          if (!/if \(!isCanonicalPublicRoute\(\) \|\| isVerifiedSession\(\)\)\s*\{[\s\S]*?binders\.events\.bindAllNavEvents\(\);[\s\S]*?binders\.interactions\.bindNavInteractions\(\);/.test(navSessionSource)
             || !/async function bindSystems\(\)\s*\{[\s\S]*?await bindCoreSystems\(\);[\s\S]*?bindMotionSystems\(\)/.test(navMainSource)) {
-            failures.push('public Home: verified sessions must restore canonical events, interactions, and motion instead of a lean bypass');
+            failures.push('PUBLIC-SHELL-1: verified sessions must restore canonical events, interactions, and motion instead of a lean bypass');
           }
-          if (!navEntrySource.includes('if (!isPublicHome) maybeLoadOwnerEditor(storedRole());')
-            || !navEntrySource.includes('if (!isPublicHome) maybeLoadOwnerEditor(event.detail?.role || storedRole());')
-            || !navEntrySource.includes('if (!isPublicHome) idleEnhancements.push(safeImport("./nav/avatar-sync.js?v=nav-v59-responsive-core"));')) {
-            failures.push('nav.js: public Home must not request the owner/account editor runtime');
+          const studioLoaderSource = fs.readFileSync('public/assets/js/studio/studio-visual-builder-loader.js', 'utf8');
+          const studioProductionAuthoritySource = fs.readFileSync('public/assets/js/studio/studio-production-authority.js', 'utf8');
+          const adaptiveComponentsSource = fs.readFileSync('public/assets/css/theme/adaptive-components.css', 'utf8');
+          if (/owner-editor\.js|maybeLoadOwnerEditor|ownerEditorRequested|ownerRoles/.test(navEntrySource)
+            || !navEntrySource.includes('if (!isPublicBottomNavRoute) idleEnhancements.push(safeImport("./nav/avatar-sync.js?v=nav-v59-responsive-core"));')
+            || !studioLoaderSource.includes('studio-visual-builder.js')) {
+            failures.push('SHELL-RECOVERY-1: normal navigation must not import global owner-editor chrome; Studio must retain its independent visual-builder loader');
+          }
+          if (!navMainSource.includes('function revealPublicHomeShell()')
+            || !navMainSource.includes('document.body?.classList.remove("auth-pending","app-loading");')
+            || !navMainSource.includes('window.EvaraLoader?.completeNavigationLoad?.();')) {
+            failures.push('SHELL-RECOVERY-1: public Home navigation readiness must release only the public presentation shell from stale loading locks');
+          }
+          if (!adaptiveComponentsSource.includes('--surface-on-dark-primary')
+            || !adaptiveComponentsSource.includes('--surface-on-light-primary')
+            || !adaptiveComponentsSource.includes('color:var(--studio-recovery-text-primary)!important')
+            || !adaptiveComponentsSource.includes('color:var(--studio-recovery-text-secondary)!important')
+            || !adaptiveComponentsSource.includes('.studio-production-conflict-kicker{color:#ff9aa6!important}')
+            || !adaptiveComponentsSource.includes('button:focus-visible')
+            || !adaptiveComponentsSource.includes('button[aria-busy="true"]')) {
+            failures.push('SURFACE-TEXT-1: the known dark Studio recovery surface must own deterministic on-dark text and control states without image-derived semantic ink');
+          }
+          if (!studioProductionAuthoritySource.includes("function isTrustedSyncUnavailable(state = conflictState)")
+            || !studioProductionAuthoritySource.includes("state?.reason === 'app-check-unavailable'")
+            || !studioProductionAuthoritySource.includes("state: syncUnavailable ? 'sync-unavailable'")
+            || !studioProductionAuthoritySource.includes("text: 'Keep working locally'")
+            || !studioProductionAuthoritySource.includes('await readiness.retry()')) {
+            failures.push('STUDIO-RECOVERY-UX-1: App Check unavailability must present safe local-authoring and retry actions without treating it as a branch-head conflict');
           }
           if (!/export function isCompact\(\)\s*\{[\s\S]*?!atTopOfPage\(\)[\s\S]*?nav-menu-open/.test(navScrollSource)
             || !navScrollSource.includes('shell.classList.toggle("compact", nextCompact);')

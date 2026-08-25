@@ -1,8 +1,9 @@
-import "./nav/nav-main-v6.js?v=nav-v59-responsive-core";
+import "./nav/nav-main-v6.js?v=nav-v60-shell-recovery";
 import "./experience/experience-runtime.js?v=experience-runtime-v1";
+import { canAccessPageName } from "./access-control.js";
 
-const NAV_ENTRY_BUILD = "nav-v59-responsive-core";
-const NAV_ENTRY_GUARD = "__evaraosNavEntryV59";
+const NAV_ENTRY_BUILD = "nav-v60-shell-recovery";
+const NAV_ENTRY_GUARD = "__evaraosNavEntryV60";
 
 if (!window[NAV_ENTRY_GUARD]) {
   window[NAV_ENTRY_GUARD] = true;
@@ -10,10 +11,10 @@ if (!window[NAV_ENTRY_GUARD]) {
   const guardMode = document.body?.dataset?.routeGuard || "";
   const pathname = location.pathname.toLowerCase();
   const isPublicHome = guardMode === "public" && (pathname === "/" || pathname.endsWith("/index.html"));
+  const isPublicBottomNavRoute = canAccessPageName(pathname, "guest");
   const isStudioRoute = /(?:website-builder|studio|blueprint|design-system)/.test(pathname);
-  const ownerRoles = new Set(["owner", "super_admin", "admin"]);
-  let ownerEditorRequested = false;
   let navEnhancementsRequested = false;
+  let bottomNavRequested = false;
   let privateRuntimeRequested = false;
   let studioRuntimeRequested = false;
 
@@ -24,27 +25,18 @@ if (!window[NAV_ENTRY_GUARD]) {
     });
   }
 
+  function loadBottomNav() {
+    if (bottomNavRequested) return Promise.resolve(null);
+    bottomNavRequested = true;
+    return safeImport("./nav/nav-bottom.js?v=nav-v60-shell-recovery");
+  }
+
   function runWhenIdle(callback, timeout = 1400) {
     if ("requestIdleCallback" in window) {
       requestIdleCallback(callback, { timeout });
     } else {
       setTimeout(callback, 180);
     }
-  }
-
-  function storedRole() {
-    try {
-      const profile = JSON.parse(localStorage.getItem("evaraos-user") || sessionStorage.getItem("evaraos-user") || "null") || {};
-      return String(profile.role || localStorage.getItem("evaraos-role") || sessionStorage.getItem("evaraos-role") || "").trim().toLowerCase();
-    } catch {
-      return String(localStorage.getItem("evaraos-role") || sessionStorage.getItem("evaraos-role") || "").trim().toLowerCase();
-    }
-  }
-
-  function maybeLoadOwnerEditor(role = "") {
-    if (ownerEditorRequested || !ownerRoles.has(String(role || "").trim().toLowerCase())) return;
-    ownerEditorRequested = true;
-    runWhenIdle(() => safeImport("./owner-editor.js?v=5"));
   }
 
   function loadNavEnhancements() {
@@ -55,8 +47,8 @@ if (!window[NAV_ENTRY_GUARD]) {
       safeImport("./nav/nav-drawer-close.js?v=nav-v59-responsive-core")
     ];
 
-    if (guardMode !== "auth" && !isPublicHome) {
-      immediateEnhancements.unshift(safeImport("./nav/nav-bottom.js?v=nav-v59-responsive-core"));
+    if ((guardMode !== "auth" && !isPublicHome) || isPublicBottomNavRoute) {
+      immediateEnhancements.unshift(loadBottomNav());
     }
 
     Promise.all(immediateEnhancements).catch(() => {});
@@ -66,7 +58,7 @@ if (!window[NAV_ENTRY_GUARD]) {
         safeImport("./nav/pull-to-refresh.js?v=nav-v59-responsive-core"),
         safeImport("./ui/icon-hydrator.js?v=13")
       ];
-      if (!isPublicHome) idleEnhancements.push(safeImport("./nav/avatar-sync.js?v=nav-v59-responsive-core"));
+      if (!isPublicBottomNavRoute) idleEnhancements.push(safeImport("./nav/avatar-sync.js?v=nav-v59-responsive-core"));
       Promise.all(idleEnhancements).catch(() => {});
     }, 1800);
   }
@@ -106,12 +98,11 @@ if (!window[NAV_ENTRY_GUARD]) {
   window.addEventListener("evara:nav-ready", onNavReady, { once: true });
   if (document.documentElement.dataset.evaraosNavReady === "true") onNavReady();
 
-  window.addEventListener("evara:session-ready", (event) => {
-    if (!isPublicHome) maybeLoadOwnerEditor(event.detail?.role || storedRole());
+  if (isPublicBottomNavRoute) loadBottomNav();
+
+  window.addEventListener("evara:session-ready", () => {
     loadPrivateRuntime();
   });
-
-  if (!isPublicHome) maybeLoadOwnerEditor(storedRole());
 }
 
 window.EVARAOS_NAV_ENTRY_VERSION = NAV_ENTRY_BUILD;

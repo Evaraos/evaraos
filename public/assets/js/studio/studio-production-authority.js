@@ -130,38 +130,66 @@ function closeConflictPanel() {
   panel = null;
 }
 
+function isTrustedSyncUnavailable(state = conflictState) {
+  return state?.reason === 'app-check-unavailable' && !state?.conflict?.code;
+}
+
 function renderConflictPanel() {
   closeConflictPanel();
   if (!conflictState) return;
   const graph = canvasGraph();
   const graphId = text(conflictState.graphId || graph?.graphId, 220);
+  const syncUnavailable = isTrustedSyncUnavailable();
+  const title = syncUnavailable
+    ? 'Local authoring is available. Trusted synchronization is unavailable.'
+    : 'The local draft was preserved. Choose a safe resolution.';
+  const detailLabel = syncUnavailable ? 'App Check' : 'Conflict';
+  const detailValue = syncUnavailable
+    ? text(conflictState.serviceCode || conflictState.reason || 'app-check-unavailable', 220)
+    : text(conflictState.conflict?.code || conflictState.reason || 'branch-head-conflict', 220);
+  const message = syncUnavailable
+    ? (conflictState.error || 'App Check is unavailable, so trusted Studio synchronization cannot begin.')
+    : (conflictState.error || 'The trusted branch head differs from this local Canvas draft. No last-write-wins overwrite was attempted.');
+  const actions = syncUnavailable
+    ? [
+      node('button', { type: 'button', text: 'Retry synchronization', dataset: { productionAuthorityAction: 'retry-sync', graphId } }),
+      node('button', { type: 'button', text: 'Keep working locally', dataset: { productionAuthorityAction: 'dismiss-conflict' } })
+    ]
+    : [
+      node('button', { type: 'button', text: 'Retry synchronization', dataset: { productionAuthorityAction: 'retry-sync', graphId } }),
+      node('button', { type: 'button', text: 'Create recovery branch', dataset: { productionAuthorityAction: 'create-branch', graphId } }),
+      node('button', { type: 'button', text: 'Reject local & recover trusted', dataset: { productionAuthorityAction: 'recover-trusted', graphId } }),
+      node('button', { type: 'button', text: 'Keep local draft', dataset: { productionAuthorityAction: 'dismiss-conflict' } })
+    ];
   panel = node('aside', {
     className: 'studio-production-conflict-panel',
-    dataset: { productionConflictPanel: 'true', state: conflictState.state || 'conflict' },
-    attrs: { role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Resolve Studio synchronization conflict' }
+    dataset: { productionConflictPanel: 'true', state: syncUnavailable ? 'sync-unavailable' : (conflictState.state || 'conflict') },
+    attrs: { role: 'dialog', 'aria-modal': 'true', 'aria-label': syncUnavailable ? 'Studio cloud synchronization unavailable' : 'Resolve Studio synchronization conflict' }
   }, [
     node('div', { className: 'studio-production-conflict-card' }, [
-      node('span', { className: 'studio-production-conflict-kicker', text: conflictState.state === 'recovery-required' ? 'Recovery required' : 'Synchronization conflict' }),
-      node('h2', { text: 'The local draft was preserved. Choose a safe resolution.' }),
-      node('p', { text: conflictState.error || 'The trusted branch head differs from this local Canvas draft. No last-write-wins overwrite was attempted.' }),
+      node('span', { className: 'studio-production-conflict-kicker', text: syncUnavailable ? 'Cloud synchronization unavailable' : (conflictState.state === 'recovery-required' ? 'Recovery required' : 'Synchronization conflict') }),
+      node('h2', { text: title }),
+      node('p', { text: message }),
       node('dl', {}, [
         node('div', {}, [node('dt', { text: 'Graph' }), node('dd', { text: graphId || 'Unknown' })]),
-        node('div', {}, [node('dt', { text: 'Conflict' }), node('dd', { text: conflictState.conflict?.code || conflictState.reason || 'branch-head-conflict' })])
+        node('div', {}, [node('dt', { text: detailLabel }), node('dd', { text: detailValue })])
       ]),
-      node('div', { className: 'studio-production-conflict-actions' }, [
-        node('button', { type: 'button', text: 'Retry synchronization', dataset: { productionAuthorityAction: 'retry-sync', graphId } }),
-        node('button', { type: 'button', text: 'Create recovery branch', dataset: { productionAuthorityAction: 'create-branch', graphId } }),
-        node('button', { type: 'button', text: 'Reject local & recover trusted', dataset: { productionAuthorityAction: 'recover-trusted', graphId } }),
-        node('button', { type: 'button', text: 'Keep local draft', dataset: { productionAuthorityAction: 'dismiss-conflict' } })
-      ]),
-      node('small', { text: 'Rejected local transactions remain in immutable local history. Creating a recovery branch never rewrites the current trusted branch.' })
+      node('div', { className: 'studio-production-conflict-actions' }, actions),
+      node('small', { text: syncUnavailable
+        ? 'Your local draft remains available. Trusted synchronization, checkpoints, releases, and trusted writes stay blocked until App Check succeeds.'
+        : 'Rejected local transactions remain in immutable local history. Creating a recovery branch never rewrites the current trusted branch.' })
     ])
   ]);
   document.body.append(panel);
 }
 
 async function retrySync(graphId) {
-  const adapter = trustedAdapter();
+  let adapter = trustedAdapter();
+  if (!adapter?.syncGraph) {
+    const readiness = window.EvaraAppCheckReadiness;
+    if (readiness?.retry) await readiness.retry();
+    adapter = trustedAdapter();
+  }
   if (!adapter?.syncGraph) throw new Error('Trusted synchronization is unavailable.');
   const result = await adapter.syncGraph(graphId);
   if (result.state === 'server-confirmed') {

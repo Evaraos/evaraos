@@ -1,4 +1,4 @@
-import { getMount, buildHref, getVisibleLinks, isCurrentPage, isPublicHomeRoute, isVerifiedPublicHomeSession } from "./nav-utils.js";
+import { getMount, buildHref, getVisibleLinks, isCanonicalPublicRoute, isCurrentPage, isVerifiedSession } from "./nav-utils.js";
 import { APP_CATEGORIES, appsByCategory } from "../navigation/app-registry.js";
 import { canAccessPageName } from "../access-control.js";
 import { iconSvg, iconNameForApp, iconNameForCategory } from "../ui/icons.js";
@@ -40,9 +40,9 @@ function storedUser() {
 }
 
 function profileData() {
-  if (isPublicHomeRoute()) {
+  if (isCanonicalPublicRoute()) {
     const session = window.EvaraRouteSession;
-    if (!isVerifiedPublicHomeSession(session)) {
+    if (!isVerifiedSession(session)) {
       return { name: "Evaraos", image: "" };
     }
     return {
@@ -63,7 +63,7 @@ function compactAction(label, page, icon, active = true) {
 
 function accountGroup(authed) {
   if (!authed) {
-    return `<section class="eva-menu-top-block eva-public-access-block"><div class="eva-top-block-head"><span class="eva-top-block-icon">${iconSvg("account")}</span><div><p>ACCESS</p><h3>Enter Evaraos</h3></div></div><div class="eva-account-strip eva-access-strip">${[["Login", "login.html", "login"], ["Signup", "signup.html", "signup"], ["Apply", "staff_application.html", "applications"]].map(item => compactAction(...item, false)).join("")}</div></section>`;
+    return `<section class="eva-menu-top-block eva-public-access-block"><div class="eva-top-block-head"><span class="eva-top-block-icon">${iconSvg("account")}</span><div><p>ACCESS</p><h3>Enter Evaraos</h3></div></div><div class="eva-account-strip eva-access-strip">${[["Login", "login.html", "login"], ["Sign Up", "signup.html", "signup"], ["Apply", "staff_application.html", "applications"]].map(item => compactAction(...item, false)).join("")}</div></section>`;
   }
   const actions = [["Account", "settings/account.html", "account"], ["Settings", "settings-v2.html", "settings"], ["Alerts", "notifications_center.html", "bell"], ["Workspace", "settings/workspace.html", "workspace"]];
   return `<section class="eva-menu-top-block eva-menu-glass-group" data-glass="card"><div class="eva-top-block-head"><span class="eva-top-block-icon">${iconSvg("account")}</span><div><p>ACCOUNT</p><h3>Your Evaraos controls</h3></div></div><div class="eva-account-strip">${actions.map(item => compactAction(...item)).join("")}<a class="eva-menu-control eva-logout-control" href="#logout" id="evaLogoutBtn" data-action="logout"><span class="eva-menu-icon">${iconSvg("logout")}</span><strong>Logout</strong></a></div></section>`;
@@ -90,9 +90,13 @@ function guestHomeDrawer() {
   return `<div class="eva-drawer-profile eva-public-home-drawer"><div class="eva-drawer-avatar">${iconSvg("home", "eva-drawer-avatar-icon")}</div><div class="eva-drawer-identity"><strong>Evaraos</strong><span>Public access</span></div><div class="eva-drawer-actions"><button type="button" data-public-home-menu-close aria-label="Close menu">${iconSvg("close")}</button></div></div>`;
 }
 
-function guestHomeTopControl() {
-  const href = buildHref("login.html");
-  return `<a class="eva-public-access-control" id="evaPublicAccessControl" href="${href}" aria-label="Log in to Evaraos"><span>${iconSvg("login", "eva-public-access-icon")}</span><strong>Login</strong></a>`;
+function guestPublicTopControl() {
+  const isLogin = isCurrentPage("login.html");
+  const action = isLogin
+    ? { label: "Sign Up", page: "signup.html", icon: "signup", ariaLabel: "Sign up for Evaraos" }
+    : { label: "Login", page: "login.html", icon: "login", ariaLabel: "Log in to Evaraos" };
+  const href = buildHref(action.page);
+  return `<a class="eva-public-access-control" id="evaPublicAccessControl" href="${href}" aria-label="${action.ariaLabel}"><span>${iconSvg(action.icon, "eva-public-access-icon")}</span><strong>${action.label}</strong></a>`;
 }
 
 function guestHomeMenuIcon() {
@@ -103,29 +107,29 @@ export function renderNav() {
   const mount = getMount();
   if (!mount) return false;
   const groups = getVisibleLinks();
-  const publicHome = isPublicHomeRoute();
-  const guestHome = publicHome && !groups.authed;
+  const publicRoute = isCanonicalPublicRoute();
+  const guestPublic = publicRoute && !groups.authed;
   const profile = profileData();
   const role = normalizeRole(groups.role);
   const fallbackAvatar = iconSvg("account", "eva-drawer-avatar-icon");
   const avatar = profile.image ? `<img src="${clean(profile.image)}" alt="${clean(profile.name)}" />` : fallbackAvatar;
-  const menuContent = guestHome
+  const menuContent = guestPublic
     ? guestHomeMenuIcon()
     : groups.authed && profile.image
     ? `<img class="eva-top-avatar" src="${clean(profile.image)}" alt="${clean(profile.name)}" />`
     : iconSvg("account", "eva-top-action-icon");
-  const drawerProfile = guestHome
+  const drawerProfile = guestPublic
     ? guestHomeDrawer()
     : `<div class="eva-drawer-profile"><div class="eva-drawer-avatar">${avatar}</div><div class="eva-drawer-identity"><strong>${clean(profile.name)}</strong><span>${clean(role)} · Adaptive Glass</span></div><div class="eva-drawer-actions"><button type="button" id="evaMenuThemeBtn" data-theme-toggle="true" aria-label="Change appearance" title="Change appearance">${iconSvg("appearance")}</button><button type="button" id="evaMenuCloseBtn" aria-label="Close menu">${iconSvg("close")}</button></div></div>`;
-  const drawerLinks = guestHome
+  const drawerLinks = guestPublic
     ? accountGroup(false)
     : `${accountGroup(groups.authed)}${groups.authed ? appSections(groups.role) : ""}`;
-  const drawerAi = guestHome ? "" : aiGroup(groups.authed);
-  const topRight = guestHome
-    ? guestHomeTopControl()
+  const drawerAi = guestPublic ? "" : aiGroup(groups.authed);
+  const topRight = guestPublic
+    ? guestPublicTopControl()
     : `<button class="eva-top-alert eva-top-action" id="globalNotificationsBell" type="button" aria-expanded="false" aria-label="Open notifications">${iconSvg("bell", "eva-top-action-icon")}<span id="globalNotificationsCount" class="eva-alert-count" hidden>0</span></button>`;
 
-  mount.innerHTML = `<div class="eva-nav-layer" data-render-build="${NAV_RENDER_BUILD}"${publicHome ? " data-public-home-nav=\"true\"" : ""}><header class="eva-nav-shell is-visible expanded${guestHome ? " eva-public-home-universal-shell" : ""}" id="evaNavShell" data-nav-mode="expanded"><div class="eva-nav-pill" id="evaNavPill"><div class="eva-menu-zone" id="evaMenuZone"><button class="eva-profile-trigger eva-top-action${groups.authed && profile.image ? " has-avatar" : ""}" type="button" id="evaMenuBtn" aria-expanded="false" aria-label="Open Evaraos menu">${menuContent}</button></div>${topRight}</div></header><div class="eva-backdrop" id="evaBackdrop"></div><aside class="eva-menu-panel" id="evaMenuPanel" aria-label="Evaraos menu">${drawerProfile}<nav class="eva-menu-apps" id="evaLinks" data-nav-role="${clean(role)}">${drawerLinks}</nav>${drawerAi}</aside></div>`;
+  mount.innerHTML = `<div class="eva-nav-layer" data-render-build="${NAV_RENDER_BUILD}"${publicRoute ? " data-public-shell-nav=\"true\"" : ""}><header class="eva-nav-shell is-visible expanded${guestPublic ? " eva-public-home-universal-shell" : ""}" id="evaNavShell" data-nav-mode="expanded"><div class="eva-nav-pill" id="evaNavPill"><div class="eva-menu-zone" id="evaMenuZone"><button class="eva-profile-trigger eva-top-action${groups.authed && profile.image ? " has-avatar" : ""}" type="button" id="evaMenuBtn" aria-expanded="false" aria-label="Open Evaraos menu">${menuContent}</button></div>${topRight}</div></header><div class="eva-backdrop" id="evaBackdrop"></div><aside class="eva-menu-panel" id="evaMenuPanel" aria-label="Evaraos menu">${drawerProfile}<nav class="eva-menu-apps" id="evaLinks" data-nav-role="${clean(role)}">${drawerLinks}</nav>${drawerAi}</aside></div>`;
 
   requestAnimationFrame(() => window.EvaraTheme?.refreshAdaptiveGlass?.());
   return true;

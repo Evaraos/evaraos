@@ -9,18 +9,16 @@ const SURFACE_SELECTOR = [
 ].join(",");
 
 const SURFACE_POINTS = [[0.16, 0.16], [0.5, 0.16], [0.84, 0.16], [0.16, 0.5], [0.5, 0.5], [0.84, 0.5], [0.16, 0.84], [0.5, 0.84], [0.84, 0.84]];
-const TEXT_X = [0.02, 0.18, 0.34, 0.5, 0.66, 0.82, 0.98];
-const TEXT_Y = [0.28, 0.5, 0.72];
 const DEFAULT_COLOR = { r: 38, g: 48, b: 68, a: 1 };
 
 let fallbackUrl = "";
+let preparedUrl = "";
 let image = null;
 let canvas = null;
 let pixels = null;
 let appearance = null;
 let frame = 0;
 let installed = false;
-let styleCache = new WeakMap();
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
@@ -114,7 +112,9 @@ function mapPoint(x, y) {
   if (!image || !canvas) return null;
   const viewportWidth = Math.max(1, innerWidth);
   const viewportHeight = Math.max(1, innerHeight);
-  const scale = Math.max(viewportWidth / image.naturalWidth, viewportHeight / image.naturalHeight);
+  const scale = appearance?.imageFit === "contain"
+    ? Math.min(viewportWidth / image.naturalWidth, viewportHeight / image.naturalHeight)
+    : Math.max(viewportWidth / image.naturalWidth, viewportHeight / image.naturalHeight);
   const renderedWidth = image.naturalWidth * scale;
   const renderedHeight = image.naturalHeight * scale;
   const position = positionFactor(appearance?.imagePosition);
@@ -154,45 +154,6 @@ function readPatch(point) {
     b: Math.round((blue / count) * (1 - dim) + 18 * dim),
     a: 1
   };
-}
-
-function parseColor(value) {
-  const match = String(value || "").match(/rgba?\(([^)]+)\)/i);
-  if (!match) return null;
-  const parts = match[1].split(/[\s,\/]+/).filter(Boolean).map(Number);
-  if (parts.length < 3 || parts.slice(0, 3).some(Number.isNaN)) return null;
-  return {
-    r: clamp(parts[0], 0, 255),
-    g: clamp(parts[1], 0, 255),
-    b: clamp(parts[2], 0, 255),
-    a: clamp(Number.isFinite(parts[3]) ? parts[3] : 1, 0, 1)
-  };
-}
-
-function composite(over, under) {
-  const alpha = over.a + (under.a || 1) * (1 - over.a);
-  if (alpha <= 0) return { r: 0, g: 0, b: 0, a: 0 };
-  return {
-    r: (over.r * over.a + under.r * (under.a || 1) * (1 - over.a)) / alpha,
-    g: (over.g * over.a + under.g * (under.a || 1) * (1 - over.a)) / alpha,
-    b: (over.b * over.a + under.b * (under.a || 1) * (1 - over.a)) / alpha,
-    a: alpha
-  };
-}
-
-function styleOf(element) {
-  let style = styleCache.get(element);
-  if (!style) {
-    style = getComputedStyle(element);
-    styleCache.set(element, style);
-  }
-  return style;
-}
-
-function ancestors(element) {
-  const list = [];
-  for (let node = element?.parentElement; node; node = node.parentElement) list.push(node);
-  return list.reverse();
 }
 
 function linearChannel(value) {
@@ -246,90 +207,30 @@ function applyGlass(base, surface) {
   };
 }
 
-function backgroundAt(element, x, y, includeSurface = true) {
-  let color = readPatch(mapPoint(x, y));
-  const surface = element?.closest?.(SURFACE_SELECTOR) || null;
-  for (const node of ancestors(element)) {
-    if (node === surface) {
-      if (includeSurface) color = applyGlass(color, surface);
-      continue;
-    }
-    const background = parseColor(styleOf(node).backgroundColor);
-    if (background && background.a > 0.015) color = composite(background, color);
-  }
-  return color;
-}
-
-function chooseInk(color, prior = "") {
-  const lightness = luminance(color);
-  const black = (lightness + 0.05) / 0.05;
-  const white = 1.05 / (lightness + 0.05);
-  if (prior) {
-    const current = prior === "d" ? black : white;
-    const alternate = prior === "d" ? white : black;
-    if (alternate - current < 1.2) {
-      return { tone: prior, color: prior === "d" ? "rgb(18 20 24)" : "rgb(255 255 255)", contrast: current };
-    }
-  }
-  const dark = black >= white;
-  return {
-    tone: dark ? "d" : "l",
-    color: dark ? "rgb(18 20 24)" : "rgb(255 255 255)",
-    contrast: Math.max(black, white)
-  };
-}
-
 function applySurfaceTone(element) {
   const rect = element.getBoundingClientRect();
   const samples = [];
   if (!rect.width || !rect.height) return;
   for (const [x, y] of SURFACE_POINTS) {
-    samples.push(backgroundAt(element, rect.left + rect.width * x, rect.top + rect.height * y, false));
+    samples.push(readPatch(mapPoint(rect.left + rect.width * x, rect.top + rect.height * y)));
   }
   const base = average(samples);
   const effective = applyGlass(base, element);
-  const prior = element.dataset.evaraTone === "dark-ink" ? "d" : element.dataset.evaraTone === "light-ink" ? "l" : "";
-  const ink = chooseInk(effective, prior);
   const glass = effective.glass || base;
-  element.dataset.evaraTone = ink.tone === "d" ? "dark-ink" : "light-ink";
-  element.style.setProperty("--adaptive-ink-rgb", ink.tone === "d" ? "18,20,24" : "255,255,255");
-  element.style.setProperty("--adaptive-shadow-rgb", ink.tone === "d" ? "255,255,255" : "0,0,0");
   element.style.setProperty("--adaptive-glass-rgb", `${Math.round(glass.r)},${Math.round(glass.g)},${Math.round(glass.b)}`);
   element.style.setProperty("--adaptive-ambient-rgb", `${Math.round(base.r)},${Math.round(base.g)},${Math.round(base.b)}`);
   element.style.setProperty("--adaptive-luma", luminance(effective).toFixed(3));
-  element.style.setProperty("--adaptive-contrast", ink.contrast.toFixed(2));
-}
-
-function applyTextGradient(wrapper) {
-  if (!(wrapper instanceof HTMLElement) || wrapper.hidden) return;
-  const rect = wrapper.getBoundingClientRect();
-  if (!rect.width || !rect.height || rect.bottom < -120 || rect.top > innerHeight + 120 || rect.right < -120 || rect.left > innerWidth + 120) return;
-  const prior = (wrapper.dataset.evaraTextTones || "").padEnd(TEXT_X.length, "-").slice(0, TEXT_X.length);
-  const tones = [];
-  const colors = [];
-  TEXT_X.forEach((factor, index) => {
-    const samples = TEXT_Y.map((y) => backgroundAt(wrapper, rect.left + rect.width * factor, rect.top + rect.height * y, true));
-    const ink = chooseInk(average(samples), prior[index]);
-    tones.push(ink.tone);
-    colors.push(ink.color);
-  });
-  const key = tones.join("");
-  if (wrapper.dataset.evaraTextTones === key) return;
-  wrapper.dataset.evaraTextTones = key;
-  colors.forEach((color, index) => wrapper.style.setProperty(`--adaptive-text-c${index}`, color));
 }
 
 function adapt() {
   frame = 0;
   if (document.hidden || document.body?.classList.contains("eva-page-leaving")) return;
-  styleCache = new WeakMap();
   for (const element of document.querySelectorAll(SURFACE_SELECTOR)) {
     if (!(element instanceof HTMLElement) || element.hidden) continue;
     const rect = element.getBoundingClientRect();
     if (rect.bottom < -140 || rect.top > innerHeight + 140 || rect.right < -140 || rect.left > innerWidth + 140) continue;
     applySurfaceTone(element);
   }
-  document.querySelectorAll(".evara-adaptive-text-node").forEach(applyTextGradient);
 }
 
 export function refreshAdaptiveGlass() {
@@ -380,7 +281,10 @@ function install() {
 
 export async function initAdaptiveGlass(nextAppearance, url) {
   appearance = nextAppearance;
-  if (url !== image?.src) await prepare(url);
+  if (url !== preparedUrl) {
+    await prepare(url);
+    preparedUrl = url;
+  }
   install();
   refreshAdaptiveGlass();
 }
