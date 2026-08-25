@@ -163,7 +163,7 @@ function renderConflictPanel() {
     ];
   panel = node('aside', {
     className: 'studio-production-conflict-panel',
-    dataset: { productionConflictPanel: 'true', state: syncUnavailable ? 'sync-unavailable' : (conflictState.state || 'conflict') },
+    dataset: { productionConflictPanel: 'true', state: syncUnavailable ? 'sync-unavailable' : (conflictState.state || 'conflict'), evaShellMotion: 'studio-production-conflict' },
     attrs: { role: 'dialog', 'aria-modal': 'true', 'aria-label': syncUnavailable ? 'Studio cloud synchronization unavailable' : 'Resolve Studio synchronization conflict' }
   }, [
     node('div', { className: 'studio-production-conflict-card' }, [
