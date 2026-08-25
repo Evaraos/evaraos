@@ -9,6 +9,8 @@ const EDITABLE_IDS = new Set([
   'home.platform.heading',
   'home.platform.copy'
 ]);
+const INLINE_EDIT_IDS = new Set(['home.hero.kicker']);
+const KICKER_MAX_LENGTH = 180;
 
 let scheduled = false;
 
@@ -20,6 +22,21 @@ function createNonce() {
 
 function previewMessage(type, nonce, extra = {}) {
   return { type: `${PROTOCOL}${type}`, protocolVersion: PROTOCOL_VERSION, nonce, ...extra };
+}
+
+function normalizeKickerText(value) {
+  return Array.from(String(value ?? '')
+    .replace(/[\r\n\u2028\u2029]+/g, ' ')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim())
+    .slice(0, KICKER_MAX_LENGTH)
+    .join('');
+}
+
+function draftPayload(drafts) {
+  const draft = drafts.get('home.hero.kicker');
+  return draft ? { 'home.hero.kicker': { ...draft } } : {};
 }
 
 function isExpectedMessage(event, iframe, nonce, type) {
@@ -56,6 +73,8 @@ function mountLiveHome(stage) {
   host.className = 'studio-live-preview-host';
   host.dataset.studioLivePreviewHost = 'home';
   host.dataset.selectionState = 'waiting';
+  const drafts = new Map();
+  const editSessions = new Map();
 
   const status = document.createElement('p');
   status.className = 'studio-live-preview-status';
@@ -78,18 +97,76 @@ function mountLiveHome(stage) {
 
   window.addEventListener('message', (event) => {
     if (isExpectedMessage(event, iframe, nonce, 'ready')) {
-      iframe.contentWindow?.postMessage(previewMessage('activate', nonce), ORIGIN);
+      editSessions.clear();
+      iframe.contentWindow?.postMessage(previewMessage('activate', nonce, {
+        drafts: draftPayload(drafts)
+      }), ORIGIN);
       host.dataset.selectionState = 'ready';
       status.textContent = 'Live Home · select approved content';
       return;
     }
 
-    if (!isExpectedMessage(event, iframe, nonce, 'selection')) return;
-    const id = String(event.data.editId || '');
-    if (!EDITABLE_IDS.has(id)) return;
-    host.dataset.selectionState = 'selected';
-    host.dataset.selectedEditId = id;
-    status.textContent = `Live Home · selected ${id}`;
+    if (isExpectedMessage(event, iframe, nonce, 'selection')) {
+      const id = String(event.data.editId || '');
+      if (!EDITABLE_IDS.has(id)) return;
+      host.dataset.selectionState = 'selected';
+      host.dataset.selectedEditId = id;
+      status.textContent = `Live Home · selected ${id}`;
+      return;
+    }
+
+    const editMessageTypes = ['edit-started', 'edit-draft', 'edit-commit', 'edit-cancel'];
+    for (const type of editMessageTypes) {
+      if (!isExpectedMessage(event, iframe, nonce, type)) continue;
+      const editId = String(event.data.elementId || '');
+      if (!INLINE_EDIT_IDS.has(editId)) return;
+
+      if (type === 'edit-started') {
+        const priorDraft = drafts.get(editId);
+        editSessions.set(editId, priorDraft ? { ...priorDraft } : null);
+        if (!priorDraft) {
+          drafts.set(editId, {
+            value: normalizeKickerText(event.data.value),
+            dirty: false,
+            committedInSession: false
+          });
+        }
+        host.dataset.selectionState = 'editing';
+        status.textContent = `Live Home · editing ${editId}`;
+        return;
+      }
+
+      if (!editSessions.has(editId)) return;
+
+      if (type === 'edit-draft') {
+        drafts.set(editId, {
+          value: normalizeKickerText(event.data.value),
+          dirty: true,
+          committedInSession: false
+        });
+        return;
+      }
+
+      if (type === 'edit-commit') {
+        drafts.set(editId, {
+          value: normalizeKickerText(event.data.value),
+          dirty: true,
+          committedInSession: true
+        });
+        editSessions.delete(editId);
+        host.dataset.selectionState = 'selected';
+        status.textContent = `Live Home · session draft kept for ${editId}`;
+        return;
+      }
+
+      const priorDraft = editSessions.get(editId);
+      if (priorDraft) drafts.set(editId, priorDraft);
+      else drafts.delete(editId);
+      editSessions.delete(editId);
+      host.dataset.selectionState = 'selected';
+      status.textContent = `Live Home · edit cancelled for ${editId}`;
+      return;
+    }
   });
 }
 

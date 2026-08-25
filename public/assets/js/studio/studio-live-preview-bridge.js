@@ -1,13 +1,15 @@
 const PROTOCOL = 'evara:studio-preview:';
 const PROTOCOL_VERSION = 1;
 const ORIGIN = window.location.origin;
-const EDITABLE = new Set([
+const SELECTABLE_IDS = new Set([
   'home.hero.kicker',
   'home.hero.title',
   'home.hero.subtitle',
   'home.platform.heading',
   'home.platform.copy'
 ]);
+const INLINE_EDIT_IDS = new Set(['home.hero.kicker']);
+const KICKER_MAX_LENGTH = 180;
 
 const params = new URLSearchParams(window.location.search);
 const nonce = params.get('studioNonce') || '';
@@ -31,7 +33,7 @@ function message(type, extra = {}) {
 function editableTarget(target) {
   if (!(target instanceof Element)) return null;
   const element = target.closest('[data-evara-page="home"][data-evara-editable="text"][data-evara-region="content"][data-evara-edit-id]');
-  if (!element || !EDITABLE.has(element.dataset.evaraEditId || '')) return null;
+  if (!element || !SELECTABLE_IDS.has(element.dataset.evaraEditId || '')) return null;
   return element;
 }
 
@@ -53,9 +55,82 @@ function createSelectionOverlay() {
   return { outline, label };
 }
 
-function activatePreview() {
+function normalizeKickerText(value) {
+  return Array.from(String(value ?? '')
+    .replace(/[\r\n\u2028\u2029]+/g, ' ')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim())
+    .slice(0, KICKER_MAX_LENGTH)
+    .join('');
+}
+
+function focusWithoutScroll(element) {
+  try {
+    element.focus({ preventScroll: true });
+  } catch {
+    element.focus();
+  }
+}
+
+function setCaretToEnd(element) {
+  const selection = window.getSelection();
+  if (!selection) return;
+  const range = document.createRange();
+  range.selectNodeContents(element);
+  range.collapse(false);
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+
+function selectionInside(element) {
+  const selection = window.getSelection();
+  if (!selection?.rangeCount) return null;
+  const range = selection.getRangeAt(0);
+  const contains = (node) => node === element
+    || (node.nodeType === Node.ELEMENT_NODE ? element.contains(node) : element.contains(node.parentElement));
+  return contains(range.startContainer) && contains(range.endContainer) ? range : null;
+}
+
+function rawTextAfterInsertion(element, text) {
+  const current = Array.from(element.textContent || '');
+  const range = selectionInside(element);
+  if (!range) return `${current.join('')}${text}`;
+  const before = range.cloneRange();
+  before.selectNodeContents(element);
+  before.setEnd(range.startContainer, range.startOffset);
+  const after = range.cloneRange();
+  after.selectNodeContents(element);
+  after.setStart(range.endContainer, range.endOffset);
+  const start = Array.from(before.toString()).length;
+  const end = current.length - Array.from(after.toString()).length;
+  return [...current.slice(0, start), ...Array.from(text), ...current.slice(end)].join('');
+}
+
+function textAfterInsertion(element, text) {
+  return normalizeKickerText(rawTextAfterInsertion(element, text));
+}
+
+function setPlainText(element, value, placeCaret = false) {
+  const normalized = normalizeKickerText(value);
+  const hasSingleTextNode = element.childNodes.length === 1 && element.firstChild?.nodeType === Node.TEXT_NODE;
+  if (element.textContent !== normalized || !hasSingleTextNode) element.textContent = normalized;
+  if (placeCaret) setCaretToEnd(element);
+  return normalized;
+}
+
+function activatePreview(initialDrafts = {}) {
   let selected = null;
+  let activeEdit = null;
+  let composing = false;
+  let pendingRebind = false;
+  let kickerDraft = null;
   const overlay = createSelectionOverlay();
+
+  const initialKicker = initialDrafts?.['home.hero.kicker'];
+  if (initialKicker && typeof initialKicker.value === 'string') {
+    kickerDraft = normalizeKickerText(initialKicker.value);
+  }
 
   const positionOverlay = () => {
     if (!selected) return;
@@ -69,17 +144,110 @@ function activatePreview() {
   };
 
   const select = (element) => {
+    if (activeEdit && element !== activeEdit.element) return;
     selected = element;
     overlay.label.textContent = element.dataset.evaraEditId || '';
     overlay.outline.hidden = false;
     overlay.label.hidden = false;
     positionOverlay();
+    if (INLINE_EDIT_IDS.has(element.dataset.evaraEditId || '')) {
+      element.tabIndex = 0;
+      focusWithoutScroll(element);
+    }
     window.parent.postMessage(message('selection', { editId: element.dataset.evaraEditId, editable: 'text' }), ORIGIN);
+  };
+
+  const reapplyKickerDraft = () => {
+    const element = editableTarget(document.querySelector('[data-evara-edit-id="home.hero.kicker"]'));
+    if (activeEdit && activeEdit.element !== element) {
+      const session = activeEdit;
+      activeEdit = null;
+      composing = false;
+      delete session.element.dataset.evaraStudioEditing;
+      session.element.removeAttribute('contenteditable');
+      if (session.ariaLabel === null) session.element.removeAttribute('aria-label');
+      else session.element.setAttribute('aria-label', session.ariaLabel);
+    }
+    if (selected?.dataset.evaraEditId === 'home.hero.kicker' && selected !== element) {
+      selected = element;
+      if (!element) {
+        overlay.outline.hidden = true;
+        overlay.label.hidden = true;
+      }
+    }
+    if (!element || kickerDraft === null) return;
+    if (activeEdit?.element === element && composing) return;
+    if (element.textContent !== kickerDraft) setPlainText(element, kickerDraft, activeEdit?.element === element);
+    if (selected === null || selected === element) {
+      selected = element;
+      positionOverlay();
+    }
+  };
+
+  const sendDraft = (element) => {
+    const value = setPlainText(element, element.textContent || '');
+    kickerDraft = value;
+    window.parent.postMessage(message('edit-draft', {
+      elementId: element.dataset.evaraEditId,
+      value
+    }), ORIGIN);
+    return value;
+  };
+
+  const finishEditing = (outcome) => {
+    if (!activeEdit) return;
+    const session = activeEdit;
+    activeEdit = null;
+    composing = false;
+    delete session.element.dataset.evaraStudioEditing;
+    session.element.removeAttribute('contenteditable');
+    if (session.ariaLabel === null) session.element.removeAttribute('aria-label');
+    else session.element.setAttribute('aria-label', session.ariaLabel);
+    overlay.label.textContent = session.element.dataset.evaraEditId || '';
+    positionOverlay();
+
+    if (outcome === 'cancel') {
+      kickerDraft = session.originalText;
+      setPlainText(session.element, session.originalText);
+      window.parent.postMessage(message('edit-cancel', {
+        elementId: session.element.dataset.evaraEditId,
+        value: session.originalText
+      }), ORIGIN);
+      return;
+    }
+
+    const value = setPlainText(session.element, session.element.textContent || '');
+    kickerDraft = value;
+    window.parent.postMessage(message('edit-commit', {
+      elementId: session.element.dataset.evaraEditId,
+      value
+    }), ORIGIN);
+  };
+
+  const startEditing = (element) => {
+    const editId = element?.dataset.evaraEditId || '';
+    if (activeEdit || !INLINE_EDIT_IDS.has(editId) || selected !== element) return;
+    const originalText = setPlainText(element, element.textContent || '');
+    kickerDraft = originalText;
+    activeEdit = {
+      element,
+      originalText,
+      ariaLabel: element.getAttribute('aria-label')
+    };
+    element.dataset.evaraStudioEditing = 'true';
+    element.setAttribute('contenteditable', 'plaintext-only');
+    element.setAttribute('aria-label', 'Editing Home hero kicker. Press Enter to save or Escape to cancel.');
+    overlay.label.textContent = `Editing · ${editId}`;
+    positionOverlay();
+    focusWithoutScroll(element);
+    setCaretToEnd(element);
+    window.parent.postMessage(message('edit-started', { elementId: editId, value: originalText }), ORIGIN);
   };
 
   window.addEventListener('click', (event) => {
     const element = editableTarget(event.target);
     if (element) {
+      if (activeEdit?.element === element) return;
       event.preventDefault();
       event.stopImmediatePropagation();
       select(element);
@@ -91,20 +259,117 @@ function activatePreview() {
     }
   }, true);
 
+  window.addEventListener('dblclick', (event) => {
+    const element = editableTarget(event.target);
+    if (!element) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (selected !== element) select(element);
+    startEditing(element);
+  }, true);
+
   window.addEventListener('submit', (event) => {
     event.preventDefault();
     event.stopImmediatePropagation();
   }, true);
 
   window.addEventListener('keydown', (event) => {
+    if (activeEdit?.element === event.target || activeEdit?.element.contains(event.target)) {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        finishEditing('cancel');
+        return;
+      }
+      if (event.key === 'Enter' && !composing && !event.isComposing) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        finishEditing('commit');
+        return;
+      }
+      return;
+    }
+    if (event.key === 'Enter' && selected === event.target && INLINE_EDIT_IDS.has(selected.dataset.evaraEditId || '')) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      startEditing(selected);
+      return;
+    }
     if ((event.key === 'Enter' || event.key === ' ') && isProtectedAction(event.target)) {
       event.preventDefault();
       event.stopImmediatePropagation();
     }
   }, true);
 
+  window.addEventListener('beforeinput', (event) => {
+    if (!activeEdit || event.target !== activeEdit.element) return;
+    if ((event.inputType === 'insertParagraph' || event.inputType === 'insertLineBreak') && !composing) {
+      event.preventDefault();
+      finishEditing('commit');
+      return;
+    }
+    if (event.inputType === 'insertText' && typeof event.data === 'string' && !composing) {
+      const rawNext = rawTextAfterInsertion(activeEdit.element, event.data);
+      const next = textAfterInsertion(activeEdit.element, event.data);
+      if (Array.from(rawNext).length > KICKER_MAX_LENGTH) {
+        event.preventDefault();
+        setPlainText(activeEdit.element, next, true);
+        sendDraft(activeEdit.element);
+      }
+    }
+  }, true);
+
+  window.addEventListener('paste', (event) => {
+    if (!activeEdit || event.target !== activeEdit.element) return;
+    event.preventDefault();
+    const plainText = event.clipboardData?.getData('text/plain') || '';
+    const next = textAfterInsertion(activeEdit.element, plainText);
+    setPlainText(activeEdit.element, next, true);
+    sendDraft(activeEdit.element);
+  }, true);
+
+  window.addEventListener('compositionstart', (event) => {
+    if (activeEdit?.element === event.target) composing = true;
+  }, true);
+
+  window.addEventListener('compositionend', (event) => {
+    if (activeEdit?.element !== event.target) return;
+    composing = false;
+    sendDraft(activeEdit.element);
+    if (pendingRebind) {
+      pendingRebind = false;
+      reapplyKickerDraft();
+    }
+  }, true);
+
+  window.addEventListener('input', (event) => {
+    if (activeEdit?.element !== event.target || composing) return;
+    sendDraft(activeEdit.element);
+  }, true);
+
+  window.addEventListener('focusout', (event) => {
+    if (activeEdit?.element === event.target) finishEditing('commit');
+  }, true);
+
+  const scheduleRebind = () => {
+    if (pendingRebind) return;
+    pendingRebind = true;
+    requestAnimationFrame(() => {
+      pendingRebind = false;
+      if (composing) {
+        pendingRebind = true;
+        return;
+      }
+      reapplyKickerDraft();
+    });
+  };
+
+  window.addEventListener('evara:experience-applied', scheduleRebind);
+  new MutationObserver(scheduleRebind).observe(document.body, { childList: true, subtree: true });
+
   window.addEventListener('resize', positionOverlay);
   window.addEventListener('scroll', positionOverlay, true);
+  reapplyKickerDraft();
 }
 
 if (hasAuthorizedParent()) {
@@ -113,7 +378,7 @@ if (hasAuthorizedParent()) {
     if (event.origin !== ORIGIN || event.source !== window.parent || !data || typeof data !== 'object') return;
     if (data.type !== `${PROTOCOL}activate` || data.protocolVersion !== PROTOCOL_VERSION || data.nonce !== nonce) return;
     window.removeEventListener('message', onMessage);
-    activatePreview();
+    activatePreview(data.drafts);
   };
   window.addEventListener('message', onMessage);
   window.parent.postMessage(message('ready', { page: 'home' }), ORIGIN);
