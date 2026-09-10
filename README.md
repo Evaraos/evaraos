@@ -2,6 +2,8 @@
 
 EvaraOS is a Firebase-backed web application for company operations, teams, customer portals, leads, jobs, and administration. The permanent integration branch is `evaraos`.
 
+See the [current release status and essential work queue](docs/RELEASE_STATUS.md) for deployed scope and remaining work.
+
 ## Repository map
 
 | Location | Purpose |
