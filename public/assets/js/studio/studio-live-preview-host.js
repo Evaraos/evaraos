@@ -1,15 +1,21 @@
+import {
+  HOME_DRAFT_PAGE_ID,
+  HOME_DRAFT_PREVIEW_MARKER_KEY,
+  HOME_DRAFT_SCHEMA_VERSION,
+  HOME_DRAFT_SOURCE_FINGERPRINT,
+  HOME_TEXT_DRAFT_SLOT_IDS,
+  HOME_TEXT_DRAFT_SLOTS,
+  isVerifiedStudioHomeDraftSession,
+  normalizeHomeDraftText
+} from './studio-home-draft-contract.js';
+import { deleteHomeDraft, loadHomeDraft, saveHomeDraft } from './studio-home-draft-store.js';
+
 const PROTOCOL = 'evara:studio-preview:';
 const PROTOCOL_VERSION = 1;
 const ORIGIN = window.location.origin;
 const HOME_ROUTE = '/index.html';
-const EDIT_SLOT_CONFIG = Object.freeze({
-  'home.hero.kicker': Object.freeze({ maxLength: 180, experienceControlled: true, linePolicy: 'single' }),
-  'home.hero.title': Object.freeze({ maxLength: 260, experienceControlled: true, linePolicy: 'single' }),
-  'home.hero.subtitle': Object.freeze({ maxLength: 1200, experienceControlled: true, linePolicy: 'single' }),
-  'home.platform.heading': Object.freeze({ maxLength: 180, experienceControlled: false, linePolicy: 'single' }),
-  'home.platform.copy': Object.freeze({ maxLength: 1200, experienceControlled: false, linePolicy: 'single' })
-});
-const EDIT_SLOT_IDS = new Set(Object.keys(EDIT_SLOT_CONFIG));
+const EDIT_SLOT_CONFIG = HOME_TEXT_DRAFT_SLOTS;
+const EDIT_SLOT_IDS = new Set(HOME_TEXT_DRAFT_SLOT_IDS);
 
 let scheduled = false;
 
@@ -23,29 +29,16 @@ function previewMessage(type, nonce, extra = {}) {
   return { type: `${PROTOCOL}${type}`, protocolVersion: PROTOCOL_VERSION, nonce, ...extra };
 }
 
-function normalizeSlotText(value, slot) {
-  const source = String(value ?? '');
-  const normalized = slot.linePolicy === 'single'
-    ? source
-    .replace(/[\r\n\u2028\u2029]+/g, ' ')
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    : source;
-  return Array.from(normalized)
-    .slice(0, slot.maxLength)
-    .join('');
+function normalizeSlotText(editId, value) {
+  return normalizeHomeDraftText(editId, value) || '';
 }
 
 function draftPayload(drafts) {
   const payload = {};
-  for (const [editId, slot] of Object.entries(EDIT_SLOT_CONFIG)) {
+  for (const editId of HOME_TEXT_DRAFT_SLOT_IDS) {
     const draft = drafts.get(editId);
     if (!draft) continue;
-    payload[editId] = {
-      ...draft,
-      value: normalizeSlotText(draft.value, slot)
-    };
+    payload[editId] = { ...draft, value: normalizeSlotText(editId, draft.value) };
   }
   return payload;
 }
@@ -64,6 +57,42 @@ function syncViewport(host) {
   const viewport = host.querySelector('[data-studio-live-preview-viewport]');
   if (!stage || !viewport) return;
   viewport.dataset.device = stage.dataset.device || 'desktop';
+}
+
+function currentEligibleSession() {
+  return isVerifiedStudioHomeDraftSession(window.EvaraRouteSession) ? window.EvaraRouteSession : null;
+}
+
+function setPreviewMarker(record) {
+  try {
+    sessionStorage.setItem(HOME_DRAFT_PREVIEW_MARKER_KEY, JSON.stringify({
+      schemaVersion: HOME_DRAFT_SCHEMA_VERSION,
+      sourceFingerprint: HOME_DRAFT_SOURCE_FINGERPRINT,
+      ownerUid: record.ownerUid,
+      pageId: HOME_DRAFT_PAGE_ID,
+      draftId: record.draftId
+    }));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function clearPreviewMarker(ownerUid = '') {
+  try {
+    const marker = JSON.parse(sessionStorage.getItem(HOME_DRAFT_PREVIEW_MARKER_KEY) || 'null');
+    if (!ownerUid || marker?.ownerUid === ownerUid) sessionStorage.removeItem(HOME_DRAFT_PREVIEW_MARKER_KEY);
+  } catch {
+    sessionStorage.removeItem(HOME_DRAFT_PREVIEW_MARKER_KEY);
+  }
+}
+
+function populateDrafts(drafts, record) {
+  drafts.clear();
+  for (const editId of HOME_TEXT_DRAFT_SLOT_IDS) {
+    const slot = record?.slots?.[editId];
+    if (slot) drafts.set(editId, { value: slot.value, dirty: false, committedInSession: true });
+  }
 }
 
 function mountLiveHome(stage) {
@@ -87,10 +116,22 @@ function mountLiveHome(stage) {
   const drafts = new Map();
   const editSessions = new Map();
   let activeEditId = null;
+  let durableRecord = null;
+  let initializedUid = '';
+  let saveQueue = Promise.resolve();
+  let saveToken = 0;
+  let discarding = false;
 
   const status = document.createElement('p');
   status.className = 'studio-live-preview-status';
+  status.setAttribute('aria-live', 'polite');
   status.textContent = 'Live Home · establishing protected preview';
+
+  const discard = document.createElement('button');
+  discard.type = 'button';
+  discard.className = 'studio-dock-button';
+  discard.textContent = 'Discard local draft';
+  discard.hidden = true;
 
   const viewport = document.createElement('div');
   viewport.className = 'studio-live-preview-viewport';
@@ -102,20 +143,97 @@ function mountLiveHome(stage) {
   iframe.setAttribute('data-studio-live-preview-frame', 'home');
   iframe.src = `${HOME_ROUTE}?studioPreview=edit&studioNonce=${encodeURIComponent(nonce)}`;
   viewport.append(iframe);
-  host.append(status, viewport);
+  host.append(status, discard, viewport);
   stage.append(host);
   stage.classList.add('has-studio-live-preview');
   syncViewport(host);
+
+  const activateIframe = () => {
+    iframe.contentWindow?.postMessage(previewMessage('activate', nonce, { drafts: draftPayload(drafts) }), ORIGIN);
+  };
+  const updateDiscard = () => { discard.hidden = !durableRecord; };
+  const restoreDurableDraft = async () => {
+    const session = currentEligibleSession();
+    if (!session || session.userId === initializedUid) return;
+    initializedUid = session.userId;
+    try {
+      const record = await loadHomeDraft(session.userId);
+      if (session.userId !== currentEligibleSession()?.userId) return;
+      durableRecord = record;
+      populateDrafts(drafts, record);
+      updateDiscard();
+      activateIframe();
+      if (record) {
+        if (setPreviewMarker(record)) status.textContent = 'Local Home draft restored';
+        else status.textContent = 'Local Home draft restored · Home preview unavailable in this tab';
+      }
+    } catch {
+      durableRecord = null;
+      updateDiscard();
+      status.textContent = 'Storage unavailable · session draft only';
+    }
+  };
+
+  const persistCommittedDraft = () => {
+    const session = currentEligibleSession();
+    if (!session || discarding) {
+      status.textContent = 'Live Home · session draft only';
+      return;
+    }
+    const token = ++saveToken;
+    const ownerUid = session.userId;
+    const snapshot = draftPayload(drafts);
+    saveQueue = saveQueue.catch(() => {}).then(async () => {
+      if (token !== saveToken || currentEligibleSession()?.userId !== ownerUid) return;
+      const record = await saveHomeDraft(ownerUid, snapshot);
+      if (token !== saveToken || currentEligibleSession()?.userId !== ownerUid) return;
+      durableRecord = record;
+      updateDiscard();
+      status.textContent = setPreviewMarker(record)
+        ? 'Saved locally'
+        : 'Saved locally · Home preview unavailable in this tab';
+    }).catch(() => {
+      if (token === saveToken) status.textContent = 'Storage unavailable · session draft only';
+    });
+  };
+
+  discard.addEventListener('click', async () => {
+    const session = currentEligibleSession();
+    if (!session || discarding) return;
+    discarding = true;
+    discard.disabled = true;
+    const pendingSaves = saveQueue.catch(() => {});
+    saveToken += 1;
+    try {
+      await pendingSaves;
+      await deleteHomeDraft(session.userId);
+      if (currentEligibleSession()?.userId !== session.userId) return;
+      clearPreviewMarker(session.userId);
+      drafts.clear();
+      editSessions.clear();
+      activeEditId = null;
+      durableRecord = null;
+      updateDiscard();
+      status.textContent = 'Local draft discarded';
+      iframe.src = `${HOME_ROUTE}?studioPreview=edit&studioNonce=${encodeURIComponent(nonce)}`;
+    } catch {
+      status.textContent = 'Unable to discard local draft';
+    } finally {
+      discarding = false;
+      discard.disabled = false;
+    }
+  });
+
+  window.addEventListener('evara:session-ready', restoreDurableDraft);
+  restoreDurableDraft();
 
   window.addEventListener('message', (event) => {
     if (isExpectedMessage(event, iframe, nonce, 'ready')) {
       editSessions.clear();
       activeEditId = null;
-      iframe.contentWindow?.postMessage(previewMessage('activate', nonce, {
-        drafts: draftPayload(drafts)
-      }), ORIGIN);
+      activateIframe();
       host.dataset.selectionState = 'ready';
-      status.textContent = 'Live Home · select approved content';
+      if (!durableRecord) status.textContent = 'Live Home · select approved content';
       return;
     }
 
@@ -140,13 +258,9 @@ function mountLiveHome(stage) {
         if (editSessions.has(editId)) return;
         const priorDraft = drafts.get(editId);
         editSessions.set(editId, priorDraft ? { ...priorDraft } : null);
-        if (!priorDraft) {
-          drafts.set(editId, {
-            value: normalizeSlotText(event.data.value, slot),
-            dirty: false,
-            committedInSession: false
-          });
-        }
+        if (!priorDraft) drafts.set(editId, {
+          value: normalizeSlotText(editId, event.data.value), dirty: false, committedInSession: false
+        });
         activeEditId = editId;
         host.dataset.selectionState = 'editing';
         status.textContent = `Live Home · editing ${editId}`;
@@ -157,23 +271,19 @@ function mountLiveHome(stage) {
 
       if (type === 'edit-draft') {
         drafts.set(editId, {
-          value: normalizeSlotText(event.data.value, slot),
-          dirty: true,
-          committedInSession: false
+          value: normalizeSlotText(editId, event.data.value), dirty: true, committedInSession: false
         });
         return;
       }
 
       if (type === 'edit-commit') {
         drafts.set(editId, {
-          value: normalizeSlotText(event.data.value, slot),
-          dirty: true,
-          committedInSession: true
+          value: normalizeSlotText(editId, event.data.value), dirty: true, committedInSession: true
         });
         editSessions.delete(editId);
         activeEditId = null;
         host.dataset.selectionState = 'selected';
-        status.textContent = `Live Home · session draft kept for ${editId}`;
+        persistCommittedDraft();
         return;
       }
 

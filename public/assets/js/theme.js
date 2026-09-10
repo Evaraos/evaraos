@@ -1,4 +1,4 @@
-import * as Core from "./theme-core-adaptive.js?v=adaptive-liquid-v18-surface-text";
+import * as Core from "./theme-core-adaptive.js?v=adaptive-liquid-v19-workspace-glass";
 
 export const EVARAOS_THEME_BUILD = "adaptive-liquid-v13-public-critical";
 export const applyAppearance = Core.applyAppearance;

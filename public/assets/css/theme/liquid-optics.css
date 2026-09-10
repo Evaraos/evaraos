@@ -18,6 +18,17 @@
   --lg-blur:16px;
   --lg-blur-thick:26px;
   --lg-saturation:178%;
+
+  /* One material vocabulary for every app surface. Environment files supply
+     the live values; components choose a semantic strength rather than
+     repainting their own glass. */
+  --lg-surface-regular-fill:var(--lg-fill);
+  --lg-surface-strong-fill:var(--lg-fill-strong);
+  --lg-surface-nested-fill:var(--lg-fill);
+  --lg-control-neutral-fill:var(--lg-fill-clear);
+  --lg-control-primary-fill:
+    linear-gradient(135deg,rgba(var(--accent-rgb),.38),rgba(var(--accent-rgb),.16)),
+    var(--lg-fill-strong);
 }
 
 html[data-theme="light"]{
@@ -58,7 +69,7 @@ html[data-theme-mode="image"]{
 ){
   --glass-x:22%;
   --glass-y:0%;
-  --lg-surface-fill:var(--lg-fill);
+  --lg-surface-fill:var(--lg-surface-regular-fill);
   --lg-surface-edge:var(--lg-edge);
   --lg-surface-blur:var(--lg-blur);
   --lg-surface-saturation:var(--lg-saturation);
@@ -163,14 +174,20 @@ html[data-theme-mode="image"]{
   -webkit-backdrop-filter:blur(var(--lg-blur-thick)) saturate(188%) contrast(106%)!important;
 }
 
-/* Nested surfaces become thin overlays instead of a second pane of glass. */
+/* Nested surfaces retain the same regular Workspace glass rather than
+   switching to a flat, no-blur overlay. */
 :where(.glass-card,.glass-shell,.liquid-glass,.dashboard-panel,.settings-block,.eva-menu-panel,[data-glass="card"])
 :where(.glass-card,.glass-shell,.liquid-glass,.dashboard-panel,.settings-card,.settings-block,.eva-menu-card,[data-glass="card"]){
-  background:rgba(var(--adaptive-ink-rgb),.045)!important;
-  border-color:rgba(var(--adaptive-ink-rgb),.11)!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.13)!important;
-  backdrop-filter:none!important;
-  -webkit-backdrop-filter:none!important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.10),transparent 30%),
+    var(--lg-surface-nested-fill)!important;
+  border-color:var(--lg-edge-soft)!important;
+  box-shadow:
+    0 8px 24px var(--lg-shadow-soft),
+    inset 0 1px 0 rgba(255,255,255,.46),
+    inset 0 -1px 0 rgba(255,255,255,.05)!important;
+  backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-saturation)) contrast(106%)!important;
+  -webkit-backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-saturation)) contrast(106%)!important;
 }
 
 /* Compact controls use the lightweight material. */
@@ -183,7 +200,7 @@ html[data-theme-mode="image"]{
 ){
   --lg-control-x:32%;
   --lg-control-y:10%;
-  --lg-control-fill:var(--lg-fill-clear);
+  --lg-control-fill:var(--lg-control-neutral-fill);
   --lg-control-edge:var(--lg-edge-soft);
   --lg-control-blur:11px;
   --lg-control-saturation:182%;
@@ -258,14 +275,15 @@ html[data-theme-mode="image"]{
 
 /* Color is a translucent tint, never an opaque replacement material. */
 :where(.btn-theme-primary,.settings-chip.is-active,.role-pill.active,.role-pill-option.active){
-  --lg-control-fill:rgba(var(--accent-rgb),.52);
-  --lg-control-edge:rgba(255,255,255,.44);
-  --lg-control-top-alpha:.22;
-  --lg-control-blur:10px;
-  --lg-control-saturation:205%;
-  --lg-control-contrast:108%;
+  --lg-control-fill:var(--lg-control-primary-fill);
+  --lg-control-edge:rgba(255,255,255,.58);
+  --lg-control-top-alpha:.15;
+  --lg-control-blur:18px;
+  --lg-control-saturation:178%;
+  --lg-control-contrast:106%;
+  --lg-control-brightness:104%;
   color:#fff!important;
-  box-shadow:0 14px 36px rgba(var(--accent-rgb),.24),inset 0 1px 0 rgba(255,255,255,.68)!important;
+  box-shadow:0 14px 36px rgba(var(--accent-rgb),.20),inset 0 1px 0 rgba(255,255,255,.70),inset 0 -1px 0 rgba(255,255,255,.12)!important;
 }
 
 :where(.messages-send,.message-row.mine .message-bubble){color:#fff!important}

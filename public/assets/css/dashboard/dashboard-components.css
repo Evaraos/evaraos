@@ -27,7 +27,22 @@
   text-wrap: balance;
 }
 
+/* Dashboard-specific material tuning: this keeps the section navigator
+   legible on image-backed surfaces without changing the shared glass engine. */
+.dashboard-sidebar-inner {
+  --lg-surface-fill: var(--lg-surface-strong-fill);
+  --lg-surface-edge: var(--lg-edge);
+  --lg-surface-blur: var(--lg-blur-thick);
+  --lg-surface-saturation: 188%;
+  --lg-surface-top-alpha: .14;
+  --lg-surface-highlight-alpha: .24;
+}
+
 .dashboard-nav-link {
+  --lg-surface-fill: var(--lg-surface-regular-fill);
+  --lg-surface-edge: var(--lg-edge-soft);
+  --lg-surface-blur: var(--lg-blur);
+  --lg-surface-top-alpha: .11;
   color: var(--text-primary);
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
@@ -45,6 +60,10 @@
 
 .dashboard-nav-link.active,
 .dashboard-nav-link[aria-current="page"] {
+  --lg-surface-fill: var(--lg-surface-strong-fill);
+  --lg-surface-edge: color-mix(in srgb, var(--accent-blue) 42%, var(--lg-edge));
+  --lg-surface-blur: var(--lg-blur-thick);
+  --lg-surface-top-alpha: .14;
   color: var(--text-primary);
   outline: 1px solid color-mix(in srgb, var(--accent-blue) 46%, transparent);
   outline-offset: -1px;
@@ -95,9 +114,9 @@
 .dashboard-hero-copy h1 {
   margin: 0;
   font-size: clamp(2.375rem, 5vw, 4.25rem);
-  font-weight: var(--weight-bold);
-  line-height: .96;
-  letter-spacing: -.05em;
+  font-weight: var(--weight-semibold);
+  line-height: 1.01;
+  letter-spacing: -.042em;
   text-wrap: balance;
   color: var(--text-primary);
 }
@@ -109,6 +128,15 @@
   line-height: var(--leading-relaxed);
   color: var(--text-secondary);
   text-wrap: pretty;
+}
+
+.dashboard-hero-actions .btn-theme-secondary {
+  --lg-control-fill: var(--lg-surface-strong-fill);
+  --lg-control-edge: var(--lg-edge);
+  --lg-control-blur: var(--lg-blur-thick);
+  --lg-control-saturation: 188%;
+  --lg-control-top-alpha: .14;
+  --lg-control-glow-alpha: .24;
 }
 
 .dashboard-mini-badge,

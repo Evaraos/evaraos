@@ -16,7 +16,9 @@ export const DEFAULT_APPEARANCE = Object.freeze({
   updatedAt: null
 });
 
-const THEME_STYLESHEET = "/assets/css/theme.css?v=adaptive-liquid-v14-surface-text";
+// Keep the runtime stylesheet revision aligned with the shared material engine.
+// The controller owns this URL because it replaces each page's bootstrap link.
+const THEME_STYLESHEET = "/assets/css/theme.css?v=adaptive-liquid-v15-workspace-glass";
 const clamp = (value, min, max, fallback) => {
   const number = Number(value);
   return Number.isFinite(number) ? Math.min(max, Math.max(min, number)) : fallback;
@@ -94,7 +96,7 @@ function ensureStylesheet() {
   const existing = [...document.querySelectorAll('link[rel="stylesheet"]')]
     .find((link) => link.href.includes("/assets/css/theme.css"));
   if (existing) {
-    if (!existing.href.includes("adaptive-liquid-v14-surface-text")) existing.href = THEME_STYLESHEET;
+    if (!existing.href.includes("adaptive-liquid-v15-workspace-glass")) existing.href = THEME_STYLESHEET;
     return existing;
   }
   const link = document.createElement("link");

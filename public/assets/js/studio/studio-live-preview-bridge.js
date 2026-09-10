@@ -1,14 +1,15 @@
+import {
+  HOME_TEXT_DRAFT_SLOT_IDS,
+  HOME_TEXT_DRAFT_SLOTS,
+  homeDraftSlot,
+  normalizeHomeDraftText
+} from './studio-home-draft-contract.js';
+
 const PROTOCOL = 'evara:studio-preview:';
 const PROTOCOL_VERSION = 1;
 const ORIGIN = window.location.origin;
-const EDIT_SLOT_CONFIG = Object.freeze({
-  'home.hero.kicker': Object.freeze({ maxLength: 180, experienceControlled: true, linePolicy: 'single' }),
-  'home.hero.title': Object.freeze({ maxLength: 260, experienceControlled: true, linePolicy: 'single' }),
-  'home.hero.subtitle': Object.freeze({ maxLength: 1200, experienceControlled: true, linePolicy: 'single' }),
-  'home.platform.heading': Object.freeze({ maxLength: 180, experienceControlled: false, linePolicy: 'single' }),
-  'home.platform.copy': Object.freeze({ maxLength: 1200, experienceControlled: false, linePolicy: 'single' })
-});
-const EDIT_SLOT_IDS = new Set(Object.keys(EDIT_SLOT_CONFIG));
+const EDIT_SLOT_CONFIG = HOME_TEXT_DRAFT_SLOTS;
+const EDIT_SLOT_IDS = new Set(HOME_TEXT_DRAFT_SLOT_IDS);
 
 const params = new URLSearchParams(window.location.search);
 const nonce = params.get('studioNonce') || '';
@@ -37,7 +38,7 @@ function editableTarget(target) {
 }
 
 function slotForElement(element) {
-  return EDIT_SLOT_CONFIG[element?.dataset.evaraEditId || ''] || null;
+  return homeDraftSlot(element?.dataset.evaraEditId || '');
 }
 
 function isProtectedAction(target) {
@@ -59,17 +60,7 @@ function createSelectionOverlay() {
 }
 
 function normalizeSlotText(value, slot) {
-  const source = String(value ?? '');
-  const normalized = slot.linePolicy === 'single'
-    ? source
-    .replace(/[\r\n\u2028\u2029]+/g, ' ')
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    : source;
-  return Array.from(normalized)
-    .slice(0, slot.maxLength)
-    .join('');
+  return normalizeHomeDraftText(slot?.id, value) || '';
 }
 
 function focusWithoutScroll(element) {
