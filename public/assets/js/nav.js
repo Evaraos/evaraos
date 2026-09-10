@@ -1,4 +1,5 @@
-import "./nav/nav-main-v6.js?v=nav-v59-responsive-core";
+import "./nav/nav-main-v6.js?v=home-reconcile-1";
+import { canAccessPageName } from "./access-control.js";
 import "./experience/experience-runtime.js?v=experience-runtime-v1";
 
 const NAV_ENTRY_BUILD = "nav-v59-responsive-core";
@@ -55,8 +56,8 @@ if (!window[NAV_ENTRY_GUARD]) {
       safeImport("./nav/nav-drawer-close.js?v=nav-v59-responsive-core")
     ];
 
-    if (guardMode !== "auth" && !isPublicHome) {
-      immediateEnhancements.unshift(safeImport("./nav/nav-bottom.js?v=nav-v59-responsive-core"));
+    if ((guardMode !== "auth" && !isPublicHome) || canAccessPageName(pathname, "guest")) {
+      immediateEnhancements.unshift(safeImport("./nav/nav-bottom.js"));
     }
 
     Promise.all(immediateEnhancements).catch(() => {});
@@ -66,7 +67,7 @@ if (!window[NAV_ENTRY_GUARD]) {
         safeImport("./nav/pull-to-refresh.js?v=nav-v59-responsive-core"),
         safeImport("./ui/icon-hydrator.js?v=13")
       ];
-      if (!isPublicHome) idleEnhancements.push(safeImport("./nav/avatar-sync.js?v=nav-v59-responsive-core"));
+      if (!canAccessPageName(pathname, "guest")) idleEnhancements.push(safeImport("./nav/avatar-sync.js?v=nav-v59-responsive-core"));
       Promise.all(idleEnhancements).catch(() => {});
     }, 1800);
   }

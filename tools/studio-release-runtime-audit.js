@@ -42,12 +42,16 @@ if (!failures.length) {
   const syntaxChecks = [
     ['functions/studio-release-runtime-service.js', []],
     ['functions/index-stats.js', []],
-    ['public/assets/js/studio/studio-release-runtime-client.js', ['--experimental-default-type=module']],
+    ['public/assets/js/studio/studio-release-runtime-client.js', ['--input-type=module']],
     ['tools/studio-release-runtime-audit.js', []]
   ];
   syntaxChecks.forEach(([file, flags]) => {
     try {
-      execFileSync(process.execPath, [...flags, '--check', path.join(root, file)], { stdio: 'pipe' });
+      const moduleInput = flags.includes('--input-type=module');
+      execFileSync(process.execPath, [...flags, '--check', ...(moduleInput ? [] : [path.join(root, file)])], {
+        stdio: 'pipe',
+        ...(moduleInput ? { input: fs.readFileSync(path.join(root, file)) } : {})
+      });
     } catch (error) {
       failures.push(`${file}: syntax check failed: ${String(error.stderr || error.message).trim()}`);
     }

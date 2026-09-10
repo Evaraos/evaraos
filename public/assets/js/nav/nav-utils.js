@@ -1,3 +1,6 @@
+import { canAccessPageName, normalizeAccessRole } from "../access-control.js";
+import { resolveAccountLifecycle } from "../account-lifecycle.js";
+
 export function getMount() {
   return document.getElementById("universalNavRoot") || document.getElementById("universalNav");
 }
@@ -29,6 +32,32 @@ export function isCurrentPage(path) {
   const current = normalizePage(window.location.pathname.replace(/\/+$/, ""));
   const target = normalizePage(path);
   return current === target || (current === "" && target === "index.html");
+}
+
+export function isPublicHomeRoute() {
+  const mode = document.body?.dataset?.routeGuard || "";
+  const path = window.location.pathname.toLowerCase();
+  return mode === "public" && (path === "/" || path.endsWith("/index.html"));
+}
+
+export function isCanonicalPublicRoute() {
+  return canAccessPageName(window.location.pathname, "guest");
+}
+
+export function isVerifiedSession(session = window.EvaraRouteSession) {
+  const verifiedSource = ["verified-public-home", "verified-route-guard"].includes(session?.source);
+  return Boolean(
+    session?.authenticated === true
+    && verifiedSource
+    && session?.lifecycle === "active"
+    && String(session?.userId || "").trim()
+    && normalizeAccessRole(session?.role)
+    && resolveAccountLifecycle({ ...session, uid: session.userId }).active
+  );
+}
+
+export function isVerifiedPublicHomeSession(session = window.EvaraRouteSession) {
+  return isPublicHomeRoute() && isVerifiedSession(session);
 }
 
 export function getStoredUser() {
@@ -66,6 +95,8 @@ export function isPrivateRoutePending() {
 }
 
 export function isAuthenticated() {
+  if (isCanonicalPublicRoute()) return isVerifiedSession();
+  if (isVerifiedSession()) return true;
   if (window.EvaraRouteSession?.authenticated) return true;
   const user = getStoredUser();
   if (user && (user.uid || user.email)) return true;
@@ -73,6 +104,11 @@ export function isAuthenticated() {
 }
 
 export function getRole() {
+  if (isCanonicalPublicRoute()) {
+    return isVerifiedSession()
+      ? String(window.EvaraRouteSession.role).toLowerCase()
+      : "guest";
+  }
   if (window.EvaraRouteSession?.role) return String(window.EvaraRouteSession.role).toLowerCase();
   try {
     const previewRole = localStorage.getItem("evaraos-preview-role");
@@ -89,6 +125,11 @@ export function getRole() {
 
 export function getDisplayName() {
   const routeSession = window.EvaraRouteSession;
+  if (isCanonicalPublicRoute()) {
+    return isVerifiedSession(routeSession)
+      ? routeSession.displayName || routeSession.email || "Profile"
+      : "Evaraos Guest";
+  }
   if (routeSession?.authenticated) {
     return routeSession.displayName || routeSession.email || "Profile";
   }

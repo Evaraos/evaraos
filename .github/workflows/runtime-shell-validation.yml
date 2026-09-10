@@ -28,6 +28,7 @@ on:
       - "public/assets/js/map-view-parameters.js"
       - "tools/access-authority-audit.mjs"
       - "tools/account-lifecycle-audit.mjs"
+      - "tools/home-shell-authority-audit.mjs"
       - "tools/experience-runtime-audit.js"
       - "tools/experience-editor-audit.js"
       - ".github/workflows/runtime-shell-validation.yml"
@@ -56,6 +57,7 @@ on:
       - "public/assets/js/map-view-parameters.js"
       - "tools/access-authority-audit.mjs"
       - "tools/account-lifecycle-audit.mjs"
+      - "tools/home-shell-authority-audit.mjs"
       - "tools/experience-runtime-audit.js"
       - "tools/experience-editor-audit.js"
       - ".github/workflows/runtime-shell-validation.yml"
@@ -113,6 +115,9 @@ jobs:
           set -euo pipefail
           node tools/access-authority-audit.mjs
           node tools/account-lifecycle-audit.mjs
+
+      - name: Validate Home shell authority
+        run: node tools/home-shell-authority-audit.mjs
 
       - name: Validate registered-slot Experience runtime
         run: |
@@ -196,49 +201,32 @@ jobs:
           }
 
           const navRebindBody = navSessionSource.match(/export async function rebindNavAfterRender\(\)\s*\{([\s\S]*?)\n\}/)?.[1] || '';
-          if (!navSessionSource.includes('import(`./nav-interactions.js?v=${NAV_BUILD}`)')
-            || !navRebindBody.includes('binders.interactions.bindNavInteractions();')) {
-            failures.push('nav-session.js: post-render refresh must restore canonical navigation interactions');
+          for (const [module, binding] of [['nav-interactions', 'binders.interactions.bindNavInteractions();'], ['nav-logout', 'bindLogout();'], ['nav-menu', 'menu.bindMenu();']]) {
+            if (!navSessionSource.includes(`import("./${module}.js")`) || !navRebindBody.includes(binding)) {
+              failures.push(`nav-session.js: post-render refresh must restore ${module}`);
+            }
           }
-          if (!navSessionSource.includes('import(`./nav-logout.js?v=${NAV_BUILD}`)')
-            || !navRebindBody.includes('bindLogout();')) {
-            failures.push('nav-session.js: post-render refresh must restore canonical logout binding');
+          if (!navEntrySource.includes('canAccessPageName(pathname, "guest")')
+            || !navEntrySource.includes('safeImport("./nav/nav-bottom.js")')
+            || !navSessionSource.includes('import("./nav-bottom.js")')
+            || !navRebindBody.includes('restoreBottomNavAfterRender();')) {
+            failures.push('nav: guest eligibility must reuse central policy and one bottom-nav module');
           }
-          if (!navSessionSource.includes('import(`./nav-menu.js?v=${NAV_BUILD}`)')
-            || !navRebindBody.includes('binders.menu.bindMenu();')) {
-            failures.push('nav-session.js: post-render refresh must restore canonical menu binding');
+          if (!navRenderSource.includes('const guestPublic = publicRoute && !groups.authed;')
+            || !navRenderSource.includes('guestPublicTopControl()')
+            || !navRenderSource.includes('const drawerAi = guestPublic ? "" : aiGroup(groups.authed);')) {
+            failures.push('nav-render.js: guest shell must exclude private notification and AI controls');
           }
-          if (!/if\s*\(guardMode\s*!==\s*["']auth["']\s*&&\s*!isPublicHome\)\s*\{[\s\S]*?safeImport\(["']\.\/nav\/nav-bottom\.js\?v=nav-v59-responsive-core["']\)/.test(navEntrySource)) {
-            failures.push('nav.js: auth routes and public Home must remain excluded from bottom navigation loading');
-          }
-          if (!navSessionSource.includes('document.body?.dataset?.routeGuard === "auth" || isPublicHomeRoute()')
-            || !navSessionSource.includes('import("./nav-bottom.js?v=nav-v59-responsive-core")')
-            || !navSessionSource.includes('({ mountBottomNav }) => mountBottomNav()')) {
-            failures.push('nav-session.js: eligible post-render refresh must reuse canonical bottom navigation mounting');
-          }
-          if (!navRebindBody.includes('restoreBottomNavAfterRender();')) {
-            failures.push('nav-session.js: post-render refresh must restore eligible bottom navigation');
-          }
-
-          const publicHomeMarkup = navRenderSource.match(/function publicHomeMarkup\(\)\s*\{([\s\S]*?)\n\}/)?.[1] || '';
-          if (!publicHomeMarkup.includes('href="/"') || !publicHomeMarkup.includes('<strong>Home</strong>')) {
-            failures.push('nav-render.js: public Home must render one canonical Home link');
-          }
-          if (/(evaMenuBtn|globalNotificationsBell|evaMenuPanel|evaLogoutBtn)/.test(publicHomeMarkup)) {
-            failures.push('nav-render.js: public Home markup must not contain account, menu, notification, drawer, or logout controls');
-          }
-          const publicCoreStart = navMainSource.indexOf('if(isPublicHome()){');
-          const accountCoreStart = navMainSource.indexOf('const [menu,events,session,interactions]');
-          const publicCore = publicCoreStart >= 0 && accountCoreStart > publicCoreStart
-            ? navMainSource.slice(publicCoreStart, accountCoreStart)
-            : '';
-          if (!publicCore.includes('optional("./nav-session.js")') || /(nav-events|nav-menu|nav-interactions|notifications-dropdown|nav-logout)/.test(publicCore)) {
-            failures.push('nav-main-v6.js: public Home must use only the lean session refresh path');
+          if (!navMainSource.includes('if(!isVerifiedSession?.())return;')
+            || !navMainSource.includes('startVerifiedPublicHomeSession')
+            || !navSessionSource.includes('profile.readVerifiedUserProfile')
+            || !navSessionSource.includes('lifecycle.resolveAccountLifecycle')) {
+            failures.push('nav: account systems require verified profile and lifecycle authority');
           }
           if (!navEntrySource.includes('if (!isPublicHome) maybeLoadOwnerEditor(storedRole());')
             || !navEntrySource.includes('if (!isPublicHome) maybeLoadOwnerEditor(event.detail?.role || storedRole());')
-            || !navEntrySource.includes('if (!isPublicHome) idleEnhancements.push(safeImport("./nav/avatar-sync.js?v=nav-v59-responsive-core"));')) {
-            failures.push('nav.js: public Home must not request the owner/account editor runtime');
+            || !navEntrySource.includes('if (!canAccessPageName(pathname, "guest")) idleEnhancements.push')) {
+            failures.push('nav.js: public Home must not request owner editor or cached-avatar runtime');
           }
           if (!/export function isCompact\(\)\s*\{[\s\S]*?!atTopOfPage\(\)[\s\S]*?nav-menu-open/.test(navScrollSource)
             || !navScrollSource.includes('shell.classList.toggle("compact", nextCompact);')
