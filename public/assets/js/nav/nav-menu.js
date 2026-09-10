@@ -65,6 +65,8 @@ export function closeMenu() {
   window.dispatchEvent(new CustomEvent("evara:menu-close"));
 }
 
+let globalMenuEventsBound = false;
+
 export function bindMenu() {
   const zone = getMenuZone();
   const btn = getMenuBtn();
@@ -85,10 +87,12 @@ export function bindMenu() {
   panel.addEventListener("click", event => event.stopPropagation());
   backdrop.addEventListener("click", () => closeMenu(true));
 
+  if (globalMenuEventsBound) return;
+  globalMenuEventsBound = true;
   document.addEventListener("click", event => {
     const target = event.target;
-    const clickedMenuButton = btn.contains(target);
-    const clickedMenuPanel = panel.contains(target);
+    const clickedMenuButton = getMenuBtn()?.contains(target);
+    const clickedMenuPanel = getMenuPanel()?.contains(target);
     if (!clickedMenuButton && !clickedMenuPanel && document.body.classList.contains("nav-menu-open")) closeMenu(true);
   });
 

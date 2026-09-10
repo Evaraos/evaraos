@@ -7,7 +7,7 @@ html:root{--eva-nav-compact-scale:.9}
 .eva-nav-shell::before,
 .eva-menu-zone,
 .eva-top-alert,
-.eva-public-home-pill{
+.eva-public-access-control{
   transition:transform .22s cubic-bezier(.2,.8,.2,1),opacity .18s ease!important;
   will-change:transform,opacity;
 }
@@ -15,7 +15,8 @@ html:root{--eva-nav-compact-scale:.9}
   transform:translate3d(0,-2px,0) scale(var(--eva-nav-compact-scale));
   transform-origin:top left;
 }
-.eva-nav-shell.compact .eva-top-alert{
+.eva-nav-shell.compact .eva-top-alert,
+.eva-nav-shell.compact .eva-public-access-control{
   transform:translate3d(0,-2px,0) scale(var(--eva-nav-compact-scale))!important;
   transform-origin:top right;
 }
@@ -28,25 +29,26 @@ body.nav-menu-open .eva-menu-zone{
   transform:none;
 }
 .eva-nav-shell.expanded .eva-top-alert,
-body.nav-menu-open .eva-top-alert{
+.eva-nav-shell.expanded .eva-public-access-control,
+body.nav-menu-open .eva-top-alert,
+body.nav-menu-open .eva-public-access-control{
   transform:none!important;
 }
-.eva-nav-shell.eva-public-home-shell::before{content:none!important}
-.eva-nav-shell.eva-public-home-shell .eva-nav-pill.eva-public-home-pill{
-  position:fixed;
+.eva-public-access-control{
+  position:absolute;
   z-index:40;
-  left:50%;
+  right:max(14px,env(safe-area-inset-right));
   top:calc(env(safe-area-inset-top,0px) + 8px);
   width:auto;
-  height:52px;
-  min-width:132px;
-  min-height:52px;
+  height:48px;
+  min-width:94px;
+  min-height:48px;
   margin:0;
-  padding:0 22px;
+  padding:0 14px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  gap:9px;
+  gap:7px;
   border:1px solid var(--lg-edge-soft)!important;
   border-radius:999px!important;
   color:var(--text-primary);
@@ -56,21 +58,17 @@ body.nav-menu-open .eva-top-alert{
   -webkit-backdrop-filter:blur(18px) saturate(185%)!important;
   pointer-events:auto!important;
   text-decoration:none;
-  transform:translateX(-50%);
-  transform-origin:top center;
+  transform:none;
+  transform-origin:top right;
 }
-.eva-nav-shell.eva-public-home-shell.compact .eva-public-home-pill{
-  opacity:.94;
-  transform:translateX(-50%) translateY(-2px) scale(var(--eva-nav-compact-scale));
-}
-.eva-public-home-icon{width:22px;height:22px;display:grid;place-items:center}
-.eva-public-home-icon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-.eva-public-home-pill strong{font-size:.92rem;font-weight:850;letter-spacing:-.02em}
+.eva-public-access-control>span{width:20px;height:20px;display:grid;place-items:center}
+.eva-public-access-control svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.eva-public-access-control strong{width:auto;min-width:36px!important;flex:0 0 auto;white-space:nowrap;font-size:.82rem;font-weight:850;letter-spacing:-.02em}
 @media(max-width:520px){
   html:root{--eva-page-nav-clearance:var(--eva-nav-clearance-expanded);--eva-nav-compact-scale:.96}
-  .eva-nav-shell.eva-public-home-shell .eva-nav-pill.eva-public-home-pill{top:calc(env(safe-area-inset-top,0px) + 7px);height:48px;min-width:120px;min-height:48px;padding:0 18px}
+  .eva-public-access-control{top:calc(env(safe-area-inset-top,0px) + 7px);right:max(12px,env(safe-area-inset-right));height:46px;min-width:90px;min-height:46px;padding:0 12px}
 }
 @media(prefers-reduced-motion:reduce){
-  .eva-nav-shell::before,.eva-menu-zone,.eva-top-alert,.eva-public-home-pill{transition:none!important}
+  .eva-nav-shell::before,.eva-menu-zone,.eva-top-alert,.eva-public-access-control{transition:none!important}
 }
 #universalNavRoot,#universalNav{display:contents!important;pointer-events:none!important}.eva-nav-layer{position:fixed;inset:0;width:100vw;max-width:100vw;z-index:2147483647;pointer-events:none!important}.eva-nav-layer::before{content:"";position:fixed;z-index:1;left:0;right:0;top:0;height:calc(82px + env(safe-area-inset-top,0px));pointer-events:none!important;background:linear-gradient(180deg,color-mix(in srgb,var(--bg-primary) 76%,transparent) 0%,color-mix(in srgb,var(--bg-primary) 40%,transparent) 58%,transparent 100%);backdrop-filter:blur(8px) saturate(135%);-webkit-backdrop-filter:blur(8px) saturate(135%);border:0!important;box-shadow:none!important;-webkit-mask-image:linear-gradient(180deg,#000 0%,#000 62%,transparent 100%);mask-image:linear-gradient(180deg,#000 0%,#000 62%,transparent 100%)}.eva-nav-shell{position:fixed;top:0;left:0;right:0;width:100vw;height:calc(68px + env(safe-area-inset-top,0px));z-index:20;pointer-events:none!important;overflow:visible;border:0!important;box-shadow:none!important;transition:transform .24s cubic-bezier(.2,.8,.2,1),opacity .18s ease}.eva-nav-shell::after{content:none!important}.eva-nav-shell::before{content:"Evaraos";position:absolute;z-index:30;left:50%;top:calc(env(safe-area-inset-top,0px) + 33px);transform:translate(-50%,-50%);color:var(--text-primary);font-size:1.08rem;font-weight:950;letter-spacing:-.045em;pointer-events:none;text-shadow:0 8px 26px var(--ios27-shadow)}.eva-nav-shell.is-hidden{transform:translateY(calc(-100% - 8px));opacity:0}.eva-nav-shell.is-visible{transform:translateY(0);opacity:1}.eva-nav-pill{position:static;z-index:21;width:100%;height:100%;min-height:0;margin:0;padding:0;border:0!important;background:none!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;overflow:visible;pointer-events:none!important}.eva-nav-pill::before,.eva-nav-pill::after{content:none!important}.eva-menu-zone{position:fixed!important;z-index:40;left:max(12px,env(safe-area-inset-left))!important;right:auto!important;top:calc(env(safe-area-inset-top,0px) + 9px)!important;display:flex;align-items:center;pointer-events:auto!important}.eva-brand{display:none!important}.eva-top-alert{position:fixed!important;z-index:40;right:max(14px,env(safe-area-inset-right))!important;left:auto!important;top:calc(env(safe-area-inset-top,0px) + 9px)!important;width:48px;height:48px;min-width:48px;min-height:48px;padding:0!important;margin:0!important;border:0!important;outline:0!important;border-radius:999px!important;background:linear-gradient(145deg,rgba(255,255,255,.28),rgba(255,255,255,.10))!important;box-shadow:0 14px 34px var(--ios27-shadow),inset 0 1px 0 rgba(255,255,255,.62)!important;backdrop-filter:blur(24px) saturate(175%)!important;-webkit-backdrop-filter:blur(24px) saturate(175%)!important;display:grid!important;place-items:center;color:var(--text-primary);pointer-events:auto!important;cursor:pointer;overflow:visible!important;transform:none!important;touch-action:manipulation;-webkit-tap-highlight-color:transparent}.eva-top-alert::before,.eva-top-alert::after{content:none!important}.eva-top-alert svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 4px 10px var(--ios27-shadow));pointer-events:none}.eva-alert-count{position:absolute;right:-3px;top:0;min-width:20px;height:20px;padding:0 5px;border-radius:999px;display:grid;place-items:center;background:var(--text-primary);color:var(--bg-primary);font-size:.62rem;font-weight:950;border:2px solid var(--bg-primary);box-shadow:0 5px 12px var(--ios27-shadow);pointer-events:none}.eva-backdrop{position:fixed;inset:0;z-index:2147483645;background:rgba(0,0,0,.28);backdrop-filter:blur(8px) saturate(130%);-webkit-backdrop-filter:blur(8px) saturate(130%);opacity:0;visibility:hidden;pointer-events:none!important;transition:opacity .18s ease,visibility .18s ease}body.nav-menu-open .eva-backdrop{opacity:1;visibility:visible;pointer-events:auto!important}.eva-menu-panel{pointer-events:none!important}body.nav-menu-open .eva-menu-panel{pointer-events:auto!important}@media(max-width:520px){:root{--eva-page-nav-clearance:var(--eva-nav-clearance-expanded)}.eva-nav-layer::before{height:calc(78px + env(safe-area-inset-top,0px))}.eva-nav-shell{height:calc(62px + env(safe-area-inset-top,0px))}.eva-nav-shell::before{top:calc(env(safe-area-inset-top,0px) + 30px);font-size:1rem}.eva-menu-zone{top:calc(env(safe-area-inset-top,0px) + 7px)!important}.eva-top-alert{top:calc(env(safe-area-inset-top,0px) + 7px)!important;right:max(12px,env(safe-area-inset-right))!important;width:46px;height:46px;min-width:46px;min-height:46px}.eva-top-alert svg{width:27px;height:27px}}

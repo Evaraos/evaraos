@@ -3,6 +3,31 @@ import { getNavShell } from "./nav-utils.js";
 
 let ticking = false;
 const TOP_GUARD = 18;
+const DIRECTION_THRESHOLD = 12;
+let lastObservedY = Math.max(0, window.scrollY || 0);
+let directionalTravel = 0;
+let scrollCompact = lastObservedY > TOP_GUARD;
+
+function updateScrollIntent() {
+  // Clamp browser overscroll so bouncing at either edge cannot reverse the bar.
+  const maxY = Math.max(0, Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) - window.innerHeight);
+  const y = Math.min(maxY, Math.max(0, window.scrollY || 0));
+  const delta = y - lastObservedY;
+  lastObservedY = y;
+
+  if (y <= TOP_GUARD) {
+    scrollCompact = false;
+    directionalTravel = 0;
+  } else if (delta) {
+    directionalTravel = Math.sign(delta) === Math.sign(directionalTravel)
+      ? directionalTravel + delta
+      : delta;
+    if (Math.abs(directionalTravel) >= DIRECTION_THRESHOLD) {
+      scrollCompact = directionalTravel > 0;
+      directionalTravel = 0;
+    }
+  }
+}
 
 function isMessagesCenterPinned() {
   const body = document.body;
@@ -20,7 +45,9 @@ export function atBottomOfPage() {
 }
 
 export function isCompact() {
-  return !atTopOfPage()
+  updateScrollIntent();
+  return scrollCompact
+    && !atTopOfPage()
     && !NAV_STATE.navPinnedOpen
     && !document.body.classList.contains("nav-menu-open")
     && !isMessagesCenterPinned();
@@ -48,6 +75,13 @@ function applyMode(compact = isCompact()) {
   shell.classList.toggle("expanded", !nextCompact);
   shell.classList.remove("is-hidden", "quick-pressing");
   shell.classList.add("is-visible");
+
+  // The shared scroll state controls both bars, including drawer transitions.
+  const bottomNav = document.querySelector(".eva-bottom-nav");
+  if (bottomNav) {
+    bottomNav.classList.toggle("is-compact", nextCompact);
+    bottomNav.dataset.evaScrollState = nextCompact ? "compact" : "expanded";
+  }
 
   document.body.classList.toggle("eva-nav-compact", nextCompact);
   document.body.classList.toggle("eva-nav-expanded", !nextCompact);

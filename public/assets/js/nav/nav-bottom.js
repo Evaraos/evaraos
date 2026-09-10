@@ -1,9 +1,11 @@
-import { buildHref, isCurrentPage } from "./nav-utils.js";
+import { buildHref, isAuthenticated, isCurrentPage, isVerifiedSession } from "./nav-utils.js";
 import { canAccessPageName, normalizeAccessRole } from "../access-control.js";
 import { iconSvg } from "../ui/icons.js";
 
 const REGISTRY = {
-  home: { label: "Home", page: "index.html", icon: "home" },
+  home: { label: "Home", page: "index.html", href: "/", icon: "home" },
+  signup: { label: "Sign Up", page: "signup.html", icon: "signup" },
+  apply: { label: "Apply", page: "staff_application.html", icon: "applications" },
   dashboard: { label: "Dashboard", page: "dashboard.html", icon: "dashboard" },
   customerHome: { label: "Home", page: "customer_dashboard.html", icon: "dashboard" },
   marketplace: { label: "Order", page: "customer-commerce.html", icon: "payments" },
@@ -18,6 +20,7 @@ const REGISTRY = {
   settings: { label: "Settings", page: "settings-v2.html", icon: "settings" }
 };
 
+const GUEST_DEFAULT_ITEMS = ["home", "signup", "apply"];
 function storedRole() {
   try {
     const raw = localStorage.getItem("evaraos-user") || sessionStorage.getItem("evaraos-user") || "{}";
@@ -29,10 +32,17 @@ function storedRole() {
 }
 
 function canonicalRole() {
+  if (isVerifiedSession()) return normalizeAccessRole(window.EvaraRouteSession.role);
+  if (canAccessPageName(window.location.pathname, "guest")) return "";
   return normalizeAccessRole(storedRole());
 }
 
+function isGuestPublicNavigation() {
+  return canAccessPageName(window.location.pathname, "guest") && !isAuthenticated();
+}
+
 function roleGroup() {
+  if (isGuestPublicNavigation()) return "guest";
   const role = canonicalRole();
   if (role === "customer") return "customer";
   if (["sales", "technician", "cleaner"].includes(role)) return "staff";
@@ -52,6 +62,10 @@ function allowedItemIds(ids, role) {
 }
 
 function workspaceItems() {
+  if (isGuestPublicNavigation()) {
+    return allowedItemIds(GUEST_DEFAULT_ITEMS, "guest").map((id) => REGISTRY[id]);
+  }
+
   const role = canonicalRole();
   const defaults = allowedItemIds(defaultItems(), role);
   if (role === "customer") return defaults.map((id) => REGISTRY[id]);
@@ -68,18 +82,25 @@ function workspaceItems() {
 export function mountBottomNav(force = false) {
   const layer = document.querySelector(".eva-nav-layer");
   if (!layer) return false;
-  if (force) layer.querySelector(".eva-bottom-nav")?.remove();
-  if (layer.querySelector(".eva-bottom-nav")) return false;
-
+  const items = workspaceItems();
+  const itemsKey = JSON.stringify([roleGroup(), ...items.map(item => item.href || buildHref(item.page))]);
+  const existing = layer.querySelector(".eva-bottom-nav");
+  if (existing && (!force || existing.dataset.evaItemsKey === itemsKey)) return false;
+  existing?.remove();
   const nav = document.createElement("nav");
   nav.className = `eva-bottom-nav eva-bottom-nav--${roleGroup()}`;
   nav.setAttribute("aria-label", "Primary navigation");
-  nav.innerHTML = workspaceItems().map((item) => {
-    const href = buildHref(item.page);
+  nav.dataset.evaItemCount = String(items.length);
+  nav.dataset.evaItemsKey = itemsKey;
+  nav.innerHTML = items.map((item) => {
+    const href = item.href || buildHref(item.page);
     const active = isCurrentPage(href);
     return `<a class="eva-bottom-link${active ? " is-active" : ""}" href="${href}" aria-label="${item.label}"${active ? ' aria-current="page"' : ""}><span class="eva-bottom-icon">${iconSvg(item.icon, "eva-icon")}</span><span class="eva-bottom-label">${item.label}</span></a>`;
   }).join("");
   layer.appendChild(nav);
+  const compact = document.getElementById("evaNavShell")?.classList.contains("compact") === true;
+  nav.classList.toggle("is-compact", compact);
+  nav.dataset.evaScrollState = compact ? "compact" : "expanded";
   return true;
 }
 
