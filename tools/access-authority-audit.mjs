@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {
+  CANONICAL_ROLES,
   canAccessPageName,
   defaultRouteForRole,
   normalizeAccessPath,
@@ -45,8 +46,20 @@ for (const [path, role, expected] of accessCases) {
   );
 }
 
+for (const role of CANONICAL_ROLES) {
+  assert.equal(normalizeAccessRole(role), role, `Canonical role ${role} must normalize to itself`);
+  assert.equal(normalizeAccessRole(normalizeAccessRole(role)), role, `Normalization must be idempotent for ${role}`);
+  assert.equal(resolveAccountLifecycle({ uid: 'role-check', role, status: 'active', approvalStatus: 'approved' }).active, true);
+  assert.equal(resolveAccountLifecycle({ uid: 'role-check', role, status: 'suspended', approvalStatus: 'approved' }).active, false);
+}
+assert.equal(canAccessPageName('/dashboard.html', 'platform_admin'), true);
+assert.equal(canAccessPageName('/unknown-private-route.html', 'platform_admin'), false);
+
 assert.equal(normalizeAccessRole('super admin'), 'platform_admin');
-assert.equal(normalizeAccessRole('not-a-role'), '');
+for (const unknown of ['not-a-role', 'constructor', '__proto__', 'toString']) {
+  assert.equal(normalizeAccessRole(unknown), '');
+  assert.equal(canAccessPageName('/dashboard.html', unknown), false);
+}
 assert.equal(normalizeAccessPath('/settings/account.html?tab=profile#name'), 'settings/account.html');
 assert.equal(normalizeAccessPath('./public/settings/icons.html'), 'settings/icons.html');
 assert.equal(defaultRouteForRole('customer'), '/customer_dashboard.html');

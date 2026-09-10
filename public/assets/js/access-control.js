@@ -11,6 +11,7 @@ export const CANONICAL_ROLES = Object.freeze([
 ]);
 
 const ROLE_ALIASES = Object.freeze({
+  platform_admin: 'platform_admin',
   super_admin: 'platform_admin',
   owner: 'owner',
   admin: 'admin',
@@ -171,7 +172,7 @@ export const FEATURE_POLICY = Object.freeze({
 
 export function normalizeAccessRole(role = '') {
   const value = String(role || '').trim().toLowerCase().replace(/\s+/g, '_');
-  return ROLE_ALIASES[value] || '';
+  return Object.hasOwn(ROLE_ALIASES, value) ? ROLE_ALIASES[value] : '';
 }
 
 export function normalizeAccessPath(path = '') {
