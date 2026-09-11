@@ -48,6 +48,9 @@ check(editor.includes('const result = await invoke(callable.getState);')
 check(editor.includes("dataset.evaraExperienceEditorAuthority = 'verified'")
   && editor.includes("dataset.evaraExperienceEditorAuthority = 'denied'"),
   'editor exposes a fail-closed authority state for diagnostics');
+check(editor.includes("EXPERIENCE_DELIVERY === 'hosting'") && editor.includes("dataset.evaraExperienceEditorAuthority = 'unavailable'"),
+  'static delivery explicitly pauses the online editor without granting authority');
+
 check(editor.includes('expectedDraftRevision: state.draftRevision'),
   'draft saves send the exact loaded draft revision');
 check(editor.includes('expectedDraftRevision: Number(saved.draftRevision)'),

@@ -15,6 +15,8 @@ on:
       - "public/assets/js/loader.js"
       - "public/assets/js/nav.js"
       - "public/assets/js/experience/**"
+      - "public/assets/config/experience.json"
+      - "tools/experience-spark-audit.mjs"
       - "public/assets/js/studio/experience-editor.js"
       - "public/assets/css/pages/studio-experience-editor.css"
       - "tools/experience-backend-audit.js"
@@ -35,6 +37,8 @@ on:
       - "public/assets/js/loader.js"
       - "public/assets/js/nav.js"
       - "public/assets/js/experience/**"
+      - "public/assets/config/experience.json"
+      - "tools/experience-spark-audit.mjs"
       - "public/assets/js/studio/experience-editor.js"
       - "public/assets/css/pages/studio-experience-editor.css"
       - "tools/experience-backend-audit.js"
@@ -179,8 +183,8 @@ jobs:
           const endpointIndex = rewrites.findIndex((rewrite) => rewrite.source === '/__experience/config');
           const catchAllIndex = rewrites.findIndex((rewrite) => rewrite.source === '**');
           const endpoint = endpointIndex >= 0 ? rewrites[endpointIndex] : null;
-          if (!endpoint || endpoint.function?.functionId !== 'getPublicExperienceConfig') {
-            failures.push('Firebase Hosting does not route /__experience/config to getPublicExperienceConfig.');
+          if (!endpoint || (endpoint.function?.functionId !== 'getPublicExperienceConfig' && endpoint.destination !== '/assets/config/experience.json')) {
+            failures.push('Firebase Hosting lacks a supported Experience configuration source.');
           }
           if (catchAllIndex >= 0 && endpointIndex >= catchAllIndex) {
             failures.push('The Experience endpoint must precede the Hosting catch-all rewrite.');

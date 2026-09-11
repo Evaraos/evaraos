@@ -12,6 +12,8 @@ on:
       - "public/assets/js/nav.js"
       - "public/assets/js/nav/**"
       - "public/assets/js/experience/**"
+      - "public/assets/config/experience.json"
+      - "tools/experience-spark-audit.mjs"
       - "public/assets/js/studio/experience-editor.js"
       - "public/assets/css/pages/studio-experience-editor.css"
       - "public/assets/js/access-control.js"
@@ -41,6 +43,8 @@ on:
       - "public/assets/js/nav.js"
       - "public/assets/js/nav/**"
       - "public/assets/js/experience/**"
+      - "public/assets/config/experience.json"
+      - "tools/experience-spark-audit.mjs"
       - "public/assets/js/studio/experience-editor.js"
       - "public/assets/css/pages/studio-experience-editor.css"
       - "public/assets/js/access-control.js"
@@ -128,6 +132,7 @@ jobs:
         run: |
           set -euo pipefail
           node tools/experience-editor-audit.js
+          node tools/experience-spark-audit.mjs
 
       - name: Audit shell entrypoints and cache policy
         shell: bash
