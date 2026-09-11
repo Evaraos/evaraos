@@ -188,6 +188,7 @@ jobs:
           node --experimental-default-type=module --check public/assets/js/marketplace-vendor-handoff.js
           node --experimental-default-type=module --check public/assets/js/customer-marketplace-ordering.js
           node --experimental-default-type=module --check public/assets/js/marketplace-order-engine.js
+          node tools/experience-runtime-audit.js
           node tools/studio-app-check-audit.js
           node tools/studio-trusted-journal-audit.js
           node tools/studio-production-authority-audit.js
@@ -271,7 +272,7 @@ jobs:
           const endpointIndex = rewrites.findIndex((rewrite) => rewrite.source === '/__experience/config');
           const catchAllIndex = rewrites.findIndex((rewrite) => rewrite.source === '**');
           const endpoint = endpointIndex >= 0 ? rewrites[endpointIndex] : null;
-          if (endpoint?.function?.functionId !== 'getPublicExperienceConfig') {
+          if (endpoint?.function?.functionId !== 'getPublicExperienceConfig' && endpoint?.destination !== '/assets/config/experience.json') {
             throw new Error('Experience Hosting rewrite is missing.');
           }
           if (catchAllIndex >= 0 && endpointIndex >= catchAllIndex) {

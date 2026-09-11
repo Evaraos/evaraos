@@ -1,4 +1,5 @@
 import { functions, httpsCallable } from '../firebase.js';
+import { EXPERIENCE_DELIVERY } from '../experience/experience-deployment.js';
 
 const EXPERIENCE_EDITOR_VERSION = 'experience-editor-v2';
 const ROOT_ID = 'evaraExperienceEditor';
@@ -539,6 +540,18 @@ function mount() {
 }
 
 async function bootstrap() {
+  if (EXPERIENCE_DELIVERY === 'hosting') {
+    document.documentElement.dataset.evaraExperienceEditorAuthority = 'unavailable';
+    if (!document.getElementById('evaraExperienceAvailability')) {
+      const notice = element('p', {
+        className: 'experience-editor-availability',
+        text: 'Online site publishing is paused. Site updates continue through reviewed releases.',
+        attrs: { id: 'evaraExperienceAvailability', role: 'status' }
+      });
+      document.body.append(notice);
+    }
+    return;
+  }
   if (state.bootstrapPromise) return state.bootstrapPromise;
   state.bootstrapPromise = (async () => {
     try {

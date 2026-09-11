@@ -77,7 +77,18 @@ if (!failures.length) {
   check(home.includes('var(--evara-loader-mark-size,42px)'), 'homepage pre-rendered loader uses the configured mark-size variable');
 
   const rewrites = firebase.hosting?.rewrites || [];
-  const endpointIndex = rewrites.findIndex((rewrite) => rewrite.source === '/__experience/config' && rewrite.function?.functionId === 'getPublicExperienceConfig');
+  const endpointIndex = rewrites.findIndex((rewrite) => rewrite.source === '/__experience/config');
+  const endpoint = rewrites[endpointIndex];
+  const deployment = read('public/assets/js/experience/experience-deployment.js');
+  const mode = deployment.match(/EXPERIENCE_DELIVERY = '(hosting|functions)'/)?.[1];
+  check(Boolean(mode), 'Experience delivery mode is explicit and recognized');
+  if (mode === 'hosting') {
+    check(endpoint?.destination === '/assets/config/experience.json' && !endpoint.function, 'Spark serves configuration from the checked-in Hosting asset');
+    const payload = JSON.parse(read('public/assets/config/experience.json'));
+    check(payload.schemaVersion === 'evara.experience.v1' && payload.publishedVersion === 0 && JSON.stringify(payload.config) === '{}', 'static delivery uses canonical defaults without claiming a server publication');
+  } else {
+    check(endpoint?.function?.functionId === 'getPublicExperienceConfig' && !endpoint.destination, 'online delivery uses the trusted Experience function');
+  }
   const catchAllIndex = rewrites.findIndex((rewrite) => rewrite.source === '**');
   check(endpointIndex >= 0, 'Hosting exposes the published Experience endpoint');
   check(catchAllIndex < 0 || endpointIndex < catchAllIndex, 'Experience endpoint precedes the SPA catch-all');

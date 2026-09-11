@@ -314,3 +314,11 @@
   from{transform:translateX(-24%)}
   to{transform:translateX(78%)}
 }
+
+.experience-editor-availability{
+  position:fixed;right:16px;bottom:90px;z-index:2147483200;
+  max-width:min(280px,calc(100vw - 32px));padding:12px 16px;margin:0;
+  border:1px solid var(--evara-border,rgba(27,47,68,.18));border-radius:16px;
+  background:var(--evara-surface,#fff);color:var(--evara-text,#0d1824);
+  font:500 13px/1.5 Inter,system-ui,sans-serif;
+}
