@@ -144,21 +144,20 @@ export async function rebindNavAfterRender() {
 
 async function performNavRefresh() {
   try {
-    const wasOpen = document.body.classList.contains("nav-menu-open");
-    let menu = null;
-    if (wasOpen) {
-      menu = await import("./nav-menu.js");
-      menu.closeMenu(false);
-    }
-
+    const previousShell = document.getElementById("evaNavShell");
     renderNav();
+    // Repeated session/storage notifications must not restart drawer motion.
+    // renderNav preserves the shell when its authority and profile are unchanged.
+    if (previousShell && previousShell === document.getElementById("evaNavShell")) return;
 
     applyProgress();
     await rebindNavAfterRender();
 
-    if (wasOpen) {
-      menu ||= await import("./nav-menu.js");
-      menu.openMenu();
+    // Preserve the current intent, not a snapshot from before asynchronous binds.
+    // A user closing the drawer during a refresh must not have it reopened.
+    if (document.body.classList.contains("nav-menu-open")) {
+      const menu = await import("./nav-menu.js");
+      if (document.body.classList.contains("nav-menu-open")) menu.openMenu();
     }
   } catch (error) {
     console.warn("Nav refresh failed:", error);
