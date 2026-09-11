@@ -5,16 +5,14 @@ Verified on 2026-09-10. This page replaces estimates with dated release evidence
 ## Live release
 
 - Website: [evaraos.web.app](https://evaraos.web.app/).
-- Released source: `1130979f72e8ac483bdf4b7da02dc8c8449eb50a` on the permanent `evaraos` branch.
-- [Production workflow 34444113035](https://github.com/Evaraos/evaraos/actions/runs/34444113035): validation and Hosting deployment succeeded.
-- [Machine-readable release proof](deployments/firebase-production-release.json): Hosting only. Functions, Firestore rules/indexes, and Storage were not deployed in this release.
-- New Hosting version: `48e565b152ad4776`; previous version: `b20e2dc5e6406522`. Keep the previous release available for rollback.
+- Spark-compatible released source: `7c7c0c1579d78d3c03d5817e6a61ad706322a64e`.
+- [Production workflow 34550277628](https://github.com/Evaraos/evaraos/actions/runs/34550277628): validation and Hosting deployment succeeded at 2026-09-11 01:21 UTC (September 10 in New York).
+- [Machine-readable release proof](deployments/firebase-production-release.json) is the authority for the latest exact revision and deployed components. This release changed Hosting only; billing, Functions, Firestore rules/indexes, and Storage were unchanged.
+- [PR #78](https://github.com/Evaraos/evaraos/pull/78) replaced the absent Experience function dependency with static Hosting configuration and an unavailable online-editor state. The live configuration URL returns HTTP 200 JSON. The response, deployment-mode module, and editor module match the released source byte-for-byte.
 
-Included changes: canonical access-role normalization ([PR #74](https://github.com/Evaraos/evaraos/pull/74)), project documentation ([PR #75](https://github.com/Evaraos/evaraos/pull/75)), and verified Home navigation plus stable scroll contraction/expansion ([PR #76](https://github.com/Evaraos/evaraos/pull/76)).
+Validation: six PR workflows, 13 focused audits and seven source-verification gates passed. The Hosting emulator verified the real rewrite and guest navigation. Component checks proved zero Experience callable requests in static mode, one availability notice, no editor controls, and denied authority when the online service fails. The prior navigation release ([PR #76](https://github.com/Evaraos/evaraos/pull/76)) remains included, together with the role fix ([PR #74](https://github.com/Evaraos/evaraos/pull/74)) and repository documentation.
 
-Seven live files, including Home, navigation entry/session/scroll/bottom modules, access control, and bottom-nav CSS, matched the released source byte-for-byte. Live guest checks at 1440px and 390px confirmed a single bottom bar, expansion when scrolling up, contraction when scrolling down, public drawer links, no private controls, and signed-out Leads/Dashboard redirects to login. The candidate also passed five PR workflows, 18 source audits, 69 Home authority assertions, and guest checks at four viewport widths.
-
-These checks do not prove authenticated owner workflows. Current-release Home/Leads/Dashboard session continuity, notifications, and logout remain to be exercised with an approved signed-in account. A complete semantic or security review of every repository file has not been performed.
+These checks do not prove authenticated owner workflows. Current-release Home/Leads/Dashboard session continuity, notifications and logout remain to be exercised with an approved signed-in account. A complete semantic or security review of every repository file has not been performed. Preserve the previous Hosting release for rollback; use the exact retained version shown in Firebase Hosting release history.
 
 ## Spark operating plan
 
