@@ -10,6 +10,8 @@ const {
   doc,
   getDoc,
   setDoc,
+  updateDoc,
+  deleteDoc,
   collection,
   getDocs,
   query,
@@ -43,6 +45,9 @@ async function seed() {
     const db = context.firestore();
     const users = [
       activeUser({ uid: "owner", role: "owner" }),
+      activeUser({ uid: "platform", role: "platform_admin" }),
+      activeUser({ uid: "legacyPlatform", role: "super_admin" }),
+      activeUser({ uid: "adminA", role: "admin", companyId: "company-a" }),
       activeUser({ uid: "managerA", role: "manager", companyId: "company-a" }),
       activeUser({ uid: "managerB", role: "manager", companyId: "company-b" }),
       activeUser({ uid: "salesA", role: "sales_rep", companyId: "company-a" }),
@@ -326,4 +331,24 @@ test("pending applicants can upload only their own application files", async () 
     contentType: "image/png",
     customMetadata: { ownerUid: "customerA" }
   }));
+});
+
+
+test("staff profile create update delete remain denied even for platform roles", async () => {
+  await env.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(), "staff_profiles", "techA"), {uid:"techA",userId:"techA",companyId:"company-a",role:"technician"});
+  });
+  for (const uid of ["techA", "techB", "owner", "platform", "legacyPlatform"]) {
+    const db = env.authenticatedContext(uid).firestore();
+    await assertFails(updateDoc(doc(db,"staff_profiles","techA"), {"onboardingTasks.reviewPolicies":true}));
+    await assertFails(deleteDoc(doc(db,"staff_profiles","techA")));
+    await assertFails(setDoc(doc(db,"staff_profiles",uid+"-new"),{uid}));
+  }
+});
+
+test("canonical and legacy platform reads agree without promoting tenant admins", async () => {
+  for (const uid of ["platform", "legacyPlatform", "owner"]) {
+    await assertSucceeds(getDoc(doc(env.authenticatedContext(uid).firestore(),"jobs","job-b")));
+  }
+  await assertFails(getDoc(doc(env.authenticatedContext("adminA").firestore(),"jobs","job-b")));
 });

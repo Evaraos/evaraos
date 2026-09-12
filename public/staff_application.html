@@ -105,11 +105,11 @@
           </div>
           <div class="form-section">
             <h2 class="form-section-title">Identity Verification</h2>
-            <p class="application-notice">Upload one valid identity document. Images and PDFs up to 15 MB are accepted.</p>
+            <p class="application-notice">Document collection is deferred. You can submit your application now; verification remains pending.</p>
             <div class="application-grid">
               <div class="application-field file-field"><label for="appProfilePhoto">Profile photo</label><input id="appProfilePhoto" type="file" accept="image/*" /></div>
-              <div class="application-field"><label for="appIdType">Document type *</label><select id="appIdType" required><option value="">Select</option><option value="state_id">State ID</option><option value="drivers_license">Driver’s License</option><option value="passport">Passport</option><option value="other">Other Government ID</option></select></div>
-              <div class="application-field file-field"><label for="appIdFront">Identity document *</label><input id="appIdFront" type="file" accept="image/*,application/pdf" required /></div>
+              <div class="application-field"><label for="appIdType">Document type (deferred)</label><select id="appIdType" disabled><option value="">Select</option><option value="state_id">State ID</option><option value="drivers_license">Driver’s License</option><option value="passport">Passport</option><option value="other">Other Government ID</option></select></div>
+              <div class="application-field file-field"><p class="form-subnote">Submit your application without documents. Document verification remains pending and will be requested separately.</p><label for="appIdFront">Identity document (deferred)</label><input id="appIdFront" type="file" accept="image/*,application/pdf" disabled /></div>
               <div class="application-field file-field"><label for="appIdBack">Back side, if applicable</label><input id="appIdBack" type="file" accept="image/*,application/pdf" /></div>
               <div class="application-field full file-field"><label for="appResume">Résumé or additional proof</label><input id="appResume" type="file" accept="image/*,application/pdf" /></div>
             </div>

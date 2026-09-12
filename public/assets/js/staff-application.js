@@ -3,13 +3,12 @@ import {
   syncUserSession, doc, setDoc, serverTimestamp
 } from "./firebase.js";
 import { ACCOUNT_STATUS_ROUTE } from "./account-lifecycle.js";
-import { getApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 const DEFAULT_PUBLIC_ROLE = "customer";
 const DEFAULT_PUBLIC_STATUS = "pending";
 const DEFAULT_PUBLIC_APPROVAL = "pending";
-const MAX_ATTACHMENT_BYTES = 15 * 1024 * 1024;
+// Initial intake deliberately does not access Storage. Attachments retain their schema
+// for a separate, capability-checked document collection flow after submission.
 
 const AVAILABLE_STAFF_ROLES = [
   { value:"sales_rep", label:"Sales Representative", summary:"Generate leads, educate customers, and close service opportunities in assigned territories." },
@@ -29,19 +28,12 @@ const messageEl = document.getElementById("staffApplicationMessage");
 const byId = id => document.getElementById(id);
 const value = id => String(byId(id)?.value || "").trim();
 const checked = id => Boolean(byId(id)?.checked);
-const fileValue = id => byId(id)?.files?.[0] || null;
 
 function fullName(){ return [value("appFirstName"),value("appMiddleName"),value("appLastName")].filter(Boolean).join(" "); }
 function normalizeUsername(email=""){ return String(email).trim().toLowerCase().split("@")[0].replace(/[^a-z0-9._-]+/g,"").slice(0,40); }
 function sanitizeRole(role=""){ const v=String(role).trim().toLowerCase(); return AVAILABLE_STAFF_ROLES.some(r=>r.value===v)?v:""; }
 function setMessage(text="",state=""){ if(messageEl){messageEl.textContent=text;messageEl.dataset.state=state;} }
 function setBusy(busy,text="Submit Staff Application"){ if(submitBtn){submitBtn.disabled=busy;submitBtn.textContent=busy?text:"Submit Staff Application";} }
-
-function validateAttachment(file,label,required=false){
-  if(!file){if(required)throw new Error(`${label} is required.`);return;}
-  if(!(file.type.startsWith("image/")||file.type==="application/pdf"))throw new Error(`${label} must be an image or PDF.`);
-  if(file.size>MAX_ATTACHMENT_BYTES)throw new Error(`${label} must be under 15MB.`);
-}
 
 function validateForm(){
   const required=[
@@ -51,7 +43,7 @@ function validateForm(){
     ["appAddress","Street address"],["appCity","City"],["appState","State"],["appZip","ZIP"],["appWorkAuth","Work authorization"],
     ["appDriversLicense","Driver’s license answer"],["appTransportation","Transportation answer"],["appAvailability","Availability"],
     ["appEmploymentType","Employment type"],["appEarliestStartDate","Earliest start date"],["appBackgroundConsent","Background-check consent"],
-    ["appIdType","Document type"],["appEmergencyName","Emergency contact name"],["appEmergencyPhone","Emergency contact phone"],["appEmergencyEmail","Emergency contact email"]
+    ["appEmergencyName","Emergency contact name"],["appEmergencyPhone","Emergency contact phone"],["appEmergencyEmail","Emergency contact email"]
   ];
   for(const [id,label] of required){if(!value(id))throw new Error(`${label} is required.`);}
   if(!sanitizeRole(value("appRole")))throw new Error("Select a valid role.");
@@ -59,18 +51,6 @@ function validateForm(){
   if(value("appPassword")!==value("appPasswordConfirm"))throw new Error("Passwords do not match.");
   if(value("appDriversLicense")==="yes"&&!value("appDriversNumber"))throw new Error("Driver’s license number is required when you have a license.");
   if(!checked("appConsentAccurate"))throw new Error("Confirm that the application information is accurate.");
-  validateAttachment(fileValue("appIdFront"),"Identity document",true);
-  validateAttachment(fileValue("appIdBack"),"Back side attachment");
-  validateAttachment(fileValue("appResume"),"Résumé or extra proof");
-  validateAttachment(fileValue("appProfilePhoto"),"Profile photo");
-}
-
-function fileExtension(file={}){const n=String(file.name||"");return (n.includes(".")?n.split(".").pop():"file").toLowerCase().replace(/[^a-z0-9]+/g,"")||"file";}
-async function uploadAttachment(uid,file,kind){
-  if(!file)return null;
-  const ref=storageRef(getStorage(getApp()),`staff_applications/${uid}/${Date.now()}_${kind}.${fileExtension(file)}`);
-  await uploadBytes(ref,file,{contentType:file.type,customMetadata:{ownerUid:uid,applicationId:uid,kind}});
-  return {kind,name:file.name,size:file.size,type:file.type,path:ref.fullPath,downloadURL:await getDownloadURL(ref),verified:false,uploadedAt:new Date().toISOString()};
 }
 
 function buildPayload(user,attachments){
@@ -86,7 +66,7 @@ function buildPayload(user,attachments){
     earliestStartDate:value("appEarliestStartDate"),payExpectation:value("appPayExpectation"),equipmentExperience:value("appEquipmentExperience"),backgroundConsent:value("appBackgroundConsent"),
     consentAccurate:checked("appConsentAccurate"),experienceSummary:value("appExperience"),idDocumentType:value("appIdType"),emergencyContactName:value("appEmergencyName"),
     emergencyContactPhone:value("appEmergencyPhone"),emergencyContactEmail:value("appEmergencyEmail"),attachments,attachmentCount:attachments.length,
-    profilePhotoUploaded:Boolean(photo),profilePhotoURL:photo?.downloadURL||"",status:"submitted",verificationStatus:"pending_review",reviewNotes:"",
+    documentVerificationStatus:"deferred",documentVerificationReason:"document_collection_unavailable",profilePhotoUploaded:Boolean(photo),profilePhotoURL:photo?.downloadURL||"",status:"submitted",verificationStatus:"pending_review",
     createdAt:serverTimestamp(),submittedAt:serverTimestamp(),updatedAt:serverTimestamp(),
     searchText:[name,email,role,value("appDesiredCompany"),value("appCampaign"),value("appPreferredCity"),value("appPhone"),value("appCity"),value("appState")].filter(Boolean).join(" ").toLowerCase()
   };
@@ -102,12 +82,10 @@ async function handleSubmit(event){
     await updateProfile(user,{displayName:name});
     await setDoc(doc(db,"users",user.uid),{uid:user.uid,id:user.uid,email,username,usernameLower:username,displayName:name,fullName:name,name,role:DEFAULT_PUBLIC_ROLE,phone:value("appPhone"),bio:"Staff applicant pending review.",status:DEFAULT_PUBLIC_STATUS,approvalStatus:DEFAULT_PUBLIC_APPROVAL,companyId:"",companyName:"",createdAt:serverTimestamp(),updatedAt:serverTimestamp()},{merge:true});
     syncUserSession(user,DEFAULT_PUBLIC_ROLE,{displayName:name,fullName:name,name,username,companyId:"",companyName:"",approvalStatus:DEFAULT_PUBLIC_APPROVAL,status:DEFAULT_PUBLIC_STATUS});
-    setBusy(true,"Uploading verification…");setMessage("Uploading verification attachments…","info");
     const uploads=[];
-    for(const [id,kind] of [["appProfilePhoto","profile_photo"],["appIdFront","id_front"],["appIdBack","id_back"],["appResume","resume_or_extra_proof"]]){const item=await uploadAttachment(user.uid,fileValue(id),kind);if(item)uploads.push(item);}
     setBusy(true,"Submitting application…");
     await setDoc(doc(db,"staff_applications",user.uid),buildPayload(user,uploads),{merge:false});
-    setMessage("Application submitted. Opening your secure account status…","success");
+    setMessage("Application submitted. Document verification is pending; documents will be requested separately. Opening your secure account status…","success");
     form.reset();document.querySelectorAll(".role-choice").forEach(x=>x.classList.remove("active"));
     setTimeout(()=>window.location.assign(`${ACCOUNT_STATUS_ROUTE}?state=pending`),1000);
   }catch(error){console.error("Staff application failed:",error);setMessage(error.message||"Could not submit staff application.","error");}
@@ -115,6 +93,12 @@ async function handleSubmit(event){
 }
 
 function upgradePage(){
+  // Do not accept sensitive files that this release cannot submit.
+  for (const id of ["appIdFront", "appIdBack", "appResume", "appProfilePhoto", "appIdType"]) {
+    const input = byId(id);
+    if (input) { input.required = false; input.disabled = true; }
+  }
+
   const oldName=byId("appFullName")?.closest(".application-field");
   if(oldName){oldName.className="application-field full name-grid-host";oldName.innerHTML=`<div class="name-grid"><div class="application-field"><label for="appFirstName">First name *</label><input id="appFirstName" autocomplete="given-name" required></div><div class="application-field"><label for="appMiddleName">Middle name <small>Optional</small></label><input id="appMiddleName" autocomplete="additional-name"></div><div class="application-field"><label for="appLastName">Last name *</label><input id="appLastName" autocomplete="family-name" required></div></div>`;}
 

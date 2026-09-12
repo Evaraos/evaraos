@@ -6,7 +6,7 @@ const {
   assertFails,
   assertSucceeds
 } = require("@firebase/rules-unit-testing");
-const { doc, getDoc, setDoc } = require("firebase/firestore");
+const { doc, getDoc, setDoc, updateDoc } = require("firebase/firestore");
 
 const projectId = `${process.env.GCLOUD_PROJECT || "evaraos-web"}-staff-applicant-lifecycle`;
 const root = path.resolve(__dirname, "../..");
@@ -45,6 +45,10 @@ function submittedApplication(uid, overrides = {}) {
     desiredCompany: "Preferred Company",
     status: "submitted",
     verificationStatus: "pending_review",
+    attachments: [],
+    attachmentCount: 0,
+    documentVerificationStatus: "deferred",
+    documentVerificationReason: "document_collection_unavailable",
     createdAtMs: Date.now(),
     submittedAtMs: Date.now(),
     updatedAtMs: Date.now(),
@@ -130,4 +134,73 @@ test("public application creation enforces the requestable role catalog", async 
     doc(mismatchedRoleDb, "staff_applications", "mismatchedRole"),
     submittedApplication("mismatchedRole", { roleRequested: "technician", desiredRole: "manager" })
   ));
+});
+
+
+test("applicants cannot self-assign canonical or legacy platform authority", async () => {
+  for (const role of ["platform_admin", "super_admin", "owner", "admin", "manager"]) {
+    const uid = `forged_${role}`;
+    const db = env.authenticatedContext(uid).firestore();
+    await assertFails(setDoc(doc(db, "users", uid), pendingProfile(uid, {role})));
+    await assertFails(setDoc(doc(db, "staff_applications", uid), submittedApplication(uid, {roleRequested:role,desiredRole:role})));
+  }
+});
+
+
+const trustedFields = ["finalRole","approvedRole","approvedAt","approvedBy","approvedByName",
+  "reviewedAt","reviewedBy","reviewedByName","reviewerRole","rejectedAt","rejectedBy","rejectedByName",
+  "assignmentStatus","assignedAt","assignedBy","assignedByName","companyId","companyName","reviewNotes",
+  "approvalStatus","reviewerUid","verifiedBy","permissions","customClaims"];
+
+test("Spark creation rejects verification, attachment and trusted field forgery", async () => {
+  const db = env.authenticatedContext("applicant").firestore();
+  const ref = doc(db,"staff_applications","applicant");
+  for (const patch of [
+    {verificationStatus:"verified"}, {documentVerificationStatus:"verified"},
+    {attachments:[{downloadURL:"https://example.com/forged.pdf"}]}, {attachments:{}},
+    {attachmentCount:1}, {attachmentCount:"0"}, {status:"approved"},
+    {profilePhotoURL:"javascript:alert(1)"}, {profilePhotoUploaded:true},
+    ...trustedFields.map(key=>({[key]:"forged"}))
+  ]) await assertFails(setDoc(ref,submittedApplication("applicant",patch)));
+  await assertSucceeds(setDoc(ref,submittedApplication("applicant")));
+});
+
+test("self-update freezes verification attachments authority and requested role", async () => {
+  const db = env.authenticatedContext("applicant").firestore();
+  const ref = doc(db,"staff_applications","applicant");
+  await assertSucceeds(setDoc(ref,submittedApplication("applicant")));
+  for (const patch of [
+    {verificationStatus:"verified"}, {documentVerificationStatus:"verified"},
+    {documentVerificationReason:"verified"}, {attachments:[{downloadURL:"https://example.com/fake"}]},
+    {attachmentCount:1}, {roleRequested:"cleaner"}, {desiredRole:"owner"},
+    {profilePhotoURL:"https://example.com/fake"}, {applicantUid:"other"},
+    ...trustedFields.map(key=>({[key]:"forged"}))
+  ]) await assertFails(updateDoc(ref,patch));
+});
+
+test("submitted and needs_more_info applicants retain legitimate corrections only", async () => {
+  const db = env.authenticatedContext("applicant").firestore();
+  const ref = doc(db,"staff_applications","applicant");
+  await assertSucceeds(setDoc(ref,submittedApplication("applicant")));
+  for (const status of ["submitted","needs_more_info"]) {
+    await env.withSecurityRulesDisabled(async context=>{
+      await updateDoc(doc(context.firestore(),"staff_applications","applicant"),{status});
+    });
+    await assertSucceeds(updateDoc(ref,{fullName:"Corrected Name",phone:"555-0101",address:"123 Main",availability:"Weekdays"}));
+    await assertFails(updateDoc(doc(env.authenticatedContext("other").firestore(),"staff_applications","applicant"),{phone:"forged"}));
+  }
+  await env.withSecurityRulesDisabled(async context=>{
+    await updateDoc(doc(context.firestore(),"staff_applications","applicant"),{status:"approved"});
+  });
+  await assertFails(updateDoc(ref,{phone:"555-0102"}));
+});
+
+test("actual public buildPayload remains accepted by the create allowlist", async () => {
+  const vm = require("node:vm");
+  const source=fs.readFileSync(path.join(root,"public/assets/js/staff-application.js"),"utf8");
+  const code=source.slice(source.indexOf("function buildPayload"),source.indexOf("async function handleSubmit"));
+  const context={value:()=>"provided",sanitizeRole:()=>"technician",fullName:()=>"Applicant",normalizeUsername:()=>"applicant",checked:()=>true,serverTimestamp:()=>Date.now()};
+  vm.createContext(context);vm.runInContext(code,context);
+  const payload=JSON.parse(JSON.stringify(vm.runInContext('buildPayload({uid:"applicant"}, [])',context)));
+  await assertSucceeds(setDoc(doc(env.authenticatedContext("applicant").firestore(),"staff_applications","applicant"),payload));
 });

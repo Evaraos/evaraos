@@ -23,6 +23,7 @@ const appsApproved = document.getElementById("appsApproved");
 const REVIEWER_ROLES = new Set([
   "owner",
   "super_admin",
+  "platform_admin",
   "admin",
   "manager",
   "operations_manager",
@@ -31,7 +32,7 @@ const REVIEWER_ROLES = new Set([
   "hr_manager"
 ]);
 
-const PLATFORM_ROLES = new Set(["owner", "super_admin"]);
+const PLATFORM_ROLES = new Set(["owner", "super_admin", "platform_admin"]);
 
 const STAFF_ROLES = [
   ["quality_control", "Quality Control"],
@@ -143,12 +144,24 @@ function renderStats() {
   }
 }
 
+// Legacy records remain untrusted. Future attachment metadata must come from a
+// separately authorized document-collection backend, never applicant writes.
+function safeAttachmentUrl(value) {
+  if (typeof value !== "string") return "";
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && !url.username && !url.password ? url.href : "";
+  } catch { return ""; }
+}
+
 function renderAttachments(app = {}) {
   const attachments = Array.isArray(app.attachments) ? app.attachments : [];
   if (!attachments.length) return `<span class="pill error">No attachments</span>`;
   return attachments.map((file) => {
-    const label = escapeHtml(file.kind || file.name || "attachment");
-    const url = escapeHtml(file.downloadURL || "#");
+    const label = escapeHtml(file?.kind || file?.name || "attachment");
+    const safeUrl = safeAttachmentUrl(file?.downloadURL);
+    if (!safeUrl) return `<span class="pill error">Unavailable ${label}</span>`;
+    const url = escapeHtml(safeUrl);
     return `<a class="pill" href="${url}" target="_blank" rel="noopener noreferrer">Open ${label}</a>`;
   }).join("");
 }
@@ -297,7 +310,7 @@ async function submitDecision(button) {
   const companyDecision = ["approved", "assigned"].includes(decision);
 
   if (decision === "assigned" && !isPlatformReviewer(currentProfile)) {
-    return alert("Only the owner or super admin can assign an application to a company.");
+    return alert("Only the owner or platform administrator can assign an application to a company.");
   }
   if (companyDecision && !companyId) return alert("Select a company before continuing.");
   if (decision === "approved" && !STAFF_ROLES.some(([role]) => role === normalize(finalRole))) return alert("Select a valid final role.");

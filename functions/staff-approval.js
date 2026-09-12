@@ -4,9 +4,11 @@ const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const db = admin.firestore();
 const FieldValue = admin.firestore.FieldValue;
 
+const { normalizeAuthorityRole, isPlatformReviewer } = require("./staff-authority");
+
 const REVIEWER_ROLES = new Set([
   "owner",
-  "super_admin",
+  "platform_admin",
   "admin",
   "manager",
   "operations_manager",
@@ -46,12 +48,11 @@ function activeApproved(user = {}) {
 }
 
 function platformReviewer(user = {}) {
-  const role = normalize(user.role);
-  return role === "owner" || role === "super_admin";
+  return isPlatformReviewer(user);
 }
 
 function assertReviewer(user = {}) {
-  if (!activeApproved(user) || !REVIEWER_ROLES.has(normalize(user.role))) {
+  if (!activeApproved(user) || !REVIEWER_ROLES.has(normalizeAuthorityRole(user.role))) {
     throw new HttpsError("permission-denied", "This account cannot review staff applications.");
   }
 }
@@ -228,22 +229,22 @@ exports.reviewStaffApplication = onCall(
 
     const reviewerRef = db.doc(`users/${request.auth.uid}`);
     const applicationRef = db.doc(`staff_applications/${applicationId}`);
-    const reviewerSnapshot = await reviewerRef.get();
-    if (!reviewerSnapshot.exists) {
-      throw new HttpsError("permission-denied", "Reviewer profile not found.");
-    }
-
-    const reviewer = reviewerSnapshot.data() || {};
-    assertReviewer(reviewer);
-    if (decision === "assigned" && !platformReviewer(reviewer)) {
-      throw new HttpsError("permission-denied", "Only the owner or super admin can assign applications to a company.");
-    }
-    const actor = actorSnapshot(request, reviewer);
 
     let approvedClaims = null;
     let processedCompanyId = null;
 
     await db.runTransaction(async (transaction) => {
+      const reviewerSnapshot = await transaction.get(reviewerRef);
+      if (!reviewerSnapshot.exists) {
+        throw new HttpsError("permission-denied", "Reviewer profile not found.");
+      }
+
+      const reviewer = reviewerSnapshot.data() || {};
+      assertReviewer(reviewer);
+      if (decision === "assigned" && !platformReviewer(reviewer)) {
+        throw new HttpsError("permission-denied", "Only an owner or platform administrator can assign applications to a company.");
+      }
+      const actor = actorSnapshot(request, reviewer);
       const applicationSnapshot = await transaction.get(applicationRef);
       if (!applicationSnapshot.exists) {
         throw new HttpsError("not-found", "Staff application not found.");

@@ -1,5 +1,6 @@
 export const ROLE_PERMISSIONS = {
   owner: ["all"],
+  platform_admin: ["all"],
   super_admin: ["all"],
 
   admin: [
@@ -88,6 +89,7 @@ export const ROLE_PERMISSIONS = {
 export function normalizeRole(role = "") {
   const value = String(role || "").trim().toLowerCase();
 
+  if (value === "super_admin") return "platform_admin";
   if (value === "tech") return "technician";
   if (value === "sales") return "sales_rep";
 
