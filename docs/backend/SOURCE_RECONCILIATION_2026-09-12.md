@@ -62,3 +62,14 @@ No provider changes, App Check enforcement changes or billing changes are includ
 - `functions/staff-onboarding.js`
 - `functions/staff-reconciliation.test.js`
 - `docs/backend/SOURCE_RECONCILIATION_2026-09-12.md`
+
+
+## Applicant record-integrity hardening (second commit)
+
+Client creation now requires submitted/pending_review/deferred state, an empty attachment list and integer zero count. An explicit intake-field allowlist denies all review, approval, assignment and unknown fields, including reviewNotes. Optional photo metadata must remain empty/false. Public submission no longer includes reviewNotes. Self-update retains the existing contact/address/detail correction allowlist and pending-status gate; verification, document verification, attachments/counts, requested role, identity and trusted authority fields cannot change. Backend attachment support is preserved for a future separately authorized collection path.
+
+Applications renders only absolute HTTPS attachment links with no embedded credentials; malformed and unsafe URLs render as unavailable. HTTPS validation is not a reputation check. Legacy records remain untrusted. Copy uses owner/platform administrator terminology.
+
+Validation: 54 Functions tests, 22 Firestore/Storage emulator tests, six source audits, four changed-JavaScript syntax checks and whitespace check all pass. No suites blocked. Node 20 was not readily available; local tests used Node 24.19 and CI remains configured for Node 20. Tests include the actual public buildPayload against emulator rules, forged create/update fields, legitimate corrections, and HTTPS URL validation. Trusted approval handler tests still pass without changing backend approval code.
+
+Remaining concerns: existing application detail type/size validation and non-Storage registration recovery are outside this focused patch. Previously injected production records are not retroactively repaired. The production rules gap remains until a separately authorized rules deployment. No production resources were changed.

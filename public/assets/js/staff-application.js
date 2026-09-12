@@ -66,7 +66,7 @@ function buildPayload(user,attachments){
     earliestStartDate:value("appEarliestStartDate"),payExpectation:value("appPayExpectation"),equipmentExperience:value("appEquipmentExperience"),backgroundConsent:value("appBackgroundConsent"),
     consentAccurate:checked("appConsentAccurate"),experienceSummary:value("appExperience"),idDocumentType:value("appIdType"),emergencyContactName:value("appEmergencyName"),
     emergencyContactPhone:value("appEmergencyPhone"),emergencyContactEmail:value("appEmergencyEmail"),attachments,attachmentCount:attachments.length,
-    documentVerificationStatus:"deferred",documentVerificationReason:"document_collection_unavailable",profilePhotoUploaded:Boolean(photo),profilePhotoURL:photo?.downloadURL||"",status:"submitted",verificationStatus:"pending_review",reviewNotes:"",
+    documentVerificationStatus:"deferred",documentVerificationReason:"document_collection_unavailable",profilePhotoUploaded:Boolean(photo),profilePhotoURL:photo?.downloadURL||"",status:"submitted",verificationStatus:"pending_review",
     createdAt:serverTimestamp(),submittedAt:serverTimestamp(),updatedAt:serverTimestamp(),
     searchText:[name,email,role,value("appDesiredCompany"),value("appCampaign"),value("appPreferredCity"),value("appPhone"),value("appCity"),value("appState")].filter(Boolean).join(" ").toLowerCase()
   };

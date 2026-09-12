@@ -120,6 +120,19 @@ test('submission executes successfully without files and writes pending unassign
   assert.equal(writes.length,2);
   assert.equal(writes[0][1].role,'customer');assert.equal(writes[0][1].companyId,'');
   const app=writes[1][1];assert.equal(app.status,'submitted');assert.equal(app.verificationStatus,'pending_review');
-  assert.equal(app.attachments.length,0);assert.equal(app.documentVerificationStatus,'deferred');
+  assert.equal(Object.hasOwn(app,'reviewNotes'),false);assert.equal(app.attachments.length,0);assert.equal(app.documentVerificationStatus,'deferred');
   assert.equal(Object.hasOwn(app,'companyId'),false);
+});
+
+
+test('attachment URLs permit HTTPS Storage URLs and reject unsafe protocols', () => {
+  const source=fs.readFileSync(path.join(__dirname,'../public/assets/js/applications.js'),'utf8');
+  const start=source.indexOf('function safeAttachmentUrl');
+  const end=source.indexOf('function renderAttachments',start);
+  const context={URL};vm.createContext(context);vm.runInContext(source.slice(start,end),context);
+  for(const value of ['javascript:alert(1)','data:text/html,evil','http://example.com/a','//example.com/a','/relative',null,'https://user:password@example.com/a']) {
+    context.value=value; assert.equal(vm.runInContext('safeAttachmentUrl(value)',context),'');
+  }
+  context.value='https://firebasestorage.googleapis.com/v0/b/example/o/file.pdf?alt=media&token=test';
+  assert.equal(vm.runInContext('safeAttachmentUrl(value)',context),context.value);
 });
