@@ -30,6 +30,7 @@ service firebase.storage {
 
     function isPlatformOwner() {
       return accountActive() && userRole() in [
+        'platform_admin',
         'owner', 'Owner', 'OWNER',
         'super_admin', 'Super Admin', 'SUPER_ADMIN'
       ];

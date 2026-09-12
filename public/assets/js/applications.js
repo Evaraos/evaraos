@@ -23,6 +23,7 @@ const appsApproved = document.getElementById("appsApproved");
 const REVIEWER_ROLES = new Set([
   "owner",
   "super_admin",
+  "platform_admin",
   "admin",
   "manager",
   "operations_manager",
@@ -31,7 +32,7 @@ const REVIEWER_ROLES = new Set([
   "hr_manager"
 ]);
 
-const PLATFORM_ROLES = new Set(["owner", "super_admin"]);
+const PLATFORM_ROLES = new Set(["owner", "super_admin", "platform_admin"]);
 
 const STAFF_ROLES = [
   ["quality_control", "Quality Control"],

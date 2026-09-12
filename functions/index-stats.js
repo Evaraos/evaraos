@@ -219,3 +219,5 @@ exports.publishExperienceConfig = experienceConfig.publishExperienceConfig;
 exports.rollbackExperienceConfig = experienceConfig.rollbackExperienceConfig;
 exports.uploadExperienceAsset = experienceConfig.uploadExperienceAsset;
 exports.getPublicExperienceConfig = experienceConfig.getPublicExperienceConfig;
+
+exports.updateStaffOnboardingTask = require("./staff-onboarding").updateStaffOnboardingTask;

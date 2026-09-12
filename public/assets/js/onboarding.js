@@ -1,11 +1,11 @@
+import { httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 import {
   auth,
   db,
   onAuthStateChanged,
   doc,
   getDoc,
-  updateDoc,
-  serverTimestamp,
+  functions,
   getSavedUserProfile
 } from "./firebase.js";
 
@@ -24,11 +24,11 @@ const TASK_LABELS = {
   },
   receiveAssignment: {
     title: "Receive first assignment",
-    description: "Management dispatches your first route, lead set, or crew assignment."
+    description: "Acknowledge receipt of your first assignment. This does not assign work."
   },
   activatePayouts: {
     title: "Activate payout profile",
-    description: "Connect payout information before payroll or contractor payouts."
+    description: "Acknowledge payout setup. This checklist does not activate payments."
   }
 };
 
@@ -55,7 +55,7 @@ function roleLabel(role = "") {
 }
 
 function completionPercent(tasks = {}) {
-  const values = Object.values(tasks || {});
+  const values = Object.keys(TASK_LABELS).map(key => tasks[key] === true);
   if (!values.length) return 0;
   const complete = values.filter(Boolean).length;
   return Math.round((complete / values.length) * 100);
@@ -116,6 +116,7 @@ function renderProfile(profile = {}) {
       </section>
 
       <section>
+        <p>These are your onboarding acknowledgements. They do not verify documents, assign work, or activate payments.</p>
         <div class="task-list">
           ${renderTasks(profile)}
         </div>
@@ -152,33 +153,31 @@ async function loadOnboarding(uid) {
 async function toggleTask(taskKey) {
   if (!currentProfile?.uid || !TASK_LABELS[taskKey]) return;
 
-  const tasks = {
-    ...(currentProfile.onboardingTasks || {})
-  };
-
-  tasks[taskKey] = !tasks[taskKey];
-
-  await updateDoc(doc(db, "staff_profiles", currentProfile.uid), {
-    onboardingTasks: tasks,
-    onboardingStage: completionPercent(tasks) >= 100 ? "fully_active" : "in_progress",
-    updatedAt: serverTimestamp()
+  const { data } = await httpsCallable(functions, "updateStaffOnboardingTask")({
+    taskKey, completed: currentProfile.onboardingTasks?.[taskKey] !== true
   });
-
-  currentProfile.onboardingTasks = tasks;
+  currentProfile.onboardingTasks = data.onboardingTasks;
+  currentProfile.onboardingStage = data.onboardingStage;
   renderProfile(currentProfile);
 }
+
+let taskUpdatePending = false;
 
 function bindEvents() {
   onboardingRoot?.addEventListener("click", async (event) => {
     const toggle = event.target.closest("[data-task-key]");
-    if (!toggle) return;
+    if (!toggle || taskUpdatePending) return;
 
     try {
+      taskUpdatePending = true;
       toggle.disabled = true;
       await toggleTask(toggle.getAttribute("data-task-key"));
     } catch (error) {
       console.error("Onboarding task update failed:", error);
       alert(error.message || "Could not update onboarding task.");
+    } finally {
+      taskUpdatePending = false;
+      toggle.disabled = false;
     }
   });
 }

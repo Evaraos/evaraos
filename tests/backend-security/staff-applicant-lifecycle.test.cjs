@@ -45,6 +45,10 @@ function submittedApplication(uid, overrides = {}) {
     desiredCompany: "Preferred Company",
     status: "submitted",
     verificationStatus: "pending_review",
+    attachments: [],
+    attachmentCount: 0,
+    documentVerificationStatus: "deferred",
+    documentVerificationReason: "document_collection_unavailable",
     createdAtMs: Date.now(),
     submittedAtMs: Date.now(),
     updatedAtMs: Date.now(),
@@ -130,4 +134,14 @@ test("public application creation enforces the requestable role catalog", async 
     doc(mismatchedRoleDb, "staff_applications", "mismatchedRole"),
     submittedApplication("mismatchedRole", { roleRequested: "technician", desiredRole: "manager" })
   ));
+});
+
+
+test("applicants cannot self-assign canonical or legacy platform authority", async () => {
+  for (const role of ["platform_admin", "super_admin", "owner", "admin", "manager"]) {
+    const uid = `forged_${role}`;
+    const db = env.authenticatedContext(uid).firestore();
+    await assertFails(setDoc(doc(db, "users", uid), pendingProfile(uid, {role})));
+    await assertFails(setDoc(doc(db, "staff_applications", uid), submittedApplication(uid, {roleRequested:role,desiredRole:role})));
+  }
 });

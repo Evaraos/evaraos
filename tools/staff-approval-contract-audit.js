@@ -106,8 +106,8 @@ assert(
 );
 
 assert(
-  /const PLATFORM_ROLES = new Set\(\["owner", "super_admin"\]\);/.test(applications),
-  "Browser platform authority must be limited to owner and super_admin."
+  /const PLATFORM_ROLES = new Set\(\["owner", "super_admin", "platform_admin"\]\);/.test(applications),
+  "Browser platform authority must be limited to owner, platform_admin and the legacy super_admin alias."
 );
 assert(
   !/role\s*===\s*["']admin["'][\s\S]{0,100}platformAccess/.test(applications),
@@ -140,8 +140,8 @@ assert(
 );
 
 assert(
-  /function platformReviewer\(user = \{\}\) \{\s*const role = normalize\(user\.role\);\s*return role === "owner" \|\| role === "super_admin";\s*\}/.test(approvalFunction),
-  "Backend platform authority must be limited to owner and super_admin."
+  /function platformReviewer\(user = \{\}\) \{\s*return isPlatformReviewer\(user\);\s*\}/.test(approvalFunction),
+  "Backend platform authority must be limited to owner, platform_admin and the legacy super_admin alias."
 );
 assert(
   !/role\s*===\s*["']admin["'][\s\S]{0,100}platformAccess/.test(approvalFunction),
@@ -234,8 +234,8 @@ assert(
 );
 
 assert(
-  /function platform\(\) \{ return active\(\) && role\(\) in \['owner', 'super_admin'\]; \}/.test(rules),
-  "Firestore platform authority must be limited to owner and super_admin."
+  /function platform\(\) \{ return active\(\) && role\(\) in \['owner', 'super_admin', 'platform_admin'\]; \}/.test(rules),
+  "Firestore platform authority must be limited to owner, platform_admin and the legacy super_admin alias."
 );
 assert(
   !/function platform\(\)[\s\S]{0,180}role\(\) == 'admin'[\s\S]{0,80}platformAccess/.test(rules),
@@ -275,7 +275,7 @@ console.log("Staff approval contract audit passed.");
 console.log("- One canonical browser runtime calls reviewStaffApplication.");
 console.log("- One canonical backend callable is wired through the Functions entrypoint.");
 console.log("- Applicant submissions remain unassigned and browser assignment writes are blocked.");
-console.log("- Owner/super_admin own trusted company assignment and remain platform-wide.");
+console.log("- Owner/platform_admin (including legacy super_admin) own trusted company assignment and remain platform-wide.");
 console.log("- Admin-and-below read and review only their assigned company.");
 console.log("- Elevated role assignment and repeat finalization are blocked.");
 console.log("- Approved claim synchronization remains retryable, idempotent, and assignment-preserving.");

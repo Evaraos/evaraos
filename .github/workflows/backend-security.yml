@@ -17,6 +17,9 @@ on:
       - "public/assets/js/messages-group-photo.js"
       - "public/assets/js/route-guard.js"
       - "public/assets/js/staff-application.js"
+      - "public/assets/js/onboarding.js"
+      - "public/assets/js/roles.js"
+      - "public/staff_application.html"
       - "public/assets/js/account-status.js"
       - "public/assets/js/nav/nav-role-lockdown.js"
       - "public/assets/js/studio/blueprint-drafts.js"
@@ -42,6 +45,9 @@ on:
       - "public/assets/js/messages-group-photo.js"
       - "public/assets/js/route-guard.js"
       - "public/assets/js/staff-application.js"
+      - "public/assets/js/onboarding.js"
+      - "public/assets/js/roles.js"
+      - "public/staff_application.html"
       - "public/assets/js/account-status.js"
       - "public/assets/js/nav/nav-role-lockdown.js"
       - "public/assets/js/studio/blueprint-drafts.js"
@@ -129,6 +135,9 @@ jobs:
 
       - name: Validate staff applicant lifecycle contract
         run: node tools/staff-applicant-lifecycle-audit.js
+
+      - name: Validate onboarding and intake security
+        run: node --test functions/staff-reconciliation.test.js
 
       - name: Run Experience configuration unit tests
         run: node --test functions/experience-config-core.test.js
