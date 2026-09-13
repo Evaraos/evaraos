@@ -33,6 +33,7 @@ on:
       - ".github/workflows/backend-security.yml"
       - ".github/workflows/firebase-production-release.yml"
       - "tools/staff-release-contract-audit.cjs"
+      - "tools/staff-functions-inventory.cjs"
       - "tools/staff-release-contract-audit.test.cjs"
   pull_request:
     paths:
@@ -64,6 +65,7 @@ on:
       - ".github/workflows/backend-security.yml"
       - ".github/workflows/firebase-production-release.yml"
       - "tools/staff-release-contract-audit.cjs"
+      - "tools/staff-functions-inventory.cjs"
       - "tools/staff-release-contract-audit.test.cjs"
   workflow_dispatch:
 

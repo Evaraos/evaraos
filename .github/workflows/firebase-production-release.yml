@@ -432,6 +432,16 @@ jobs:
             grep -q "$name" "$RUNNER_TEMP/firebase-functions-list.json"
           done
 
+      - name: Verify staff callable inventory
+        if: inputs.release_scope == 'staff-functions'
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          firebase functions:list --project evaraos-web --json > "$RUNNER_TEMP/staff-functions-list.json"
+          node tools/staff-functions-inventory.cjs "$RUNNER_TEMP/staff-functions-list.json"
+
       - name: Record complete release proof
         env:
           RELEASE_SCOPE: ${{ inputs.release_scope }}
