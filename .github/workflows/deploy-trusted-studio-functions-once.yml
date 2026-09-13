@@ -83,10 +83,10 @@ jobs:
           echo "sha=$PROOF_SHA" >> "$GITHUB_OUTPUT"
           echo "Confirmed source proof: $PROOF_SHA"
 
-      - name: Use Node.js 20
+      - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install Functions dependencies
         run: npm install --prefix functions --package-lock=false --ignore-scripts --no-audit --no-fund
@@ -182,10 +182,10 @@ jobs:
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "${{ needs.validate.outputs.validated_sha }}"
 
-      - name: Use Node.js 20
+      - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install Functions dependencies
         run: npm install --prefix functions --package-lock=false --ignore-scripts --no-audit --no-fund

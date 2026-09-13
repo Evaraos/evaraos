@@ -4,7 +4,7 @@
   "description": "Evaraos backend automation, AI command routing, and trusted server workflows.",
   "private": true,
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "main": "index-stats.js",
   "scripts": {

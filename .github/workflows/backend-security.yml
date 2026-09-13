@@ -31,6 +31,9 @@ on:
       - "tools/staff-approval-contract-audit.js"
       - "tools/staff-applicant-lifecycle-audit.js"
       - ".github/workflows/backend-security.yml"
+      - ".github/workflows/firebase-production-release.yml"
+      - "tools/staff-release-contract-audit.cjs"
+      - "tools/staff-release-contract-audit.test.cjs"
   pull_request:
     paths:
       - "firebase/**"
@@ -59,6 +62,9 @@ on:
       - "tools/staff-approval-contract-audit.js"
       - "tools/staff-applicant-lifecycle-audit.js"
       - ".github/workflows/backend-security.yml"
+      - ".github/workflows/firebase-production-release.yml"
+      - "tools/staff-release-contract-audit.cjs"
+      - "tools/staff-release-contract-audit.test.cjs"
   workflow_dispatch:
 
 permissions:
@@ -73,10 +79,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Use Node.js 20
+      - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Use Java 21
         uses: actions/setup-java@v4
@@ -87,6 +93,17 @@ jobs:
       - name: Install security test dependencies
         working-directory: tests/backend-security
         run: npm install --no-audit --no-fund
+
+      - name: Install Functions dependencies
+        run: npm install --prefix functions --package-lock=false --ignore-scripts --no-audit --no-fund
+
+      - name: Validate release contract
+        run: |
+          node tools/staff-release-contract-audit.cjs
+          node --test tools/staff-release-contract-audit.test.cjs
+
+      - name: Run complete Functions suite on supported runtime
+        run: npm run test:all --prefix functions
 
       - name: Validate Cloud Function syntax
         run: |

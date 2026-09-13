@@ -11,7 +11,10 @@ on:
         options:
           - hosting
           - functions
+          - staff-functions
           - firestore
+          - firestore-indexes
+          - firestore-rules
           - storage
           - backend
           - experience
@@ -132,14 +135,30 @@ jobs:
           echo "source_sha=$SOURCE_SHA" >> "$GITHUB_OUTPUT"
           echo "studio_deployment_sha=$STUDIO_DEPLOYMENT_SHA" >> "$GITHUB_OUTPUT"
 
-      - name: Use Node.js 20
+      - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install Functions dependencies
-        if: inputs.release_scope == 'functions' || inputs.release_scope == 'backend' || inputs.release_scope == 'experience' || inputs.release_scope == 'all'
+        if: inputs.release_scope == 'staff-functions' || inputs.release_scope == 'functions' || inputs.release_scope == 'backend' || inputs.release_scope == 'experience' || inputs.release_scope == 'all'
         run: npm install --prefix functions --package-lock=false --ignore-scripts --no-audit --no-fund
+
+      - name: Validate staff release contract
+        run: |
+          node tools/staff-release-contract-audit.cjs
+          node --test tools/staff-release-contract-audit.test.cjs
+
+      - name: Validate staff Functions
+        if: inputs.release_scope == 'staff-functions'
+        run: |
+          set -euo pipefail
+          node --test functions/staff-reconciliation.test.js
+          node tools/access-authority-audit.mjs
+          node tools/account-lifecycle-audit.mjs
+          node tools/staff-approval-contract-audit.js
+          node tools/staff-applicant-lifecycle-audit.js
+          FIREBASE_CONFIG='{"projectId":"demo-staff-release","storageBucket":"demo-staff-release.appspot.com"}' node -e 'const entry = require("./functions"); for (const name of ["reviewStaffApplication", "updateStaffOnboardingTask"]) { if (typeof entry[name] !== "function") throw new Error("Missing export: " + name); }'
 
       - name: Validate backend syntax and policies
         if: inputs.release_scope == 'functions' || inputs.release_scope == 'backend' || inputs.release_scope == 'all'
@@ -222,7 +241,7 @@ jobs:
         run: npm install -g firebase-tools@latest
 
       - name: Verify Firebase Functions inventory access
-        if: inputs.release_scope == 'functions' || inputs.release_scope == 'backend' || inputs.release_scope == 'experience' || inputs.release_scope == 'all'
+        if: inputs.release_scope == 'staff-functions' || inputs.release_scope == 'functions' || inputs.release_scope == 'backend' || inputs.release_scope == 'experience' || inputs.release_scope == 'all'
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
         run: firebase functions:list --project evaraos-web --json >/dev/null
@@ -304,13 +323,13 @@ jobs:
       - name: Verify checked-out commit
         run: test "$(git rev-parse HEAD)" = "${{ needs.validate.outputs.validated_sha }}"
 
-      - name: Use Node.js 20
+      - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install Functions dependencies
-        if: inputs.release_scope == 'functions' || inputs.release_scope == 'backend' || inputs.release_scope == 'experience' || inputs.release_scope == 'all'
+        if: inputs.release_scope == 'staff-functions' || inputs.release_scope == 'functions' || inputs.release_scope == 'backend' || inputs.release_scope == 'experience' || inputs.release_scope == 'all'
         run: npm install --prefix functions --package-lock=false --ignore-scripts --no-audit --no-fund
 
       - name: Install Firebase CLI
@@ -336,6 +355,24 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
         run: firebase deploy --only functions --project evaraos-web --non-interactive
+
+      - name: Deploy staff Functions only
+        if: inputs.release_scope == 'staff-functions'
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: firebase deploy --only functions:reviewStaffApplication,functions:updateStaffOnboardingTask --project evaraos-web --non-interactive
+
+      - name: Deploy Firestore indexes only
+        if: inputs.release_scope == 'firestore-indexes'
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: firebase deploy --only firestore:indexes --project evaraos-web --non-interactive
+
+      - name: Deploy Firestore rules only
+        if: inputs.release_scope == 'firestore-rules'
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: firebase deploy --only firestore:rules --project evaraos-web --non-interactive
 
       - name: Deploy Firestore rules and indexes
         if: inputs.release_scope == 'firestore'
@@ -422,8 +459,11 @@ jobs:
             deployedAt: new Date().toISOString(),
             components: {
               hosting: ['hosting', 'experience', 'all'].includes(process.env.RELEASE_SCOPE),
-              functions: ['functions', 'backend', 'experience', 'all'].includes(process.env.RELEASE_SCOPE),
-              firestore: ['firestore', 'backend', 'all'].includes(process.env.RELEASE_SCOPE),
+              functions: ['staff-functions', 'functions', 'backend', 'experience', 'all'].includes(process.env.RELEASE_SCOPE),
+              firestore: ['firestore-indexes', 'firestore-rules', 'firestore', 'backend', 'all'].includes(process.env.RELEASE_SCOPE),
+              firestoreRules: ['firestore-rules', 'firestore', 'backend', 'all'].includes(process.env.RELEASE_SCOPE),
+              firestoreIndexes: ['firestore-indexes', 'firestore', 'backend', 'all'].includes(process.env.RELEASE_SCOPE),
+              staffFunctions: process.env.RELEASE_SCOPE === 'staff-functions' ? ['reviewStaffApplication', 'updateStaffOnboardingTask'] : [],
               storage: ['storage', 'backend', 'all'].includes(process.env.RELEASE_SCOPE)
             }
           };
@@ -438,6 +478,7 @@ jobs:
           fi
 
       - name: Update activation tracker
+        if: inputs.release_scope == 'all'
         uses: actions/github-script@v7
         with:
           script: |
