@@ -226,7 +226,7 @@ if (!errors.length) {
       errors.push(`Trusted Studio Journal validation is missing contract ${trustedContract}`);
     }
   }
-  if (backendPackage.engines?.node !== '20') errors.push('functions/package.json: Backend Journal runtime must remain on Node 20');
+  if (backendPackage.engines?.node !== '22') errors.push('functions/package.json: Backend Journal runtime must remain on Node 22');
   if (!String(backendPackage.scripts?.['test:studio-journal'] || '').includes('studio-journal-core.test.js')) {
     errors.push('functions/package.json: trusted Studio Journal test script is missing');
   }
@@ -242,7 +242,7 @@ if (!errors.length) {
     errors.push('.github/workflows/design-system-visual-qa.yml: all focused Studio validation specs must run together');
   }
   if (!workflow.includes("- 'functions/**'")) errors.push('.github/workflows/design-system-visual-qa.yml: Backend changes must trigger the validation workflow');
-  if (!workflow.includes("node-version: '20'")) errors.push('.github/workflows/design-system-visual-qa.yml: Firebase Functions tests must run on Node 20');
+  if (!workflow.includes("name: Set up Node.js for Firebase Functions\n        uses: actions/setup-node@v4\n        with:\n          node-version: '22'")) errors.push('.github/workflows/design-system-visual-qa.yml: Firebase Functions tests must run on Node 22');
   if (!workflow.includes('npm run test:studio-journal')) errors.push('.github/workflows/design-system-visual-qa.yml: trusted Backend Journal tests are missing');
   if (!workflow.includes('node tools/design-system-audit.js')) errors.push('.github/workflows/design-system-visual-qa.yml: design-system audit is missing');
   if (!workflow.includes('node tools/studio-component-catalog-audit.js')) errors.push('.github/workflows/design-system-visual-qa.yml: Studio catalog audit is missing');
