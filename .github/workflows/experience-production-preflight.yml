@@ -216,7 +216,7 @@ jobs:
           if (!productionRelease.includes("hosting: ['hosting', 'experience', 'all']")) {
             failures.push('Firebase release evidence does not record Experience Hosting deployment.');
           }
-          if (!productionRelease.includes("functions: ['functions', 'backend', 'experience', 'all']")) {
+          if (!productionRelease.includes("functions: ['staff-functions', 'functions', 'backend', 'experience', 'all']")) {
             failures.push('Firebase release evidence does not record Experience Functions deployment.');
           }
 

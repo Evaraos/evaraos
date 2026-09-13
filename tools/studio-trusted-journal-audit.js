@@ -111,7 +111,7 @@ if (!errors.length) {
   ]);
 
   const packageJson = JSON.parse(source.package);
-  if (packageJson.engines?.node !== '20') errors.push('functions/package.json: trusted Studio Journal runtime must remain on Node 20');
+  if (packageJson.engines?.node !== '22') errors.push('functions/package.json: trusted Studio Journal runtime must remain on Node 22');
   if (packageJson.main !== 'index-stats.js') errors.push('functions/package.json: callable entrypoint must remain index-stats.js');
   if (!String(packageJson.scripts?.['test:studio-journal'] || '').includes('studio-journal-core.test.js')) errors.push('functions/package.json: test:studio-journal is missing');
   if (!String(packageJson.scripts?.test || '').includes('studio-journal-core.test.js')) errors.push('functions/package.json: default tests must include the trusted Studio Journal suite');
