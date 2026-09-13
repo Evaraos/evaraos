@@ -1,18 +1,96 @@
 # Release status and essential work queue
 
-Verified on 2026-09-10. This page replaces estimates with dated release evidence; historical audit documents remain historical.
+Verified on 2026-09-13. This page replaces estimates with dated release evidence; historical audit documents remain historical.
 
 ## Live release
 
 - Website: [evaraos.web.app](https://evaraos.web.app/).
-- Spark-compatible released source: `7c7c0c1579d78d3c03d5817e6a61ad706322a64e`.
-- [Production workflow 34550277628](https://github.com/Evaraos/evaraos/actions/runs/34550277628): validation and Hosting deployment succeeded at 2026-09-11 01:21 UTC (September 10 in New York).
-- [Machine-readable release proof](deployments/firebase-production-release.json) is the authority for the latest exact revision and deployed components. This release changed Hosting only; billing, Functions, Firestore rules/indexes, and Storage were unchanged.
-- [PR #78](https://github.com/Evaraos/evaraos/pull/78) replaced the absent Experience function dependency with static Hosting configuration and an unavailable online-editor state. The live configuration URL returns HTTP 200 JSON. The response, deployment-mode module, and editor module match the released source byte-for-byte.
+- **LIVE PRODUCTION HOSTING:** `73cfc3cce1d43450e1da89fb9d330ca06597e018`
+- **Current canonical source:** `bb188600b8673f859f1b6db61cb48208e48f6aa5`
+- [Production workflow 34580232792](https://github.com/Evaraos/evaraos/actions/runs/34580232792): validation and Hosting deployment succeeded for the live Hosting release.
+- [Machine-readable release proof](deployments/firebase-production-release.json) is the authority for the exact deployed revision and components. It records Hosting `true`, Functions `false`, Firestore `false`, and Storage `false`; billing, Functions, Firestore rules/indexes, and Storage were unchanged.
+- The live Hosting release includes [PR #80](https://github.com/Evaraos/evaraos/pull/80), “Stop Leads drawer flicker during navigation refreshes.” Canonical source contains subsequent work, including [PR #81](https://github.com/Evaraos/evaraos/pull/81), but that work is not established as part of the current Hosting deployment. Do not imply that all canonical source is deployed.
 
-Validation: six PR workflows, 13 focused audits and seven source-verification gates passed. The Hosting emulator verified the real rewrite and guest navigation. Component checks proved zero Experience callable requests in static mode, one availability notice, no editor controls, and denied authority when the online service fails. The prior navigation release ([PR #76](https://github.com/Evaraos/evaraos/pull/76)) remains included, together with the role fix ([PR #74](https://github.com/Evaraos/evaraos/pull/74)) and repository documentation.
+Preserve the previous Hosting release for rollback; use the exact retained version shown in Firebase Hosting release history.
 
-These checks do not prove authenticated owner workflows. Current-release Home/Leads/Dashboard session continuity, notifications and logout remain to be exercised with an approved signed-in account. A complete semantic or security review of every repository file has not been performed. Preserve the previous Hosting release for rollback; use the exact retained version shown in Firebase Hosting release history.
+## Authenticated production QA
+
+Approved-owner production QA on the deployed Hosting release completed successfully.
+
+### Authority
+
+- Firebase Auth: PASS
+- App Check: PASS
+- lifecycle active + approved: PASS
+- canonical owner role: PASS
+- EvaraRouteSession: PASS
+
+### Home
+
+- authenticated load: PASS
+- hard reload/session persistence: PASS
+- owner drawer: PASS
+- drawer close/backdrop: PASS
+- bottom navigation: PASS
+- scroll contract/expand behavior: PASS
+- repeated drawer/scroll stability: PASS
+- duplicate nav not observed
+- authority/session errors not observed
+
+### Leads
+
+- owner access: PASS
+- authenticated continuity: PASS
+- drawer stability: PASS
+- no close/reopen flicker observed
+- reload: PASS
+- scroll behavior: PASS
+- no route-guard loop observed
+- no normal-load Firestore permission error observed
+
+### Dashboard
+
+- private route guard: PASS
+- owner/active/approved authority: PASS
+- EvaraRouteSession: PASS
+- reload: PASS
+- drawer/navigation/scroll behavior: PASS
+- no Auth/App Check/lifecycle/route errors observed
+
+### Cross-route
+
+- Home → Leads → Dashboard → Home: PASS
+- Home → Dashboard → Leads → Home: PASS
+- no session loss
+- no guest-shell replacement
+- no duplicate navigation symptoms
+- no redirect loop
+
+### Logout / signed-out authority
+
+- normal logout: PASS
+- Firebase Auth termination: PASS
+- private controls removed: PASS
+- redirect to signed-out/login state: PASS
+- signed-out Dashboard denied/redirected: PASS
+- signed-out Leads denied/redirected: PASS
+- no private content flash observed
+- public Home recovery: PASS
+
+### QA limitations
+
+- Notification control presence was verified, but notification interaction was not invoked because it could mutate read state.
+- Destructive/business-mutating Leads/Dashboard actions were not exercised.
+- Payments, outbound messaging, staff approval, publishing, uploads, automation, and AI server actions were not exercised.
+- Complete semantic/security review of every repository file is still not established.
+- Functions/Storage-dependent capabilities remain deferred on Spark.
+
+### Non-blocking UX observations
+
+- Authenticated Home still exposes some guest-oriented marketing/account CTAs such as Login/Sign Up/Create Account/Enter Platform.
+- Some Dashboard capability cards use READY/live-oriented language while waiting for unavailable/deferred backend data.
+
+These are non-blocking cleanup candidates, not security failures.
 
 ## Spark operating plan
 
@@ -32,11 +110,11 @@ Official references: [Firebase plan comparison](https://firebase.google.com/docs
 
 ## Essential work, in order
 
-1. Complete the signed-in Home/Leads/Dashboard matrix, including reload, drawer, scrolling, notifications and logout. Flag Functions-dependent actions individually instead of treating the whole app as ready.
-2. Improve the verified Spark-compatible workflows and reduce unnecessary database reads/listeners. Preserve all account, tenant and lifecycle rules.
-3. Reconcile the preserved Studio/theme checkpoint and older PRs #44/#48 in coherent feature groups against current `evaraos`. They contain mixed unfinished work and are not release candidates.
-4. Consolidate file layout following the [organization guide](REPOSITORY_ORGANIZATION.md), checking references before each group of moves.
-5. When Blaze is explicitly resumed, recheck billing/IAM/secrets metadata; deploy and verify trusted Studio and Experience functions. Only then switch `EXPERIENCE_DELIVERY` to `functions` and restore the function rewrite in the same reviewed release. Remove the static payload when it is superseded. No upgrade or backend deployment is part of the Spark change.
+1. Improve the verified Spark-compatible workflows and reduce unnecessary Firestore reads/listeners while preserving account, tenant, and lifecycle authority.
+2. Reconcile the preserved Studio/theme work and historical PRs #44/#48 in coherent, reviewed feature groups against current `evaraos`; never merge them wholesale.
+3. Consolidate repository organization using [reference-checked, independently reviewable moves](REPOSITORY_ORGANIZATION.md).
+4. Preserve the authenticated-Home CTA and Dashboard capability-state UX findings as non-blocking cleanup candidates.
+5. Keep Blaze-only backend deployment, Storage-dependent uploads, trusted Studio/Experience Functions, automation, payments, and AI server actions explicitly deferred until Blaze is intentionally resumed.
 
 The last metadata check found billing disabled and none of the required trusted Studio/Experience functions in the 19-function production inventory. This explains the deferred backend work; it is not a reason to stop improving the website.
 
