@@ -40,6 +40,7 @@ const SAFE_CUSTOMER_ACTION_ROUTES = new Set([
   '/customer_bills.html',
   '/customer-commerce.html'
 ]);
+const CUSTOMER_NOTIFICATION_FEED_LIMIT = 50;
 
 let initialized = false;
 
@@ -122,15 +123,23 @@ function safeActionUrl(raw = '') {
   }
 }
 
+function activeCustomerNotifications(rows = state.notifications) {
+  return (Array.isArray(rows) ? rows : []).filter((notification) => {
+    const status = String(notification?.status || '').toLowerCase();
+    return status !== 'archived' && status !== 'dismissed';
+  });
+}
+
 function visibleNotifications() {
+  const rows = activeCustomerNotifications();
   if (state.filter === 'unread') {
-    return state.notifications.filter((notification) => notification.status === 'unread');
+    return rows.filter((notification) => notification.status === 'unread');
   }
-  return state.notifications;
+  return rows;
 }
 
 function renderStats() {
-  const rows = state.notifications;
+  const rows = activeCustomerNotifications(state.notifications);
   const unread = rows.filter((notification) => notification.status === 'unread');
   const urgent = rows.filter((notification) => notification.priority === 'urgent');
   const latest = rows.reduce((latestValue, row) => {
@@ -239,7 +248,7 @@ async function refreshCustomerNotifications() {
   renderNotifications();
 
   try {
-    const rows = await loadCustomerNotifications(customerId);
+    const rows = await loadCustomerNotifications(customerId, { limit: CUSTOMER_NOTIFICATION_FEED_LIMIT });
     if (!isCurrentCustomerSession(customerId)) return;
     state.notifications = rowsForCustomer(rows, customerId);
     state.loading = false;
@@ -279,7 +288,7 @@ function startSubscription() {
     state.loading = false;
     state.error = '';
     renderNotifications();
-  });
+  }, { limit: CUSTOMER_NOTIFICATION_FEED_LIMIT });
 }
 
 function resetCustomerState({ loading = true, error = '' } = {}) {
@@ -307,6 +316,26 @@ function startVerifiedCustomerSession() {
   refreshCustomerNotifications();
 }
 
+async function openNotificationTarget(notificationId = '', source = null) {
+  const targetElement = source || document.querySelector('[data-notification-id="' + notificationId + '"]');
+  const target = safeActionUrl(targetElement?.dataset?.notificationUrl || '');
+  if (!target) return false;
+
+  const notification = state.notifications.find((row) => row.id === notificationId);
+  if (notification && String(notification.status || '').toLowerCase() === 'unread') {
+    try {
+      await markPersistentNotificationRead(notificationId);
+    } catch (error) {
+      console.error('Failed to mark unread customer notification as read before navigation.', error);
+      status('This unread notification could not be marked read before opening.');
+      return false;
+    }
+  }
+
+  window.location.assign(target);
+  return true;
+}
+
 async function handleNotificationAction(notificationId = '', action = '') {
   if (!notificationId || !action) return;
 
@@ -318,8 +347,8 @@ async function handleNotificationAction(notificationId = '', action = '') {
     } else if (action === 'dismiss') {
       await dismissPersistentNotification(notificationId);
     } else if (action === 'open') {
-      const target = safeActionUrl(document.querySelector('[data-notification-id="' + notificationId + '"]')?.dataset?.notificationUrl || '');
-      if (target) window.location.assign(target);
+      const completed = await openNotificationTarget(notificationId);
+      if (completed) return;
       return;
     }
     renderNotifications();
@@ -358,10 +387,7 @@ function bindEvents() {
     const action = actionButton.dataset.action;
     const notificationId = actionButton.dataset.notificationId;
     if (action === 'open') {
-      const target = safeActionUrl(actionButton.dataset.notificationUrl || '');
-      if (target) {
-        window.location.assign(target);
-      }
+      await openNotificationTarget(notificationId, actionButton);
       return;
     }
 
