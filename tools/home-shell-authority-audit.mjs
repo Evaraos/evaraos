@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { CANONICAL_ROLES, canAccessPageName } from '../public/assets/js/access-control.js';
 
 // Pure navigation authority tests; these do not simulate authenticated browser QA.
@@ -10,6 +11,8 @@ globalThis.localStorage = globalThis.sessionStorage = { getItem: key => values.g
 globalThis.window = { location: { pathname: '/' } };
 globalThis.document = { body: { dataset: { routeGuard: 'public' } } };
 const nav = await import('../public/assets/js/nav/nav-utils.js');
+const homeCta = await import('../public/assets/js/home-cta.js');
+const homeSource = fs.readFileSync('public/index.html', 'utf8');
 let checks = 0;
 function expectGuest() {
   assert.equal(nav.isAuthenticated(), false);
@@ -37,4 +40,13 @@ for (const override of [{role:'unrecognized'}, {userId:''}, {status:'suspended'}
 }
 for (const route of ['index.html','signup.html','staff_application.html']) {assert.equal(canAccessPageName(route,'guest'),true);checks++;}
 for (const route of ['dashboard.html','jobs.html','users.html','notifications_center.html']) {assert.equal(canAccessPageName(route,'guest'),false);checks++;}
+assert.match(homeSource, /data-home-guest-cta/);
+assert.match(homeSource, /data-home-enter-platform/);
+assert.match(homeSource, /assets\/js\/home-cta\.js/);
+const guestCtas = homeCta.getHomeCtaState({ authenticated: false, source: 'verified-public-home', lifecycle: 'guest' });
+assert.deepEqual(guestCtas, { authenticated: false, enterPlatformHref: '/login.html' });
+const activeCtas = homeCta.getHomeCtaState(verified);
+assert.deepEqual(activeCtas, { authenticated: true, enterPlatformHref: '/dashboard.html' });
+assert.equal(homeCta.getHomeCtaState({ ...verified, approvalStatus: 'pending' }).authenticated, false);
+checks += 6;
 console.log(`PASS: ${checks} Home shell authority assertions, including poisoned caches, all canonical roles, revoked/pending sessions and guest destination policy.`);
