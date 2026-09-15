@@ -1,8 +1,6 @@
 import {
   auth,
-  onAuthStateChanged,
-  getSavedUserProfile,
-  normalizeRole
+  onAuthStateChanged
 } from './firebase.js';
 
 import {
@@ -80,12 +78,18 @@ function summary(message = '') {
   if (summaryNode) summaryNode.textContent = message;
 }
 
-function currentProfile() {
-  return getSavedUserProfile() || {};
-}
-
-function resolveCustomerId(profile = currentProfile(), user = auth.currentUser) {
-  return profile.uid || profile.id || user?.uid || '';
+function verifiedCustomerSession(user = auth.currentUser) {
+  const session = window.EvaraRouteSession;
+  if (
+    !user ||
+    session?.source !== 'verified-route-guard' ||
+    session.authenticated !== true ||
+    session.role !== 'customer' ||
+    session.userId !== user.uid
+  ) {
+    return null;
+  }
+  return session;
 }
 
 function safeActionUrl(raw = '') {
@@ -213,13 +217,15 @@ function setFilter(filter = 'all') {
 }
 
 async function refreshCustomerNotifications() {
-  if (!state.customerId) return;
+  const customerId = state.customerId;
+  if (!customerId) return;
   state.loading = true;
   state.error = '';
   renderNotifications();
 
   try {
-    const rows = await loadCustomerNotifications(state.customerId);
+    const rows = await loadCustomerNotifications(customerId);
+    if (state.customerId !== customerId || auth.currentUser?.uid !== customerId || !verifiedCustomerSession(auth.currentUser)) return;
     state.notifications = rows || [];
     state.loading = false;
     state.error = '';
@@ -241,9 +247,11 @@ function stopSubscription() {
 
 function startSubscription() {
   stopSubscription();
-  if (!state.customerId) return;
+  const customerId = state.customerId;
+  if (!customerId || !verifiedCustomerSession(auth.currentUser)) return;
 
-  state.unsubscribe = subscribeCustomerNotifications(state.customerId, (rows = [], error = null) => {
+  state.unsubscribe = subscribeCustomerNotifications(customerId, (rows = [], error = null) => {
+    if (state.customerId !== customerId || auth.currentUser?.uid !== customerId || !verifiedCustomerSession(auth.currentUser)) return;
     if (error) {
       state.loading = false;
       state.error = 'Live customer notification updates are unavailable.';
@@ -256,6 +264,31 @@ function startSubscription() {
     state.error = '';
     renderNotifications();
   });
+}
+
+function resetCustomerState({ loading = true, error = '' } = {}) {
+  stopSubscription();
+  state.customerId = '';
+  state.notifications = [];
+  state.loading = loading;
+  state.error = error;
+  renderNotifications();
+}
+
+function startVerifiedCustomerSession() {
+  const user = auth.currentUser;
+  const session = verifiedCustomerSession(user);
+  if (!session) {
+    if (state.customerId || state.notifications.length) resetCustomerState();
+    return;
+  }
+
+  if (state.customerId === user.uid && state.unsubscribe) return;
+
+  if (state.customerId !== user.uid || state.notifications.length) resetCustomerState();
+  state.customerId = user.uid;
+  startSubscription();
+  refreshCustomerNotifications();
 }
 
 async function handleNotificationAction(notificationId = '', action = '') {
@@ -321,10 +354,13 @@ function bindEvents() {
 
   window.addEventListener('pagehide', stopSubscription);
   window.addEventListener('pageshow', (event) => {
-    if (!event.persisted || !state.customerId || !auth.currentUser) return;
+    const user = auth.currentUser;
+    const session = verifiedCustomerSession(user);
+    if (!event.persisted || !user || !session || state.customerId !== user.uid) return;
     startSubscription();
     refreshCustomerNotifications();
   });
+  window.addEventListener('evara:session-ready', startVerifiedCustomerSession);
   window.EvaraPageLifecycle?.registerCleanup?.(stopSubscription);
 }
 
@@ -366,31 +402,18 @@ async function startCustomerNotificationPage() {
   initialized = true;
   bindEvents();
 
-  onAuthStateChanged(auth, async (user) => {
+  onAuthStateChanged(auth, (user) => {
     if (!user) {
-      stopSubscription();
+      resetCustomerState({ loading: false });
       window.location.assign('/login.html');
       return;
     }
 
-    const profile = currentProfile();
-    const role = normalizeRole(profile.role || 'customer');
-    if (role !== 'customer') {
-      window.location.assign('/customer_dashboard.html');
-      return;
-    }
-
-    state.customerId = resolveCustomerId(profile, user);
-    if (!state.customerId) {
-      state.loading = false;
-      state.error = 'Customer identity is unavailable.';
-      renderNotifications();
-      return;
-    }
-
-    startSubscription();
-    await refreshCustomerNotifications();
+    if (state.customerId && state.customerId !== user.uid) resetCustomerState();
+    startVerifiedCustomerSession();
   });
+
+  startVerifiedCustomerSession();
 }
 
 if (document.readyState === 'loading') {
