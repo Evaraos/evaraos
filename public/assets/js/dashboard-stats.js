@@ -33,6 +33,13 @@ function writeText(el, value) {
   if (el) el.textContent = String(value);
 }
 
+function setHeroStatus(status) {
+  const copy = getDashboardStatusCopy(status);
+  if (heroStatusTitle) heroStatusTitle.dataset.dashboardStatus = status;
+  writeText(heroStatusTitle, copy.title);
+  writeText(heroStatusText, copy.text);
+}
+
 function saveCache(stats) {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify({ stats, cachedAt: Date.now() }));
@@ -139,9 +146,7 @@ function renderStats(stats = {}, status = DASHBOARD_STATUS.proven) {
   writeText(statLeadsMeta, `${numberValue(stats.leads?.open)} currently open`);
   writeText(statJobsMeta, `${numberValue(stats.jobs?.inMotion)} in motion`);
 
-  const copy = getDashboardStatusCopy(status);
-  writeText(heroStatusTitle, copy.title);
-  writeText(heroStatusText, copy.text);
+  setHeroStatus(status);
 
   renderLeadFlow(stats);
   renderUserRoles(stats);
@@ -150,9 +155,7 @@ function renderStats(stats = {}, status = DASHBOARD_STATUS.proven) {
 }
 
 function renderMissingStats(status = DASHBOARD_STATUS.unavailable) {
-  const copy = getDashboardStatusCopy(status);
-  writeText(heroStatusTitle, copy.title);
-  writeText(heroStatusText, copy.text);
+  setHeroStatus(status);
   renderSummaryPanels({}, status);
 }
 
@@ -174,10 +177,11 @@ async function loadStatsOnce() {
 }
 
 function subscribeStats() {
+  const cached = readCache();
   try {
     return onSnapshot(doc(db, "dashboard_stats", "global"), (snap) => {
       if (!snap.exists()) {
-        renderMissingStats();
+        if (!cached) renderMissingStats();
         return;
       }
       renderStats(snap.data() || {}, DASHBOARD_STATUS.proven);

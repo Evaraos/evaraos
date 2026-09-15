@@ -86,7 +86,7 @@ function mountOperationsMapPreview() {
       <div>
         <p class="dashboard-section-kicker">${config.kicker}</p>
         <h2 id="${config.titleId}">${config.heading}</h2>
-        <span class="dashboard-map-status" data-map-preview-status>${config.status}</span>
+        <span class="dashboard-map-status" data-map-preview-status data-state="loading">${config.status}</span>
       </div>
       <div class="dashboard-map-actions" aria-label="Map actions">
         <a href="${config.openHref}" class="btn btn-theme-primary beam-target">${config.openLabel}</a>
@@ -108,7 +108,10 @@ function mountOperationsMapPreview() {
   const frame = section.querySelector('.dashboard-map-frame');
   const status = section.querySelector('[data-map-preview-status]');
   frame?.addEventListener('load', () => {
-    if (status) status.textContent = config.readyStatus;
+    if (status) {
+      status.dataset.state = 'ready';
+      status.textContent = config.readyStatus;
+    }
   }, { once: true });
 
   return true;

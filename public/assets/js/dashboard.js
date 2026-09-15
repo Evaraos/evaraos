@@ -85,6 +85,8 @@ function showSection(id) {
 function updateHero(bucket) {
   if (bucket === "leadership") {
     setText("dashboardOverviewTitle", "Executive Control");
+    const heroStatusTitle = document.getElementById("heroStatusTitle");
+    if (["proven", "cached"].includes(heroStatusTitle?.dataset.dashboardStatus)) return;
     setText("heroStatusTitle", "Awaiting dashboard data");
     setText("heroStatusText", "Owner command center is open. Dashboard intelligence is shown below.");
   }
