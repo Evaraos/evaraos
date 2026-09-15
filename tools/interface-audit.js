@@ -8,7 +8,7 @@ const failures=[];
 const read=relative=>fs.readFileSync(path.join(ROOT,relative),"utf8");
 const check=(name,condition,detail)=>{if(!condition)failures.push(`${name}: ${detail}`)};
 function syntax(relative){const temporary=path.join(os.tmpdir(),`evaraos-${path.basename(relative,".js")}-${process.pid}.mjs`);try{fs.writeFileSync(temporary,read(relative),"utf8");execFileSync(process.execPath,["--check",temporary],{stdio:"pipe"})}catch(error){failures.push(`${relative}: JavaScript syntax check failed\n${String(error.stderr||error.message)}`)}finally{try{fs.rmSync(temporary,{force:true})}catch{}}}
-const javascriptFiles=["public/assets/js/adaptive-appearance-boot.js","public/assets/js/theme-adaptive.js","public/assets/js/theme-text-inversion.js","public/assets/js/theme-core-adaptive.js","public/assets/js/theme.js","public/assets/js/nav.js","public/assets/js/nav/nav-main-v5.js","public/assets/js/nav/nav-render.js","public/assets/js/nav/nav-menu.js","public/assets/js/nav/nav-interactions.js","public/assets/js/nav/nav-bottom.js"];
+const javascriptFiles=["public/assets/js/adaptive-appearance-boot.js","public/assets/js/theme-adaptive.js","public/assets/js/theme-text-inversion.js","public/assets/js/theme-core-adaptive.js","public/assets/js/theme.js","public/assets/js/nav.js","public/assets/js/nav/nav-main-v6.js","public/assets/js/nav/nav-render.js","public/assets/js/nav/nav-menu.js","public/assets/js/nav/nav-interactions.js","public/assets/js/nav/nav-bottom.js"];
 javascriptFiles.forEach(syntax);
 const menuCss=read("public/assets/css/nav/nav-menu-liquid.css");
 const stabilityCss=read("public/assets/css/nav/nav-stability.css");
