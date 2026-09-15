@@ -92,6 +92,21 @@ function verifiedCustomerSession(user = auth.currentUser) {
   return session;
 }
 
+function isCurrentCustomerSession(customerId = '') {
+  return Boolean(
+    customerId &&
+    state.customerId === customerId &&
+    auth.currentUser?.uid === customerId &&
+    verifiedCustomerSession(auth.currentUser)
+  );
+}
+
+function rowsForCustomer(rows = [], customerId = '') {
+  const normalizedCustomerId = String(customerId || '');
+  return (Array.isArray(rows) ? rows : [])
+    .filter((row) => String(row?.customerId || '') === normalizedCustomerId);
+}
+
 function safeActionUrl(raw = '') {
   const value = String(raw || '').trim();
   if (!value) return '';
@@ -225,13 +240,14 @@ async function refreshCustomerNotifications() {
 
   try {
     const rows = await loadCustomerNotifications(customerId);
-    if (state.customerId !== customerId || auth.currentUser?.uid !== customerId || !verifiedCustomerSession(auth.currentUser)) return;
-    state.notifications = rows || [];
+    if (!isCurrentCustomerSession(customerId)) return;
+    state.notifications = rowsForCustomer(rows, customerId);
     state.loading = false;
     state.error = '';
     renderNotifications();
   } catch (error) {
     console.error('Failed to load customer notifications.', error);
+    if (!isCurrentCustomerSession(customerId)) return;
     state.loading = false;
     state.error = 'Unable to load customer notifications right now.';
     renderNotifications();
@@ -251,7 +267,7 @@ function startSubscription() {
   if (!customerId || !verifiedCustomerSession(auth.currentUser)) return;
 
   state.unsubscribe = subscribeCustomerNotifications(customerId, (rows = [], error = null) => {
-    if (state.customerId !== customerId || auth.currentUser?.uid !== customerId || !verifiedCustomerSession(auth.currentUser)) return;
+    if (!isCurrentCustomerSession(customerId)) return;
     if (error) {
       state.loading = false;
       state.error = 'Live customer notification updates are unavailable.';
@@ -259,7 +275,7 @@ function startSubscription() {
       return;
     }
 
-    state.notifications = rows || [];
+    state.notifications = rowsForCustomer(rows, customerId);
     state.loading = false;
     state.error = '';
     renderNotifications();
