@@ -115,6 +115,7 @@ export const PAGE_POLICY = Object.freeze({
   'operations-visibility.html': ['platform_admin', 'owner', 'admin', 'manager'],
   'notifications.html': ['platform_admin', 'owner', 'admin', 'manager'],
   'notifications_center.html': ['platform_admin', 'owner', 'admin', 'manager'],
+  'customer-notifications.html': ['customer'],
   'executive-queue.html': ['platform_admin', 'owner', 'admin'],
   'workflow-monitor-dashboard.html': ['platform_admin', 'owner', 'admin', 'manager'],
   'alerts-dashboard.html': ['platform_admin', 'owner', 'admin', 'manager'],

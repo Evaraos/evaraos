@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="adaptive" data-environment="light" data-theme-mode="image" data-appearance="adaptive-system">
+<head>
+  <meta charset="UTF-8" />
+  <script src="/assets/js/adaptive-appearance-boot.js?v=1"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <meta name="theme-color" content="#eef5fb" />
+  <title>Evaraos Customer Notifications</title>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="stylesheet" href="./assets/css/base.css?v=53" />
+  <link rel="stylesheet" href="./assets/css/theme.css?v=adaptive-liquid-v1" />
+  <link rel="stylesheet" href="./assets/css/nav.css?v=nav-v25-x-drawer" />
+  <link rel="stylesheet" href="./assets/css/dashboard.css?v=1" />
+  <link rel="stylesheet" href="./assets/css/app-system.css?v=1" />
+</head>
+<body data-route-guard="private" class="dashboard-body customer-notifications-page app-loading">
+  <div id="universalNavRoot"></div>
+
+  <main class="dashboard-shell" data-eva-shell-motion>
+    <aside class="dashboard-sidebar glass-card">
+      <div class="dashboard-sidebar-inner">
+        <div class="dashboard-sidebar-head">
+          <p class="dashboard-sidebar-eyebrow">Customer Portal</p>
+          <h2>Notifications</h2>
+        </div>
+
+        <nav class="dashboard-sidebar-nav" aria-label="Customer notifications navigation">
+          <a class="dashboard-nav-link" href="./customer_dashboard.html"><span class="dashboard-nav-icon">▲</span><span>Dashboard</span></a>
+          <a class="dashboard-nav-link" href="./customer_bills.html"><span class="dashboard-nav-icon">◈</span><span>Bills</span></a>
+          <a class="dashboard-nav-link" href="./customer-service-history.html"><span class="dashboard-nav-icon">◉</span><span>History</span></a>
+          <a class="dashboard-nav-link" href="./customer-messaging.html"><span class="dashboard-nav-icon">◎</span><span>Messages</span></a>
+          <a class="dashboard-nav-link active" href="./customer-notifications.html"><span class="dashboard-nav-icon">◔</span><span>Notifications</span></a>
+          <a class="dashboard-nav-link" href="./settings.html"><span class="dashboard-nav-icon">◆</span><span>Settings</span></a>
+        </nav>
+
+        <div class="dashboard-sidebar-foot glass-card">
+          <div class="dashboard-sidebar-foot-copy">
+            <strong>Inbox status</strong>
+            <span id="customerNotificationsStatus">Checking your customer inbox…</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="dashboard-main">
+      <section class="dashboard-hero glass-card">
+        <div class="dashboard-hero-copy">
+          <p class="dashboard-eyebrow">Customer Notifications</p>
+          <h1>Review account updates, service notices, billing reminders, and important messages.</h1>
+          <p class="dashboard-hero-text">Your notifications stay scoped to your account and update in real time without exposing operations inbox data.</p>
+        </div>
+
+        <div class="dashboard-hero-panel glass-card">
+          <div class="dashboard-hero-panel-top">
+            <span class="dashboard-mini-badge">Live customer feed</span>
+            <span class="dashboard-live-dot" aria-hidden="true"></span>
+          </div>
+          <div class="dashboard-hero-panel-copy">
+            <strong><span id="customerNotificationUnread">0</span> Unread</strong>
+            <span id="customerNotificationsSummary">Waiting for updates…</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-overview glass-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Inbox summary</p>
+            <h2>Notification overview</h2>
+          </div>
+          <span class="dashboard-mini-badge">Customer scope</span>
+        </div>
+
+        <div class="dashboard-stats-grid">
+          <article class="dashboard-stat-card glass-card">
+            <p>Total</p>
+            <h3 id="customerNotificationTotal">0</h3>
+            <span>All customer notifications</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Unread</p>
+            <h3 id="customerNotificationUnreadStat">0</h3>
+            <span>Needs attention</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Urgent</p>
+            <h3 id="customerNotificationUrgent">0</h3>
+            <span>Priority alerts</span>
+          </article>
+          <article class="dashboard-stat-card glass-card">
+            <p>Updated</p>
+            <h3 id="customerNotificationUpdated">—</h3>
+            <span>Latest activity</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-panel glass-card">
+        <div class="dashboard-section-head">
+          <div>
+            <p class="dashboard-section-kicker">Inbox</p>
+            <h2>Customer notifications</h2>
+          </div>
+          <div class="dashboard-toolbar-actions">
+            <div class="segmented-control" aria-label="Notification filters">
+              <button id="notificationFilterAll" type="button" class="segment-button is-active" data-filter="all" aria-pressed="true">All</button>
+              <button id="notificationFilterUnread" type="button" class="segment-button" data-filter="unread" aria-pressed="false">Unread</button>
+            </div>
+            <button id="notificationMarkAllRead" type="button" class="btn btn-theme-secondary">Mark all read</button>
+            <button id="notificationRefresh" type="button" class="btn btn-theme-secondary">Refresh</button>
+          </div>
+        </div>
+
+        <div id="customerNotificationList" class="dashboard-list" aria-live="polite">
+          <div class="item muted">Loading notifications…</div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="./assets/js/loader.js"></script>
+  <script type="module" src="./assets/js/firebase.js"></script>
+  <script type="module" src="./assets/js/route-guard.js"></script>
+  <script type="module" src="./assets/js/customer-notifications-page.js"></script>
+  <script type="module" src="/assets/js/theme.js?v=adaptive-liquid-v1"></script>
+  <script type="module" src="/assets/js/nav.js?v=nav-v61-role-authority"></script>
+</body>
+</html>
