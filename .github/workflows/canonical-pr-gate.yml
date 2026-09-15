@@ -1,0 +1,94 @@
+name: EvaraOS Canonical PR Gate
+
+on:
+  pull_request:
+    branches:
+      - evaraos
+
+permissions:
+  contents: read
+
+concurrency:
+  group: canonical-pr-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  canonical-pr-gate:
+    name: Canonical PR Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out pull request source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate canonical pull request
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git cat-file -e "${BASE_SHA}^{commit}"
+          git cat-file -e "${HEAD_SHA}^{commit}"
+          git diff --check "$BASE_SHA" "$HEAD_SHA"
+          changed_file_count="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" | wc -l | tr -d ' ')"
+
+          authority_files=(
+            "docs/RELEASE_STATUS.md"
+            "docs/REPOSITORY_ORGANIZATION.md"
+            "docs/deployments/firebase-production-release.json"
+            "firebase.json"
+            "firestore.indexes.json"
+            "functions/package.json"
+          )
+          for file in "${authority_files[@]}"; do
+            test -f "$file"
+          done
+
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          const jsonFiles = [
+            'docs/deployments/firebase-production-release.json',
+            'firebase.json',
+            'firestore.indexes.json',
+            'functions/package.json',
+          ];
+
+          const parsed = Object.fromEntries(jsonFiles.map((file) => {
+            const value = JSON.parse(fs.readFileSync(file, 'utf8'));
+            return [file, value];
+          }));
+
+          const proof = parsed['docs/deployments/firebase-production-release.json'];
+          const isSha = (value) => typeof value === 'string' && /^[0-9a-fA-F]{40}$/.test(value);
+          const validProof = (
+            Object.prototype.hasOwnProperty.call(proof, 'schemaVersion') &&
+            Object.prototype.hasOwnProperty.call(proof, 'status') &&
+            isSha(proof.validatedCommit) &&
+            Object.prototype.hasOwnProperty.call(proof, 'workflowRunId') &&
+            proof.components !== null &&
+            typeof proof.components === 'object' &&
+            !Array.isArray(proof.components) &&
+            typeof proof.components.hosting === 'boolean' &&
+            typeof proof.components.functions === 'boolean' &&
+            typeof proof.components.firestore === 'boolean' &&
+            typeof proof.components.storage === 'boolean'
+          );
+
+          if (!validProof) {
+            throw new Error('release proof structure is invalid');
+          }
+          NODE
+
+          echo "base SHA: ${BASE_SHA}"
+          echo "head SHA: ${HEAD_SHA}"
+          echo "changed-file count: ${changed_file_count}"
+          echo "whitespace validation: passed"
+          echo "authority-file validation: passed"
+          echo "JSON validation: passed"
+          echo "release-proof structure: passed"
