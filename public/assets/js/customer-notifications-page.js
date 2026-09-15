@@ -39,7 +39,8 @@ const SAFE_CUSTOMER_ACTION_ROUTES = new Set([
   '/customer-messaging.html',
   '/customer-service-history.html',
   '/customer_dashboard.html',
-  '/customer_bills.html'
+  '/customer_bills.html',
+  '/customer-commerce.html'
 ]);
 
 let initialized = false;
@@ -319,6 +320,11 @@ function bindEvents() {
   });
 
   window.addEventListener('pagehide', stopSubscription);
+  window.addEventListener('pageshow', (event) => {
+    if (!event.persisted || !state.customerId || !auth.currentUser) return;
+    startSubscription();
+    refreshCustomerNotifications();
+  });
   window.EvaraPageLifecycle?.registerCleanup?.(stopSubscription);
 }
 
