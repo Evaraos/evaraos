@@ -85,8 +85,8 @@ function showSection(id) {
 function updateHero(bucket) {
   if (bucket === "leadership") {
     setText("dashboardOverviewTitle", "Executive Control");
-    setText("heroStatusTitle", "Mega dashboard ready");
-    setText("heroStatusText", "Owner command center is active. Live widget intelligence is mounted below.");
+    setText("heroStatusTitle", "Awaiting dashboard data");
+    setText("heroStatusText", "Owner command center is open. Dashboard intelligence is shown below.");
   }
 }
 
@@ -281,7 +281,7 @@ function ensureWidgetMount() {
   mount = document.createElement("section");
   mount.id = "dashboardWidgetMount";
   mount.className = "dashboard-widget-mount";
-  mount.setAttribute("aria-label", "Executive live intelligence widgets");
+  mount.setAttribute("aria-label", "Executive dashboard intelligence widgets");
 
   const hero = document.getElementById("overviewSection");
   if (hero?.nextSibling) main.insertBefore(mount, hero.nextSibling);
@@ -302,14 +302,14 @@ function mountExecutiveWidgets() {
     role: "owner",
     input: {
       alerts: { critical: 0, payroll: 0, promotion: 0 },
-      health: { state: "stable" },
+      health: { state: "unknown" },
       dataByType: {
-        ecosystem_health: { value: "Stable", subtitle: "Ecosystem intelligence is online." },
-        live_revenue: { value: "$0", subtitle: "Live revenue stream ready for Firestore connection." },
-        live_activity: { subtitle: "Live events will appear here as the activity feed connects." },
-        ai_recommendations: { subtitle: "AI recommendations engine is ready." },
-        organization_tree: { subtitle: "Organization, office, and vendor tree ready for live data." },
-        operations_map: { subtitle: "Global operations map ready for GIS integration." }
+        ecosystem_health: { state: "deferred", value: "—", subtitle: "Ecosystem health data is deferred." },
+        live_revenue: { state: "deferred", value: "—", subtitle: "Revenue data is deferred." },
+        live_activity: { state: "deferred", subtitle: "Activity data is deferred." },
+        ai_recommendations: { state: "deferred", subtitle: "Recommendations are not enabled yet." },
+        organization_tree: { state: "deferred", subtitle: "Organization data is not configured yet." },
+        operations_map: { state: "deferred", subtitle: "Map data is not configured yet." }
       }
     }
   });

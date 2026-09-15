@@ -1,5 +1,5 @@
 // Evaraos Dashboard Widget Renderer
-// Converts registered widgets into dashboard-ready UI view models.
+// Converts registered widgets into dashboard UI view models.
 
 import {
   widgetsForRole,
@@ -12,6 +12,7 @@ export const DASHBOARD_WIDGET_RENDERER_VERSION = "2026.05.17-dashboard-widget-re
 
 export const WIDGET_RENDER_STATE = Object.freeze({
   loading: "loading",
+  deferred: "deferred",
   ready: "ready",
   empty: "empty",
   warning: "warning",
@@ -20,7 +21,7 @@ export const WIDGET_RENDER_STATE = Object.freeze({
 });
 
 export function createWidgetViewModel(widget = {}, data = {}) {
-  const state = data.state || WIDGET_RENDER_STATE.ready;
+  const state = data.state || WIDGET_RENDER_STATE.loading;
 
   return {
     id: widget.id,
@@ -33,7 +34,7 @@ export function createWidgetViewModel(widget = {}, data = {}) {
     refreshIntervalMs: widget.refreshIntervalMs || 30000,
     state,
     value: data.value ?? null,
-    subtitle: data.subtitle || "Live Evaraos intelligence",
+    subtitle: data.subtitle || "Awaiting dashboard data",
     items: Array.isArray(data.items) ? data.items : [],
     actions: Array.isArray(data.actions) ? data.actions : [],
     updatedAtMs: Date.now(),
@@ -76,5 +77,5 @@ export function widgetCssClass(widget = {}) {
 }
 
 export function widgetAccessibilityLabel(widget = {}) {
-  return `${widget.title || "Dashboard widget"}. ${widget.subtitle || "Live Evaraos widget."}`;
+  return `${widget.title || "Dashboard widget"}. ${widget.subtitle || "Awaiting dashboard data."}`;
 }

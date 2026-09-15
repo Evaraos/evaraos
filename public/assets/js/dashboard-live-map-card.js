@@ -15,17 +15,17 @@ function resolvePreviewConfig() {
     return {
       sectionId: 'liveMapSection',
       titleId: 'liveMapSectionTitle',
-      heading: 'Live Operations Map',
-      kicker: 'Field Intelligence',
-      status: 'Connecting compact live workspace',
-      readyStatus: 'Compact live workspace ready',
+      heading: 'Operations Map Preview',
+      kicker: 'Field Intelligence Preview',
+      status: 'Map preview loading',
+      readyStatus: 'Map preview loaded',
       frameTitle: 'Interactive compact EvaraOS operations map',
       frameSrc: '/operations_map.html?embed=1',
       openHref: '/operations_map.html',
       openLabel: 'Open Operations Map',
       parent: dashboardMain,
       before: document.getElementById('activitySection'),
-      sidebarLabel: 'Live Map',
+      sidebarLabel: 'Map Preview',
       sidebarBeforeSelector: 'a[href="#activitySection"]'
     };
   }
@@ -36,10 +36,10 @@ function resolvePreviewConfig() {
     return {
       sectionId: 'leadsMapWorkspace',
       titleId: 'leadsMapWorkspaceTitle',
-      heading: 'Lead Operations Map',
-      kicker: 'Territory Intelligence',
-      status: 'Connecting authorized lead map',
-      readyStatus: 'Authorized lead map ready',
+      heading: 'Lead Operations Map Preview',
+      kicker: 'Territory Intelligence Preview',
+      status: 'Map preview loading',
+      readyStatus: 'Map preview loaded',
       frameTitle: 'Interactive compact EvaraOS lead operations map',
       frameSrc: '/operations_map.html?embed=1&type=lead',
       openHref: '/operations_map.html?type=lead',

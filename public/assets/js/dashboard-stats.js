@@ -4,6 +4,7 @@ import {
   getDoc,
   onSnapshot
 } from "./firebase.js";
+import { DASHBOARD_STATUS, getDashboardStatusCopy } from "./dashboard-status.mjs";
 
 const statCompanies = document.getElementById("statCompanies");
 const statUsers = document.getElementById("statUsers");
@@ -111,20 +112,23 @@ function renderUserRoles(stats = {}) {
   `).join("");
 }
 
-function renderSummaryPanels(stats = {}) {
+function renderSummaryPanels(stats = {}, status = DASHBOARD_STATUS.proven) {
+  const available = status === DASHBOARD_STATUS.proven;
+  const cached = status === DASHBOARD_STATUS.cached;
+  const dataLabel = available ? "data available" : cached ? "cached snapshot" : "data unavailable";
   if (companiesList) {
-    companiesList.innerHTML = statusCard("Company stats live", `${numberValue(stats.companies?.active)} active companies from dashboard_stats/global.`, "Companies");
+    companiesList.innerHTML = statusCard(`Company ${dataLabel}`, available || cached ? `${numberValue(stats.companies?.active)} active companies from dashboard_stats/global.` : "Current company records are not available.", "Companies");
   }
   if (jobsList) {
-    jobsList.innerHTML = statusCard("Job stats live", `${numberValue(stats.jobs?.inMotion)} jobs currently in motion.`, "Jobs");
+    jobsList.innerHTML = statusCard(`Job ${dataLabel}`, available || cached ? `${numberValue(stats.jobs?.inMotion)} jobs currently in motion.` : "Current job records are not available.", "Jobs");
   }
   if (activityFeed) {
-    const updatedAt = stats.updatedAt?.toDate ? stats.updatedAt.toDate().toLocaleString() : "live";
-    activityFeed.innerHTML = statusCard("Stats document connected", `Dashboard now reads dashboard_stats/global instead of scanning every collection. Last update: ${updatedAt}.`, "Fast");
+    const updatedAt = stats.updatedAt?.toDate ? stats.updatedAt.toDate().toLocaleString() : "not provided";
+    activityFeed.innerHTML = statusCard(available ? "Stats document available" : cached ? "Cached stats snapshot" : "Dashboard stats unavailable", available || cached ? `Dashboard reads dashboard_stats/global instead of scanning every collection. Last update: ${updatedAt}.` : "Current dashboard statistics are not available.", available || cached ? "Available" : "Unavailable");
   }
 }
 
-function renderStats(stats = {}) {
+function renderStats(stats = {}, status = DASHBOARD_STATUS.proven) {
   writeText(statCompanies, numberValue(stats.companies?.total));
   writeText(statUsers, numberValue(stats.users?.total));
   writeText(statLeads, numberValue(stats.leads?.total));
@@ -135,24 +139,26 @@ function renderStats(stats = {}) {
   writeText(statLeadsMeta, `${numberValue(stats.leads?.open)} currently open`);
   writeText(statJobsMeta, `${numberValue(stats.jobs?.inMotion)} in motion`);
 
-  writeText(heroStatusTitle, "Stats system connected");
-  writeText(heroStatusText, "Dashboard is reading dashboard_stats/global for faster load performance.");
+  const copy = getDashboardStatusCopy(status);
+  writeText(heroStatusTitle, copy.title);
+  writeText(heroStatusText, copy.text);
 
   renderLeadFlow(stats);
   renderUserRoles(stats);
-  renderSummaryPanels(stats);
+  renderSummaryPanels(stats, status);
   saveCache(stats);
 }
 
-function renderMissingStats() {
-  writeText(heroStatusTitle, "Stats document not found yet");
-  writeText(heroStatusText, "Create dashboard_stats/global or deploy the stats function triggers to begin live dashboard stats.");
-  renderSummaryPanels({});
+function renderMissingStats(status = DASHBOARD_STATUS.unavailable) {
+  const copy = getDashboardStatusCopy(status);
+  writeText(heroStatusTitle, copy.title);
+  writeText(heroStatusText, copy.text);
+  renderSummaryPanels({}, status);
 }
 
 async function loadStatsOnce() {
   const cached = readCache();
-  if (cached) renderStats(cached);
+  if (cached) renderStats(cached, DASHBOARD_STATUS.cached);
 
   try {
     const snap = await getDoc(doc(db, "dashboard_stats", "global"));
@@ -160,7 +166,7 @@ async function loadStatsOnce() {
       if (!cached) renderMissingStats();
       return;
     }
-    renderStats(snap.data() || {});
+    renderStats(snap.data() || {}, DASHBOARD_STATUS.proven);
   } catch (error) {
     console.warn("Dashboard stats read failed:", error);
     if (!cached) renderMissingStats();
@@ -174,7 +180,7 @@ function subscribeStats() {
         renderMissingStats();
         return;
       }
-      renderStats(snap.data() || {});
+      renderStats(snap.data() || {}, DASHBOARD_STATUS.proven);
     }, (error) => {
       console.warn("Dashboard stats listener failed:", error);
     });
