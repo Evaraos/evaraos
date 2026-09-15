@@ -21,6 +21,10 @@ let jobs = [];
 let staff = [];
 let latestMatches = [];
 let activeUser = null;
+let unsubscribeAuth = null;
+let unsubscribeJobs = null;
+let unsubscribeStaff = null;
+let realtimeStarted = false;
 
 function clean(v) {
   return String(v || '').replace(/[<>]/g, '');
@@ -274,23 +278,41 @@ function bindEvents() {
   });
 }
 
+function cleanupRealtime() {
+  unsubscribeJobs?.();
+  unsubscribeStaff?.();
+  unsubscribeJobs = null;
+  unsubscribeStaff = null;
+  realtimeStarted = false;
+}
+
 function initRealtime() {
-  onSnapshot(collection(db, 'jobs'), (snap) => {
+  if (realtimeStarted) return;
+  realtimeStarted = true;
+
+  unsubscribeJobs = onSnapshot(collection(db, 'jobs'), (snap) => {
     jobs = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     render();
   });
 
-  onSnapshot(collection(db, 'workforce_locations'), (snap) => {
+  unsubscribeStaff = onSnapshot(collection(db, 'workforce_locations'), (snap) => {
     staff = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     render();
   });
 }
 
+function cleanup() {
+  unsubscribeAuth?.();
+  unsubscribeAuth = null;
+  cleanupRealtime();
+}
+
 function init() {
   bindEvents();
 
-  onAuthStateChanged(auth, (user) => {
+  unsubscribeAuth = onAuthStateChanged(auth, (user) => {
     if (!user) {
+      cleanupRealtime();
       window.location.assign('/login.html');
       return;
     }
@@ -298,6 +320,8 @@ function init() {
     activeUser = user;
     initRealtime();
   });
+
+  window.addEventListener('pagehide', cleanup, { once: true });
 }
 
 if (document.readyState === 'loading') {
