@@ -18,6 +18,12 @@ let jobs = [];
 let workforce = [];
 let invoices = [];
 let assignments = [];
+let unsubscribeAuth = null;
+let unsubscribeJobs = null;
+let unsubscribeWorkforce = null;
+let unsubscribeInvoices = null;
+let unsubscribeAssignments = null;
+let realtimeStarted = false;
 
 function currency(v) {
   return new Intl.NumberFormat('en-US', {
@@ -183,37 +189,61 @@ function render() {
   }).join('');
 }
 
+function cleanupRealtime() {
+  unsubscribeJobs?.();
+  unsubscribeWorkforce?.();
+  unsubscribeInvoices?.();
+  unsubscribeAssignments?.();
+  unsubscribeJobs = null;
+  unsubscribeWorkforce = null;
+  unsubscribeInvoices = null;
+  unsubscribeAssignments = null;
+  realtimeStarted = false;
+}
+
 function initRealtime() {
-  onSnapshot(collection(db, 'jobs'), (snap) => {
+  if (realtimeStarted) return;
+  realtimeStarted = true;
+
+  unsubscribeJobs = onSnapshot(collection(db, 'jobs'), (snap) => {
     jobs = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     render();
   });
 
-  onSnapshot(collection(db, 'workforce_locations'), (snap) => {
+  unsubscribeWorkforce = onSnapshot(collection(db, 'workforce_locations'), (snap) => {
     workforce = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     render();
   });
 
-  onSnapshot(collection(db, 'invoices'), (snap) => {
+  unsubscribeInvoices = onSnapshot(collection(db, 'invoices'), (snap) => {
     invoices = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     render();
   });
 
-  onSnapshot(collection(db, 'dispatch_assignments'), (snap) => {
+  unsubscribeAssignments = onSnapshot(collection(db, 'dispatch_assignments'), (snap) => {
     assignments = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     render();
   });
 }
 
+function cleanup() {
+  unsubscribeAuth?.();
+  unsubscribeAuth = null;
+  cleanupRealtime();
+}
+
 function init() {
-  onAuthStateChanged(auth, (user) => {
+  unsubscribeAuth = onAuthStateChanged(auth, (user) => {
     if (!user) {
+      cleanupRealtime();
       window.location.assign('/login.html');
       return;
     }
 
     initRealtime();
   });
+
+  window.addEventListener('pagehide', cleanup, { once: true });
 }
 
 if (document.readyState === 'loading') {
