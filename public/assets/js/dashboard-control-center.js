@@ -6,7 +6,7 @@ const ROLE_CONTROLS = {
   admin: [["Users","/users.html","users"],["Leads","/leads.html","leads"],["Jobs","/jobs.html","jobs"],["Dispatch","/dispatch.html","dispatch"],["Applications","/applications.html","applications"],["Settings","/settings.html","settings"]],
   hr: [["Users","/users.html","users"],["Applications","/applications.html","applications"],["Onboarding","/onboarding.html","signup"],["Payroll","/payroll.html","payroll"],["Messages","/messages.html","messages"],["Settings","/settings.html","settings"]],
   staff: [["My Jobs","/jobs.html","jobs"],["My Leads","/leads.html","leads"],["Schedule","/schedule.html","schedule"],["Field","/field.html","field"],["Messages","/messages.html","messages"],["Settings","/settings.html","settings"]],
-  customer: [["My Services","/customer_dashboard.html","dashboard"],["Bills","/customer_bills.html","payments"],["History","/customer-service-history.html","history"],["Messages","/customer-messaging.html","messages"],["Notifications","/notifications_center.html","bell"],["Settings","/settings.html","settings"]]
+  customer: [["My Services","/customer_dashboard.html","dashboard"],["Bills","/customer_bills.html","payments"],["History","/customer-service-history.html","history"],["Messages","/customer-messaging.html","messages"],["Notifications","/customer-notifications.html","bell"],["Settings","/settings.html","settings"]]
 };
 
 function roleBucket() {
