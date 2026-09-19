@@ -358,9 +358,15 @@ exports.reviewStaffApplication = onCall(
         return;
       }
 
+      // Approval is not document verification. Preserve only an already-verified
+      // application with independently verified documents; never manufacture it.
+      const previouslyVerified = normalize(application.verificationStatus) === "verified"
+        && normalize(application.documentVerificationStatus) === "verified";
       const commonReview = {
         status: decision,
-        verificationStatus: decision === "approved" ? "verified" : decision,
+        verificationStatus: decision === "approved"
+          ? (previouslyVerified ? "verified" : "pending_document_verification")
+          : decision,
         reviewNotes,
         reviewedAt: FieldValue.serverTimestamp(),
         reviewedBy: actor.uid,

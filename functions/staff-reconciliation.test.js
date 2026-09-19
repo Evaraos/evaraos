@@ -76,6 +76,51 @@ test('trusted approval creates expected profile and does not promote applicant a
     assert.ok(Object.values(p.onboardingTasks).every(v=>v===false));
   }
 });
+
+test('approval does not turn deferred documents or inconsistent legacy metadata into verification', async () => {
+  for (const [documentVerificationStatus, verificationStatus] of [
+    ['deferred','pending_review'], ['deferred','verified'], ['verified','pending_review']
+  ]) {
+    const h=harness('staff-approval.js');
+    h.documents.set('users/alice',{role:'owner',status:'active',approvalStatus:'approved'});
+    h.documents.set('users/bob',{role:'customer'});
+    h.documents.set('companies/a',{name:'A'});
+    h.documents.set('staff_applications/bob',{
+      applicantUid:'bob',status:'submitted',roleRequested:'technician',
+      documentVerificationStatus,verificationStatus
+    });
+    await h.call(request({applicationId:'bob',decision:'approved',companyId:'a',finalRole:'technician'}));
+    const application=h.documents.get('staff_applications/bob');
+    assert.equal(application.status,'approved');
+    assert.equal(application.verificationStatus,'pending_document_verification');
+    assert.equal(application.documentVerificationStatus,documentVerificationStatus);
+    assert.equal(h.documents.get('users/bob').role,'technician');
+    const approvalWrite=h.writes.find(([key])=>key==='staff_applications/bob')[1];
+    assert.equal(Object.hasOwn(approvalWrite,'documentVerificationStatus'),false);
+    assert.equal(Object.hasOwn(approvalWrite,'documentVerifiedAt'),false);
+  }
+});
+
+test('approval preserves already verified metadata and a claim retry cannot change document status', async () => {
+  const h=harness('staff-approval.js');
+  h.documents.set('users/alice',{role:'owner',status:'active',approvalStatus:'approved'});
+  h.documents.set('users/bob',{role:'customer'});
+  h.documents.set('companies/a',{name:'A'});
+  h.documents.set('staff_applications/bob',{
+    applicantUid:'bob',status:'submitted',roleRequested:'technician',
+    documentVerificationStatus:'verified',verificationStatus:'verified'
+  });
+  const approve=request({applicationId:'bob',decision:'approved',companyId:'a',finalRole:'technician'});
+  await h.call(approve);
+  assert.equal(h.documents.get('staff_applications/bob').verificationStatus,'verified');
+  assert.equal(h.documents.get('staff_applications/bob').documentVerificationStatus,'verified');
+  const initialApplicationWrites=h.writes.filter(([key])=>key==='staff_applications/bob').length;
+  await h.call(approve);
+  assert.equal(h.writes.filter(([key])=>key==='staff_applications/bob').length,initialApplicationWrites);
+  assert.equal(h.documents.get('staff_applications/bob').documentVerificationStatus,'verified');
+  assert.equal(h.documents.get('staff_applications/bob').verificationStatus,'verified');
+});
+
 test('company admin cannot use global assignment authority', async () => {
   const h=harness('staff-approval.js');h.documents.set('users/alice',{role:'admin',status:'active',approvalStatus:'approved',companyId:'a'});
   await assert.rejects(h.call(request({applicationId:'bob',decision:'assigned',companyId:'b'})),{code:'permission-denied'});
