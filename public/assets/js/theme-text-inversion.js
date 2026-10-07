@@ -17,16 +17,19 @@ function wrap(node){
   // A multiline gradient repeats the same color stops on every line even
   // when each line crosses a different part of the wallpaper. Sample words
   // independently so each gradient uses the actual rendered text rectangle.
-  const fragment=document.createDocumentFragment();
+  // Keep a text run together when its parent lays out direct children as flex
+  // items. Whitespace between word spans then remains normal inline content.
+  const run=document.createElement("span");
+  run.className="evara-adaptive-text-run";
   for(const part of node.textContent.match(/\S+|\s+/g)||[]){
-    if(!part.trim()){fragment.appendChild(document.createTextNode(part));continue}
+    if(!part.trim()){run.appendChild(document.createTextNode(part));continue}
     const span=document.createElement("span");
     span.className="evara-adaptive-text-node";
     span.dataset.adaptiveText="pixel";
     span.textContent=part;
-    fragment.appendChild(span);
+    run.appendChild(span);
   }
-  node.replaceWith(fragment);
+  node.replaceWith(run);
 }
 
 function scan(root=document.body){

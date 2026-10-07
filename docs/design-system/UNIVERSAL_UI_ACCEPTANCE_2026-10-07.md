@@ -15,6 +15,9 @@ Base: `11e9e25bdc03aea63e1881fdaa48d2f066b72c1a` on canonical `evaraos`.
 - Unified prepaint/runtime mode resolution, legacy settings migration, valid zero
   dimming and live wallpaper canvas variables. Theme changes update the page
   background and native control color scheme. Image loading has a bounded wait.
+- Clear sampled element colors when leaving image mode or disabling contrast.
+  Failed wallpaper loads/canvas reads permit a same-URL explicit retry.
+  Per-word sampling keeps each original text run together in flex controls.
 - Supplied the selected image/settings to adaptive sampling. Stable light/dark
   modes use semantic ink; image text is sampled per word to avoid repeating a
   multiline gradient against different backgrounds. Adaptive contrast preserves
@@ -39,13 +42,14 @@ Base: `11e9e25bdc03aea63e1881fdaa48d2f066b72c1a` on canonical `evaraos`.
 | --- | --- |
 | Theme deep audit | PASS; baseline 97 errors resolved; 24 warnings remain |
 | Interface audit | PASS; baseline 171 failures resolved |
-| State/asset/renderer regression tests | PASS, 11 tests |
+| State/asset/renderer regression tests | PASS, 13 tests |
 | Navigation refresh and Home authority | PASS, including all canonical role source fixtures |
 | Access/lifecycle, design-system and visual-QA contracts | PASS |
 | Guest Home/login/signup/staff application at 320/390/768/1440 px | PASS, 16 cases; no root overflow, duplicate IDs or unnamed visible controls |
 | Home light/dark/system-light/system-dark/image at those widths | PASS, 20 cases; one theme stylesheet, correct resolved environment and no root overflow |
 | Reduced motion and forced colors on public Home | PASS, checked rendered styles |
 | Guest drawer keyboard containment, Escape and focus return | PASS in the rendered Chromium preview |
+| Review fixes across 320/390/768/1440 px | PASS, 16 transitions; visible flex labels retain spaces and sampled styles clear |
 
 Guest and appearance matrix captures reported zero uncaught page exceptions and
 zero failed same-origin asset requests after repairing the local preview
@@ -60,8 +64,9 @@ not certify iPhone WebKit or Android hardware behavior.
 1. Review/merge the isolated candidate through canonical protection. The connected
    baseline and production release are unchanged until integration/deployment.
 2. Review the 24 page-specific material warnings, particularly Studio/editor
-   chrome, App Icon Studio, communications and map overlays. They are retained
-   in both audits and have not been suppressed or declared accepted.
+   chrome, App Icon Studio, communications and map overlays. They are inventoried in
+   `PAGE_MATERIAL_REVIEW_2026-10-07.md`, retained in both audits, and require
+   authenticated rendered acceptance before they can be cleared.
 3. Securely configure the encrypted QA origin, App Check debug token and all nine
    role credential pairs. At inspection, repository/environment secret-name
    inventories contained no `EVARA_QA_*` configuration. Never provide values in

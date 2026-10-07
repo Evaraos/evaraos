@@ -79,3 +79,73 @@ test('save and reset return synchronous normalized settings and persistence fail
   h.context.localStorage.setItem=()=>{throw new Error('Quota exceeded');};
   assert.throws(()=>runtime.saveAppearance({mode:'dark'}),/Quota/);
 });
+
+async function sampler(failure = '') {
+  const properties = new Map(), frames = [], root = { dataset: { environment: 'image' } };
+  let loads = 0;
+  class Element {
+    constructor() {
+      this.dataset = {};
+      this.parentElement = null;
+      this.style = { setProperty: (key,value) => properties.set(key,value), removeProperty: key => properties.delete(key) };
+    }
+    matches() { return false; }
+    getBoundingClientRect() { return { left:0,top:0,width:100,height:100,right:100,bottom:100 }; }
+    removeAttribute(name) { delete this.dataset[name==='data-evara-tone'?'evaraTone':'evaraTextTones']; }
+  }
+  const element = new Element();
+  const context = vm.createContext({
+    console, setTimeout, clearTimeout, innerWidth:100, innerHeight:100,
+    HTMLElement:Element, window:{}, matchMedia:()=>({matches:true}), addEventListener() {},
+    requestAnimationFrame:callback=>{frames.push(callback);return frames.length;}, cancelAnimationFrame() {},
+    MutationObserver:class { observe() {} },
+    Image:class {
+      constructor() { this.naturalWidth=1;this.naturalHeight=1; }
+      set src(value) {
+        if (!value) return;
+        loads++;
+        queueMicrotask(()=>failure==='load'&&loads===1?this.onerror(new Error('Transient load')):this.onload());
+      }
+    },
+    document:{
+      documentElement:root,hidden:false,body:{classList:{contains:()=>false}},
+      querySelectorAll:selector=>selector==='.evara-adaptive-text-node'?[]:[element],
+      createElement:()=>({ getContext:()=>({ drawImage() {}, getImageData() {
+        if(failure==='canvas'&&loads===1)throw new Error('Canvas unavailable');
+        return {data:new Uint8ClampedArray([255,255,255,255])};
+      } }) })
+    }
+  });
+  const module = new vm.SourceTextModule(fs.readFileSync('public/assets/js/theme-adaptive.js','utf8'),{context});
+  await module.link(()=>{throw new Error('Unexpected dependency');});await module.evaluate();
+  return {runtime:module.namespace,root,element,properties,loads:()=>loads,flush:()=>{while(frames.length)frames.shift()();}};
+}
+
+test('sampled surface and text styles clear when changing modes or disabling contrast',async()=>{
+  for(const next of ['light','dark','system','contrast-off']) {
+    const h=await sampler();
+    await h.runtime.initAdaptiveGlass({adaptiveContrast:true},'https://ui.invalid/wallpaper.png');h.flush();
+    assert.equal(h.element.dataset.evaraTone,'dark-ink');
+    assert.ok(h.properties.has('--adaptive-glass-rgb'));
+    h.element.dataset.evaraTextTones='ddddddd';
+    for(let i=0;i<7;i++)h.properties.set('--adaptive-text-c'+i,'rgb(0 0 0)');
+    h.root.dataset.environment=next==='contrast-off'?'image':next;
+    await h.runtime.initAdaptiveGlass({adaptiveContrast:next!=='contrast-off'},next==='contrast-off'?'https://ui.invalid/wallpaper.png':'');h.flush();
+    assert.equal(h.element.dataset.evaraTone,undefined);
+    assert.equal(h.element.dataset.evaraTextTones,undefined);
+    assert.equal(h.properties.size,0);
+  }
+});
+
+test('an explicit same-URL retry recovers failed wallpaper loading and canvas sampling',async()=>{
+  for(const failure of ['load','canvas']) {
+    const h=await sampler(failure),url='https://ui.invalid/wallpaper.png';
+    await h.runtime.initAdaptiveGlass({adaptiveContrast:true},url);h.flush();
+    assert.equal(h.loads(),1);
+    await h.runtime.initAdaptiveGlass({adaptiveContrast:true},url);h.flush();
+    assert.equal(h.loads(),2);
+    assert.equal(h.element.dataset.evaraTone,'dark-ink');
+    await h.runtime.initAdaptiveGlass({adaptiveContrast:true},url);h.flush();
+    assert.equal(h.loads(),2);
+  }
+});

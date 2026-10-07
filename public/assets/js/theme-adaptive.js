@@ -321,9 +321,24 @@ function applyTextGradient(wrapper) {
   colors.forEach((color, index) => wrapper.style.setProperty(`--adaptive-text-c${index}`, color));
 }
 
+function clearSampledStyles() {
+  for (const element of document.querySelectorAll("[data-evara-tone],[data-evara-text-tones]")) {
+    element.removeAttribute("data-evara-tone");
+    element.removeAttribute("data-evara-text-tones");
+    for (const name of ["ink-rgb", "shadow-rgb", "glass-rgb", "ambient-rgb", "luma", "contrast"]) {
+      element.style.removeProperty(`--adaptive-${name}`);
+    }
+    TEXT_X.forEach((_, index) => element.style.removeProperty(`--adaptive-text-c${index}`));
+  }
+}
+
 function adapt() {
   frame = 0;
-  if (document.hidden || document.body?.classList.contains("eva-page-leaving") || document.documentElement.dataset.environment !== "image" || appearance?.adaptiveContrast === false) return;
+  if (document.documentElement.dataset.environment !== "image" || appearance?.adaptiveContrast === false) {
+    clearSampledStyles();
+    return;
+  }
+  if (document.hidden || document.body?.classList.contains("eva-page-leaving")) return;
   styleCache = new WeakMap();
   for (const element of document.querySelectorAll(SURFACE_SELECTOR)) {
     if (!(element instanceof HTMLElement) || element.hidden) continue;
@@ -382,10 +397,16 @@ function install() {
 
 export async function initAdaptiveGlass(nextAppearance, url) {
   appearance = nextAppearance;
+  if (document.documentElement.dataset.environment !== "image" || appearance?.adaptiveContrast === false) clearSampledStyles();
   if (url !== preparedUrl) {
-    preparedUrl = url || "";
-    if (url) await prepare(url);
-    else image = canvas = pixels = null;
+    if (url) {
+      await prepare(url);
+      // A failed load or inaccessible canvas must allow a later explicit retry.
+      preparedUrl = pixels ? url : "";
+    } else {
+      preparedUrl = "";
+      image = canvas = pixels = null;
+    }
   }
   install();
   refreshAdaptiveGlass();

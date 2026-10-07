@@ -142,6 +142,11 @@ textarea::placeholder {
 button,
 .btn,
 [role="button"],
+.evara-adaptive-text-run {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .evara-adaptive-text-node {
   color: inherit;
 }

@@ -1,5 +1,5 @@
-import { initAdaptiveGlass, refreshAdaptiveGlass, getEffectiveWallpaper } from "./theme-adaptive.js?v=adaptive-liquid-v9-universal";
-import { installUniversalTextInversion } from "./theme-text-inversion.js?v=adaptive-liquid-v9-universal";
+import { initAdaptiveGlass, refreshAdaptiveGlass, getEffectiveWallpaper } from "./theme-adaptive.js?v=adaptive-liquid-v10-universal";
+import { installUniversalTextInversion } from "./theme-text-inversion.js?v=adaptive-liquid-v10-universal";
 
 import { UI_ASSETS } from "./ui-assets.js?v=1";
 
