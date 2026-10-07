@@ -39,7 +39,7 @@ Base: `11e9e25bdc03aea63e1881fdaa48d2f066b72c1a` on canonical `evaraos`.
 | --- | --- |
 | Theme deep audit | PASS; baseline 97 errors resolved; 24 warnings remain |
 | Interface audit | PASS; baseline 171 failures resolved |
-| State/asset/renderer regression tests | PASS, 10 tests |
+| State/asset/renderer regression tests | PASS, 11 tests |
 | Navigation refresh and Home authority | PASS, including all canonical role source fixtures |
 | Access/lifecycle, design-system and visual-QA contracts | PASS |
 | Guest Home/login/signup/staff application at 320/390/768/1440 px | PASS, 16 cases; no root overflow, duplicate IDs or unnamed visible controls |

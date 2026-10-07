@@ -13,7 +13,9 @@ function attributes(tag) {
   return result;
 }
 function entries(html, relative) {
-  const tags = [...html.replace(/<!--[\s\S]*?-->/g, '').matchAll(/<(script|link)\b[^>]*>/gi)];
+  // Analyze comment/tag tokens without sanitizing or rewriting the HTML source.
+  const tags = [...html.matchAll(/<!--[\s\S]*?(?:-->|$)|<(script|link)\b[^>]*>/gi)]
+    .filter(match => Boolean(match[1]));
   return tags.map(match => {
     const attrs = attributes(match[0]);
     const url = new URL(attrs.src || attrs.href || '', `https://ui.invalid/${relative}`);

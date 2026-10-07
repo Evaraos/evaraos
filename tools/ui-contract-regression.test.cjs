@@ -27,3 +27,10 @@ test('only the named compatibility redirect may omit visible UI assets', () => {
   assert(pageFailures('<script>location.replace("/settings-v2.html")</script>','new-page.html').length>0);
   assert(pageFailures('<script>location.replace("/missing.html")</script>','settings.html').length>0);
 });
+
+test('comment tokens do not manufacture or count asset tags', () => {
+  const fake = '<link rel="stylesheet" href="./assets/css/theme.css?v=stale">';
+  assert.deepEqual(pageFailures(home.replace('</head>', '<!-- '+fake+' --></head>'),'index.html'),[]);
+  assert.deepEqual(pageFailures(home+'<!-- unfinished '+fake,'index.html'),[]);
+  assert(pageFailures(home.replace('</head>', '<!-- ignored -->'+fake+'</head>'),'index.html').some(message=>message.includes('found 2')));
+});
