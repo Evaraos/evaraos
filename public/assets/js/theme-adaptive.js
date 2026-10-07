@@ -20,6 +20,7 @@ let pixels = null;
 let appearance = null;
 let frame = 0;
 let installed = false;
+let preparedUrl = "";
 let styleCache = new WeakMap();
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -77,8 +78,9 @@ function load(url) {
   return new Promise((resolve, reject) => {
     const picture = new Image();
     if (/^https?:/i.test(url)) picture.crossOrigin = "anonymous";
-    picture.onload = () => resolve(picture);
-    picture.onerror = reject;
+    const timeout = setTimeout(() => { picture.src = ""; reject(new Error("Wallpaper load timed out")); }, 5000);
+    picture.onload = () => { clearTimeout(timeout); resolve(picture); };
+    picture.onerror = (error) => { clearTimeout(timeout); reject(error); };
     picture.src = url;
   });
 }
@@ -267,14 +269,14 @@ function chooseInk(color, prior = "") {
   if (prior) {
     const current = prior === "d" ? black : white;
     const alternate = prior === "d" ? white : black;
-    if (alternate - current < 1.2) {
-      return { tone: prior, color: prior === "d" ? "rgb(18 20 24)" : "rgb(255 255 255)", contrast: current };
+    if (current >= 4.5 && alternate - current < 1.2) {
+      return { tone: prior, color: prior === "d" ? "rgb(0 0 0)" : "rgb(255 255 255)", contrast: current };
     }
   }
   const dark = black >= white;
   return {
     tone: dark ? "d" : "l",
-    color: dark ? "rgb(18 20 24)" : "rgb(255 255 255)",
+    color: dark ? "rgb(0 0 0)" : "rgb(255 255 255)",
     contrast: Math.max(black, white)
   };
 }
@@ -321,7 +323,7 @@ function applyTextGradient(wrapper) {
 
 function adapt() {
   frame = 0;
-  if (document.hidden || document.body?.classList.contains("eva-page-leaving")) return;
+  if (document.hidden || document.body?.classList.contains("eva-page-leaving") || document.documentElement.dataset.environment !== "image" || appearance?.adaptiveContrast === false) return;
   styleCache = new WeakMap();
   for (const element of document.querySelectorAll(SURFACE_SELECTOR)) {
     if (!(element instanceof HTMLElement) || element.hidden) continue;
@@ -380,7 +382,11 @@ function install() {
 
 export async function initAdaptiveGlass(nextAppearance, url) {
   appearance = nextAppearance;
-  if (url !== image?.src) await prepare(url);
+  if (url !== preparedUrl) {
+    preparedUrl = url || "";
+    if (url) await prepare(url);
+    else image = canvas = pixels = null;
+  }
   install();
   refreshAdaptiveGlass();
 }

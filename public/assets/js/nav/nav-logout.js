@@ -4,7 +4,7 @@ import {
   clearSavedUserRole,
   clearSavedUserProfile
 } from "../firebase.js";
-import { closeMenu } from "./nav-menu.js";
+import { closeMenu } from "./nav-menu.js?v=universal-a11y-1";
 import { buildHref } from "./nav-utils.js";
 
 let logoutInProgress = false;

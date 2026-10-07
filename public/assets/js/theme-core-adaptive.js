@@ -1,6 +1,9 @@
-import { initAdaptiveGlass, refreshAdaptiveGlass, getEffectiveWallpaper } from "./theme-adaptive.js?v=adaptive-liquid-v8";
-import { installUniversalTextInversion } from "./theme-text-inversion.js?v=adaptive-liquid-v8";
+import { initAdaptiveGlass, refreshAdaptiveGlass, getEffectiveWallpaper } from "./theme-adaptive.js?v=adaptive-liquid-v9-universal";
+import { installUniversalTextInversion } from "./theme-text-inversion.js?v=adaptive-liquid-v9-universal";
 
+import { UI_ASSETS } from "./ui-assets.js?v=1";
+
+export { getEffectiveWallpaper };
 export const APPEARANCE_KEY = "evaraos-appearance";
 export const VALID_MODES = Object.freeze(["light", "dark", "system", "image"]);
 export const IMAGE_POSITIONS = Object.freeze(["center center", "center top", "center bottom", "left center", "right center"]);
@@ -14,7 +17,7 @@ export const DEFAULT_APPEARANCE = Object.freeze({
   updatedAt: null
 });
 
-const THEME_STYLESHEET = "/assets/css/theme.css?v=adaptive-liquid-v10";
+const THEME_STYLESHEET = UI_ASSETS.themeStylesheet;
 const clamp = (value, min, max, fallback) => {
   const number = Number(value);
   return Number.isFinite(number) ? Math.min(max, Math.max(min, number)) : fallback;
@@ -71,7 +74,7 @@ export function systemTheme() {
 }
 
 export function resolvedTheme(value = getAppearance()) {
-  return value.mode === "system" ? systemTheme() : value.mode;
+  return value.mode === "system" || (value.mode === "image" && !value.imageUrl) ? systemTheme() : value.mode;
 }
 
 export const getTheme = () => "adaptive";
@@ -79,7 +82,7 @@ export function getThemeMode() { return getAppearance().mode; }
 
 function presetWallpaper(environment) {
   if (presetCache.has(environment)) return presetCache.get(environment);
-  const value = environment === "dark"
+  const value = environment === "dark" || environment === "image"
     ? "radial-gradient(circle at 18% 12%,#10243f 0,transparent 38%),radial-gradient(circle at 83% 22%,#211b55 0,transparent 42%),radial-gradient(circle at 58% 88%,#4a1c31 0,transparent 43%),linear-gradient(145deg,#080b12,#151b28 48%,#232b3d 72%,#080b12)"
     : "radial-gradient(circle at 18% 12%,#d8f0ff 0,transparent 38%),radial-gradient(circle at 83% 22%,#d5d0ff 0,transparent 42%),radial-gradient(circle at 58% 88%,#ffd6df 0,transparent 43%),linear-gradient(145deg,#f7fbff,#dbe9f7 48%,#f6e9ec 72%,#eef5fb)";
   presetCache.set(environment, value);
@@ -90,7 +93,7 @@ function ensureStylesheet() {
   const existing = [...document.querySelectorAll('link[rel="stylesheet"]')]
     .find((link) => link.href.includes("/assets/css/theme.css"));
   if (existing) {
-    if (!existing.href.includes("adaptive-liquid-v10")) existing.href = THEME_STYLESHEET;
+    if (existing.href !== new URL(THEME_STYLESHEET, location.origin).href) existing.href = THEME_STYLESHEET;
     return existing;
   }
   const link = document.createElement("link");
@@ -106,6 +109,7 @@ function setWallpaperVariables(appearance, environment) {
     ? `url(${JSON.stringify(appearance.imageUrl)})`
     : presetWallpaper(environment);
   root.style.setProperty("--evara-wallpaper-image", image);
+  root.style.setProperty("--evara-wallpaper-canvas", appearance.mode === "image" && appearance.imageUrl ? `${image},${presetWallpaper(environment)}` : image);
   root.style.setProperty("--evara-wallpaper-position", appearance.imagePosition);
   root.style.setProperty("--evara-wallpaper-dim", String(appearance.mode === "image" ? appearance.wallpaperDim : 0));
   root.style.setProperty("--evara-glass-tint", String(appearance.glassTint));
@@ -122,6 +126,8 @@ export async function applyAppearance(value = getAppearance(), options = {}) {
     ensureStylesheet();
     const root = document.documentElement;
     root.dataset.theme = "adaptive";
+    root.dataset.evaraThemeAuthority = "runtime";
+    root.style.colorScheme = environment === "dark" ? "dark" : "light";
     root.dataset.environment = environment;
     root.dataset.themeMode = appearance.mode;
     root.dataset.appearance = `adaptive-${appearance.mode}`;
@@ -129,7 +135,7 @@ export async function applyAppearance(value = getAppearance(), options = {}) {
     root.toggleAttribute("data-has-wallpaper", appearance.mode === "image" && Boolean(appearance.imageUrl));
     setWallpaperVariables(appearance, environment);
     appliedSignature = signature;
-    refreshAdaptiveGlass?.();
+    await initAdaptiveGlass(appearance, appearance.mode === "image" ? appearance.imageUrl : "");
     dispatchEvent(new CustomEvent("evara:theme-applied", { detail: { ...appearance, resolved: environment } }));
   }).catch((error) => console.warn("Appearance apply failed:", error));
 
@@ -137,10 +143,23 @@ export async function applyAppearance(value = getAppearance(), options = {}) {
   return appearance;
 }
 
-export function setAppearance(value = {}) {
+export function saveAppearance(value = {}) {
   const appearance = normalizeAppearance({ ...getAppearance(), ...value, updatedAt: new Date().toISOString() });
   localStorage.setItem(APPEARANCE_KEY, JSON.stringify(appearance));
-  return applyAppearance(appearance, { force: true });
+  void applyAppearance(appearance, { force: true });
+  return appearance;
+}
+
+export function resetAppearance() {
+  localStorage.removeItem(APPEARANCE_KEY);
+  const appearance = { ...DEFAULT_APPEARANCE };
+  void applyAppearance(appearance, { force: true });
+  return appearance;
+}
+
+export function setAppearance(value = {}) {
+  const appearance = saveAppearance(value);
+  return applyQueue.then(() => appearance);
 }
 
 export const setThemeMode = (mode) => setAppearance({ mode });
@@ -159,7 +178,6 @@ export function initTheme() {
   initialized = true;
   ensureStylesheet();
   installUniversalTextInversion?.();
-  initAdaptiveGlass?.();
   applyAppearance(getAppearance(), { force: true });
   matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => {
     if (getAppearance().mode === "system") applyAppearance(getAppearance(), { force: true });
@@ -171,6 +189,8 @@ window.EvaraTheme = {
   initTheme,
   applyAppearance,
   setAppearance,
+  saveAppearance,
+  resetAppearance,
   getAppearance,
   getTheme,
   getThemeMode,

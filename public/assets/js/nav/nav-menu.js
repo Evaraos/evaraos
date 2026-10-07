@@ -6,6 +6,33 @@ import {
 } from "./nav-utils.js";
 import { applyProgress, expandNav } from "./nav-scroll.js";
 
+const backgroundInert = new Map();
+const FOCUSABLE = 'a[href],button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-1"])';
+
+function restoreBackground() {
+  for (const [element, wasInert] of backgroundInert) element.inert = wasInert;
+  backgroundInert.clear();
+}
+
+function isolateDrawer(panel) {
+  restoreBackground();
+  for (let node = panel; node?.parentElement && node !== document.body; node = node.parentElement) {
+    for (const sibling of node.parentElement.children) {
+      if (sibling === node || sibling.id === "evaBackdrop" || /^(SCRIPT|STYLE|LINK)$/.test(sibling.tagName)) continue;
+      backgroundInert.set(sibling, sibling.inert);
+      sibling.inert = true;
+    }
+  }
+}
+
+function drawerControls(panel) {
+  return [...panel.querySelectorAll(FOCUSABLE)].filter(node => !node.closest('[hidden],[inert],[aria-hidden="true"]') && getComputedStyle(node).visibility !== "hidden" && node.getClientRects().length);
+}
+
+function focusDrawer(panel) {
+  (drawerControls(panel)[0] || panel).focus({ preventScroll: true });
+}
+
 export function updateMenuViewportFit() {
   const panel = getMenuPanel();
   if (!panel) return;
@@ -34,8 +61,12 @@ export function unlockBodyScroll() {
 export function openMenu() {
   const zone = getMenuZone();
   const btn = getMenuBtn();
-  if (!zone || !btn) return;
+  const panel = getMenuPanel();
+  if (!zone || !btn || !panel) return;
 
+  panel.inert = false;
+  panel.setAttribute("aria-hidden", "false");
+  panel.setAttribute("aria-modal", "true");
   updateMenuViewportFit();
   lockBodyScroll();
   NAV_STATE.navPinnedOpen = true;
@@ -43,6 +74,8 @@ export function openMenu() {
   zone.classList.add("open");
   btn.setAttribute("aria-expanded", "true");
   expandNav();
+  if (!panel.contains(document.activeElement)) focusDrawer(panel);
+  isolateDrawer(panel);
   window.dispatchEvent(new CustomEvent("evara:menu-open"));
 
   requestAnimationFrame(() => {
@@ -51,13 +84,22 @@ export function openMenu() {
   });
 }
 
-export function closeMenu() {
+export function closeMenu(returnFocus = true) {
   const zone = getMenuZone();
   const btn = getMenuBtn();
   if (!zone || !btn) return;
 
+  const wasOpen = document.body.classList.contains("nav-menu-open");
+  const panel = getMenuPanel();
+  restoreBackground();
+  if (panel) {
+    panel.inert = true;
+    panel.setAttribute("aria-hidden", "true");
+    panel.removeAttribute("aria-modal");
+  }
   document.body.classList.remove("nav-menu-open");
   zone.classList.remove("open");
+  if (wasOpen && returnFocus) btn.focus({ preventScroll: true });
   btn.setAttribute("aria-expanded", "false");
   unlockBodyScroll();
   NAV_STATE.navPinnedOpen = false;
@@ -89,6 +131,28 @@ export function bindMenu() {
 
   if (globalMenuEventsBound) return;
   globalMenuEventsBound = true;
+  document.addEventListener("keydown", event => {
+    if (!document.body.classList.contains("nav-menu-open")) return;
+    const currentPanel = getMenuPanel();
+    if (!currentPanel) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeMenu(true);
+    } else if (event.key === "Tab") {
+      const controls = drawerControls(currentPanel);
+      const first = controls[0], last = controls.at(-1);
+      const focus = document.activeElement;
+      if (!first) { event.preventDefault(); focusDrawer(currentPanel); }
+      else if (!currentPanel.contains(focus) || (event.shiftKey && focus === first) || (!event.shiftKey && focus === last)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus({ preventScroll: true });
+      }
+    }
+  });
+  document.addEventListener("focusin", event => {
+    const currentPanel = getMenuPanel();
+    if (document.body.classList.contains("nav-menu-open") && currentPanel && !currentPanel.contains(event.target)) focusDrawer(currentPanel);
+  });
   document.addEventListener("click", event => {
     const target = event.target;
     const clickedMenuButton = getMenuBtn()?.contains(target);

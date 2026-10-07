@@ -23,9 +23,9 @@ function activeAttrs(route = "") {
   return isCurrentPage(route) ? ' aria-current="page" data-active="true"' : "";
 }
 
-function normalizeRole(role = "customer") {
+export function normalizeNavRole(role = "customer") {
   const value = String(role || "customer").toLowerCase();
-  if (["owner", "super_admin"].includes(value)) return "owner";
+  if (["platform_admin", "owner", "super_admin"].includes(value)) return "owner";
   if (["admin", "manager", "operations_manager"].includes(value)) return "admin";
   if (["organization", "organization_owner", "office_owner", "branch_owner"].includes(value)) return "organization";
   if (["vendor", "lead_vendor", "service_vendor", "management_program"].includes(value)) return "vendor";
@@ -61,7 +61,7 @@ function profileData() {
 
 function compactAction(label, page, icon, active = true) {
   const href = buildHref(page);
-  return `<a class="eva-menu-control" href="${href}" data-menu-link="${href}"${active ? activeAttrs(href) : ""}><span class="eva-menu-icon">${iconSvg(icon)}</span><strong>${clean(label)}</strong></a>`;
+  return `<a class="eva-menu-control" href="${href}" data-menu-link="${href}" aria-label="${clean(label)}"${active ? activeAttrs(href) : ""}><span class="eva-menu-icon">${iconSvg(icon)}</span><strong>${clean(label)}</strong></a>`;
 }
 
 function accountGroup(authed) {
@@ -73,20 +73,20 @@ function accountGroup(authed) {
 }
 
 function appSections(role) {
-  const groups = appsByCategory(normalizeRole(role));
+  const groups = appsByCategory(normalizeNavRole(role));
   return CATEGORY_ORDER.map(category => {
     const apps = (groups[category] || []).filter(app => app.id !== "settings" && canAccessPageName(app.route, role));
     if (!apps.length) return "";
     return `<section class="eva-app-section"><div class="eva-app-section-head"><span>${iconSvg(iconNameForCategory(category))}</span><strong>${clean(CATEGORY_TITLES[category] || category)}</strong><small>${apps.length}</small></div><div class="eva-app-list">${apps.map(app => {
       const href = buildHref(app.route);
-      return `<a class="eva-app-link" href="${href}" data-menu-link="${href}"${activeAttrs(href)}><span>${iconSvg(iconNameForApp(app.id))}</span><strong>${clean(app.title)}</strong><small>${iconSvg("arrowRight")}</small></a>`;
+      return `<a class="eva-app-link" href="${href}" data-menu-link="${href}" aria-label="${clean(app.title)}"${activeAttrs(href)}><span>${iconSvg(iconNameForApp(app.id))}</span><strong>${clean(app.title)}</strong><small>${iconSvg("arrowRight")}</small></a>`;
     }).join("")}</div></section>`;
   }).join("");
 }
 
 function aiGroup(authed) {
   const href = buildHref("ai.html");
-  return `<section class="eva-menu-search-bottom eva-menu-glass-group" data-glass="card"><div class="eva-ai-prompt-head"><span class="eva-ai-orb">${iconSvg("ai")}</span><div><strong>Evaraos AI</strong><small>Search or open the assistant.</small></div><a class="eva-ai-launch-arrow" href="${href}" data-menu-link="${href}" aria-label="Open Evaraos AI">${iconSvg("arrowRight")}</a></div><form class="eva-search-shell" id="evaAiPromptForm"><span class="eva-search-icon">${iconSvg("search")}</span><input id="evaSearchInput" type="search" autocomplete="off" placeholder="${authed ? "Search apps, pages, and tools" : "Search access and onboarding"}"/><button class="eva-ai-send-btn" id="evaAiSendBtn" type="submit" aria-label="Search Evaraos">${iconSvg("arrowUp")}</button></form><div id="evaSearchResults" class="eva-search-results" aria-live="polite"></div></section>`;
+  return `<section class="eva-menu-search-bottom eva-menu-glass-group" data-glass="card"><div class="eva-ai-prompt-head"><span class="eva-ai-orb">${iconSvg("ai")}</span><div><strong>Evaraos AI</strong><small>Search or open the assistant.</small></div><a class="eva-ai-launch-arrow" href="${href}" data-menu-link="${href}" aria-label="Open Evaraos AI">${iconSvg("arrowRight")}</a></div><form class="eva-search-shell" id="evaAiPromptForm"><span class="eva-search-icon">${iconSvg("search")}</span><input id="evaSearchInput" aria-label="Search apps, pages, and tools" type="search" autocomplete="off" placeholder="${authed ? "Search apps, pages, and tools" : "Search access and onboarding"}"/><button class="eva-ai-send-btn" id="evaAiSendBtn" type="submit" aria-label="Search Evaraos">${iconSvg("arrowUp")}</button></form><div id="evaSearchResults" class="eva-search-results" aria-live="polite"></div></section>`;
 }
 
 function guestHomeDrawer() {
@@ -115,7 +115,7 @@ export function renderNav() {
   const profile = profileData();
   const stateKey = JSON.stringify([groups, profile, window.location.pathname]);
   if (renderedStates.get(mount) === stateKey && mount.querySelector("#evaNavShell")) return true;
-  const role = normalizeRole(groups.role);
+  const role = normalizeNavRole(groups.role);
   const fallbackAvatar = iconSvg("account", "eva-drawer-avatar-icon");
   const avatar = profile.image ? `<img src="${clean(profile.image)}" alt="${clean(profile.name)}" />` : fallbackAvatar;
   const menuContent = guestPublic
@@ -134,7 +134,7 @@ export function renderNav() {
     ? guestPublicTopControl()
     : `<button class="eva-top-alert eva-top-action" id="globalNotificationsBell" type="button" aria-expanded="false" aria-label="Open notifications">${iconSvg("bell", "eva-top-action-icon")}<span id="globalNotificationsCount" class="eva-alert-count" hidden>0</span></button>`;
 
-  mount.innerHTML = `<div class="eva-nav-layer" data-render-build="${NAV_RENDER_BUILD}"${publicRoute ? " data-public-shell-nav=\"true\"" : ""}><header class="eva-nav-shell is-visible expanded${guestPublic ? " eva-public-home-universal-shell" : ""}" id="evaNavShell" data-nav-mode="expanded"><div class="eva-nav-pill" id="evaNavPill"><div class="eva-menu-zone" id="evaMenuZone"><button class="eva-profile-trigger eva-top-action${groups.authed && profile.image ? " has-avatar" : ""}" type="button" id="evaMenuBtn" aria-expanded="false" aria-label="Open Evaraos menu">${menuContent}</button></div>${topRight}</div></header><div class="eva-backdrop" id="evaBackdrop"></div><aside class="eva-menu-panel" id="evaMenuPanel" aria-label="Evaraos menu">${drawerProfile}<nav class="eva-menu-apps" id="evaLinks" data-nav-role="${clean(role)}">${drawerLinks}</nav>${drawerAi}</aside></div>`;
+  mount.innerHTML = `<div class="eva-nav-layer" data-render-build="${NAV_RENDER_BUILD}"${publicRoute ? " data-public-shell-nav=\"true\"" : ""}><header class="eva-nav-shell is-visible expanded${guestPublic ? " eva-public-home-universal-shell" : ""}" id="evaNavShell" data-nav-mode="expanded"><div class="eva-nav-pill" id="evaNavPill"><div class="eva-menu-zone" id="evaMenuZone"><button class="eva-profile-trigger eva-top-action${groups.authed && profile.image ? " has-avatar" : ""}" type="button" id="evaMenuBtn" aria-controls="evaMenuPanel" aria-haspopup="dialog" aria-expanded="false" aria-label="Open Evaraos menu">${menuContent}</button></div>${topRight}</div></header><div class="eva-backdrop" id="evaBackdrop"></div><aside class="eva-menu-panel" id="evaMenuPanel" role="dialog" tabindex="-1" inert aria-hidden="true" aria-label="Evaraos menu">${drawerProfile}<nav class="eva-menu-apps" id="evaLinks" data-nav-role="${clean(role)}">${drawerLinks}</nav>${drawerAi}</aside></div>`;
 
   renderedStates.set(mount, stateKey);
   // Mount alongside the shell, before optional Firebase/session enrichment.

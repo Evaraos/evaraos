@@ -9,7 +9,7 @@ async function loadCore(){
   const [config,utils,renderer]=await Promise.all([
     import("./nav-config.js"),
     import("./nav-utils.js"),
-    import("./nav-render.js")
+    import("./nav-render.js?v=universal-a11y-1")
   ]);
   NAV_STATE=config.NAV_STATE;
   getNavShell=utils.getNavShell;
@@ -105,7 +105,7 @@ function bindSessionLifecycle(){
 async function bindCoreSystems(){
   if(isCanonicalPublicPage()){
     const [menu,session]=await Promise.all([
-      optional("./nav-menu.js"),
+      optional("./nav-menu.js?v=universal-a11y-1"),
       optional("./nav-session.js")
     ]);
     publicMenu=menu;
@@ -117,7 +117,7 @@ async function bindCoreSystems(){
     return;
   }
   const [menu,events,session,interactions]=await Promise.all([
-    optional("./nav-menu.js"),
+    optional("./nav-menu.js?v=universal-a11y-1"),
     optional("./nav-events.js"),
     optional("./nav-session.js"),
     optional("./nav-interactions.js")
