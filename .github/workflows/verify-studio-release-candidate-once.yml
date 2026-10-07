@@ -22,7 +22,7 @@ on:
       - 'tools/visual-qa-audit.js'
 
 permissions:
-  contents: write
+  contents: read
   issues: write
 
 concurrency:
@@ -133,23 +133,6 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Commit proof to authoritative branch
-        if: github.event_name == 'workflow_dispatch' && always() && hashFiles('studio-release-candidate-source-verification.json') != ''
-        shell: bash
-        run: |
-          set -euo pipefail
-          git fetch origin evaraos
-          git checkout -B source-verification origin/evaraos
-          mkdir -p docs/deployments
-          cp "$GITHUB_WORKSPACE/studio-release-candidate-source-verification.json" docs/deployments/studio-release-candidate-source-verification.json
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/deployments/studio-release-candidate-source-verification.json
-          if ! git diff --cached --quiet; then
-            git commit -m "ops: record Studio source verification"
-            git push origin HEAD:evaraos
-          fi
-
       - name: Update activation tracker
         if: github.event_name == 'workflow_dispatch' && always()
         uses: actions/github-script@v7
@@ -170,11 +153,11 @@ jobs:
               '',
               'Evidence:',
               '- Workflow artifact: `studio-source-verification-' + process.env.WORKFLOW_RUN_ID + '`',
-              '- Repository proof: `docs/deployments/studio-release-candidate-source-verification.json`',
+              '- Import the artifact proof through a reviewed PR to `docs/deployments/studio-release-candidate-source-verification.json`.',
               '- Detailed logs are included in the artifact under `studio-source-gate-logs/`.',
               '',
               status === 'confirmed'
-                ? 'Gate B may advance after the repository proof is reviewed.'
+                ? 'Gate B may advance after the artifact proof is reviewed and merged through a PR.'
                 : 'Gate B remains blocked. Repair every failing source check listed in the proof and logs.'
             ].join('\n');
             await github.rest.issues.createComment({
