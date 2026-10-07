@@ -43,6 +43,7 @@ Base: `11e9e25bdc03aea63e1881fdaa48d2f066b72c1a` on canonical `evaraos`.
 | Theme deep audit | PASS; baseline 97 errors resolved; 24 warnings remain |
 | Interface audit | PASS; baseline 171 failures resolved |
 | State/asset/renderer regression tests | PASS, 13 tests |
+| Fresh Studio source verification | PASS, seven gates; run 37681903277 |
 | Navigation refresh and Home authority | PASS, including all canonical role source fixtures |
 | Access/lifecycle, design-system and visual-QA contracts | PASS |
 | Guest Home/login/signup/staff application at 320/390/768/1440 px | PASS, 16 cases; no root overflow, duplicate IDs or unnamed visible controls |
@@ -83,3 +84,20 @@ not certify iPhone WebKit or Android hardware behavior.
 The confirmed score remains 3/5 until the partial theme acceptance and unverified
 role matrix have actual integration and acceptance evidence. This candidate
 removes the shared implementation defects and makes the remaining gates concrete.
+
+## Release setup progress
+
+The source verifier now has read-only repository permissions and uploads its
+proof as an artifact. It cannot write directly to the canonical branch or post
+an activation-tracker comment. Run 37681903277 verified all seven source gates
+on `564c7690801d5a164e6ebc5808a0253eab1c5b0f`. Its original artifact proof is
+included in this PR for independent review. No source paths covered by that
+proof changed when it was imported. This is source evidence only; trusted
+Functions deployment/inventory and full Firebase release proof remain missing
+or unverified.
+
+The approved independent reviewer and QA project/HTTPS origin remain required
+setup inputs. The application's existing Firebase target is `evaraos-web`;
+creating privileged synthetic users requires selecting the approved QA target.
+Credential values stay in encrypted configuration and are never supplied in
+chat, source or reports.
