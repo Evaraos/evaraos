@@ -29,7 +29,7 @@ on:
         type: string
 
 permissions:
-  contents: write
+  contents: read
   issues: write
 
 concurrency:
@@ -452,8 +452,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git fetch origin evaraos
-          git checkout -B firebase-release-proof origin/evaraos
           mkdir -p docs/deployments
           node <<'NODE'
           const fs = require('fs');
@@ -479,13 +477,14 @@ jobs:
           };
           fs.writeFileSync('docs/deployments/firebase-production-release.json', `${JSON.stringify(proof, null, 2)}\n`);
           NODE
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/deployments/firebase-production-release.json
-          if ! git diff --cached --quiet; then
-            git commit -m "ops: confirm Firebase production release [skip ci]"
-            git push origin HEAD:evaraos
-          fi
+
+      - name: Upload proof for reviewed integration
+        uses: actions/upload-artifact@v4
+        with:
+          name: firebase-production-release-proof-${{ github.run_id }}
+          path: docs/deployments/firebase-production-release.json
+          if-no-files-found: error
+          retention-days: 90
 
       - name: Update activation tracker
         if: inputs.release_scope == 'all'
@@ -503,9 +502,9 @@ jobs:
                 `Validated commit: \`${{ needs.validate.outputs.validated_sha }}\``,
                 `Workflow run: \`${context.runId}\``,
                 '',
-                'Proof: `docs/deployments/firebase-production-release.json`',
+                'Artifact proof awaits a reviewed PR to `docs/deployments/firebase-production-release.json`.',
                 '',
-                'Proceed to authenticated deployed-origin Studio QA.'
+                'Review and merge the artifact proof before authenticated deployed-origin Studio QA.'
               ].join('\n')
             });
 

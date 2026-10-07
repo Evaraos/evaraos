@@ -20,9 +20,45 @@ jobs:
       - name: Check out pull request source
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Use supported Node.js runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Validate integration governance
+        run: |
+          node tools/source-integration-governance-audit.mjs
+          node --test tools/source-integration-governance-audit.test.mjs
+
+      - name: Validate canonical source contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          for audit in \
+            access-authority-audit.mjs \
+            account-lifecycle-audit.mjs \
+            nav-refresh-audit.mjs \
+            home-shell-authority-audit.mjs \
+            staff-approval-contract-audit.js \
+            staff-applicant-lifecycle-audit.js \
+            staff-release-contract-audit.cjs \
+            studio-app-check-audit.js \
+            studio-trusted-journal-audit.js \
+            studio-production-authority-audit.js \
+            studio-canvas-sandbox-audit.js \
+            studio-release-runtime-audit.js \
+            experience-backend-audit.js \
+            experience-runtime-audit.js \
+            design-system-audit.js \
+            audit-icon-system.js \
+            visual-qa-audit.js
+          do
+            node "tools/$audit"
+          done
 
       - name: Validate canonical pull request
         env:
@@ -34,8 +70,8 @@ jobs:
 
           git cat-file -e "${BASE_SHA}^{commit}"
           git cat-file -e "${HEAD_SHA}^{commit}"
-          git diff --check "$BASE_SHA" "$HEAD_SHA"
-          changed_file_count="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" | wc -l | tr -d ' ')"
+          git diff --check "$BASE_SHA" HEAD
+          changed_file_count="$(git diff --name-only "$BASE_SHA" HEAD | wc -l | tr -d ' ')"
 
           authority_files=(
             "docs/RELEASE_STATUS.md"
@@ -87,6 +123,7 @@ jobs:
 
           echo "base SHA: ${BASE_SHA}"
           echo "head SHA: ${HEAD_SHA}"
+          echo "tested integration SHA: $(git rev-parse HEAD)"
           echo "changed-file count: ${changed_file_count}"
           echo "whitespace validation: passed"
           echo "authority-file validation: passed"

@@ -9,7 +9,7 @@ on:
         type: string
 
 permissions:
-  contents: write
+  contents: read
   issues: write
 
 concurrency:
@@ -254,7 +254,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Commit deployment proof
+      - name: Generate deployment proof
         env:
           VALIDATED_SHA: ${{ needs.validate.outputs.validated_sha }}
           SOURCE_PROOF_SHA: ${{ needs.validate.outputs.source_proof_sha }}
@@ -262,8 +262,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git fetch origin evaraos
-          git checkout -B deployment-proof origin/evaraos
           mkdir -p docs/deployments
           node <<'NODE'
           const fs = require('fs');
@@ -291,15 +289,14 @@ jobs:
           };
           fs.writeFileSync('docs/deployments/trusted-studio-functions-production.json', `${JSON.stringify(proof, null, 2)}\n`);
           NODE
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/deployments/trusted-studio-functions-production.json
-          if git diff --cached --quiet; then
-            echo "Deployment proof already matches the confirmed deployment."
-          else
-            git commit -m "ops: confirm trusted Studio Functions deployment [skip ci]"
-            git push origin HEAD:evaraos
-          fi
+
+      - name: Upload proof for reviewed integration
+        uses: actions/upload-artifact@v4
+        with:
+          name: trusted-studio-functions-production-proof-${{ github.run_id }}
+          path: docs/deployments/trusted-studio-functions-production.json
+          if-no-files-found: error
+          retention-days: 90
 
       - name: Confirm Gate C in activation tracker
         uses: actions/github-script@v7
@@ -317,7 +314,7 @@ jobs:
                 `Source proof commit: \`${{ toJSON(needs.validate.outputs.source_proof_sha) }}\``,
                 `Workflow run: \`${context.runId}\``,
                 '',
-                'Repository proof: `docs/deployments/trusted-studio-functions-production.json`',
+                'Artifact proof awaiting reviewed PR: `docs/deployments/trusted-studio-functions-production.json`',
                 '',
                 'Verified production activation advances to **55%** after proof review.'
               ].join('\n')
