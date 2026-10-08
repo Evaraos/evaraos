@@ -1,9 +1,9 @@
-import "./nav/nav-main-v6.js?v=universal-a11y-1";
+import "./nav/nav-main-v6.js?v=universal-a11y-2";
 import { canAccessPageName } from "./access-control.js";
 import "./experience/experience-runtime.js?v=experience-runtime-v1";
 
-const NAV_ENTRY_BUILD = "nav-v60-universal";
-const NAV_ENTRY_GUARD = "__evaraosNavEntryV60";
+const NAV_ENTRY_BUILD = "nav-v61-universal";
+const NAV_ENTRY_GUARD = "__evaraosNavEntryV61";
 
 if (!window[NAV_ENTRY_GUARD]) {
   window[NAV_ENTRY_GUARD] = true;
@@ -53,7 +53,7 @@ if (!window[NAV_ENTRY_GUARD]) {
     navEnhancementsRequested = true;
 
     const immediateEnhancements = [
-      safeImport("./nav/nav-drawer-close.js?v=nav-v60-universal")
+      safeImport("./nav/nav-drawer-close.js?v=nav-v61-universal")
     ];
 
     if ((guardMode !== "auth" && !isPublicHome) || canAccessPageName(pathname, "guest")) {
@@ -64,10 +64,10 @@ if (!window[NAV_ENTRY_GUARD]) {
 
     runWhenIdle(() => {
       const idleEnhancements = [
-        safeImport("./nav/pull-to-refresh.js?v=nav-v60-universal"),
+        safeImport("./nav/pull-to-refresh.js?v=nav-v61-universal"),
         safeImport("./ui/icon-hydrator.js?v=13")
       ];
-      if (!canAccessPageName(pathname, "guest")) idleEnhancements.push(safeImport("./nav/avatar-sync.js?v=nav-v60-universal"));
+      if (!canAccessPageName(pathname, "guest")) idleEnhancements.push(safeImport("./nav/avatar-sync.js?v=nav-v61-universal"));
       Promise.all(idleEnhancements).catch(() => {});
     }, 1800);
   }
