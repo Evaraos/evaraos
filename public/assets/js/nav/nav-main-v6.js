@@ -1,4 +1,4 @@
-const NAV_BUILD="nav-v60-shell-recovery";
+const NAV_BUILD="nav-v61-universal";
 const PUBLIC_HOME_SHELL_STYLESHEET="/assets/css/nav/nav-shell.css?v=home-1";
 let NAV_STATE,getNavShell,renderNav,applyProgress,bindScrollBehavior,animateNav,isCanonicalPublicRoute,isVerifiedSession;
 let accountSystemsPromise=null;

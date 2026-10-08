@@ -45,6 +45,7 @@ check("all-text-coverage",textJs.includes("createTreeWalker")&&textJs.includes("
 check("paint-lock",bootJs.includes("evara-boot-lock")&&bootJs.includes("evara-theme-painted"),"startup must hide legacy paint until adaptive CSS is active");
 check("nav-build",navEntry.includes(new URL(assets.navRuntime,"https://ui.invalid").searchParams.get("v")),"navigation entry must match the shared contract");
 check("nav-main-build",navEntry.includes("./nav/nav-main-v6.js?v=universal-a11y-2"),"navigation entry must load the current module graph");
+check("nav-build-labels",navMainEntry.includes('const NAV_BUILD="nav-v61-universal"')&&navSessionEntry.includes('const NAV_BUILD = "nav-v61-universal"'),"shared navigation modules must announce the current runtime build");
 check("nav-events-build",navMainEntry.includes("./nav-events.js?v=nav-events-universal-2"),"navigation event binding must use a versioned module URL");
 check("nav-session-build",navMainEntry.includes("./nav-session.js?v=nav-session-universal-2"),"navigation session binding must load the current module revision");
 check("nav-session-events-build",navSessionEntry.includes("./nav-events.js?v=nav-events-universal-2"),"session refresh must reuse the current navigation event binder");

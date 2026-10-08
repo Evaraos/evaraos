@@ -4,7 +4,7 @@ import { canAccessPageName } from "../access-control.js";
 import { applyProgress } from "./nav-scroll.js";
 import { renderNav } from "./nav-render.js?v=universal-a11y-1";
 
-const NAV_BUILD = "nav-v60-shell-recovery";
+const NAV_BUILD = "nav-v61-universal";
 const VERIFIED_PUBLIC_HOME_SOURCE = "verified-public-home";
 let publicHomeSessionStarted = false;
 let publicHomeSessionSequence = 0;
