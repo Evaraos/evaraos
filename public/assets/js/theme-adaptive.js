@@ -21,6 +21,7 @@ let appearance = null;
 let frame = 0;
 let installed = false;
 let preparedUrl = "";
+let preparationGeneration = 0;
 let styleCache = new WeakMap();
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -86,7 +87,6 @@ function load(url) {
 }
 
 async function prepare(url) {
-  image = canvas = pixels = null;
   try {
     const picture = await load(url);
     const scale = Math.min(1, 720 / Math.max(picture.naturalWidth, picture.naturalHeight));
@@ -94,13 +94,12 @@ async function prepare(url) {
     target.width = Math.max(1, Math.round(picture.naturalWidth * scale));
     target.height = Math.max(1, Math.round(picture.naturalHeight * scale));
     const context = target.getContext("2d", { willReadFrequently: true });
-    if (!context) return;
+    if (!context) return null;
     context.drawImage(picture, 0, 0, target.width, target.height);
-    image = picture;
-    canvas = target;
-    pixels = context.getImageData(0, 0, target.width, target.height).data;
+    const pixels = context.getImageData(0, 0, target.width, target.height).data;
+    return { image: picture, canvas: target, pixels };
   } catch {
-    image = canvas = pixels = null;
+    return null;
   }
 }
 
@@ -396,11 +395,23 @@ function install() {
 }
 
 export async function initAdaptiveGlass(nextAppearance, url) {
+  const generation = ++preparationGeneration;
   appearance = nextAppearance;
-  if (document.documentElement.dataset.environment !== "image" || appearance?.adaptiveContrast === false) clearSampledStyles();
+  const changedUrl = url !== preparedUrl;
+  if (document.documentElement.dataset.environment !== "image" || appearance?.adaptiveContrast === false || changedUrl) {
+    clearSampledStyles();
+  }
+  install();
+  refreshAdaptiveGlass();
+
   if (url !== preparedUrl) {
     if (url) {
-      await prepare(url);
+      image = canvas = pixels = null;
+      const prepared = await prepare(url);
+      if (generation !== preparationGeneration) return;
+      image = prepared?.image || null;
+      canvas = prepared?.canvas || null;
+      pixels = prepared?.pixels || null;
       // A failed load or inaccessible canvas must allow a later explicit retry.
       preparedUrl = pixels ? url : "";
     } else {
@@ -408,6 +419,6 @@ export async function initAdaptiveGlass(nextAppearance, url) {
       image = canvas = pixels = null;
     }
   }
-  install();
+  if (generation !== preparationGeneration) return;
   refreshAdaptiveGlass();
 }

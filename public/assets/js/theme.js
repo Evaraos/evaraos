@@ -1,6 +1,6 @@
-import * as Core from "./theme-core-adaptive.js?v=adaptive-liquid-v13-universal";
+import * as Core from "./theme-core-adaptive.js?v=adaptive-liquid-v14-universal";
 
-export const EVARAOS_THEME_BUILD = "adaptive-liquid-v15-universal";
+export const EVARAOS_THEME_BUILD = "adaptive-liquid-v16-universal";
 export const applyAppearance = Core.applyAppearance;
 export const setAppearance = Core.setAppearance;
 export const saveAppearance = Core.saveAppearance;

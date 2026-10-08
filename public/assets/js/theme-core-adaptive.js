@@ -1,5 +1,5 @@
-import { initAdaptiveGlass, refreshAdaptiveGlass, getEffectiveWallpaper } from "./theme-adaptive.js?v=adaptive-liquid-v10-universal";
-import { installUniversalTextInversion } from "./theme-text-inversion.js?v=adaptive-liquid-v10-universal";
+import { initAdaptiveGlass, refreshAdaptiveGlass, getEffectiveWallpaper } from "./theme-adaptive.js?v=adaptive-liquid-v11-universal";
+import { installUniversalTextInversion } from "./theme-text-inversion.js?v=adaptive-liquid-v11-universal";
 
 import { UI_ASSETS } from "./ui-assets.js?v=1";
 
@@ -135,7 +135,8 @@ export async function applyAppearance(value = getAppearance(), options = {}) {
     root.toggleAttribute("data-has-wallpaper", appearance.mode === "image" && Boolean(appearance.imageUrl));
     setWallpaperVariables(appearance, environment);
     appliedSignature = signature;
-    await initAdaptiveGlass(appearance, appearance.mode === "image" ? appearance.imageUrl : "");
+    void initAdaptiveGlass(appearance, appearance.mode === "image" ? appearance.imageUrl : "")
+      .catch((error) => console.warn("Appearance sampling failed:", error));
     dispatchEvent(new CustomEvent("evara:theme-applied", { detail: { ...appearance, resolved: environment } }));
   }).catch((error) => console.warn("Appearance apply failed:", error));
 
@@ -180,7 +181,10 @@ export function initTheme() {
   installUniversalTextInversion?.();
   applyAppearance(getAppearance(), { force: true });
   matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => {
-    if (getAppearance().mode === "system") applyAppearance(getAppearance(), { force: true });
+    const appearance = getAppearance();
+    if (appearance.mode === "system" || (appearance.mode === "image" && !appearance.imageUrl)) {
+      applyAppearance(appearance, { force: true });
+    }
   });
 }
 

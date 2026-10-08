@@ -8,6 +8,8 @@ const { assets } = require('./lib/ui-contract.cjs');
 function harness(saved, dark = false) {
   const values = new Map(saved === undefined ? [] : [['evaraos-appearance', JSON.stringify(saved)]]);
   const properties = new Map(), styles = new Map(), events = [], samples = [];
+  const mediaListeners = [];
+  let schemeIsDark = dark;
   const root = {
     dataset: {},
     style: { setProperty: (name, value) => properties.set(name,value) },
@@ -17,7 +19,7 @@ function harness(saved, dark = false) {
     URL, console, Date, setTimeout() {},
     location: { origin: 'https://ui.invalid', pathname: '/index.html' },
     localStorage: { getItem: key => values.get(key) ?? null, setItem: (key,value) => values.set(key,value), removeItem: key => values.delete(key) },
-    matchMedia: () => ({ matches: dark, addEventListener() {} }),
+    matchMedia: () => ({ matches: schemeIsDark, addEventListener: (type, listener) => mediaListeners.push(listener) }),
     addEventListener() {}, dispatchEvent: event => events.push(event),
     CustomEvent: class { constructor(type, options) { this.type=type;this.detail=options.detail; } },
     window: {},
@@ -28,7 +30,14 @@ function harness(saved, dark = false) {
       head: { appendChild: element => { styles.set(element.id,element); } }
     }
   });
-  return { context, root, properties, styles, values, events, samples };
+  return {
+    context, root, properties, styles, values, events, samples,
+    adaptiveSampler: async (...args) => samples.push(args),
+    changeScheme(darkMode) {
+      schemeIsDark = darkMode;
+      for (const listener of mediaListeners) listener({ matches: darkMode });
+    }
+  };
 }
 async function core(h) {
   const module = new vm.SourceTextModule(fs.readFileSync('public/assets/js/theme-core-adaptive.js','utf8'),{ context: h.context });
@@ -36,7 +45,7 @@ async function core(h) {
     if (specifier.includes('ui-assets')) return new vm.SourceTextModule(fs.readFileSync('public/assets/js/ui-assets.js','utf8'),{ context:h.context });
     if (specifier.includes('text-inversion')) return new vm.SyntheticModule(['installUniversalTextInversion'],function(){this.setExport('installUniversalTextInversion',()=>{});},{context:h.context});
     return new vm.SyntheticModule(['initAdaptiveGlass','refreshAdaptiveGlass','getEffectiveWallpaper'],function(){
-      this.setExport('initAdaptiveGlass',async(...args)=>h.samples.push(args));
+      this.setExport('initAdaptiveGlass',(...args)=>h.adaptiveSampler(...args));
       this.setExport('refreshAdaptiveGlass',()=>{});
       this.setExport('getEffectiveWallpaper',url=>url||'fallback');
     },{context:h.context});
@@ -68,6 +77,23 @@ test('theme switches update the canvas and supply the chosen image to sampling',
   assert.equal(h.properties.get('--evara-wallpaper-dim'),'0');
   assert.match(h.styles.get('evaraPrepaintAuthority').textContent,/background:var\(--evara-wallpaper-canvas\)/);
 });
+test('empty image mode follows system scheme changes and slow sampling never blocks a later mode',async()=>{
+  const h=harness({mode:'image'});vm.runInContext(boot,h.context);const runtime=await core(h);
+  runtime.initTheme();
+  assert.equal(h.root.dataset.environment,'light');
+  h.changeScheme(true);
+  for(let i=0;i<10&&h.root.dataset.environment!=='dark';i++)await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(h.root.dataset.environment,'dark');
+
+  let finishSampling;
+  h.adaptiveSampler=()=>new Promise(resolve=>{finishSampling=resolve;});
+  await runtime.setAppearance({mode:'image',imageUrl:'/slow-wallpaper.png'});
+  await runtime.setThemeMode('light');
+  assert.equal(h.root.dataset.environment,'light');
+  finishSampling();
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(h.root.dataset.environment,'light');
+});
 test('save and reset return synchronous normalized settings and persistence failures are observable',async()=>{
   const h=harness();const runtime=await core(h);
   const saved=runtime.saveAppearance({mode:'light',glassTint:20});
@@ -80,9 +106,10 @@ test('save and reset return synchronous normalized settings and persistence fail
   assert.throws(()=>runtime.saveAppearance({mode:'dark'}),/Quota/);
 });
 
-async function sampler(failure = '') {
+async function sampler(failure = '', deferLoad = false) {
   const properties = new Map(), frames = [], root = { dataset: { environment: 'image' } };
   let loads = 0;
+  const pendingLoads = [];
   class Element {
     constructor() {
       this.dataset = {};
@@ -104,7 +131,8 @@ async function sampler(failure = '') {
       set src(value) {
         if (!value) return;
         loads++;
-        queueMicrotask(()=>failure==='load'&&loads===1?this.onerror(new Error('Transient load')):this.onload());
+        const finish=()=>failure==='load'&&loads===1?this.onerror(new Error('Transient load')):this.onload();
+        if(deferLoad)pendingLoads.push(finish);else queueMicrotask(finish);
       }
     },
     document:{
@@ -118,7 +146,7 @@ async function sampler(failure = '') {
   });
   const module = new vm.SourceTextModule(fs.readFileSync('public/assets/js/theme-adaptive.js','utf8'),{context});
   await module.link(()=>{throw new Error('Unexpected dependency');});await module.evaluate();
-  return {runtime:module.namespace,root,element,properties,loads:()=>loads,flush:()=>{while(frames.length)frames.shift()();}};
+  return {runtime:module.namespace,root,element,properties,loads:()=>loads,finishLoad:()=>pendingLoads.shift()?.(),flush:()=>{while(frames.length)frames.shift()();}};
 }
 
 test('sampled surface and text styles clear when changing modes or disabling contrast',async()=>{
@@ -148,4 +176,18 @@ test('an explicit same-URL retry recovers failed wallpaper loading and canvas sa
     await h.runtime.initAdaptiveGlass({adaptiveContrast:true},url);h.flush();
     assert.equal(h.loads(),2);
   }
+});
+
+test('a late wallpaper sample cannot overwrite a newer non-image environment',async()=>{
+  const h=await sampler('',true),url='https://ui.invalid/slow-wallpaper.png';
+  const pending=h.runtime.initAdaptiveGlass({adaptiveContrast:true},url);
+  h.root.dataset.environment='dark';
+  await h.runtime.initAdaptiveGlass({adaptiveContrast:true},'');
+  h.flush();
+  assert.equal(h.properties.size,0);
+  h.finishLoad();
+  await pending;
+  h.flush();
+  assert.equal(h.element.dataset.evaraTone,undefined);
+  assert.equal(h.properties.size,0);
 });
