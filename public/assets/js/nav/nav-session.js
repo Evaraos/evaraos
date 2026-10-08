@@ -4,7 +4,7 @@ import { canAccessPageName } from "../access-control.js";
 import { applyProgress } from "./nav-scroll.js";
 import { renderNav } from "./nav-render.js?v=universal-a11y-1";
 
-const NAV_BUILD = "nav-v61-universal";
+const NAV_BUILD = "nav-v62-universal";
 const VERIFIED_PUBLIC_HOME_SOURCE = "verified-public-home";
 let publicHomeSessionStarted = false;
 let publicHomeSessionSequence = 0;
@@ -134,7 +134,7 @@ export async function rebindNavAfterRender() {
     binders.interactions.bindNavInteractions();
 
     if (document.getElementById("evaLogoutBtn")) {
-      const { bindLogout } = await import("./nav-logout.js");
+      const { bindLogout } = await import("./nav-logout.js?v=nav-logout-universal-2");
       bindLogout();
     }
   }

@@ -191,3 +191,17 @@ test('a late wallpaper sample cannot overwrite a newer non-image environment',as
   assert.equal(h.element.dataset.evaraTone,undefined);
   assert.equal(h.properties.size,0);
 });
+
+
+test('a wallpaper load is shared across concurrent appearance updates',async()=>{
+  const h=await sampler('',true),url='https://ui.invalid/shared-wallpaper.png';
+  const first=h.runtime.initAdaptiveGlass({adaptiveContrast:true,wallpaperDim:.08},url);
+  const second=h.runtime.initAdaptiveGlass({adaptiveContrast:true,wallpaperDim:.12},url);
+  assert.equal(h.loads(),1);
+  h.finishLoad();
+  await Promise.all([first,second]);h.flush();
+  assert.equal(h.loads(),1);
+  assert.equal(h.element.dataset.evaraTone,'dark-ink');
+  await h.runtime.initAdaptiveGlass({adaptiveContrast:true,wallpaperDim:.2},url);h.flush();
+  assert.equal(h.loads(),1);
+});

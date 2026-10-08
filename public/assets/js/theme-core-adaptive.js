@@ -1,7 +1,7 @@
-import { initAdaptiveGlass, refreshAdaptiveGlass, getEffectiveWallpaper } from "./theme-adaptive.js?v=adaptive-liquid-v11-universal";
+import { initAdaptiveGlass, refreshAdaptiveGlass, getEffectiveWallpaper } from "./theme-adaptive.js?v=adaptive-liquid-v12-universal";
 import { installUniversalTextInversion } from "./theme-text-inversion.js?v=adaptive-liquid-v11-universal";
 
-import { UI_ASSETS } from "./ui-assets.js?v=1";
+import { UI_ASSETS } from "./ui-assets.js?v=2";
 
 export { getEffectiveWallpaper };
 export const APPEARANCE_KEY = "evaraos-appearance";

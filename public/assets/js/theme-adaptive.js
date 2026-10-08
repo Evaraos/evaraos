@@ -22,6 +22,7 @@ let frame = 0;
 let installed = false;
 let preparedUrl = "";
 let preparationGeneration = 0;
+const preparationPromises = new Map();
 let styleCache = new WeakMap();
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -101,6 +102,16 @@ async function prepare(url) {
   } catch {
     return null;
   }
+}
+
+function prepareShared(url) {
+  const existing = preparationPromises.get(url);
+  if (existing) return existing;
+  const pending = prepare(url).finally(() => {
+    if (preparationPromises.get(url) === pending) preparationPromises.delete(url);
+  });
+  preparationPromises.set(url, pending);
+  return pending;
 }
 
 function positionFactor(value) {
@@ -407,7 +418,7 @@ export async function initAdaptiveGlass(nextAppearance, url) {
   if (url !== preparedUrl) {
     if (url) {
       image = canvas = pixels = null;
-      const prepared = await prepare(url);
+      const prepared = await prepareShared(url);
       if (generation !== preparationGeneration) return;
       image = prepared?.image || null;
       canvas = prepared?.canvas || null;
