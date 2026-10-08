@@ -80,12 +80,16 @@ async function waitForApplication(page, appearance) {
   await page.waitForTimeout(300);
 }
 
-async function openRoute(page, route, appearance, baseURL) {
+async function openRoute(page, route, appearance, baseURL, expectedRole) {
   await installAppearance(page, appearance, baseURL);
   const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
   expect(response, `${route} should return a response`).not.toBeNull();
   expect(response.status(), `${route} should not return an HTTP error`).toBeLessThan(400);
   await waitForApplication(page, appearance);
+  await page.waitForFunction((role) => {
+    const session = window.EvaraRouteSession;
+    return session?.authenticated === true && Boolean(session.userId) && session.role === role && session.source === 'verified-route-guard';
+  }, expectedRole, { timeout: 15_000 });
   const pathname = new URL(page.url()).pathname;
   expect(pathname, `${route} must not redirect to login`).not.toMatch(/login\.html$/);
   expect.soft(pathname, `${route} should remain on the authorized route`).toBe(route);
@@ -100,10 +104,15 @@ async function collectDomDiagnostics(page) {
     const duplicateIds = Object.entries(idCounts).filter(([, count]) => count > 1).map(([id, count]) => ({ id, count }));
     const unlabeledControls = [...document.querySelectorAll('button,a[href],input,select,textarea')]
       .filter((node) => {
-        if (node.hidden || node.closest('[hidden]')) return false;
+        if (node.hidden || node.getAttribute('type') === 'hidden' || node.closest('[hidden],[inert],[aria-hidden="true"]')) return false;
         const style = getComputedStyle(node);
         if (style.display === 'none' || style.visibility === 'hidden') return false;
-        return !String(node.getAttribute('aria-label') || node.getAttribute('title') || node.textContent || node.getAttribute('placeholder') || '').trim();
+        const labelledBy = String(node.getAttribute('aria-labelledby') || '').split(/\s+/).map(id => document.getElementById(id)?.textContent || '').join(' ');
+        const labels = [...(node.labels || [])].map(label => label.textContent || '').join(' ');
+        const imageAlt = [...node.querySelectorAll('img[alt]')].map(image => image.alt).join(' ');
+        const value = ['submit','button','reset'].includes(node.getAttribute('type')) ? node.value : '';
+        // A placeholder does not substitute for a persistent accessible name.
+        return !String(node.getAttribute('aria-label') || labelledBy || labels || node.textContent || imageAlt || value || node.getAttribute('title') || '').trim();
       })
       .slice(0, 50)
       .map((node) => ({ tag: node.tagName.toLowerCase(), id: node.id || '', className: String(node.className || '') }));
@@ -130,6 +139,8 @@ async function verifyKeyboardFocus(page) {
       focused: true,
       tag: node.tagName.toLowerCase(),
       id: node.id || '',
+      visible: node.getBoundingClientRect().width > 0 && node.getBoundingClientRect().height > 0 && style.visibility !== 'hidden' && style.display !== 'none',
+      indicator: (style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2) || style.boxShadow !== 'none',
       outlineStyle: style.outlineStyle,
       outlineWidth: style.outlineWidth,
       boxShadow: style.boxShadow
@@ -149,7 +160,7 @@ for (const role of ROLE_DEFINITIONS) {
       test(`${matrixMode === 'critical' ? '@critical ' : ''}${route} loads without layout failure`, async ({ page, baseURL }, testInfo) => {
         if (matrixMode !== 'full' && testInfo.project.name !== 'desktop-chromium') test.skip();
         const diagnostics = collectRuntimeDiagnostics(page);
-        await openRoute(page, route, APPEARANCES[0], baseURL);
+        await openRoute(page, route, APPEARANCES[0], baseURL, role.id);
         const dom = await collectDomDiagnostics(page);
         const focus = await verifyKeyboardFocus(page);
 
@@ -162,6 +173,8 @@ for (const role of ROLE_DEFINITIONS) {
         expect(dom.horizontalOverflow, 'The root document must not overflow horizontally.').toBeLessThanOrEqual(2);
         expect(dom.themeMode).toBe('light');
         expect(focus.focused, 'Keyboard Tab should reach a visible interactive element.').toBe(true);
+        expect(focus.visible, 'Keyboard focus must reach a rendered element.').toBe(true);
+        expect(focus.indicator, 'Keyboard focus needs a visible outline or ring.').toBe(true);
         expect(diagnostics.pageErrors, 'Uncaught page errors are not allowed.').toEqual([]);
         expect.soft(diagnostics.consoleErrors, 'Console errors require review.').toEqual([]);
         expect.soft(dom.duplicateIds, 'Duplicate IDs require review.').toEqual([]);
@@ -187,7 +200,7 @@ for (const visualCase of visualCases) {
       test(`@critical ${routeSlug(visualCase.route)} · ${appearance.id}`, async ({ page, baseURL }, testInfo) => {
         if (matrixMode !== 'full' && !criticalProjects.has(testInfo.project.name)) test.skip();
         const diagnostics = collectRuntimeDiagnostics(page);
-        await openRoute(page, visualCase.route, appearance, baseURL);
+        await openRoute(page, visualCase.route, appearance, baseURL, visualCase.role);
         const dom = await collectDomDiagnostics(page);
         const mask = page.locator(dynamicMaskSelector);
 
@@ -200,6 +213,10 @@ for (const visualCase of visualCases) {
         await testInfo.attach('visual-dom-diagnostics.json', { body: JSON.stringify(dom, null, 2), contentType: 'application/json' });
         expect(dom.horizontalOverflow, 'The visual baseline must not contain root horizontal overflow.').toBeLessThanOrEqual(2);
         expect(dom.themeMode).toBe(appearance.mode);
+        expect(dom.environment).toBe(appearance.mode === 'system' ? appearance.colorScheme : appearance.mode);
+        expect(dom.duplicateIds, 'Appearance routes must preserve unique IDs.').toEqual([]);
+        expect(dom.unlabeledControls, 'Every appearance needs accessible control names.').toEqual([]);
+        expect(diagnostics.consoleErrors, 'Appearance captures must be free of console errors.').toEqual([]);
         expect(diagnostics.pageErrors, 'Uncaught page errors are not allowed during visual capture.').toEqual([]);
       });
     }

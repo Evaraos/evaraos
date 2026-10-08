@@ -4,7 +4,7 @@ import {
   getBrandBlock
 } from "./nav-utils.js";
 
-import { closeMenu } from "./nav-menu.js";
+import { closeMenu } from "./nav-menu.js?v=universal-a11y-1";
 import { navigateWithLoader } from "./nav-navigation.js";
 import { functions, httpsCallable } from "../firebase.js";
 import { searchApps } from "../navigation/app-registry.js";

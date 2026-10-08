@@ -45,6 +45,11 @@ async function authenticateRole(browser, baseURL, role) {
     const current = new URL(page.url());
     if (current.pathname.endsWith('/login.html')) throw new Error('Login did not leave the authentication route.');
 
+    await page.waitForFunction((expectedRole) => {
+      const session = window.EvaraRouteSession;
+      return session?.authenticated === true && Boolean(session.userId) && session.role === expectedRole && session.source === 'verified-route-guard';
+    }, role.id, { timeout: 15_000 });
+
     const statePath = storageStatePath(role.id);
     await fs.mkdir(path.dirname(statePath), { recursive: true });
     await context.storageState({ path: statePath, indexedDB: true });

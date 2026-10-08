@@ -20,6 +20,9 @@ let pixels = null;
 let appearance = null;
 let frame = 0;
 let installed = false;
+let preparedUrl = "";
+let preparationGeneration = 0;
+const preparationPromises = new Map();
 let styleCache = new WeakMap();
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -77,14 +80,14 @@ function load(url) {
   return new Promise((resolve, reject) => {
     const picture = new Image();
     if (/^https?:/i.test(url)) picture.crossOrigin = "anonymous";
-    picture.onload = () => resolve(picture);
-    picture.onerror = reject;
+    const timeout = setTimeout(() => { picture.src = ""; reject(new Error("Wallpaper load timed out")); }, 5000);
+    picture.onload = () => { clearTimeout(timeout); resolve(picture); };
+    picture.onerror = (error) => { clearTimeout(timeout); reject(error); };
     picture.src = url;
   });
 }
 
 async function prepare(url) {
-  image = canvas = pixels = null;
   try {
     const picture = await load(url);
     const scale = Math.min(1, 720 / Math.max(picture.naturalWidth, picture.naturalHeight));
@@ -92,14 +95,23 @@ async function prepare(url) {
     target.width = Math.max(1, Math.round(picture.naturalWidth * scale));
     target.height = Math.max(1, Math.round(picture.naturalHeight * scale));
     const context = target.getContext("2d", { willReadFrequently: true });
-    if (!context) return;
+    if (!context) return null;
     context.drawImage(picture, 0, 0, target.width, target.height);
-    image = picture;
-    canvas = target;
-    pixels = context.getImageData(0, 0, target.width, target.height).data;
+    const pixels = context.getImageData(0, 0, target.width, target.height).data;
+    return { image: picture, canvas: target, pixels };
   } catch {
-    image = canvas = pixels = null;
+    return null;
   }
+}
+
+function prepareShared(url) {
+  const existing = preparationPromises.get(url);
+  if (existing) return existing;
+  const pending = prepare(url).finally(() => {
+    if (preparationPromises.get(url) === pending) preparationPromises.delete(url);
+  });
+  preparationPromises.set(url, pending);
+  return pending;
 }
 
 function positionFactor(value) {
@@ -267,14 +279,14 @@ function chooseInk(color, prior = "") {
   if (prior) {
     const current = prior === "d" ? black : white;
     const alternate = prior === "d" ? white : black;
-    if (alternate - current < 1.2) {
-      return { tone: prior, color: prior === "d" ? "rgb(18 20 24)" : "rgb(255 255 255)", contrast: current };
+    if (current >= 4.5 && alternate - current < 1.2) {
+      return { tone: prior, color: prior === "d" ? "rgb(0 0 0)" : "rgb(255 255 255)", contrast: current };
     }
   }
   const dark = black >= white;
   return {
     tone: dark ? "d" : "l",
-    color: dark ? "rgb(18 20 24)" : "rgb(255 255 255)",
+    color: dark ? "rgb(0 0 0)" : "rgb(255 255 255)",
     contrast: Math.max(black, white)
   };
 }
@@ -319,8 +331,23 @@ function applyTextGradient(wrapper) {
   colors.forEach((color, index) => wrapper.style.setProperty(`--adaptive-text-c${index}`, color));
 }
 
+function clearSampledStyles() {
+  for (const element of document.querySelectorAll("[data-evara-tone],[data-evara-text-tones]")) {
+    element.removeAttribute("data-evara-tone");
+    element.removeAttribute("data-evara-text-tones");
+    for (const name of ["ink-rgb", "shadow-rgb", "glass-rgb", "ambient-rgb", "luma", "contrast"]) {
+      element.style.removeProperty(`--adaptive-${name}`);
+    }
+    TEXT_X.forEach((_, index) => element.style.removeProperty(`--adaptive-text-c${index}`));
+  }
+}
+
 function adapt() {
   frame = 0;
+  if (document.documentElement.dataset.environment !== "image" || appearance?.adaptiveContrast === false) {
+    clearSampledStyles();
+    return;
+  }
   if (document.hidden || document.body?.classList.contains("eva-page-leaving")) return;
   styleCache = new WeakMap();
   for (const element of document.querySelectorAll(SURFACE_SELECTOR)) {
@@ -379,8 +406,30 @@ function install() {
 }
 
 export async function initAdaptiveGlass(nextAppearance, url) {
+  const generation = ++preparationGeneration;
   appearance = nextAppearance;
-  if (url !== image?.src) await prepare(url);
+  const changedUrl = url !== preparedUrl;
+  if (document.documentElement.dataset.environment !== "image" || appearance?.adaptiveContrast === false || changedUrl) {
+    clearSampledStyles();
+  }
   install();
+  refreshAdaptiveGlass();
+
+  if (url !== preparedUrl) {
+    if (url) {
+      image = canvas = pixels = null;
+      const prepared = await prepareShared(url);
+      if (generation !== preparationGeneration) return;
+      image = prepared?.image || null;
+      canvas = prepared?.canvas || null;
+      pixels = prepared?.pixels || null;
+      // A failed load or inaccessible canvas must allow a later explicit retry.
+      preparedUrl = pixels ? url : "";
+    } else {
+      preparedUrl = "";
+      image = canvas = pixels = null;
+    }
+  }
+  if (generation !== preparationGeneration) return;
   refreshAdaptiveGlass();
 }

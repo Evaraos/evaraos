@@ -401,7 +401,7 @@
     if(appPending()&&!document.querySelector('#evaraFastLoader.active,#evaraWelcomeLoader.active'))showFastLoader();
     const root=document.getElementById('universalNavRoot');
     if(root&&!root.querySelector('.eva-nav-layer')&&!document.documentElement.dataset.evaraosNavReady){
-      import('/assets/js/nav.js?v=nav-v59-responsive-core').catch(error=>console.warn('Nav watchdog import failed:',error));
+      import('/assets/js/ui-assets.js?v=2').then(({ UI_ASSETS })=>import(UI_ASSETS.navRuntime)).catch(error=>console.warn('Nav watchdog import failed:',error));
     }
     window.dispatchEvent(new CustomEvent('evaraos:shell-watchdog',{detail:{...health()}}));
   }

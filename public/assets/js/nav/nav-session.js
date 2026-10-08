@@ -2,9 +2,9 @@ import { NAV_STATE } from "./nav-config.js";
 import { isCanonicalPublicRoute, isVerifiedSession, syncThemeLabel } from "./nav-utils.js";
 import { canAccessPageName } from "../access-control.js";
 import { applyProgress } from "./nav-scroll.js";
-import { renderNav } from "./nav-render.js";
+import { renderNav } from "./nav-render.js?v=universal-a11y-1";
 
-const NAV_BUILD = "nav-v60-shell-recovery";
+const NAV_BUILD = "nav-v62-universal";
 const VERIFIED_PUBLIC_HOME_SOURCE = "verified-public-home";
 let publicHomeSessionStarted = false;
 let publicHomeSessionSequence = 0;
@@ -105,8 +105,8 @@ export async function startVerifiedPublicHomeSession() {
 
 async function loadCanonicalBinders() {
   const [events, menu, interactions] = await Promise.all([
-    import("./nav-events.js"),
-    import("./nav-menu.js"),
+    import("./nav-events.js?v=nav-events-universal-2"),
+    import("./nav-menu.js?v=universal-a11y-1"),
     import("./nav-interactions.js")
   ]);
   return { events, menu, interactions };
@@ -120,7 +120,7 @@ function restoreBottomNavAfterRender() {
 }
 
 export async function rebindNavAfterRender() {
-  const menu = await import("./nav-menu.js");
+  const menu = await import("./nav-menu.js?v=universal-a11y-1");
   menu.bindMenu();
   const close = document.querySelector("[data-public-home-menu-close]");
   if (close && close.dataset.publicGuestCloseBound !== "true") {
@@ -134,7 +134,7 @@ export async function rebindNavAfterRender() {
     binders.interactions.bindNavInteractions();
 
     if (document.getElementById("evaLogoutBtn")) {
-      const { bindLogout } = await import("./nav-logout.js");
+      const { bindLogout } = await import("./nav-logout.js?v=nav-logout-universal-2");
       bindLogout();
     }
   }
@@ -156,7 +156,7 @@ async function performNavRefresh() {
     // Preserve the current intent, not a snapshot from before asynchronous binds.
     // A user closing the drawer during a refresh must not have it reopened.
     if (document.body.classList.contains("nav-menu-open")) {
-      const menu = await import("./nav-menu.js");
+      const menu = await import("./nav-menu.js?v=universal-a11y-1");
       if (document.body.classList.contains("nav-menu-open")) menu.openMenu();
     }
   } catch (error) {

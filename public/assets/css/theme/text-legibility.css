@@ -139,6 +139,11 @@ textarea::placeholder {
   opacity: 1 !important;
 }
 
+.evara-adaptive-text-run {
+  min-width: 0;
+  max-width: 100%;
+}
+
 button,
 .btn,
 [role="button"],
@@ -149,3 +154,24 @@ button,
 .text-primary,.title,.page-title,.card-title { color: var(--text-primary) !important; }
 .text-secondary,.subtitle,.page-subtitle,.card-subtitle,.muted { color: var(--text-secondary) !important; }
 :disabled,[aria-disabled="true"] { opacity: .56; }
+
+:root:not([data-environment="image"]) .evara-adaptive-text-node,
+:root[data-adaptive-contrast="off"] .evara-adaptive-text-node {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+  background: none !important;
+}
+
+/* Focus remains visible even when a route resets control outlines. */
+html[data-theme="adaptive"] :where(a[href],button,input,select,textarea,[tabindex]):focus-visible {
+  outline: 3px solid var(--control-ink,var(--text-primary)) !important;
+  outline-offset: 3px !important;
+}
+
+@media (forced-colors: active) {
+  html[data-theme="adaptive"] :where(body,main,section,article,aside,header,footer,nav,label,p,h1,h2,h3,h4,h5,h6,li,button,a,span,strong,small,input,textarea,select) {
+    color: CanvasText !important;
+    -webkit-text-fill-color: CanvasText !important;
+  }
+  html[data-theme="adaptive"] :focus-visible { outline-color: Highlight !important; }
+}

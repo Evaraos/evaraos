@@ -1,5 +1,4 @@
-import { getAppearance, saveAppearance, resetAppearance, applyAppearance, VALID_MODES } from "./theme.js";
-import { getEffectiveWallpaper } from "./theme-adaptive.js";
+import { getAppearance, saveAppearance, resetAppearance, applyAppearance, VALID_MODES, getEffectiveWallpaper } from "./theme.js?v=adaptive-liquid-v17-universal";
 import { setText, setMessage, markSettingsReady } from "./settings-shared.js";
 
 const MAX_SOURCE_BYTES=12*1024*1024,MAX_STORED_LENGTH=3600000;

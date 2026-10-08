@@ -1,0 +1,43 @@
+name: Universal UI Validation
+
+on:
+  pull_request:
+    branches: [evaraos]
+    paths:
+      - 'public/**'
+      - 'tools/**'
+      - 'tests/visual/**'
+      - '.github/workflows/universal-ui-validation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: universal-ui-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  universal-ui:
+    name: Universal UI Contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate shared theme and interface ownership
+        run: |
+          node tools/theme-deep-audit.js
+          node tools/interface-audit.js
+          node tools/design-system-audit.js
+      - name: Verify state transitions and negative asset contracts
+        run: |
+          node --experimental-vm-modules --test tools/ui-contract-regression.test.cjs tools/theme-state-regression.test.cjs tools/nav-render-regression.test.cjs
+      - name: Preserve navigation, authorization and visual QA contracts
+        run: |
+          node tools/nav-refresh-audit.mjs
+          node tools/home-shell-authority-audit.mjs
+          node tools/access-authority-audit.mjs
+          node tools/account-lifecycle-audit.mjs
+          node tools/visual-qa-audit.js

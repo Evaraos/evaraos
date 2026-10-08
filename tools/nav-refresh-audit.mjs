@@ -5,7 +5,7 @@ import vm from 'node:vm';
 // Exercise the refresh coordinator independently of Firebase authentication.
 const source = fs.readFileSync('public/assets/js/nav/nav-session.js', 'utf8');
 const coordinator = source.slice(source.indexOf('async function performNavRefresh()'), source.indexOf('let refreshQueue'))
-  .replaceAll('import("./nav-menu.js")', 'Promise.resolve(menuStub)');
+  .replaceAll('import("./nav-menu.js?v=universal-a11y-1")', 'Promise.resolve(menuStub)');
 async function scenario({ changed = false, closeWhileBinding = false } = {}) {
   let shell = {}, open = true, rebinds = 0, opens = 0, closes = 0;
   const context = vm.createContext({

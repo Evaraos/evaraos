@@ -1,8 +1,12 @@
-import * as Core from "./theme-core-adaptive.js?v=adaptive-liquid-v11";
+import * as Core from "./theme-core-adaptive.js?v=adaptive-liquid-v15-universal";
 
-export const EVARAOS_THEME_BUILD = "adaptive-liquid-v13-public-critical";
+export const EVARAOS_THEME_BUILD = "adaptive-liquid-v17-universal";
 export const applyAppearance = Core.applyAppearance;
 export const setAppearance = Core.setAppearance;
+export const saveAppearance = Core.saveAppearance;
+export const resetAppearance = Core.resetAppearance;
+export const VALID_MODES = Core.VALID_MODES;
+export const getEffectiveWallpaper = Core.getEffectiveWallpaper;
 export const getAppearance = Core.getAppearance;
 export const getTheme = Core.getTheme;
 export const getThemeMode = Core.getThemeMode;
@@ -38,24 +42,9 @@ async function loadPageEnhancements() {
   }
 }
 
-function enforceUniversalTheme(detail) {
-  const root = document.documentElement;
-  const appearance = Core.getAppearance();
-  const environment = detail && (detail.resolved || detail.environment) ? (detail.resolved || detail.environment) : Core.resolvedTheme(appearance);
-  root.dataset.theme = "adaptive";
-  root.dataset.environment = environment;
-  root.dataset.themeMode = appearance.mode;
-  root.dataset.appearance = "adaptive-" + appearance.mode;
-  root.dataset.evaraThemeAuthority = "runtime";
-  root.style.colorScheme = environment === "dark" ? "dark" : "light";
-  if (window.EvaraTheme) window.EvaraTheme.getTheme = function(){ return "adaptive"; };
-}
-
-addEventListener("evara:theme-applied", function(event){ enforceUniversalTheme(event.detail || {}); });
-addEventListener("pageshow", function(){ enforceUniversalTheme({}); });
+addEventListener("pageshow", () => Core.applyAppearance(Core.getAppearance(), { force: true }));
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", function(){ enforceUniversalTheme({}); loadPageEnhancements(); }, { once: true });
+  document.addEventListener("DOMContentLoaded", function(){ loadPageEnhancements(); }, { once: true });
 } else {
-  enforceUniversalTheme({});
   loadPageEnhancements();
 }
