@@ -43,3 +43,11 @@ Repository checkpoint of visual brand book delivered in chat as `EvaraOS_Premium
 - Both screenshot concepts embed the source PNG bytes unchanged. They are static, not screenshots of deployed production app pages. No fictional metrics, real-person portraits, staff claims or live customer records are used.
 - Artifacts delivered to owner in chat in archive `EvaraOS_Premium_Design_Mockups_v1.zip` (PNG previews + HTML concept sources + exact source PNG + readme). The mockups must not be treated as verified Google Business Profile location/team photographs.
 - State: **awaiting owner review/approval; no production changes, no rebrand**.
+
+## Google Business Profile creative asset pack — October 2026
+- Reviewed the live homepage at `https://evaraos.web.app/` and Google Business Profile's own photos/video guidance: `https://support.google.com/business/answer/6103862`.
+- Prepared the user-confirmed **unchanged official red E logo** as an original transparent 512×512 PNG plus white-backed 1080×1080 brand-logo display image for the GBP **Logo** slot.
+- Produced three stylized **AI-generated marketing concepts** covering EvaraOS identity, multi-company/people/leads/jobs, and Supreme True Clean / OneofOne Cleaning services. **They are not genuine business photos or deployed app screenshots** and should not be represented as such in the Google Maps general photo album.
+- The zip and README explicitly separate allowed logo asset from conceptual marketing graphics. Saved to EvaraOS Drive marketing folder: https://drive.google.com/file/d/1ljlyXB9ldM0V4iuIa1aClgJhefy5ki4w/view.
+- Google survey option for uploading photos/posts: “Add editorial content (e.g., photos, posts)”. Google typically requires authentic, well-lit, unaltered business/service images for its photo gallery; logo must be uploaded via dedicated Logo surface.
+- No Google listing, website or legal name changes have been made. A false historic map/photo association remains a separate issue to diagnose.
