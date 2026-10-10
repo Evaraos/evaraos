@@ -51,3 +51,12 @@ Repository checkpoint of visual brand book delivered in chat as `EvaraOS_Premium
 - The zip and README explicitly separate allowed logo asset from conceptual marketing graphics. Saved to EvaraOS Drive marketing folder: https://drive.google.com/file/d/1ljlyXB9ldM0V4iuIa1aClgJhefy5ki4w/view.
 - Google survey option for uploading photos/posts: “Add editorial content (e.g., photos, posts)”. Google typically requires authentic, well-lit, unaltered business/service images for its photo gallery; logo must be uploaded via dedicated Logo surface.
 - No Google listing, website or legal name changes have been made. A false historic map/photo association remains a separate issue to diagnose.
+
+## Supplied subsidiary service brand identity — user reference, October 2026
+- The user supplied the **original 1 of 1 Cleaning** house-shaped logo and **Supreme TrueClean** red wordmark as exact brand references, correcting invented marks in an earlier service-category promotional concept.
+- Confirmed category mapping from existing website positioning: **Supreme TrueClean: exterior services** (trash bins, driveways, house washing); **1 of 1 Cleaning: interior services** (residential/recurring cleaning).
+- Prepared a review-only “Connected Services” editorial image, using both source logos without AI-redrawing the lettering or symbols and the official EvaraOS red E. **Illustrative scenes are AI concept artwork, not photographs of real customer work**; do not use as documentary GBP service photographs.
+- Preserved the original 1 of 1 Cleaning asset in EvaraOS Drive: https://drive.google.com/file/d/1WiQewuhv089MSqfvDPrRWkDs7gYA97XL/view
+- Preserved the original Supreme TrueClean asset in EvaraOS Drive: https://drive.google.com/file/d/1wRa8rorE0jHAVpkK8UuHl_BRnD8WoZwC/view
+- Saved the revised composite in EvaraOS Drive: https://drive.google.com/file/d/1wF81P_ybKAzczn2DYQyhzGdDZgoDEgnY/view
+- This documentation does not imply legal ownership of either brand or authorize site/profile changes; owner review remains pending.
