@@ -36,3 +36,10 @@ Retain EvaraOS until a proper comparison and legal clearance; its trademark is n
 
 ## Notes
 Repository checkpoint of visual brand book delivered in chat as `EvaraOS_Premium_Brand_Direction_v1.pdf` and notes as `EvaraOS_Brand_Direction_Implementation_Notes.md`. This Markdown documents the decision and constraints, not product deployment or trademark advice.
+
+## Owner-confirmed logo and visual concepts — October 9, 2026
+- The owner confirmed the newly supplied transparent red 3D E file is the **official EvaraOS logo**. File SHA-256: `95b93a5717da8b5faf99fbc2c4d28be98558d65aa6448eedaa42fe81ee468897` (512×512 RGBA PNG); preserve the geometry and treatment exactly. The same emblem matches the repository's canonical red sculpted E concept.
+- Two 1600×1000 **review-only** concept mockups were produced: `01_homepage_concept.png` (light, pearlescent, glass UI; tagline “Business runs better together.”) and `02_operations_dashboard_concept.png` (dark aurora-glass control center with companies, jobs, workforce, customers and clearly marked future marketplace concept).
+- Both screenshot concepts embed the source PNG bytes unchanged. They are static, not screenshots of deployed production app pages. No fictional metrics, real-person portraits, staff claims or live customer records are used.
+- Artifacts delivered to owner in chat in archive `EvaraOS_Premium_Design_Mockups_v1.zip` (PNG previews + HTML concept sources + exact source PNG + readme). The mockups must not be treated as verified Google Business Profile location/team photographs.
+- State: **awaiting owner review/approval; no production changes, no rebrand**.
