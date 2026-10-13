@@ -169,7 +169,9 @@ node tests/visual/run-local-emulator-matrix.mjs
 
 The runner creates disposable Auth Emulator users and Firestore profiles,
 authenticates through the normal sign-in page, and checks critical routes for
-all nine roles across the four configured browser/device projects. It uses the
+all nine roles across the four configured browser/device projects. The
+Universal UI GitHub workflow runs the same matrix using a demo Firebase project,
+Java 21, pinned Firebase CLI, and installed Playwright browser runtimes. It uses the
 `demo-evaraos-ui` project ID, loopback endpoints, and Hosting Emulator port
 5180. It creates a temporary emulator-only config so the production Hosting
 target remains unchanged, then deletes temporary browser state and test output. This is local

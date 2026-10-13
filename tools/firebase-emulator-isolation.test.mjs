@@ -117,3 +117,12 @@ test('authenticated QA failure diagnostics omit account identifiers and login te
   assert.doesNotMatch(setup, /routeSession:\s*window\.EvaraRouteSession/);
   assert.doesNotMatch(setup, /loginMessage:\s*document\.querySelector/);
 });
+
+test('Universal UI CI runs the role matrix with isolated demo emulators', () => {
+  const workflow = read('.github/workflows/universal-ui-validation.yml');
+  assert.match(workflow, /local-emulator-role-matrix:/);
+  assert.match(workflow, /uses:\s*actions\/setup-java@v4[\s\S]*?java-version:\s*'21'/);
+  assert.match(workflow, /firebase-tools@15\.33\.0/);
+  assert.match(workflow, /EVARA_QA_FIREBASE_CLI:\s*firebase/);
+  assert.match(workflow, /node tests\/visual\/run-local-emulator-matrix\.mjs/);
+});

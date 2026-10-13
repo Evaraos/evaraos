@@ -41,3 +41,26 @@ jobs:
           node tools/access-authority-audit.mjs
           node tools/account-lifecycle-audit.mjs
           node tools/visual-qa-audit.js
+
+  local-emulator-role-matrix:
+    name: Local Firebase Emulator Role Matrix
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install visual QA dependencies
+        run: npm install --no-audit --no-fund --prefix tests/visual
+      - name: Install Firebase CLI and browser runtimes
+        run: |
+          npm install --global firebase-tools@15.33.0
+          tests/visual/node_modules/.bin/playwright install --with-deps chromium webkit
+      - name: Run nine-role matrix against demo Firebase emulators
+        env:
+          EVARA_QA_FIREBASE_CLI: firebase
+        run: node tests/visual/run-local-emulator-matrix.mjs
