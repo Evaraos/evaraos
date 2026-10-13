@@ -20,6 +20,25 @@ const API_KEY = 'demo-api-key';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(here, '../..');
 const accounts = [];
+let matrixSummaryFinalized = false;
+
+function sanitizeFailureText(value) {
+  return String(value)
+    .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, '[email]')
+    .replace(/([?&](?:key|token|code|auth|password|secret)=)[^&#\s]+/gi, '$1[redacted]')
+    .replace(/\b(password|token|api[_-]?key|authorization|bearer)\s*[:=]\s*[^\s,;]+/gi, '$1=[redacted]')
+    .replace(/\b[A-Za-z0-9_-]{32,}\b/g, '[redacted]')
+    .replace(/\s+/g, ' ')
+    .slice(0, 400);
+}
+
+async function writeMatrixSummary(lines, finalized = true) {
+  const summaryPath = process.env.EVARA_QA_FAILURE_SUMMARY?.trim();
+  if (!summaryPath) return;
+  await fs.mkdir(path.dirname(summaryPath), { recursive: true });
+  await fs.writeFile(summaryPath, `${lines.join('\n')}\n`, 'utf8');
+  matrixSummaryFinalized = finalized;
+}
 
 function requireLocalEmulator(name, value, host, port) {
   const [actualHost, actualPort] = String(value || '').split(':');
@@ -161,14 +180,21 @@ async function summarizePlaywrightFailures(resultsPath) {
 async function reportPlaywrightFailures(resultsPath) {
   try {
     const failures = await summarizePlaywrightFailures(resultsPath);
-    if (!failures.length) return;
+    if (!failures.length) {
+      await writeMatrixSummary(['# Local Firebase role matrix', '', 'Result: Playwright completed without test failures.']);
+      return;
+    }
     console.error(`Local authenticated matrix failures: ${failures.length}.`);
+    const summary = ['# Local Firebase role matrix', '', `Result: ${failures.length} Playwright test failure(s).`, ''];
     for (const failure of failures.slice(0, 12)) {
-      console.error(`- ${failure.title}: ${failure.error}`);
+      console.error(`- ${sanitizeFailureText(failure.title)}: ${sanitizeFailureText(failure.error)}`);
+      summary.push(`- ${sanitizeFailureText(failure.title)}: ${sanitizeFailureText(failure.error)}`);
     }
     if (failures.length > 12) console.error(`- ${failures.length - 12} additional failures are summarized in the temporary Playwright JSON report.`);
+    await writeMatrixSummary(summary);
   } catch {
     console.error('The local Playwright JSON report was unavailable for failure details.');
+    await writeMatrixSummary(['# Local Firebase role matrix', '', 'Result: failed before a usable Playwright failure report was available.']);
   }
 }
 
@@ -238,6 +264,7 @@ async function main() {
   }
 
   assertSafeEmulatorEnvironment();
+  await writeMatrixSummary(['# Local Firebase role matrix', '', 'Result: runner started; final outcome was not recorded.'], false);
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'evaraos-ui-emulator-'));
   const authDir = path.join(tempRoot, 'auth');
   const runId = randomBytes(6).toString('hex');
@@ -272,6 +299,9 @@ async function main() {
 }
 
 main().catch((error) => {
+  if (process.env.EVARA_QA_LOCAL_EMULATOR_CHILD === '1' && !matrixSummaryFinalized) {
+    writeMatrixSummary(['# Local Firebase role matrix', '', `Result: setup failed. ${sanitizeFailureText(error.message)}`], true).catch(() => {});
+  }
   console.error(error.message);
   process.exitCode = 1;
 });

@@ -63,4 +63,15 @@ jobs:
       - name: Run nine-role matrix against demo Firebase emulators
         env:
           EVARA_QA_FIREBASE_CLI: firebase
-        run: node tests/visual/run-local-emulator-matrix.mjs
+          EVARA_QA_FAILURE_SUMMARY: ${{ runner.temp }}/universal-ui-role-matrix-summary.md
+        run: |
+          printf '# Local Firebase role matrix\n\nResult: no detailed summary was produced.\n' > "$EVARA_QA_FAILURE_SUMMARY"
+          node tests/visual/run-local-emulator-matrix.mjs
+      - name: Upload local role matrix summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: universal-ui-role-matrix-summary-${{ github.run_id }}
+          path: ${{ runner.temp }}/universal-ui-role-matrix-summary.md
+          if-no-files-found: error
+          retention-days: 3

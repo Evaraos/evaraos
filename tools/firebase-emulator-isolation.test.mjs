@@ -125,4 +125,9 @@ test('Universal UI CI runs the role matrix with isolated demo emulators', () => 
   assert.match(workflow, /firebase-tools@15\.33\.0/);
   assert.match(workflow, /EVARA_QA_FIREBASE_CLI:\s*firebase/);
   assert.match(workflow, /node tests\/visual\/run-local-emulator-matrix\.mjs/);
+  assert.match(workflow, /actions\/upload-artifact@v4[\s\S]*?universal-ui-role-matrix-summary/);
+  assert.match(workflow, /EVARA_QA_FAILURE_SUMMARY/);
+  const runner = read('tests/visual/run-local-emulator-matrix.mjs');
+  assert.match(runner, /sanitizeFailureText/);
+  assert.match(runner, /writeMatrixSummary/);
 });
