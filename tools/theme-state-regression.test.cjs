@@ -205,3 +205,21 @@ test('a wallpaper load is shared across concurrent appearance updates',async()=>
   await h.runtime.initAdaptiveGlass({adaptiveContrast:true,wallpaperDim:.2},url);h.flush();
   assert.equal(h.loads(),1);
 });
+
+test('returning to a prepared wallpaper restores sampling after another URL clears its buffers',async()=>{
+  const h=await sampler('',true),wallpaperA='https://ui.invalid/wallpaper-a.png',wallpaperB='https://ui.invalid/wallpaper-b.png';
+  const firstA=h.runtime.initAdaptiveGlass({adaptiveContrast:true},wallpaperA);
+  h.finishLoad();
+  await firstA;h.flush();
+  assert.equal(h.element.dataset.evaraTone,'dark-ink');
+
+  const pendingB=h.runtime.initAdaptiveGlass({adaptiveContrast:true},wallpaperB);
+  const returnedA=h.runtime.initAdaptiveGlass({adaptiveContrast:true},wallpaperA);
+  assert.equal(h.loads(),3,'returning to A must prepare new sampling buffers after they were cleared');
+
+  h.finishLoad();
+  await pendingB;
+  h.finishLoad();
+  await returnedA;h.flush();
+  assert.equal(h.element.dataset.evaraTone,'dark-ink');
+});

@@ -52,10 +52,10 @@ check("nav-session-build",navMainEntry.includes("./nav-session.js?v=nav-session-
 check("nav-session-events-build",navSessionEntry.includes("./nav-events.js?v=nav-events-universal-2"),"session refresh must reuse the current navigation event binder");
 check("nav-main-logout-build",navMainEntry.includes("./nav-logout.js?v=nav-logout-universal-2"),"authenticated navigation must load the current logout binder");
 check("nav-session-logout-build",navSessionEntry.includes("./nav-logout.js?v=nav-logout-universal-2"),"session refresh must reuse the current logout binder");
-check("theme-build",themeEntry.includes(new URL(assets.themeRuntime,"https://ui.invalid").searchParams.get("v"))&&themeEntry.includes("adaptive-liquid-v17-universal"),"theme entry must match the shared contract");
-check("theme-core-build",themeEntry.includes("./theme-core-adaptive.js?v=adaptive-liquid-v15-universal"),"theme facade must load the current core module");
+check("theme-build",themeEntry.includes(new URL(assets.themeRuntime,"https://ui.invalid").searchParams.get("v"))&&themeEntry.includes("adaptive-liquid-v18-universal"),"theme entry must match the shared contract");
+check("theme-core-build",themeEntry.includes("./theme-core-adaptive.js?v=adaptive-liquid-v16-universal"),"theme facade must load the current core module");
 check("theme-ui-assets-build",themeCoreEntry.includes("./ui-assets.js?v=2")&&loaderJs.includes("ui-assets.js?v=2"),"theme and recovery must share the current asset contract");
-check("theme-adaptive-build",themeCoreEntry.includes("./theme-adaptive.js?v=adaptive-liquid-v12-universal"),"theme core must load the current adaptive sampler");
+check("theme-adaptive-build",themeCoreEntry.includes("./theme-adaptive.js?v=adaptive-liquid-v13-universal"),"theme core must load the current adaptive sampler");
 check("appearance-api",["saveAppearance","resetAppearance","VALID_MODES","getEffectiveWallpaper"].every(name=>themeEntry.includes(`export const ${name} = Core.${name}`)),"Appearance imports must be exported by the shared theme facade");
 check("appearance-entry-build",settingsAppearancePage.includes("/assets/js/settings-appearance-v2.js?v=7"),"Appearance page must load the current control module");
 check("appearance-theme-build",settingsAppearanceEntry.includes(`./theme.js${new URL(assets.themeRuntime,"https://ui.invalid").search}`),"Appearance controls must reuse the canonical theme facade URL");

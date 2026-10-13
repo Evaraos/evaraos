@@ -418,6 +418,7 @@ export async function initAdaptiveGlass(nextAppearance, url) {
   if (url !== preparedUrl) {
     if (url) {
       image = canvas = pixels = null;
+      preparedUrl = "";
       const prepared = await prepareShared(url);
       if (generation !== preparationGeneration) return;
       image = prepared?.image || null;

@@ -101,3 +101,25 @@ setup inputs. The application's existing Firebase target is `evaraos-web`;
 creating privileged synthetic users requires selecting the approved QA target.
 Credential values stay in encrypted configuration and are never supplied in
 chat, source or reports.
+
+## Follow-up — 2026-10-12
+
+- Fixed the wallpaper A → B → A race: when selecting another wallpaper clears
+  the active sampling buffers, the prior URL is invalidated so returning to it
+  prepares valid pixels instead of treating the cleared buffers as cached.
+- Bumped the sampler, theme-core and shared theme runtime cache keys, then
+  synchronized the shared runtime URL across all 67 visible HTML routes.
+- Added a deferred-load regression for returning to a prepared wallpaper while
+  the newer wallpaper is still loading.
+- Current local validation passes: theme deep audit, interface audit,
+  design-system audit, repository audit, navigation refresh, Home shell
+  authority, access authority, account lifecycle and visual-QA architecture;
+  17 state/asset/navigation regression tests pass; JavaScript syntax and
+  whitespace checks pass.
+- The theme/design-system audits still report the same 24 page-specific
+  material warnings. They remain open for rendered review. The current
+  GitHub Actions baseline's architecture job passed, while its authenticated
+  deployed-origin verification job was skipped. The nine-role/four-device
+  authenticated matrix is still unverified, so this follow-up does not raise
+  the confirmed score above 3/5.
+- No Firebase production resource or application deployment was changed.
