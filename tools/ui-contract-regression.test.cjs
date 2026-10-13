@@ -34,3 +34,11 @@ test('comment tokens do not manufacture or count asset tags', () => {
   assert.deepEqual(pageFailures(home+'<!-- unfinished '+fake,'index.html'),[]);
   assert(pageFailures(home.replace('</head>', '<!-- ignored -->'+fake+'</head>'),'index.html').some(message=>message.includes('found 2')));
 });
+
+test('message and owner-editor text fields have persistent accessible names', () => {
+  const messages = fs.readFileSync('public/messages.html','utf8');
+  const ownerEditor = fs.readFileSync('public/assets/js/owner-editor.js','utf8');
+  assert.match(messages, /<input\b[^>]*id="conversationSearch"[^>]*aria-label="Search conversations"/);
+  assert.match(messages, /<textarea\b[^>]*id="messageInput"[^>]*aria-label="Message text"/);
+  assert.match(ownerEditor, /<textarea\s+data-owner-editor-text\s+aria-label="Selected content text"/);
+});

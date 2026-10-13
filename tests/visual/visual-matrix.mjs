@@ -94,7 +94,8 @@ export function configuredRoles() {
 }
 
 export function storageStatePath(roleId) {
-  return path.join(root, '.auth', `${roleId}.json`);
+  const authDirectory = process.env.EVARA_QA_AUTH_DIR || path.join(root, '.auth');
+  return path.join(authDirectory, `${roleId}.json`);
 }
 
 export function routeSlug(route) {

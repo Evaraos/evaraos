@@ -7,8 +7,10 @@ import {
   routeSlug,
   storageStatePath
 } from '../visual-matrix.mjs';
+import { installLocalFirebaseNetworkGuard } from '../local-emulator-safety.mjs';
 
 const matrixMode = process.env.EVARA_QA_MATRIX === 'full' ? 'full' : 'critical';
+const criticalResponsiveMatrix = process.env.EVARA_QA_CRITICAL_RESPONSIVE === '1';
 const criticalProjects = new Set(['desktop-chromium', 'iphone-webkit']);
 const dynamicMaskSelector = [
   'canvas',
@@ -24,6 +26,10 @@ const dynamicMaskSelector = [
   '[id*="Paid"]',
   '[id*="Risk"]'
 ].join(',');
+
+test.beforeEach(async ({ page, baseURL }) => {
+  await installLocalFirebaseNetworkGuard(page, baseURL);
+});
 
 function appearancePayload(appearance, baseURL) {
   return {
@@ -105,6 +111,7 @@ async function collectDomDiagnostics(page) {
     const unlabeledControls = [...document.querySelectorAll('button,a[href],input,select,textarea')]
       .filter((node) => {
         if (node.hidden || node.getAttribute('type') === 'hidden' || node.closest('[hidden],[inert],[aria-hidden="true"]')) return false;
+        if (node.getClientRects().length === 0) return false;
         const style = getComputedStyle(node);
         if (style.display === 'none' || style.visibility === 'hidden') return false;
         const labelledBy = String(node.getAttribute('aria-labelledby') || '').split(/\s+/).map(id => document.getElementById(id)?.textContent || '').join(' ');
@@ -158,7 +165,7 @@ for (const role of ROLE_DEFINITIONS) {
 
     for (const route of routes) {
       test(`${matrixMode === 'critical' ? '@critical ' : ''}${route} loads without layout failure`, async ({ page, baseURL }, testInfo) => {
-        if (matrixMode !== 'full' && testInfo.project.name !== 'desktop-chromium') test.skip();
+        if (matrixMode !== 'full' && !criticalResponsiveMatrix && testInfo.project.name !== 'desktop-chromium') test.skip();
         const diagnostics = collectRuntimeDiagnostics(page);
         await openRoute(page, route, APPEARANCES[0], baseURL, role.id);
         const dom = await collectDomDiagnostics(page);

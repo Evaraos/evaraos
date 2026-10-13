@@ -7,6 +7,7 @@ import {
   configuredRoles,
   storageStatePath
 } from './visual-matrix.mjs';
+import { installLocalFirebaseNetworkGuard } from './local-emulator-safety.mjs';
 
 function normalizedBaseUrl() {
   const value = String(process.env.EVARA_QA_BASE_URL || '').trim().replace(/\/$/, '');
@@ -31,6 +32,28 @@ async function authenticateRole(browser, baseURL, role) {
 
   try {
     const page = await context.newPage();
+    const runtimeDiagnostics = { pageErrors: [], consoleErrors: [], failedRequests: [], dropped: {} };
+    const recordDiagnostic = (category, value) => {
+      const entries = runtimeDiagnostics[category];
+      if (entries.length >= 20) {
+        runtimeDiagnostics.dropped[category] = (runtimeDiagnostics.dropped[category] || 0) + 1;
+        return;
+      }
+      entries.push(String(value).slice(0, 600));
+    };
+    page.on('pageerror', (error) => recordDiagnostic('pageErrors', `${error.name}: ${error.message}`));
+    page.on('console', (message) => {
+      if (message.type() === 'error') recordDiagnostic('consoleErrors', message.text());
+    });
+    page.on('requestfailed', (request) => {
+      try {
+        const url = new URL(request.url());
+        recordDiagnostic('failedRequests', `${url.hostname}${url.pathname}: ${request.failure()?.errorText || 'request failed'}`);
+      } catch {
+        recordDiagnostic('failedRequests', 'request failed');
+      }
+    });
+    await installLocalFirebaseNetworkGuard(page, baseURL);
     await page.goto('/login.html', { waitUntil: 'domcontentloaded' });
     await waitForReady(page);
     await page.locator('#loginEmail').fill(credentials.email);
@@ -48,7 +71,24 @@ async function authenticateRole(browser, baseURL, role) {
     await page.waitForFunction((expectedRole) => {
       const session = window.EvaraRouteSession;
       return session?.authenticated === true && Boolean(session.userId) && session.role === expectedRole && session.source === 'verified-route-guard';
-    }, role.id, { timeout: 15_000 });
+    }, role.id, { timeout: 15_000 }).catch(async (error) => {
+      const diagnostics = await page.evaluate(() => {
+        const session = window.EvaraRouteSession;
+        return {
+          url: window.location.pathname,
+          routeSession: session ? {
+            authenticated: session.authenticated === true,
+            hasUserId: Boolean(session.userId),
+            role: typeof session.role === 'string' ? session.role : '',
+            source: typeof session.source === 'string' ? session.source : ''
+          } : null,
+          hasLoginMessage: Boolean(document.querySelector('#loginMessage')?.textContent?.trim()),
+          scripts: [...document.scripts].map((script) => script.src).filter(Boolean)
+        };
+      }).catch(() => ({}));
+      diagnostics.runtime = runtimeDiagnostics;
+      throw new Error(`${error.message}; route diagnostics: ${JSON.stringify(diagnostics)}`);
+    });
 
     const statePath = storageStatePath(role.id);
     await fs.mkdir(path.dirname(statePath), { recursive: true });

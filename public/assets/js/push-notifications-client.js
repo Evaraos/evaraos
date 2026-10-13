@@ -1,5 +1,5 @@
 import "./evara-notifications.js";
-import { auth, functions, onAuthStateChanged, httpsCallable } from "./firebase.js";
+import { auth, functions, onAuthStateChanged, httpsCallable, isFirebaseEmulatorRuntime } from "./firebase.js";
 import { getApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getMessaging,
@@ -79,6 +79,11 @@ async function saveToken(token) {
 
 export async function enablePhoneNotifications() {
   try {
+    if (isFirebaseEmulatorRuntime) {
+      dispatchStatus("unavailable", { message: "Push notifications are not available in the local Firebase emulator." });
+      return "unavailable";
+    }
+
     if (!("Notification" in window) || !("serviceWorker" in navigator)) {
       throw new Error("Notifications are not supported in this browser.");
     }
@@ -117,7 +122,7 @@ export async function enablePhoneNotifications() {
 
 export async function disablePhoneNotifications() {
   const token = localStorage.getItem(TOKEN_KEY) || "";
-  if (token) await unregisterPushToken({ token }).catch(() => {});
+  if (token && !isFirebaseEmulatorRuntime) await unregisterPushToken({ token }).catch(() => {});
   localStorage.removeItem(TOKEN_KEY);
   dispatchStatus("disabled");
 }
@@ -185,6 +190,11 @@ function maybeShowOneTimePrompt() {
 }
 
 export function startPushNotifications() {
+  if (isFirebaseEmulatorRuntime) {
+    dispatchStatus("unavailable", { message: "Push notifications are not available in the local Firebase emulator." });
+    return stopPushNotifications;
+  }
+
   bindPromptEvents();
   if (authUnsubscribe) return stopPushNotifications;
 

@@ -33,7 +33,7 @@ jobs:
           node tools/design-system-audit.js
       - name: Verify state transitions and negative asset contracts
         run: |
-          node --experimental-vm-modules --test tools/ui-contract-regression.test.cjs tools/theme-state-regression.test.cjs tools/nav-render-regression.test.cjs
+          node --experimental-vm-modules --test tools/ui-contract-regression.test.cjs tools/theme-state-regression.test.cjs tools/nav-render-regression.test.cjs tools/firebase-emulator-isolation.test.mjs
       - name: Preserve navigation, authorization and visual QA contracts
         run: |
           node tools/nav-refresh-audit.mjs
