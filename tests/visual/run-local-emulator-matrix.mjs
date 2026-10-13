@@ -184,13 +184,21 @@ async function reportPlaywrightFailures(resultsPath) {
       await writeMatrixSummary(['# Local Firebase role matrix', '', 'Result: Playwright completed without test failures.']);
       return;
     }
-    console.error(`Local authenticated matrix failures: ${failures.length}.`);
-    const summary = ['# Local Firebase role matrix', '', `Result: ${failures.length} Playwright test failure(s).`, ''];
-    for (const failure of failures.slice(0, 12)) {
-      console.error(`- ${sanitizeFailureText(failure.title)}: ${sanitizeFailureText(failure.error)}`);
-      summary.push(`- ${sanitizeFailureText(failure.title)}: ${sanitizeFailureText(failure.error)}`);
+    const uniqueFailures = new Map();
+    for (const failure of failures) {
+      const key = `${failure.title}\n${failure.error}`;
+      const existing = uniqueFailures.get(key);
+      if (existing) existing.attempts += 1;
+      else uniqueFailures.set(key, { ...failure, attempts: 1 });
     }
-    if (failures.length > 12) console.error(`- ${failures.length - 12} additional failures are summarized in the temporary Playwright JSON report.`);
+    const distinctFailures = [...uniqueFailures.values()];
+    console.error(`Local authenticated matrix failures: ${failures.length} failed attempt(s), ${distinctFailures.length} distinct check(s).`);
+    const summary = ['# Local Firebase role matrix', '', `Result: ${failures.length} failed attempt(s), ${distinctFailures.length} distinct check(s).`, ''];
+    for (const failure of distinctFailures.slice(0, 40)) {
+      console.error(`- ${sanitizeFailureText(failure.title)}: ${sanitizeFailureText(failure.error)}`);
+      summary.push(`- ${sanitizeFailureText(failure.title)} (${failure.attempts} attempt(s)): ${sanitizeFailureText(failure.error)}`);
+    }
+    if (distinctFailures.length > 40) console.error(`- ${distinctFailures.length - 40} additional distinct failures omitted.`);
     await writeMatrixSummary(summary);
   } catch {
     console.error('The local Playwright JSON report was unavailable for failure details.');

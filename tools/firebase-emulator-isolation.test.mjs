@@ -130,4 +130,6 @@ test('Universal UI CI runs the role matrix with isolated demo emulators', () => 
   const runner = read('tests/visual/run-local-emulator-matrix.mjs');
   assert.match(runner, /sanitizeFailureText/);
   assert.match(runner, /writeMatrixSummary/);
+  assert.match(runner, /distinct check\(s\)/);
+  assert.match(runner, /new Map\(\)/);
 });
