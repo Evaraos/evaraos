@@ -95,8 +95,8 @@ body[data-canvas-writer-state="refresh-required"] .studio-canvas-graph-resize-ha
   font-weight: 850;
   line-height: 1.35;
   pointer-events: none;
-  backdrop-filter: blur(18px) saturate(1.15);
-  -webkit-backdrop-filter: blur(18px) saturate(1.15);
+  backdrop-filter: var(--lg-backdrop-standard);
+  -webkit-backdrop-filter: var(--lg-backdrop-standard);
 }
 
 .studio-canvas-sync-status[hidden] {

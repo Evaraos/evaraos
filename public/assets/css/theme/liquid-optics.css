@@ -17,8 +17,16 @@
   --lg-shadow-soft:rgba(var(--adaptive-shadow-rgb),.13);
   --lg-blur:16px;
   --lg-blur-thick:26px;
+  --lg-blur-control:10px;
   --lg-saturation:178%;
+  --lg-backdrop-control:blur(var(--lg-blur-control)) saturate(var(--lg-saturation));
+  --lg-backdrop-standard:blur(var(--lg-blur)) saturate(var(--lg-saturation));
+  --lg-backdrop-elevated:blur(var(--lg-blur-thick)) saturate(var(--lg-saturation));
 }
+
+html[data-environment="light"]{--lg-blur-control:6px}
+html[data-environment="dark"]{--lg-blur-control:8px}
+html[data-environment="image"]{--lg-blur-control:7px}
 
 html[data-environment="light"]{
   --lg-fill:rgba(255,255,255,.18);

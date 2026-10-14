@@ -2,13 +2,13 @@ import {
   auth,
   db,
   onAuthStateChanged,
-  collection,
-  getDocs,
   doc,
   updateDoc,
   serverTimestamp,
-  getSavedUserProfile
+  getSavedUserProfile,
+  hydrateUserProfile
 } from "./firebase.js";
+import { getRoleScopedCollectionDocs } from "./firestore-role-scoped-collections.js";
 
 import { getApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
@@ -127,13 +127,17 @@ async function loadJobs() {
   fieldRefresh.textContent = "Refreshing...";
 
   try {
-    const snap = await getDocs(collection(db, "jobs"));
+    const docs = await getRoleScopedCollectionDocs("jobs", activeProfile, activeUser?.uid);
 
-    jobs = snap.docs.map((item) => ({ id: item.id, ...item.data() })).filter((job) => {
-      const assignedUid = normalize(job.staffClaimedBy || job.assignedTo || "");
-      const userUid = normalize(activeUser?.uid || "");
+    const userUid = normalize(activeUser?.uid || "");
+    jobs = docs.map((item) => ({ id: item.id, ...item.data() })).filter((job) => {
       if (!userUid) return false;
-      return assignedUid === userUid || normalize(job.assignedStaffName) === normalize(activeProfile?.fullName || "");
+      return job.assignedToUid === userUid
+        || job.staffClaimedBy === userUid
+        || (Array.isArray(job.assignedTo) && job.assignedTo.includes(userUid))
+        || (Array.isArray(job.assignedTeamIds) && job.assignedTeamIds.includes(userUid))
+        || job.assignedRep === userUid
+        || (Array.isArray(job.assignedRep) && job.assignedRep.includes(userUid));
     });
 
     jobs.sort((a, b) => Number(b.updatedAt?.seconds || 0) - Number(a.updatedAt?.seconds || 0));
@@ -259,7 +263,7 @@ function init() {
     }
 
     activeUser = user;
-    activeProfile = getSavedUserProfile() || {};
+    activeProfile = await hydrateUserProfile(user, { requireVerified: true }) || getSavedUserProfile() || {};
     await loadJobs();
   });
 }

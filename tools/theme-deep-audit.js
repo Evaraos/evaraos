@@ -3,6 +3,7 @@ const fs=require("fs"),path=require("path");
 const root=path.resolve(__dirname,".."),publicRoot=path.join(root,"public"),errors=[],warnings=[],files=[];
 (function walk(dir){for(const item of fs.readdirSync(dir,{withFileTypes:true})){const full=path.join(dir,item.name);if(item.isDirectory())walk(full);else if(/\.(html|css|js)$/.test(item.name))files.push(full)}})(publicRoot);
 const { pageFailures } = require("./lib/ui-contract.cjs");
+const { hasNonCanonicalPageBackdrop } = require("./lib/page-material-audit.cjs");
 const rel=file=>path.relative(root,file).replace(/\\/g,"/");
 for(const file of files){
   const name=rel(file),text=fs.readFileSync(file,"utf8");
@@ -12,7 +13,7 @@ for(const file of files){
   if(file.endsWith(".css")){
     // Multiplication inside calc()/min()/max()/clamp() is valid CSS.
     // Invalid declarations are checked against the rendered browser CSS parser.
-    if(name.startsWith("public/assets/css/pages/")&&/backdrop-filter\s*:/.test(text))warnings.push(`${name}: page-level backdrop material should be reviewed`);
+    if(name.startsWith("public/assets/css/pages/")&&hasNonCanonicalPageBackdrop(text))warnings.push(`${name}: page-level backdrop material should be reviewed`);
   }
   if(file.endsWith(".js")&&!/adaptive-appearance-boot|theme-core-adaptive|theme\.js$/.test(name)){
     if(/dataset\.theme\s*=\s*["'`](light|dark|image|system)["'`]/.test(text))errors.push(`${name}: directly changes the universal theme`);
@@ -44,6 +45,9 @@ for(const requiredVariable of [
   "--lg-surface-fill",
   "--lg-surface-edge",
   "--lg-surface-blur",
+  "--lg-backdrop-control",
+  "--lg-backdrop-standard",
+  "--lg-backdrop-elevated",
   "--lg-surface-shadow-y",
   "--lg-surface-highlight-alpha"
 ])if(!optics.includes(requiredVariable))errors.push(`liquid-optics.css: missing ${requiredVariable}`);

@@ -2,15 +2,13 @@ import {
   auth,
   db,
   onAuthStateChanged,
-  collection,
-  onSnapshot,
-  query,
-  limit,
   updateDoc,
   doc,
   serverTimestamp,
-  getSavedUserProfile
+  getSavedUserProfile,
+  hydrateUserProfile
 } from "./firebase.js";
+import { subscribeRoleScopedCollection } from "./firestore-role-scoped-collections.js";
 import { createVirtualizationEngine, installSharedVirtualStyles } from "./shared-virtualization.js";
 
 const jobsSearch = document.getElementById("jobsSearch");
@@ -51,6 +49,7 @@ let sortAsc = true;
 let hasBoundEvents = false;
 let hasStartedAuthWatch = false;
 let currentFirebaseUser = null;
+let currentUserProfile = null;
 let unsubscribeJobs = null;
 let isLiveFeedConnected = false;
 let renderTimer = null;
@@ -574,13 +573,15 @@ function startLiveJobsFeed() {
 
   renderLoadingState();
 
-  unsubscribeJobs = onSnapshot(
-    query(collection(db, "jobs"), limit(LIVE_LIMIT)),
-    (snapshot) => {
-      jobsData = snapshot.docs.map((docSnap) => ({
+  unsubscribeJobs = subscribeRoleScopedCollection(
+    "jobs",
+    currentUserProfile || getSavedUserProfile(),
+    currentFirebaseUser?.uid,
+    (docs) => {
+      jobsData = docs.map((docSnap) => ({
         id: docSnap.id,
         ...docSnap.data()
-      }));
+      })).slice(0, LIVE_LIMIT);
 
       setFeedConnectedState(true);
       dispatchVirtualEngine.prefetch(jobsData, {
@@ -603,7 +604,8 @@ function startLiveJobsFeed() {
       lastListHtml = setHtmlIfChanged(jobsList, errorCard, lastListHtml);
       lastProgressHtml = setHtmlIfChanged(jobsProgressStack, errorCard, lastProgressHtml);
       lastFeedHtml = setHtmlIfChanged(jobsFeed, errorCard, lastFeedHtml);
-    }
+    },
+    LIVE_LIMIT
   );
 }
 
@@ -734,7 +736,7 @@ function initJobsPage() {
 
   bindEvents();
 
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     if (!user) {
       navigateWithLoader("/login.html", {
         title: "Returning to login",
@@ -744,6 +746,7 @@ function initJobsPage() {
     }
 
     currentFirebaseUser = user;
+    currentUserProfile = await hydrateUserProfile(user, { requireVerified: true }) || getSavedUserProfile();
     startLiveJobsFeed();
   });
 }

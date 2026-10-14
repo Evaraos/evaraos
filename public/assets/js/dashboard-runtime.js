@@ -111,7 +111,7 @@ export async function startDashboardRuntime(runtimeIdValue, bootSteps = []) {
 
 export function stopDashboardRuntime(runtimeIdValue) {
   const runtime = runtimeRegistry.get(runtimeIdValue);
-  if (!runtime) return false;
+  if (!runtime || runtime.status === 'stopping' || runtime.status === 'stopped') return false;
 
   runtime.status = 'stopping';
 

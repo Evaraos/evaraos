@@ -9,7 +9,7 @@ import {
   hydrateUserProfile
 } from './firebase.js';
 
-const PLATFORM_ROLES = new Set(['owner', 'super_admin']);
+const PLATFORM_ROLES = new Set(['owner', 'super_admin', 'platform_admin']);
 const MANAGER_ROLES = new Set([
   'admin',
   'manager',

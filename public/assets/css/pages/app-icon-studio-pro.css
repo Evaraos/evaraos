@@ -18,7 +18,7 @@
 .app-icon-preview--midnightBlue{background:radial-gradient(circle at 24% 18%,#32669c 0 16%,#07162d 48%,#02040a 100%)!important}
 .app-icon-preview--carbonFiber{background:#07080b!important;background-image:linear-gradient(45deg,rgba(255,255,255,.08) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.08) 75%,transparent 75%),linear-gradient(145deg,#2f343d,#040507)!important;background-size:12px 12px,100% 100%!important}
 .app-icon-preview--rubyGlass{background:radial-gradient(circle at 18% 12%,#ffc1c6 0 13%,#ba0016 36%,#320005 100%)!important}
-.app-icon-preview--frostedClear{background:linear-gradient(145deg,rgba(255,255,255,.88),rgba(201,219,232,.36))!important;backdrop-filter:blur(18px)!important}
+.app-icon-preview--frostedClear{background:linear-gradient(145deg,rgba(255,255,255,.88),rgba(201,219,232,.36))!important;backdrop-filter:var(--lg-backdrop-standard)!important}
 .app-icon-preview--satinSilver{background:linear-gradient(120deg,#f8fbff 0,#99a2ae 36%,#ecf2f7 68%,#6c737e 100%)!important}
 .app-icon-preview--deepNavy{background:linear-gradient(145deg,#1f3762 0,#061024 54%,#010207 100%)!important}
 .app-icon-preview--matteBlack{background:linear-gradient(145deg,#24262b,#050506)!important}
@@ -40,7 +40,7 @@
 .app-icon-preview--magneticTilt{animation:evaraProTilt 4.4s ease-in-out infinite!important}
 .app-icon-preview--breathingGlow{animation:evaraProGlow 2.2s ease-in-out infinite!important;box-shadow:0 0 0 0 rgba(242,23,45,.0),0 22px 50px rgba(0,0,0,.22)!important}
 .app-icon-preview--orbitReflection:before{animation:evaraProOrbit 4.8s linear infinite!important;background:conic-gradient(from 0deg,transparent,rgba(255,255,255,.8),transparent,rgba(242,23,45,.40),transparent)!important;inset:-32%!important}
-.owner-edit-fab,.owner-editor-fab{background:linear-gradient(145deg,rgba(255,255,255,.34),rgba(255,255,255,.12))!important;color:var(--text-primary,#fff)!important;border:1px solid rgba(255,255,255,.46)!important;box-shadow:0 18px 44px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.38)!important;backdrop-filter:blur(26px) saturate(1.35)!important;-webkit-backdrop-filter:blur(26px) saturate(1.35)!important}
+.owner-edit-fab,.owner-editor-fab{background:linear-gradient(145deg,rgba(255,255,255,.34),rgba(255,255,255,.12))!important;color:var(--text-primary,#fff)!important;border:1px solid rgba(255,255,255,.46)!important;box-shadow:0 18px 44px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.38)!important;backdrop-filter:var(--lg-backdrop-elevated)!important;-webkit-backdrop-filter:var(--lg-backdrop-elevated)!important}
 @keyframes evaraProFlow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 @keyframes evaraProSpin{to{filter:hue-rotate(20deg);transform:rotate(360deg)}}
 @keyframes evaraProPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}

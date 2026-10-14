@@ -4,18 +4,25 @@ import {
   onAuthStateChanged,
   collection,
   getDocs,
+  getDoc,
+  query,
+  where,
   addDoc,
   updateDoc,
   deleteDoc,
   doc,
   serverTimestamp,
-  getSavedUserProfile
+  getSavedUserProfile,
+  hydrateUserProfile
 } from "./firebase.js";
+import { getRoleScopedCollectionDocs } from "./firestore-role-scoped-collections.js";
 
 const leadsSearch = document.getElementById("leadsSearch");
 const leadsList = document.getElementById("leadsList");
 const leadsFeed = document.getElementById("leadsFeed");
 const leadFlowStack = document.getElementById("leadFlowStack");
+const PLATFORM_ROLES = new Set(["owner", "super_admin", "platform_admin"]);
+const COMPANY_OPERATIONS_ROLES = new Set(["admin", "manager", "operations_manager", "operations_coordinator", "hr", "hr_manager"]);
 
 const leadsHeroTitle = document.getElementById("leadsHeroTitle");
 const leadsHeroText = document.getElementById("leadsHeroText");
@@ -68,6 +75,7 @@ let isLoadingLeads = false;
 let hasBoundEvents = false;
 let hasStartedAuthWatch = false;
 let currentFirebaseUser = null;
+let currentUserProfile = null;
 let editingLeadId = null;
 let currentLeadActivities = [];
 
@@ -396,9 +404,19 @@ function renderLeads() {
 
 async function loadCompanies() {
   try {
-    const snap = await getDocs(collection(db, "companies"));
-    companiesData = snap.docs
-      .map((companyDoc) => ({ id: companyDoc.id, ...companyDoc.data() }))
+    const profile = currentUserProfile || getSavedUserProfile() || {};
+    const role = String(profile.role || "").trim().toLowerCase();
+    const snapshot = PLATFORM_ROLES.has(role)
+      ? await getDocs(collection(db, "companies"))
+      : profile.companyId
+        ? await getDoc(doc(db, "companies", profile.companyId))
+        : null;
+    const companyRows = snapshot?.docs
+      ? snapshot.docs.map((companyDoc) => ({ id: companyDoc.id, ...companyDoc.data() }))
+      : snapshot?.exists?.()
+        ? [{ id: snapshot.id, ...snapshot.data() }]
+        : [];
+    companiesData = companyRows
       .sort((a, b) => companyName(a).localeCompare(companyName(b)));
   } catch (error) {
     console.warn("Failed to load companies for leads:", error);
@@ -408,9 +426,17 @@ async function loadCompanies() {
 
 async function loadUsers() {
   try {
-    const snap = await getDocs(collection(db, "users"));
-    usersData = snap.docs
-      .map((userDoc) => ({ id: userDoc.id, ...userDoc.data() }))
+    const profile = currentUserProfile || getSavedUserProfile() || {};
+    const role = String(profile.role || "").trim().toLowerCase();
+    let userRows = [];
+    if (PLATFORM_ROLES.has(role)) {
+      const snap = await getDocs(collection(db, "users"));
+      userRows = snap.docs.map((userDoc) => ({ id: userDoc.id, ...userDoc.data() }));
+    } else if (COMPANY_OPERATIONS_ROLES.has(role) && profile.companyId) {
+      const snap = await getDocs(query(collection(db, "users"), where("companyId", "==", profile.companyId)));
+      userRows = snap.docs.map((userDoc) => ({ id: userDoc.id, ...userDoc.data() }));
+    }
+    usersData = userRows
       .sort((a, b) => userName(a).localeCompare(userName(b)));
   } catch (error) {
     console.warn("Failed to load users for leads:", error);
@@ -426,8 +452,8 @@ async function loadLeads() {
 
   try {
     await Promise.all([loadCompanies(), loadUsers()]);
-    const snap = await getDocs(collection(db, "leads"));
-    leadsData = snap.docs.map((docSnap) => ({
+    const docs = await getRoleScopedCollectionDocs("leads", currentUserProfile || getSavedUserProfile(), auth.currentUser?.uid);
+    leadsData = docs.map((docSnap) => ({
       id: docSnap.id,
       ...docSnap.data()
     }));
@@ -1088,7 +1114,7 @@ function initLeadsPage() {
 
   bindEvents();
 
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     if (!user) {
       navigateWithLoader("/login.html", {
         title: "Returning to login",
@@ -1098,6 +1124,7 @@ function initLeadsPage() {
     }
 
     currentFirebaseUser = user;
+    currentUserProfile = await hydrateUserProfile(user, { requireVerified: true }) || getSavedUserProfile();
     loadLeads();
   });
 }

@@ -8,6 +8,7 @@ const root = path.resolve(__dirname, '..');
 const publicRoot = path.join(root, 'public');
 const errors = [];
 const warnings = [];
+const { hasNonCanonicalPageBackdrop } = require('./lib/page-material-audit.cjs');
 
 const requiredFiles = [
   'public/assets/css/base/variables.css',
@@ -56,6 +57,11 @@ if (!errors.length) {
   if (!theme.includes('theme/liquid-optics.css')) errors.push('public/assets/css/theme.css: missing authoritative Liquid Glass import');
   if (!theme.includes('design-system/primitives.css')) errors.push('public/assets/css/theme.css: missing core primitives import');
   if (!/AUTHORITATIVE MATERIAL ENGINE/.test(optics)) errors.push('public/assets/css/theme/liquid-optics.css: missing authoritative material declaration');
+  for (const preset of ['control', 'standard', 'elevated']) {
+    if (!new RegExp(`--lg-backdrop-${preset}\\s*:`).test(optics)) {
+      errors.push(`public/assets/css/theme/liquid-optics.css: missing ${preset} backdrop preset`);
+    }
+  }
 
   const forbiddenBundlePatterns = [
     /--eva-color-brand\s*:/,
@@ -119,7 +125,7 @@ if (!errors.length) {
       if (/--eva-color-brand\s*:|\.eva-glass\s*\{|AUTHORITATIVE MATERIAL ENGINE/.test(text)) {
         errors.push(`public/assets/css/pages/${name}: page stylesheet attempts to own global tokens or material authority`);
       }
-      if (/backdrop-filter\s*:/.test(text)) warnings.push(`public/assets/css/pages/${name}: page-level backdrop material requires design-system review`);
+      if (hasNonCanonicalPageBackdrop(text)) warnings.push(`public/assets/css/pages/${name}: page-level backdrop material requires design-system review`);
     }
   }
 }

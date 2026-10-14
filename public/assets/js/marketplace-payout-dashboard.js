@@ -23,7 +23,10 @@ import {
 } from './firestore-sync-health.js';
 
 const statusNode = document.getElementById('marketplacePayoutStatus');
-const grossNode = document.getElementById('marketplacePayoutGross');
+const grossNodes = [
+  document.getElementById('marketplacePayoutGrossHero'),
+  document.getElementById('marketplacePayoutGross')
+].filter(Boolean);
 const platformNode = document.getElementById('marketplacePayoutPlatform');
 const companyNode = document.getElementById('marketplacePayoutCompany');
 const vendorNode = document.getElementById('marketplacePayoutVendors');
@@ -97,7 +100,7 @@ function summarize(rows = payouts) {
 
 function renderStats() {
   const summary = summarize();
-  if (grossNode) grossNode.textContent = money(summary.grossCents);
+  grossNodes.forEach((node) => { node.textContent = money(summary.grossCents); });
   if (platformNode) platformNode.textContent = money(summary.platformCents);
   if (companyNode) companyNode.textContent = money(summary.companyCents);
   if (vendorNode) vendorNode.textContent = money(summary.vendorCents);

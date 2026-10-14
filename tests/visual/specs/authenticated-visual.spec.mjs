@@ -29,6 +29,30 @@ const dynamicMaskSelector = [
 
 test.beforeEach(async ({ page, baseURL }) => {
   await installLocalFirebaseNetworkGuard(page, baseURL);
+  if (process.env.EVARA_QA_LOCAL_EMULATOR_CHILD === '1') {
+    await page.route((url) => url.origin === 'http://127.0.0.1:5001'
+      && url.pathname === '/demo-evaraos-ui/us-central1/getMarketplaceCommerceSnapshot', async (route) => {
+      const requestedHeaders = route.request().headers()['access-control-request-headers'];
+      const body = JSON.stringify({ data: {
+        customerId: 'local-ui-fixture',
+        generatedAtMs: 0,
+        quotes: [],
+        invoices: [],
+        subscriptions: [],
+        summary: { quoteCount: 0, openQuotes: 0, outstandingCents: 0, paidCents: 0, activeSubscriptions: 0 }
+      } });
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: {
+          'access-control-allow-origin': '*',
+          'access-control-allow-methods': 'POST, OPTIONS',
+          'access-control-allow-headers': requestedHeaders || 'content-type, authorization, x-firebase-appcheck, x-firebase-gmpid'
+        },
+        body
+      });
+    });
+  }
 });
 
 function appearancePayload(appearance, baseURL) {
@@ -58,7 +82,12 @@ function collectRuntimeDiagnostics(page) {
   const consoleErrors = [];
   page.on('pageerror', (error) => pageErrors.push(String(error?.stack || error?.message || error)));
   page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
+    if (message.type() !== 'error') return;
+    const text = message.text();
+    // WebKit and older Chromium builds report the optional, ignored viewport
+    // directive as an error even though the page remains responsive.
+    if (/viewport.*interactive-widget.*(?:not recognized|unsupported|ignored)|interactive-widget.*(?:not recognized|unsupported|ignored)/i.test(text)) return;
+    consoleErrors.push(text);
   });
   return { pageErrors, consoleErrors };
 }
@@ -91,14 +120,16 @@ async function openRoute(page, route, appearance, baseURL, expectedRole) {
   const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
   expect(response, `${route} should return a response`).not.toBeNull();
   expect(response.status(), `${route} should not return an HTTP error`).toBeLessThan(400);
-  await waitForApplication(page, appearance);
-  await page.waitForFunction((role) => {
+  const expectedPathname = new URL(route, baseURL).pathname;
+  await page.waitForFunction(({ pathname, role }) => {
+    const currentPathname = new URL(window.location.href).pathname;
     const session = window.EvaraRouteSession;
-    return session?.authenticated === true && Boolean(session.userId) && session.role === role && session.source === 'verified-route-guard';
-  }, expectedRole, { timeout: 15_000 });
+    return currentPathname !== pathname
+      || (session?.authenticated === true && Boolean(session.userId) && session.role === role && session.source === 'verified-route-guard');
+  }, { pathname: expectedPathname, role: expectedRole }, { timeout: 15_000 });
   const pathname = new URL(page.url()).pathname;
-  expect(pathname, `${route} must not redirect to login`).not.toMatch(/login\.html$/);
-  expect.soft(pathname, `${route} should remain on the authorized route`).toBe(route);
+  expect(pathname, `${route} should remain on its authorized route`).toBe(expectedPathname);
+  await waitForApplication(page, appearance);
 }
 
 async function collectDomDiagnostics(page) {

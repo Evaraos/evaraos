@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const fs = require('node:fs');
 const { assets, pageFailures } = require('./lib/ui-contract.cjs');
+const { hasNonCanonicalPageBackdrop } = require('./lib/page-material-audit.cjs');
 const home = fs.readFileSync('public/index.html','utf8');
 
 test('actual Home contract passes and valid calculations remain supported', () => {
@@ -41,4 +42,15 @@ test('message and owner-editor text fields have persistent accessible names', ()
   assert.match(messages, /<input\b[^>]*id="conversationSearch"[^>]*aria-label="Search conversations"/);
   assert.match(messages, /<textarea\b[^>]*id="messageInput"[^>]*aria-label="Message text"/);
   assert.match(ownerEditor, /<textarea\s+data-owner-editor-text\s+aria-label="Selected content text"/);
+});
+
+test('page glass uses shared theme presets or bounded Studio customization', () => {
+  assert.equal(hasNonCanonicalPageBackdrop('.card{backdrop-filter:blur(24px)}'), true);
+  assert.equal(hasNonCanonicalPageBackdrop('.card{backdrop-filter:var(--lg-backdrop-elevated)}'), false);
+  assert.equal(hasNonCanonicalPageBackdrop('.preview{backdrop-filter:none!important}'), false);
+  assert.equal(hasNonCanonicalPageBackdrop('.node{backdrop-filter:blur(calc(var(--node-glass, 72) * 0.45px)) saturate(var(--lg-saturation))}'), false);
+  assert.equal(hasNonCanonicalPageBackdrop('.builder{backdrop-filter:blur(var(--studio-glass-blur)) saturate(var(--lg-saturation))}'), false);
+  const studioBuilder = fs.readFileSync('public/assets/js/studio/studio-visual-builder.js', 'utf8');
+  assert.match(studioBuilder, /clamp\(node\.style\.glass,\s*20,\s*100\)/);
+  assert.match(studioBuilder, /Math\.max\(14,\s*state\.theme\.glass\s*\/\s*2\)/);
 });

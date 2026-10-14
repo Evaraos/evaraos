@@ -165,7 +165,7 @@ async function summarizePlaywrightFailures(resultsPath) {
           if (!failedAttempts.length && test.status !== 'unexpected') continue;
           const error = failedAttempts.flatMap((result) => result.errors || []).find((entry) => entry.message)?.message || 'Unexpected test result.';
           failures.push({
-            title: [...pathParts, spec.title].filter(Boolean).join(' › '),
+            title: [`[${test.projectName || 'unknown project'}]`, ...pathParts, spec.title].filter(Boolean).join(' › '),
             error: String(error).replace(/\s+/g, ' ').slice(0, 500)
           });
         }
@@ -181,7 +181,7 @@ async function reportPlaywrightFailures(resultsPath) {
   try {
     const failures = await summarizePlaywrightFailures(resultsPath);
     if (!failures.length) {
-      await writeMatrixSummary(['# Local Firebase role matrix', '', 'Result: Playwright completed without test failures.']);
+      await writeMatrixSummary(['# Local Firebase role matrix', '', 'Result: Playwright failed without test-level failure details.']);
       return;
     }
     const uniqueFailures = new Map();
@@ -296,6 +296,11 @@ async function main() {
     console.log('Running the critical nine-role responsive matrix against local Firebase emulators.');
     try {
       await runPlaywright(childEnvironment);
+      await writeMatrixSummary([
+        '# Local Firebase role matrix',
+        '',
+        'Result: Playwright completed without test failures.'
+      ]);
     } catch (error) {
       await reportPlaywrightFailures(path.join(tempRoot, 'results', 'results.json'));
       throw error;

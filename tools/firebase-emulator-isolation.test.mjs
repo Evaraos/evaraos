@@ -70,8 +70,12 @@ test('the browser connects all supported data services to local emulators only',
 test('local mode does not register push tokens or load production messaging in its service worker', () => {
   const push = read('public/assets/js/push-notifications-client.js');
   const serviceWorker = read('public/firebase-messaging-sw.js');
+  assert.match(push, /import\s+\{\s*isFirebaseEmulatorHost\s*\}\s+from\s+["']\.\/firebase-runtime-config\.mjs\?v=1["']/);
+  assert.doesNotMatch(push, /isFirebaseEmulatorRuntime\s*\}\s*from\s+["']\.\/firebase\.js/);
   assert.match(push, /if\s*\(isFirebaseEmulatorRuntime\)\s*\{[\s\S]*?return\s+"unavailable"/);
   assert.match(push, /if\s*\(isFirebaseEmulatorRuntime\)\s*\{[\s\S]*?return\s+stopPushNotifications/);
+  assert.match(push, /"Notification"\s+in\s+window\s*\?\s*Notification\.permission\s*:\s*["']unsupported["']/);
+  assert.match(push, /if\s*\(!\(["']Notification["']\s+in\s+window\)\)\s*\{[\s\S]*?dispatchStatus\(["']unsupported["']/);
   assert.match(serviceWorker, /if\s*\(!isLocalFirebaseEmulator\)\s*\{[\s\S]*?importScripts\(["']https:\/\/www\.gstatic\.com\/firebasejs/);
   assert.match(serviceWorker, /projectId:\s*["']evaraos-web["']/);
 });
@@ -132,4 +136,9 @@ test('Universal UI CI runs the role matrix with isolated demo emulators', () => 
   assert.match(runner, /writeMatrixSummary/);
   assert.match(runner, /distinct check\(s\)/);
   assert.match(runner, /new Map\(\)/);
+  assert.match(runner, /await runPlaywright\(childEnvironment\);[\s\S]*?await writeMatrixSummary\([\s\S]*?completed without test failures/);
+  assert.match(runner, /Result: Playwright failed without test-level failure details/);
+  const visualSpec = read('tests/visual/specs/authenticated-visual.spec.mjs');
+  assert.match(visualSpec, /EVARA_QA_LOCAL_EMULATOR_CHILD === '1'[\s\S]*?page\.route\(\(url\) => url\.origin === 'http:\/\/127\.0\.0\.1:5001'[\s\S]*?getMarketplaceCommerceSnapshot/);
+  assert.match(visualSpec, /access-control-allow-headers.*requestedHeaders/);
 });
