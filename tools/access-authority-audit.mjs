@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import {
   CANONICAL_ROLES,
   canAccessPageName,
+  canUseFeature,
   defaultRouteForRole,
   normalizeAccessPath,
   normalizeAccessRole,
@@ -63,6 +64,12 @@ for (const unknown of ['not-a-role', 'constructor', '__proto__', 'toString']) {
 assert.equal(normalizeAccessPath('/settings/account.html?tab=profile#name'), 'settings/account.html');
 assert.equal(normalizeAccessPath('./public/settings/icons.html'), 'settings/icons.html');
 assert.equal(defaultRouteForRole('customer'), '/customer_dashboard.html');
+assert.equal(defaultRouteForRole('vendor'), '/dispatch.html');
+assert.equal(canAccessPageName('/dispatch.html', 'vendor'), true);
+for (const vendorFinanceRoute of ['/revenue.html', '/job_billing.html', '/marketplace-payouts.html']) {
+  assert.equal(canAccessPageName(vendorFinanceRoute, 'vendor'), false, `Vendor access must remain denied for ${vendorFinanceRoute}`);
+}
+assert.equal(canUseFeature('viewFinance', 'vendor'), false);
 assert.equal(defaultRouteForRole('owner'), '/dashboard.html');
 assert.equal(defaultRouteForRole('unknown-role'), '/login.html');
 assert.ok(pagesForRole('customer').includes('settings/account.html'));
@@ -98,6 +105,8 @@ const blueprintSecuritySource = fs.readFileSync('functions/blueprint-security.js
 const firestoreRulesSource = fs.readFileSync('firebase/firestore.rules', 'utf8');
 const fieldOpsMapSource = fs.readFileSync('public/assets/js/field-ops-map-layer.js', 'utf8');
 const fieldOpsRealtimeSource = fs.readFileSync('public/assets/js/field-ops-realtime.js', 'utf8');
+const roleScopedQueriesSource = fs.readFileSync('public/assets/js/role-scoped-firestore-queries.mjs', 'utf8');
+const roleScopedCollectionsSource = fs.readFileSync('public/assets/js/firestore-role-scoped-collections.js', 'utf8');
 const dashboardMapCardSource = fs.readFileSync('public/assets/js/dashboard-live-map-card.js', 'utf8');
 const dashboardEntrySource = fs.readFileSync('public/assets/js/dashboard-entry.js', 'utf8');
 const leadsEntrySource = fs.readFileSync('public/assets/js/leads-entry.js', 'utf8');
@@ -169,24 +178,30 @@ assert.doesNotMatch(
 );
 assert.match(
   fieldOpsMapSource,
-  /where\('companyId', '==', context\.companyId\)/,
+  /getRoleScopedCollectionDocs\(collectionName, context, context\.uid\)/,
+  'Map loads must use the shared role-scoped collection reader.'
+);
+assert.match(
+  roleScopedQueriesSource,
+  /\['companyId', '==', companyId\]/,
   'Manager map reads must remain company-scoped.'
 );
-for (const assignmentField of ['assignedToUid', 'assignedTo', 'assignedTeamIds', 'assignedRep', 'staffClaimedBy']) {
+for (const assignmentField of ['assignedToUid', 'assignedRep', 'staffClaimedBy']) {
   assert.match(
-    fieldOpsMapSource,
-    new RegExp(`where\\('${assignmentField}'`),
+    roleScopedQueriesSource,
+    new RegExp(`\\['${assignmentField}', '=='`),
     `Staff map reads must retain the ${assignmentField} assignment scope.`
   );
 }
+assert.match(roleScopedQueriesSource, /indexCollection: collectionName === 'leads' \? 'assignedLeads' : 'assignedJobs'/);
+assert.match(roleScopedCollectionsSource, /getDoc\(doc\(db, collectionName, reference\.id\)\)/);
+assert.doesNotMatch(roleScopedQueriesSource, /'array-contains'/, 'Staff collection reads must use a scoped reference index for list assignments.');
 assert.match(
   fieldOpsRealtimeSource,
-  /buildFieldOpsCollectionQueries\('leads', context\)/
+  /subscribeRoleScopedCollection\(collectionName, context, context\.uid/
 );
-assert.match(
-  fieldOpsRealtimeSource,
-  /buildFieldOpsCollectionQueries\('jobs', context\)/
-);
+assert.match(fieldOpsRealtimeSource, /subscribeScopedCollection\(\s*'leads',\s*context,/);
+assert.match(fieldOpsRealtimeSource, /subscribeScopedCollection\(\s*'jobs',\s*context,/);
 
 assert.match(
   dashboardEntrySource,

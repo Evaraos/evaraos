@@ -11,6 +11,7 @@ import {
   serverTimestamp,
   getSavedUserProfile
 } from "./firebase.js";
+import { syncStaffAssignmentIndex } from "./staff-assignment-index.js";
 
 let currentUser = null;
 let activeLeadId = null;
@@ -388,6 +389,7 @@ async function convertActiveLeadToJob() {
     if (!confirmed) return;
   }
 
+  let assignmentIndexReady = true;
   try {
     if (btn) {
       btn.disabled = true;
@@ -398,6 +400,12 @@ async function convertActiveLeadToJob() {
 
     const payload = jobPayloadFromLead(existingLead);
     const jobRef = await addDoc(collection(db, "jobs"), payload);
+    try {
+      await syncStaffAssignmentIndex("jobs", jobRef.id, {}, payload);
+    } catch (error) {
+      assignmentIndexReady = false;
+      console.error("Converted job assignment access index could not be synchronized:", error);
+    }
 
     await updateDoc(doc(db, "leads", activeLeadId), {
       status: LEAD_CONVERTED_STATUS,
@@ -417,7 +425,10 @@ async function convertActiveLeadToJob() {
       jobId: jobRef.id
     });
 
-    setConversionMessage("Converted. Job created and lead timeline updated.", "success");
+    setConversionMessage(assignmentIndexReady
+      ? "Converted. Job created and lead timeline updated."
+      : "Job created, but team access needs to be refreshed before assigned staff can rely on it.",
+    assignmentIndexReady ? "success" : "error");
 
     setTimeout(() => {
       const openJobs = window.confirm("Job created. Open Jobs page now?");

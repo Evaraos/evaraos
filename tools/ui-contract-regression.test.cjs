@@ -46,15 +46,31 @@ test('message and owner-editor text fields have persistent accessible names', ()
 
 test('changed role routes and dashboard renderers use refreshed entry URLs', () => {
   const expectations = [
-    ['public/jobs.html', /assets\/js\/jobs\.js\?v=6/],
-    ['public/dispatch.html', /assets\/js\/dispatch\.js\?v=3/],
-    ['public/field.html', /assets\/js\/field\.js\?v=1/],
-    ['public/leads.html', /assets\/js\/leads-entry\.js\?v=2/],
+    ['public/jobs.html', /assets\/js\/jobs\.js\?v=7/],
+    ['public/dispatch.html', /assets\/js\/dispatch\.js\?v=4/],
+    ['public/field.html', /assets\/js\/field\.js\?v=2/],
+    ['public/leads.html', /assets\/js\/leads-entry\.js\?v=3/],
     ['public/customer-messaging.html', /assets\/js\/customer-messaging-dashboard\.js\?v=1/],
     ['public/marketplace-payouts.html', /assets\/js\/marketplace-payout-dashboard\.js\?v=1/]
   ];
   for (const [path, revision] of expectations) assert.match(fs.readFileSync(path, 'utf8'), revision, `${path} must request its refreshed page module`);
-  assert.match(fs.readFileSync('public/assets/js/leads-entry.js', 'utf8'), /leads\.js\?v=4/);
+  assert.match(fs.readFileSync('public/assets/js/leads-entry.js', 'utf8'), /leads\.js\?v=5/);
+  assert.match(fs.readFileSync('public/assets/js/leads-entry.js', 'utf8'), /lead-job-conversion\.js\?v=3/);
+});
+
+
+test('vendor route policy and navigation do not promise access to protected financial records', () => {
+  const access = fs.readFileSync('public/assets/js/access-control.js', 'utf8');
+  const dashboard = fs.readFileSync('public/assets/js/dashboard.js', 'utf8');
+  const apps = fs.readFileSync('public/assets/js/navigation/app-registry.js', 'utf8');
+  const matrix = fs.readFileSync('tests/visual/visual-matrix.mjs', 'utf8');
+  assert.match(access, /if \(normalizedRole === 'vendor'\) return '\/dispatch\.html';/);
+  assert.match(access, /'marketplace-payouts\.html': \['platform_admin', 'owner', 'admin'\]/);
+  assert.match(dashboard, /if \(bucket === "vendor"\) \{\s*routeTo\(ROUTES\.dispatch\);/);
+  assert.match(apps, /id: "dispatch"[\s\S]*?roles: \["owner", "organization", "vendor", "admin"\]/);
+  assert.doesNotMatch(apps, /id: "(?:revenue|ledger)"[^\n]*"vendor"/);
+  assert.match(matrix, /id: 'vendor'[\s\S]*?criticalRoutes: \['\/dispatch\.html', '\/jobs\.html', '\/settings\/appearance\.html'\]/);
+  assert.doesNotMatch(matrix, /id: 'vendor'[\s\S]*?criticalRoutes:[^\n]*marketplace-payouts/);
 });
 
 test('wallpaper focus indicators use two contrasting rings', () => {

@@ -1,11 +1,11 @@
 import {
   db,
-  collection,
-  getDocs,
   updateDoc,
   doc,
   serverTimestamp
 } from "./firebase.js";
+import { getRoleScopedCollectionDocs } from "./firestore-role-scoped-collections.js?v=assignment-index-1";
+import { syncStaffAssignmentIndex } from "./staff-assignment-index.js";
 
 let currentUser = null;
 
@@ -13,8 +13,9 @@ let currentUser = null;
 export async function claimJob(jobId, role, user) {
   const jobRef = doc(db, "jobs", jobId);
 
-  const snap = await getDocs(collection(db, "jobs"));
-  const job = snap.docs.find(d => d.id === jobId)?.data();
+  const documents = await getRoleScopedCollectionDocs("jobs", user, user.uid);
+  const jobSnapshot = documents.find((document) => document.id === jobId);
+  const job = jobSnapshot?.data();
 
   if (!job) return alert("Job not found");
 
@@ -56,6 +57,16 @@ export async function claimJob(jobId, role, user) {
       staffClaimedAt: serverTimestamp(),
       status: "in_progress"
     });
+
+    try {
+      await syncStaffAssignmentIndex("jobs", jobId, {}, {
+        assignedTo: [user.uid],
+        staffClaimedBy: user.uid
+      });
+    } catch (error) {
+      console.error("Claimed job assignment reference could not be synchronized:", error);
+      return alert("Job accepted, but your work list could not refresh. Ask a manager to repair the assignment index.");
+    }
 
     alert("You got the job");
   }

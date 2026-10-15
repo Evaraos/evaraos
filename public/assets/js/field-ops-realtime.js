@@ -1,10 +1,7 @@
-import {
-  onSnapshot
-} from './firebase.js';
+import { subscribeRoleScopedCollection } from './firestore-role-scoped-collections.js?v=assignment-index-1';
 
 import {
   resolveFieldOpsMapAccessContext,
-  buildFieldOpsCollectionQueries,
   normalizeLeadForMap,
   normalizeJobForMap,
   groupFieldOpsByTerritory,
@@ -45,21 +42,18 @@ function emitUpdate(callback) {
   });
 }
 
-function subscribeScopedCollection(queryRefs, bucketStore, normalizer, onChange, onError) {
-  queryRefs.forEach((queryRef, index) => {
-    const unsubscribe = onSnapshot(queryRef, (snapshot) => {
-      const bucket = new Map();
+function subscribeScopedCollection(collectionName, context, bucketStore, normalizer, onChange, onError) {
+  const unsubscribe = subscribeRoleScopedCollection(collectionName, context, context.uid, (documents) => {
+    const bucket = new Map();
+    documents.forEach((document) => {
+      bucket.set(document.id, normalizer({ id: document.id, ...document.data() }));
+    });
+    bucketStore.clear();
+    bucketStore.set(0, bucket);
+    onChange();
+  }, onError);
 
-      snapshot.docs.forEach((docItem) => {
-        bucket.set(docItem.id, normalizer({ id: docItem.id, ...docItem.data() }));
-      });
-
-      bucketStore.set(index, bucket);
-      onChange();
-    }, onError);
-
-    unsubscribeListeners.push(unsubscribe);
-  });
+  unsubscribeListeners.push(unsubscribe);
 }
 
 export function startFieldOpsRealtime(callback, options = {}) {
@@ -92,7 +86,8 @@ export function startFieldOpsRealtime(callback, options = {}) {
       };
 
       subscribeScopedCollection(
-        buildFieldOpsCollectionQueries('leads', context),
+        'leads',
+        context,
         leadBuckets,
         normalizeLeadForMap,
         refreshLeads,
@@ -100,7 +95,8 @@ export function startFieldOpsRealtime(callback, options = {}) {
       );
 
       subscribeScopedCollection(
-        buildFieldOpsCollectionQueries('jobs', context),
+        'jobs',
+        context,
         jobBuckets,
         normalizeJobForMap,
         refreshJobs,

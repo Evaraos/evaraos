@@ -88,7 +88,9 @@ async function seed() {
     ];
     for (const [id, assignment] of jobAssignmentFixtures) {
       await setDoc(doc(db, "jobs", id), { companyId: "company-a", ...assignment, status: "scheduled" });
+      await setDoc(doc(db, "users", "techA", "assignedJobs", id), {});
     }
+    await setDoc(doc(db, "users", "techA", "assignedJobs", "job-a"), {});
 
     await setDoc(doc(db, "leads", "lead-assigned"), {
       companyId: "company-a",
@@ -107,6 +109,8 @@ async function seed() {
       createdBy: "managerA",
       status: "new"
     });
+    await setDoc(doc(db, "users", "salesB", "assignedLeads", "lead-assigned-to-other"), {});
+    await setDoc(doc(db, "users", "salesA", "assignedLeads", "lead-assigned-to-other"), {});
     const leadAssignmentFixtures = [
       ["lead-assigned-to-list", { assignedTo: ["salesA"] }],
       ["lead-assigned-team", { assignedTeamIds: ["salesA"] }],
@@ -116,7 +120,9 @@ async function seed() {
     ];
     for (const [id, assignment] of leadAssignmentFixtures) {
       await setDoc(doc(db, "leads", id), { companyId: "company-a", ...assignment, status: "new" });
+      await setDoc(doc(db, "users", "salesA", "assignedLeads", id), {});
     }
+    await setDoc(doc(db, "users", "salesA", "assignedLeads", "lead-assigned"), {});
 
     await setDoc(doc(db, "invoices", "invoice-a"), {
       companyId: "company-a",
@@ -205,41 +211,48 @@ test("sales representatives only receive assigned leads", async () => {
   await assertFails(getDoc(doc(salesDb, "users", "managerA")));
 });
 
-test("role-scoped collection queries prove every assignment branch in Firestore rules", async () => {
-  const cases = [
-    ["leads", "salesA", "assignedToUid", "==", "lead-assigned"],
-    ["leads", "salesA", "assignedTo", "array-contains", "lead-assigned-to-list"],
-    ["leads", "salesA", "assignedTeamIds", "array-contains", "lead-assigned-team"],
-    ["leads", "salesA", "assignedRep", "==", "lead-assigned-rep"],
-    ["leads", "salesA", "assignedRep", "array-contains", "lead-assigned-rep-list"],
-    ["leads", "salesA", "staffClaimedBy", "==", "lead-staff-claimed"],
-    ["jobs", "techA", "assignedToUid", "==", "job-a"],
-    ["jobs", "techA", "assignedTo", "array-contains", "job-assigned-to-list"],
-    ["jobs", "techA", "assignedTeamIds", "array-contains", "job-assigned-team"],
-    ["jobs", "techA", "assignedRep", "==", "job-assigned-rep"],
-    ["jobs", "techA", "assignedRep", "array-contains", "job-assigned-rep-list"],
-    ["jobs", "techA", "staffClaimedBy", "==", "job-staff-claimed"]
-  ];
+test("assigned staff list only their own references and every fetched record remains assignment-checked", async () => {
+  const salesDb = env.authenticatedContext("salesA").firestore();
+  const techDb = env.authenticatedContext("techA").firestore();
+  const salesRefs = await assertSucceeds(getDocs(collection(salesDb, "users", "salesA", "assignedLeads")));
+  const techRefs = await assertSucceeds(getDocs(collection(techDb, "users", "techA", "assignedJobs")));
+  const salesIds = new Set(salesRefs.docs.map((snapshot) => snapshot.id));
+  const techIds = new Set(techRefs.docs.map((snapshot) => snapshot.id));
 
-  for (const [collectionName, uid, field, operator, expectedId] of cases) {
-    const db = env.authenticatedContext(uid).firestore();
-    let result;
-    try {
-      result = await assertSucceeds(getDocs(query(
-        collection(db, collectionName),
-        where(field, operator, uid)
-      )));
-    } catch (error) {
-      throw new Error(`The ${collectionName}.${field} ${operator} query for ${uid} was denied.`, { cause: error });
-    }
-    assert.ok(result.docs.some((snapshot) => snapshot.id === expectedId), `${collectionName}.${field} returns its assigned fixture`);
+  for (const id of ["lead-assigned", "lead-assigned-to-list", "lead-assigned-team", "lead-assigned-rep", "lead-assigned-rep-list", "lead-staff-claimed"]) {
+    assert.ok(salesIds.has(id), `salesA has a reference to ${id}`);
+    await assertSucceeds(getDoc(doc(salesDb, "leads", id)));
+  }
+  for (const id of ["job-a", "job-assigned-to-list", "job-assigned-team", "job-assigned-rep", "job-assigned-rep-list", "job-staff-claimed"]) {
+    assert.ok(techIds.has(id), `techA has a reference to ${id}`);
+    await assertSucceeds(getDoc(doc(techDb, "jobs", id)));
   }
 
-  const salesDb = env.authenticatedContext("salesA").firestore();
-  await assertFails(getDocs(query(collection(salesDb, "leads"), where("assignedTo", "array-contains", "salesB"))));
+  await assertFails(getDocs(collection(salesDb, "users", "salesB", "assignedLeads")));
+  await assertFails(getDoc(doc(salesDb, "leads", "lead-unassigned")));
+  await assertFails(getDoc(doc(salesDb, "leads", "lead-assigned-to-other")));
+  await assertFails(deleteDoc(doc(salesDb, "users", "salesA", "assignedLeads", "lead-assigned")));
+  await assertSucceeds(deleteDoc(doc(salesDb, "users", "salesA", "assignedLeads", "lead-assigned-to-other")));
+  const staleReference = salesRefs.docs.find((snapshot) => snapshot.id === "lead-assigned-to-other");
+  assert.ok(staleReference, "a stale reference may remain during eventual assignment cleanup");
+  assert.deepEqual(staleReference.data(), {}, "assignment references contain no copied record fields");
 
   const managerDb = env.authenticatedContext("managerA").firestore();
+  await assertSucceeds(deleteDoc(doc(managerDb, "users", "salesA", "assignedLeads", "lead-assigned-to-other")));
   await assertSucceeds(getDocs(query(collection(managerDb, "jobs"), where("companyId", "==", "company-a"))));
+});
+
+test("assignment references cannot be forged, populated, or created across users or tenants", async () => {
+  const salesDb = env.authenticatedContext("salesA").firestore();
+  const ownAssignedRef = doc(salesDb, "users", "salesA", "assignedLeads", "lead-assigned-to-list");
+  await assertSucceeds(setDoc(ownAssignedRef, {}));
+  await assertFails(setDoc(ownAssignedRef, { companyId: "company-a", title: "forged" }));
+  await assertFails(setDoc(doc(salesDb, "users", "salesB", "assignedLeads", "lead-assigned-to-other"), {}));
+  await assertFails(setDoc(doc(salesDb, "users", "salesA", "assignedLeads", "lead-unassigned"), {}));
+
+  const managerDb = env.authenticatedContext("managerA").firestore();
+  await assertSucceeds(setDoc(doc(managerDb, "users", "salesB", "assignedLeads", "lead-assigned-to-other"), {}));
+  await assertFails(setDoc(doc(managerDb, "users", "techB", "assignedJobs", "job-b"), {}));
 });
 
 test("customers only read their own financial records", async () => {

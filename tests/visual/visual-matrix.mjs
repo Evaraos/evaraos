@@ -56,8 +56,8 @@ export const ROLE_DEFINITIONS = Object.freeze([
   {
     id: 'vendor',
     secret: 'VENDOR',
-    routes: ['/settings-v2.html', '/settings/appearance.html', '/messages.html', '/jobs.html', '/leads.html', '/dispatch.html', '/schedule.html', '/field.html', '/territory-map.html', '/revenue.html', '/job_billing.html', '/marketplace-payouts.html'],
-    criticalRoutes: ['/dispatch.html', '/marketplace-payouts.html', '/settings/appearance.html']
+    routes: ['/settings-v2.html', '/settings/appearance.html', '/messages.html', '/jobs.html', '/leads.html', '/dispatch.html', '/schedule.html', '/field.html'],
+    criticalRoutes: ['/dispatch.html', '/jobs.html', '/settings/appearance.html']
   }
 ]);
 
@@ -79,7 +79,7 @@ export const CRITICAL_VISUAL_CASES = Object.freeze([
   { role: 'technician', route: '/field.html' },
   { role: 'customer', route: '/customer_dashboard.html' },
   { role: 'customer', route: '/customer-commerce.html' },
-  { role: 'vendor', route: '/marketplace-payouts.html' }
+  { role: 'vendor', route: '/dispatch.html' }
 ]);
 
 export function credentialsFor(role) {

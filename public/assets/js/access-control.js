@@ -98,13 +98,13 @@ export const PAGE_POLICY = Object.freeze({
   'territory_intelligence.html': ['platform_admin', 'owner', 'admin', 'manager', 'sales'],
   'presence.html': OPERATIONS_ROLES,
 
-  'revenue.html': ['platform_admin', 'owner', 'admin', 'manager', 'vendor'],
+  'revenue.html': ['platform_admin', 'owner', 'admin', 'manager'],
   'payroll.html': ['platform_admin', 'owner', 'admin', 'manager'],
   'ledger.html': ['platform_admin', 'owner', 'admin'],
   'payment_ops.html': ['platform_admin', 'owner', 'admin'],
-  'job_billing.html': ['platform_admin', 'owner', 'admin', 'manager', 'vendor'],
+  'job_billing.html': ['platform_admin', 'owner', 'admin', 'manager'],
   'enterprise-finance-dashboard.html': ['platform_admin', 'owner', 'admin'],
-  'marketplace-payouts.html': ['platform_admin', 'owner', 'admin', 'vendor'],
+  'marketplace-payouts.html': ['platform_admin', 'owner', 'admin'],
 
   'governance-dashboard.html': ['platform_admin', 'owner', 'admin'],
   'governance-analytics.html': ['platform_admin', 'owner', 'admin'],
@@ -147,7 +147,7 @@ export const FEATURE_POLICY = Object.freeze({
   assignStaff: ['platform_admin', 'owner', 'admin', 'manager'],
   manageApplications: ['platform_admin', 'owner', 'admin', 'manager'],
 
-  viewFinance: ['platform_admin', 'owner', 'admin', 'manager', 'vendor'],
+  viewFinance: ['platform_admin', 'owner', 'admin', 'manager'],
   manageFinance: ['platform_admin', 'owner', 'admin'],
   managePayroll: ['platform_admin', 'owner', 'admin', 'manager'],
 
@@ -227,7 +227,7 @@ export function canAccessPageName(pageName = '', role = '') {
 export function defaultRouteForRole(role = '') {
   const normalizedRole = normalizeAccessRole(role);
   if (normalizedRole === 'customer') return '/customer_dashboard.html';
-  if (normalizedRole === 'vendor') return '/marketplace-payouts.html';
+  if (normalizedRole === 'vendor') return '/dispatch.html';
   if (CANONICAL_ROLES.includes(normalizedRole)) return '/dashboard.html';
   return '/login.html';
 }

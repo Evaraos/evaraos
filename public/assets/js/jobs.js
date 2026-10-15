@@ -8,7 +8,8 @@ import {
   getSavedUserProfile,
   hydrateUserProfile
 } from "./firebase.js";
-import { subscribeRoleScopedCollection } from "./firestore-role-scoped-collections.js";
+import { subscribeRoleScopedCollection } from "./firestore-role-scoped-collections.js?v=assignment-index-1";
+import { syncStaffAssignmentIndex } from "./staff-assignment-index.js";
 import { createVirtualizationEngine, installSharedVirtualStyles } from "./shared-virtualization.js";
 
 const jobsSearch = document.getElementById("jobsSearch");
@@ -678,7 +679,24 @@ async function claimStaffJob(jobId, button) {
       updatedByEmail: actor.email,
       updatedByName: actor.displayName
     });
-    notify("Job accepted", `${jobName(job)} is now assigned to you.`, "success");
+    let indexReady = true;
+    try {
+      await syncStaffAssignmentIndex("jobs", jobId, {}, {
+        assignedTo: [actor.uid],
+        assignedTeamIds: [actor.uid],
+        staffClaimedBy: actor.uid
+      });
+    } catch (error) {
+      indexReady = false;
+      console.error("Accepted job assignment reference could not be synchronized:", error);
+    }
+    notify(
+      indexReady ? "Job accepted" : "Job accepted; list refresh needed",
+      indexReady
+        ? `${jobName(job)} is now assigned to you.`
+        : `${jobName(job)} was accepted, but the personal work list could not refresh. Ask a manager to repair the assignment index.`,
+      indexReady ? "success" : "warning"
+    );
   } catch (error) {
     console.error("Staff job claim failed:", error);
     notify("Unable to accept job", error?.message || "The job could not be accepted.", "error");

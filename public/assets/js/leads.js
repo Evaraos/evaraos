@@ -15,7 +15,8 @@ import {
   getSavedUserProfile,
   hydrateUserProfile
 } from "./firebase.js";
-import { getRoleScopedCollectionDocs } from "./firestore-role-scoped-collections.js";
+import { getRoleScopedCollectionDocs } from "./firestore-role-scoped-collections.js?v=assignment-index-1";
+import { syncStaffAssignmentIndex } from "./staff-assignment-index.js";
 
 const leadsSearch = document.getElementById("leadsSearch");
 const leadsList = document.getElementById("leadsList");
@@ -23,6 +24,17 @@ const leadsFeed = document.getElementById("leadsFeed");
 const leadFlowStack = document.getElementById("leadFlowStack");
 const PLATFORM_ROLES = new Set(["owner", "super_admin", "platform_admin"]);
 const COMPANY_OPERATIONS_ROLES = new Set(["admin", "manager", "operations_manager", "operations_coordinator", "hr", "hr_manager"]);
+
+async function syncLeadAssignmentAccess(leadId, before, after) {
+  try {
+    await syncStaffAssignmentIndex("leads", leadId, before, after);
+    return true;
+  } catch (error) {
+    console.error("Lead assignment access index could not be synchronized:", error);
+    showMessage("Lead is saved, but team access needs to be refreshed. Recheck the assignment before relying on staff access.", "error");
+    return false;
+  }
+}
 
 const leadsHeroTitle = document.getElementById("leadsHeroTitle");
 const leadsHeroText = document.getElementById("leadsHeroText");
@@ -905,6 +917,7 @@ async function saveLead(event) {
 
   const saveBtn = document.getElementById("leadCrudSaveBtn");
   const previous = editingLeadId ? getLeadById(editingLeadId) : null;
+  let assignmentAccessReady = true;
 
   try {
     const payload = formToLeadPayload();
@@ -918,6 +931,10 @@ async function saveLead(event) {
 
     if (editingLeadId) {
       await updateDoc(doc(db, "leads", editingLeadId), payload);
+      assignmentAccessReady = await syncLeadAssignmentAccess(editingLeadId, previous || {}, {
+        ...(previous || {}),
+        ...payload
+      });
 
       await addLeadActivity(editingLeadId, {
         type: "lead_updated",
@@ -946,6 +963,7 @@ async function saveLead(event) {
       });
 
       savedLeadId = newDoc.id;
+      assignmentAccessReady = await syncLeadAssignmentAccess(savedLeadId, {}, payload);
 
       await addLeadActivity(savedLeadId, {
         type: "lead_created",
@@ -959,7 +977,12 @@ async function saveLead(event) {
 
     if (savedLeadId) {
       openLeadModal(savedLeadId);
-      showMessage("Saved. Timeline updated.", "success");
+      showMessage(
+        assignmentAccessReady
+          ? "Saved. Timeline updated."
+          : "Lead saved, but team access needs review before staff can rely on it.",
+        assignmentAccessReady ? "success" : "error"
+      );
     }
   } catch (error) {
     console.error("Lead save failed:", error);
