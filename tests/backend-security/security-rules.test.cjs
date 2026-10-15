@@ -52,6 +52,7 @@ async function seed() {
       activeUser({ uid: "managerA", role: "manager", companyId: "company-a" }),
       activeUser({ uid: "managerB", role: "manager", companyId: "company-b" }),
       activeUser({ uid: "salesA", role: "sales_rep", companyId: "company-a" }),
+      activeUser({ uid: "salesB", role: "sales_rep", companyId: "company-a" }),
       activeUser({ uid: "techA", role: "technician", companyId: "company-a" }),
       activeUser({ uid: "techB", role: "technician", companyId: "company-b" }),
       activeUser({ uid: "customerA", role: "customer", companyId: "company-a" }),
@@ -97,6 +98,12 @@ async function seed() {
     });
     await setDoc(doc(db, "leads", "lead-unassigned"), {
       companyId: "company-a",
+      createdBy: "managerA",
+      status: "new"
+    });
+    await setDoc(doc(db, "leads", "lead-assigned-to-other"), {
+      companyId: "company-a",
+      assignedTo: ["salesB"],
       createdBy: "managerA",
       status: "new"
     });
@@ -227,6 +234,9 @@ test("role-scoped collection queries prove every assignment branch in Firestore 
     }
     assert.ok(result.docs.some((snapshot) => snapshot.id === expectedId), `${collectionName}.${field} returns its assigned fixture`);
   }
+
+  const salesDb = env.authenticatedContext("salesA").firestore();
+  await assertFails(getDocs(query(collection(salesDb, "leads"), where("assignedTo", "array-contains", "salesB"))));
 
   const managerDb = env.authenticatedContext("managerA").firestore();
   await assertSucceeds(getDocs(query(collection(managerDb, "jobs"), where("companyId", "==", "company-a"))));
