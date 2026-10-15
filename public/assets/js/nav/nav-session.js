@@ -105,7 +105,7 @@ export async function startVerifiedPublicHomeSession() {
 
 async function loadCanonicalBinders() {
   const [events, menu, interactions] = await Promise.all([
-    import("./nav-events.js?v=nav-events-universal-3"),
+    import("./nav-events.js?v=nav-events-universal-4"),
     import("./nav-menu.js?v=universal-a11y-1"),
     import("./nav-interactions.js")
   ]);

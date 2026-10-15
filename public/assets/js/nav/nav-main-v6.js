@@ -118,7 +118,7 @@ async function bindCoreSystems(){
   }
   const [menu,events,session,interactions]=await Promise.all([
     optional("./nav-menu.js?v=universal-a11y-1"),
-    optional("./nav-events.js?v=nav-events-universal-3"),
+    optional("./nav-events.js?v=nav-events-universal-4"),
     optional("./nav-session.js?v=nav-session-universal-4"),
     optional("./nav-interactions.js")
   ]);

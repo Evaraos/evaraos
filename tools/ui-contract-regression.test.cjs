@@ -69,6 +69,10 @@ test('same-page drawer navigation restores focus before closing', () => {
   assert.match(events, /function openNavHref[\s\S]*?closeMenu\(true\);[\s\S]*?navigateWithLoader/);
   const nav = fs.readFileSync('public/assets/js/nav.js', 'utf8');
   assert.match(nav, /nav-main-v6\.js\?v=universal-a11y-4/);
+  const navMain = fs.readFileSync('public/assets/js/nav/nav-main-v6.js', 'utf8');
+  const navSession = fs.readFileSync('public/assets/js/nav/nav-session.js', 'utf8');
+  assert.match(navMain, /nav-events\.js\?v=nav-events-universal-4/);
+  assert.match(navSession, /nav-events\.js\?v=nav-events-universal-4/);
 });
 
 test('page glass uses shared theme presets or bounded Studio customization', () => {

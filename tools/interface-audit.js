@@ -47,9 +47,9 @@ check("paint-lock",bootJs.includes("evara-boot-lock")&&bootJs.includes("evara-th
 check("nav-build",navEntry.includes(new URL(assets.navRuntime,"https://ui.invalid").searchParams.get("v")),"navigation entry must match the shared contract");
 check("nav-main-build",navEntry.includes("./nav/nav-main-v6.js?v=universal-a11y-4"),"navigation entry must load the current module graph");
 check("nav-build-labels",navMainEntry.includes('const NAV_BUILD="nav-v63-universal"')&&navSessionEntry.includes('const NAV_BUILD = "nav-v63-universal"'),"shared navigation modules must announce the current runtime build");
-check("nav-events-build",navMainEntry.includes("./nav-events.js?v=nav-events-universal-3"),"navigation event binding must use a versioned module URL");
+check("nav-events-build",navMainEntry.includes("./nav-events.js?v=nav-events-universal-4"),"navigation event binding must use a versioned module URL");
 check("nav-session-build",navMainEntry.includes("./nav-session.js?v=nav-session-universal-4"),"navigation session binding must load the current module revision");
-check("nav-session-events-build",navSessionEntry.includes("./nav-events.js?v=nav-events-universal-3"),"session refresh must reuse the current navigation event binder");
+check("nav-session-events-build",navSessionEntry.includes("./nav-events.js?v=nav-events-universal-4"),"session refresh must reuse the current navigation event binder");
 check("nav-main-logout-build",navMainEntry.includes("./nav-logout.js?v=nav-logout-universal-2"),"authenticated navigation must load the current logout binder");
 check("nav-session-logout-build",navSessionEntry.includes("./nav-logout.js?v=nav-logout-universal-2"),"session refresh must reuse the current logout binder");
 check("theme-build",themeEntry.includes(new URL(assets.themeRuntime,"https://ui.invalid").searchParams.get("v"))&&themeEntry.includes("adaptive-liquid-v19-universal"),"theme entry must match the shared contract");
