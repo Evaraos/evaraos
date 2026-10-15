@@ -216,10 +216,15 @@ test("role-scoped collection queries prove every assignment branch in Firestore 
 
   for (const [collectionName, uid, field, operator, expectedId] of cases) {
     const db = env.authenticatedContext(uid).firestore();
-    const result = await assertSucceeds(getDocs(query(
-      collection(db, collectionName),
-      where(field, operator, uid)
-    )), `${collectionName}.${field} should prove the assigned-read rule`);
+    let result;
+    try {
+      result = await assertSucceeds(getDocs(query(
+        collection(db, collectionName),
+        where(field, operator, uid)
+      )));
+    } catch (error) {
+      throw new Error(`The ${collectionName}.${field} ${operator} query for ${uid} was denied.`, { cause: error });
+    }
     assert.ok(result.docs.some((snapshot) => snapshot.id === expectedId), `${collectionName}.${field} returns its assigned fixture`);
   }
 
