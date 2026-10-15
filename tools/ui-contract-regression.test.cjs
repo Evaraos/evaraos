@@ -48,12 +48,12 @@ test('field search has an accessible name and customer balance IDs remain unique
   const field = fs.readFileSync('public/field.html', 'utf8');
   const commerce = fs.readFileSync('public/customer-commerce.html', 'utf8');
   const commerceDashboard = fs.readFileSync('public/assets/js/customer-commerce-dashboard.js', 'utf8');
-  assert.match(field, /<input\\b[^>]*id="fieldSearch"[^>]*aria-label="Search assigned work"/);
+  assert.match(field, /<input\b[^>]*id="fieldSearch"[^>]*aria-label="Search assigned work"/);
   assert.match(commerce, /id="customerOutstandingHero"[^>]*data-customer-outstanding/);
   assert.match(commerce, /id="customerOutstanding"[^>]*data-customer-outstanding/);
   assert.equal((commerce.match(/id="customerOutstanding(?:Hero)?"/g) || []).length, 2);
-  assert.match(commerce, /customer-commerce-dashboard\\.js\\?v=3/);
-  assert.match(commerceDashboard, /querySelectorAll\\('\\[data-customer-outstanding\\]'\\)/);
+  assert.match(commerce, /customer-commerce-dashboard\.js\?v=3/);
+  assert.match(commerceDashboard, /querySelectorAll\('\[data-customer-outstanding\]'\)/);
 });
 
 test('changed role routes and dashboard renderers use refreshed entry URLs', () => {
