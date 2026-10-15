@@ -69,7 +69,7 @@ export function bindBrandHome() {
 
 function openNavHref(href, options = {}) {
   if (!href) return;
-  closeMenu(false);
+  closeMenu(true);
   navigateWithLoader(href, {
     title: options.title || "Loading page",
     subtitle: options.subtitle || "Preparing your next screen."

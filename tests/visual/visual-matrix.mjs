@@ -56,8 +56,8 @@ export const ROLE_DEFINITIONS = Object.freeze([
   {
     id: 'vendor',
     secret: 'VENDOR',
-    routes: ['/dashboard.html', '/settings-v2.html', '/settings/appearance.html', '/messages.html', '/jobs.html', '/leads.html', '/dispatch.html', '/schedule.html', '/field.html', '/territory-map.html', '/revenue.html', '/job_billing.html', '/marketplace-payouts.html'],
-    criticalRoutes: ['/dashboard.html', '/dispatch.html', '/marketplace-payouts.html', '/settings/appearance.html']
+    routes: ['/settings-v2.html', '/settings/appearance.html', '/messages.html', '/jobs.html', '/leads.html', '/dispatch.html', '/schedule.html', '/field.html', '/territory-map.html', '/revenue.html', '/job_billing.html', '/marketplace-payouts.html'],
+    criticalRoutes: ['/dispatch.html', '/marketplace-payouts.html', '/settings/appearance.html']
   }
 ]);
 

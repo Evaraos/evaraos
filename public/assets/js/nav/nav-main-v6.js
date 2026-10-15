@@ -1,4 +1,4 @@
-const NAV_BUILD="nav-v62-universal";
+const NAV_BUILD="nav-v63-universal";
 const PUBLIC_HOME_SHELL_STYLESHEET="/assets/css/nav/nav-shell.css?v=home-1";
 let NAV_STATE,getNavShell,renderNav,applyProgress,bindScrollBehavior,animateNav,isCanonicalPublicRoute,isVerifiedSession;
 let accountSystemsPromise=null;
@@ -106,7 +106,7 @@ async function bindCoreSystems(){
   if(isCanonicalPublicPage()){
     const [menu,session]=await Promise.all([
       optional("./nav-menu.js?v=universal-a11y-1"),
-      optional("./nav-session.js?v=nav-session-universal-3")
+      optional("./nav-session.js?v=nav-session-universal-4")
     ]);
     publicMenu=menu;
     try{menu?.bindMenu?.();bindPublicGuestControls(menu)}catch(error){console.warn("Public guest menu binding failed:",error)}
@@ -118,8 +118,8 @@ async function bindCoreSystems(){
   }
   const [menu,events,session,interactions]=await Promise.all([
     optional("./nav-menu.js?v=universal-a11y-1"),
-    optional("./nav-events.js?v=nav-events-universal-2"),
-    optional("./nav-session.js?v=nav-session-universal-3"),
+    optional("./nav-events.js?v=nav-events-universal-3"),
+    optional("./nav-session.js?v=nav-session-universal-4"),
     optional("./nav-interactions.js")
   ]);
   try{events?.bindAllNavEvents?.()}catch(error){console.warn("Nav events binding failed:",error)}

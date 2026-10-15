@@ -139,6 +139,6 @@ test('Universal UI CI runs the role matrix with isolated demo emulators', () => 
   assert.match(runner, /await runPlaywright\(childEnvironment\);[\s\S]*?await writeMatrixSummary\([\s\S]*?completed without test failures/);
   assert.match(runner, /Result: Playwright failed without test-level failure details/);
   const visualSpec = read('tests/visual/specs/authenticated-visual.spec.mjs');
-  assert.match(visualSpec, /EVARA_QA_LOCAL_EMULATOR_CHILD === '1'[\s\S]*?page\.route\(\(url\) => url\.origin === 'http:\/\/127\.0\.0\.1:5001'[\s\S]*?getMarketplaceCommerceSnapshot/);
+  assert.match(visualSpec, /EVARA_QA_LOCAL_EMULATOR_CHILD === '1'[\s\S]*?new Map\(\[[\s\S]*?getMarketplaceCommerceSnapshot[\s\S]*?getMarketplaceOperationsSnapshot[\s\S]*?\]\)[\s\S]*?page\.route\(\(url\) => url\.origin === 'http:\/\/127\.0\.0\.1:5001'/);
   assert.match(visualSpec, /access-control-allow-headers.*requestedHeaders/);
 });

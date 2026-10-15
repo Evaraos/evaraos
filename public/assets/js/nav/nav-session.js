@@ -4,7 +4,7 @@ import { canAccessPageName } from "../access-control.js";
 import { applyProgress } from "./nav-scroll.js";
 import { renderNav } from "./nav-render.js?v=universal-a11y-1";
 
-const NAV_BUILD = "nav-v62-universal";
+const NAV_BUILD = "nav-v63-universal";
 const VERIFIED_PUBLIC_HOME_SOURCE = "verified-public-home";
 let publicHomeSessionStarted = false;
 let publicHomeSessionSequence = 0;
@@ -105,7 +105,7 @@ export async function startVerifiedPublicHomeSession() {
 
 async function loadCanonicalBinders() {
   const [events, menu, interactions] = await Promise.all([
-    import("./nav-events.js?v=nav-events-universal-2"),
+    import("./nav-events.js?v=nav-events-universal-3"),
     import("./nav-menu.js?v=universal-a11y-1"),
     import("./nav-interactions.js")
   ]);

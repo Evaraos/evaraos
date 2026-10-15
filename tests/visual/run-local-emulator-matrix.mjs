@@ -29,7 +29,7 @@ function sanitizeFailureText(value) {
     .replace(/\b(password|token|api[_-]?key|authorization|bearer)\s*[:=]\s*[^\s,;]+/gi, '$1=[redacted]')
     .replace(/\b[A-Za-z0-9_-]{32,}\b/g, '[redacted]')
     .replace(/\s+/g, ' ')
-    .slice(0, 400);
+    .slice(0, 1400);
 }
 
 async function writeMatrixSummary(lines, finalized = true) {
@@ -166,7 +166,7 @@ async function summarizePlaywrightFailures(resultsPath) {
           const error = failedAttempts.flatMap((result) => result.errors || []).find((entry) => entry.message)?.message || 'Unexpected test result.';
           failures.push({
             title: [`[${test.projectName || 'unknown project'}]`, ...pathParts, spec.title].filter(Boolean).join(' › '),
-            error: String(error).replace(/\s+/g, ' ').slice(0, 500)
+            error: String(error).replace(/\s+/g, ' ').slice(0, 1600)
           });
         }
       }

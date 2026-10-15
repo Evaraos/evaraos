@@ -77,6 +77,16 @@ async function seed() {
       createdBy: "managerB",
       status: "scheduled"
     });
+    const jobAssignmentFixtures = [
+      ["job-assigned-to-list", { assignedTo: ["techA"] }],
+      ["job-assigned-team", { assignedTeamIds: ["techA"] }],
+      ["job-assigned-rep", { assignedRep: "techA" }],
+      ["job-assigned-rep-list", { assignedRep: ["techA"] }],
+      ["job-staff-claimed", { staffClaimedBy: "techA" }]
+    ];
+    for (const [id, assignment] of jobAssignmentFixtures) {
+      await setDoc(doc(db, "jobs", id), { companyId: "company-a", ...assignment, status: "scheduled" });
+    }
 
     await setDoc(doc(db, "leads", "lead-assigned"), {
       companyId: "company-a",
@@ -89,6 +99,16 @@ async function seed() {
       createdBy: "managerA",
       status: "new"
     });
+    const leadAssignmentFixtures = [
+      ["lead-assigned-to-list", { assignedTo: ["salesA"] }],
+      ["lead-assigned-team", { assignedTeamIds: ["salesA"] }],
+      ["lead-assigned-rep", { assignedRep: "salesA" }],
+      ["lead-assigned-rep-list", { assignedRep: ["salesA"] }],
+      ["lead-staff-claimed", { staffClaimedBy: "salesA" }]
+    ];
+    for (const [id, assignment] of leadAssignmentFixtures) {
+      await setDoc(doc(db, "leads", id), { companyId: "company-a", ...assignment, status: "new" });
+    }
 
     await setDoc(doc(db, "invoices", "invoice-a"), {
       companyId: "company-a",
@@ -175,6 +195,35 @@ test("sales representatives only receive assigned leads", async () => {
   await assertSucceeds(getDoc(doc(salesDb, "leads", "lead-assigned")));
   await assertFails(getDoc(doc(salesDb, "leads", "lead-unassigned")));
   await assertFails(getDoc(doc(salesDb, "users", "managerA")));
+});
+
+test("role-scoped collection queries prove every assignment branch in Firestore rules", async () => {
+  const cases = [
+    ["leads", "salesA", "assignedToUid", "==", "lead-assigned"],
+    ["leads", "salesA", "assignedTo", "array-contains", "lead-assigned-to-list"],
+    ["leads", "salesA", "assignedTeamIds", "array-contains", "lead-assigned-team"],
+    ["leads", "salesA", "assignedRep", "==", "lead-assigned-rep"],
+    ["leads", "salesA", "assignedRep", "array-contains", "lead-assigned-rep-list"],
+    ["leads", "salesA", "staffClaimedBy", "==", "lead-staff-claimed"],
+    ["jobs", "techA", "assignedToUid", "==", "job-a"],
+    ["jobs", "techA", "assignedTo", "array-contains", "job-assigned-to-list"],
+    ["jobs", "techA", "assignedTeamIds", "array-contains", "job-assigned-team"],
+    ["jobs", "techA", "assignedRep", "==", "job-assigned-rep"],
+    ["jobs", "techA", "assignedRep", "array-contains", "job-assigned-rep-list"],
+    ["jobs", "techA", "staffClaimedBy", "==", "job-staff-claimed"]
+  ];
+
+  for (const [collectionName, uid, field, operator, expectedId] of cases) {
+    const db = env.authenticatedContext(uid).firestore();
+    const result = await assertSucceeds(getDocs(query(
+      collection(db, collectionName),
+      where(field, operator, uid)
+    )), `${collectionName}.${field} should prove the assigned-read rule`);
+    assert.ok(result.docs.some((snapshot) => snapshot.id === expectedId), `${collectionName}.${field} returns its assigned fixture`);
+  }
+
+  const managerDb = env.authenticatedContext("managerA").firestore();
+  await assertSucceeds(getDocs(query(collection(managerDb, "jobs"), where("companyId", "==", "company-a"))));
 });
 
 test("customers only read their own financial records", async () => {

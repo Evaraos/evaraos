@@ -30,17 +30,29 @@ const dynamicMaskSelector = [
 test.beforeEach(async ({ page, baseURL }) => {
   await installLocalFirebaseNetworkGuard(page, baseURL);
   if (process.env.EVARA_QA_LOCAL_EMULATOR_CHILD === '1') {
-    await page.route((url) => url.origin === 'http://127.0.0.1:5001'
-      && url.pathname === '/demo-evaraos-ui/us-central1/getMarketplaceCommerceSnapshot', async (route) => {
-      const requestedHeaders = route.request().headers()['access-control-request-headers'];
-      const body = JSON.stringify({ data: {
+    const localReadOnlyCallables = new Map([
+      ['getMarketplaceCommerceSnapshot', {
         customerId: 'local-ui-fixture',
         generatedAtMs: 0,
         quotes: [],
         invoices: [],
         subscriptions: [],
         summary: { quoteCount: 0, openQuotes: 0, outstandingCents: 0, paidCents: 0, activeSubscriptions: 0 }
-      } });
+      }],
+      ['getMarketplaceOperationsSnapshot', {
+        customerId: 'local-ui-fixture',
+        generatedAtMs: 0,
+        orders: [],
+        notifications: [],
+        refunds: []
+      }]
+    ]);
+    await page.route((url) => url.origin === 'http://127.0.0.1:5001'
+      && url.pathname.startsWith('/demo-evaraos-ui/us-central1/')
+      && localReadOnlyCallables.has(url.pathname.split('/').at(-1)), async (route) => {
+      const callableName = new URL(route.request().url()).pathname.split('/').at(-1);
+      const requestedHeaders = route.request().headers()['access-control-request-headers'];
+      const body = JSON.stringify({ data: localReadOnlyCallables.get(callableName) });
       return route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -128,7 +140,18 @@ async function openRoute(page, route, appearance, baseURL, expectedRole) {
       || (session?.authenticated === true && Boolean(session.userId) && session.role === role && session.source === 'verified-route-guard');
   }, { pathname: expectedPathname, role: expectedRole }, { timeout: 15_000 });
   const pathname = new URL(page.url()).pathname;
-  expect(pathname, `${route} should remain on its authorized route`).toBe(expectedPathname);
+  const routeSession = await page.evaluate(() => {
+    const session = window.EvaraRouteSession || {};
+    return {
+      authenticated: session.authenticated === true,
+      role: typeof session.role === 'string' ? session.role : '',
+      lifecycle: typeof session.lifecycle === 'string' ? session.lifecycle : '',
+      status: typeof session.status === 'string' ? session.status : '',
+      approvalStatus: typeof session.approvalStatus === 'string' ? session.approvalStatus : '',
+      source: typeof session.source === 'string' ? session.source : ''
+    };
+  }).catch(() => null);
+  expect(pathname, `${route} should remain on its authorized route; session=${JSON.stringify(routeSession)}`).toBe(expectedPathname);
   await waitForApplication(page, appearance);
 }
 

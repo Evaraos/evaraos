@@ -1,9 +1,9 @@
-import "./nav/nav-main-v6.js?v=universal-a11y-3";
+import "./nav/nav-main-v6.js?v=universal-a11y-4";
 import { canAccessPageName } from "./access-control.js";
 import "./experience/experience-runtime.js?v=experience-runtime-v1";
 
-const NAV_ENTRY_BUILD = "nav-v62-universal";
-const NAV_ENTRY_GUARD = "__evaraosNavEntryV62";
+const NAV_ENTRY_BUILD = "nav-v63-universal";
+const NAV_ENTRY_GUARD = "__evaraosNavEntryV63";
 
 if (!window[NAV_ENTRY_GUARD]) {
   window[NAV_ENTRY_GUARD] = true;
@@ -12,7 +12,7 @@ if (!window[NAV_ENTRY_GUARD]) {
   const pathname = location.pathname.toLowerCase();
   const isPublicHome = guardMode === "public" && (pathname === "/" || pathname.endsWith("/index.html"));
   const isStudioRoute = /(?:website-builder|studio|blueprint|design-system)/.test(pathname);
-  const ownerRoles = new Set(["owner", "super_admin", "admin"]);
+  const ownerRoles = new Set(["platform_admin", "owner", "super_admin", "admin"]);
   let ownerEditorRequested = false;
   let navEnhancementsRequested = false;
   let privateRuntimeRequested = false;
@@ -53,7 +53,7 @@ if (!window[NAV_ENTRY_GUARD]) {
     navEnhancementsRequested = true;
 
     const immediateEnhancements = [
-      safeImport("./nav/nav-drawer-close.js?v=nav-v62-universal")
+      safeImport("./nav/nav-drawer-close.js?v=nav-v63-universal")
     ];
 
     if ((guardMode !== "auth" && !isPublicHome) || canAccessPageName(pathname, "guest")) {
@@ -64,10 +64,10 @@ if (!window[NAV_ENTRY_GUARD]) {
 
     runWhenIdle(() => {
       const idleEnhancements = [
-        safeImport("./nav/pull-to-refresh.js?v=nav-v62-universal"),
+        safeImport("./nav/pull-to-refresh.js?v=nav-v63-universal"),
         safeImport("./ui/icon-hydrator.js?v=13")
       ];
-      if (!canAccessPageName(pathname, "guest")) idleEnhancements.push(safeImport("./nav/avatar-sync.js?v=nav-v62-universal"));
+      if (!canAccessPageName(pathname, "guest")) idleEnhancements.push(safeImport("./nav/avatar-sync.js?v=nav-v63-universal"));
       Promise.all(idleEnhancements).catch(() => {});
     }, 1800);
   }

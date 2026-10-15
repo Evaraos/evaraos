@@ -227,6 +227,7 @@ export function canAccessPageName(pageName = '', role = '') {
 export function defaultRouteForRole(role = '') {
   const normalizedRole = normalizeAccessRole(role);
   if (normalizedRole === 'customer') return '/customer_dashboard.html';
+  if (normalizedRole === 'vendor') return '/marketplace-payouts.html';
   if (CANONICAL_ROLES.includes(normalizedRole)) return '/dashboard.html';
   return '/login.html';
 }

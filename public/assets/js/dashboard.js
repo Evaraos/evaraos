@@ -3,7 +3,7 @@
 // Owner dashboard stays the mega command center; widget intelligence mounts as an additive layer.
 
 import "./dashboard-stats.js?v=1";
-import { getSavedUserProfile, normalizeRole } from "./firebase.js";
+import { normalizeRole } from "./firebase.js";
 import { autoMountDashboardWidgets } from "./dashboard-widget-ui.js";
 
 const ROUTES = {
@@ -20,7 +20,7 @@ const ROUTES = {
   visibility: "/operations-visibility.html?from=dashboard"
 };
 
-const LEADERSHIP_ROLES = new Set(["owner", "super_admin", "admin", "manager", "operations_manager", "operations_coordinator"]);
+const LEADERSHIP_ROLES = new Set(["platform_admin", "owner", "super_admin", "admin", "manager", "operations_manager", "operations_coordinator"]);
 const STAFF_ROLES = new Set(["technician", "cleaner", "staff", "field_staff", "crew_lead", "sales", "sales_rep", "customer_support", "quality_control"]);
 
 let sidebarSectionObserver = null;
@@ -29,10 +29,13 @@ let dashboardLocationStateReady = false;
 let sidebarHashLock = "";
 
 function roleBucket() {
-  const profile = getSavedUserProfile() || {};
-  const role = normalizeRole(profile.role || "customer");
+  const session = window.EvaraRouteSession;
+  if (session?.authenticated !== true || session.source !== "verified-route-guard") return "pending";
+  const role = normalizeRole(session.role || "");
+  if (!role) return "pending";
   if (LEADERSHIP_ROLES.has(role)) return "leadership";
   if (STAFF_ROLES.has(role)) return "staff";
+  if (role === "vendor") return "vendor";
   return "customer";
 }
 
@@ -94,6 +97,8 @@ function updateHeroActions(bucket) {
   const actions = document.querySelector(".dashboard-hero-actions");
   if (!actions) return;
 
+  if (bucket === "pending") return;
+
   if (bucket === "staff") {
     actions.innerHTML = `
       <a href="${ROUTES.jobs}" class="btn btn-theme-primary beam-target">Open Jobs</a>
@@ -105,6 +110,11 @@ function updateHeroActions(bucket) {
 
   if (bucket === "customer") {
     routeTo(ROUTES.billing);
+    return;
+  }
+
+  if (bucket === "vendor") {
+    routeTo(ROUTES.payouts);
     return;
   }
 
@@ -317,6 +327,7 @@ function mountExecutiveWidgets() {
 
 function bindDashboardCards() {
   const bucket = roleBucket();
+  if (bucket === "pending") return;
 
   if (bucket === "staff") {
     makeClickable(document.getElementById("statLeads")?.closest(".dashboard-stat-card"), ROUTES.leads, "Open assigned leads");
@@ -340,6 +351,7 @@ function scheduleDashboardCardBinding() {
 
 function applyRoleDashboard() {
   const bucket = roleBucket();
+  if (bucket === "pending") return;
   document.body.classList.remove("dashboard-role-customer", "dashboard-role-staff", "dashboard-role-leadership");
   document.body.classList.add(`dashboard-role-${bucket}`);
   updateHero(bucket);

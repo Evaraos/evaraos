@@ -164,8 +164,9 @@ button,
 
 /* Focus remains visible even when a route resets control outlines. */
 html[data-theme="adaptive"] :where(a[href],button,input,select,textarea,[tabindex]):focus-visible {
-  outline: 3px solid var(--control-ink,var(--text-primary)) !important;
+  outline: 3px solid #fff !important;
   outline-offset: 3px !important;
+  box-shadow: 0 0 0 6px #111318 !important;
 }
 
 @media (forced-colors: active) {
@@ -173,5 +174,5 @@ html[data-theme="adaptive"] :where(a[href],button,input,select,textarea,[tabinde
     color: CanvasText !important;
     -webkit-text-fill-color: CanvasText !important;
   }
-  html[data-theme="adaptive"] :focus-visible { outline-color: Highlight !important; }
+  html[data-theme="adaptive"] :focus-visible { outline-color: Highlight !important; box-shadow: none !important; }
 }

@@ -57,6 +57,18 @@ test('query refs use fixed rule-aligned constraints and never accept caller-sele
   assert.throws(() => buildRoleScopedQueryRefs(source, baseProfile, userId, {}), /Firestore query helpers/);
 });
 
+test('platform administrator loads the owner navigation catalog', () => {
+  const nav = fs.readFileSync('public/assets/js/nav.js', 'utf8');
+  assert.match(nav, /ownerRoles = new Set\(\[\"platform_admin\", \"owner\", \"super_admin\", \"admin\"\]\)/);
+});
+
+test('dashboard waits for the verified role session before applying role-specific routes', () => {
+  const dashboard = fs.readFileSync('public/assets/js/dashboard.js', 'utf8');
+  assert.match(dashboard, /session\?\.authenticated !== true \|\| session\.source !== \"verified-route-guard\"/);
+  assert.match(dashboard, /if \(bucket === \"pending\"\) return;/);
+  assert.doesNotMatch(dashboard, /getSavedUserProfile\(\).*role/);
+});
+
 test('role pages use scoped reads and the deployed read rules remain unchanged', () => {
   for (const path of [
     'public/assets/js/dispatch.js',
@@ -85,9 +97,12 @@ test('messaging and payout screens have unique IDs and cleanup is reentrancy-saf
   assert.match(runtime, /runtime\.status === 'stopping' \|\| runtime\.status === 'stopped'/);
 });
 
-test('the UI matrix stubs only the read-only customer snapshot in demo-emulator mode', () => {
+test('the UI matrix stubs read-only customer snapshots in demo-emulator mode', () => {
   const spec = fs.readFileSync('tests/visual/specs/authenticated-visual.spec.mjs', 'utf8');
   assert.match(spec, /EVARA_QA_LOCAL_EMULATOR_CHILD === '1'/);
-  assert.match(spec, /page\.route\(\(url\) => url\.origin === 'http:\/\/127\.0\.0\.1:5001'[\s\S]*?url\.pathname === '\/demo-evaraos-ui\/us-central1\/getMarketplaceCommerceSnapshot'/);
+  assert.match(spec, /getMarketplaceCommerceSnapshot/);
+  assert.match(spec, /getMarketplaceOperationsSnapshot/);
+  assert.match(spec, /localReadOnlyCallables\.has\(url\.pathname\.split\('\/'\)\.at\(-1\)\)/);
   assert.match(spec, /quotes: \[\],\s*invoices: \[\],\s*subscriptions: \[\]/);
+  assert.match(spec, /orders: \[\],\s*notifications: \[\],\s*refunds: \[\]/);
 });

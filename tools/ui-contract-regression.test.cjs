@@ -44,6 +44,33 @@ test('message and owner-editor text fields have persistent accessible names', ()
   assert.match(ownerEditor, /<textarea\s+data-owner-editor-text\s+aria-label="Selected content text"/);
 });
 
+test('changed role routes and dashboard renderers use refreshed entry URLs', () => {
+  const expectations = [
+    ['public/jobs.html', /assets\/js\/jobs\.js\?v=6/],
+    ['public/dispatch.html', /assets\/js\/dispatch\.js\?v=3/],
+    ['public/field.html', /assets\/js\/field\.js\?v=1/],
+    ['public/leads.html', /assets\/js\/leads-entry\.js\?v=2/],
+    ['public/customer-messaging.html', /assets\/js\/customer-messaging-dashboard\.js\?v=1/],
+    ['public/marketplace-payouts.html', /assets\/js\/marketplace-payout-dashboard\.js\?v=1/]
+  ];
+  for (const [path, revision] of expectations) assert.match(fs.readFileSync(path, 'utf8'), revision, `${path} must request its refreshed page module`);
+  assert.match(fs.readFileSync('public/assets/js/leads-entry.js', 'utf8'), /leads\.js\?v=4/);
+});
+
+test('wallpaper focus indicators use two contrasting rings', () => {
+  const css = fs.readFileSync('public/assets/css/theme/text-legibility.css', 'utf8');
+  assert.match(css, /outline:\s*3px solid #fff/);
+  assert.match(css, /box-shadow:\s*0 0 0 6px #111318/);
+  assert.match(css, /forced-colors: active[\s\S]*?box-shadow: none !important/);
+});
+
+test('same-page drawer navigation restores focus before closing', () => {
+  const events = fs.readFileSync('public/assets/js/nav/nav-events.js', 'utf8');
+  assert.match(events, /function openNavHref[\s\S]*?closeMenu\(true\);[\s\S]*?navigateWithLoader/);
+  const nav = fs.readFileSync('public/assets/js/nav.js', 'utf8');
+  assert.match(nav, /nav-main-v6\.js\?v=universal-a11y-4/);
+});
+
 test('page glass uses shared theme presets or bounded Studio customization', () => {
   assert.equal(hasNonCanonicalPageBackdrop('.card{backdrop-filter:blur(24px)}'), true);
   assert.equal(hasNonCanonicalPageBackdrop('.card{backdrop-filter:var(--lg-backdrop-elevated)}'), false);

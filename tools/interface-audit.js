@@ -45,24 +45,24 @@ check("cached-pixels",/pixels\s*=\s*\w+\.getImageData\(/.test(adaptiveJs),"adapt
 check("all-text-coverage",textJs.includes("createTreeWalker")&&textJs.includes("NodeFilter.SHOW_TEXT"),"all visible text nodes must be wrapped for adaptive gradients");
 check("paint-lock",bootJs.includes("evara-boot-lock")&&bootJs.includes("evara-theme-painted"),"startup must hide legacy paint until adaptive CSS is active");
 check("nav-build",navEntry.includes(new URL(assets.navRuntime,"https://ui.invalid").searchParams.get("v")),"navigation entry must match the shared contract");
-check("nav-main-build",navEntry.includes("./nav/nav-main-v6.js?v=universal-a11y-3"),"navigation entry must load the current module graph");
-check("nav-build-labels",navMainEntry.includes('const NAV_BUILD="nav-v62-universal"')&&navSessionEntry.includes('const NAV_BUILD = "nav-v62-universal"'),"shared navigation modules must announce the current runtime build");
-check("nav-events-build",navMainEntry.includes("./nav-events.js?v=nav-events-universal-2"),"navigation event binding must use a versioned module URL");
-check("nav-session-build",navMainEntry.includes("./nav-session.js?v=nav-session-universal-3"),"navigation session binding must load the current module revision");
-check("nav-session-events-build",navSessionEntry.includes("./nav-events.js?v=nav-events-universal-2"),"session refresh must reuse the current navigation event binder");
+check("nav-main-build",navEntry.includes("./nav/nav-main-v6.js?v=universal-a11y-4"),"navigation entry must load the current module graph");
+check("nav-build-labels",navMainEntry.includes('const NAV_BUILD="nav-v63-universal"')&&navSessionEntry.includes('const NAV_BUILD = "nav-v63-universal"'),"shared navigation modules must announce the current runtime build");
+check("nav-events-build",navMainEntry.includes("./nav-events.js?v=nav-events-universal-3"),"navigation event binding must use a versioned module URL");
+check("nav-session-build",navMainEntry.includes("./nav-session.js?v=nav-session-universal-4"),"navigation session binding must load the current module revision");
+check("nav-session-events-build",navSessionEntry.includes("./nav-events.js?v=nav-events-universal-3"),"session refresh must reuse the current navigation event binder");
 check("nav-main-logout-build",navMainEntry.includes("./nav-logout.js?v=nav-logout-universal-2"),"authenticated navigation must load the current logout binder");
 check("nav-session-logout-build",navSessionEntry.includes("./nav-logout.js?v=nav-logout-universal-2"),"session refresh must reuse the current logout binder");
-check("theme-build",themeEntry.includes(new URL(assets.themeRuntime,"https://ui.invalid").searchParams.get("v"))&&themeEntry.includes("adaptive-liquid-v18-universal"),"theme entry must match the shared contract");
-check("theme-core-build",themeEntry.includes("./theme-core-adaptive.js?v=adaptive-liquid-v16-universal"),"theme facade must load the current core module");
-check("theme-ui-assets-build",themeCoreEntry.includes("./ui-assets.js?v=2")&&loaderJs.includes("ui-assets.js?v=2"),"theme and recovery must share the current asset contract");
+check("theme-build",themeEntry.includes(new URL(assets.themeRuntime,"https://ui.invalid").searchParams.get("v"))&&themeEntry.includes("adaptive-liquid-v19-universal"),"theme entry must match the shared contract");
+check("theme-core-build",themeEntry.includes("./theme-core-adaptive.js?v=adaptive-liquid-v17-universal"),"theme facade must load the current core module");
+check("theme-ui-assets-build",themeCoreEntry.includes("./ui-assets.js?v=3")&&loaderJs.includes("ui-assets.js?v=3"),"theme and recovery must share the current asset contract");
 check("theme-adaptive-build",themeCoreEntry.includes("./theme-adaptive.js?v=adaptive-liquid-v13-universal"),"theme core must load the current adaptive sampler");
 check("appearance-api",["saveAppearance","resetAppearance","VALID_MODES","getEffectiveWallpaper"].every(name=>themeEntry.includes(`export const ${name} = Core.${name}`)),"Appearance imports must be exported by the shared theme facade");
-check("appearance-entry-build",settingsAppearancePage.includes("/assets/js/settings-appearance-v2.js?v=7"),"Appearance page must load the current control module");
+check("appearance-entry-build",settingsAppearancePage.includes("/assets/js/settings-appearance-v2.js?v=8"),"Appearance page must load the current control module");
 check("appearance-theme-build",settingsAppearanceEntry.includes(`./theme.js${new URL(assets.themeRuntime,"https://ui.invalid").search}`),"Appearance controls must reuse the canonical theme facade URL");
 check("prepaint-updates",bootJs.includes("background:var(--evara-wallpaper-canvas)"),"prepaint must consume live wallpaper variables");
 check("stable-semantic-ink",componentsCss.includes('html[data-environment="image"][data-adaptive-contrast="on"] .evara-adaptive-text-node'),"text gradients must be limited to adaptive image appearance");
-check("watchdog-asset-contract",loaderJs.includes('UI_ASSETS.navRuntime')&&loaderJs.includes("ui-assets.js?v=2")&&!loaderJs.includes('nav.js?v='),"loader recovery must use the same nav URL as the page");
-check("drawer-modal-focus",menuJs.includes('event.key === "Tab"')&&menuJs.includes('event.key === "Escape"')&&menuJs.includes('sibling.inert = true')&&menuJs.includes('btn.focus({ preventScroll: true })'),"the drawer must isolate background interaction, contain focus and restore it when closed");
+check("watchdog-asset-contract",loaderJs.includes('UI_ASSETS.navRuntime')&&loaderJs.includes("ui-assets.js?v=3")&&!loaderJs.includes('nav.js?v='),"loader recovery must use the same nav URL as the page");
+check("drawer-modal-focus",menuJs.includes('event.key === "Tab"')&&menuJs.includes('event.key === "Escape"')&&menuJs.includes('sibling.inert = true')&&menuJs.includes('btn.focus({ preventScroll: true })')&&read("public/assets/js/nav/nav-events.js").includes("closeMenu(true);"),"the drawer must isolate background interaction, contain focus and restore it when closed");
 const htmlFiles=[];function walk(dir){for(const entry of fs.readdirSync(dir,{withFileTypes:true})){const full=path.join(dir,entry.name);if(entry.isDirectory())walk(full);else if(entry.name.endsWith(".html"))htmlFiles.push(full)}}walk(path.join(ROOT,"public"));
 for(const file of htmlFiles){const html=fs.readFileSync(file,"utf8"),relative=path.relative(path.join(ROOT,"public"),file).replace(/\\/g,"/");failures.push(...pageFailures(html,relative))}
 if(failures.length){console.error(`Interface audit failed with ${failures.length} issue(s):`);failures.forEach(failure=>console.error(`- ${failure}`));process.exit(1)}
