@@ -56,8 +56,8 @@ export const ROLE_DEFINITIONS = Object.freeze([
   {
     id: 'vendor',
     secret: 'VENDOR',
-    routes: ['/settings-v2.html', '/settings/appearance.html', '/messages.html', '/jobs.html', '/leads.html', '/dispatch.html', '/schedule.html', '/field.html'],
-    criticalRoutes: ['/dispatch.html', '/jobs.html', '/settings/appearance.html']
+    routes: ['/settings/account.html', '/settings-v2.html', '/settings/appearance.html', '/messages.html'],
+    criticalRoutes: ['/settings/account.html', '/settings/appearance.html']
   }
 ]);
 
@@ -79,7 +79,7 @@ export const CRITICAL_VISUAL_CASES = Object.freeze([
   { role: 'technician', route: '/field.html' },
   { role: 'customer', route: '/customer_dashboard.html' },
   { role: 'customer', route: '/customer-commerce.html' },
-  { role: 'vendor', route: '/dispatch.html' }
+  { role: 'vendor', route: '/settings/account.html' }
 ]);
 
 export function credentialsFor(role) {
@@ -93,9 +93,10 @@ export function configuredRoles() {
   return ROLE_DEFINITIONS.filter((role) => credentialsFor(role).available);
 }
 
-export function storageStatePath(roleId) {
+export function storageStatePath(roleId, browserName = 'chromium') {
   const authDirectory = process.env.EVARA_QA_AUTH_DIR || path.join(root, '.auth');
-  return path.join(authDirectory, `${roleId}.json`);
+  const browser = browserName === 'webkit' ? 'webkit' : 'chromium';
+  return path.join(authDirectory, `${roleId}-${browser}.json`);
 }
 
 export function routeSlug(route) {

@@ -14,7 +14,13 @@ const COMPANY_MANAGER_ROLES = new Set([
 const ASSIGNED_RECORD_FILTERS = [
   ['assignedToUid', '=='],
   ['assignedRep', '=='],
-  ['staffClaimedBy', '==']
+  ['staffClaimedBy', '=='],
+  // Keep rule-proven legacy list queries while per-user index records are
+  // populated for existing assignments. Each query constrains the exact
+  // field checked by assignedToUser() in Firestore rules.
+  ['assignedTo', 'array-contains'],
+  ['assignedTeamIds', 'array-contains'],
+  ['assignedRep', 'array-contains']
 ];
 
 function clean(value) {

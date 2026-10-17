@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { chromium } from '@playwright/test';
+import { chromium, webkit } from '@playwright/test';
 import {
   ROLE_DEFINITIONS,
   credentialsFor,
@@ -21,7 +21,7 @@ async function waitForReady(page) {
   await page.waitForFunction(() => document.body?.classList.contains('app-ready'), null, { timeout: 30_000 });
 }
 
-async function authenticateRole(browser, baseURL, role) {
+async function authenticateRole(browser, baseURL, role, browserName) {
   const credentials = credentialsFor(role);
   const context = await browser.newContext({
     baseURL,
@@ -90,7 +90,7 @@ async function authenticateRole(browser, baseURL, role) {
       throw new Error(`${error.message}; route diagnostics: ${JSON.stringify(diagnostics)}`);
     });
 
-    const statePath = storageStatePath(role.id);
+    const statePath = storageStatePath(role.id, browserName);
     await fs.mkdir(path.dirname(statePath), { recursive: true });
     await context.storageState({ path: statePath, indexedDB: true });
     return { role: role.id, route: current.pathname, ready: true };
@@ -113,19 +113,25 @@ export default async function globalSetup() {
     throw new Error(`Full role QA requires credentials for: ${missingRoles.map((role) => role.id).join(', ')}`);
   }
 
-  const browser = await chromium.launch();
   const sessions = [];
-  try {
-    for (const role of availableRoles) {
-      try {
-        sessions.push(await authenticateRole(browser, baseURL, role));
-        console.log(`Authenticated visual QA session: ${role.id}`);
-      } catch (error) {
-        throw new Error(`Unable to create ${role.id} QA session: ${error.message}`);
+  for (const engine of [
+    { name: 'chromium', launch: () => chromium.launch() },
+    { name: 'webkit', launch: () => webkit.launch() }
+  ]) {
+    const browser = await engine.launch();
+    try {
+      for (const role of availableRoles) {
+        try {
+          await authenticateRole(browser, baseURL, role, engine.name);
+          if (engine.name === 'chromium') sessions.push(role.id);
+          console.log(`Authenticated ${engine.name} visual QA session: ${role.id}`);
+        } catch (error) {
+          throw new Error(`Unable to create ${role.id} ${engine.name} QA session: ${error.message}`);
+        }
       }
+    } finally {
+      await browser.close();
     }
-  } finally {
-    await browser.close();
   }
 
   const authDirectory = path.dirname(storageStatePath('owner'));
@@ -133,7 +139,8 @@ export default async function globalSetup() {
   await fs.writeFile(path.join(authDirectory, 'manifest.json'), JSON.stringify({
     generatedAt: new Date().toISOString(),
     baseOrigin: new URL(baseURL).origin,
-    configuredRoles: sessions.map((entry) => entry.role),
+    configuredRoles: sessions,
+    authenticatedBrowsers: ['chromium', 'webkit'],
     missingRoles: missingRoles.map((entry) => entry.id),
     requireAllRoles
   }, null, 2));

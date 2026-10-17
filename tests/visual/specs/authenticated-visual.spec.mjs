@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test as base, expect } from '@playwright/test';
 import {
   APPEARANCES,
   CRITICAL_VISUAL_CASES,
@@ -26,6 +26,14 @@ const dynamicMaskSelector = [
   '[id*="Paid"]',
   '[id*="Risk"]'
 ].join(',');
+
+const test = base.extend({
+  qaRoleId: ['', { option: true }],
+  storageState: async ({ browserName, qaRoleId }, use) => {
+    if (!qaRoleId) throw new Error('A QA role is required for authenticated visual tests.');
+    await use(storageStatePath(qaRoleId, browserName));
+  }
+});
 
 test.beforeEach(async ({ page, baseURL }) => {
   await installLocalFirebaseNetworkGuard(page, baseURL);
@@ -214,8 +222,8 @@ for (const role of ROLE_DEFINITIONS) {
   const routes = matrixMode === 'full' ? role.routes : role.criticalRoutes;
 
   test.describe(`${role.id} authenticated route QA`, () => {
+    test.use({ qaRoleId: role.id });
     test.skip(!available, `${role.id} QA credentials are not configured.`);
-    test.use({ storageState: storageStatePath(role.id) });
 
     for (const route of routes) {
       test(`${matrixMode === 'critical' ? '@critical ' : ''}${route} loads without layout failure`, async ({ page, baseURL }, testInfo) => {
@@ -254,8 +262,8 @@ for (const visualCase of visualCases) {
   const available = Boolean(role && credentialsFor(role).available);
 
   test.describe(`${visualCase.role} visual baselines`, () => {
+    test.use({ qaRoleId: visualCase.role });
     test.skip(!available, `${visualCase.role} QA credentials are not configured.`);
-    test.use({ storageState: storageStatePath(visualCase.role) });
 
     for (const appearance of APPEARANCES) {
       test(`@critical ${routeSlug(visualCase.route)} · ${appearance.id}`, async ({ page, baseURL }, testInfo) => {

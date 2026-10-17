@@ -16,7 +16,7 @@ const ROUTES = {
   history: "/customer-service-history.html?from=dashboard",
   settings: "/settings.html?from=dashboard",
   finance: "/enterprise-finance-dashboard.html?from=dashboard",
-  dispatch: "/dispatch.html?from=dashboard",
+  account: "/settings/account.html?from=dashboard",
   visibility: "/operations-visibility.html?from=dashboard"
 };
 
@@ -114,7 +114,7 @@ function updateHeroActions(bucket) {
   }
 
   if (bucket === "vendor") {
-    routeTo(ROUTES.dispatch);
+    routeTo(ROUTES.account);
     return;
   }
 

@@ -4,22 +4,37 @@ import test from 'node:test';
 import { buildRoleScopedFilterSpecs, buildRoleScopedQueryRefs, buildRoleScopedReadPlan } from '../../public/assets/js/role-scoped-firestore-queries.mjs';
 import { assignedUserIds, groupAssignmentIndexWrites, planAssignmentIndexWrites } from '../../public/assets/js/assignment-index-utils.mjs';
 import { canAccessPageName, defaultRouteForRole } from '../../public/assets/js/access-control.js';
-import { ROLE_DEFINITIONS } from './visual-matrix.mjs';
+import { ROLE_DEFINITIONS, storageStatePath } from './visual-matrix.mjs';
 
 const userId = 'qa-user';
 const baseProfile = { uid: userId, role: 'technician', companyId: 'qa-company' };
 
-test('vendor navigation stays on authorized operations and excludes protected finance views', () => {
-  assert.equal(defaultRouteForRole('vendor'), '/dispatch.html');
-  assert.equal(canAccessPageName('/dispatch.html', 'vendor'), true);
-  for (const route of ['/revenue.html', '/job_billing.html', '/marketplace-payouts.html']) {
+test('vendor navigation stays on owned account surfaces and excludes unsupported work actions', () => {
+  assert.equal(defaultRouteForRole('vendor'), '/settings/account.html');
+  assert.equal(canAccessPageName('/settings/account.html', 'vendor'), true);
+  for (const route of ['/dashboard.html', '/jobs.html', '/leads.html', '/dispatch.html', '/field.html', '/schedule.html', '/customer-service-history.html', '/revenue.html', '/job_billing.html', '/marketplace-payouts.html']) {
     assert.equal(canAccessPageName(route, 'vendor'), false, `vendor must not enter ${route}`);
   }
   const vendor = ROLE_DEFINITIONS.find((role) => role.id === 'vendor');
   assert.ok(vendor);
-  assert.ok(vendor.routes.includes('/dispatch.html'));
-  assert.ok(!vendor.routes.some((route) => ['/revenue.html', '/job_billing.html', '/marketplace-payouts.html', '/territory-map.html'].includes(route)));
-  assert.deepEqual(vendor.criticalRoutes, ['/dispatch.html', '/jobs.html', '/settings/appearance.html']);
+  assert.ok(vendor.routes.includes('/settings/account.html'));
+  assert.ok(!vendor.routes.some((route) => ['/jobs.html', '/leads.html', '/dispatch.html', '/field.html', '/schedule.html', '/revenue.html', '/job_billing.html', '/marketplace-payouts.html', '/territory-map.html'].includes(route)));
+  assert.deepEqual(vendor.criticalRoutes, ['/settings/account.html', '/settings/appearance.html']);
+  for (const route of vendor.routes) {
+    assert.equal(canAccessPageName(route, 'vendor'), true, `vendor matrix route ${route} must be authorized`);
+  }
+});
+
+test('authenticated visual matrix uses browser-native Chromium and WebKit sessions', () => {
+  assert.ok(storageStatePath('qa-user', 'chromium').endsWith('qa-user-chromium.json'));
+  assert.ok(storageStatePath('qa-user', 'webkit').endsWith('qa-user-webkit.json'));
+  const setup = fs.readFileSync('tests/visual/global-setup.mjs', 'utf8');
+  const matrix = fs.readFileSync('tests/visual/specs/authenticated-visual.spec.mjs', 'utf8');
+  assert.match(setup, /\{ name: 'chromium', launch: \(\) => chromium\.launch\(\) \}/);
+  assert.match(setup, /\{ name: 'webkit', launch: \(\) => webkit\.launch\(\) \}/);
+  assert.match(matrix, /qaRoleId: \['', \{ option: true \}\]/);
+  assert.match(matrix, /storageState: async \(\{ browserName, qaRoleId \}, use\) =>/);
+  assert.match(matrix, /test\.use\(\{ qaRoleId: role\.id \}\)/);
 });
 
 test('canonical and legacy platform roles retain only the rules-authorized collection scope', () => {
@@ -47,17 +62,23 @@ test('assigned-role queries match only the Firestore assignment rule branches', 
   assert.deepEqual(buildRoleScopedFilterSpecs(baseProfile, userId), [
     ['assignedToUid', '==', userId],
     ['assignedRep', '==', userId],
-    ['staffClaimedBy', '==', userId]
+    ['staffClaimedBy', '==', userId],
+    ['assignedTo', 'array-contains', userId],
+    ['assignedTeamIds', 'array-contains', userId],
+    ['assignedRep', 'array-contains', userId]
   ]);
 });
 
-test('assigned roles use a per-user work index for list-valued assignment fields', () => {
+test('assigned roles retain rule-proven legacy reads while using the per-user work index', () => {
   assert.deepEqual(buildRoleScopedReadPlan('leads', baseProfile, userId), {
     kind: 'assigned-index',
     filters: [
       ['assignedToUid', '==', userId],
       ['assignedRep', '==', userId],
-      ['staffClaimedBy', '==', userId]
+      ['staffClaimedBy', '==', userId],
+      ['assignedTo', 'array-contains', userId],
+      ['assignedTeamIds', 'array-contains', userId],
+      ['assignedRep', 'array-contains', userId]
     ],
     indexCollection: 'assignedLeads'
   });
@@ -66,7 +87,10 @@ test('assigned roles use a per-user work index for list-valued assignment fields
     filters: [
       ['assignedToUid', '==', userId],
       ['assignedRep', '==', userId],
-      ['staffClaimedBy', '==', userId]
+      ['staffClaimedBy', '==', userId],
+      ['assignedTo', 'array-contains', userId],
+      ['assignedTeamIds', 'array-contains', userId],
+      ['assignedRep', 'array-contains', userId]
     ],
     indexCollection: 'assignedJobs'
   });
@@ -139,10 +163,18 @@ test('query refs use fixed rule-aligned constraints and never accept caller-sele
   const where = (...args) => ({ type: 'where', args });
   const query = (ref, constraint) => ({ ref, constraint });
   const refs = buildRoleScopedQueryRefs(source, baseProfile, userId, { where, query });
-  assert.equal(refs.length, 3);
+  assert.equal(refs.length, 6);
   assert.deepEqual(refs[0], {
     ref: source,
     constraint: { type: 'where', args: ['assignedToUid', '==', userId] }
+  });
+  assert.deepEqual(refs[3], {
+    ref: source,
+    constraint: { type: 'where', args: ['assignedTo', 'array-contains', userId] }
+  });
+  assert.deepEqual(refs[5], {
+    ref: source,
+    constraint: { type: 'where', args: ['assignedRep', 'array-contains', userId] }
   });
   assert.throws(() => buildRoleScopedQueryRefs(source, baseProfile, userId, {}), /Firestore query helpers/);
 });

@@ -242,6 +242,26 @@ test("assigned staff list only their own references and every fetched record rem
   await assertSucceeds(getDocs(query(collection(managerDb, "jobs"), where("companyId", "==", "company-a"))));
 });
 
+test("legacy list-assignment queries return only records assigned to the signed-in user", async () => {
+  const queryCases = [
+    ["techA", "jobs", "assignedTo", "job-assigned-to-list"],
+    ["techA", "jobs", "assignedTeamIds", "job-assigned-team"],
+    ["techA", "jobs", "assignedRep", "job-assigned-rep-list"],
+    ["salesA", "leads", "assignedTo", "lead-assigned-to-list"],
+    ["salesA", "leads", "assignedTeamIds", "lead-assigned-team"],
+    ["salesA", "leads", "assignedRep", "lead-assigned-rep-list"]
+  ];
+
+  for (const [uid, collectionName, field, expectedId] of queryCases) {
+    const db = env.authenticatedContext(uid).firestore();
+    const result = await assertSucceeds(getDocs(query(
+      collection(db, collectionName),
+      where(field, "array-contains", uid)
+    )));
+    assert.deepEqual(result.docs.map((snapshot) => snapshot.id), [expectedId]);
+  }
+});
+
 test("assignment references cannot be forged, populated, or created across users or tenants", async () => {
   const salesDb = env.authenticatedContext("salesA").firestore();
   const ownAssignedRef = doc(salesDb, "users", "salesA", "assignedLeads", "lead-assigned-to-list");

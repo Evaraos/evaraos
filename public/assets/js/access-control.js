@@ -51,7 +51,7 @@ const ALL_AUTHENTICATED = Object.freeze([...CANONICAL_ROLES]);
 const TENANT_LEADERSHIP = Object.freeze(['owner', 'admin', 'manager']);
 const TENANT_EXECUTIVES = Object.freeze(['owner', 'admin']);
 const FIELD_ROLES = Object.freeze(['sales', 'technician', 'cleaner']);
-const OPERATIONS_ROLES = Object.freeze(['platform_admin', 'owner', 'admin', 'manager', 'vendor', ...FIELD_ROLES]);
+const OPERATIONS_ROLES = Object.freeze(['platform_admin', 'owner', 'admin', 'manager', ...FIELD_ROLES]);
 
 export const PUBLIC_PAGES = Object.freeze(new Set([
   'index.html',
@@ -62,7 +62,7 @@ export const PUBLIC_PAGES = Object.freeze(new Set([
 ]));
 
 export const PAGE_POLICY = Object.freeze({
-  'dashboard.html': ALL_AUTHENTICATED.filter((role) => role !== 'customer'),
+  'dashboard.html': ALL_AUTHENTICATED.filter((role) => role !== 'customer' && role !== 'vendor'),
   'customer_dashboard.html': ['customer'],
   'settings.html': ALL_AUTHENTICATED,
   'settings-v2.html': ALL_AUTHENTICATED,
@@ -85,8 +85,8 @@ export const PAGE_POLICY = Object.freeze({
   'qa-v2.html': ['platform_admin', 'owner', 'admin'],
 
   'jobs.html': OPERATIONS_ROLES,
-  'leads.html': ['platform_admin', 'owner', 'admin', 'manager', 'vendor', 'sales'],
-  'dispatch.html': ['platform_admin', 'owner', 'admin', 'manager', 'vendor'],
+  'leads.html': ['platform_admin', 'owner', 'admin', 'manager', 'sales'],
+  'dispatch.html': ['platform_admin', 'owner', 'admin', 'manager'],
   'dispatch_map.html': OPERATIONS_ROLES,
   'dispatch_intelligence.html': ['platform_admin', 'owner', 'admin', 'manager'],
   'proximity_dispatch.html': ['platform_admin', 'owner', 'admin', 'manager'],
@@ -151,11 +151,11 @@ export const FEATURE_POLICY = Object.freeze({
   manageFinance: ['platform_admin', 'owner', 'admin'],
   managePayroll: ['platform_admin', 'owner', 'admin', 'manager'],
 
-  manageJobs: ['platform_admin', 'owner', 'admin', 'manager', 'vendor'],
+  manageJobs: ['platform_admin', 'owner', 'admin', 'manager'],
   completeAssignedJobs: ['technician', 'cleaner'],
-  manageLeads: ['platform_admin', 'owner', 'admin', 'manager', 'vendor', 'sales'],
-  createLeads: ['platform_admin', 'owner', 'admin', 'manager', 'vendor', 'sales', 'customer'],
-  dispatchWork: ['platform_admin', 'owner', 'admin', 'manager', 'vendor'],
+  manageLeads: ['platform_admin', 'owner', 'admin', 'manager', 'sales'],
+  createLeads: ['platform_admin', 'owner', 'admin', 'manager', 'sales', 'customer'],
+  dispatchWork: ['platform_admin', 'owner', 'admin', 'manager'],
   uploadJobProof: ['platform_admin', 'owner', 'admin', 'manager', 'technician', 'cleaner'],
 
   orderServices: ['customer'],
@@ -227,7 +227,7 @@ export function canAccessPageName(pageName = '', role = '') {
 export function defaultRouteForRole(role = '') {
   const normalizedRole = normalizeAccessRole(role);
   if (normalizedRole === 'customer') return '/customer_dashboard.html';
-  if (normalizedRole === 'vendor') return '/dispatch.html';
+  if (normalizedRole === 'vendor') return '/settings/account.html';
   if (CANONICAL_ROLES.includes(normalizedRole)) return '/dashboard.html';
   return '/login.html';
 }

@@ -64,12 +64,15 @@ for (const unknown of ['not-a-role', 'constructor', '__proto__', 'toString']) {
 assert.equal(normalizeAccessPath('/settings/account.html?tab=profile#name'), 'settings/account.html');
 assert.equal(normalizeAccessPath('./public/settings/icons.html'), 'settings/icons.html');
 assert.equal(defaultRouteForRole('customer'), '/customer_dashboard.html');
-assert.equal(defaultRouteForRole('vendor'), '/dispatch.html');
-assert.equal(canAccessPageName('/dispatch.html', 'vendor'), true);
-for (const vendorFinanceRoute of ['/revenue.html', '/job_billing.html', '/marketplace-payouts.html']) {
-  assert.equal(canAccessPageName(vendorFinanceRoute, 'vendor'), false, `Vendor access must remain denied for ${vendorFinanceRoute}`);
+assert.equal(defaultRouteForRole('vendor'), '/settings/account.html');
+assert.equal(canAccessPageName('/settings/account.html', 'vendor'), true);
+for (const vendorRestrictedRoute of ['/dashboard.html', '/jobs.html', '/leads.html', '/dispatch.html', '/field.html', '/schedule.html', '/customer-service-history.html', '/revenue.html', '/job_billing.html', '/marketplace-payouts.html']) {
+  assert.equal(canAccessPageName(vendorRestrictedRoute, 'vendor'), false, `Vendor access must remain denied for ${vendorRestrictedRoute}`);
 }
 assert.equal(canUseFeature('viewFinance', 'vendor'), false);
+assert.equal(canUseFeature('manageJobs', 'vendor'), false);
+assert.equal(canUseFeature('manageLeads', 'vendor'), false);
+assert.equal(canUseFeature('dispatchWork', 'vendor'), false);
 assert.equal(defaultRouteForRole('owner'), '/dashboard.html');
 assert.equal(defaultRouteForRole('unknown-role'), '/login.html');
 assert.ok(pagesForRole('customer').includes('settings/account.html'));
@@ -195,7 +198,16 @@ for (const assignmentField of ['assignedToUid', 'assignedRep', 'staffClaimedBy']
 }
 assert.match(roleScopedQueriesSource, /indexCollection: collectionName === 'leads' \? 'assignedLeads' : 'assignedJobs'/);
 assert.match(roleScopedCollectionsSource, /getDoc\(doc\(db, collectionName, reference\.id\)\)/);
-assert.doesNotMatch(roleScopedQueriesSource, /'array-contains'/, 'Staff collection reads must use a scoped reference index for list assignments.');
+for (const assignmentField of ['assignedTo', 'assignedTeamIds', 'assignedRep']) {
+  assert.match(
+    roleScopedQueriesSource,
+    new RegExp(`\\['${assignmentField}', 'array-contains'`),
+    `Existing ${assignmentField} list assignments must remain queryable under the deployed assignment rule.`
+  );
+}
+assert.match(firestoreRulesSource, /data\.assignedTo is list && userId in data\.assignedTo/);
+assert.match(firestoreRulesSource, /data\.assignedTeamIds is list && userId in data\.assignedTeamIds/);
+assert.match(firestoreRulesSource, /data\.assignedRep is list && userId in data\.assignedRep/);
 assert.match(
   fieldOpsRealtimeSource,
   /subscribeRoleScopedCollection\(collectionName, context, context\.uid/

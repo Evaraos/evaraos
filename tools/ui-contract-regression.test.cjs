@@ -71,17 +71,20 @@ test('changed role routes and dashboard renderers use refreshed entry URLs', () 
 });
 
 
-test('vendor route policy and navigation do not promise access to protected financial records', () => {
+test('vendor route policy and navigation expose only rules-permitted account surfaces', () => {
   const access = fs.readFileSync('public/assets/js/access-control.js', 'utf8');
   const dashboard = fs.readFileSync('public/assets/js/dashboard.js', 'utf8');
   const apps = fs.readFileSync('public/assets/js/navigation/app-registry.js', 'utf8');
   const matrix = fs.readFileSync('tests/visual/visual-matrix.mjs', 'utf8');
-  assert.match(access, /if \(normalizedRole === 'vendor'\) return '\/dispatch\.html';/);
+  assert.match(access, /if \(normalizedRole === 'vendor'\) return '\/settings\/account\.html';/);
+  assert.match(access, /'dispatch\.html': \['platform_admin', 'owner', 'admin', 'manager'\]/);
+  assert.match(access, /dispatchWork: \['platform_admin', 'owner', 'admin', 'manager'\]/);
   assert.match(access, /'marketplace-payouts\.html': \['platform_admin', 'owner', 'admin'\]/);
-  assert.match(dashboard, /if \(bucket === "vendor"\) \{\s*routeTo\(ROUTES\.dispatch\);/);
-  assert.match(apps, /id: "dispatch"[\s\S]*?roles: \["owner", "organization", "vendor", "admin"\]/);
+  assert.match(dashboard, /if \(bucket === "vendor"\) \{\s*routeTo\(ROUTES\.account\);/);
+  assert.match(apps, /id: "dispatch"[^\n]*roles: \["owner", "organization", "admin"\]/);
+  assert.doesNotMatch(apps, /id: "(?:jobs|leads|field|schedule|operations-map|service-history)"[^\n]*"vendor"/);
   assert.doesNotMatch(apps, /id: "(?:revenue|ledger)"[^\n]*"vendor"/);
-  assert.match(matrix, /id: 'vendor'[\s\S]*?criticalRoutes: \['\/dispatch\.html', '\/jobs\.html', '\/settings\/appearance\.html'\]/);
+  assert.match(matrix, /id: 'vendor'[\s\S]*?criticalRoutes: \['\/settings\/account\.html', '\/settings\/appearance\.html'\]/);
   assert.doesNotMatch(matrix, /id: 'vendor'[\s\S]*?criticalRoutes:[^\n]*marketplace-payouts/);
 });
 
