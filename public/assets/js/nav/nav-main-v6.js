@@ -1,4 +1,4 @@
-const NAV_BUILD="nav-v63-universal";
+const NAV_BUILD="nav-v64-role-policy-1";
 const PUBLIC_HOME_SHELL_STYLESHEET="/assets/css/nav/nav-shell.css?v=home-1";
 let NAV_STATE,getNavShell,renderNav,applyProgress,bindScrollBehavior,animateNav,isCanonicalPublicRoute,isVerifiedSession;
 let accountSystemsPromise=null;
@@ -7,9 +7,9 @@ let publicMenu=null;
 
 async function loadCore(){
   const [config,utils,renderer]=await Promise.all([
-    import("./nav-config.js"),
-    import("./nav-utils.js"),
-    import("./nav-render.js?v=universal-a11y-1")
+    import("./nav-config.js?v=universal-role-policy-1"),
+    import("./nav-utils.js?v=universal-role-policy-1"),
+    import("./nav-render.js?v=universal-role-policy-1")
   ]);
   NAV_STATE=config.NAV_STATE;
   getNavShell=utils.getNavShell;
@@ -24,7 +24,7 @@ async function optional(path){
 }
 
 async function loadMotionSystems(){
-  const scroll=await optional("./nav-scroll.js");
+  const scroll=await optional("./nav-scroll.js?v=universal-role-policy-1");
   if(!scroll)return;
   applyProgress=scroll.applyProgress;
   bindScrollBehavior=scroll.bindScrollBehavior;
@@ -105,8 +105,8 @@ function bindSessionLifecycle(){
 async function bindCoreSystems(){
   if(isCanonicalPublicPage()){
     const [menu,session]=await Promise.all([
-      optional("./nav-menu.js?v=universal-a11y-1"),
-      optional("./nav-session.js?v=nav-session-universal-4")
+      optional("./nav-menu.js?v=universal-role-policy-1"),
+      optional("./nav-session.js?v=universal-role-policy-1")
     ]);
     publicMenu=menu;
     try{menu?.bindMenu?.();bindPublicGuestControls(menu)}catch(error){console.warn("Public guest menu binding failed:",error)}
@@ -117,10 +117,10 @@ async function bindCoreSystems(){
     return;
   }
   const [menu,events,session,interactions]=await Promise.all([
-    optional("./nav-menu.js?v=universal-a11y-1"),
-    optional("./nav-events.js?v=nav-events-universal-4"),
-    optional("./nav-session.js?v=nav-session-universal-4"),
-    optional("./nav-interactions.js")
+    optional("./nav-menu.js?v=universal-role-policy-1"),
+    optional("./nav-events.js?v=universal-role-policy-1"),
+    optional("./nav-session.js?v=universal-role-policy-1"),
+    optional("./nav-interactions.js?v=universal-role-policy-1")
   ]);
   try{events?.bindAllNavEvents?.()}catch(error){console.warn("Nav events binding failed:",error)}
   try{menu?.bindMenu?.()}catch(error){console.warn("Menu binding failed:",error)}
@@ -133,7 +133,7 @@ async function bindCoreSystems(){
 function bindAccountSystems(){
   if(accountSystemsPromise)return accountSystemsPromise;
   accountSystemsPromise=Promise.all([
-    optional("./nav-logout.js?v=nav-logout-universal-2"),
+    optional("./nav-logout.js?v=universal-role-policy-1"),
     optional("../notifications-dropdown.js")
   ]).then(([logout,notifications])=>{
     if(!isVerifiedSession?.()){accountSystemsPromise=null;return;}

@@ -1,10 +1,10 @@
-import { NAV_STATE } from "./nav-config.js";
+import { NAV_STATE } from "./nav-config.js?v=universal-role-policy-1";
 import {
   getMenuZone,
   getMenuBtn,
   getMenuPanel
-} from "./nav-utils.js";
-import { applyProgress, expandNav } from "./nav-scroll.js";
+} from "./nav-utils.js?v=universal-role-policy-1";
+import { applyProgress, expandNav } from "./nav-scroll.js?v=universal-role-policy-1";
 
 const backgroundInert = new Map();
 const FOCUSABLE = 'a[href],button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-1"])';

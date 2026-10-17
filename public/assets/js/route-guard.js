@@ -5,12 +5,12 @@ import {
 import {
   canAccessPageName,
   defaultRouteForRole
-} from './access-control.js';
+} from './access-control.js?v=universal-role-policy-1';
 import {
   ACCOUNT_LIFECYCLE_STATES,
   resolveAccountLifecycle,
   routeForAccountLifecycle
-} from './account-lifecycle.js';
+} from './account-lifecycle.js?v=universal-role-policy-1';
 import {
   clearVerifiedProfileCache,
   readVerifiedUserProfile

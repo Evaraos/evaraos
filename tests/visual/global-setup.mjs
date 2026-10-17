@@ -3,6 +3,7 @@ import path from 'node:path';
 import { chromium, webkit } from '@playwright/test';
 import {
   ROLE_DEFINITIONS,
+  browserEnginesForProject,
   credentialsFor,
   configuredRoles,
   storageStatePath
@@ -59,10 +60,22 @@ async function authenticateRole(browser, baseURL, role, browserName) {
     await page.locator('#loginEmail').fill(credentials.email);
     await page.locator('#loginPassword').fill(credentials.password);
 
-    await Promise.all([
-      page.waitForURL((url) => !url.pathname.endsWith('/login.html'), { timeout: 30_000 }),
-      page.locator('#loginForm button[type="submit"]').click()
-    ]);
+    try {
+      const routeChange = page.waitForURL(
+        (url) => !url.pathname.endsWith('/login.html'),
+        { timeout: 30_000, waitUntil: 'commit' }
+      );
+      await page.locator('#loginForm button[type="submit"]').click({ noWaitAfter: true });
+      await routeChange;
+    } catch (error) {
+      const diagnostics = await page.evaluate(() => ({
+        url: window.location.pathname,
+        hasLoginMessage: Boolean(document.querySelector('#loginMessage')?.textContent?.trim()),
+        submitDisabled: Boolean(document.querySelector('#loginForm button[type="submit"]')?.disabled)
+      })).catch(() => ({}));
+      diagnostics.runtime = runtimeDiagnostics;
+      throw new Error(`${error.message}; login diagnostics: ${JSON.stringify(diagnostics)}`);
+    }
 
     await waitForReady(page);
     const current = new URL(page.url());
@@ -113,17 +126,21 @@ export default async function globalSetup() {
     throw new Error(`Full role QA requires credentials for: ${missingRoles.map((role) => role.id).join(', ')}`);
   }
 
-  const sessions = [];
-  for (const engine of [
-    { name: 'chromium', launch: () => chromium.launch() },
-    { name: 'webkit', launch: () => webkit.launch() }
-  ]) {
+  const sessions = new Set();
+  const authenticatedBrowsers = [];
+  const launchers = new Map([
+    ['chromium', () => chromium.launch()],
+    ['webkit', () => webkit.launch()]
+  ]);
+  for (const browserName of browserEnginesForProject(process.env.EVARA_QA_LOCAL_PROJECT)) {
+    const engine = { name: browserName, launch: launchers.get(browserName) };
     const browser = await engine.launch();
+    authenticatedBrowsers.push(engine.name);
     try {
       for (const role of availableRoles) {
         try {
           await authenticateRole(browser, baseURL, role, engine.name);
-          if (engine.name === 'chromium') sessions.push(role.id);
+          sessions.add(role.id);
           console.log(`Authenticated ${engine.name} visual QA session: ${role.id}`);
         } catch (error) {
           throw new Error(`Unable to create ${role.id} ${engine.name} QA session: ${error.message}`);
@@ -139,8 +156,8 @@ export default async function globalSetup() {
   await fs.writeFile(path.join(authDirectory, 'manifest.json'), JSON.stringify({
     generatedAt: new Date().toISOString(),
     baseOrigin: new URL(baseURL).origin,
-    configuredRoles: sessions,
-    authenticatedBrowsers: ['chromium', 'webkit'],
+    configuredRoles: [...sessions],
+    authenticatedBrowsers,
     missingRoles: missingRoles.map((entry) => entry.id),
     requireAllRoles
   }, null, 2));

@@ -40,8 +40,8 @@ const signupHtml = fs.readFileSync('public/signup.html', 'utf8');
 const accountStatusHtml = fs.readFileSync('public/account-status.html', 'utf8');
 const accountStatusJs = fs.readFileSync('public/assets/js/account-status.js', 'utf8');
 const rules = fs.readFileSync('firebase/firestore.rules', 'utf8');
-const lifecycleReleaseKey = '20260805-lifecycle-r1';
-const statusReleaseKey = '20260805-lifecycle-r2';
+const lifecycleReleaseKey = 'universal-role-policy-1';
+const statusReleaseKey = 'universal-role-policy-1';
 
 assert.match(routeGuard, /readVerifiedUserProfile\(user\)/);
 assert.match(routeGuard, /resolveAccountLifecycle\(profile\)/);

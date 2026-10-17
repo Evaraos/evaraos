@@ -1,4 +1,4 @@
-import { normalizeAccessRole } from '../access-control.js';
+import { normalizeAccessRole } from '../access-control.js?v=universal-role-policy-1';
 
 const PREVIEW_KEY = 'evaraos-preview-role';
 const CONTROLLERS = new Set(['platform_admin', 'owner', 'admin']);

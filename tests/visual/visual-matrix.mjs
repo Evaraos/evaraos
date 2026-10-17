@@ -93,6 +93,21 @@ export function configuredRoles() {
   return ROLE_DEFINITIONS.filter((role) => credentialsFor(role).available);
 }
 
+const PROJECT_BROWSERS = Object.freeze({
+  'desktop-chromium': 'chromium',
+  'tablet-chromium': 'chromium',
+  'iphone-webkit': 'webkit',
+  'android-chromium': 'chromium'
+});
+
+export function browserEnginesForProject(projectName = '') {
+  const selectedProject = String(projectName || '').trim();
+  if (!selectedProject) return ['chromium', 'webkit'];
+  const browser = PROJECT_BROWSERS[selectedProject];
+  if (!browser) throw new Error('The selected visual QA project is not configured.');
+  return [browser];
+}
+
 export function storageStatePath(roleId, browserName = 'chromium') {
   const authDirectory = process.env.EVARA_QA_AUTH_DIR || path.join(root, '.auth');
   const browser = browserName === 'webkit' ? 'webkit' : 'chromium';

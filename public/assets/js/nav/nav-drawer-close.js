@@ -1,4 +1,4 @@
-import { closeMenu } from "./nav-menu.js?v=universal-a11y-1";
+import { closeMenu } from "./nav-menu.js?v=universal-role-policy-1";
 
 let escapeBound = false;
 

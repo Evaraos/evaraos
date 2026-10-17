@@ -8,7 +8,7 @@ import {
   getSavedUserProfile,
   hydrateUserProfile
 } from "./firebase.js";
-import { subscribeRoleScopedCollection } from "./firestore-role-scoped-collections.js?v=assignment-index-1";
+import { subscribeRoleScopedCollection } from "./firestore-role-scoped-collections.js?v=assignment-index-2";
 import { syncStaffAssignmentIndex } from "./staff-assignment-index.js";
 import { createVirtualizationEngine, installSharedVirtualStyles } from "./shared-virtualization.js";
 

@@ -1,7 +1,7 @@
-import { mountBottomNav } from "./nav-bottom.js";
-import { getMount, buildHref, getVisibleLinks, isCanonicalPublicRoute, isCurrentPage, isVerifiedSession } from "./nav-utils.js";
+import { mountBottomNav } from "./nav-bottom.js?v=universal-role-policy-1";
+import { getMount, buildHref, getVisibleLinks, isCanonicalPublicRoute, isCurrentPage, isVerifiedSession } from "./nav-utils.js?v=universal-role-policy-1";
 import { APP_CATEGORIES, appsByCategory } from "../navigation/app-registry.js";
-import { canAccessPageName } from "../access-control.js";
+import { canAccessPageName } from "../access-control.js?v=universal-role-policy-1";
 import { iconSvg, iconNameForApp, iconNameForCategory } from "../ui/icons.js";
 
 const renderedStates = new WeakMap();

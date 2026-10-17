@@ -2,7 +2,7 @@ import {
   canAccessPageName,
   defaultRouteForRole,
   normalizeAccessRole
-} from './access-control.js';
+} from './access-control.js?v=universal-role-policy-1';
 
 function currentPath() {
   return location.pathname || '/index.html';

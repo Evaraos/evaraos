@@ -1,10 +1,10 @@
-import { NAV_STATE } from "./nav-config.js";
-import { isCanonicalPublicRoute, isVerifiedSession, syncThemeLabel } from "./nav-utils.js";
-import { canAccessPageName } from "../access-control.js";
-import { applyProgress } from "./nav-scroll.js";
-import { renderNav } from "./nav-render.js?v=universal-a11y-1";
+import { NAV_STATE } from "./nav-config.js?v=universal-role-policy-1";
+import { isCanonicalPublicRoute, isVerifiedSession, syncThemeLabel } from "./nav-utils.js?v=universal-role-policy-1";
+import { canAccessPageName } from "../access-control.js?v=universal-role-policy-1";
+import { applyProgress } from "./nav-scroll.js?v=universal-role-policy-1";
+import { renderNav } from "./nav-render.js?v=universal-role-policy-1";
 
-const NAV_BUILD = "nav-v63-universal";
+const NAV_BUILD = "nav-v64-role-policy-1";
 const VERIFIED_PUBLIC_HOME_SOURCE = "verified-public-home";
 let publicHomeSessionStarted = false;
 let publicHomeSessionSequence = 0;
@@ -79,7 +79,7 @@ export async function startVerifiedPublicHomeSession() {
     const [firebase, profile, lifecycle] = await Promise.all([
       import("../firebase.js"),
       import("../verified-profile.js"),
-      import("../account-lifecycle.js")
+      import("../account-lifecycle.js?v=universal-role-policy-1")
     ]);
 
     firebase.onAuthStateChanged(firebase.auth, (user) => {
@@ -105,22 +105,22 @@ export async function startVerifiedPublicHomeSession() {
 
 async function loadCanonicalBinders() {
   const [events, menu, interactions] = await Promise.all([
-    import("./nav-events.js?v=nav-events-universal-4"),
-    import("./nav-menu.js?v=universal-a11y-1"),
-    import("./nav-interactions.js")
+    import("./nav-events.js?v=universal-role-policy-1"),
+    import("./nav-menu.js?v=universal-role-policy-1"),
+    import("./nav-interactions.js?v=universal-role-policy-1")
   ]);
   return { events, menu, interactions };
 }
 
 function restoreBottomNavAfterRender() {
   if (document.body?.dataset?.routeGuard === "auth" && !isPublicBottomNavRoute()) return;
-  import("./nav-bottom.js")
+  import("./nav-bottom.js?v=universal-role-policy-1")
     .then(({ mountBottomNav }) => mountBottomNav())
     .catch((error) => console.warn("Bottom nav restore failed:", error));
 }
 
 export async function rebindNavAfterRender() {
-  const menu = await import("./nav-menu.js?v=universal-a11y-1");
+  const menu = await import("./nav-menu.js?v=universal-role-policy-1");
   menu.bindMenu();
   const close = document.querySelector("[data-public-home-menu-close]");
   if (close && close.dataset.publicGuestCloseBound !== "true") {
@@ -134,7 +134,7 @@ export async function rebindNavAfterRender() {
     binders.interactions.bindNavInteractions();
 
     if (document.getElementById("evaLogoutBtn")) {
-      const { bindLogout } = await import("./nav-logout.js?v=nav-logout-universal-2");
+      const { bindLogout } = await import("./nav-logout.js?v=universal-role-policy-1");
       bindLogout();
     }
   }
@@ -156,7 +156,7 @@ async function performNavRefresh() {
     // Preserve the current intent, not a snapshot from before asynchronous binds.
     // A user closing the drawer during a refresh must not have it reopened.
     if (document.body.classList.contains("nav-menu-open")) {
-      const menu = await import("./nav-menu.js?v=universal-a11y-1");
+      const menu = await import("./nav-menu.js?v=universal-role-policy-1");
       if (document.body.classList.contains("nav-menu-open")) menu.openMenu();
     }
   } catch (error) {

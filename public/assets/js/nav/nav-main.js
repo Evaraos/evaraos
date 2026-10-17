@@ -58,10 +58,10 @@ function syncThemeFromEngine() {
 }
 
 async function bindOptionalSystems() {
-  const menu = await safeImport("./nav-menu.js");
-  const events = await safeImport("./nav-events.js");
-  const session = await safeImport("./nav-session.js");
-  const interactions = await safeImport("./nav-interactions.js");
+  const menu = await safeImport("./nav-menu.js?v=universal-role-policy-1");
+  const events = await safeImport("./nav-events.js?v=universal-role-policy-1");
+  const session = await safeImport("./nav-session.js?v=universal-role-policy-1");
+  const interactions = await safeImport("./nav-interactions.js?v=universal-role-policy-1");
 
   try { events?.bindAllNavEvents?.(); } catch (error) { console.warn("Nav events failed:", error); }
   try { menu?.bindMenu?.(); } catch (error) { console.warn("Nav menu failed:", error); }

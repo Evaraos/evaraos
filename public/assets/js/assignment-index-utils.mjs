@@ -11,6 +11,21 @@ const ASSIGNEE_FIELDS = Object.freeze([
   'staffClaimedBy'
 ]);
 
+export function isAssignableUserToCompany(user = {}, companyId = '') {
+  const targetCompanyId = String(companyId || '').trim();
+  const userCompanyId = String(user?.companyId || '').trim();
+  const status = String(user?.status || '').trim().toLowerCase();
+  const approvalStatus = String(user?.approvalStatus || '').trim().toLowerCase();
+  const role = String(user?.role || '').trim().toLowerCase();
+  return Boolean(
+    targetCompanyId
+    && userCompanyId === targetCompanyId
+    && ['active', 'approved'].includes(status)
+    && approvalStatus === 'approved'
+    && role
+  );
+}
+
 function values(value) {
   return Array.isArray(value) ? value : [value];
 }

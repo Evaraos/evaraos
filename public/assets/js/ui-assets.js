@@ -4,5 +4,5 @@ export const UI_ASSETS = Object.freeze({
   "themeStylesheet": "/assets/css/theme.css?v=adaptive-liquid-v16-universal",
   "themeRuntime": "/assets/js/theme.js?v=adaptive-liquid-v19-universal",
   "navStylesheet": "/assets/css/nav.css?v=nav-v38-universal",
-  "navRuntime": "/assets/js/nav.js?v=nav-v63-universal"
+  "navRuntime": "/assets/js/nav.js?v=nav-v64-role-policy-1"
 });

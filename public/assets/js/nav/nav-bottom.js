@@ -1,5 +1,5 @@
-import { buildHref, isAuthenticated, isCurrentPage, isVerifiedSession } from "./nav-utils.js";
-import { canAccessPageName, normalizeAccessRole } from "../access-control.js";
+import { buildHref, isAuthenticated, isCurrentPage, isVerifiedSession } from "./nav-utils.js?v=universal-role-policy-1";
+import { canAccessPageName, normalizeAccessRole } from "../access-control.js?v=universal-role-policy-1";
 import { iconSvg } from "../ui/icons.js";
 
 const REGISTRY = {

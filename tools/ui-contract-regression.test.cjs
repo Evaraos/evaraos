@@ -58,15 +58,15 @@ test('field search has an accessible name and customer balance IDs remain unique
 
 test('changed role routes and dashboard renderers use refreshed entry URLs', () => {
   const expectations = [
-    ['public/jobs.html', /assets\/js\/jobs\.js\?v=7/],
-    ['public/dispatch.html', /assets\/js\/dispatch\.js\?v=4/],
-    ['public/field.html', /assets\/js\/field\.js\?v=2/],
-    ['public/leads.html', /assets\/js\/leads-entry\.js\?v=3/],
+    ['public/jobs.html', /assets\/js\/jobs\.js\?v=8/],
+    ['public/dispatch.html', /assets\/js\/dispatch\.js\?v=5/],
+    ['public/field.html', /assets\/js\/field\.js\?v=3/],
+    ['public/leads.html', /assets\/js\/leads-entry\.js\?v=4/],
     ['public/customer-messaging.html', /assets\/js\/customer-messaging-dashboard\.js\?v=1/],
     ['public/marketplace-payouts.html', /assets\/js\/marketplace-payout-dashboard\.js\?v=1/]
   ];
   for (const [path, revision] of expectations) assert.match(fs.readFileSync(path, 'utf8'), revision, `${path} must request its refreshed page module`);
-  assert.match(fs.readFileSync('public/assets/js/leads-entry.js', 'utf8'), /leads\.js\?v=5/);
+  assert.match(fs.readFileSync('public/assets/js/leads-entry.js', 'utf8'), /leads\.js\?v=6/);
   assert.match(fs.readFileSync('public/assets/js/leads-entry.js', 'utf8'), /lead-job-conversion\.js\?v=3/);
 });
 
@@ -99,11 +99,11 @@ test('same-page drawer navigation restores focus before closing', () => {
   const events = fs.readFileSync('public/assets/js/nav/nav-events.js', 'utf8');
   assert.match(events, /function openNavHref[\s\S]*?closeMenu\(true\);[\s\S]*?navigateWithLoader/);
   const nav = fs.readFileSync('public/assets/js/nav.js', 'utf8');
-  assert.match(nav, /nav-main-v6\.js\?v=universal-a11y-4/);
+  assert.match(nav, /nav-main-v6\.js\?v=universal-role-policy-1/);
   const navMain = fs.readFileSync('public/assets/js/nav/nav-main-v6.js', 'utf8');
   const navSession = fs.readFileSync('public/assets/js/nav/nav-session.js', 'utf8');
-  assert.match(navMain, /nav-events\.js\?v=nav-events-universal-4/);
-  assert.match(navSession, /nav-events\.js\?v=nav-events-universal-4/);
+  assert.match(navMain, /nav-events\.js\?v=universal-role-policy-1/);
+  assert.match(navSession, /nav-events\.js\?v=universal-role-policy-1/);
 });
 
 test('page glass uses shared theme presets or bounded Studio customization', () => {
@@ -116,3 +116,4 @@ test('page glass uses shared theme presets or bounded Studio customization', () 
   assert.match(studioBuilder, /clamp\(node\.style\.glass,\s*20,\s*100\)/);
   assert.match(studioBuilder, /Math\.max\(14,\s*state\.theme\.glass\s*\/\s*2\)/);
 });
+

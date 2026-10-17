@@ -62,9 +62,14 @@ export function buildRoleScopedReadPlan(collectionName, profile = {}, userId = '
     };
   }
 
+  const companyId = clean(profile.companyId);
+  if (!companyId) throw new Error('A company assignment is required for this query.');
   return {
     kind: 'assigned-index',
-    filters: ASSIGNED_RECORD_FILTERS.map(([field, operator]) => [field, operator, uid]),
+    filters: ASSIGNED_RECORD_FILTERS.map(([field, operator]) => [
+      ['companyId', '==', companyId],
+      [field, operator, uid]
+    ]),
     indexCollection: collectionName === 'leads' ? 'assignedLeads' : 'assignedJobs'
   };
 }
@@ -86,7 +91,12 @@ export function buildRoleScopedFilterSpecs(profile = {}, userId = '') {
     ];
   }
   const uid = clean(userId);
-  return ASSIGNED_RECORD_FILTERS.map(([field, operator]) => [field, operator, uid]);
+  const companyId = clean(profile.companyId);
+  if (!companyId) throw new Error('A company assignment is required for this query.');
+  return ASSIGNED_RECORD_FILTERS.map(([field, operator]) => [
+    ['companyId', '==', companyId],
+    [field, operator, uid]
+  ]);
 }
 
 export function buildRoleScopedQueryRefs(source, profile, userId, firestore = {}) {
@@ -97,6 +107,8 @@ export function buildRoleScopedQueryRefs(source, profile, userId, firestore = {}
 
   return buildRoleScopedFilterSpecs(profile, userId).map((spec) => {
     if (spec === null) return source;
-    return query(source, where(...spec));
+    const filters = Array.isArray(spec[0]) ? spec : [spec];
+    return query(source, ...filters.map((filter) => where(...filter)));
   });
 }
+

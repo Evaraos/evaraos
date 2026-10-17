@@ -1,4 +1,4 @@
-import { subscribeRoleScopedCollection } from './firestore-role-scoped-collections.js?v=assignment-index-1';
+import { subscribeRoleScopedCollection } from './firestore-role-scoped-collections.js?v=assignment-index-2';
 
 import {
   resolveFieldOpsMapAccessContext,
@@ -6,7 +6,7 @@ import {
   normalizeJobForMap,
   groupFieldOpsByTerritory,
   groupFieldOpsByAssignee
-} from './field-ops-map-layer.js';
+} from './field-ops-map-layer.js?v=assignment-index-2';
 
 let activeGeneration = 0;
 let unsubscribeListeners = [];

@@ -2,7 +2,7 @@ import {
   CANONICAL_ROLES,
   canAccessPageName,
   normalizeAccessRole
-} from '../access-control.js';
+} from '../access-control.js?v=universal-role-policy-1';
 import {
   DESIGN_SYSTEM_VERSION,
   getDesignSystemComponent

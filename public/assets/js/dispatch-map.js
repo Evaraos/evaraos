@@ -11,7 +11,7 @@ import {
   getSavedUserProfile,
   getSavedUserRole
 } from './firebase.js';
-import { subscribeRoleScopedCollection } from './firestore-role-scoped-collections.js?v=assignment-index-1';
+import { subscribeRoleScopedCollection } from './firestore-role-scoped-collections.js?v=assignment-index-2';
 import { setDoc as setFirestoreDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 const statusEl = document.getElementById('mapStatus');

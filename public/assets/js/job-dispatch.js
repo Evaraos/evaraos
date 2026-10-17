@@ -4,7 +4,7 @@ import {
   doc,
   serverTimestamp
 } from "./firebase.js";
-import { getRoleScopedCollectionDocs } from "./firestore-role-scoped-collections.js?v=assignment-index-1";
+import { getRoleScopedCollectionDocs } from "./firestore-role-scoped-collections.js?v=assignment-index-2";
 import { syncStaffAssignmentIndex } from "./staff-assignment-index.js";
 
 let currentUser = null;

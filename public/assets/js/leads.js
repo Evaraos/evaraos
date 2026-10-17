@@ -15,8 +15,9 @@ import {
   getSavedUserProfile,
   hydrateUserProfile
 } from "./firebase.js";
-import { getRoleScopedCollectionDocs } from "./firestore-role-scoped-collections.js?v=assignment-index-1";
+import { getRoleScopedCollectionDocs } from "./firestore-role-scoped-collections.js?v=assignment-index-2";
 import { syncStaffAssignmentIndex } from "./staff-assignment-index.js";
+import { isAssignableUserToCompany } from "./assignment-index-utils.mjs?v=assignment-index-policy-1";
 
 const leadsSearch = document.getElementById("leadsSearch");
 const leadsList = document.getElementById("leadsList");
@@ -551,14 +552,27 @@ function companyOptionsHtml(selectedCompanyId = "") {
   `;
 }
 
-function teamCheckboxesHtml(selectedIds = []) {
+function teamCheckboxesHtml(selectedIds = [], companyId = "") {
   const selected = new Set((selectedIds || []).map(String));
-  if (!usersData.length) return `<div class="lead-crud-check">No users available yet.</div>`;
-
-  return usersData.map((user) => {
+  const eligibleUsers = usersData.filter((user) => isAssignableUserToCompany(user, companyId));
+  const eligibleIds = new Set(eligibleUsers.map((user) => String(user.id || user.uid || "")));
+  const options = eligibleUsers.map((user) => {
     const id = String(user.id || user.uid || "");
     return `<label class="lead-crud-check"><input type="checkbox" name="assignedTo" value="${escapeHtml(id)}" ${selected.has(id) ? "checked" : ""}>${escapeHtml(userName(user))}</label>`;
-  }).join("");
+  });
+  for (const id of selected) {
+    if (eligibleIds.has(id)) continue;
+    const user = getUserById(id);
+    const label = user ? `${userName(user)} — not eligible for this company; uncheck to remove` : `${id} — unavailable; uncheck to remove`;
+    options.push(`<label class="lead-crud-check"><input type="checkbox" name="assignedTo" value="${escapeHtml(id)}" checked>${escapeHtml(label)}</label>`);
+  }
+  const emptyMessage = !companyId
+    ? "Choose a company before assigning team members."
+    : "No active, approved users belong to this company.";
+  const note = selected.size
+    ? `<div class="lead-crud-note">Only active, approved users from this lead's company can remain assigned. Uncheck any ineligible selection to remove it.</div>`
+    : "";
+  return `${note}${options.length ? options.join("") : `<div class="lead-crud-check">${emptyMessage}</div>`}`;
 }
 
 function activityTypeOptionsHtml(selectedValue = "note") {
@@ -708,7 +722,7 @@ function setFormValues(lead = {}) {
   document.getElementById("leadStatusInput").innerHTML = selectOptions(STATUS_OPTIONS, leadStatus(lead));
   document.getElementById("leadPriorityInput").innerHTML = selectOptions(PRIORITY_OPTIONS, leadPriority(lead));
   document.getElementById("leadCompanyInput").innerHTML = companyOptionsHtml(lead.companyId || "");
-  document.getElementById("leadAssignedTeamBox").innerHTML = teamCheckboxesHtml(selectedAssignedIds(lead));
+  document.getElementById("leadAssignedTeamBox").innerHTML = teamCheckboxesHtml(selectedAssignedIds(lead), lead.companyId || "");
 }
 
 function renderActivityTimeline(activities = []) {
@@ -864,6 +878,10 @@ function formToLeadPayload() {
 
   const company = getCompanyById(companyId);
   const team = selectedTeam();
+  const invalidAssignees = team.ids.filter((id) => !isAssignableUserToCompany(getUserById(id), companyId));
+  if (invalidAssignees.length) {
+    throw new Error("Remove or reassign people who are inactive or outside the selected company.");
+  }
   const actor = currentActor();
 
   return {
@@ -1055,13 +1073,37 @@ async function deleteLead(leadId) {
 
   if (!confirmed) return;
 
+  const leadRef = doc(db, "leads", leadId);
+  const clearedAssignments = {
+    assignedToUid: null,
+    assignedTo: [],
+    assignedTeamIds: [],
+    assignedRep: null,
+    staffClaimedBy: null
+  };
+  const previousAssignments = Object.fromEntries(
+    Object.keys(clearedAssignments).map((field) => [field, lead[field] ?? clearedAssignments[field]])
+  );
+
   try {
     await addLeadActivity(leadId, {
       type: "lead_deleted",
       message: "Lead deleted"
     });
 
-    await deleteDoc(doc(db, "leads", leadId));
+    await updateDoc(leadRef, clearedAssignments);
+    const referencesRemoved = await syncLeadAssignmentAccess(leadId, lead, clearedAssignments);
+    if (!referencesRemoved) {
+      try {
+        await updateDoc(leadRef, previousAssignments);
+        await syncLeadAssignmentAccess(leadId, clearedAssignments, lead);
+      } catch (restoreError) {
+        console.error("Lead assignments could not be restored after index cleanup failed:", restoreError);
+      }
+      throw new Error("Assignment references could not be safely removed. The lead was not deleted.");
+    }
+
+    await deleteDoc(leadRef);
 
     leadsData = leadsData.filter((item) => String(item.id) !== String(leadId));
     renderLeads();
@@ -1078,6 +1120,11 @@ function bindCrudEvents() {
   document.getElementById("leadCrudCloseBtn")?.addEventListener("click", closeLeadModal);
   document.getElementById("leadCrudCancelBtn")?.addEventListener("click", closeLeadModal);
   document.getElementById("leadCrudForm")?.addEventListener("submit", saveLead);
+  document.getElementById("leadCompanyInput")?.addEventListener("change", (event) => {
+    const selectedIds = selectedTeam().ids;
+    const teamBox = document.getElementById("leadAssignedTeamBox");
+    if (teamBox) teamBox.innerHTML = teamCheckboxesHtml(selectedIds, event.currentTarget.value);
+  });
   document.getElementById("leadActivityAddBtn")?.addEventListener("click", addManualActivity);
 
   document.getElementById("leadActivityMessageInput")?.addEventListener("keydown", (event) => {

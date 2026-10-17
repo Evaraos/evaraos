@@ -79,6 +79,12 @@ async function seed() {
       createdBy: "managerB",
       status: "scheduled"
     });
+    await setDoc(doc(db, "jobs", "job-cross-company-assigned-to-techA"), {
+      companyId: "company-b",
+      assignedTo: ["techA"],
+      createdBy: "managerB",
+      status: "scheduled"
+    });
     const jobAssignmentFixtures = [
       ["job-assigned-to-list", { assignedTo: ["techA"] }],
       ["job-assigned-team", { assignedTeamIds: ["techA"] }],
@@ -107,6 +113,12 @@ async function seed() {
       companyId: "company-a",
       assignedTo: ["salesB"],
       createdBy: "managerA",
+      status: "new"
+    });
+    await setDoc(doc(db, "leads", "lead-cross-company-assigned-to-salesA"), {
+      companyId: "company-b",
+      assignedTo: ["salesA"],
+      createdBy: "managerB",
       status: "new"
     });
     await setDoc(doc(db, "users", "salesB", "assignedLeads", "lead-assigned-to-other"), {});
@@ -242,24 +254,50 @@ test("assigned staff list only their own references and every fetched record rem
   await assertSucceeds(getDocs(query(collection(managerDb, "jobs"), where("companyId", "==", "company-a"))));
 });
 
-test("legacy list-assignment queries return only records assigned to the signed-in user", async () => {
+test("legacy assignment queries stay tenant-scoped and include existing scalar and list assignments", async () => {
   const queryCases = [
-    ["techA", "jobs", "assignedTo", "job-assigned-to-list"],
-    ["techA", "jobs", "assignedTeamIds", "job-assigned-team"],
-    ["techA", "jobs", "assignedRep", "job-assigned-rep-list"],
-    ["salesA", "leads", "assignedTo", "lead-assigned-to-list"],
-    ["salesA", "leads", "assignedTeamIds", "lead-assigned-team"],
-    ["salesA", "leads", "assignedRep", "lead-assigned-rep-list"]
+    ["techA", "jobs", "assignedToUid", "==", "job-a"],
+    ["techA", "jobs", "assignedRep", "==", "job-assigned-rep"],
+    ["techA", "jobs", "staffClaimedBy", "==", "job-staff-claimed"],
+    ["techA", "jobs", "assignedTo", "array-contains", "job-assigned-to-list"],
+    ["techA", "jobs", "assignedTeamIds", "array-contains", "job-assigned-team"],
+    ["techA", "jobs", "assignedRep", "array-contains", "job-assigned-rep-list"],
+    ["salesA", "leads", "assignedToUid", "==", "lead-assigned"],
+    ["salesA", "leads", "assignedTo", "array-contains", "lead-assigned-to-list"],
+    ["salesA", "leads", "assignedTeamIds", "array-contains", "lead-assigned-team"],
+    ["salesA", "leads", "assignedRep", "array-contains", "lead-assigned-rep-list"],
+    ["salesA", "leads", "staffClaimedBy", "==", "lead-staff-claimed"]
   ];
 
-  for (const [uid, collectionName, field, expectedId] of queryCases) {
+  for (const [uid, collectionName, field, operator, expectedId] of queryCases) {
     const db = env.authenticatedContext(uid).firestore();
     const result = await assertSucceeds(getDocs(query(
       collection(db, collectionName),
-      where(field, "array-contains", uid)
+      where("companyId", "==", "company-a"),
+      where(field, operator, uid)
     )));
     assert.deepEqual(result.docs.map((snapshot) => snapshot.id), [expectedId]);
+    await assertFails(getDocs(query(
+      collection(db, collectionName),
+      where(field, operator, uid)
+    )));
   }
+
+  const techDb = env.authenticatedContext("techA").firestore();
+  const salesDb = env.authenticatedContext("salesA").firestore();
+  await assertFails(getDoc(doc(techDb, "jobs", "job-cross-company-assigned-to-techA")));
+  await assertFails(getDoc(doc(salesDb, "leads", "lead-cross-company-assigned-to-salesA")));
+});
+
+test("lead assignment references can be removed only after their lead is unassigned", async () => {
+  const managerDb = env.authenticatedContext("managerA").firestore();
+  const leadRef = doc(managerDb, "leads", "lead-assigned-to-list");
+  const assignmentRef = doc(managerDb, "users", "salesA", "assignedLeads", "lead-assigned-to-list");
+
+  await assertFails(deleteDoc(assignmentRef));
+  await updateDoc(leadRef, { assignedTo: [] });
+  await assertSucceeds(deleteDoc(assignmentRef));
+  await assertSucceeds(deleteDoc(leadRef));
 });
 
 test("assignment references cannot be forged, populated, or created across users or tenants", async () => {

@@ -2,10 +2,10 @@ import {
   buildHref,
   getAppearanceTheme,
   getBrandBlock
-} from "./nav-utils.js";
+} from "./nav-utils.js?v=universal-role-policy-1";
 
-import { closeMenu } from "./nav-menu.js?v=universal-a11y-1";
-import { navigateWithLoader } from "./nav-navigation.js";
+import { closeMenu } from "./nav-menu.js?v=universal-role-policy-1";
+import { navigateWithLoader } from "./nav-navigation.js?v=universal-role-policy-1";
 import { functions, httpsCallable } from "../firebase.js";
 import { searchApps } from "../navigation/app-registry.js";
 

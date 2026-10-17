@@ -8,7 +8,7 @@ import {
   getSavedUserProfile,
   hydrateUserProfile
 } from "./firebase.js";
-import { getRoleScopedCollectionDocs } from "./firestore-role-scoped-collections.js?v=assignment-index-1";
+import { getRoleScopedCollectionDocs } from "./firestore-role-scoped-collections.js?v=assignment-index-2";
 
 import { getApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {

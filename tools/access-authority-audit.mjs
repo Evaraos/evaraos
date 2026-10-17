@@ -106,12 +106,14 @@ const lifecycleSource = fs.readFileSync('public/assets/js/account-lifecycle.js',
 const directAccessSource = fs.readFileSync('public/assets/js/direct-access-check.js', 'utf8');
 const blueprintSecuritySource = fs.readFileSync('functions/blueprint-security.js', 'utf8');
 const firestoreRulesSource = fs.readFileSync('firebase/firestore.rules', 'utf8');
+const firestoreIndexDefinitions = JSON.parse(fs.readFileSync('firestore.indexes.json', 'utf8')).indexes;
 const fieldOpsMapSource = fs.readFileSync('public/assets/js/field-ops-map-layer.js', 'utf8');
 const fieldOpsRealtimeSource = fs.readFileSync('public/assets/js/field-ops-realtime.js', 'utf8');
 const roleScopedQueriesSource = fs.readFileSync('public/assets/js/role-scoped-firestore-queries.mjs', 'utf8');
 const roleScopedCollectionsSource = fs.readFileSync('public/assets/js/firestore-role-scoped-collections.js', 'utf8');
 const dashboardMapCardSource = fs.readFileSync('public/assets/js/dashboard-live-map-card.js', 'utf8');
 const dashboardEntrySource = fs.readFileSync('public/assets/js/dashboard-entry.js', 'utf8');
+const dashboardHtmlSource = fs.readFileSync('public/dashboard.html', 'utf8');
 const leadsEntrySource = fs.readFileSync('public/assets/js/leads-entry.js', 'utf8');
 const compactOperationsMapSource = fs.readFileSync('public/operations_map.html', 'utf8');
 const expandedDispatchMapSource = fs.readFileSync('public/dispatch_map.html', 'utf8');
@@ -125,7 +127,7 @@ assert.match(routeGuardSource, /source: 'verified-route-guard'/);
 assert.match(routeGuardSource, /window\.EvaraRouteSession = session/);
 assert.match(
   routeGuardSource,
-  /from '\.\/account-lifecycle\.js'/,
+  /from '\.\/account-lifecycle\.js\?v=universal-role-policy-1'/,
   'The browser route guard must import the canonical lifecycle authority.'
 );
 assert.match(
@@ -198,6 +200,19 @@ for (const assignmentField of ['assignedToUid', 'assignedRep', 'staffClaimedBy']
 }
 assert.match(roleScopedQueriesSource, /indexCollection: collectionName === 'leads' \? 'assignedLeads' : 'assignedJobs'/);
 assert.match(roleScopedCollectionsSource, /getDoc\(doc\(db, collectionName, reference\.id\)\)/);
+for (const file of [
+  'public/assets/js/field-ops-map-layer.js',
+  'public/assets/js/dispatch.js',
+  'public/assets/js/jobs.js',
+  'public/assets/js/field.js',
+  'public/assets/js/job-dispatch.js',
+  'public/assets/js/dispatch-map.js',
+  'public/assets/js/field-ops-realtime.js',
+  'public/assets/js/leads.js'
+]) {
+  assert.match(fs.readFileSync(file, 'utf8'), /firestore-role-scoped-collections\.js\?v=assignment-index-2/);
+}
+assert.match(roleScopedCollectionsSource, /role-scoped-firestore-queries\.mjs\?v=assignment-index-2/);
 for (const assignmentField of ['assignedTo', 'assignedTeamIds', 'assignedRep']) {
   assert.match(
     roleScopedQueriesSource,
@@ -208,6 +223,26 @@ for (const assignmentField of ['assignedTo', 'assignedTeamIds', 'assignedRep']) 
 assert.match(firestoreRulesSource, /data\.assignedTo is list && userId in data\.assignedTo/);
 assert.match(firestoreRulesSource, /data\.assignedTeamIds is list && userId in data\.assignedTeamIds/);
 assert.match(firestoreRulesSource, /data\.assignedRep is list && userId in data\.assignedRep/);
+for (const collectionGroup of ['leads', 'jobs']) {
+  const indexes = firestoreIndexDefinitions.filter((index) => index.collectionGroup === collectionGroup);
+  for (const [fieldPath, kind] of [
+    ['assignedToUid', 'ASCENDING'],
+    ['assignedRep', 'ASCENDING'],
+    ['staffClaimedBy', 'ASCENDING'],
+    ['assignedTo', 'CONTAINS'],
+    ['assignedTeamIds', 'CONTAINS'],
+    ['assignedRep', 'CONTAINS']
+  ]) {
+    assert.ok(
+      indexes.some((index) =>
+        index.fields.some((field) => field.fieldPath === 'companyId' && field.order === 'ASCENDING')
+        && index.fields.some((field) => field.fieldPath === fieldPath
+          && (kind === 'CONTAINS' ? field.arrayConfig === 'CONTAINS' : field.order === kind))
+      ),
+      `${collectionGroup} must index companyId with ${fieldPath} (${kind}).`
+    );
+  }
+}
 assert.match(
   fieldOpsRealtimeSource,
   /subscribeRoleScopedCollection\(collectionName, context, context\.uid/
@@ -220,6 +255,8 @@ assert.match(
   /dashboard-live-map-card\.js/,
   'The dashboard must load the shared compact Operations Map preview.'
 );
+assert.match(dashboardHtmlSource, /dashboard-entry\.js\?v=3/);
+assert.match(dashboardEntrySource, /dashboard\.js\?v=4/);
 assert.match(
   leadsEntrySource,
   /dashboard-live-map-card\.js/,

@@ -1,4 +1,4 @@
-import { buildHref, isCurrentPage } from "./nav-utils.js";
+import { buildHref, isCurrentPage } from "./nav-utils.js?v=universal-role-policy-1";
 
 const ITEMS = [
   { label: "Home", page: "index.html", icon: "⌂" },

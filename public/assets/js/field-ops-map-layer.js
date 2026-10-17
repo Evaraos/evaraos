@@ -3,7 +3,7 @@ import {
   onAuthStateChanged,
   hydrateUserProfile
 } from './firebase.js';
-import { buildRoleScopedCollectionQueries, getRoleScopedCollectionDocs } from './firestore-role-scoped-collections.js?v=assignment-index-1';
+import { buildRoleScopedCollectionQueries, getRoleScopedCollectionDocs } from './firestore-role-scoped-collections.js?v=assignment-index-2';
 
 const PLATFORM_ROLES = new Set(['owner', 'super_admin', 'platform_admin']);
 const MANAGER_ROLES = new Set([

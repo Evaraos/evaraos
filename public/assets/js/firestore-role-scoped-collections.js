@@ -9,7 +9,7 @@ import {
   query,
   where
 } from './firebase.js';
-import { buildRoleScopedQueryRefs, buildRoleScopedReadPlan } from './role-scoped-firestore-queries.mjs?v=assignment-index-1';
+import { buildRoleScopedQueryRefs, buildRoleScopedReadPlan } from './role-scoped-firestore-queries.mjs?v=assignment-index-2';
 
 const READABLE_ROLE_COLLECTIONS = new Set(['jobs', 'leads']);
 

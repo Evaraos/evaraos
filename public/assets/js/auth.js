@@ -15,7 +15,7 @@ import {
 import {
   resolveAccountLifecycle,
   routeForAccountLifecycle
-} from './account-lifecycle.js';
+} from './account-lifecycle.js?v=universal-role-policy-1';
 
 const DEFAULT_PUBLIC_ROLE = 'customer';
 const DEFAULT_PUBLIC_STATUS = 'pending';
