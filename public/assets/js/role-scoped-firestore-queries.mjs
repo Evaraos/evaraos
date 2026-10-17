@@ -111,4 +111,3 @@ export function buildRoleScopedQueryRefs(source, profile, userId, firestore = {}
     return query(source, ...filters.map((filter) => where(...filter)));
   });
 }
-

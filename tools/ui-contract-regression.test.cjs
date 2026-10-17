@@ -116,4 +116,3 @@ test('page glass uses shared theme presets or bounded Studio customization', () 
   assert.match(studioBuilder, /clamp\(node\.style\.glass,\s*20,\s*100\)/);
   assert.match(studioBuilder, /Math\.max\(14,\s*state\.theme\.glass\s*\/\s*2\)/);
 });
-

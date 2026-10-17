@@ -217,9 +217,11 @@ jobs:
               failures.push(`nav-session.js: post-render refresh must restore ${module}`);
             }
           }
+          const navBottomEntryImport = /safeImport\(["']\.\/nav\/nav-bottom\.js(?:\?v=[^"']+)?["']\)/;
+          const navBottomSessionImport = /import\(["']\.\/nav-bottom\.js(?:\?v=[^"']+)?["']\)/;
           if (!navEntrySource.includes('canAccessPageName(pathname, "guest")')
-            || !navEntrySource.includes('safeImport("./nav/nav-bottom.js")')
-            || !navSessionSource.includes('import("./nav-bottom.js")')
+            || !navBottomEntryImport.test(navEntrySource)
+            || !navBottomSessionImport.test(navSessionSource)
             || !navRebindBody.includes('restoreBottomNavAfterRender();')) {
             failures.push('nav: guest eligibility must reuse central policy and one bottom-nav module');
           }
