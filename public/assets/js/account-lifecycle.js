@@ -1,4 +1,4 @@
-import { defaultRouteForRole, normalizeAccessRole } from './access-control.js';
+import { defaultRouteForRole, normalizeAccessRole } from './access-control.js?v=universal-role-policy-1';
 
 export const ACCOUNT_STATUS_ROUTE = '/account-status.html';
 

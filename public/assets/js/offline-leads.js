@@ -5,6 +5,7 @@ import {
   serverTimestamp,
   getSavedUserProfile
 } from "./firebase.js";
+import { syncStaffAssignmentIndex } from "./staff-assignment-index.js";
 
 import {
   queueLead,
@@ -143,6 +144,7 @@ async function writeLead(clientLeadId, payload) {
     createdAt: payload.createdAt || serverTimestamp(),
     updatedAt: serverTimestamp()
   }, { merge: true });
+  await syncStaffAssignmentIndex("leads", clientLeadId, {}, payload);
 }
 
 export async function saveLeadOfflineCapable(payload = buildOfflineLeadPayload()) {

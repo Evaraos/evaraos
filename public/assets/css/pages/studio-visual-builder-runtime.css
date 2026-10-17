@@ -4,8 +4,8 @@
 .studio-image-block,
 .studio-button-block {
   background: rgba(255, 255, 255, var(--node-glass-opacity, 0.72));
-  backdrop-filter: blur(calc(var(--node-glass, 72) * 0.45px)) saturate(1.18);
-  -webkit-backdrop-filter: blur(calc(var(--node-glass, 72) * 0.45px)) saturate(1.18);
+  backdrop-filter: blur(calc(var(--node-glass, 72) * 0.45px)) saturate(var(--lg-saturation));
+  -webkit-backdrop-filter: blur(calc(var(--node-glass, 72) * 0.45px)) saturate(var(--lg-saturation));
 }
 
 /*

@@ -1,4 +1,4 @@
-import { normalizeAccessRole } from '../access-control.js';
+import { normalizeAccessRole } from '../access-control.js?v=universal-role-policy-1';
 
 const MODE_KEY = 'evaraos-studio-mode-enabled';
 const EDIT_KEY = 'evaraos-studio-mode-edits-v1';

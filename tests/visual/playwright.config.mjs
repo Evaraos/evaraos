@@ -3,11 +3,20 @@ import { defineConfig, devices } from '@playwright/test';
 const baseURL = String(process.env.EVARA_QA_BASE_URL || '').replace(/\/$/, '');
 const iphone = devices['iPhone 15 Pro'] || devices['iPhone 14 Pro'];
 const android = devices['Pixel 7'] || devices['Pixel 5'];
+const qaOutputDir = String(process.env.EVARA_QA_OUTPUT_DIR || '').trim();
+const localEmulatorOrigin = (() => {
+  try {
+    const { hostname } = new URL(baseURL);
+    return hostname === 'localhost' || hostname === '127.0.0.1';
+  } catch {
+    return false;
+  }
+})();
 
 export default defineConfig({
   testDir: './specs',
   globalSetup: './global-setup.mjs',
-  outputDir: './test-results/artifacts',
+  outputDir: qaOutputDir ? `${qaOutputDir}/artifacts` : './test-results/artifacts',
   timeout: 90_000,
   expect: {
     timeout: 15_000,
@@ -24,8 +33,8 @@ export default defineConfig({
   workers: 1,
   reporter: [
     ['list'],
-    ['html', { outputFolder: './playwright-report', open: 'never' }],
-    ['json', { outputFile: './test-results/results.json' }]
+    ['html', { outputFolder: qaOutputDir ? `${qaOutputDir}/report` : './playwright-report', open: 'never' }],
+    ['json', { outputFile: qaOutputDir ? `${qaOutputDir}/results.json` : './test-results/results.json' }]
   ],
   snapshotPathTemplate: '{testDir}/__screenshots__/{projectName}/{arg}{ext}',
   use: {
@@ -35,6 +44,7 @@ export default defineConfig({
     locale: 'en-US',
     timezoneId: 'America/New_York',
     reducedMotion: 'reduce',
+    serviceWorkers: localEmulatorOrigin ? 'block' : 'allow',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure'

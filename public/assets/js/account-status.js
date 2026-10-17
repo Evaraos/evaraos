@@ -11,7 +11,7 @@ import {
   ACCOUNT_LIFECYCLE_STATES,
   accountLifecycleCopy,
   normalizeLifecycleValue
-} from './account-lifecycle.js';
+} from './account-lifecycle.js?v=universal-role-policy-1';
 
 const APPLICATION_STATES = Object.freeze({
   submitted: 'Submitted',

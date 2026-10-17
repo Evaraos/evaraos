@@ -1,4 +1,4 @@
-import { canUseFeature, canAccessPageName, normalizeAccessRole, permissionsForRole } from './access-control.js';
+import { canUseFeature, canAccessPageName, normalizeAccessRole, permissionsForRole } from './access-control.js?v=universal-role-policy-1';
 
 function currentRole() {
   try {

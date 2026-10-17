@@ -47,7 +47,10 @@ const statusNode = document.getElementById('customerMessagingStatus');
 const totalNode = document.getElementById('messageThreadTotal');
 const openNode = document.getElementById('messageThreadOpen');
 const urgentNode = document.getElementById('messageThreadUrgent');
-const unreadNode = document.getElementById('messageThreadUnread');
+const unreadNodes = [
+  document.getElementById('messageThreadUnread'),
+  document.getElementById('messageThreadUnreadTotal')
+].filter(Boolean);
 const threadRoot = document.getElementById('customerThreadRoot');
 const messageRoot = document.getElementById('customerMessageRoot');
 const composerForm = document.getElementById('customerMessageComposer');
@@ -110,7 +113,8 @@ function renderStats(rows = visibleThreads()) {
   if (totalNode) totalNode.textContent = String(summary.total || 0);
   if (openNode) openNode.textContent = String(summary.open || 0);
   if (urgentNode) urgentNode.textContent = String((summary.urgent || 0) + (notificationSummary.urgent || 0));
-  if (unreadNode) unreadNode.textContent = String((isTeamRole() ? summary.unreadForTeam : summary.unreadForCustomer) + (notificationSummary.unread || 0));
+  const unread = String((isTeamRole() ? summary.unreadForTeam : summary.unreadForCustomer) + (notificationSummary.unread || 0));
+  unreadNodes.forEach((node) => { node.textContent = unread; });
 }
 
 function renderThreads() {

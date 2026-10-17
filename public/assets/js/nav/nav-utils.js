@@ -1,5 +1,5 @@
-import { canAccessPageName, normalizeAccessRole } from "../access-control.js";
-import { resolveAccountLifecycle } from "../account-lifecycle.js";
+import { canAccessPageName, normalizeAccessRole } from "../access-control.js?v=universal-role-policy-1";
+import { resolveAccountLifecycle } from "../account-lifecycle.js?v=universal-role-policy-1";
 
 export function getMount() {
   return document.getElementById("universalNavRoot") || document.getElementById("universalNav");

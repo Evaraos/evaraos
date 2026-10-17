@@ -2,7 +2,7 @@ import {
   auth, db, setAuthPersistence, createUserWithEmailAndPassword, updateProfile,
   syncUserSession, doc, setDoc, serverTimestamp
 } from "./firebase.js";
-import { ACCOUNT_STATUS_ROUTE } from "./account-lifecycle.js";
+import { ACCOUNT_STATUS_ROUTE } from "./account-lifecycle.js?v=universal-role-policy-1";
 
 const DEFAULT_PUBLIC_ROLE = "customer";
 const DEFAULT_PUBLIC_STATUS = "pending";

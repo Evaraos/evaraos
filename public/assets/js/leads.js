@@ -4,18 +4,38 @@ import {
   onAuthStateChanged,
   collection,
   getDocs,
+  getDoc,
+  query,
+  where,
   addDoc,
   updateDoc,
   deleteDoc,
   doc,
   serverTimestamp,
-  getSavedUserProfile
+  getSavedUserProfile,
+  hydrateUserProfile
 } from "./firebase.js";
+import { getRoleScopedCollectionDocs } from "./firestore-role-scoped-collections.js?v=assignment-index-2";
+import { syncStaffAssignmentIndex } from "./staff-assignment-index.js";
+import { isAssignableUserToCompany } from "./assignment-index-utils.mjs?v=assignment-index-policy-1";
 
 const leadsSearch = document.getElementById("leadsSearch");
 const leadsList = document.getElementById("leadsList");
 const leadsFeed = document.getElementById("leadsFeed");
 const leadFlowStack = document.getElementById("leadFlowStack");
+const PLATFORM_ROLES = new Set(["owner", "super_admin", "platform_admin"]);
+const COMPANY_OPERATIONS_ROLES = new Set(["admin", "manager", "operations_manager", "operations_coordinator", "hr", "hr_manager"]);
+
+async function syncLeadAssignmentAccess(leadId, before, after) {
+  try {
+    await syncStaffAssignmentIndex("leads", leadId, before, after);
+    return true;
+  } catch (error) {
+    console.error("Lead assignment access index could not be synchronized:", error);
+    showMessage("Lead is saved, but team access needs to be refreshed. Recheck the assignment before relying on staff access.", "error");
+    return false;
+  }
+}
 
 const leadsHeroTitle = document.getElementById("leadsHeroTitle");
 const leadsHeroText = document.getElementById("leadsHeroText");
@@ -68,6 +88,7 @@ let isLoadingLeads = false;
 let hasBoundEvents = false;
 let hasStartedAuthWatch = false;
 let currentFirebaseUser = null;
+let currentUserProfile = null;
 let editingLeadId = null;
 let currentLeadActivities = [];
 
@@ -396,9 +417,19 @@ function renderLeads() {
 
 async function loadCompanies() {
   try {
-    const snap = await getDocs(collection(db, "companies"));
-    companiesData = snap.docs
-      .map((companyDoc) => ({ id: companyDoc.id, ...companyDoc.data() }))
+    const profile = currentUserProfile || getSavedUserProfile() || {};
+    const role = String(profile.role || "").trim().toLowerCase();
+    const snapshot = PLATFORM_ROLES.has(role)
+      ? await getDocs(collection(db, "companies"))
+      : profile.companyId
+        ? await getDoc(doc(db, "companies", profile.companyId))
+        : null;
+    const companyRows = snapshot?.docs
+      ? snapshot.docs.map((companyDoc) => ({ id: companyDoc.id, ...companyDoc.data() }))
+      : snapshot?.exists?.()
+        ? [{ id: snapshot.id, ...snapshot.data() }]
+        : [];
+    companiesData = companyRows
       .sort((a, b) => companyName(a).localeCompare(companyName(b)));
   } catch (error) {
     console.warn("Failed to load companies for leads:", error);
@@ -408,9 +439,17 @@ async function loadCompanies() {
 
 async function loadUsers() {
   try {
-    const snap = await getDocs(collection(db, "users"));
-    usersData = snap.docs
-      .map((userDoc) => ({ id: userDoc.id, ...userDoc.data() }))
+    const profile = currentUserProfile || getSavedUserProfile() || {};
+    const role = String(profile.role || "").trim().toLowerCase();
+    let userRows = [];
+    if (PLATFORM_ROLES.has(role)) {
+      const snap = await getDocs(collection(db, "users"));
+      userRows = snap.docs.map((userDoc) => ({ id: userDoc.id, ...userDoc.data() }));
+    } else if (COMPANY_OPERATIONS_ROLES.has(role) && profile.companyId) {
+      const snap = await getDocs(query(collection(db, "users"), where("companyId", "==", profile.companyId)));
+      userRows = snap.docs.map((userDoc) => ({ id: userDoc.id, ...userDoc.data() }));
+    }
+    usersData = userRows
       .sort((a, b) => userName(a).localeCompare(userName(b)));
   } catch (error) {
     console.warn("Failed to load users for leads:", error);
@@ -426,8 +465,8 @@ async function loadLeads() {
 
   try {
     await Promise.all([loadCompanies(), loadUsers()]);
-    const snap = await getDocs(collection(db, "leads"));
-    leadsData = snap.docs.map((docSnap) => ({
+    const docs = await getRoleScopedCollectionDocs("leads", currentUserProfile || getSavedUserProfile(), auth.currentUser?.uid);
+    leadsData = docs.map((docSnap) => ({
       id: docSnap.id,
       ...docSnap.data()
     }));
@@ -513,14 +552,27 @@ function companyOptionsHtml(selectedCompanyId = "") {
   `;
 }
 
-function teamCheckboxesHtml(selectedIds = []) {
+function teamCheckboxesHtml(selectedIds = [], companyId = "") {
   const selected = new Set((selectedIds || []).map(String));
-  if (!usersData.length) return `<div class="lead-crud-check">No users available yet.</div>`;
-
-  return usersData.map((user) => {
+  const eligibleUsers = usersData.filter((user) => isAssignableUserToCompany(user, companyId));
+  const eligibleIds = new Set(eligibleUsers.map((user) => String(user.id || user.uid || "")));
+  const options = eligibleUsers.map((user) => {
     const id = String(user.id || user.uid || "");
     return `<label class="lead-crud-check"><input type="checkbox" name="assignedTo" value="${escapeHtml(id)}" ${selected.has(id) ? "checked" : ""}>${escapeHtml(userName(user))}</label>`;
-  }).join("");
+  });
+  for (const id of selected) {
+    if (eligibleIds.has(id)) continue;
+    const user = getUserById(id);
+    const label = user ? `${userName(user)} — not eligible for this company; uncheck to remove` : `${id} — unavailable; uncheck to remove`;
+    options.push(`<label class="lead-crud-check"><input type="checkbox" name="assignedTo" value="${escapeHtml(id)}" checked>${escapeHtml(label)}</label>`);
+  }
+  const emptyMessage = !companyId
+    ? "Choose a company before assigning team members."
+    : "No active, approved users belong to this company.";
+  const note = selected.size
+    ? `<div class="lead-crud-note">Only active, approved users from this lead's company can remain assigned. Uncheck any ineligible selection to remove it.</div>`
+    : "";
+  return `${note}${options.length ? options.join("") : `<div class="lead-crud-check">${emptyMessage}</div>`}`;
 }
 
 function activityTypeOptionsHtml(selectedValue = "note") {
@@ -670,7 +722,7 @@ function setFormValues(lead = {}) {
   document.getElementById("leadStatusInput").innerHTML = selectOptions(STATUS_OPTIONS, leadStatus(lead));
   document.getElementById("leadPriorityInput").innerHTML = selectOptions(PRIORITY_OPTIONS, leadPriority(lead));
   document.getElementById("leadCompanyInput").innerHTML = companyOptionsHtml(lead.companyId || "");
-  document.getElementById("leadAssignedTeamBox").innerHTML = teamCheckboxesHtml(selectedAssignedIds(lead));
+  document.getElementById("leadAssignedTeamBox").innerHTML = teamCheckboxesHtml(selectedAssignedIds(lead), lead.companyId || "");
 }
 
 function renderActivityTimeline(activities = []) {
@@ -826,6 +878,10 @@ function formToLeadPayload() {
 
   const company = getCompanyById(companyId);
   const team = selectedTeam();
+  const invalidAssignees = team.ids.filter((id) => !isAssignableUserToCompany(getUserById(id), companyId));
+  if (invalidAssignees.length) {
+    throw new Error("Remove or reassign people who are inactive or outside the selected company.");
+  }
   const actor = currentActor();
 
   return {
@@ -879,6 +935,7 @@ async function saveLead(event) {
 
   const saveBtn = document.getElementById("leadCrudSaveBtn");
   const previous = editingLeadId ? getLeadById(editingLeadId) : null;
+  let assignmentAccessReady = true;
 
   try {
     const payload = formToLeadPayload();
@@ -892,6 +949,10 @@ async function saveLead(event) {
 
     if (editingLeadId) {
       await updateDoc(doc(db, "leads", editingLeadId), payload);
+      assignmentAccessReady = await syncLeadAssignmentAccess(editingLeadId, previous || {}, {
+        ...(previous || {}),
+        ...payload
+      });
 
       await addLeadActivity(editingLeadId, {
         type: "lead_updated",
@@ -920,6 +981,7 @@ async function saveLead(event) {
       });
 
       savedLeadId = newDoc.id;
+      assignmentAccessReady = await syncLeadAssignmentAccess(savedLeadId, {}, payload);
 
       await addLeadActivity(savedLeadId, {
         type: "lead_created",
@@ -933,7 +995,12 @@ async function saveLead(event) {
 
     if (savedLeadId) {
       openLeadModal(savedLeadId);
-      showMessage("Saved. Timeline updated.", "success");
+      showMessage(
+        assignmentAccessReady
+          ? "Saved. Timeline updated."
+          : "Lead saved, but team access needs review before staff can rely on it.",
+        assignmentAccessReady ? "success" : "error"
+      );
     }
   } catch (error) {
     console.error("Lead save failed:", error);
@@ -1006,13 +1073,37 @@ async function deleteLead(leadId) {
 
   if (!confirmed) return;
 
+  const leadRef = doc(db, "leads", leadId);
+  const clearedAssignments = {
+    assignedToUid: null,
+    assignedTo: [],
+    assignedTeamIds: [],
+    assignedRep: null,
+    staffClaimedBy: null
+  };
+  const previousAssignments = Object.fromEntries(
+    Object.keys(clearedAssignments).map((field) => [field, lead[field] ?? clearedAssignments[field]])
+  );
+
   try {
     await addLeadActivity(leadId, {
       type: "lead_deleted",
       message: "Lead deleted"
     });
 
-    await deleteDoc(doc(db, "leads", leadId));
+    await updateDoc(leadRef, clearedAssignments);
+    const referencesRemoved = await syncLeadAssignmentAccess(leadId, lead, clearedAssignments);
+    if (!referencesRemoved) {
+      try {
+        await updateDoc(leadRef, previousAssignments);
+        await syncLeadAssignmentAccess(leadId, clearedAssignments, lead);
+      } catch (restoreError) {
+        console.error("Lead assignments could not be restored after index cleanup failed:", restoreError);
+      }
+      throw new Error("Assignment references could not be safely removed. The lead was not deleted.");
+    }
+
+    await deleteDoc(leadRef);
 
     leadsData = leadsData.filter((item) => String(item.id) !== String(leadId));
     renderLeads();
@@ -1029,6 +1120,11 @@ function bindCrudEvents() {
   document.getElementById("leadCrudCloseBtn")?.addEventListener("click", closeLeadModal);
   document.getElementById("leadCrudCancelBtn")?.addEventListener("click", closeLeadModal);
   document.getElementById("leadCrudForm")?.addEventListener("submit", saveLead);
+  document.getElementById("leadCompanyInput")?.addEventListener("change", (event) => {
+    const selectedIds = selectedTeam().ids;
+    const teamBox = document.getElementById("leadAssignedTeamBox");
+    if (teamBox) teamBox.innerHTML = teamCheckboxesHtml(selectedIds, event.currentTarget.value);
+  });
   document.getElementById("leadActivityAddBtn")?.addEventListener("click", addManualActivity);
 
   document.getElementById("leadActivityMessageInput")?.addEventListener("keydown", (event) => {
@@ -1088,7 +1184,7 @@ function initLeadsPage() {
 
   bindEvents();
 
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     if (!user) {
       navigateWithLoader("/login.html", {
         title: "Returning to login",
@@ -1098,6 +1194,7 @@ function initLeadsPage() {
     }
 
     currentFirebaseUser = user;
+    currentUserProfile = await hydrateUserProfile(user, { requireVerified: true }) || getSavedUserProfile();
     loadLeads();
   });
 }

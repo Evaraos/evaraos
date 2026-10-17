@@ -1,5 +1,5 @@
 import { auth, getSavedUserProfile, getSavedUserRole } from './firebase.js';
-import { normalizeAccessRole, pagesForRole } from './access-control.js';
+import { normalizeAccessRole, pagesForRole } from './access-control.js?v=universal-role-policy-1';
 import { EVARA_DESIGN_SYSTEM_REGISTRY } from './design-system/registry.js';
 
 const AUDIT_URL = '/tools/reports/repo-audit-ui.json';

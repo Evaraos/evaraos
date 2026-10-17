@@ -3,7 +3,7 @@ import {
   canAccessPageName,
   defaultRouteForRole,
   normalizeAccessRole
-} from '../access-control.js';
+} from '../access-control.js?v=universal-role-policy-1';
 
 const PREVIEW_KEY = 'evaraos-preview-role';
 const PREVIEW_CONTROLLERS = new Set(['platform_admin', 'owner', 'admin']);

@@ -10,6 +10,7 @@ const requiredFiles = [
   '.github/workflows/design-system-visual-qa.yml',
   'public/assets/js/icons/icon-registry.js',
   'public/assets/js/studio/studio-property-bridge.js',
+  'public/assets/js/studio/studio-visual-builder-loader.js',
   'public/assets/js/studio/studio-action-icon-config-v2.js',
   'public/assets/js/access-control.js',
   'public/assets/css/pages/studio-action-icon-config.css',
@@ -33,6 +34,7 @@ if (!errors.length) {
   const icons = read('public/assets/js/icons/icon-registry.js');
   const bridge = read('public/assets/js/studio/studio-property-bridge.js');
   const config = read('public/assets/js/studio/studio-action-icon-config-v2.js');
+  const builderLoader = read('public/assets/js/studio/studio-visual-builder-loader.js');
   const access = read('public/assets/js/access-control.js');
   const css = read('public/assets/css/pages/studio-action-icon-config.css');
   const page = read('public/website-builder.html');
@@ -109,16 +111,30 @@ if (!errors.length) {
     if (!css.includes(selector)) errors.push(`studio-action-icon-config.css: missing ${selector}`);
   }
 
-  const builderImport = '/assets/js/studio/studio-visual-builder.js?v=2';
+  const builderLoaderImport = '/assets/js/studio/studio-visual-builder-loader.js?v=';
+  const builderModuleImport = "await import('./studio-visual-builder.js?v=3-auth-gated')";
   const bridgeImport = '/assets/js/studio/studio-property-bridge.js?v=1';
   const inspectorImport = '/assets/js/studio/studio-component-inspector.js?v=1';
-  const actionIconImport = '/assets/js/studio/studio-action-icon-config-v2.js?v=2';
+  const actionIconImport = '/assets/js/studio/studio-action-icon-config-v2.js?v=';
   if (!page.includes('/assets/css/pages/studio-action-icon-config.css?v=1')) errors.push('public/website-builder.html: action/icon stylesheet is missing');
+  if (!page.includes(builderLoaderImport)) errors.push('public/website-builder.html: authenticated builder loader is missing');
+  if (!builderLoader.includes(builderModuleImport)
+    || !builderLoader.includes("const ALLOWED_ROLES = new Set(['owner', 'admin'])")
+    || !builderLoader.includes('if (ALLOWED_ROLES.has(role)) await loadBuilder();')) {
+    errors.push('studio-visual-builder-loader.js: builder must load through its authenticated role gate');
+  }
   if (!page.includes(bridgeImport)) errors.push('public/website-builder.html: canonical property bridge is missing');
   if (!page.includes(actionIconImport)) errors.push('public/website-builder.html: hardened action/icon runtime is missing');
   if (page.includes('/assets/js/studio/studio-action-icon-config.js')) errors.push('public/website-builder.html: superseded action/icon runtime must not be loaded');
-  if (!(page.indexOf(builderImport) < page.indexOf(bridgeImport) && page.indexOf(bridgeImport) < page.indexOf(inspectorImport) && page.indexOf(inspectorImport) < page.indexOf(actionIconImport))) {
-    errors.push('public/website-builder.html: builder, property bridge, inspector, and action/icon load order is invalid');
+  const loadOrder = [
+    page.indexOf(builderLoaderImport),
+    page.indexOf(bridgeImport),
+    page.indexOf(inspectorImport),
+    page.indexOf(actionIconImport)
+  ];
+  if (loadOrder.some((position) => position < 0)
+    || loadOrder.some((position, index) => index > 0 && loadOrder[index - 1] >= position)) {
+    errors.push('public/website-builder.html: builder loader, property bridge, inspector, and action/icon load order is invalid');
   }
 
   for (const marker of [

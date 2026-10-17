@@ -1,5 +1,6 @@
 import "./evara-notifications.js";
 import { auth, functions, onAuthStateChanged, httpsCallable } from "./firebase.js";
+import { isFirebaseEmulatorHost } from "./firebase-runtime-config.mjs?v=1";
 import { getApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getMessaging,
@@ -12,6 +13,7 @@ const VAPID_KEY = "BFpdd2wIIzS9CZfuX9MEJjcPz7ZzbJ-KQ76oBUsDDzVVk0iwfA_4sH21PbY6r
 const PROMPT_KEY = "evaraos-push-permission-prompted-v1";
 const TOKEN_KEY = "evaraos-fcm-token";
 const SERVICE_WORKER_URL = "/firebase-messaging-sw.js?v=2";
+const isFirebaseEmulatorRuntime = isFirebaseEmulatorHost(window.location.hostname);
 
 let messaging = null;
 let registration = null;
@@ -32,7 +34,8 @@ function isStandalone() {
 
 function dispatchStatus(status, detail = {}) {
   window.dispatchEvent(new CustomEvent("evara:push-status", { detail: { status, ...detail } }));
-  window.dispatchEvent(new CustomEvent("evara:message-notification-permission", { detail: { permission: Notification.permission, status } }));
+  const permission = "Notification" in window ? Notification.permission : "unsupported";
+  window.dispatchEvent(new CustomEvent("evara:message-notification-permission", { detail: { permission, status } }));
 }
 
 function toast(title, message, tone = "info") {
@@ -79,6 +82,11 @@ async function saveToken(token) {
 
 export async function enablePhoneNotifications() {
   try {
+    if (isFirebaseEmulatorRuntime) {
+      dispatchStatus("unavailable", { message: "Push notifications are not available in the local Firebase emulator." });
+      return "unavailable";
+    }
+
     if (!("Notification" in window) || !("serviceWorker" in navigator)) {
       throw new Error("Notifications are not supported in this browser.");
     }
@@ -117,7 +125,7 @@ export async function enablePhoneNotifications() {
 
 export async function disablePhoneNotifications() {
   const token = localStorage.getItem(TOKEN_KEY) || "";
-  if (token) await unregisterPushToken({ token }).catch(() => {});
+  if (token && !isFirebaseEmulatorRuntime) await unregisterPushToken({ token }).catch(() => {});
   localStorage.removeItem(TOKEN_KEY);
   dispatchStatus("disabled");
 }
@@ -185,6 +193,16 @@ function maybeShowOneTimePrompt() {
 }
 
 export function startPushNotifications() {
+  if (isFirebaseEmulatorRuntime) {
+    dispatchStatus("unavailable", { message: "Push notifications are not available in the local Firebase emulator." });
+    return stopPushNotifications;
+  }
+
+  if (!("Notification" in window)) {
+    dispatchStatus("unsupported", { message: "Push notifications are not supported in this browser." });
+    return stopPushNotifications;
+  }
+
   bindPromptEvents();
   if (authUnsubscribe) return stopPushNotifications;
 

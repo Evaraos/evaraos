@@ -1,5 +1,5 @@
-import { defaultRouteForRole } from "./access-control.js";
-import { isVerifiedSession } from "./nav/nav-utils.js";
+import { defaultRouteForRole } from "./access-control.js?v=universal-role-policy-1";
+import { isVerifiedSession } from "./nav/nav-utils.js?v=universal-role-policy-1";
 
 const HOME_CTA_SELECTOR = "[data-home-guest-cta]";
 const ENTER_PLATFORM_SELECTOR = "[data-home-enter-platform]";
