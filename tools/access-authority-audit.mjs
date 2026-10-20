@@ -161,10 +161,13 @@ assert.doesNotMatch(
   /profile\.status \|\| 'active'/,
   'Trusted Blueprint Functions must not default a missing account status to active.'
 );
-assert.match(
-  firestoreRulesSource,
+const activeAccountContract = [
   /function active\(\) \{ return userExists\(\) && user\(\)\.status in \['active', 'approved'\] && user\(\)\.approvalStatus == 'approved'; \}/,
-  'Firestore must retain the canonical strict active-account contract.'
+  /function active\(\) \{ let profileExists = userExists\(\); let profile = profileExists \? user\(\) : \{\}; return profileExists && profile\.status in \['active', 'approved'\] && profile\.approvalStatus == 'approved'; \}/
+];
+assert.ok(
+  activeAccountContract.some((contract) => contract.test(firestoreRulesSource)),
+  'Firestore must require an existing profile, active-or-approved status, and approved review status.'
 );
 
 assert.doesNotMatch(directAccessSource, /localStorage|sessionStorage/);
