@@ -299,11 +299,17 @@ test("legacy assignment queries stay tenant-scoped and include existing scalar a
     });
 
     const db = env.authenticatedContext(uid).firestore();
-    const result = await assertSucceeds(getDocs(query(
-      collection(db, collectionName),
-      where("companyId", "==", "company-a"),
-      where(field, operator, uid)
-    )));
+    let result;
+    try {
+      result = await assertSucceeds(getDocs(query(
+        collection(db, collectionName),
+        where("companyId", "==", "company-a"),
+        where(field, operator, uid)
+      )));
+    } catch (error) {
+      error.message = `Expected ${uid} ${collectionName}.${field} ${operator} query to succeed: ${error.message}`;
+      throw error;
+    }
     assert.deepEqual(result.docs.map((snapshot) => snapshot.id), [expectedId]);
     await assertFails(getDocs(query(
       collection(db, collectionName),
