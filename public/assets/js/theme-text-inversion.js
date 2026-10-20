@@ -14,15 +14,26 @@ function wrap(node){
   if(blocked(node))return;
   const parent=node.parentElement;
   parent?.removeAttribute("data-adaptive-text");
-  const span=document.createElement("span");
-  span.className="evara-adaptive-text-node";
-  span.dataset.adaptiveText="pixel";
-  node.replaceWith(span);
-  span.appendChild(node);
+  // A multiline gradient repeats the same color stops on every line even
+  // when each line crosses a different part of the wallpaper. Sample words
+  // independently so each gradient uses the actual rendered text rectangle.
+  // Keep a text run together when its parent lays out direct children as flex
+  // items. Whitespace between word spans then remains normal inline content.
+  const run=document.createElement("span");
+  run.className="evara-adaptive-text-run";
+  for(const part of node.textContent.match(/\S+|\s+/g)||[]){
+    if(!part.trim()){run.appendChild(document.createTextNode(part));continue}
+    const span=document.createElement("span");
+    span.className="evara-adaptive-text-node";
+    span.dataset.adaptiveText="pixel";
+    span.textContent=part;
+    run.appendChild(span);
+  }
+  node.replaceWith(run);
 }
 
 function scan(root=document.body){
-  if(!root)return;
+  if(!root || document.documentElement.dataset.environment!=="image" || document.documentElement.dataset.adaptiveContrast!=="on")return;
   const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(node){return blocked(node)?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT}});
   const nodes=[];
   while(walker.nextNode())nodes.push(walker.currentNode);
@@ -33,7 +44,9 @@ export function installUniversalTextInversion(){
   if(observer)return;
   const start=()=>{
     scan(document.body);
+    addEventListener("evara:theme-applied",()=>scan(document.body));
     observer=new MutationObserver(records=>{
+      if(document.documentElement.dataset.environment!=="image" || document.documentElement.dataset.adaptiveContrast!=="on")return;
       for(const record of records){
         for(const node of record.addedNodes){
           if(node.nodeType===Node.TEXT_NODE)wrap(node);

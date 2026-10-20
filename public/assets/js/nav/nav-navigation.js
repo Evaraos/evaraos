@@ -1,5 +1,5 @@
-import { NAV_STATE } from "./nav-config.js";
-import { forcePageVisible } from "./nav-utils.js";
+import { NAV_STATE } from "./nav-config.js?v=universal-role-policy-1";
+import { forcePageVisible } from "./nav-utils.js?v=universal-role-policy-1";
 
 function unlockNavigation() {
   NAV_STATE.isNavigating = false;

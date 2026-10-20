@@ -62,7 +62,8 @@ Owner credentials are required for authenticated Studio runs. Other role credent
 
 - light
 - dark
-- system
+- system with light preference
+- system with dark preference
 - image
 
 ## Device projects
@@ -156,6 +157,35 @@ npx playwright install chromium webkit
 ```
 
 Never commit credentials or browser storage-state files.
+
+### Emulator-only critical role/device smoke
+
+For a local validation run without Firebase QA credentials or cloud resources:
+
+```bash
+# Run from the repository root.
+node tests/visual/run-local-emulator-matrix.mjs
+```
+
+The runner creates disposable Auth Emulator users and Firestore profiles,
+authenticates through the normal sign-in page, and checks critical routes for
+all nine roles across the four configured browser/device projects. The
+Universal UI GitHub workflow runs the same matrix using a demo Firebase project,
+Java 21, pinned Firebase CLI, and installed Playwright browser runtimes. It uses the
+`demo-evaraos-ui` project ID, loopback endpoints, and Hosting Emulator port
+5180. It creates a temporary emulator-only config so the production Hosting
+target remains unchanged, then deletes temporary browser state and test output. This is local
+emulator evidence; the official
+authenticated release gate still requires an approved HTTPS origin, encrypted
+role accounts, App Check validation, and matching production release proof.
+
+By default, the runner resolves Firebase CLI through `npx`. If the CLI is
+already installed and registry access is unavailable, set
+`EVARA_QA_FIREBASE_CLI` to its executable path to use that installation.
+For a focused local diagnosis, set `EVARA_QA_LOCAL_PROJECT` to one configured
+project (`desktop-chromium`, `tablet-chromium`, `iphone-webkit`, or
+`android-chromium`). A failed run prints a short summary from its temporary
+Playwright report before deleting the disposable accounts and test state.
 
 ## Focused Studio command
 
@@ -362,3 +392,26 @@ Close or release the writer tab. The remaining tab must verify its graph head be
 ### Screenshots differ only in business values
 
 Add a narrowly targeted selector to the dynamic mask list. Do not mask entire cards or page regions unless the whole region is intentionally nondeterministic.
+
+## Universal UI acceptance
+
+The full matrix includes 9 canonical roles, 98 authorized role/route pairs and
+35 critical role/route pairs. Appearance Settings is covered for every role.
+All 35 critical pairs run in light, dark, system/light, system/dark and image
+appearance on desktop Chromium, tablet Chromium, iPhone WebKit and Android
+Chromium (700 appearance/device cases). The 98 route cases also run on all four
+devices (392 layout and keyboard cases).
+
+Authentication setup and every private route require a verified route-guard
+session with the expected canonical role and user ID. Placeholder-only fields
+fail the accessible-name check. Keyboard focus must reach a rendered element
+with a visible outline or ring. Screenshot cases also reject duplicate IDs,
+unnamed controls, wrong resolved environments and console errors.
+
+A passing source audit, guest preview, renderer fixture or skipped authenticated
+job does not establish acceptance of this matrix. Run the existing encrypted
+workflow with `suite=all`, `require_all_roles=true`, and the exact candidate
+source/ref only after its release-proof and App Check prerequisites are ready.
+New screenshot baselines require artifact review; updating images is not itself
+a visual acceptance result. Never commit authentication state or credential
+values.

@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import {
   CANONICAL_ROLES,
   canAccessPageName,
+  canUseFeature,
   defaultRouteForRole,
   normalizeAccessPath,
   normalizeAccessRole,
@@ -63,6 +64,15 @@ for (const unknown of ['not-a-role', 'constructor', '__proto__', 'toString']) {
 assert.equal(normalizeAccessPath('/settings/account.html?tab=profile#name'), 'settings/account.html');
 assert.equal(normalizeAccessPath('./public/settings/icons.html'), 'settings/icons.html');
 assert.equal(defaultRouteForRole('customer'), '/customer_dashboard.html');
+assert.equal(defaultRouteForRole('vendor'), '/settings/account.html');
+assert.equal(canAccessPageName('/settings/account.html', 'vendor'), true);
+for (const vendorRestrictedRoute of ['/dashboard.html', '/jobs.html', '/leads.html', '/dispatch.html', '/field.html', '/schedule.html', '/customer-service-history.html', '/revenue.html', '/job_billing.html', '/marketplace-payouts.html']) {
+  assert.equal(canAccessPageName(vendorRestrictedRoute, 'vendor'), false, `Vendor access must remain denied for ${vendorRestrictedRoute}`);
+}
+assert.equal(canUseFeature('viewFinance', 'vendor'), false);
+assert.equal(canUseFeature('manageJobs', 'vendor'), false);
+assert.equal(canUseFeature('manageLeads', 'vendor'), false);
+assert.equal(canUseFeature('dispatchWork', 'vendor'), false);
 assert.equal(defaultRouteForRole('owner'), '/dashboard.html');
 assert.equal(defaultRouteForRole('unknown-role'), '/login.html');
 assert.ok(pagesForRole('customer').includes('settings/account.html'));
@@ -96,10 +106,14 @@ const lifecycleSource = fs.readFileSync('public/assets/js/account-lifecycle.js',
 const directAccessSource = fs.readFileSync('public/assets/js/direct-access-check.js', 'utf8');
 const blueprintSecuritySource = fs.readFileSync('functions/blueprint-security.js', 'utf8');
 const firestoreRulesSource = fs.readFileSync('firebase/firestore.rules', 'utf8');
+const firestoreIndexDefinitions = JSON.parse(fs.readFileSync('firestore.indexes.json', 'utf8')).indexes;
 const fieldOpsMapSource = fs.readFileSync('public/assets/js/field-ops-map-layer.js', 'utf8');
 const fieldOpsRealtimeSource = fs.readFileSync('public/assets/js/field-ops-realtime.js', 'utf8');
+const roleScopedQueriesSource = fs.readFileSync('public/assets/js/role-scoped-firestore-queries.mjs', 'utf8');
+const roleScopedCollectionsSource = fs.readFileSync('public/assets/js/firestore-role-scoped-collections.js', 'utf8');
 const dashboardMapCardSource = fs.readFileSync('public/assets/js/dashboard-live-map-card.js', 'utf8');
 const dashboardEntrySource = fs.readFileSync('public/assets/js/dashboard-entry.js', 'utf8');
+const dashboardHtmlSource = fs.readFileSync('public/dashboard.html', 'utf8');
 const leadsEntrySource = fs.readFileSync('public/assets/js/leads-entry.js', 'utf8');
 const compactOperationsMapSource = fs.readFileSync('public/operations_map.html', 'utf8');
 const expandedDispatchMapSource = fs.readFileSync('public/dispatch_map.html', 'utf8');
@@ -113,7 +127,7 @@ assert.match(routeGuardSource, /source: 'verified-route-guard'/);
 assert.match(routeGuardSource, /window\.EvaraRouteSession = session/);
 assert.match(
   routeGuardSource,
-  /from '\.\/account-lifecycle\.js'/,
+  /from '\.\/account-lifecycle\.js\?v=universal-role-policy-1'/,
   'The browser route guard must import the canonical lifecycle authority.'
 );
 assert.match(
@@ -147,10 +161,13 @@ assert.doesNotMatch(
   /profile\.status \|\| 'active'/,
   'Trusted Blueprint Functions must not default a missing account status to active.'
 );
-assert.match(
-  firestoreRulesSource,
+const activeAccountContract = [
   /function active\(\) \{ return userExists\(\) && user\(\)\.status in \['active', 'approved'\] && user\(\)\.approvalStatus == 'approved'; \}/,
-  'Firestore must retain the canonical strict active-account contract.'
+  /function active\(\) \{ let profileExists = userExists\(\); let profile = profileExists \? user\(\) : \{\}; return profileExists && profile\.status in \['active', 'approved'\] && profile\.approvalStatus == 'approved'; \}/
+];
+assert.ok(
+  activeAccountContract.some((contract) => contract.test(firestoreRulesSource)),
+  'Firestore must require an existing profile, active-or-approved status, and approved review status.'
 );
 
 assert.doesNotMatch(directAccessSource, /localStorage|sessionStorage/);
@@ -169,30 +186,80 @@ assert.doesNotMatch(
 );
 assert.match(
   fieldOpsMapSource,
-  /where\('companyId', '==', context\.companyId\)/,
+  /getRoleScopedCollectionDocs\(collectionName, context, context\.uid\)/,
+  'Map loads must use the shared role-scoped collection reader.'
+);
+assert.match(
+  roleScopedQueriesSource,
+  /\['companyId', '==', companyId\]/,
   'Manager map reads must remain company-scoped.'
 );
-for (const assignmentField of ['assignedToUid', 'assignedTo', 'assignedTeamIds', 'assignedRep', 'staffClaimedBy']) {
+for (const assignmentField of ['assignedToUid', 'assignedRep', 'staffClaimedBy']) {
   assert.match(
-    fieldOpsMapSource,
-    new RegExp(`where\\('${assignmentField}'`),
+    roleScopedQueriesSource,
+    new RegExp(`\\['${assignmentField}', '=='`),
     `Staff map reads must retain the ${assignmentField} assignment scope.`
   );
 }
+assert.match(roleScopedQueriesSource, /indexCollection: collectionName === 'leads' \? 'assignedLeads' : 'assignedJobs'/);
+assert.match(roleScopedCollectionsSource, /getDoc\(doc\(db, collectionName, reference\.id\)\)/);
+for (const file of [
+  'public/assets/js/field-ops-map-layer.js',
+  'public/assets/js/dispatch.js',
+  'public/assets/js/jobs.js',
+  'public/assets/js/field.js',
+  'public/assets/js/job-dispatch.js',
+  'public/assets/js/dispatch-map.js',
+  'public/assets/js/field-ops-realtime.js',
+  'public/assets/js/leads.js'
+]) {
+  assert.match(fs.readFileSync(file, 'utf8'), /firestore-role-scoped-collections\.js\?v=assignment-index-2/);
+}
+assert.match(roleScopedCollectionsSource, /role-scoped-firestore-queries\.mjs\?v=assignment-index-2/);
+for (const assignmentField of ['assignedTo', 'assignedTeamIds', 'assignedRep']) {
+  assert.match(
+    roleScopedQueriesSource,
+    new RegExp(`\\['${assignmentField}', 'array-contains'`),
+    `Existing ${assignmentField} list assignments must remain queryable under the deployed assignment rule.`
+  );
+}
+assert.match(firestoreRulesSource, /data\.assignedTo is list && userId in data\.assignedTo/);
+assert.match(firestoreRulesSource, /data\.assignedTeamIds is list && userId in data\.assignedTeamIds/);
+assert.match(firestoreRulesSource, /data\.assignedRep is list && userId in data\.assignedRep/);
+for (const collectionGroup of ['leads', 'jobs']) {
+  const indexes = firestoreIndexDefinitions.filter((index) => index.collectionGroup === collectionGroup);
+  for (const [fieldPath, kind] of [
+    ['assignedToUid', 'ASCENDING'],
+    ['assignedRep', 'ASCENDING'],
+    ['staffClaimedBy', 'ASCENDING'],
+    ['assignedTo', 'CONTAINS'],
+    ['assignedTeamIds', 'CONTAINS'],
+    ['assignedRep', 'CONTAINS']
+  ]) {
+    assert.ok(
+      indexes.some((index) =>
+        index.fields.some((field) => field.fieldPath === 'companyId' && field.order === 'ASCENDING')
+        && index.fields.some((field) => field.fieldPath === fieldPath
+          && (kind === 'CONTAINS' ? field.arrayConfig === 'CONTAINS' : field.order === kind))
+      ),
+      `${collectionGroup} must index companyId with ${fieldPath} (${kind}).`
+    );
+  }
+}
 assert.match(
   fieldOpsRealtimeSource,
-  /buildFieldOpsCollectionQueries\('leads', context\)/
+  /subscribeRoleScopedCollection\(collectionName, context, context\.uid/
 );
-assert.match(
-  fieldOpsRealtimeSource,
-  /buildFieldOpsCollectionQueries\('jobs', context\)/
-);
+assert.match(fieldOpsRealtimeSource, /subscribeScopedCollection\(\s*'leads',\s*context,/);
+assert.match(fieldOpsRealtimeSource, /subscribeScopedCollection\(\s*'jobs',\s*context,/);
 
 assert.match(
   dashboardEntrySource,
   /dashboard-live-map-card\.js/,
   'The dashboard must load the shared compact Operations Map preview.'
 );
+assert.match(dashboardHtmlSource, /dashboard-entry\.js\?v=3/);
+assert.match(dashboardEntrySource, /dashboard\.js\?v=4/);
 assert.match(
   leadsEntrySource,
   /dashboard-live-map-card\.js/,

@@ -11,6 +11,7 @@ import {
   getSavedUserProfile,
   getSavedUserRole
 } from './firebase.js';
+import { subscribeRoleScopedCollection } from './firestore-role-scoped-collections.js?v=assignment-index-2';
 import { setDoc as setFirestoreDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 const statusEl = document.getElementById('mapStatus');
@@ -36,10 +37,11 @@ const selectedMeta = document.getElementById('selectedMapMeta');
 const selectedDirections = document.getElementById('selectedMapDirections');
 const selectedClose = document.getElementById('selectedMapClose');
 
-const PLATFORM_ROLES = new Set(['owner', 'super_admin']);
+const PLATFORM_ROLES = new Set(['owner', 'super_admin', 'platform_admin']);
 const COMPANY_MAP_ROLES = new Set([
   'owner',
   'super_admin',
+  'platform_admin',
   'admin',
   'manager',
   'operations_manager',
@@ -53,6 +55,7 @@ const COMPANY_MAP_ROLES = new Set([
 const TEAM_LOCATION_ROLES = new Set([
   'owner',
   'super_admin',
+  'platform_admin',
   'admin',
   'manager',
   'operations_manager',
@@ -761,23 +764,24 @@ function companyFeed(collectionName) {
 }
 
 function subscribeAssignedFeeds(collectionName, kind, generation) {
-  const source = collection(db, collectionName);
-  const constraints = [
-    ['assignedToUid', '=='],
-    ['assignedRep', '=='],
-    ['staffClaimedBy', '=='],
-    ['assignedTo', 'array-contains'],
-    ['assignedTeamIds', 'array-contains']
-  ];
-
-  constraints.forEach(([field, operator]) => {
-    watchFeed(
-      query(source, where(field, operator, activeUser.uid)),
-      kind,
-      `mine-${field}`,
-      generation
+  const profile = { ...activeProfile, uid: activeUser.uid, role: activeRole, companyId: activeCompanyId };
+  const key = partitionKey(kind, 'mine');
+  const unsubscribe = subscribeRoleScopedCollection(collectionName, profile, activeUser.uid, (documents) => {
+    if (generation !== feedGeneration) return;
+    replacePartition(key, kind, { docs: documents });
+    setStatus(
+      locationWatchId !== null ? 'Live location is on' : 'Live map ready',
+      locationWatchId !== null
+        ? 'Your position and permitted company pins are updating in real time.'
+        : 'Turn on live location to sort nearby pins and calculate distance.'
     );
+  }, (error) => {
+    if (generation !== feedGeneration) return;
+    console.warn(`Map feed failed (${key}):`, error);
+    feedPartitions.delete(key);
+    rebuildRecords();
   });
+  unsubscribers.push(unsubscribe);
 }
 
 function startRealtimeFeeds() {

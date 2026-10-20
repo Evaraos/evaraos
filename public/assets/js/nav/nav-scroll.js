@@ -1,5 +1,5 @@
-import { NAV_STATE } from "./nav-config.js";
-import { getNavShell } from "./nav-utils.js";
+import { NAV_STATE } from "./nav-config.js?v=universal-role-policy-1";
+import { getNavShell } from "./nav-utils.js?v=universal-role-policy-1";
 
 let ticking = false;
 const TOP_GUARD = 18;

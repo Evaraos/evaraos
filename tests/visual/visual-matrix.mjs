@@ -7,57 +7,57 @@ export const ROLE_DEFINITIONS = Object.freeze([
   {
     id: 'platform_admin',
     secret: 'PLATFORM_ADMIN',
-    routes: ['/dashboard.html', '/website-builder.html', '/qa-v2.html', '/applications.html', '/jobs.html', '/dispatch.html', '/schedule.html', '/territory-map.html', '/marketplace-payouts.html', '/live-operations-command.html', '/operations-visibility.html'],
-    criticalRoutes: ['/dashboard.html', '/website-builder.html', '/qa-v2.html']
+    routes: ['/dashboard.html', '/website-builder.html', '/qa-v2.html', '/applications.html', '/jobs.html', '/dispatch.html', '/schedule.html', '/territory-map.html', '/marketplace-payouts.html', '/live-operations-command.html', '/operations-visibility.html', '/settings/appearance.html'],
+    criticalRoutes: ['/dashboard.html', '/website-builder.html', '/qa-v2.html', '/settings/appearance.html']
   },
   {
     id: 'owner',
     secret: 'OWNER',
     required: true,
-    routes: ['/dashboard.html', '/settings-v2.html', '/messages.html', '/website-builder.html', '/applications.html', '/jobs.html', '/dispatch.html', '/schedule.html', '/field.html', '/territory-map.html', '/marketplace-payouts.html', '/live-operations-command.html', '/operations-visibility.html', '/qa-v2.html'],
-    criticalRoutes: ['/dashboard.html', '/settings-v2.html', '/messages.html', '/website-builder.html', '/qa-v2.html']
+    routes: ['/dashboard.html', '/settings-v2.html', '/settings/appearance.html', '/messages.html', '/website-builder.html', '/applications.html', '/jobs.html', '/dispatch.html', '/schedule.html', '/field.html', '/territory-map.html', '/marketplace-payouts.html', '/live-operations-command.html', '/operations-visibility.html', '/qa-v2.html'],
+    criticalRoutes: ['/dashboard.html', '/settings-v2.html', '/settings/appearance.html', '/messages.html', '/website-builder.html', '/qa-v2.html']
   },
   {
     id: 'admin',
     secret: 'ADMIN',
-    routes: ['/dashboard.html', '/settings-v2.html', '/messages.html', '/website-builder.html', '/applications.html', '/jobs.html', '/dispatch.html', '/schedule.html', '/territory-map.html', '/marketplace-payouts.html', '/qa-v2.html'],
-    criticalRoutes: ['/dashboard.html', '/messages.html', '/qa-v2.html']
+    routes: ['/dashboard.html', '/settings-v2.html', '/settings/appearance.html', '/messages.html', '/website-builder.html', '/applications.html', '/jobs.html', '/dispatch.html', '/schedule.html', '/territory-map.html', '/marketplace-payouts.html', '/qa-v2.html'],
+    criticalRoutes: ['/dashboard.html', '/messages.html', '/qa-v2.html', '/settings/appearance.html']
   },
   {
     id: 'manager',
     secret: 'MANAGER',
-    routes: ['/dashboard.html', '/settings-v2.html', '/messages.html', '/users.html', '/applications.html', '/jobs.html', '/leads.html', '/dispatch.html', '/schedule.html', '/field.html', '/live-operations-command.html', '/operations-visibility.html'],
-    criticalRoutes: ['/dashboard.html', '/dispatch.html', '/schedule.html']
+    routes: ['/dashboard.html', '/settings-v2.html', '/settings/appearance.html', '/messages.html', '/users.html', '/applications.html', '/jobs.html', '/leads.html', '/dispatch.html', '/schedule.html', '/field.html', '/live-operations-command.html', '/operations-visibility.html'],
+    criticalRoutes: ['/dashboard.html', '/dispatch.html', '/schedule.html', '/settings/appearance.html']
   },
   {
     id: 'sales',
     secret: 'SALES',
-    routes: ['/dashboard.html', '/settings-v2.html', '/messages.html', '/leads.html', '/jobs.html', '/field.html', '/schedule.html', '/territory-map.html'],
-    criticalRoutes: ['/dashboard.html', '/leads.html']
+    routes: ['/dashboard.html', '/settings-v2.html', '/settings/appearance.html', '/messages.html', '/leads.html', '/jobs.html', '/field.html', '/schedule.html', '/territory-map.html'],
+    criticalRoutes: ['/dashboard.html', '/leads.html', '/settings/appearance.html']
   },
   {
     id: 'technician',
     secret: 'TECHNICIAN',
-    routes: ['/dashboard.html', '/settings-v2.html', '/messages.html', '/jobs.html', '/field.html', '/schedule.html', '/territory-map.html'],
-    criticalRoutes: ['/field.html', '/jobs.html']
+    routes: ['/dashboard.html', '/settings-v2.html', '/settings/appearance.html', '/messages.html', '/jobs.html', '/field.html', '/schedule.html', '/territory-map.html'],
+    criticalRoutes: ['/field.html', '/jobs.html', '/settings/appearance.html']
   },
   {
     id: 'cleaner',
     secret: 'CLEANER',
-    routes: ['/dashboard.html', '/settings-v2.html', '/messages.html', '/jobs.html', '/field.html', '/schedule.html', '/territory-map.html'],
-    criticalRoutes: ['/field.html', '/jobs.html']
+    routes: ['/dashboard.html', '/settings-v2.html', '/settings/appearance.html', '/messages.html', '/jobs.html', '/field.html', '/schedule.html', '/territory-map.html'],
+    criticalRoutes: ['/field.html', '/jobs.html', '/settings/appearance.html']
   },
   {
     id: 'customer',
     secret: 'CUSTOMER',
-    routes: ['/customer_dashboard.html', '/settings-v2.html', '/messages.html', '/customer-messaging.html', '/customer-commerce.html', '/customer-service-history.html', '/customer_bills.html'],
-    criticalRoutes: ['/customer_dashboard.html', '/customer-commerce.html', '/customer-messaging.html']
+    routes: ['/customer_dashboard.html', '/settings-v2.html', '/settings/appearance.html', '/messages.html', '/customer-messaging.html', '/customer-commerce.html', '/customer-service-history.html', '/customer_bills.html'],
+    criticalRoutes: ['/customer_dashboard.html', '/customer-commerce.html', '/customer-messaging.html', '/settings/appearance.html']
   },
   {
     id: 'vendor',
     secret: 'VENDOR',
-    routes: ['/dashboard.html', '/settings-v2.html', '/messages.html', '/jobs.html', '/leads.html', '/dispatch.html', '/schedule.html', '/field.html', '/territory-map.html', '/revenue.html', '/job_billing.html', '/marketplace-payouts.html'],
-    criticalRoutes: ['/dashboard.html', '/dispatch.html', '/marketplace-payouts.html']
+    routes: ['/settings/account.html', '/settings-v2.html', '/settings/appearance.html', '/messages.html'],
+    criticalRoutes: ['/settings/account.html', '/settings/appearance.html']
   }
 ]);
 
@@ -65,6 +65,7 @@ export const APPEARANCES = Object.freeze([
   { id: 'light', mode: 'light', colorScheme: 'light' },
   { id: 'dark', mode: 'dark', colorScheme: 'dark' },
   { id: 'system', mode: 'system', colorScheme: 'light' },
+  { id: 'system-dark', mode: 'system', colorScheme: 'dark' },
   { id: 'image', mode: 'image', colorScheme: 'dark', imagePath: '/assets/brand/evaraos-mark.png' }
 ]);
 
@@ -78,7 +79,7 @@ export const CRITICAL_VISUAL_CASES = Object.freeze([
   { role: 'technician', route: '/field.html' },
   { role: 'customer', route: '/customer_dashboard.html' },
   { role: 'customer', route: '/customer-commerce.html' },
-  { role: 'vendor', route: '/marketplace-payouts.html' }
+  { role: 'vendor', route: '/settings/account.html' }
 ]);
 
 export function credentialsFor(role) {
@@ -92,8 +93,25 @@ export function configuredRoles() {
   return ROLE_DEFINITIONS.filter((role) => credentialsFor(role).available);
 }
 
-export function storageStatePath(roleId) {
-  return path.join(root, '.auth', `${roleId}.json`);
+const PROJECT_BROWSERS = Object.freeze({
+  'desktop-chromium': 'chromium',
+  'tablet-chromium': 'chromium',
+  'iphone-webkit': 'webkit',
+  'android-chromium': 'chromium'
+});
+
+export function browserEnginesForProject(projectName = '') {
+  const selectedProject = String(projectName || '').trim();
+  if (!selectedProject) return ['chromium', 'webkit'];
+  const browser = PROJECT_BROWSERS[selectedProject];
+  if (!browser) throw new Error('The selected visual QA project is not configured.');
+  return [browser];
+}
+
+export function storageStatePath(roleId, browserName = 'chromium') {
+  const authDirectory = process.env.EVARA_QA_AUTH_DIR || path.join(root, '.auth');
+  const browser = browserName === 'webkit' ? 'webkit' : 'chromium';
+  return path.join(authDirectory, `${roleId}-${browser}.json`);
 }
 
 export function routeSlug(route) {

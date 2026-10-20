@@ -1,15 +1,11 @@
 import {
   auth,
-  db,
-  collection,
-  query,
-  where,
-  getDocs,
   onAuthStateChanged,
   hydrateUserProfile
 } from './firebase.js';
+import { buildRoleScopedCollectionQueries, getRoleScopedCollectionDocs } from './firestore-role-scoped-collections.js?v=assignment-index-2';
 
-const PLATFORM_ROLES = new Set(['owner', 'super_admin']);
+const PLATFORM_ROLES = new Set(['owner', 'super_admin', 'platform_admin']);
 const MANAGER_ROLES = new Set([
   'admin',
   'manager',
@@ -111,48 +107,12 @@ export async function resolveFieldOpsMapAccessContext(options = {}) {
 }
 
 export function buildFieldOpsCollectionQueries(collectionName, context = {}) {
-  const source = collection(db, collectionName);
-
-  if (context.scope === 'platform') return [source];
-
-  if (context.scope === 'company') {
-    return [query(source, where('companyId', '==', context.companyId))];
-  }
-
-  if (context.scope === 'customer') {
-    return [
-      query(source, where('customerUid', '==', context.uid)),
-      query(source, where('customerId', '==', context.uid)),
-      query(source, where('userId', '==', context.uid))
-    ];
-  }
-
-  return [
-    query(source, where('assignedToUid', '==', context.uid)),
-    query(source, where('assignedTo', 'array-contains', context.uid)),
-    query(source, where('assignedTeamIds', 'array-contains', context.uid)),
-    query(source, where('assignedRep', '==', context.uid)),
-    query(source, where('assignedRep', 'array-contains', context.uid)),
-    query(source, where('staffClaimedBy', '==', context.uid))
-  ];
-}
-
-function mergeSnapshots(snapshots = [], normalizer) {
-  const records = new Map();
-
-  snapshots.forEach((snapshot) => {
-    snapshot.docs.forEach((docItem) => {
-      records.set(docItem.id, normalizer({ id: docItem.id, ...docItem.data() }));
-    });
-  });
-
-  return [...records.values()];
+  return buildRoleScopedCollectionQueries(collectionName, context, context.uid);
 }
 
 async function loadScopedCollection(collectionName, context, normalizer) {
-  const queryRefs = buildFieldOpsCollectionQueries(collectionName, context);
-  const snapshots = await Promise.all(queryRefs.map((queryRef) => getDocs(queryRef)));
-  return mergeSnapshots(snapshots, normalizer);
+  const documents = await getRoleScopedCollectionDocs(collectionName, context, context.uid);
+  return documents.map((document) => normalizer({ id: document.id, ...document.data() }));
 }
 
 export function normalizeLeadForMap(lead = {}) {

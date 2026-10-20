@@ -2,15 +2,14 @@ import {
   auth,
   db,
   onAuthStateChanged,
-  collection,
-  onSnapshot,
-  query,
-  limit,
   updateDoc,
   doc,
   serverTimestamp,
-  getSavedUserProfile
+  getSavedUserProfile,
+  hydrateUserProfile
 } from "./firebase.js";
+import { subscribeRoleScopedCollection } from "./firestore-role-scoped-collections.js?v=assignment-index-2";
+import { syncStaffAssignmentIndex } from "./staff-assignment-index.js";
 import { createVirtualizationEngine, installSharedVirtualStyles } from "./shared-virtualization.js";
 
 const jobsSearch = document.getElementById("jobsSearch");
@@ -51,6 +50,7 @@ let sortAsc = true;
 let hasBoundEvents = false;
 let hasStartedAuthWatch = false;
 let currentFirebaseUser = null;
+let currentUserProfile = null;
 let unsubscribeJobs = null;
 let isLiveFeedConnected = false;
 let renderTimer = null;
@@ -574,13 +574,15 @@ function startLiveJobsFeed() {
 
   renderLoadingState();
 
-  unsubscribeJobs = onSnapshot(
-    query(collection(db, "jobs"), limit(LIVE_LIMIT)),
-    (snapshot) => {
-      jobsData = snapshot.docs.map((docSnap) => ({
+  unsubscribeJobs = subscribeRoleScopedCollection(
+    "jobs",
+    currentUserProfile || getSavedUserProfile(),
+    currentFirebaseUser?.uid,
+    (docs) => {
+      jobsData = docs.map((docSnap) => ({
         id: docSnap.id,
         ...docSnap.data()
-      }));
+      })).slice(0, LIVE_LIMIT);
 
       setFeedConnectedState(true);
       dispatchVirtualEngine.prefetch(jobsData, {
@@ -603,7 +605,8 @@ function startLiveJobsFeed() {
       lastListHtml = setHtmlIfChanged(jobsList, errorCard, lastListHtml);
       lastProgressHtml = setHtmlIfChanged(jobsProgressStack, errorCard, lastProgressHtml);
       lastFeedHtml = setHtmlIfChanged(jobsFeed, errorCard, lastFeedHtml);
-    }
+    },
+    LIVE_LIMIT
   );
 }
 
@@ -676,7 +679,24 @@ async function claimStaffJob(jobId, button) {
       updatedByEmail: actor.email,
       updatedByName: actor.displayName
     });
-    notify("Job accepted", `${jobName(job)} is now assigned to you.`, "success");
+    let indexReady = true;
+    try {
+      await syncStaffAssignmentIndex("jobs", jobId, {}, {
+        assignedTo: [actor.uid],
+        assignedTeamIds: [actor.uid],
+        staffClaimedBy: actor.uid
+      });
+    } catch (error) {
+      indexReady = false;
+      console.error("Accepted job assignment reference could not be synchronized:", error);
+    }
+    notify(
+      indexReady ? "Job accepted" : "Job accepted; list refresh needed",
+      indexReady
+        ? `${jobName(job)} is now assigned to you.`
+        : `${jobName(job)} was accepted, but the personal work list could not refresh. Ask a manager to repair the assignment index.`,
+      indexReady ? "success" : "warning"
+    );
   } catch (error) {
     console.error("Staff job claim failed:", error);
     notify("Unable to accept job", error?.message || "The job could not be accepted.", "error");
@@ -734,7 +754,7 @@ function initJobsPage() {
 
   bindEvents();
 
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     if (!user) {
       navigateWithLoader("/login.html", {
         title: "Returning to login",
@@ -744,6 +764,7 @@ function initJobsPage() {
     }
 
     currentFirebaseUser = user;
+    currentUserProfile = await hydrateUserProfile(user, { requireVerified: true }) || getSavedUserProfile();
     startLiveJobsFeed();
   });
 }

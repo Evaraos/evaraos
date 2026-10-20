@@ -40,8 +40,8 @@ const signupHtml = fs.readFileSync('public/signup.html', 'utf8');
 const accountStatusHtml = fs.readFileSync('public/account-status.html', 'utf8');
 const accountStatusJs = fs.readFileSync('public/assets/js/account-status.js', 'utf8');
 const rules = fs.readFileSync('firebase/firestore.rules', 'utf8');
-const lifecycleReleaseKey = '20260805-lifecycle-r1';
-const statusReleaseKey = '20260805-lifecycle-r2';
+const lifecycleReleaseKey = 'universal-role-policy-1';
+const statusReleaseKey = 'universal-role-policy-1';
 
 assert.match(routeGuard, /readVerifiedUserProfile\(user\)/);
 assert.match(routeGuard, /resolveAccountLifecycle\(profile\)/);
@@ -92,9 +92,13 @@ assert.match(
 assert.match(accountStatusJs, /source !== 'verified-route-guard'/);
 assert.match(accountStatusJs, /await signOut\(auth\)/);
 
-assert.match(
-  rules,
-  /function active\(\) \{ return userExists\(\) && user\(\)\.status in \['active', 'approved'\] && user\(\)\.approvalStatus == 'approved'; \}/
+const strictActiveRuleContracts = [
+  /function active\(\) \{ return userExists\(\) && user\(\)\.status in \['active', 'approved'\] && user\(\)\.approvalStatus == 'approved'; \}/,
+  /function active\(\) \{ let profileExists = userExists\(\); let profile = profileExists \? user\(\) : \{\}; return profileExists && profile\.status in \['active', 'approved'\] && profile\.approvalStatus == 'approved'; \}/
+];
+assert.ok(
+  strictActiveRuleContracts.some((contract) => contract.test(rules)),
+  'Firestore must require an existing profile, active-or-approved status, and approved review status.'
 );
 assert.match(
   rules,

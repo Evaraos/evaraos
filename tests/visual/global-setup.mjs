@@ -1,12 +1,14 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { chromium } from '@playwright/test';
+import { chromium, webkit } from '@playwright/test';
 import {
   ROLE_DEFINITIONS,
+  browserEnginesForProject,
   credentialsFor,
   configuredRoles,
   storageStatePath
 } from './visual-matrix.mjs';
+import { installLocalFirebaseNetworkGuard } from './local-emulator-safety.mjs';
 
 function normalizedBaseUrl() {
   const value = String(process.env.EVARA_QA_BASE_URL || '').trim().replace(/\/$/, '');
@@ -20,7 +22,7 @@ async function waitForReady(page) {
   await page.waitForFunction(() => document.body?.classList.contains('app-ready'), null, { timeout: 30_000 });
 }
 
-async function authenticateRole(browser, baseURL, role) {
+async function authenticateRole(browser, baseURL, role, browserName) {
   const credentials = credentialsFor(role);
   const context = await browser.newContext({
     baseURL,
@@ -31,21 +33,77 @@ async function authenticateRole(browser, baseURL, role) {
 
   try {
     const page = await context.newPage();
+    const runtimeDiagnostics = { pageErrors: [], consoleErrors: [], failedRequests: [], dropped: {} };
+    const recordDiagnostic = (category, value) => {
+      const entries = runtimeDiagnostics[category];
+      if (entries.length >= 20) {
+        runtimeDiagnostics.dropped[category] = (runtimeDiagnostics.dropped[category] || 0) + 1;
+        return;
+      }
+      entries.push(String(value).slice(0, 600));
+    };
+    page.on('pageerror', (error) => recordDiagnostic('pageErrors', `${error.name}: ${error.message}`));
+    page.on('console', (message) => {
+      if (message.type() === 'error') recordDiagnostic('consoleErrors', message.text());
+    });
+    page.on('requestfailed', (request) => {
+      try {
+        const url = new URL(request.url());
+        recordDiagnostic('failedRequests', `${url.hostname}${url.pathname}: ${request.failure()?.errorText || 'request failed'}`);
+      } catch {
+        recordDiagnostic('failedRequests', 'request failed');
+      }
+    });
+    await installLocalFirebaseNetworkGuard(page, baseURL);
     await page.goto('/login.html', { waitUntil: 'domcontentloaded' });
     await waitForReady(page);
     await page.locator('#loginEmail').fill(credentials.email);
     await page.locator('#loginPassword').fill(credentials.password);
 
-    await Promise.all([
-      page.waitForURL((url) => !url.pathname.endsWith('/login.html'), { timeout: 30_000 }),
-      page.locator('#loginForm button[type="submit"]').click()
-    ]);
+    try {
+      const routeChange = page.waitForURL(
+        (url) => !url.pathname.endsWith('/login.html'),
+        { timeout: 30_000, waitUntil: 'commit' }
+      );
+      await page.locator('#loginForm button[type="submit"]').click({ noWaitAfter: true });
+      await routeChange;
+    } catch (error) {
+      const diagnostics = await page.evaluate(() => ({
+        url: window.location.pathname,
+        hasLoginMessage: Boolean(document.querySelector('#loginMessage')?.textContent?.trim()),
+        submitDisabled: Boolean(document.querySelector('#loginForm button[type="submit"]')?.disabled)
+      })).catch(() => ({}));
+      diagnostics.runtime = runtimeDiagnostics;
+      throw new Error(`${error.message}; login diagnostics: ${JSON.stringify(diagnostics)}`);
+    }
 
     await waitForReady(page);
     const current = new URL(page.url());
     if (current.pathname.endsWith('/login.html')) throw new Error('Login did not leave the authentication route.');
 
-    const statePath = storageStatePath(role.id);
+    await page.waitForFunction((expectedRole) => {
+      const session = window.EvaraRouteSession;
+      return session?.authenticated === true && Boolean(session.userId) && session.role === expectedRole && session.source === 'verified-route-guard';
+    }, role.id, { timeout: 15_000 }).catch(async (error) => {
+      const diagnostics = await page.evaluate(() => {
+        const session = window.EvaraRouteSession;
+        return {
+          url: window.location.pathname,
+          routeSession: session ? {
+            authenticated: session.authenticated === true,
+            hasUserId: Boolean(session.userId),
+            role: typeof session.role === 'string' ? session.role : '',
+            source: typeof session.source === 'string' ? session.source : ''
+          } : null,
+          hasLoginMessage: Boolean(document.querySelector('#loginMessage')?.textContent?.trim()),
+          scripts: [...document.scripts].map((script) => script.src).filter(Boolean)
+        };
+      }).catch(() => ({}));
+      diagnostics.runtime = runtimeDiagnostics;
+      throw new Error(`${error.message}; route diagnostics: ${JSON.stringify(diagnostics)}`);
+    });
+
+    const statePath = storageStatePath(role.id, browserName);
     await fs.mkdir(path.dirname(statePath), { recursive: true });
     await context.storageState({ path: statePath, indexedDB: true });
     return { role: role.id, route: current.pathname, ready: true };
@@ -68,19 +126,29 @@ export default async function globalSetup() {
     throw new Error(`Full role QA requires credentials for: ${missingRoles.map((role) => role.id).join(', ')}`);
   }
 
-  const browser = await chromium.launch();
-  const sessions = [];
-  try {
-    for (const role of availableRoles) {
-      try {
-        sessions.push(await authenticateRole(browser, baseURL, role));
-        console.log(`Authenticated visual QA session: ${role.id}`);
-      } catch (error) {
-        throw new Error(`Unable to create ${role.id} QA session: ${error.message}`);
+  const sessions = new Set();
+  const authenticatedBrowsers = [];
+  const launchers = new Map([
+    ['chromium', () => chromium.launch()],
+    ['webkit', () => webkit.launch()]
+  ]);
+  for (const browserName of browserEnginesForProject(process.env.EVARA_QA_LOCAL_PROJECT)) {
+    const engine = { name: browserName, launch: launchers.get(browserName) };
+    const browser = await engine.launch();
+    authenticatedBrowsers.push(engine.name);
+    try {
+      for (const role of availableRoles) {
+        try {
+          await authenticateRole(browser, baseURL, role, engine.name);
+          sessions.add(role.id);
+          console.log(`Authenticated ${engine.name} visual QA session: ${role.id}`);
+        } catch (error) {
+          throw new Error(`Unable to create ${role.id} ${engine.name} QA session: ${error.message}`);
+        }
       }
+    } finally {
+      await browser.close();
     }
-  } finally {
-    await browser.close();
   }
 
   const authDirectory = path.dirname(storageStatePath('owner'));
@@ -88,7 +156,8 @@ export default async function globalSetup() {
   await fs.writeFile(path.join(authDirectory, 'manifest.json'), JSON.stringify({
     generatedAt: new Date().toISOString(),
     baseOrigin: new URL(baseURL).origin,
-    configuredRoles: sessions.map((entry) => entry.role),
+    configuredRoles: [...sessions],
+    authenticatedBrowsers,
     missingRoles: missingRoles.map((entry) => entry.id),
     requireAllRoles
   }, null, 2));

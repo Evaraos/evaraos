@@ -74,7 +74,7 @@ body[data-studio-authoring-authority="canvas-session"] .studio-production-author
   place-items: center;
   padding: 24px;
   background: rgba(4, 7, 12, 0.74);
-  backdrop-filter: blur(20px) saturate(140%);
+  backdrop-filter: var(--lg-backdrop-standard);
 }
 
 .studio-production-conflict-card {

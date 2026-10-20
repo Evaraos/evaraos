@@ -4,6 +4,10 @@ import {
   getApps
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
+  createFirebaseRuntimeConfig,
+  isFirebaseEmulatorHost
+} from "./firebase-runtime-config.mjs?v=1";
+import {
   initializeAppCheck,
   ReCaptchaEnterpriseProvider
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-check.js";
@@ -18,16 +22,19 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
-  updateProfile
+  updateProfile,
+  connectAuthEmulator
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 import {
   getFunctions,
-  httpsCallable
+  httpsCallable,
+  connectFunctionsEmulator
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 
 import {
   getFirestore,
+  initializeFirestore,
   doc,
   collection,
   query,
@@ -44,18 +51,17 @@ import {
   serverTimestamp,
   Timestamp,
   writeBatch,
-  runTransaction
+  runTransaction,
+  connectFirestoreEmulator
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getStorage,
+  connectStorageEmulator
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAg12tiBifLswke_km3nY6YQpf8ROyqup4",
-  authDomain: "evaraos-web.firebaseapp.com",
-  projectId: "evaraos-web",
-  storageBucket: "evaraos-web.firebasestorage.app",
-  messagingSenderId: "125377381598",
-  appId: "1:125377381598:web:d63df45da3a09f0199ae4f",
-  measurementId: "G-296N94CKPR"
-};
+const host = window.location.hostname;
+export const isFirebaseEmulatorRuntime = isFirebaseEmulatorHost(host);
+const firebaseConfig = createFirebaseRuntimeConfig(host);
 
 const RUNTIME_KEY = "__EVARAOS_FIREBASE_RUNTIME_V2__";
 const runtime = window[RUNTIME_KEY] || {
@@ -64,7 +70,8 @@ const runtime = window[RUNTIME_KEY] || {
   useSessionStorageForProfile: false,
   globalAuthSyncStarted: false,
   profileHydrationPromise: null,
-  profileHydrationUid: ""
+  profileHydrationUid: "",
+  firebaseEmulatorsConnected: false
 };
 window[RUNTIME_KEY] = runtime;
 
@@ -73,7 +80,7 @@ const appCheckSiteKey = "6LczbtQsAAAAAOHLSS25b38mXh1uTMAWvDjPIiOy";
 
 export let appCheck = runtime.appCheck;
 
-if (!appCheck) {
+if (!appCheck && !isFirebaseEmulatorRuntime) {
   try {
     const host = window.location.hostname;
     const isLocalDev = host === "localhost" || host === "127.0.0.1";
@@ -95,8 +102,19 @@ if (!appCheck) {
 }
 
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const db = isFirebaseEmulatorRuntime
+  ? initializeFirestore(app, { experimentalForceLongPolling: true })
+  : getFirestore(app);
 export const functions = getFunctions(app, "us-central1");
+export const storage = getStorage(app);
+
+if (isFirebaseEmulatorRuntime && !runtime.firebaseEmulatorsConnected) {
+  connectAuthEmulator(auth, `http://${host}:9099`, { disableWarnings: true });
+  connectFirestoreEmulator(db, host, 8080);
+  connectFunctionsEmulator(functions, host, 5001);
+  connectStorageEmulator(storage, host, 9199);
+  runtime.firebaseEmulatorsConnected = true;
+}
 
 const HISTORY_SKIP_COLLECTIONS = new Set(["audit_logs", "history_timeline", "operation_events"]);
 

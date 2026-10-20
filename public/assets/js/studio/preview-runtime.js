@@ -1,1 +1,1 @@
-import './role-preview.js?v=1';
+import './role-preview.js?v=role-policy-1';

@@ -1,4 +1,4 @@
-import { normalizeAccessRole } from '../access-control.js';
+import { normalizeAccessRole } from '../access-control.js?v=universal-role-policy-1';
 
 export const BLUEPRINT_ENGINE_VERSION = 'blueprint-engine-v2';
 

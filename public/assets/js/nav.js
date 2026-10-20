@@ -1,9 +1,9 @@
-import "./nav/nav-main-v6.js?v=home-reconcile-1";
-import { canAccessPageName } from "./access-control.js";
+import "./nav/nav-main-v6.js?v=universal-role-policy-1";
+import { canAccessPageName } from "./access-control.js?v=universal-role-policy-1";
 import "./experience/experience-runtime.js?v=experience-runtime-v1";
 
-const NAV_ENTRY_BUILD = "nav-v59-responsive-core";
-const NAV_ENTRY_GUARD = "__evaraosNavEntryV59";
+const NAV_ENTRY_BUILD = "nav-v64-role-policy-1";
+const NAV_ENTRY_GUARD = "__evaraosNavEntryV64";
 
 if (!window[NAV_ENTRY_GUARD]) {
   window[NAV_ENTRY_GUARD] = true;
@@ -12,7 +12,7 @@ if (!window[NAV_ENTRY_GUARD]) {
   const pathname = location.pathname.toLowerCase();
   const isPublicHome = guardMode === "public" && (pathname === "/" || pathname.endsWith("/index.html"));
   const isStudioRoute = /(?:website-builder|studio|blueprint|design-system)/.test(pathname);
-  const ownerRoles = new Set(["owner", "super_admin", "admin"]);
+  const ownerRoles = new Set(["platform_admin", "owner", "super_admin", "admin"]);
   let ownerEditorRequested = false;
   let navEnhancementsRequested = false;
   let privateRuntimeRequested = false;
@@ -53,21 +53,21 @@ if (!window[NAV_ENTRY_GUARD]) {
     navEnhancementsRequested = true;
 
     const immediateEnhancements = [
-      safeImport("./nav/nav-drawer-close.js?v=nav-v59-responsive-core")
+      safeImport("./nav/nav-drawer-close.js?v=nav-v64-role-policy-1")
     ];
 
     if ((guardMode !== "auth" && !isPublicHome) || canAccessPageName(pathname, "guest")) {
-      immediateEnhancements.unshift(safeImport("./nav/nav-bottom.js"));
+      immediateEnhancements.unshift(safeImport("./nav/nav-bottom.js?v=universal-role-policy-1"));
     }
 
     Promise.all(immediateEnhancements).catch(() => {});
 
     runWhenIdle(() => {
       const idleEnhancements = [
-        safeImport("./nav/pull-to-refresh.js?v=nav-v59-responsive-core"),
+        safeImport("./nav/pull-to-refresh.js?v=nav-v64-role-policy-1"),
         safeImport("./ui/icon-hydrator.js?v=13")
       ];
-      if (!canAccessPageName(pathname, "guest")) idleEnhancements.push(safeImport("./nav/avatar-sync.js?v=nav-v59-responsive-core"));
+      if (!canAccessPageName(pathname, "guest")) idleEnhancements.push(safeImport("./nav/avatar-sync.js?v=nav-v64-role-policy-1"));
       Promise.all(idleEnhancements).catch(() => {});
     }, 1800);
   }
@@ -76,9 +76,9 @@ if (!window[NAV_ENTRY_GUARD]) {
     if (privateRuntimeRequested || guardMode !== "private") return;
     privateRuntimeRequested = true;
     Promise.all([
-      safeImport("./nav/nav-role-lockdown.js?v=6"),
-      safeImport("./permissions-runtime.js?v=6"),
-      safeImport("./direct-access-check.js?v=5")
+      safeImport("./nav/nav-role-lockdown.js?v=universal-role-policy-1"),
+      safeImport("./permissions-runtime.js?v=universal-role-policy-1"),
+      safeImport("./direct-access-check.js?v=universal-role-policy-1")
     ]).catch(() => {});
   }
 
@@ -90,7 +90,7 @@ if (!window[NAV_ENTRY_GUARD]) {
       safeImport("./studio/component-registry.js?v=2"),
       safeImport("./studio/module-registry.js?v=2"),
       safeImport("./studio/studio-roadmap.js?v=2"),
-      safeImport("./studio/blueprint-registry.js?v=2"),
+      safeImport("./studio/blueprint-registry.js?v=universal-role-policy-1"),
       safeImport("./studio/blueprint-drafts.js?v=2"),
       safeImport("./studio/studio-safe-reset.js?v=2")
     ]).catch(() => {});

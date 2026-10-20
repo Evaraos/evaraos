@@ -2,13 +2,13 @@ import {
   auth,
   db,
   onAuthStateChanged,
-  collection,
-  getDocs,
   doc,
   updateDoc,
   serverTimestamp,
-  getSavedUserProfile
+  getSavedUserProfile,
+  hydrateUserProfile
 } from "./firebase.js";
+import { getRoleScopedCollectionDocs } from "./firestore-role-scoped-collections.js?v=assignment-index-2";
 
 const dispatchMain = document.getElementById("dispatchMain");
 const dispatchBoard = document.getElementById("dispatchBoard");
@@ -36,6 +36,7 @@ const COLUMN_KEYS = Object.freeze(["open", "claimed", "active"]);
 const columnCache = new Map();
 
 let jobs = [];
+let activeProfile = null;
 let searchTimer = null;
 let hasLoaded = false;
 let hasBoundEvents = false;
@@ -383,9 +384,9 @@ async function loadJobs({ showSkeleton = !hasLoaded } = {}) {
   }
 
   try {
-    const snap = await getDocs(collection(db, "jobs"));
+    const docs = await getRoleScopedCollectionDocs("jobs", activeProfile || getSavedUserProfile(), auth.currentUser?.uid);
 
-    jobs = snap.docs.map((item) => ({
+    jobs = docs.map((item) => ({
       id: item.id,
       ...item.data()
     }));
@@ -517,6 +518,7 @@ function init() {
       return;
     }
 
+    activeProfile = await hydrateUserProfile(user, { requireVerified: true });
     await loadJobs();
   });
 }

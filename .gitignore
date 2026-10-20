@@ -39,3 +39,7 @@ tools/access-continuity-audit/audit-output/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Local UI validation artifacts
+.playwright-cli/
+output/playwright/

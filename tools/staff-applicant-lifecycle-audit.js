@@ -57,7 +57,7 @@ check(/request\.resource\.data\.desiredRole == request\.resource\.data\.roleRequ
 
 check(!fs.existsSync(path.join(root, "public", "staff_application_status.html")), "Duplicate staff status page exists.");
 check(!fs.existsSync(path.join(root, "public", "assets", "js", "staff-application-status.js")), "Duplicate staff status runtime exists.");
-check(/staffApplicationStatusPanel/.test(statusHtml) && /account-status\.js\?v=2/.test(statusHtml), "Shared account status page is missing its optional staff application panel.");
+check(/staffApplicationStatusPanel/.test(statusHtml) && /account-status\.js\?v=[^"\']+/.test(statusHtml), "Shared account status page is missing its optional staff application panel.");
 check(/getDoc\(doc\(db, 'staff_applications', userId\)\)/.test(statusJs), "Status runtime must use one fixed own-document read.");
 check(!/\b(?:collection|query|where|getDocs|addDoc|setDoc|updateDoc|deleteDoc|writeBatch|runTransaction)\s*\(/.test(statusJs), "Status runtime must not list or write Firestore records.");
 check(/session\?\.userId/.test(statusJs), "Status read must be anchored to verified route-guard identity.");

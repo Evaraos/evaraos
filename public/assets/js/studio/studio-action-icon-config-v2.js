@@ -1,5 +1,5 @@
 import { getStudioComponent } from './component-registry.js';
-import { canAccessPageName, normalizeAccessRole, pagesForRole } from '../access-control.js';
+import { canAccessPageName, normalizeAccessRole, pagesForRole } from '../access-control.js?v=universal-role-policy-1';
 import {
   DEFAULT_COMPONENT_ICONS,
   EVARA_ICON_REGISTRY_VERSION,

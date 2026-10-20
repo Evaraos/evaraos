@@ -2,20 +2,18 @@
 const fs=require("fs"),path=require("path");
 const root=path.resolve(__dirname,".."),publicRoot=path.join(root,"public"),errors=[],warnings=[],files=[];
 (function walk(dir){for(const item of fs.readdirSync(dir,{withFileTypes:true})){const full=path.join(dir,item.name);if(item.isDirectory())walk(full);else if(/\.(html|css|js)$/.test(item.name))files.push(full)}})(publicRoot);
+const { pageFailures } = require("./lib/ui-contract.cjs");
+const { hasNonCanonicalPageBackdrop } = require("./lib/page-material-audit.cjs");
 const rel=file=>path.relative(root,file).replace(/\\/g,"/");
 for(const file of files){
   const name=rel(file),text=fs.readFileSync(file,"utf8");
   if(file.endsWith(".html")){
-    const count=(text.match(/\/assets\/css\/theme\.css/g)||[]).length;
-    if(count!==1)errors.push(`${name}: expected one theme.css link, found ${count}`);
-    if(!/adaptive-appearance-boot\.js\?v=\d+/.test(text))errors.push(`${name}: missing versioned prepaint boot`);
-    if(!/theme\.css\?v=[^"']+/.test(text))errors.push(`${name}: missing versioned theme stylesheet`);
-    if(!/theme\.js\?v=[^"']+/.test(text))errors.push(`${name}: missing versioned theme runtime`);
-    if(/theme-boot\.js|appearance-mode-fix\.js|adaptive-liquid-v[1-6](?!\d)/.test(text))errors.push(`${name}: legacy theme asset remains`);
+    errors.push(...pageFailures(text, path.relative(publicRoot,file).replace(/\\/g,"/")));
   }
   if(file.endsWith(".css")){
-    if(/\*\s*var\(|var\([^)]*\)\s*\*/.test(text))errors.push(`${name}: unsupported multiplication inside CSS calculation`);
-    if(name.startsWith("public/assets/css/pages/")&&/backdrop-filter\s*:/.test(text))warnings.push(`${name}: page-level backdrop material should be reviewed`);
+    // Multiplication inside calc()/min()/max()/clamp() is valid CSS.
+    // Invalid declarations are checked against the rendered browser CSS parser.
+    if(name.startsWith("public/assets/css/pages/")&&hasNonCanonicalPageBackdrop(text))warnings.push(`${name}: page-level backdrop material should be reviewed`);
   }
   if(file.endsWith(".js")&&!/adaptive-appearance-boot|theme-core-adaptive|theme\.js$/.test(name)){
     if(/dataset\.theme\s*=\s*["'`](light|dark|image|system)["'`]/.test(text))errors.push(`${name}: directly changes the universal theme`);
@@ -34,7 +32,6 @@ for(const required of [
   /base\/variables\.css\?v=\d+/,
   /liquid-optics\.css\?v=\d+/,
   /liquid-functional-cards\.css\?v=\d+/,
-  /liquid-functional-controls\.css\?v=\d+/,
   /design-system\/primitives\.css\?v=\d+/
 ])if(!required.test(theme))errors.push(`theme.css: missing ${required}`);
 
@@ -48,6 +45,9 @@ for(const requiredVariable of [
   "--lg-surface-fill",
   "--lg-surface-edge",
   "--lg-surface-blur",
+  "--lg-backdrop-control",
+  "--lg-backdrop-standard",
+  "--lg-backdrop-elevated",
   "--lg-surface-shadow-y",
   "--lg-surface-highlight-alpha"
 ])if(!optics.includes(requiredVariable))errors.push(`liquid-optics.css: missing ${requiredVariable}`);

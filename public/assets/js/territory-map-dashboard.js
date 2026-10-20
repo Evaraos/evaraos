@@ -16,12 +16,12 @@ import {
   renderFieldOpsMarkers,
   groupFieldOpsByTerritory,
   groupFieldOpsByAssignee
-} from './field-ops-map-layer.js';
+} from './field-ops-map-layer.js?v=assignment-index-2';
 
 import {
   startFieldOpsRealtime,
   stopFieldOpsRealtime
-} from './field-ops-realtime.js';
+} from './field-ops-realtime.js?v=assignment-index-2';
 
 const mapCanvas = document.getElementById('territoryMapCanvas');
 const statusNode = document.getElementById('territoryMapStatus');

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test as base, expect } from '@playwright/test';
 import {
   APPEARANCES,
   CRITICAL_VISUAL_CASES,
@@ -7,8 +7,10 @@ import {
   routeSlug,
   storageStatePath
 } from '../visual-matrix.mjs';
+import { installLocalFirebaseNetworkGuard } from '../local-emulator-safety.mjs';
 
 const matrixMode = process.env.EVARA_QA_MATRIX === 'full' ? 'full' : 'critical';
+const criticalResponsiveMatrix = process.env.EVARA_QA_CRITICAL_RESPONSIVE === '1';
 const criticalProjects = new Set(['desktop-chromium', 'iphone-webkit']);
 const dynamicMaskSelector = [
   'canvas',
@@ -24,6 +26,54 @@ const dynamicMaskSelector = [
   '[id*="Paid"]',
   '[id*="Risk"]'
 ].join(',');
+
+const test = base.extend({
+  qaRoleId: ['', { option: true }],
+  storageState: async ({ browserName, qaRoleId }, use) => {
+    if (!qaRoleId) throw new Error('A QA role is required for authenticated visual tests.');
+    await use(storageStatePath(qaRoleId, browserName));
+  }
+});
+
+test.beforeEach(async ({ page, baseURL }) => {
+  await installLocalFirebaseNetworkGuard(page, baseURL);
+  if (process.env.EVARA_QA_LOCAL_EMULATOR_CHILD === '1') {
+    const localReadOnlyCallables = new Map([
+      ['getMarketplaceCommerceSnapshot', {
+        customerId: 'local-ui-fixture',
+        generatedAtMs: 0,
+        quotes: [],
+        invoices: [],
+        subscriptions: [],
+        summary: { quoteCount: 0, openQuotes: 0, outstandingCents: 0, paidCents: 0, activeSubscriptions: 0 }
+      }],
+      ['getMarketplaceOperationsSnapshot', {
+        customerId: 'local-ui-fixture',
+        generatedAtMs: 0,
+        orders: [],
+        notifications: [],
+        refunds: []
+      }]
+    ]);
+    await page.route((url) => url.origin === 'http://127.0.0.1:5001'
+      && url.pathname.startsWith('/demo-evaraos-ui/us-central1/')
+      && localReadOnlyCallables.has(url.pathname.split('/').at(-1)), async (route) => {
+      const callableName = new URL(route.request().url()).pathname.split('/').at(-1);
+      const requestedHeaders = route.request().headers()['access-control-request-headers'];
+      const body = JSON.stringify({ data: localReadOnlyCallables.get(callableName) });
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: {
+          'access-control-allow-origin': '*',
+          'access-control-allow-methods': 'POST, OPTIONS',
+          'access-control-allow-headers': requestedHeaders || 'content-type, authorization, x-firebase-appcheck, x-firebase-gmpid'
+        },
+        body
+      });
+    });
+  }
+});
 
 function appearancePayload(appearance, baseURL) {
   return {
@@ -52,7 +102,12 @@ function collectRuntimeDiagnostics(page) {
   const consoleErrors = [];
   page.on('pageerror', (error) => pageErrors.push(String(error?.stack || error?.message || error)));
   page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
+    if (message.type() !== 'error') return;
+    const text = message.text();
+    // WebKit and older Chromium builds report the optional, ignored viewport
+    // directive as an error even though the page remains responsive.
+    if (/viewport.*interactive-widget.*(?:not recognized|unsupported|ignored)|interactive-widget.*(?:not recognized|unsupported|ignored)/i.test(text)) return;
+    consoleErrors.push(text);
   });
   return { pageErrors, consoleErrors };
 }
@@ -80,15 +135,32 @@ async function waitForApplication(page, appearance) {
   await page.waitForTimeout(300);
 }
 
-async function openRoute(page, route, appearance, baseURL) {
+async function openRoute(page, route, appearance, baseURL, expectedRole) {
   await installAppearance(page, appearance, baseURL);
   const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
   expect(response, `${route} should return a response`).not.toBeNull();
   expect(response.status(), `${route} should not return an HTTP error`).toBeLessThan(400);
-  await waitForApplication(page, appearance);
+  const expectedPathname = new URL(route, baseURL).pathname;
+  await page.waitForFunction(({ pathname, role }) => {
+    const currentPathname = new URL(window.location.href).pathname;
+    const session = window.EvaraRouteSession;
+    return currentPathname !== pathname
+      || (session?.authenticated === true && Boolean(session.userId) && session.role === role && session.source === 'verified-route-guard');
+  }, { pathname: expectedPathname, role: expectedRole }, { timeout: 15_000 });
   const pathname = new URL(page.url()).pathname;
-  expect(pathname, `${route} must not redirect to login`).not.toMatch(/login\.html$/);
-  expect.soft(pathname, `${route} should remain on the authorized route`).toBe(route);
+  const routeSession = await page.evaluate(() => {
+    const session = window.EvaraRouteSession || {};
+    return {
+      authenticated: session.authenticated === true,
+      role: typeof session.role === 'string' ? session.role : '',
+      lifecycle: typeof session.lifecycle === 'string' ? session.lifecycle : '',
+      status: typeof session.status === 'string' ? session.status : '',
+      approvalStatus: typeof session.approvalStatus === 'string' ? session.approvalStatus : '',
+      source: typeof session.source === 'string' ? session.source : ''
+    };
+  }).catch(() => null);
+  expect(pathname, `${route} should remain on its authorized route; session=${JSON.stringify(routeSession)}`).toBe(expectedPathname);
+  await waitForApplication(page, appearance);
 }
 
 async function collectDomDiagnostics(page) {
@@ -100,10 +172,16 @@ async function collectDomDiagnostics(page) {
     const duplicateIds = Object.entries(idCounts).filter(([, count]) => count > 1).map(([id, count]) => ({ id, count }));
     const unlabeledControls = [...document.querySelectorAll('button,a[href],input,select,textarea')]
       .filter((node) => {
-        if (node.hidden || node.closest('[hidden]')) return false;
+        if (node.hidden || node.getAttribute('type') === 'hidden' || node.closest('[hidden],[inert],[aria-hidden="true"]')) return false;
+        if (node.getClientRects().length === 0) return false;
         const style = getComputedStyle(node);
         if (style.display === 'none' || style.visibility === 'hidden') return false;
-        return !String(node.getAttribute('aria-label') || node.getAttribute('title') || node.textContent || node.getAttribute('placeholder') || '').trim();
+        const labelledBy = String(node.getAttribute('aria-labelledby') || '').split(/\s+/).map(id => document.getElementById(id)?.textContent || '').join(' ');
+        const labels = [...(node.labels || [])].map(label => label.textContent || '').join(' ');
+        const imageAlt = [...node.querySelectorAll('img[alt]')].map(image => image.alt).join(' ');
+        const value = ['submit','button','reset'].includes(node.getAttribute('type')) ? node.value : '';
+        // A placeholder does not substitute for a persistent accessible name.
+        return !String(node.getAttribute('aria-label') || labelledBy || labels || node.textContent || imageAlt || value || node.getAttribute('title') || '').trim();
       })
       .slice(0, 50)
       .map((node) => ({ tag: node.tagName.toLowerCase(), id: node.id || '', className: String(node.className || '') }));
@@ -130,6 +208,8 @@ async function verifyKeyboardFocus(page) {
       focused: true,
       tag: node.tagName.toLowerCase(),
       id: node.id || '',
+      visible: node.getBoundingClientRect().width > 0 && node.getBoundingClientRect().height > 0 && style.visibility !== 'hidden' && style.display !== 'none',
+      indicator: (style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2) || style.boxShadow !== 'none',
       outlineStyle: style.outlineStyle,
       outlineWidth: style.outlineWidth,
       boxShadow: style.boxShadow
@@ -142,14 +222,14 @@ for (const role of ROLE_DEFINITIONS) {
   const routes = matrixMode === 'full' ? role.routes : role.criticalRoutes;
 
   test.describe(`${role.id} authenticated route QA`, () => {
+    test.use({ qaRoleId: role.id });
     test.skip(!available, `${role.id} QA credentials are not configured.`);
-    test.use({ storageState: storageStatePath(role.id) });
 
     for (const route of routes) {
       test(`${matrixMode === 'critical' ? '@critical ' : ''}${route} loads without layout failure`, async ({ page, baseURL }, testInfo) => {
-        if (matrixMode !== 'full' && testInfo.project.name !== 'desktop-chromium') test.skip();
+        if (matrixMode !== 'full' && !criticalResponsiveMatrix && testInfo.project.name !== 'desktop-chromium') test.skip();
         const diagnostics = collectRuntimeDiagnostics(page);
-        await openRoute(page, route, APPEARANCES[0], baseURL);
+        await openRoute(page, route, APPEARANCES[0], baseURL, role.id);
         const dom = await collectDomDiagnostics(page);
         const focus = await verifyKeyboardFocus(page);
 
@@ -162,6 +242,8 @@ for (const role of ROLE_DEFINITIONS) {
         expect(dom.horizontalOverflow, 'The root document must not overflow horizontally.').toBeLessThanOrEqual(2);
         expect(dom.themeMode).toBe('light');
         expect(focus.focused, 'Keyboard Tab should reach a visible interactive element.').toBe(true);
+        expect(focus.visible, 'Keyboard focus must reach a rendered element.').toBe(true);
+        expect(focus.indicator, 'Keyboard focus needs a visible outline or ring.').toBe(true);
         expect(diagnostics.pageErrors, 'Uncaught page errors are not allowed.').toEqual([]);
         expect.soft(diagnostics.consoleErrors, 'Console errors require review.').toEqual([]);
         expect.soft(dom.duplicateIds, 'Duplicate IDs require review.').toEqual([]);
@@ -180,14 +262,14 @@ for (const visualCase of visualCases) {
   const available = Boolean(role && credentialsFor(role).available);
 
   test.describe(`${visualCase.role} visual baselines`, () => {
+    test.use({ qaRoleId: visualCase.role });
     test.skip(!available, `${visualCase.role} QA credentials are not configured.`);
-    test.use({ storageState: storageStatePath(visualCase.role) });
 
     for (const appearance of APPEARANCES) {
       test(`@critical ${routeSlug(visualCase.route)} · ${appearance.id}`, async ({ page, baseURL }, testInfo) => {
         if (matrixMode !== 'full' && !criticalProjects.has(testInfo.project.name)) test.skip();
         const diagnostics = collectRuntimeDiagnostics(page);
-        await openRoute(page, visualCase.route, appearance, baseURL);
+        await openRoute(page, visualCase.route, appearance, baseURL, visualCase.role);
         const dom = await collectDomDiagnostics(page);
         const mask = page.locator(dynamicMaskSelector);
 
@@ -200,6 +282,10 @@ for (const visualCase of visualCases) {
         await testInfo.attach('visual-dom-diagnostics.json', { body: JSON.stringify(dom, null, 2), contentType: 'application/json' });
         expect(dom.horizontalOverflow, 'The visual baseline must not contain root horizontal overflow.').toBeLessThanOrEqual(2);
         expect(dom.themeMode).toBe(appearance.mode);
+        expect(dom.environment).toBe(appearance.mode === 'system' ? appearance.colorScheme : appearance.mode);
+        expect(dom.duplicateIds, 'Appearance routes must preserve unique IDs.').toEqual([]);
+        expect(dom.unlabeledControls, 'Every appearance needs accessible control names.').toEqual([]);
+        expect(diagnostics.consoleErrors, 'Appearance captures must be free of console errors.').toEqual([]);
         expect(diagnostics.pageErrors, 'Uncaught page errors are not allowed during visual capture.').toEqual([]);
       });
     }

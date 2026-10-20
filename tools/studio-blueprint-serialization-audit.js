@@ -130,10 +130,11 @@ if (!errors.length) {
     if (!schema.$defs?.responsive?.properties?.mobile) errors.push('Blueprint schema responsive contract is missing');
   }
 
-  const actionImport = '/assets/js/studio/studio-action-icon-config-v2.js?v=2';
+  const actionImportPrefix = '/assets/js/studio/studio-action-icon-config-v2.js?v=';
   const serializationImport = '/assets/js/studio/studio-blueprint-serialization.js?v=1';
+  const actionImportIndex = page.indexOf(actionImportPrefix);
   if (!page.includes(serializationImport)) errors.push('public/website-builder.html: Blueprint serialization bridge is missing');
-  if (!(page.indexOf(actionImport) >= 0 && page.indexOf(actionImport) < page.indexOf(serializationImport))) {
+  if (!(actionImportIndex >= 0 && actionImportIndex < page.indexOf(serializationImport))) {
     errors.push('public/website-builder.html: Blueprint serialization must load after action/icon configuration');
   }
 

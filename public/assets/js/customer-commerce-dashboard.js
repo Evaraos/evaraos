@@ -75,7 +75,7 @@ function setStatus(message) {
 }
 
 function setOutstanding(value) {
-  document.querySelectorAll('[id="customerOutstanding"]').forEach((node) => {
+  document.querySelectorAll('[data-customer-outstanding]').forEach((node) => {
     node.textContent = money(value);
   });
 }
