@@ -312,7 +312,7 @@ test('dashboard waits for the verified role session before applying role-specifi
   assert.doesNotMatch(dashboard, /getSavedUserProfile\(\).*role/);
 });
 
-test('role pages use scoped reads and the deployed read rules remain unchanged', () => {
+test('role pages use scoped reads and shared assignment rules preserve every legacy field', () => {
   for (const path of [
     'public/assets/js/dispatch.js',
     'public/assets/js/field.js',
@@ -325,16 +325,22 @@ test('role pages use scoped reads and the deployed read rules remain unchanged',
     assert.doesNotMatch(source, /onSnapshot\(\s*collection\(db,\s*["'](?:jobs|leads)["']\s*\)/);
   }
   const rules = fs.readFileSync('firebase/firestore.rules', 'utf8');
-  assert.match(rules, /function assignedToUser\(data, userId\)/);
+  const assignmentPredicate = rules.match(/function assignedToUser\(data, userId\) \{([^}]*)\}/)?.[1];
+  assert.ok(assignmentPredicate, 'the shared assignment predicate remains present');
+  for (const field of ['assignedToUid', 'assignedRep', 'staffClaimedBy', 'assignedTo', 'assignedTeamIds']) {
+    assert.ok(assignmentPredicate.includes(`data.keys().hasAny(['${field}'])`), `the shared predicate checks ${field}`);
+  }
+  assert.match(assignmentPredicate, /data\.assignedTo is list && userId in data\.assignedTo/);
+  assert.match(assignmentPredicate, /data\.assignedTeamIds is list && userId in data\.assignedTeamIds/);
+  assert.match(assignmentPredicate, /data\.assignedRep is list && userId in data\.assignedRep/);
   const leadRule = rules.match(/match \/leads\/\{id\} \{([\s\S]*?)match \/activities/);
   const jobRule = rules.match(/match \/jobs\/\{id\} \{([\s\S]*?)match \/\{collectionId\}/);
   assert.ok(leadRule, 'the lead record rule remains present');
   assert.ok(jobRule, 'the job record rule remains present');
   assert.match(leadRule[1], /allow get: if[^{]*assigned\(resource\.data\)[^{]*sameCompany\(resource\.data\.companyId\)/);
   assert.match(jobRule[1], /allow get: if[^{]*assigned\(resource\.data\)[^{]*sameCompany\(resource\.data\.companyId\)/);
-  assert.match(leadRule[1], /allow list: if[^{]*assignedTo is list[^{]*request\.auth\.uid in resource\.data\.assignedTo/);
-  assert.match(jobRule[1], /allow list: if[^{]*assignedTeamIds is list[^{]*request\.auth\.uid in resource\.data\.assignedTeamIds/);
-  assert.match(leadRule[1], /allow list: if[^{]*sameCompany\(resource\.data\.companyId\)/);
+  assert.match(leadRule[1], /allow list: if[^{}]*assigned\(resource\.data\)[^{}]*sameCompany\(resource\.data\.companyId\)/);
+  assert.match(jobRule[1], /allow list: if[^{}]*assigned\(resource\.data\)[^{}]*sameCompany\(resource\.data\.companyId\)/);
   assert.match(rules, /match \/assignedLeads\/\{leadId\} \{ allow read: if own\(userId\)/);
   assert.match(rules, /match \/assignedJobs\/\{jobId\} \{ allow read: if own\(userId\)/);
   assert.match(rules, /request\.resource\.data\.keys\(\)\.hasOnly\(\[\]\) && canCreateAssignmentIndex/);
@@ -366,3 +372,4 @@ test('the UI matrix stubs read-only customer snapshots in demo-emulator mode', (
   assert.match(spec, /quotes: \[\],\s*invoices: \[\],\s*subscriptions: \[\]/);
   assert.match(spec, /orders: \[\],\s*notifications: \[\],\s*refunds: \[\]/);
 });
+
