@@ -34,6 +34,7 @@ import {
 
 import {
   getFirestore,
+  initializeFirestore,
   doc,
   collection,
   query,
@@ -101,7 +102,9 @@ if (!appCheck && !isFirebaseEmulatorRuntime) {
 }
 
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const db = isFirebaseEmulatorRuntime
+  ? initializeFirestore(app, { experimentalForceLongPolling: true })
+  : getFirestore(app);
 export const functions = getFunctions(app, "us-central1");
 export const storage = getStorage(app);
 

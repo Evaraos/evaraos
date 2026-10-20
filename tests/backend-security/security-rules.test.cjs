@@ -269,7 +269,35 @@ test("legacy assignment queries stay tenant-scoped and include existing scalar a
     ["salesA", "leads", "staffClaimedBy", "==", "lead-staff-claimed"]
   ];
 
+  // Keep each query's fixture set minimal so the rules emulator can evaluate
+  // the full tenant and assignment predicate without spending its expression
+  // budget repeatedly across unrelated seeded records.
+  await env.clearFirestore();
+  await env.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore();
+    await setDoc(doc(db, "users", "techA"), activeUser({
+      uid: "techA",
+      role: "technician",
+      companyId: "company-a"
+    }));
+    await setDoc(doc(db, "users", "salesA"), activeUser({
+      uid: "salesA",
+      role: "sales_rep",
+      companyId: "company-a"
+    }));
+  });
+
   for (const [uid, collectionName, field, operator, expectedId] of queryCases) {
+    const assignment = operator === "array-contains" ? [uid] : uid;
+    await env.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore();
+      await setDoc(doc(db, collectionName, expectedId), {
+        companyId: "company-a",
+        [field]: assignment,
+        status: collectionName === "jobs" ? "scheduled" : "new"
+      });
+    });
+
     const db = env.authenticatedContext(uid).firestore();
     const result = await assertSucceeds(getDocs(query(
       collection(db, collectionName),
@@ -281,7 +309,25 @@ test("legacy assignment queries stay tenant-scoped and include existing scalar a
       collection(db, collectionName),
       where(field, operator, uid)
     )));
+
+    await env.withSecurityRulesDisabled(async (context) => {
+      await deleteDoc(doc(context.firestore(), collectionName, expectedId));
+    });
   }
+
+  await env.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore();
+    await setDoc(doc(db, "jobs", "job-cross-company-assigned-to-techA"), {
+      companyId: "company-b",
+      assignedTo: ["techA"],
+      status: "scheduled"
+    });
+    await setDoc(doc(db, "leads", "lead-cross-company-assigned-to-salesA"), {
+      companyId: "company-b",
+      assignedTo: ["salesA"],
+      status: "new"
+    });
+  });
 
   const techDb = env.authenticatedContext("techA").firestore();
   const salesDb = env.authenticatedContext("salesA").firestore();

@@ -54,6 +54,7 @@ test('the browser connects all supported data services to local emulators only',
     assert.ok(firebase.includes(connection), `Missing local emulator connection: ${connection}`);
   }
   assert.match(firebase, /isFirebaseEmulatorRuntime\s*=\s*isFirebaseEmulatorHost\(host\)/);
+  assert.match(firebase, /export const db = isFirebaseEmulatorRuntime\s*\?\s*initializeFirestore\(app, \{\s*experimentalForceLongPolling:\s*true\s*\}\)\s*:\s*getFirestore\(app\);/);
   assert.match(firebase, /if\s*\(!appCheck\s*&&\s*!isFirebaseEmulatorRuntime\)/);
   assert.match(read('firebase.json'), /"auth"\s*:\s*\{\s*"port"\s*:\s*9099/);
   assert.match(read('firebase.json'), /"firestore"\s*:\s*\{\s*"port"\s*:\s*8080/);
