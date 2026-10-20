@@ -92,9 +92,13 @@ assert.match(
 assert.match(accountStatusJs, /source !== 'verified-route-guard'/);
 assert.match(accountStatusJs, /await signOut\(auth\)/);
 
-assert.match(
-  rules,
-  /function active\(\) \{ return userExists\(\) && user\(\)\.status in \['active', 'approved'\] && user\(\)\.approvalStatus == 'approved'; \}/
+const strictActiveRuleContracts = [
+  /function active\(\) \{ return userExists\(\) && user\(\)\.status in \['active', 'approved'\] && user\(\)\.approvalStatus == 'approved'; \}/,
+  /function active\(\) \{ let profileExists = userExists\(\); let profile = profileExists \? user\(\) : \{\}; return profileExists && profile\.status in \['active', 'approved'\] && profile\.approvalStatus == 'approved'; \}/
+];
+assert.ok(
+  strictActiveRuleContracts.some((contract) => contract.test(rules)),
+  'Firestore must require an existing profile, active-or-approved status, and approved review status.'
 );
 assert.match(
   rules,
