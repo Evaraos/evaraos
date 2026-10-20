@@ -339,6 +339,9 @@ test('role pages use scoped reads and shared assignment rules preserve every leg
   assert.ok(jobRule, 'the job record rule remains present');
   assert.match(leadRule[1], /allow get: if[^{]*assigned\(resource\.data\)[^{]*sameCompany\(resource\.data\.companyId\)/);
   assert.match(jobRule[1], /allow get: if[^{]*assigned\(resource\.data\)[^{]*sameCompany\(resource\.data\.companyId\)/);
+  const sameCompanyPredicate = rules.match(/function sameCompany\(value\) \{([^}]*)\}/)?.[1];
+  assert.ok(sameCompanyPredicate, 'the same-company helper remains present');
+  assert.match(sameCompanyPredicate, /active\(\)/);
   for (const [name, block] of [['leads', leadRule[1]], ['jobs', jobRule[1]]]) {
     const listPredicate = block.match(/allow list: if ([^;]*);/)?.[1];
     assert.ok(listPredicate, `${name} list rule remains present`);
@@ -351,7 +354,6 @@ test('role pages use scoped reads and shared assignment rules preserve every leg
     assert.match(listPredicate, /resource\.data\.staffClaimedBy == request\.auth\.uid/);
     assert.match(listPredicate, /resource\.data\.assignedTo is list && request\.auth\.uid in resource\.data\.assignedTo/);
     assert.match(listPredicate, /resource\.data\.assignedTeamIds is list && request\.auth\.uid in resource\.data\.assignedTeamIds/);
-    assert.match(listPredicate, /function sameCompany/);
   }
   assert.match(rules, /match \/assignedLeads\/\{leadId\} \{ allow read: if own\(userId\)/);
   assert.match(rules, /match \/assignedJobs\/\{jobId\} \{ allow read: if own\(userId\)/);
