@@ -339,8 +339,18 @@ test('role pages use scoped reads and shared assignment rules preserve every leg
   assert.ok(jobRule, 'the job record rule remains present');
   assert.match(leadRule[1], /allow get: if[^{]*assigned\(resource\.data\)[^{]*sameCompany\(resource\.data\.companyId\)/);
   assert.match(jobRule[1], /allow get: if[^{]*assigned\(resource\.data\)[^{]*sameCompany\(resource\.data\.companyId\)/);
-  assert.match(leadRule[1], /allow list: if[^{}]*assigned\(resource\.data\)[^{}]*sameCompany\(resource\.data\.companyId\)/);
-  assert.match(jobRule[1], /allow list: if[^{}]*assigned\(resource\.data\)[^{}]*sameCompany\(resource\.data\.companyId\)/);
+  for (const [name, block] of [['leads', leadRule[1]], ['jobs', jobRule[1]]]) {
+    const listPredicate = block.match(/allow list: if ([^;]*);/)?.[1];
+    assert.ok(listPredicate, `${name} list rule remains present`);
+    assert.match(listPredicate, /active\(\) && sameCompany\(resource\.data\.companyId\) && \(/);
+    assert.equal((listPredicate.match(/active\(\)/g) || []).length, 1, `${name} shares its active-user check`);
+    assert.match(listPredicate, /resource\.data\.assignedToUid == request\.auth\.uid/);
+    assert.match(listPredicate, /resource\.data\.assignedRep == request\.auth\.uid/);
+    assert.match(listPredicate, /resource\.data\.staffClaimedBy == request\.auth\.uid/);
+    assert.match(listPredicate, /resource\.data\.assignedTo is list && request\.auth\.uid in resource\.data\.assignedTo/);
+    assert.match(listPredicate, /resource\.data\.assignedTeamIds is list && request\.auth\.uid in resource\.data\.assignedTeamIds/);
+    assert.match(listPredicate, /resource\.data\.assignedRep is list && request\.auth\.uid in resource\.data\.assignedRep/);
+  }
   assert.match(rules, /match \/assignedLeads\/\{leadId\} \{ allow read: if own\(userId\)/);
   assert.match(rules, /match \/assignedJobs\/\{jobId\} \{ allow read: if own\(userId\)/);
   assert.match(rules, /request\.resource\.data\.keys\(\)\.hasOnly\(\[\]\) && canCreateAssignmentIndex/);
