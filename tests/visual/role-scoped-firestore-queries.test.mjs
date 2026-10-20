@@ -372,4 +372,3 @@ test('the UI matrix stubs read-only customer snapshots in demo-emulator mode', (
   assert.match(spec, /quotes: \[\],\s*invoices: \[\],\s*subscriptions: \[\]/);
   assert.match(spec, /orders: \[\],\s*notifications: \[\],\s*refunds: \[\]/);
 });
-
